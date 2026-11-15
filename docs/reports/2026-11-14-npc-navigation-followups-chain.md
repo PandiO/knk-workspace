@@ -13,7 +13,8 @@
 
 ## 1. Waiting for the developer
 
-1. The L1 design questions (proposed defaults in L1's design, questions on #519 once L1 posts them); then the approval
+1. Phase 4 test steps 9 and 10 for L2 (#520), on a plugin built from `next` `11e07d64` or later (steps on #520).
+2. The L1 design questions (proposed defaults in L1's design, questions on #519 once L1 posts them); then the approval
    of the L1 design, which opens L3 and L4.
 
 ## 2. Summary
@@ -21,7 +22,7 @@
 | Link | Issue | Status | Branch heads | PR | CI | How started |
 |---|---|---|---|---|---|---|
 | L1 Design: corners, narrowed formations, toggle | #519 | Running | — | — | — | create_session session_01R1w2UwysEMwCYnxwCpkx3p (2026-11-15) |
-| L2 Follower recheck and guard, no gate push | #520 | In review (PRs open, not merged) | knk-plugin `2be0bf13`, knk-workspace `46e8f67` | PandiO/knk-plugin#31, PandiO/knk-workspace#536 | plugin `build` and `paper-boot` green (push runs 43648929001, 43648928936) | create_session session_01R1w2Ux2KpS7H3FidwDEZmp (2026-11-14) |
+| L2 Follower recheck and guard, no gate push | #520 | Merged into next (2026-11-15, by the manager session) | knk-plugin `651d8bff` → `next` `11e07d64`; knk-workspace → `next` `43a2328c` | PandiO/knk-plugin#31, PandiO/knk-workspace#536 | PR head green (build, paper-boot); `next` runs 43662028862, 43662028855 pending at the coordinator check | create_session session_01R1w2Ux2KpS7H3FidwDEZmp (2026-11-14) |
 | L3 Wall-corner steering and recovery | #521 | Not started (gate: L1 approved and merged, L2 merged) | — | — | — | — |
 | L4 Narrowed formations, followers-finish-trip toggle | #522 | Not started (gate: L3 merged) | — | — | — | — |
 
@@ -67,6 +68,15 @@
 9. **L2 merged by the manager session** (manager's message 2026-11-15 01:08 UTC: it updated PandiO/knk-plugin#31 with
    `next` and merges it, then PandiO/knk-workspace#536, after CI). Chosen: leave the merge to the manager and run the
    § 6/§ 7 checks afterwards. Alternatives: (a) merge myself (two sessions merging the same PR).
+
+10. **L2 check after the manager's merge** (2026-11-15). § 6 held: both branches are in `next` (rev-list counts 0),
+    tests above the baseline (core 2700, paper 2689, 0 failures), CI green on the combined PR head, scope matches #520,
+    decisions logged in block 4.2, behind `npc.navigation.enabled`. Codex did not review (usage limit, comment on
+    knk-plugin#31), so the merge went ahead without it (developer decision 2026-11-14). CI on `next` was still running
+    at the check and is checked at the next check-in. Recorded as merged by the manager session.
+11. **Scenario framework on `next`** (#421 and the #511 scenarios, knk-plugin#35, 2026-11-15). L3 and L4 write their
+    world steps (corner scene, gate and access group tests) as plugin scenarios, not "scenario later". Told L1 so its
+    test sections plan for them.
 
 ## 4. Link blocks
 
