@@ -1,5 +1,9 @@
 # Create Flow Split: Towns/Districts/Streets/Structures/Regions
 
+> **Note (2026-11-15, [#409](https://github.com/PandiO/knk-workspace/issues/409)):** a Town no longer has its own streets
+> or `streetIds`. Its streets are derived from its districts and read-only (merged into `next`); see
+> [DESIGN_TOWN_STREETS.md](DESIGN_TOWN_STREETS.md). The Town `streetIds` / `streets` input below is historical.
+
 **Purpose**: Document the split between Web App/API orchestration and Plugin world-bound execution for domination entity creation.
 
 **Status**: TBD – Specification outline awaiting implementation detail.

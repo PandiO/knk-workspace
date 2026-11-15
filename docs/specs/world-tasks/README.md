@@ -1,6 +1,6 @@
 # WorldTask Feature Documentation
 
-**Status:** Current · **Last updated:** 2026-11-13 (link to the `WgRegionId` requirements moved from knk-plugin, PandiO/knk-workspace#304)
+**Status:** Current · **Last updated:** 2026-11-15 (`GET temp-region-releases` needs `serverId`, PandiO/knk-workspace#399); 2026-11-13 (link to the `WgRegionId` requirements moved from knk-plugin, PandiO/knk-workspace#304)
 **State:** Living reference for the lifecycle (§ "Lifecycle and endpoints" below, as built by PandiO/knk-workspace#180, merged
 into the default branches 2026-11-04 with #181). The other files in this folder are older design notes:
 where they differ from that section, the section is current.
@@ -135,6 +135,11 @@ Pending ──claim──► InProgress ──complete──► Completed
   released to Pending; workflow sessions no draft points at and with no activity for 7 days → removed with their tasks,
   except sessions with a Completed task (its output is still read, e.g. a region's world) and catalogue-scan sessions.
   Rows from before #180 without `ExpiresAt`/`LeaseUntil` count from their last update.
+- **Temp regions of abandoned drafts** (#269, merged into `next` 2026-11-13 from `claude/plugin-chains-into-next`): a deleted draft, a region
+  task that closes without a result after a game server held it (cancel, fail, expiry) and a session the sweep removes
+  release the task's `tempregion_worldtask_<id>` (table `temp_region_releases`); the game server removes it within
+  minutes once nothing uses it. `TempRegionReleaseGraceMinutes` 5, `TempRegionReleaseKeepDays` 30. Details:
+  [managed-worldguard-regions.md §7](../../architecture/managed-worldguard-regions.md).
 
 ### Endpoints (`api/WorldTasks`)
 
@@ -143,6 +148,7 @@ Pending ──claim──► InProgress ──complete──► Completed
 | `POST /` | `knk.admin.world` or game server | create; the creator is the JWT caller (the session owner for the game server); body may name `formSubmissionProgressId`; a field's previous open task is cancelled |
 | `GET {id}`, `GET by-link-code/{code}`, `GET status/{status}`, `GET session/{id}` | logged in or game server | reads (`by-link-code` finds open tasks only) |
 | `GET session/{id}/open` | logged in or game server | the session's open tasks |
+| `GET temp-region-releases?serverId=`, `POST temp-region-releases/{id}/settle` | game server only | #269 (feature branch): the temp regions released for removal, and the server's answer (Removed / Missing / Kept); `serverId` is required on the list (400 when blank, #399, branch `claude/temp-region-releases-399`) |
 | `POST {id}/claim` | game server | `{taskCode, claimedByServerId, claimedByMinecraftUsername, claimedByUuid, claimMode}` |
 | `POST {id}/complete`, `{id}/fail` | game server | `{outputJson \| errorMessage, serverId}` |
 | `POST {id}/release` | game server | InProgress → Pending (in-game `cancel`, quit, restart, plugin disable) |
@@ -210,6 +216,8 @@ The form builder offers only task types with a handler: `LocationSelection` (the
 
 Header history up to 2026-11-13, as the old `Last updated` line gave it, newest first (newer changes: the header and git history):
 
+- 2026-11-13 (#269 merged into `next` 2026-11-13 from `claude/plugin-chains-into-next`)
+- 2026-11-09 (temp regions of abandoned drafts released, #269, feature branch `claude/temp-region-drafts-269`)
 - 2026-11-04 (#239 NoPermission, #240 `POST {id}/offer`, feature branch)
 - 2026-11-04 (#180 and #181 merged)
 - 2026-11-02 (§ "Over the realtime channel": offers, hand-off, busy check, #181, branch `claude/realtime-signalr`)

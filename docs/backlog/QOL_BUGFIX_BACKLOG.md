@@ -377,10 +377,10 @@ and **removes the snow** in either case before/as the block move happens, so no 
 
 ## 8. InventoryMenu pagination and search/filter are command-only, not real in-GUI controls
 
-- **Status**: Implemented — folded into InventoryMenu Phase 7 per the developer's 2026-09-22 decision (see resolved question 6 below). See the InventoryMenu Phase 7 entry in `ACTIVE_SESSIONS.md`'s "Recently completed" table for full implementation detail and verification status.
+- **Status**: Implemented — folded into InventoryMenu Phase 7 per the developer's 2026-09-22 decision (see resolved question 6 below). See the InventoryMenu Phase 7 entry in the [sessions archive, 2026-09](../reports/sessions-archive/2026-09.md) (formerly the "Recently completed" table of `ACTIVE_SESSIONS.md`) for full implementation detail and verification status.
 - **Area**: knk-plugin (InventoryMenu engine, `knk-paper/.../paper/menu/`, `knk-paper/.../paper/commands/MenuDebugCommand.java`)
 - **Reported**: 2026-09-22, by the developer directly (not discovered during use — flagged proactively while reviewing InventoryMenu Phase 5)
-- **Related docs**: `docs/specs/inventory-menu/{IMPLEMENTATION_PLAN.md,DESIGN_REVIEW.md §2.1,§2.5}`; see the InventoryMenu Phase 2, Phase 5, and Phase 7 entries in `ACTIVE_SESSIONS.md`'s "Recently completed" table for full implementation detail
+- **Related docs**: `docs/specs/inventory-menu/{IMPLEMENTATION_PLAN.md,DESIGN_REVIEW.md §2.1,§2.5}`; see the InventoryMenu Phase 2, Phase 5, and Phase 7 entries in the [sessions archive, 2026-09](../reports/sessions-archive/2026-09.md) (formerly the "Recently completed" table of `ACTIVE_SESSIONS.md`) for full implementation detail
 
 ### Symptom
 Two InventoryMenu capabilities that should eventually be normal in-GUI interactions are currently only reachable via chat commands:
@@ -456,7 +456,7 @@ Confirmations are also click-driven end-to-end (`menu.confirm.request`/`.accept`
 
 - **Status**: Open — found and flagged during User features Phase 1 (2026-09-23), not fixed (out of that feature's scope)
 - **Area**: knk-plugin (`knk-paper/.../paper/dataaccess/DataAccessFactory.java`, `KnKPlugin.java`)
-- **Reported**: 2026-09-23, while wiring `PermissionsDataAccess` (see the User features Phase 1 entry in `ACTIVE_SESSIONS.md`'s "Recently completed" table)
+- **Reported**: 2026-09-23, while wiring `PermissionsDataAccess` (see the User features Phase 1 entry in the [sessions archive, 2026-09](../reports/sessions-archive/2026-09.md) (formerly the "Recently completed" table of `ACTIVE_SESSIONS.md`))
 
 ### Symptom
 `config.yml`'s `cache.entities.<name>.ttl-minutes`/`ttl-seconds` values (e.g. `towns.ttl-minutes: 30`, `health.ttl-seconds: 30`) are never actually used to size that entity's cache. Every `*DataAccess` gateway ends up using the single global `cache.ttl-seconds` (default 60s) instead, regardless of what's configured per-entity.

@@ -1,7 +1,7 @@
 # Realtime channel (SignalR) between knk-web-api, knk-plugin and knk-web-app
 
-**Status:** Accepted design (developer decisions 2026-10-26, §12). S1 (§4–§5), S2 (§6.1), WT1 (§8.2, §8.7, #180; as built: [world-tasks/README.md § Lifecycle](../world-tasks/README.md#lifecycle-and-endpoints-pandioknk-workspace180)), WT2 (§8.3–§8.6, #181; as built: §8.8) and S3 (§6.2–§6.4, #182; as built: §6.8) **merged into the default branches 2026-11-04** (API `master` `2258df5`, plugin `main` `e1b6a7a9`, web app `main` `d0c2ba8`) after the developer's smoke tests of #180 and WT2; `realtime.enabled: false` by default in the plugin. **S4** (#183, chain 2 X1, web live updates) **merged 2026-11-12** (API `master` `bc97b7d`, web app `main` `1371951`; smoke test § S4 not run); as built: §6.9; since #280 AM1 (same merge) the audience is the type's area node. **S5** (#184, chain 2 R1, account erasure): API part merged 2026-11-12 in `bc97b7d` (migration `AddPrivacyErasureEvents`), plugin part and § 7.5 not merged.
-**Last updated:** 2026-11-12 (§6.9 as built brought over from `claude/realtime-web-live-183` and marked merged, audience per area node since #280 AM1 — docs #341); 2026-11-12 (status: S4 merged, S5 API part merged); 2026-11-06 (§6.9: `Realtime:WebLiveUpdatesEnabled`, decision on LX1-10); 2026-11-05 (S4 built: §6.9, §6.5 table, §9); 2026-11-05 (#239 offer permission check, #240 Send again merged); 2026-11-04 (#239, #240 on a feature branch); 2026-11-02 (S3 built: §6.8); 2026-11-02 (WT2 built: §8.8); 2026-11-01 (status: WT1 built, #180); 2026-10-26 (S2 built: implementation notes in §6.7; S1 built: §4.6; decisions recorded; §8.3 delivery and busy flow, §8.7 tasks anchored to the draft, §4.3 publishing path)
+**Status:** Accepted design (developer decisions 2026-10-26, §12). S1 (§4–§5), S2 (§6.1), WT1 (§8.2, §8.7, #180; as built: [world-tasks/README.md § Lifecycle](../world-tasks/README.md#lifecycle-and-endpoints-pandioknk-workspace180)), WT2 (§8.3–§8.6, #181; as built: §8.8) and S3 (§6.2–§6.4, #182; as built: §6.8) **merged into the default branches 2026-11-04** (API `master` `2258df5`, plugin `main` `e1b6a7a9`, web app `main` `d0c2ba8`) after the developer's smoke tests of #180 and WT2; `realtime.enabled: false` by default in the plugin. **S4** (#183, chain 2 X1, web live updates) **merged 2026-11-12** (API `master` `bc97b7d`, web app `main` `1371951`; smoke test § S4 not run); as built: §6.9; since #280 AM1 (same merge) the audience is the type's area node. **S5** (#184, chain 2 R1, account erasure): API part merged 2026-11-12 in `bc97b7d` (migration `AddPrivacyErasureEvents`), plugin part and § 7.5 in the PR into `next` from `claude/plugin-chains-into-next` (2026-11-13).
+**Last updated:** 2026-11-15 (§6.10 item 8: the plugin's handler as built, #574 in review); 2026-11-15 (§6.10: `PlayerKick` / `PlayerBan` v1 for kick and ban from the web app, #565 in review); 2026-11-14 (§7.5 corrections after the #486 retest: the feed is PascalCase, the first join is decided after the account sync); 2026-11-14 (§7.5: the returning player is new, #486); 2026-11-13 (§7.5: a failed erasure step keeps the feed position, a feed reset forgets this run's ids, review of knk-plugin#20); 2026-11-13 (#31 rest: §6.8 note brought into `claude/plugin-chains-into-next`, PR into `next`); 2026-11-13 (S5 #184 plugin part: R1 docs brought into `claude/plugin-chains-into-next`, PR into `next`, §7.5 as built); 2026-11-12 (§6.9 as built brought over from `claude/realtime-web-live-183` and marked merged, audience per area node since #280 AM1 — docs #341); 2026-11-12 (status: S4 merged, S5 API part merged); 2026-11-06 (§6.9: `Realtime:WebLiveUpdatesEnabled`, decision on LX1-10); 2026-11-05 (S4 built: §6.9, §6.5 table, §9); 2026-11-05 (#239 offer permission check, #240 Send again merged); 2026-11-04 (#239, #240 on a feature branch); 2026-11-02 (S3 built: §6.8); 2026-11-02 (WT2 built: §8.8); 2026-11-01 (status: WT1 built, #180); 2026-10-26 (S2 built: implementation notes in §6.7; S1 built: §4.6; decisions recorded; §8.3 delivery and busy flow, §8.7 tasks anchored to the draft, §4.3 publishing path)
 **Issue:** [PandiO/knk-workspace#66](https://github.com/PandiO/knk-workspace/issues/66) (KNG-57, priority high); phase issues in
 [IMPLEMENTATION_PLAN.md](IMPLEMENTATION_PLAN.md). Related: #76 (KNG-170, rank changes don't reach the server),
 #121 (KNG-262, cache TTLs), #31 (KNG-202, startup-only siege work), #35 (KNG-176), #34 (KNG-246), #145 (KNG-249), #75.
@@ -348,6 +348,11 @@ onto the hub" → **later, phase S6**.
   (`SiegeGateController.retryRecovery`; waits while a lockdown of this run is active), runtime config + title
   brackets (`SiegeService.retryStartup`). Each runs at startup as before; one that failed runs again on every hub
   (re)connect (resync step "siege startup work"), in that order, until it got through. With the hub off, unchanged.
+  *2026-11-05 (#31 rest, UX chain 2 link R2; merged into `next` 2026-11-13 from `claude/plugin-chains-into-next`):* the same steps also
+  run on every API connectivity transition into UP (UNKNOWN→UP included) and on a fallback retry (30 s, 1 min, 2 min,
+  then every 5 min while pending and not DOWN), hub on or off, through `core/realtime/StartupWorkRetry`; the resync
+  step calls it too, and `PendingStartupWork.runPending` is single-flight (a call during a pass shares one queued pass),
+  so two triggers never run a step twice.
 - **Slower re-syncs (Q4).** While connected these now run `realtime.fallback-poll-multiplier` times less often: domain
   access sync, game settings re-read, lootbox runtime refresh, road tiles and meta, telemetry config poll, grade
   catalogue. The entity cache TTLs (#121) and the permission/user TTLs are unchanged.
@@ -405,6 +410,65 @@ and knk-workspace; **merged 2026-11-12** (API `master` `bc97b7d`, web app `main`
   none is sent and the pages behave as with the hub down. The game servers' events, the web hub itself (the user's own
   events) and the profile summary's `presence` field stay.
 
+### 6.10 Kick and ban from the web app: `PlayerKick` / `PlayerBan` v1 (PandiO/knk-workspace#565, in review)
+
+The contract the game server's handler (knk-plugin, link L7, [#574](https://github.com/PandiO/knk-workspace/issues/574))
+implements. Developer decisions 2026-11-15 on [#565](https://github.com/PandiO/knk-workspace/issues/565#issuecomment-6892821566):
+staff kick and ban from the web app; a web ban works like in-game `/ban` (Paper's ban list, permanent, with the reason)
+and unban stays `/pardon` in game; every kick and ban is audited in the API.
+
+1. **Published from** `Services/PlayerModerationService.cs` (`POST api/Users/{id}/kick`, node `knk.kick`;
+   `POST api/Users/{id}/ban`, node `knk.ban`), through the scoped `IRealtimeEventSink` like `UserFrozenChanged`, after
+   the audit entry (`PlayerKicked` 63 / `PlayerBanned` 64) is written. No transaction is open, so it is sent at once.
+2. **To:** every connected game server (`servers` group, `ServerId` null). Each server acts only on what concerns it
+   (kick: only when the player is online on it; ban: every server adds the ban to its own ban list).
+3. **Envelope:** the usual `{ v, seq, type, at, actor, payload }` (§4.2) with `type` `PlayerKick` or `PlayerBan`, `v` 1,
+   `actor` `{ userId: <staff id>, source: "web" }`.
+4. **Payload** (`PlayerModerationPayload`, camelCase), the same for both types:
+
+   | Field | Type | Meaning |
+   |---|---|---|
+   | `actionId` | string (GUID) | Unique per staff action, also in the audit entry's details. A receiver that sees the same id twice acts once. |
+   | `userId` | int | The knk user. |
+   | `uuid` | string | Their Minecraft UUID with dashes (events are only sent for users with one). Act on this. |
+   | `username` | string | Their username (for messages and logs; use `uuid` to find the player or profile). |
+   | `reason` | string or null | Shown to the player. Always set for `PlayerBan` (1–200 characters). Null for a `PlayerKick` without a reason: use the plugin's default kick message. |
+   | `staffUserId` | int | The staff member. |
+   | `staffUsername` | string | Their username: the ban list's `source`. |
+   | `at` | string (UTC, ISO 8601) | When the API accepted it. |
+
+   Example: `{"actionId":"5b0c…","userId":42,"uuid":"069a79f4-44e9-4726-a5be-fca90e38aaf5","username":"Steve","reason":"X-ray","staffUserId":7,"staffUsername":"Mod","at":"2026-11-15T12:00:00Z"}`.
+5. **What the receiver does** (L7): `PlayerKick`: if the player with `uuid` is online on this server, kick them with
+   `reason` (or the default message) on the main thread; otherwise nothing. `PlayerBan`: add the profile `uuid`
+   (with `username`) to Paper's profile ban list, permanent (no expiry), with `reason` and `staffUsername` as source,
+   whether the player is online or not; then kick them with the ban message if online. Already banned: nothing more
+   (idempotent). Unban is `/pardon` in game; the API has no unban and no ban state.
+6. **Delivery and its limits** (the realtime channel is a doorbell, P2/P5; no outbox):
+   1. The API refuses with **503 `NoGameServerConnected`** while no game server is connected to `/api/hubs/game`, so a
+      kick or ban is never reported as done when nothing could carry it out. This also covers a plugin with
+      `realtime.enabled: false` (no hub connection): web kick/ban then needs the hub on.
+   2. A kick is refused with **409 `PlayerNotOnline`** when `User.IsOnline` is false (nothing to kick); nothing is
+      audited or sent. A ban of an offline player is accepted and sent; the game server bans the profile.
+   3. Not replayed: an event is sent to the servers connected at that moment. A server that connects later, or one
+      whose message was lost (disconnect while sending, or the bounded queue dropping its oldest message, §4.3),
+      does not get it, and a resync has nothing to re-read (the ban lives in the game server's ban list, not in the
+      API). Staff then repeat the action (idempotent by design) or use `/ban` in game. With several game servers, a
+      server that was down misses the ban; an outbox (option C of §4.3) would close this and is not built.
+   4. Other refusals: 400 `ValidationFailed` (ban without a reason, a reason over 200 characters), 400
+      `CannotModerateSelf`, 400 `NoMinecraftAccount`, 403 `EscalationRefused` (the player ranks at or above the
+      caller: highest group weight, `*` holders exempt and protected), 404 `UserNotFound`; 401/403 without login or node.
+7. **Answer:** 202 `{ actionId, userId, gameServers }` (`gameServers` = connected game servers when sent).
+8. **Plugin as built** (L7, [#574](https://github.com/PandiO/knk-workspace/issues/574), in review, knk-plugin
+   `claude/web-kick-ban-574`): `paper/realtime/ModerationRealtimeSync` registers both types (v1) on the dispatcher;
+   `api/realtime/ModerationEvents` parses the payload (no `actionId`, `userId` or usable `uuid` = logged and ignored;
+   a blank `reason` counts as none); `core/realtime/RecentActionIds` remembers the last 1000 action ids in memory, so
+   a repeat is skipped (a restart forgets them, which is safe: both actions are idempotent). On the main thread: the
+   kick uses `PlayerKickEvent.Cause.KICK_COMMAND` with the reason or `realtime.moderation.kick-default-reason`; the
+   ban checks Paper's profile ban list by `uuid`, adds a permanent entry (reason, `staffUsername` as source, `knk-web`
+   when missing) only when none exists (an existing entry, e.g. from `/ban`, is kept as it is), then kicks an online
+   player with `realtime.moderation.ban-message` (`Cause.BANNED`), also when the ban list could not be written. No
+   resync step (nothing to re-read). One `[KnK Moderation]` log line per handled action.
+
 ## 7. Reliability
 
 ### 7.1 Ordering, gaps, duplicates
@@ -435,6 +499,74 @@ the player with a neutral message if online and deletes local data (offline stor
 lists. Because SignalR is at-most-once, erasures are also persisted (a small `privacy_erasure_events` table with a
 sequence, or reuse the deletion request rows) and the plugin calls `GET /api/privacy/erasures?since={lastId}` on every
 (re)connect and stores `lastId` on disk. The hourly verifier and KNG-58's max age stay as backstop. Separate phase (S5).
+
+### 7.5 S5 as built (2026-11-05, #184)
+
+- **Feed (API).** New table `privacy_erasure_events` (migration `AddPrivacyErasureEvents`, additive): `Id` (bigint,
+  the sequence), `UserId`, `FormerUuid`, `DeletionRequestId`, `ErasedAt`, `UuidClearedAt`. `PrivacyDeletionService.
+  ExecuteAsync` adds one row per erased account (the player and every account merged into them) with the UUID it has
+  *before* the pseudonymization clears it, inside the erasure's own transaction. The deletion-request rows were not
+  reused: they are numbered in request order, not execution order, one request erases several accounts, and the UUID is
+  gone after the erasure. The hourly GDPR job clears a row's `FormerUuid` after `Privacy:ErasureFeedUuidRetentionDays`
+  (35, at least 31: past the plugin's own 30-day maximum age); the row stays, so the ids have no holes.
+- **Push.** After the commit (through `IRealtimeEventSink`, so an outer transaction holds it and a rollback drops it)
+  `AccountErased {userId, formerUuid, erasureId}` (`Realtime/Contracts/PrivacyContracts.cs`) goes to every game server,
+  one per erased account; accounts without a UUID too (the plugin then deletes by user id).
+- **Catch-up endpoint.** `GET api/privacy/erasures?since={id}&limit={1-500, default 100}` (`PrivacyErasuresController`,
+  `[RequirePluginService]`: the rows carry UUIDs) → `{Items: [{ErasureId, UserId, FormerUuid, ErasedAt}], LastId,
+  HasMore, LatestId}`, oldest first. **PascalCase** (correction 2026-11-14, #486 retest): `Program.cs` sets
+  `PropertyNamingPolicy = null` and `PrivacyErasureFeedDto` has no `[JsonPropertyName]`, unlike the API's other DTOs;
+  this section said camelCase, and the plugin read camelCase only, so the catch-up parsed every page as empty. The
+  plugin's `PrivacyErasureDtos` now read both casings (`@JsonAlias`), with no API change. `LatestId` below the caller's
+  `since` means the position came from another database (a reset). A row whose former UUID now belongs to another
+  account (a returning player got a fresh account) is served with `FormerUuid: null`, so a late catch-up never touches
+  the new account. The push (`AccountErased` over SignalR) is camelCase (SignalR's own JSON protocol).
+- **Plugin.** `core/privacy/AccountErasureService` on its own worker thread: give back, then kick (main thread, one
+  task, `realtime.erasure.kick-message`; the `BEFORE_KICK` steps run right before the kick while the player is online:
+  the siege vault, developer decision 2026-11-06 on LR1-8), wait `settle-seconds` (2) so the quit handlers ran and Minecraft saved the player, then the
+  `LocalDataEraser` steps each feature registered at start: offline security store (account, permission answers, ignore
+  lists, the player on others' lists; written at once), user/permission caches and `UserManager`, discovery spool (by
+  UUID or user id), statistics spool (their entries and PvP kills either way; emptied batches deleted), PM-log queue
+  and the local PM log lines they sent or received, siege vault (main thread; an online player's vault was given back before the kick — inventory, stats and return
+  point, like `/siege admin kick`, and forgotten at once so nothing is given twice — so this removes offline vaults),
+  hub-outage return point,
+  and Minecraft's own player files (`players/data|stats|advancements`, the pre-26.1 folders too) **listed** in
+  `erasure-minecraft-files.txt` for the owner, never deleted. A UUID the server last knew under another user id (user
+  cache, offline store) is treated as "no UUID": only the user-id steps run, no kick. The push applies at once and then
+  starts a catch-up; only the catch-up moves the position on disk (`erasure-feed.json`), so a missed earlier erasure is
+  never skipped. Resync step "account erasures" runs the catch-up on every (re)connect (off the main thread); API
+  unreachable = stop, next connect retries; a position past `latestId` starts again from 0 and forgets which ids this
+  run applied (the new feed's ids may repeat). One erasure is applied once per run; a restart re-applies from the
+  stored position (every step is idempotent). An erasure with a failed step (a return before the kick, the main-thread
+  steps, a worker step) is not counted as applied: the catch-up stops before it, so the position stays and the next
+  catch-up (connect or push) runs it again; later ones wait behind it in the feed (a push still applies them at once).
+  Review fix 2026-11-13 on knk-plugin#20. Logs name the erasure id and
+  counts only.
+- **The returning player is new (#486, merged into `next` 2026-11-14, knk-plugin#25).** A first join used to be
+  "the API created the account at this join, or Bukkit's `hasPlayedBefore()` is false". An erasure keeps Minecraft's
+  player files by design, so a player who got an existing account back (invitation claim, website) counted as
+  returning. Every applied erasure with a UUID (push and catch-up) now runs a worker step "next join is a first join":
+  `core/privacy/ErasedPlayerMarks` writes SHA-256(UUID) and the time to `erasure-first-joins.json` (no UUID or name;
+  taken at the next join, dropped after 90 days) and `NewPlayerWindow.forget(uuid)`. At pre-login a join waits at
+  most 5 s for the first catch-up of the run (joins share it; none wait once one catch-up read the feed to its end; API
+  down → the join goes on), because the feed serves `FormerUuid: null` once the UUID is in use again.
+- **The first join is decided after the join's account sync (correction 2026-11-14, #486 retest).** knk-plugin#25 put
+  `isFirstJoin(isNewUser, hasPlayedBefore, erasedSince)` in `PlayerListener.onJoin`, behind `if (cachedUser != null)`;
+  `PlayerListener` runs before the account sync, and the erasure's "user caches" step had emptied the cache (as does a
+  website account without a UUID, which the pre-login username lookup finds but can't cache), so the decision was
+  skipped and the mark never taken (developer's log: `First-join kits: no cached user for … at join, skipped`).
+  `UserAccountListener` now decides once `UserManager.onPlayerJoinAsync` knows the account, on the main thread before
+  the welcome and before `UserDataLoadedEvent` starts the join's discoveries: first join =
+  account created while the player connected (`NewPlayerWindow.accountCreated`, noted by the pre-login create and by
+  the sync's create; this also covers realtime off, where nothing is erased locally but the API made a fresh account)
+  **or** `!hasPlayedBefore` (read at `PlayerJoinEvent`) **or** the erasure mark (taken at every join with an account,
+  whatever the cache holds). That one decision marks `NewPlayerWindow` (first-join welcome once, quiet discovery
+  minutes) and asks the API for the first-join kits (`PlayerListener.requestFirstJoinKits`). No account after the sync
+  (API down): nothing decided, the mark waits. Not covered: with realtime off, an account recovered on the website
+  before the join is not new (no local mark; the API says nothing about a predecessor).
+- **Not deleted locally:** statistics and telemetry still in memory, an in-flight PM batch (the API drops statistics of
+  erased accounts, D16), Paper's own server logs. **Hub off (`realtime.enabled: false`):** nothing of this runs; the
+  hourly offline-identity check (KNG-58) is the only path, as before, and stays the backstop with the hub on.
 
 ## 8. World tasks over SignalR (R3–R5)
 

@@ -1,7 +1,7 @@
 # Form and Display builders: save in place, Publish, Duplicate, generate, preview (#71) — smoke test
 
-**Status:** Written 2026-11-09 for knk-web-app and knk-web-api `claude/builders-71` (chain 3 link V7); run by the developer 2026-11-11/12: § 0–10 pass (§ 4.5, 9, 10 accepted; § 1.2 Save and close fixed in web `321e170`; § 3.4 is a note). **Merged 2026-11-12** (knk-web-api `master` `bc97b7d`, knk-web-app `main` `1371951`)
-**Last updated:** 2026-11-12 (smoke test result, merged)
+**Status:** Written 2026-11-09 for knk-web-app and knk-web-api `claude/builders-71` (chain 3 link V7); run by the developer 2026-11-11/12: § 0–10 pass (§ 4.5, 9, 10 accepted; § 1.2 Save and close fixed in web `321e170`; § 3.4 is a note). **Merged 2026-11-12** (knk-web-api `master` `bc97b7d`, knk-web-app `main` `1371951`). **§ 11 (#291, validation rules in the draft):** 8 of 8 steps automated in CI (tagged, 2 of them partly: the real wizard); every step can still be run by hand; manual steps not run. Written 2026-11-15 for knk-web-api and knk-web-app `claude/builder-draft-rules-291` (Chain 3 follow-ups chain link L4), in review
+**Last updated:** 2026-11-15 (§ 11 validation rules in the draft and add-from-template removed, #291); 2026-11-12 (smoke test result, merged)
 **Issues:** [PandiO/knk-workspace#71](https://github.com/PandiO/knk-workspace/issues/71) (KNG-147: CRUD-11 save in
 place, CRUD-12 scaffold and Duplicate, CRUD-13 preview, CRUD-14 explicit Publish); access model
 [#280](https://github.com/PandiO/knk-workspace/issues/280)
@@ -130,3 +130,49 @@ You need:
 1. Repeat § 1.1–1.3 and § 8.1 with `?theme=brand`, and with `?bg=off`.
 2. At 390 px: the header is not sticky (it scrolls away), every button wraps, the **More** menu fits the screen, the Publish
    and Generate dialogs scroll inside themselves, and the page never scrolls sideways.
+
+## 11. Validation rules in the draft ([#291](https://github.com/PandiO/knk-workspace/issues/291))
+
+About 10 minutes for the whole section, about 3 minutes for the by-hand parts of § 11.2 and § 11.4. Deploy knk-web-api
+and knk-web-app together, **API first** (an older API ignores the rules in the draft, so they would be lost on Save).
+No migration, no setting. You need **A** and the Town form with at least two fields on one step (e.g. a town and a
+location field), and the wizard window from the start of this guide.
+
+1. [automated: e2e/form-builder-draft-rules.spec.ts, "a field that only exists in the draft gets a rule, saved with the draft"]
+   As A, open the Town form in the form builder. Select a step, **Add Field**, give it a name, label and type and press
+   **Save Field** (the field now exists only in the draft). Open it again with its pencil (**Edit field <label>**). Under
+   **Cross-Field Validation Rules** there is no "Save this field first" notice, but the line "Rules are part of the draft:
+   … staff get them when you publish." Press **+ Add Rule**, keep **Location Inside Region**, type an error message and
+   press **Add Rule**: the rule appears with the badge **Not published**. Press **Save Field**, then **Save** in the
+   toolbar: toast "Draft saved. Staff keep the published version until you publish."
+2. [partly automated: e2e/form-builder-draft-rules.spec.ts, "a field that only exists in the draft gets a rule, saved
+   with the draft" (nothing is written to `api/field-validation-rules`) and knk-web-api
+   `FormConfigurationDraftRulesTests`, "SaveDraft_KeepsRuleChangesInTheDraft_TheWizardKeepsThePublishedRules"; by hand:
+   the real wizard] In the wizard window, Dashboard → Town → **New Town**: the form is the published one (the new field
+   is not there) and every published rule behaves as before.
+3. [automated: knk-web-api `FormConfigurationDraftRulesTests`, "SaveDraft_KeepsRuleChangesInTheDraft_TheWizardKeepsThePublishedRules"]
+   Back in the builder, open a published field that has a rule: change the rule's error message (**Edit** → **Save
+   Rule**), press **Save Field** and **Save**. In the wizard, trigger that rule: it still shows the **old** message.
+4. [partly automated: e2e/form-builder-draft-rules.spec.ts, "Publish names the new rule and publishes the saved draft";
+   knk-web-api `FormConfigurationDraftRulesTests`, "Publish_AppliesRuleAddsUpdatesAndDeletes_ByFieldGuid"; by hand: the
+   wizard after Publish] Delete one other published rule (**Delete** → confirm "The rule is removed from the draft; the
+   published form keeps it until you publish.") and **Save Field**. Press **Publish…**: under "What changes for staff"
+   the list ends with "Validation rules: 1 added, 1 changed, 1 removed." Press **Publish**. Reopen the fields: no rule
+   shows **Not published**. In the wizard (start **New Town** again) the new field has its rule, the changed rule shows
+   the new message and the deleted rule is gone.
+5. [automated: knk-web-api `FormConfigurationDraftRulesTests`, "Discard_DropsTheRuleChanges"] Add a rule to any field,
+   **Save Field**, **Save**. **More** → **Discard unpublished changes…** → **Discard**: the field's rules are the
+   published ones again (the added rule is gone).
+6. [automated: src/utils/forms/__tests__/draftValidationRules.test.ts, "refuses to publish a rule whose dependency left
+   the form"; knk-web-api `FormConfigurationDraftRulesTests`, "Publish_RefusesARuleWhoseDependencyIsNoLongerInTheForm_AndChangesNothing"]
+   Give a field a rule that **Depends On Field** another field of this form (pick a dependency path), **Save Field**.
+   Delete the dependency field from the step and press **Publish…**: refused with "The <type> rule on "<label>" depends
+   on a field that is no longer in the form. Edit or delete the rule." Nothing is published. Edit the rule (or put the
+   field back) and the Publish question opens again.
+7. [automated: knk-web-api `FormConfigurationDraftRulesTests`, "Publish_OfADraftSavedWithoutRules_KeepsThePublishedRules"]
+   Only if a form had a saved draft from before this deploy: open it in the builder. Its fields show the **published**
+   rules (none marked **Not published**). **Publish** it: the rules are unchanged in the wizard.
+8. [automated: knk-web-api `FormConfigurationDraftRulesTests`, "AddFromTemplateEndpoints_AreGone"] Optional, API with an
+   admin token: `POST api/FormConfigurations/<id>/steps/add-from-template` and
+   `POST api/FormConfigurations/steps/<stepId>/fields/add-from-template` answer 404 (removed). **Add from template** in
+   the builder still copies a template step or field into the draft (§ 1), live only after **Publish**.

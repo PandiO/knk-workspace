@@ -1,7 +1,7 @@
 # Teleportation Commands — Design
 
 **Status:** Implemented and merged to trunk (KNG-17, `claude/teleport` merged 2026-09-28: knk-plugin `main` `9bae3769`, knk-web-api `master` `ae4dccd`, knk-web-app `main` `ac2db3b`); the `all` forms (#171) merged 2026-11-01 (plugin `20791049`, API `22a28ab`). Live state per the [feature register](../../FEATURE_REGISTER.md).
-**Last updated:** 2026-11-02 (status header: merged, it still said "implementation in progress"; [PandiO/knk-workspace#135](https://github.com/PandiO/knk-workspace/issues/135)); 2026-10-27 (§3.2/§3.3: `all` forms, same rank or lower, exemptions — [PandiO/knk-workspace#171](https://github.com/PandiO/knk-workspace/issues/171), merged 2026-11-01); 2026-10-19 (§3.6: `/hub` to the hub spawn, KNG-188)
+**Last updated:** 2026-11-14 (§3.4.3: NPCs are skipped by the combat tag, freeze and warmup listeners, PandiO/knk-workspace#496); 2026-11-02 (status header: merged, it still said "implementation in progress"; [PandiO/knk-workspace#135](https://github.com/PandiO/knk-workspace/issues/135)); 2026-10-27 (§3.2/§3.3: `all` forms, same rank or lower, exemptions — [PandiO/knk-workspace#171](https://github.com/PandiO/knk-workspace/issues/171), merged 2026-11-01); 2026-10-19 (§3.6: `/hub` to the hub spawn, KNG-188)
 **Linear:** [KNG-17](https://linear.app/kngpandi/issue/KNG-17/teleportation-staff-tp-tpa-requests-spawn-domain-warps-v1-port)
 **Sources:** `knk-v1-archive` (`src/UsefulCommands/PlayerTeleportCommand.java`, `src/UsefulCommands/SpawnCommand.java`,
 `src/SpawnPoints/SpawnPoint.java`, `src/SpawnPoints/SpawnPointCommands.java`, `src/Teleport/*`, `src/Houses/HomeCommands.java`,
@@ -362,7 +362,8 @@ spot, as staff intend). Player-to-player teleports check the target's spot too (
 New `CombatTagListener`: player-vs-player damage (direct or projectile) tags both for `teleport.combat-tag-seconds`
 (default **10**, v1 `Main.combat`). Only teleports check it here; the siege has its own combat rules and members are
 already blocked. **Dying clears the dead player's tag** (the killer stays tagged): added 2026-10-11 (knk-plugin `main`
-`c0ad2a9b`, KNG-34 smoke-test finding 6).
+`c0ad2a9b`, KNG-34 smoke-test finding 6). Hits by or on an NPC tag nobody, and `AdminFreezeListener` and
+`TeleportWarmupListener` ignore damage to an NPC (PandiO/knk-workspace#490, knk-plugin `next` `bd7b78a8`, not on trunk yet; [NPC navigation § 8](../../architecture/npc-navigation.md#8-npcs-and-the-player-listeners)).
 
 #### 3.4.4 Vanish
 - Name resolution for non-staff treats vanished players as offline (same message, same tab-complete exclusion) —

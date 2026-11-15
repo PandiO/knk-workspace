@@ -1,6 +1,6 @@
 # knk-web-api — Architecture
 
-**Status:** Current · **Last updated:** 2026-11-13 (§7: the Prometheus debt line is outdated, observability doc moved here, #304)
+**Status:** Current · **Last updated:** 2026-11-15 (§5.7: player profile API part, kick and ban from the web, #565 in review); 2026-11-15 (lookups take the picker's narrowing filters, #288 in review); 2026-11-15 (§5.5: validation rules in the builder draft, add-from-template endpoints removed; #291 in review); 2026-11-15 (§5.4: "Show what uses it" for form configurations and `?all=true`, #289, knk-web-api#34 in `next`); 2026-11-15 (§5.2 grant reads, §5.6 permission grants, group member count and the generic audit subject; #408, #50 in `next`, docs #576)
 
 ## 1. Stack & shape
 
@@ -48,7 +48,7 @@ Cross-cutting pieces that sit beside this pipeline:
 
 ## 4. EF Core / database layer
 
-`Properties/KnKDbContext.cs` declares 35 `DbSet<T>` entities plus 4 many-to-many/composite join tables configured inline (`TownStreet`, `DistrictStreet`, `gate_structure_guard_spawn_locations`, `ItemBlueprintDefaultEnchantment`). Charset/collation: `utf8mb4_general_ci`/`utf8mb4`.
+`Properties/KnKDbContext.cs` declares 35 `DbSet<T>` entities plus 3 many-to-many/composite join tables configured inline (`DistrictStreet`, `gate_structure_guard_spawn_locations`, `ItemBlueprintDefaultEnchantment`). `TownStreet` was dropped by migration `DropTownStreet` (PandiO/knk-workspace#409): `Town.Streets` is a `[NotMapped]` read-only list, the distinct streets of the town's districts by name then id, loaded through `Districts.Streets` (`TownRepository.GetDetailAsync`, no-tracking split query, serves `GET api/Towns/{id}`; `GET api/Towns` carries no streets) and not usable in an EF query. `PlaceholderResolutionService.DerivedIncludes` loads a placeholder path through `Town.Streets` as `Districts.Streets`. Charset/collation: `utf8mb4_general_ci`/`utf8mb4`.
 
 Key structural facts worth knowing before touching the model:
 
@@ -82,7 +82,8 @@ deploy the API before the web app. **Not live-tested:** the [smoke test](../guid
 in closed alpha test run 2 (checklist § 4c). Admin view: [dashboard access admin guide](../guides/admin/dashboard-access-admin-guide.md).
 
 - **Nodes** (`StaffPermissions`): `Delete = knk.admin.delete` (delete one), `DeleteBulk = knk.admin.delete.bulk`,
-  `Export = knk.admin.export`. The area nodes are unchanged and still mean view, create and edit in their area:
+  `Export = knk.admin.export`. The area nodes mean view in their area, and create and edit together with
+  `knk.admin.content` since #374 (see **Create, edit and link changes** below):
   `knk.admin.content`, `knk.admin.world`, `knk.kit.manage`, `knk.admin.lootbox.manage`, `knk.siege.admin.manage`,
   `knk.admin.road`, `knk.admin.user.manage` (`knk.admin.user.perm` for permission-group writes).
 - **Registry** `Attributes/DashboardAccess.cs`: one entry per `[FormConfigurableEntity]` type, plus `RoadProfile`.
@@ -90,6 +91,32 @@ in closed alpha test run 2 (checklist § 4c). Admin view: [dashboard access admi
   design's § 4.6.2, enforced from AM2), whether it is deletable and bulk deletable, and delegates to the type's own
   delete and search (the same service calls as its `DELETE {id}` and `POST …/search`). Link rows, snapshots and other
   `[FormConfigurableEntity]` types are view-only entries. `Security/DashboardAccessTests` pins the coverage.
+- **Create, edit and link changes (PandiO/knk-workspace#374, in `next` `b65e66d` 2026-11-13, PR knk-web-api#15; not
+  yet on `master`; not live-tested, [smoke test § 2.2](../guides/dashboard-access-smoke-test.md#22-create-edit-and-link-changes-need-knkadmincontent-374)):**
+  developer decision 2026-11-13, "Area staff should not be able to change forms at this point. They only work with the
+  content available." Each registry entry has `ChangesNeedContent` (default true) and `ChangeNodes`: all-of
+  `[WriteNode, knk.admin.content]` (just the write node when that is `knk.admin.content` already, or when
+  `changesNeedContent: false`). **Exempt:** `User` (Edit is the player profile, its own endpoints),
+  `PermissionGroup`, `PermissionHolder`, `PermissionGrant`, `UserPermissionGroup` (`knk.admin.user.perm` with the
+  escalation guard) and `RoadProfile` (the roads page edits it; no form).
+  - `[RequireDashboardChange("<Type>")]` (`Attributes/RequireDashboardChangeAttribute.cs`, `DashboardChangeFilter`, an
+    `IKnkAccessRule`) sits on the **primary create and update action** of 29 types, next to the controller's own area
+    rule: the Content, World, Kits, Lootboxes and Siege types of the registry (BannerLayer and DomainSubRegion
+    included). It reads the entry at request time: the plugin key passes (the game server checks its own nodes),
+    anonymous → 401, an unknown type name → 403 "This endpoint has no access rule." (fails closed), a missing node →
+    403 `{ error: "Forbidden", code: "NoWriteAccess", entityType, nodes, message }`, message "Creating or editing Town
+    requires knk.admin.world and knk.admin.content.". `Security/DashboardChangeAccessRulesTests` pins the endpoint list
+    and the filter.
+  - **Only the primary create/update.** Other writes of a type keep their own rules: gate door state, a domain's world
+    backfill, lootbox in-game spawn areas, delete, bulk delete, export, reads, lookups, the player profile's freeze,
+    balance, kick and ban. A per-action attribute rather than the class-level write rule, because that rule also
+    covers delete (decision in the "Link #374" block of the [chain 3 report](../reports/2026-11-08-ux-chain-3.md)).
+  - The **metadata's** `actionNodes.create`/`edit` and every relationship's `nodes` (§ 5.3) are `ChangeNodes`, so the
+    web app's gates and the API agree. No migration and no setting; no config switch (alternative (b) of #374 not
+    taken).
+  - Two pages outside the form wizard use these endpoints and aren't gated beforehand: the lootbox Enable/Disable
+    toggle (`PUT api/LootboxTypes/{id}`) and the roads page's "New street" (`POST api/Streets`):
+    [#383](https://github.com/PandiO/knk-workspace/issues/383).
 - **Single delete:** every deletable type's `DELETE {id}` carries `RequireServiceOrPermission(Delete)`
   (`RequirePermission` on the lootbox controllers) on top of its class or method area rule, so a delete is area node
   AND `knk.admin.delete`; users (`knk.admin.user.manage`) and permission groups (`knk.admin.user.perm`) included.
@@ -119,7 +146,7 @@ in closed alpha test run 2 (checklist § 4c). Admin view: [dashboard access admi
   `AuditLogEntry` `DashboardExport` (type, scope `selection`/`search`, count, truncated; never the rows).
 - **Metadata** (`EntityMetadataDto`, `GET api/Metadata/entities…`): `area`, `accessNode`, `writeNode`, `readNodes`,
   `deletable`, `bulkDeletable`, `exportable`, `lookupSearchable`, `lookupGettable` (AM2) and `actionNodes` (`view`
-  (AM2: the area node, the dashboard lists the type), `create`, `edit`, `delete`, `bulkDelete`, `export` → every node
+  (AM2: the area node, the dashboard lists the type), `create`, `edit` (= `ChangeNodes` since #374), `delete`, `bulkDelete`, `export` → every node
   the action needs; an action the type doesn't allow is left out), from the registry.
 - **Escalation guard** (`PermissionEscalationGuard`): `OwnerGrantOnly = { knk.admin.delete.bulk }`. Granting,
   denying or revoking it, or a wildcard that covers it by the resolver's rules (`*`, `knk.*`, `knk.admin.*`,
@@ -178,9 +205,21 @@ pinned):
   `PermissionGroupService` (everyone) drop the cached answers at the calls that publish S2's `UserPermissionsChanged` /
   `PermissionGroupChanged`, also without a realtime sink. Anything else (an expiring grant) shows within 30 s.
 - **Lookups** (`Controllers/LookupController.cs`, `Services/LookupService.cs`, `Attributes/DashboardLookups.cs`):
-  - `POST api/Lookup/{entityType}/search` `{ searchTerm, page, pageSize ≤ 50 }` → `{ items: [{ id, label, detail? }],
-    total }` through the type's own search (no filters, no sort); `GET api/Lookup/{entityType}/{id}` → `{ id, label,
+  - `POST api/Lookup/{entityType}/search` `{ searchTerm, page, pageSize ≤ 50, filters? }` → `{ items: [{ id, label,
+    detail? }], total }` through the type's own search (no sort); `GET api/Lookup/{entityType}/{id}` → `{ id, label,
     detail? }` through its own get by id.
+  - **Filters** (PandiO/knk-workspace#288, developer decision 2026-11-15; knk-web-api branch
+    `claude/lookup-picker-filters-288`, in review): a relation field's narrowing pickerFilters, passed to the type's own
+    search, which applies them as for its `POST …/search`. Each type's lookup lists the keys it takes
+    (`DashboardLookup.Filters` in `DashboardLookups.cs`, a subset of what its search reads, in its spelling, kind `Id`,
+    `Flag` or `Prefer`): Category `parentCategoryId`; ItemBlueprint `CategoryId`; Clan `preferTownId`; District
+    `townId`; Structure `streetId`, `districtId`; GateStructure `streetId`, `districtId`, `townId`, `siegeScenarioId`,
+    `isActive`, `isOpened`; GateDoor `gateStructureId`, `isActive`; SiegeScenario `townId`; SiegeTeam
+    `siegeScenarioId`; PermissionGroup `parentGroupId`, `isPremiumTier`; users none. Keys match without case. Another
+    key → 400 `LookupFilterNotAllowed`; an id that isn't a positive number, a flag that isn't true/false or a blank
+    value → 400 `LookupFilterInvalid` (both with `filters`), because the searches skip such values and would list more
+    than asked. A `prefer…` key the type doesn't take, or with an unusable value, is left out (it only orders).
+    `excludeIds` is not a lookup filter (the web app applies it). Pinned by `Api/LookupFiltersTests.cs`.
   - Label and detail are read by property name from what the service returns (one short line: a domain's parent and
     world, a location's world and coordinates, an item's category and grade, …; at most 120 characters).
   - **Users:** the label is the username, no detail; the search term goes to the `username` filter, so a lookup never
@@ -190,6 +229,11 @@ pinned):
     No rate limit (like the searches it replaces).
 - **The plugin** passes every gated read with its key (`api.auth.type: apikey`); `ReadAccessRulesTests` lists every
   GET and search POST of knk-plugin's `knk-api-client` and runs them through the filters.
+- **Permission grants** (#408, knk-web-api `next` `2425f181`): `GET api/PermissionGrants`, `GET {id}` and `POST
+  search` are all U on `knk.admin.user.manage`, the PermissionGrant type's view node; the search was on
+  `knk.admin.user.perm` before, so a `manage`-only rank saw the type listed and couldn't open it. The writes stay on
+  `knk.admin.user.perm` (§ 5.6). `GET api/PermissionGroups/{id}/member-count` (#50) is U on `knk.admin.user.manage`
+  too, like the group's other reads.
 
 ### 5.3 Relationships: Select / Unlink / Add (PandiO/knk-workspace#188, merged 2026-11-12)
 
@@ -197,11 +241,16 @@ The entity detail page changes a link without editing the rest of the record and
 record.
 - **Catalog** (`Services/RelationshipService.cs` `RelationshipCatalog`): every navigation of every `DashboardAccess` type,
   read from the EF model once per model, with its storage: `ForeignKey` (a column on the record), `Children` (the related
-  row's column), `Many` (a hidden link table such as `TownStreet`), `LinkRow` (a link entity whose key is the two ids and
+  row's column), `Many` (a hidden link table such as `DistrictStreet`), `LinkRow` (a link entity whose key is the two ids and
   that stores nothing else, e.g. `ItemBlueprintTag`; one with a level or weight is a record of its own) or `Other`.
+  `Derived` (#409): a read-only collection computed from other links, listed in `RelationshipCatalog.Derived` with the
+  reason (`Town.Streets`: "Streets are managed on the district: open a district to add or remove them."); metadata
+  `storage: "derived"`, `canLink`/`canUnlink` false, the reason as `linkReason`/`unlinkReason`; link and unlink pass the
+  node gate (403 without the nodes) and then answer 400 `RelationshipNotEditable` with the reason. The web app hides
+  Add…, Unlink, Create New and Delete on such a section and shows the reason as a hint.
 - **What may change** is a reviewed list, `RelationshipCatalog.Supported` (pinned by `RelationshipServiceTests`): category
-  parent / child categories / tags / icon, item blueprint category / grade / tags / icon, town and district streets, a
-  street's districts and town. Their update services only check that the related row exists (reviewed 2026-11-09).
+  parent / child categories / tags / icon, item blueprint category / grade / tags / icon, district streets and a
+  street's districts (a town's streets are derived, #409). Their update services only check that the related row exists (reviewed 2026-11-09).
   Everything else answers with a reason: required parents ("A District always belongs to one Town: …"), domain
   locations and teleport settings (the world is resolved from them), gates, kits, lootbox and siege setup, the players
   area (escalation guard). Icons can be replaced, not removed. Adding a pair is one line after a look at the type's
@@ -215,8 +264,11 @@ record.
   - 404 `UnknownEntityType` / `UnknownRelationship` / `NotFound` / `RelatedNotFound`, 400 `RelationshipNotEditable` with
     the reason, 409 `Conflict` when the database refuses.
 - **Access** (`Attributes/RequireRelationshipWriteAttribute.cs`, an `IKnkAccessRule`): web users only (the plugin key
-  alone 403), the type's write node and, for `Children`, the related type's write node too (`nodes` per relationship);
-  never `knk.admin.delete`. Missing → 403 `{ code: "NoWriteAccess", entityType, nodes }`.
+  alone 403), the type's change nodes and, for `Children`, the related type's change nodes too (`nodes` per
+  relationship); never `knk.admin.delete`. Since #374 (in `next` `b65e66d`) the change nodes are `ChangeNodes` of
+  § 5.1: the write node **and** `knk.admin.content` (a town's streets: `["knk.admin.world", "knk.admin.content"]`).
+  Missing → 403 `{ code: "NoWriteAccess", entityType, nodes, message }`, message "Changing links of Town requires
+  knk.admin.world and knk.admin.content.".
 - **Metadata:** `EntityMetadataDto.relationships` `[{ property, relatedType, kind, storage, canLink, canUnlink,
   linkReason?, unlinkReason?, nodes, relatedIdField?, relatedNavigation? }]`.
 - **Realtime:** the existing interceptor publishes the changed row (`Modified` on the record or on the child);
@@ -233,17 +285,25 @@ A delete the database refuses answers 409 `{ code: "DbConstraint", message, refe
   `?referencedBy=Structure.StreetId&take=20` → `{ entityTypeName, id, groups: [{ referencedBy, entityType, count, listed,
   readable, nodes, reason?, rows: [{ id, label, detail? }], more }] }`. Only the references that stop a delete (the
   refusal message's own rule, `EntityReferenceService.BlocksDelete`); `take` 1–50 per group (default 20), sorted by id.
-  Read-only.
+  Read-only. `{entityType}` is a dashboard type or, since #289, `FormConfiguration` (`Services/ReferenceRecordTypes.cs`).
+  `?all=true` (#289) lists every reference, cascades included: what the KNG-162 "in use" check
+  (`GET api/FormSubmissionProgress/entity-references/...`) counts before the web app deletes a cancelled form's created
+  entities, so its "skipped: in use" rows show the same references.
 - **Access** (`Attributes/RequireReferenceReadAttribute.cs`, an `IKnkAccessRule`, read category **U** in
   `ReadAccessRulesTests`): one of the route type's `ReadNodes`, web users only (anonymous 401, the plugin key alone 403,
-  no read node 403 `NoReadAccess`, a type outside `DashboardAccess` 404 `UnknownEntityType`). A custom rule because the
-  nodes depend on the route's type.
+  no read node 403 `NoReadAccess`, a type that isn't listed 404 `UnknownEntityType`). A form configuration's read node is
+  `knk.admin.content` (Entity setup's node; its delete also needs `knk.admin.delete`). A custom rule because the nodes
+  depend on the route's type.
 - **What a group shows** (`Services/EntityReferenceRowsService.cs`): never more than the lookup label
   (`ILookupService.GetAsync`, a user's username only):
   - rows of a type the caller reads in full (any of its read nodes): labels, `readable: true` (the web app links them);
   - rows of another dashboard type: labels when the caller holds any area node (what `api/Lookup` gives them anyway),
     `readable: false`; otherwise only `count`, `listed: false` and the nodes that would read them;
-  - rows that aren't a dashboard type (drafts, form fields, workflow sessions) and rows without a single id: counted only
+  - form fields and form steps that open a form configuration as a sub-form (#289): with `knk.admin.content`, labels
+    from `Services/ConfigurationReferenceLabelService.cs` (the field's label or the step's name, detail "Field of the
+    form "Kingdom form" (Kingdom), step "Towns"", "Reusable field template", ", draft" for a builder draft),
+    `readable: false` and no nodes (they have no page of their own); without it only counted;
+  - other rows that aren't a dashboard type (drafts, workflow sessions) and rows without a single id: counted only
     ("These records aren't listed here."), so other users' drafts never show.
 - `EntityReferenceService.GetReferencingRowsAsync` shares the loop with the counts (the ids of the referencing rows, for a
   join row the other side's id); counts and rows always agree.
@@ -282,12 +342,122 @@ saved wizard drafts and detail pages read. The builder's working copy waits besi
   (`defaultOnly`) and `entity-names` skip them in the repository. `GET {id}` still returns the row (empty steps for a
   never-published one). A legacy `PUT {id}` refuses to make a never-published form the default and keeps the saved copy's
   default flag in step (`SyncDraftDefaultAsync`, also for display).
-- **Templates**: the web app no longer calls `{configId}/steps/add-from-template` / `steps/{stepId}/fields/add-from-template`
-  (they wrote into the published rows); the endpoints stay for other callers.
+- **Templates**: `{configId}/steps/add-from-template` and `steps/{stepId}/fields/add-from-template` (they wrote into the
+  published rows) and `FormTemplateReusableService` were **removed** in
+  [#291](https://github.com/PandiO/knk-workspace/issues/291) (in `next`): since #71 the web app copies templates into the
+  working copy, and no caller was left (web app, plugin, scripts checked 2026-11-15). The display builder never had
+  such endpoints.
+- **Field validation rules in the copy** ([#291](https://github.com/PandiO/knk-workspace/issues/291), in `next`): the
+  form copy carries `validationRules` (`FormDraftValidationRuleDto`: `id` of the published rule or none, `fieldGuid`,
+  `dependsOnFieldGuid` for a field of this form or `dependsOnFieldId` for another form's field, and the rule's values).
+  `GET {id}/builder` fills `configuration.validationRules` from the copy, or with the published rules when the copy has
+  no list (none saved, or saved before #291), and `published.validationRules` with the published ones. *Publish*
+  first checks the list (every field and dependency GUID in the copy, a parent form's field still there, no rule on its
+  own field, no circle; refused as "Can't publish: …"), then in its transaction deletes the published rules the copy
+  dropped and clears the kept ones' dependency (so a removed or moved field isn't held by `Restrict`), runs
+  `UpdateAsync`, and writes the list by field GUID (kept ids updated, the rest created). A copy without the list keeps
+  the published rules. `api/field-validation-rules` (the wizard's reads, the old writes) is unchanged; the builder no
+  longer writes through it. The health check's draft variant still reads the published rules
+  ([#582](https://github.com/PandiO/knk-workspace/issues/582)).
 - **Consumers checked**: the plugin's `knk-api-client` reads no form or display configuration (world tasks carry their
   own input JSON); API-side `FormSubmissionProgressService`, `FieldValidationRuleService`/`DependencyResolutionService`
   (health checks by id), `WorldTaskRepository` (form name), portability export/seeds and the realtime map all read the rows,
   i.e. the published version.
+- **Step conditions in the configuration health check** (PandiO/knk-workspace#88, in `next` `31abe2d` since 2026-11-13):
+  `Services/StepConditionHealth.cs` reports a step-condition rule that reads a field which is not on its step, or for
+  "from an earlier step" not on any earlier step, walking the steps in `StepOrderJson` order. `FieldValidationRuleService`
+  calls it for the saved configuration (`GET api/field-validation-rules/health-check/configuration/{configId}`) and for the
+  builder's working copy (`POST …/health-check/configuration/draft`). Severity `Warning`, or `Info` when the condition is
+  switched off; it never blocks a save or a publish. Only JSON in the builder's shape is judged.
+
+### 5.6 Permission grants, group member count and the generic audit subject (PandiO/knk-workspace#408, #50; in `next`)
+
+Merged into knk-web-api `next`: #408 at `2425f181` (2026-11-14), #50 at `dcbb1f82` (2026-11-15); on `master` when the
+developer promotes `next`. Covered by the API tests named below; the developer's manual steps of the
+[dashboard access smoke test § 8.6 and § 8.7](../guides/dashboard-access-smoke-test.md#86-the-permissiongrant-table-408)
+have not run yet. Web app side: [web-app architecture § Staff permission screens](web-app-architecture.md#staff-permission-screens-pandioknk-workspace408-50-407-in-next).
+
+- **Grant search** (`PermissionGrantsController.Search`, `PermissionGrantRepository.SearchAsync`): `searchTerm`
+  matches the node (case-insensitive substring); filter `holderId` limits to one holder (a user or a group: holder ids
+  are shared). `sortBy` is `id`, `holderId` (or `holder`), `value`, `expiresAt` or `node` (the default, also for an
+  unknown key), then node and id as tie-breakers so paging stays stable. Returns `PermissionGrantListDto` rows with
+  `holderType` (`User` or `PermissionGroup`). Expired rows are included: the table keeps one row per holder and node
+  (KNG-59).
+- **Writes** are unchanged: `POST`, `PUT {id}`, `DELETE {id}`, `PUT by-node` (upsert by holder and node, revives an
+  expired row) and `DELETE by-node?holderId=&node=` on `knk.admin.user.perm`, each through the escalation guard
+  (`PermissionEscalationGuard.CanGrantNodeAsync`): not on yourself (unless `*`); a **group** holder ranked at or above
+  the actor's own heaviest group is refused with "You can only change groups ranked below your own."; the actor must
+  hold the node (a deny too); bulk delete is owner-only. `*` skips the guard. After every write the service publishes
+  `UserPermissionsChanged` (user holder) or `PermissionGroupChanged` (group holder) and drops the read cache (§ 5.2).
+- **Member count** (`GET api/PermissionGroups/{id}/member-count` → `PermissionGroupMemberCountDto { groupId,
+  directMembers, totalMembers, inheritingGroups }`, 404 for an unknown group): `PermissionGroupRepository.CountMembersAsync`
+  loads every group's parent link once and walks down from the group in memory (breadth first), then counts active
+  memberships (no expiry, or one in the future) in the group itself (`directMembers`) and distinct users across the
+  group and all its descendants at any depth (`totalMembers`). The web app's blast-radius confirmation reads it.
+- **The generic audit subject** (developer decision 2026-11-15 on #50; migration `20261115092735_AddAuditLogSubject`):
+  - `AuditLogEntry` has nullable `SubjectType` (`varchar(64)`) and `SubjectId`, and `TargetUserId` is nullable. A
+    player entry keeps its target and has no subject; an entry about something that is not one player has a subject and
+    no target. Index (`SubjectType`, `SubjectId`, `Timestamp`), next to the existing (`TargetUserId`, `Timestamp`).
+  - The type names are string constants in `Enums/AuditSubjectTypes.cs` (today only `PermissionGroup`; `MaxLength`
+    64), not an enum column and not a foreign key: a later subject needs a constant, no migration, and the trail
+    outlives the record. It is meant for later group-like subjects too, such as clans that run towns and their
+    treasuries.
+  - Write through `AuditLogService.RecordForSubjectAsync(actor, subjectType, subjectId, action, details)` (rejects a
+    blank or too long type and an id ≤ 0). `PermissionGrantService.AuditGrantChangeAsync` audits a **user** holder's
+    grant change against the player as before, and a **group** holder's once per change with the group as subject:
+    the same actions `GrantAdded`, `GrantUpdated` (from/to node, value, expiry) and `GrantRemoved` (a group removal
+    also carries `expiresAt`). Before #50 a group's grant changes left no audit row (#464; group definition changes —
+    name, weight, parent, delete — are still not audited, #464 stays open for those).
+  - Read: `GET api/audit-log?subjectType=PermissionGroup&subjectId=<id>` (U `knk.admin.user.manage`); a blank or
+    over-long `subjectType` answers 400 "subjectType is invalid.". Results are newest first, ties by id descending.
+    `AuditLogEntryDto` carries `subjectType`, `subjectId` and `targetUserId` as `int?`.
+  - GDPR erasure (`PrivacyRepository`) removes a player's rows by target only, so a group's history survives a
+    member's erasure.
+  - Deploy: back up, deploy the API, run `dotnet ef database update` (the API does not migrate on start), then the
+    web app. The migration is additive; its `Down` turns a null target into 0.
+- **Tests:** `Security/PermissionGrantReadGateTests`, `Repositories/PermissionGrantRepositoryTests` (#408);
+  `Services/GroupGrantAuditTests`, `Api/GroupGrantsPanelApiTests`, `Migrations/AddAuditLogSubjectMigrationTests`,
+  `PermissionGrantServiceTests`, `AuditLogServiceTests`, and the `ReadAccessRulesTests` pins (#50).
+- **Known gaps:** members of groups inheriting from the changed group and changes made while realtime is down reach
+  the plugin late ([#558](https://github.com/PandiO/knk-workspace/issues/558)); effective permissions carry no expiry
+  ([#568](https://github.com/PandiO/knk-workspace/issues/568)).
+
+### 5.7 Player profile API part, kick and ban from the web (PandiO/knk-workspace#565; in review)
+
+Link L6 of the Chain 3 follow-ups chain, branch `claude/player-profile-api-119` (PR into `next`).
+
+1. **Unfreeze reason:** `PUT api/Users/{id}/unfreeze` takes an optional body `{ "reason" }`
+   (`EmptyBodyBehavior.Allow`, so the plugin's body-less call still works); `UserService.SetFrozenAsync` writes the
+   trimmed reason (blank = null) into the `PlayerUnfrozen` audit details. The user row keeps no reason once unfrozen;
+   `UserFrozenChanged` is unchanged (reason null on unfreeze).
+2. **Profile summary:** `UserProfileSummaryDto.Account` is a `ProfileAccountDto` (a copy of `UserDto` plus
+   `frozenAt`, `frozenByUserId`, `frozenByUsername`), filled from the `User` row; the three fields are always written
+   (null while not frozen) so a client can tell this API from an older one. `GET api/Users/{id}` (`UserDto`) is
+   unchanged.
+3. **Game sessions:** `GET api/statistics/users/{id}/sessions?page=&pageSize=` (`RequirePermission(knk.admin.user.manage)`,
+   read category U) returns `PagedResultDto<PlayerSessionDto>` (`sessionKey`, `startedAt`, `endedAt`, `endReason`
+   `Quit`/`ServerStop`/`Kick`/`Timeout`, `serverId` = `PlayerStatSession.ServerName`, `activeSeconds`), newest start
+   first, merged accounts included (`StatisticsQueryService.GetSessionsAsync`, the `(UserId, StartedAt)` index), page
+   size 1–100. The player's visibility settings don't apply (staff only).
+4. **Player search** (`POST api/Users/search`, `UserRepository.SearchAsync`): filters `online`, `frozen`,
+   `paymentsLocked` (`"true"`/`"false"`, anything else ignored; payments locked = `TransferLockedAt` set); sort keys
+   `lastseenat` and `experiencepoints` (id as tie-break); the `uuid` filter and the search term match a UUID with or
+   without dashes (`REPLACE(Uuid, '-', '')` on MySQL). `UserListDto` adds `isFrozen`, `paymentsLocked`, `createdAt`.
+5. **Kick and ban** (developer decisions 2026-11-15): `Controllers/PlayerModerationController.cs` (route `api/Users`)
+   `POST {id}/kick` (`RequirePermission(knk.kick)`, reason optional) and `POST {id}/ban` (`RequirePermission(knk.ban)`,
+   reason required), at most 200 characters, web users only. `Services/PlayerModerationService.cs` checks, in order:
+   reason, user exists (404), not oneself (400 `CannotModerateSelf`), has a UUID (400 `NoMinecraftAccount`), rank
+   (`PermissionEscalationGuard.CanModerateUserAsync`: the target's highest group weight must be below the caller's; a
+   player in no group can always be acted on; `*` holders act on anyone and can't be acted on by others; 403
+   `EscalationRefused`), kick only: online (`User.IsOnline`, else 409 `PlayerNotOnline`), at least one game server
+   connected to the hub (`RealtimeConnections`, else 503 `NoGameServerConnected`). Then it audits `PlayerKicked` (63)
+   / `PlayerBanned` (64) with `{ reason, actionId, uuid, username, permanent?, gameServers }` and publishes
+   `PlayerKick` / `PlayerBan` v1 to every game server; answer 202 `{ actionId, userId, gameServers }`. The event
+   contract and its delivery limits: [realtime DESIGN § 6.10](../specs/realtime-signalr/DESIGN.md). The API keeps no
+   ban state; the game server's ban list does (knk-plugin, #574).
+6. **Nodes and seed:** `StaffPermissions.Kick` = `knk.kick`, `StaffPermissions.Ban` = `knk.ban` (not children of
+   `knk.admin`). Migration `20261115125459_SeedStaffKickBanNodes` grants both to the **Staff** group, skipping what
+   the group's chain already decides (as `SeedStaffFreezeNodes`); data only, Down removes nothing.
 
 ## 6. Talks to knk-plugin
 
@@ -338,6 +508,11 @@ Contrary to what both this repo's and knk-plugin's CLAUDE.md currently say ("no 
   also sends `Domain`) carries the base type's own area node; ledger and game-server-only types are never sent. The profile
   summary gains `presence {online, lastSeenAt}`. `Realtime:WebLiveUpdatesEnabled` (default `true`) switches the web
   events off (none built or sent; game-server events and the profile's `presence` stay; decision 2026-11-06). DESIGN §6.9.
+  **S5 (#184, API part merged 2026-11-12, `master` `bc97b7d`; plugin part merged into `next` 2026-11-13 from `claude/plugin-chains-into-next`):** an executed GDPR erasure
+  (`PrivacyDeletionService.ExecuteAsync`) writes one `privacy_erasure_events` row per erased account (former UUID,
+  cleared after `Privacy:ErasureFeedUuidRetentionDays`, 35) in its transaction and, after the commit, sends
+  `AccountErased {userId, formerUuid, erasureId}` to every game server; `GET api/privacy/erasures?since=&limit=`
+  (`PrivacyErasuresController`, plugin key only) is the catch-up feed. DESIGN §7.5.
 - **Headless world-task polling**: the plugin polls for tasks it needs to execute (`HeadlessWorldTaskPoller.java`, 5s interval backing off to 60s when idle) rather than being notified — the plugin's own source comments already flag this as a known gap ("should eventually be replaced by the API pushing a notification, e.g. SignalR"). There is no SignalR/WebSocket/Hub anywhere in this repo today. *#180:* the poller now claims a scan (claim mode `headless`) before it runs it, and every claim the plugin holds is renewed by `POST api/WorldTasks/{id}/heartbeat`; `claim`, `complete`, `fail`, `release`, `heartbeat` and `GET open?serverId=` are game-server only (`[RequirePluginService]`).
 - *Corrected 2026-10-25:* the plugin's `ApiConnectivityMonitor` probes `GET /health/ready` every 10 s (`config.yml` `api.connectivity`), so the paragraph below is the 2026-09-18 state. **`HealthController` (`api/Health`)** was what the plugin called for its health check (`HealthApiImpl.java`), via a route the plugin's own comments call a guessed/unverified contract. The API's "real" liveness/readiness surface is `HealthCheckController` (`health/live`, `health/ready`, checks DB connectivity) — no caller was found for it in either repo, consistent with it being meant for external infra (k8s/docker healthchecks) rather than app-to-app calls. Consider pointing the plugin at `health/live` instead, and treat `HealthController` as retirable once that happens.
 
@@ -358,6 +533,9 @@ Full detail, file:line citations, and the complete endpoint/service/repository/e
 
 Header history up to 2026-11-13, as the old `Last updated` line gave it, newest first (newer changes: the header and git history):
 
+- 2026-11-13 (§6: GDPR erasure feed and `AccountErased` push, #184, brought into `claude/plugin-chains-into-next`)
+- 2026-11-13 (`StepConditionHealth` in the configuration health check, #88 in `next` `31abe2d`, docs #395)
+- 2026-11-13 (§5.1/§5.3: create, edit and link changes need the write node and `knk.admin.content`, `ChangeNodes`, `RequireDashboardChange`, #374 in `next` `b65e66d`, docs #385)
 - 2026-11-13 (§5.1/§5.2 merged: AM1+AM2 in `master` `bc97b7d`, AM3 in `45043a7`; §5.1 configuration deletes need `knk.admin.delete`, bulk-delete refusal codes — docs #366)
 - 2026-11-12 (§5.3–§5.5 and §6 web live updates merged 2026-11-12 in `master` `bc97b7d`, §6 web audience per area node since AM1 — docs #341, #343–#345)
 - 2026-11-09 (§5.5 form and display builder drafts, Publish and Duplicate, #71 — branch `claude/builders-71`, not merged)

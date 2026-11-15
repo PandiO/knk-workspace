@@ -1,0 +1,81 @@
+# Lootbox spawn areas drawn in the web form — smoke test checklist
+
+**Status:** Written 2026-11-05 for #34; API and plugin parts merged into `next` 2026-11-13 from `claude/plugin-chains-into-next` (knk-plugin `next` `745fcf6`, knk-web-api `next` `c20899c`); smoke-tested by the developer on `next` 2026-11-14, which led to #487 (drawn bounds kept). § 0, § 1 step 4 and § 2 step 2 updated for #487, in review on `claude/smoke-fixes-484-485-487`; 10 of 18 steps partly automated in CI (tagged: the plugin halves of §§ 1–6 run as plugin scenarios and unit tests since 2026-11-14, [#511](https://github.com/PandiO/knk-workspace/issues/511)); every step can still be run by hand; manual steps not run
+**Last updated:** 2026-11-15 (every step in full again, covered steps tagged `[automated: …]` or `[partly automated: …]`, developer decision 2026-11-15, #511); 2026-11-14 (steps marked `[automated]` with their plugin scenario or test, backfill #511); 2026-11-14 (#487: the region keeps its drawn Y range; seed v3; spawning in a region below the surface); 2026-11-13; 2026-11-05
+**Issue:** [PandiO/knk-workspace#34](https://github.com/PandiO/knk-workspace/issues/34), [PandiO/knk-workspace#487](https://github.com/PandiO/knk-workspace/issues/487)
+**Related:** [managed-worldguard-regions.md](../architecture/managed-worldguard-regions.md) §7 "Lootbox spawn areas", lootbox
+[DESIGN](../specs/lootboxes/DESIGN.md) §3.4
+
+A region drawn through the LootboxSpawnArea form's region task is renamed from `tempregion_worldtask_<n>` to
+`lootbox_area_<id>` when the form is saved, keeps exactly the drawn outline and Y range (#487; it was stretched to the
+world's full build height before), and is kept by the 14-day temp-region cleanup. `<id>` is the area's id (shown in the web app's URL or `/knk lootbox area info <name>`). Use an op or the console for
+`/rg` and `/knk` commands. Write down any step that fails, with its server and API log lines.
+
+Steps tagged `[partly automated: …; by hand: …]` run their plugin half in CI: the plugin scenarios in the knk-plugin `paper-boot` job (a real Paper server with
+WorldGuard, fake API data; [writing a plugin scenario](developer/plugin-scenarios.md)) and the knk-plugin unit tests.
+What is left by hand: the web form, drawing the region in game with a real player, the API's side of a save and how a
+box looks.
+
+## 0. Setup
+
+1. Back up `plugins/WorldGuard/worlds/*/regions.yml` and the dev database.
+2. Deploy the API and the plugin from `next` with #487 (branch `claude/smoke-fixes-484-485-487` until it is merged; both;
+   no setting). Apply the API's pending migrations first (`dotnet ef database update`: #269's `AddTempRegionReleases`
+   comes with `next`; #184's `AddPrivacyErasureEvents` is already on `master`).
+3. Import the form seed `LootboxSpawnArea - Default (seed v3)` (`Data/FormConfigurationSeeds/LootboxSpawnArea.json`) and make
+   it the default for LootboxSpawnArea (keep or delete v1 and v2 by hand).
+
+## 1. New area on a drawn region
+
+1. Web app: new LootboxSpawnArea with the v3 form. "Area and region" says a drawn region becomes `lootbox_area_<id>` and
+   keeps the outline and height you drew.
+2. Region field: Send to Minecraft; in game make a WorldEdit selection a few blocks high on open, flat ground (e.g. ground
+   at Y 63, selection Y 64–68) and complete the task. `/rg list` shows `tempregion_worldtask_<n>`.
+3. Fill World, finish the form and save.
+4. [partly automated: plugin scenario `lootbox-area-rename-keeps-drawn-bounds` (the plugin's half: the rename the API asks for, `POST /Regions/rename` on the region callback server, turns an L-shaped temp region drawn from y 3 to 7 into `lootbox_area_<id>` with the same outline and Y range and removes the temp region); by hand: the save in the web app and the region name it shows] Expected: the area's region in the web app is `lootbox_area_<id>`; `/rg info lootbox_area_<id>` exists, the temp region is
+   gone, and its bounds are **exactly the drawn ones**: the same outline and the same Y range (e.g. Y 64 to 68), not the
+   world's build height. The server log shows `Successfully renamed region from tempregion_worldtask_<n> to lootbox_area_<id>
+   in <world>: renamed (Y 64 to 68)`.
+5. [partly automated: plugin scenario `lootbox-spawns-on-ground-in-range` (the spawn scheduler, given the area in the runtime config, asks for every box on the ground inside the region's Y range and never over a part with no ground); by hand: the box itself (look, label) and the API's caps] Enable the area with an allowed type; `/knk lootbox area info <name>` lists the region and its bounds; boxes spawn on the
+   ground inside it (or `/knk lootbox spawn` in it). With a short interval and a high chance, wait for a few: each box
+   stands at Y 64 here.
+6. [partly automated: plugin scenario `lootbox-spawns-under-roof` (every box is asked for on the floor inside the region, never on the roof); by hand: how it looks in a real building] Optional (#487, a region below the surface): draw a second area inside a building or under an overhang, Y range from
+   the floor's air layer up to below the roof (e.g. floor at Y 63, selection Y 64–66, roof at Y 70). Boxes spawn on the
+   floor inside it, never on the roof.
+
+## 2. Re-run the region step
+
+1. Edit the area, "Replace via Minecraft" on the Region field, draw a visibly different shape, save.
+2. [partly automated: plugin scenario `lootbox-area-rerun-replaces-in-place` (the plugin's half: renaming the new temp region onto the area's region, `replaceRegionId` set as the API sends it, leaves one `lootbox_area_<id>` with the new outline and Y range, its greeting flag and priority kept, and no temp region); by hand: "Replace via Minecraft" in the web app and the log line] Expected: still `lootbox_area_<id>` with exactly the new drawn shape and Y range (not full height); no
+   `tempregion_worldtask_*` and no second region left behind; the log says `replaced the previous lootbox_area_<id> in place
+   (Y <min> to <max>)` with the drawn range. A flag set on it before (`/rg flag lootbox_area_<id> greeting hi`) is still
+   there. An area saved before #487 (its region at full height) gets the new drawn range the same way.
+3. *(Manual: decided by the API, which sends no rename; not a plugin step.)* Edit and save only a limit (Max active): the region is not touched (no rename line in the log).
+
+## 3. Selected regions are left alone
+
+1. *(Manual: decided by the API, which sends no rename for a selected region.)* New area, Region: `select <a town's region>` (e.g. `domain_1`). Save: the area keeps `domain_1`; nothing is renamed.
+2. [partly automated: knk-plugin `LootboxAreaCommandTest` (`created_callsTheApiWithTheSlugRegion_andRefreshes`: `/knk lootbox area create market` makes `lootbox_market` and registers it with the API); by hand: the web app edit keeping it (API side) and the player's WorldEdit selection (#540)] In game `/knk lootbox area create market` → `lootbox_market` as before. Edit it in the web app and save: still
+   `lootbox_market`.
+3. [partly automated: knk-plugin `LootboxAreaCommandTest` (`reservedName_isRefusedWithoutARegionOrApiCall`, `reservedNames_areOnlyAreaNumber`); by hand: the web app's refusal (API validation)] In game `/knk lootbox area create area_7`: refused ("reserved"). In the web app, naming an area `area_7` is refused too;
+   `area_north` is fine.
+
+## 4. Server down at save, then recovery
+
+1. Draw a region for a new area (task completed), stop the Minecraft server, save the form. The save succeeds; the area keeps
+   `tempregion_worldtask_<n>` (API log: failed to finalize).
+2. [partly automated: plugin scenario `temp-region-sweep-keeps-lootbox-area-region` (the sweep behind `/knk regions temp` lists an old temp region a lootbox area uses as in use and an unused one as deletable); by hand: stopping the server during a real save] Start the server. `/knk regions temp`: that region is listed under "Used by a domain or lootbox area", not as unused.
+3. `POST /api/Regions/finalize-temp-names` (plugin key or `knk.admin.regions`): the area is renamed to `lootbox_area_<id>`
+   (counted in `renamed`). Saving the area again would do the same.
+
+## 5. Cleanup keeps an area's temp region
+
+[partly automated: plugin scenario `temp-region-sweep-keeps-lootbox-area-region` (the cleanup's decision: an area's temp
+region older than the retention is kept, an unused one is deletable; report only, the deleting purge uses the same
+decision); by hand: a real `/knk regions temp purge 1`] Only if step 4 can be repeated without step 4.3: with the area still on its temp name, `/knk regions temp purge 1` (after an
+hour) does **not** delete it ("used by a domain or lootbox area"). A temp region no domain and no area uses is still purged.
+
+## 6. Delete
+
+1. [partly automated: knk-plugin `LootboxAreaCommandTest` (`delete_removesTheRegionDrawnInTheWebForm`, `delete_needsARepeatWithinTenSeconds`); by hand: against the real API] `/knk lootbox area delete <name>` twice on an area from §1: the area and `lootbox_area_<id>` are removed.
+2. A delete from the web app keeps `lootbox_area_<id>` in WorldGuard (as for `lootbox_<name>`); `/rg remove` it.

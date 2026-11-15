@@ -9,14 +9,18 @@ directly into trunk; `next` fast-forwarded). AM4 (docs) done 2026-11-13 in the d
 [web-api architecture § 5.1](../../architecture/web-api-architecture.md#51-dashboard-access-model-pandioknk-workspace280-am1-merged-2026-11-12-am3-2026-11-13),
 [§ 5.2](../../architecture/web-api-architecture.md#52-read-gating-per-area-and-lookups-pandioknk-workspace280-am2-merged-2026-11-12),
 [web-app architecture](../../architecture/web-app-architecture.md#dashboard-access-model-in-the-web-app-pandioknk-workspace280-am3-205-bulk-delete);
-admin view: [dashboard access admin guide](../../guides/admin/dashboard-access-admin-guide.md). **Deviation from this
-design (LAM3-1):** the form wizard routes `/forms/:type` and `/forms/:type/edit/:id` open for **any** area node (§ 4.3
-kept `entitySetup*` on `knk.admin.content`), so area staff create and edit their own types; `/forms`'s lists, the
-builders and the Minecraft catalogue stay `knk.admin.content`. Kept as built pending the developer's answer:
-[#368](https://github.com/PandiO/knk-workspace/issues/368). Known gaps: #352 (material picker in world/lootbox forms),
-#353 (top bar Create New per area), #369 (Permission Group's list needs `knk.admin.user.perm`). Developer 2026-11-08:
+admin view: [dashboard access admin guide](../../guides/admin/dashboard-access-admin-guide.md). **AM3's deviation LAM3-1
+is reverted** (developer 2026-11-13, [#371](https://github.com/PandiO/knk-workspace/issues/371), knk-web-app branch
+`claude/form-wizard-content-only-371`, merged into `next` 2026-11-13, `e6ba115`): the form wizard routes `/forms/:type` and `/forms/:type/edit/:id`
+are back on `knk.admin.content` as § 4.3 has it, and in the web app create and edit of every type also need
+`knk.admin.content` (§ 7). **#374** (developer 2026-11-13, knk-web-api and knk-web-app branches
+`claude/api-writes-need-content-374`, merged into `next` 2026-11-13: API `b65e66d`, web app `ca1959d`; on trunk when
+`next` is promoted; guides in docs [#385](https://github.com/PandiO/knk-workspace/issues/385)): the API asks for `knk.admin.content` on create, edit and link changes
+too (§ 4.3, § 7). Answers [#368](https://github.com/PandiO/knk-workspace/issues/368). Known gaps: #352 (material picker in world/lootbox forms),
+#353 (top bar Create New per area), #369 (Permission Group's list needs `knk.admin.user.perm`). **Staff web app follow-ups** (#408, #50, in `next` since 2026-11-14/15, on trunk when the developer promotes `next`; docs [#576](https://github.com/PandiO/knk-workspace/issues/576)): the PermissionGrant reads, a group's member count and the audit log's subject filter are in Appendix A.8. Developer 2026-11-08:
 the backfill (§ 4.5) **skips the Staff group**, and nobody changes a group ranked at or above their own (§ 4.4).
-**Last updated:** 2026-11-13 (status: implemented and merged, AM4 docs, LAM3-1 deviation #368; docs #366); 2026-11-12 (AM3 built; § 4.7 form/display configuration deletes need `knk.admin.delete`, developer
+**Last updated:** 2026-11-15 (§ 4.6.3: lookups take the narrowing pickerFilters, developer decision on #288, in review); 2026-11-13 (status: #371 and #374 merged into `next`, docs #385); 2026-11-13 (the API asks for `knk.admin.content` on create, edit and link changes, § 4.3, § 4.7,
+§ 7, #374); 2026-11-13 (LAM3-1 reverted, § 7, #371); 2026-11-13 (status: implemented and merged, AM4 docs, LAM3-1 deviation #368; docs #366); 2026-11-12 (AM3 built; § 4.7 form/display configuration deletes need `knk.admin.delete`, developer
 decision on LV7-8; § 7 addendum); 2026-11-12 (AM1+AM2 merged); 2026-11-08 (AM2 built); 2026-11-08 (AM1 built, Staff decision); 2026-11-08 (decided version, with read gating per area, `knk.admin.export` and the read-endpoint
 appendix); 2026-11-08 (first version, chain 3 link D1)
 **Issue:** [PandiO/knk-workspace#280](https://github.com/PandiO/knk-workspace/issues/280) (blocks the bulk delete part of
@@ -290,7 +294,8 @@ has one entry per `[FormConfigurableEntity]` type, holding:
 | Open the dashboard | — (UI only) | route open to holders of **any** area node; the explorer lists only types whose area node is held (decision 8) |
 | View (list, search, detail) | the type's **read nodes** (§ 4.6) | shown for its area's types |
 | Pick or label another type (pickers, relation labels) | **lookup** endpoints: any area node (§ 4.6.3) | lookup mode when the full read isn't allowed |
-| Create, edit | area node (unchanged) | New / New with / Edit disabled with "Requires <node>" without it |
+| Create, edit | the type's **change nodes**: write node **and** `knk.admin.content` (#374, § 7); User, Permission Group and RoadProfile: write node only | New / New with / Edit disabled with "Requires <node>" without them (#371) |
+| Change a link (detail page Select / Unlink / Add) | the owner's change nodes, plus the related type's when the related row changes (#374) | disabled with "Requires <node>" without them |
 | Delete one | area node **and** `knk.admin.delete` | Delete disabled with "Requires knk.admin.delete" (or the area node) |
 | Bulk delete | `POST api/Dashboard/bulk-delete`: `knk.admin.delete.bulk` **and** `knk.admin.delete` **and** the type's area node; web users only | "Delete (n)" in the selection bar, **hidden** without all three or for users/groups |
 | Export | `POST api/Dashboard/export`: `knk.admin.export` **and** the type's area node; web users only | Export in the selection bar, disabled with "Requires knk.admin.export" |
@@ -412,7 +417,11 @@ also need `knk.admin.content` just to pick a Clan.
 
 - **Endpoints (category L):**
   - `POST api/Lookup/{entityType}/search` takes `{ searchTerm, page, pageSize ≤ 50 }` and returns
-    `{ items: [{ id, label, detail? }], total }`.
+    `{ items: [{ id, label, detail? }], total }`. **Changed by the developer on 2026-11-15**
+    ([#288](https://github.com/PandiO/knk-workspace/issues/288), replacing "no filters" of LAM2-7): it also takes
+    `filters`, the narrowing pickerFilters the type's own search accepts, and passes them to that search; results stay
+    labels only. Another filter, or a value the search would skip, answers 400 (never a wider list). Which keys each
+    type takes: [web-api architecture, lookups](../../architecture/web-api-architecture.md).
   - `GET api/Lookup/{entityType}/{id}` returns `{ id, label, detail? }`.
   - Both are implemented once, through the registry's search and label delegates.
   - `detail` is one short, non-sensitive line (a domain's parent, a location's world and coordinates); users get their
@@ -420,7 +429,8 @@ also need `knk.admin.content` just to pick a Clan.
 - **Who:** holders of any area node, or the plugin. The entity type must be in the registry; unknown types return 404.
 - **Web app:**
   - **Pickers:** when the user holds a read node of the related type, the picker works as today (full table, filters).
-    Otherwise it switches to **lookup mode**: a search box and a Name column, with no filters.
+    Otherwise it switches to **lookup mode**: a search box and a Name column, with no filter controls; the field's
+    pickerFilters still narrow the list through the lookup (#288).
   - **"Create new" from a picker** is shown only with that type's create (area) node.
   - **Labels:** `useEntityLabel`, the wizard's related-entity fetch for join entries (`FormWizard.tsx`, around line
     2319) and the display wizard's related values fall back to `GET api/Lookup/{type}/{id}` without a full read. The
@@ -471,6 +481,14 @@ node** (category R/O), not only `knk.admin.content`:
 **API (knk-web-api):**
 
 - **Constants:** `Delete`, `DeleteBulk`, `Export`; the `DashboardAccess` registry; metadata fields (§ 4.2).
+- **Create and edit (#374):** `DashboardTypeAccess.ChangeNodes` = the write node and `knk.admin.content`
+  (`ChangesNeedContent`, off for User, PermissionGroup, PermissionHolder, the Players link rows and RoadProfile).
+  `[RequireDashboardChange("<Type>")]` on the primary create and update action of every other type checks all of them
+  (the plugin key passes; 403 `NoWriteAccess` with `nodes`), next to the class or method area rule. Pinned in
+  `Security/DashboardChangeAccessRulesTests`. The metadata's `actionNodes.create`/`edit` and the relationship
+  descriptors' `nodes` (`RelationshipService`, enforced by `RequireRelationshipWrite`) use the same list. Other writes
+  of a type (gate door state and health, a domain's world backfill, gate overrides, plugin-only endpoints) keep their
+  rules.
 - **Single delete:** `[RequireServiceOrPermission(StaffPermissions.Delete)]` (lootbox controllers: `RequirePermission`)
   on the primary `DELETE {id}` of every registry type that is `deletable`. The class or method area rule stays, so a
   delete is area AND delete.
@@ -655,6 +673,40 @@ AM1's LAM1-1 stays); deleting a form or display configuration also needs `knk.ad
 the safety follow-ups #348 (sudo mode), #349 (trash / soft delete), #350 (owner notifications) and #351 (Head Admin
 rank) are separate issues, not part of AM3.
 
+**Later decision (2026-11-13, #371): LAM3-1 reverted.** The developer: "Area staff should not be able to change forms
+at this point. They only work with the content available." AM3 had opened the form wizard routes for any area node
+(LAM3-1, question #368). Now:
+
+1. `/forms/:type` and `/forms/:type/edit/:id` need `knk.admin.content` again (§ 4.3, § 1.5).
+2. In the web app, create and edit of every dashboard type need the type's own create/edit nodes **and**
+   `knk.admin.content`: the dashboard's New, New with and Edit, the detail page's Edit are disabled with "Requires
+   knk.admin.content"; a picker's Create New is hidden (decision 11's pattern). Edit of a user opens the player profile
+   and keeps `knk.admin.user.manage` alone.
+3. Unchanged: view, read, the explorer per area, lookups, delete, bulk delete, export, the player profile.
+4. The API is unchanged: it still accepts writes per area (§ 4.3, `actionNodes.create`/`edit`). Whether the API should
+   also ask for `knk.admin.content` is a separate proposal (see the #371 report). **Decided: yes, #374 below.**
+
+**Later decision (2026-11-13, #374): the API asks for `knk.admin.content` too.** The developer accepted the #374
+proposal (points 1, 2 and 5): the web app's gate is not a security boundary, so the API refuses creates and edits of
+dashboard types by area staff without `knk.admin.content`. Coordinator defaults (reversible, flagged in the link
+report), and the link's own choices:
+
+1. One rule in the registry, `ChangeNodes` = write node **and** `knk.admin.content`; no config switch (#374
+   alternative b not taken). Reverting is one flag per type.
+2. Not for User (Edit is the player profile, its own endpoints), Permission Group (stays `knk.admin.user.perm` with the
+   escalation guard) and the other Players types; not for RoadProfile (the roads page edits it, no form; link
+   decision).
+3. The detail page's Select / Unlink / Add are changes: they need the same nodes, in the API and in the web app
+   (greyed out with "Requires knk.admin.content", decision 11's pattern).
+4. Only the primary create (`POST`) and update (`PUT {id}`) of each type, the endpoints the web app's create and update
+   clients call (nested ones included: a gate door, banner layer, siege team, objective or spawnpoint created under its
+   parent); other writes keep their rules (link decision).
+5. Unchanged: delete, bulk delete, export, reads, lookups, the Staff player profile's freeze, balance, kick and ban, the
+   plugin (`api.auth.type: apikey`). No migration: `SeedDashboardActionNodes` (§ 4.5) seeded only `knk.admin.delete`
+   and `knk.admin.export`. Effect on the alpha: Admin (`knk.admin.*`) and the owner keep everything; the Staff group
+   stops creating and editing kits and siege setup through the web and the API (in-game commands use the plugin key);
+   the lootbox page's Enable/Disable toggle (a `PUT` of the type) needs `knk.admin.content` too.
+
 ## Appendix A — Read endpoints per area and their category
 
 - **Source:** knk-web-api `master` `2e3dfeb`, every GET and every read-like POST (`search`, `validate`, `resolve`,
@@ -764,6 +816,9 @@ rank) are separate issues, not part of AM3.
 | Users | `GET check-duplicate`, `POST validate-link-code/{code}` | P |
 | PermissionGroups | `GET /`, `GET {id}`, `GET {id}/permissions/check`, `GET {id}/expiring-memberships` | U (`knk.admin.user.manage`) |
 | PermissionGroups | `POST search` | U (`knk.admin.user.perm`) |
+| PermissionGroups | `GET {id}/member-count` (added by [#50](https://github.com/PandiO/knk-workspace/issues/50), in knk-web-api `next` `dcbb1f82`): the active members of the group and of every group inheriting from it, each player once, plus the number of inheriting groups | U (`knk.admin.user.manage`) |
+| PermissionGrants | `GET /`, `GET {id}`, `POST search` (search moved from `knk.admin.user.perm` to the type's view node by [#408](https://github.com/PandiO/knk-workspace/issues/408), knk-web-api `next` `2425f181`; it sorts by `id`, `holderId`, `value`, `expiresAt` or `node`, the default, and filters on `holderId`) | U (`knk.admin.user.manage`); every write stays `knk.admin.user.perm` |
+| AuditLog (`api/audit-log`) | `GET` with `targetUserId`, `actorUserId`, `action`, `direction` and, since [#50](https://github.com/PandiO/knk-workspace/issues/50) (`next` `dcbb1f82`), `subjectType` + `subjectId` (one subject's history, for example `PermissionGroup` and a group id) | U (`knk.admin.user.manage`) |
 
 ### A.9 New endpoints
 

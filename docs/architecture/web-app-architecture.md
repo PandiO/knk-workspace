@@ -1,7 +1,7 @@
 # knk-web-app — Architecture
 
-**Status:** Living document — reflects actual code, updated in place on each rescan
-**Last updated:** 2026-11-13 (dashboard access model in the web app and bulk delete, #280 AM3 and #205, merged into `main` `e02ee79`: new section, export through `POST api/Dashboard/export`, `staffAny` routes, Dashboard link for any area node — docs #366); 2026-11-12 (chain 2 W1–W4 and X1 and chain 3 V1–V7 merged into `main` `1371951`; their sections below brought over and marked merged — docs issues #337–#345); 2026-11-05 (live updates on the dashboard, detail page, moderation list and profile — #183, branch `claude/realtime-web-live-183`, merged 2026-11-12); 2026-11-09 (form and display builders: Save keeps the builder open and stores a draft, Save and close, explicit Publish with what changes for staff, Duplicate, Generate from metadata, live preview, "Leave without saving?" — #71, branch `claude/builders-71`, not merged); 2026-11-09 (form wizard search-as-you-type relation picker with Open full table and a lookup mode for viewers without the type's read node, #191; FeedbackModal "Show details" and "Show what uses it" on a delete refused as in use, #44 — branch `claude/picker-details-191-44`, not merged); 2026-11-09 (entity detail page: real Select / Unlink / Add through `api/Relationships`, a separate Delete, actions disabled with "Requires …", values as text, related values as links, paged collections, readable load errors — #188, #189, branch `claude/entity-detail-188-189`, not merged); 2026-11-08 (settings pages: Lootbox settings tab, Currency policy and Road network on the SettingsPage shell, units and help, confirms on risky switches, lootbox announcement preview — #26, branch `claude/settings-pages-26`, not merged); 2026-11-08 (staff player profile: status strip, tabs, freeze/unfreeze, per-player timeline, paged audit log; moderation search by dashless UUID, sort, search in the URL, recently opened — #119, branch `claude/player-profile-119`, not merged); 2026-11-08 (dashboard checkbox selection and Export CSV behind `knk.admin.export` — #205 export part, branch `claude/dashboard-export-205`, not merged); 2026-11-08 (Entity setup at phone width, raw colours checked in `test:ci`, landing slideshow fade out → in, `usePrefersReducedMotion` — #266, #263, #258, branch `claude/web-fixes-266-263-258`, not merged); 2026-11-06 (Dashboard kept in the top bar — LW4-1, #30); 2026-11-06 (numbers in the viewer's locale — LW3-1, #187); 2026-11-06 (child form asks before closing with unsaved changes — LW2-2, #33); 2026-11-05 (admin information architecture: route-meta table, public/player/admin layout routes, grouped admin sidebar, breadcrumbs, `/admin` overview — #30, branch `claude/admin-ia-30`, stacked on #197 and #187 (which contains #33), not merged); 2026-11-05 (no "Entity setup" nav link, the Dashboard link is current on the content-tool pages — #197, branch `claude/nav-entity-setup-197`, not merged); 2026-11-05 (data and format primitives: `DataTable`/`Pager`, `utils/format.ts`, `Field`, `SettingsPage` shell with dirty state — #187, branch `claude/data-primitives-187`, stacked on #33, not merged); 2026-11-05 (feedback primitives: one accessible `Dialog`, `ConfirmDialog` with danger and a reason, general toasts, all overlays moved — #33, branch `claude/feedback-primitives-33`, not merged); 2026-11-05 (#239 offer permission check, #240 Send again merged); 2026-11-04 (#239, #240 on a feature branch); 2026-11-02 (`src/realtime/RealtimeProvider`, world tasks and catalogue scans over the web hub — #181, branch `claude/realtime-signalr`); 2026-11-01 (world tasks anchored to the draft, cancel/expired states, task code, builder task types — #180, branch `claude/world-task-hardening`); 2026-09-18 (scan basis: `knk-web-app` @ `4ff5dc6`, branch `claude/web-app-codebase-scan-4yqibi`); spot edits 2026-10-09 (ObjectTypeExplorer, KNG-61), 2026-10-10 (FormWizard Boolean fields, KNG-53), 2026-10-12 (FormWizard child forms, KNG-133, KNG-134; List edit load, step header, List validation, KNG-135, KNG-137, KNG-164; form session registry, KNG-136; cancel / delete-draft prompt, KNG-162; form configuration export/import, KNG-138); 2026-10-17 (form wizard chain merged to `main`; smoke-test follow-ups KNG-166..169, KNG-172, KNG-173: step strip, confirmations and refusals, rule builder parent forms, picker columns, metadata refresh); 2026-10-22 (display configuration export/import; KNG-195 hybrid picker submit); 2026-10-23 (step completion conditions run, KNG-186); 2026-10-23 (validation result log, batch validate, Re-check, KNG-269); 2026-10-25 (toast region, world-task polling; UX re-evaluation in `reports/2026-10-25-web-app-ux-reevaluation.md`); 2026-10-26 (dashboard type in the URL, `returnTo`, submit pending state, success toast — PandiO/knk-workspace#177 link 1, #58); 2026-10-26 (dashboard header New/Configure, flat explorer with marker, open form without the explorer + breadcrumb, detail page header, metadata-driven Create New, "Entity setup" — #177 link 2, #81, #39); 2026-10-26 (dashboard explorer: one scrollbar, favourite types — #194, branch `claude/dashboard-explorer-194`, merged into `main` `c3c0c9f`), 2026-10-26 (dashboard header row spacing — #195, branch `claude/dashboard-header-195`, merged into `main` `c3c0c9f`); 2026-10-26 (data router, unsaved-changes guard, sticky footer, blur validation + error summary, Save on any step in edit mode, single-line input, drafts owned by the login — #109, #186, #64 FormWizard part); 2026-10-27 (unsaved changes compared by value across all steps, Next's progress save no longer counts as saved — #109 fix round); 2026-11-01 (dashboard table state in the URL, rows as links, `aria-sort`, lootbox/moderation tab in the URL, "Drafts (n)" and "New with" — PandiO/knk-workspace#39, #177 follow-up, merged 2026-11-03); 2026-11-02 (design tokens and switchable themes — #95, merged 2026-11-03); 2026-11-03 (fix round after the live comparison: orange brand primary, heading font on player pages only, full-bleed auth pages); 2026-11-03 (explorer favourites are copies — #225, branch `claude/explorer-favourite-copies-225`, not merged); 2026-11-03 (explorer filter: display / form configuration — #226, merged 2026-11-04); 2026-11-03 (open form without the type overview card — #227, merged 2026-11-04)
+**Status:** Current · **Last updated:** 2026-11-15 (staff player profile: frozen state from the summary, unfreeze reason, game sessions, Kick and Ban, moderation search filters; #565 in review); 2026-11-15 (relation picker: lookup mode sends the field's filters, #288 in review); 2026-11-15 (form builder: validation rules in the draft, #291 in review); 2026-11-15 ("Show what uses it" on Entity setup's configuration delete, bulk delete rows and a cancelled form's "skipped: in use", #289, knk-web-app#39 in `next`); 2026-11-15 (§ Staff permission screens: PermissionGrant table, group Permissions panel, profile Effective Permissions card; #408, #50, #407 in knk-web-app `next`, docs #576)
+**Checked against:** knk-web-app `next` (per section; each section names its commit). Updated in place on each rescan.
 **Source scan:** `docs/reports/web-app-scan-2026-09-18.md`
 
 ## Stack
@@ -34,8 +34,14 @@
   (`AuthContext`) for auth, plus a small manual in-memory cache in
   `hooks/useEntityMetadata.ts` (module-level `metadataBundleCache` /
   `metadataBundlePromise`, not React state).
-- Testing: Jest + React Testing Library (`react-scripts test`), 38 `*.test.ts(x)` files;
-  Cypress for e2e (2 specs: `hello-world.cy.ts`, `registration.cy.ts`).
+- Testing: Jest + React Testing Library (`react-scripts test`, about 300 test files, `npm run test:ci`) for units
+  and components. End-to-end: Playwright Test in Chromium (`e2e/*.spec.ts`, `playwright.config.ts`; Cypress removed
+  2026-11-14, #423) against the production build served by `e2e/support/serve-build.mjs`, with the API mocked per
+  spec through `page.route` (`e2e/support/mockApi.ts`) and fixtures typed with the DTOs in `src/types/`
+  (`npm run typecheck:e2e`). Specs: registration with a link code, login including the 401 → refresh → retry path
+  of `serviceCall.ts`, the dashboard town list, the first form wizard step. CI: `.github/workflows/ci.yml`
+  (`build-and-test`) and `.github/workflows/e2e.yml` (`e2e`). Commands and how to write a spec:
+  [web app testing](../guides/developer/web-app-testing.md).
 
 ## Design tokens and themes
 
@@ -88,7 +94,8 @@ _Added 2026-11-02 for PandiO/knk-workspace#95 (rebrand phase 1), knk-web-app bra
   files. `npm run lint:colors` (`scripts/report-raw-colors.js`) counts raw palette classes per file against
   `scripts/raw-colors-baseline.json` and reports files that gained some (exit 0 unless given `--strict`). The same
   check runs in `npm run test:ci` (`src/__tests__/rawColorsBaseline.test.ts`, #263): a file over its baseline fails
-  the tests, so fix it with the tokens rather than raising the baseline. There is no CI workflow in the repo.
+  the tests, so fix it with the tokens rather than raising the baseline. `test:ci` also runs in the `Build and test`
+  workflow on every push and pull request ([CI guide](../guides/developer/ci.md)).
   Migrated and unmigrated screens: guide § 5.
 - **Reduced motion:** `hooks/usePrefersReducedMotion.ts` follows `prefers-reduced-motion: reduce` (live, without a
   reload). The landing page's `components/Slideshow.tsx` uses it: a change fades the shown image out to black and then
@@ -155,6 +162,7 @@ of a hand-rolled `<table>`, pager, `toLocaleString`, unlabelled input or setting
 | Need | Use | Where |
 |---|---|---|
 | A list of rows (sortable headers, rows that open a page) | `<DataTable columns rows rowKey sort onSortChange rowHref onRowClick …>` | `components/DataTable.tsx` |
+| A right-click menu at a point (keyboard, disabled items with a reason) | `<ContextMenu position items label onClose>`; on a table use `DataTable`'s `rowContextMenu` | `components/ContextMenu.tsx` |
 | Pages under a list | `<Pager page pageSize totalCount onPageChange label? noun?>` | `components/Pager.tsx` |
 | A server-paged entity list (dashboard, wizard pickers) | `PagedEntityTable` (fetching, query modes, selection, pinned rows) — draws through `DataTable`/`Pager` | `components/PagedEntityTable/` |
 | A date, time or number on screen | `formatDateTime`, `formatDate`, `formatTime`, `formatNumber`, `formatPercent`, `numberFormat`; `parseApiDate` | `utils/format.ts` |
@@ -169,6 +177,36 @@ of a hand-rolled `<table>`, pager, `toLocaleString`, unlabelled input or setting
   `sections` with a heading row (the pickers' "Created in this form"), `leading`/`rowLeading` elements, `isRowSelected`
   styling, a `rowActions` column (sr-only "Actions" header), `empty`, `loading`, `caption` (the table's accessible
   name) and `density="compact"` for lists inside cards. Wide tables scroll inside their own container.
+- **`DataTable` row lines, sticky columns and row menu** (PandiO/knk-workspace#404, #405, #406; merged into knk-web-app
+  `next` 2026-11-14, `3f8ad46`, PR knk-web-app#17; automated in CI, the manual look in both themes not run —
+  [dashboard access smoke test § 8.5](../guides/dashboard-access-smoke-test.md#85-row-actions-in-view-and-the-right-click-menu-404-405-406)):
+  - **Lines on the cells (#404).** The table is `border-separate border-spacing-0`; every header and body cell carries
+    its own `border-b border-line` (the last body row none), never the `<tr>` (a row border showed as a grey left edge
+    from the second row on, and sticky cells must carry their own lines). The selected row's green edge is a
+    `SelectedEdge` bar (`data-testid="selected-edge"`) inside its first cell, the checkbox cell when there is one.
+  - **Sticky columns (#405).** The `rowActions` column is `sticky right-0` (`data-testid="row-actions"`, `w-px`, tighter
+    padding) and the `selection` checkbox column `sticky left-0`, both `z-10`. Their cells are opaque so the scrolled
+    columns pass under them: header cells inherit the head row's `bg-surface-alt`; body cells get the row's colour as
+    their own class (`bg-surface group-hover:bg-surface-alt`, the selected row's `bg-success-soft
+    group-hover:bg-success-muted`, `bg-surface-alt` while that row's menu is open), following the row's hover through
+    the `group` class on the `<tr>`. The edge shadows `shadow-sticky-left` / `shadow-sticky-right` (`tailwind.config.js`
+    `boxShadow`, from `--color-fg` at 18 %, so they follow the theme) show only while something is scrolled under that
+    edge: the scroll container (`data-testid="data-table-scroll"`) measures `scrollLeft` / `scrollWidth` on scroll and
+    through a `ResizeObserver` on the container and the table (skipped where `ResizeObserver` is missing, as in Jest).
+  - **Row menu (#406).** `rowContextMenu(row) => ContextMenuItem[]` and `rowContextMenuLabel(row)` (the menu's
+    accessible name, default "Row actions"). The `<tr>` handles `contextmenu` (opens at the pointer; Ctrl/Cmd held
+    keeps the browser's menu) and `keydown` Shift+F10 / `ContextMenu` while something in the row has the focus (opens
+    under the focused control, or the row's start; a `contextmenu` event at 0,0 is treated the same). An empty item
+    list keeps the browser's menu. Closing with Escape or Tab gives the focus back to the control that had it.
+    `PagedEntityTable` passes `rowContextMenu(row, state)` with the same `SelectionBarState` as `renderSelectionBar`
+    (selection, columns, query) and labels the menu "Actions for <name>".
+- **`ContextMenu`** (#406, `components/ContextMenu.tsx`): a portal on `document.body`, `role="menu"` with
+  `aria-label`, `position: fixed` at the given point and flipped left/up to stay 8 px inside the window. WAI-ARIA menu
+  keys: the first item gets the focus, ArrowDown/ArrowUp wrap, Home/End, Enter/Space choose, Escape and Tab close
+  (`onClose(true)`: give the focus back). A mousedown or right-click outside (capture phase), scroll, resize or window
+  blur close it (`onClose(false)`). `ContextMenuItem`: `key`, `label`, `icon`, `onSelect`, `disabled`, `hint` (shown
+  under the label while disabled; the item stays focusable with `aria-disabled` so the reason is read), `danger`.
+  Test ids `row-context-menu` and `context-<key>`.
 - **`Pager`**: a `<nav aria-label>` (default "Pagination") with "Showing a to b of n {noun}" from `sm` up, Previous,
   "Page x of y" (`aria-live="polite"`) and Next; numbers through `formatNumber`. The caller decides when to show it.
 - **`utils/format.ts`, one locale policy**: numbers in the viewer's browser locale (`NUMBER_LOCALE` undefined:
@@ -206,7 +244,8 @@ of a hand-rolled `<table>`, pager, `toLocaleString`, unlabelled input or setting
   layout and child tables (#188/#189), player profile (#119), the other hand-rolled tables and pagers (Balance log,
   currency alerts, email log, invitations, location retention, lootbox drop log/tokens, discovery, roads), the
   remaining `toLocale*` calls and unlabelled labels (the wizard's list/object field groups, account pages).
-- Tests: `components/__tests__/{DataTable,Field,SettingsPage}.test.tsx`, `utils/__tests__/format.test.ts`,
+- Tests: `components/__tests__/{DataTable,DataTable.rowsAndMenu,Field,SettingsPage}.test.tsx`, e2e
+  `e2e/dashboard-row-actions.spec.ts`, `utils/__tests__/format.test.ts`,
   `DisplayWizard/__tests__/DisplayField.format.test.tsx`, `FormWizard/__tests__/FieldRenderers.labels.test.tsx`, and
   the page tests of Game Settings, Siege and moderation.
 
@@ -256,7 +295,7 @@ entity. Two parallel generic engines carry most of the CRUD surface:
    A strip with more steps than fit scrolls sideways (current step kept in view, ‹ › only on a side
    that hides steps, `stepStripOverflow`). Below `sm` a compact "Step 3 of 9 · Name" label and bar
    replace the circles; the label is a disclosure button listing every step (done / current / to do),
-   closed again on a step change. Steps are not clickable yet (KNG-184). **Step completion conditions** (KNG-186): `handleNext` runs a step's `Completion` conditions (`ConditionEvaluator.evaluateConditions` over the step's data) unless the condition's `isActive` is explicitly `false`; until 2026-10-23 the API sent `false` for every condition, so none ever ran. `FormConfigurationDto.isActive` is gone (the API never had the column; `parentFormFields.ts` filters on `isDefault` only). **Validation result log** (KNG-269): Next validates a step's rule-bearing fields with one `validate-batch` request that names the subject (`entityName` + `entityId` in edit mode, else `FormSubmissionProgress` + the saved draft id; `FormWizard.validationSubject`), so the API can answer a rule from its log of the last run. A result with `metadata.fromCache` shows "checked … ago" (`utils/forms/validationResultAge.ts`) and a **Re-check** button, which re-runs that field with `force: true`; the debounced per-field run on change keeps using `validate`.
+   closed again on a step change. **Clickable steps** (PandiO/knk-workspace#68, in `next` `1f848f7` since 2026-11-13, not live-tested): with `onStepClick` the steps of `WizardStepProgress` and of the compact list are buttons (`aria-current="step"` on the current one). `FormWizard.handleStepClick` goes back without a check (`goToEarlierStep`); forward, `jumpForward` checks the current step and every visible step up to the target with the checks of Next (`validateField`, completion and entry conditions, `runValidationsForStep` in quiet mode, `manyToManyEntryIssues`) and stops at the first step that fails, in a `FeedbackModal` with "Go to <step>" (no button when it is the current step). Landing on a step by the jump goes through `saveProgress(InProgress)` (a failed save keeps the current step) and `onStepAdvanced` for each step passed, as Next does; "Go to" (`openStoppedStep`, PandiO/knk-workspace#413, `next` `399722d` 2026-11-14) opens the stopped step at once and saves in the background, calling `onStepAdvanced` only once the save succeeds, so the `FeedbackModal`, which disables its buttons and × while its action runs, never waits on the API; a failed save shows in the wizard's error banner; a jump that passed warnings or skipped checks reports them in a second dialog after landing. `handleStepClick` does nothing while saving, submitting or advancing. `utils/forms/stepJumpCheck.ts` classifies a rule result: blocking stops, a warning or a rule that could not run (`metadata.failureReason`, e.g. `PluginUnreachable`) is only listed (any `failureReason` lands under the "game server could not be reached" heading, also `UnreadableLocation`: PandiO/knk-workspace#396). A pre-filled form (edit mode, resumed draft) runs the rules of every visible step once after loading, in quiet mode: results are stored per field id, the current step's messages are untouched. **Step conditions** (KNG-186, #88): `advance` runs the current step's `Completion` conditions and, since #88, the next step's `Entry` conditions (`utils/forms/stepConditions.ts` `firstFailedStepCondition`, over `ConditionEvaluator.evaluateConditions`) unless the condition's `isActive` is explicitly `false`; a failure is shown in the banner, above the Next button and in a toast. Since PandiO/knk-workspace#414 (`next` `399722d`) the step also marks the fields the failed condition reads: `conditionMarks` (`StepConditionMark`: the condition, plus `entryOf` for the next step's Entry condition) is set by `advance` and by `showIssuesOnStep` for a jump's issues, and each render recomputes `failedStepConditionFieldNames` (`stepConditions.ts`: the fields of the rules that fail; for OR all of them, since it only fails when every rule does; empty when the condition holds or its JSON doesn't parse) on the live values, so a mark clears as soon as the condition holds. Only visible fields of the current step are marked, after the field's own error and the gate-geometry error; the marks are cleared on Next, Back and a new jump. Until 2026-10-23 the API sent `false` for every condition, so none ever ran. The builder authors them in `FormConfigBuilder/StepConditionBuilder.tsx` (rows ↔ `ParsedStepCondition` JSON, operators from `stepConditionOperatorsFor(field)`: all seven of `STEP_CONDITION_OPERATORS` for String, Integer, Decimal, Boolean, DateTime and Enum fields, only `IsEmpty` / `IsNotEmpty` for a field that holds an object or a list, i.e. entities, lists, pickers and banner layers; `ConditionEvaluator` counts `[]` as empty; JSON in another shape is edited as text and is not evaluated by the wizard, which passes JSON without a `conditions` array and fails text that does not parse, PandiO/knk-workspace#397); `FormConfigBuilder.publishProblem` refuses a Completion condition without a message. `FormConfigurationDto.isActive` is gone (the API never had the column; `parentFormFields.ts` filters on `isDefault` only). **Validation result log** (KNG-269): Next validates a step's rule-bearing fields with one `validate-batch` request that names the subject (`entityName` + `entityId` in edit mode, else `FormSubmissionProgress` + the saved draft id; `FormWizard.validationSubject`), so the API can answer a rule from its log of the last run. A result with `metadata.fromCache` shows "checked … ago" (`utils/forms/validationResultAge.ts`) and a **Re-check** button, which re-runs that field with `force: true`; the debounced per-field run on change keeps using `validate`.
    **World-task values** (KNG-167): a capture spread over a child's fields keeps a Name the admin
    typed (`utils/forms/worldTaskFieldValue.ts`); rule placeholders built from an Object field use
    the entity's name, not the object (`utils/placeholderExtraction.ts`, KNG-173).
@@ -408,8 +447,16 @@ entity. Two parallel generic engines carry most of the CRUD surface:
   `beforeunload`, the toolbar's Close), the `SettingsPage` question.
 - **Access**: the routes stay behind `knk.admin.content` (W4); inside, Save, Save and close, Publish, Duplicate, Discard and
   Generate are disabled with "Requires knk.admin.content" (`useAllNodesGate`) when the node is missing.
-- **Templates** ("Add from template") are copied into the working copy with new GUIDs; the builder no longer calls the
-  API's add-from-template, which wrote into the published version.
+- **Templates** ("Add from template") are copied into the working copy with new GUIDs; the API's add-from-template
+  endpoints and the client methods for them were removed in #291.
+- **Validation rules** ([#291](https://github.com/PandiO/knk-workspace/issues/291), in `next`) are part of the working
+  copy: `config.validationRules`, keyed by field GUID (`utils/forms/draftValidationRules.ts`). The field editor keeps its
+  field's rules (`rulesOfField`) and hands them back with **Save Field** (`onSaveRules` → `withFieldRules`); a new rule
+  shows *Not published*. `ValidationRuleBuilder` picks a dependency of this form by GUID (draft-only fields included)
+  and a parent form's field by id. `formConfigForSave` drops rules of fields that left the form; Publish is refused
+  client-side when a rule's dependency left (`validationRulesPublishProblem`, the API checks the same) and the Publish
+  question adds "Validation rules: n added, n changed, n removed." Nothing is written to `api/field-validation-rules`
+  before Publish, so the wizard keeps the published rules.
 - **Entity setup** lists never-published forms (`getByEntityTypeName(entity, false, true)`) with a *Draft* badge: Use and
   Set Default are off and `?configId=` never opens one; published ones with saved changes show *Unpublished changes*
   (display: "+ unpublished changes"); both menus have *Duplicate*. Everything else (the wizard, "New with", child forms,
@@ -493,6 +540,10 @@ Progress rows; the tables scroll inside their card. A table's scroll box is `rel
 positioned element without a positioned ancestor (the head's `sr-only` "Actions" label) is placed in page coordinates
 and widens the whole page even inside an `overflow-x-auto` box; `.dashboard-content` (`ObjectDashboard.css`) is
 `position: relative` for the same reason.
+The same holds for every admin table with a visually hidden head cell: Mail log, Invitations, the Lootboxes
+Types/Specials/Areas/Active tabs and the Minecraft catalogue audit got `relative` on their scroll box in #535
+(knk-web-app `e2e/admin-navigation.spec.ts` checks them at 390 px); `DataTable`'s hidden head cells sit in sticky,
+so positioned, cells and need nothing. A new table in an `overflow-x-auto` box takes `relative overflow-x-auto`.
 
 **Tabs in the URL** (#39): `/admin/lootboxes?tab=odds` and `/admin/users?tab=demoted` (`hooks/useTabParam.ts`;
 the default tab is left out, an unknown value reads as the default, switching replaces the history entry). On the
@@ -531,36 +582,47 @@ Stay) and a reload or closing the tab gets the browser's question; success is a 
   are not counted.
 
 **Staff player profile** (`pages/admin/PlayerProfilePage.tsx` + `pages/admin/playerProfile/`, `/admin/users/:id`; #119,
-web part merged 2026-11-12; the API part of #119 is not merged):
+web part merged 2026-11-12; the API part, #565, in review on `claude/player-profile-api-119`):
 - **Status strip** (`PlayerStatusStrip`): chips for online / last seen (live through `PresenceChanged`, #183), no
   Minecraft account, mode, **Frozen**, **Payments locked**, premium tier, Deactivated, Not admitted, Minecraft-only and
-  Email not verified, with **Freeze** / **Unfreeze** and Reload. While frozen a banner says since when, by whom (the latest
-  `PlayerFrozen` audit entry) and why (`frozenReason`).
-- **Freeze** (`usePlayerFreeze`): the frozen state comes from `GET api/Users/{id}` (`isFrozen`, `frozenReason`; the
-  profile summary doesn't carry it). Freeze asks a required reason (max 200) in `confirmWithReason` and calls
-  `PUT api/Users/{id}/freeze` (`knk.freeze`); Unfreeze is a plain confirm and `PUT …/unfreeze` (`knk.unfreeze`), which
-  takes no reason yet. `UNFREEZE_TAKES_REASON` switches the confirm to an optional reason once the API stores one.
+  Email not verified, with **Freeze** / **Unfreeze**, **Kick**, **Ban** (#565, only for an account with a UUID) and
+  Reload. While frozen a banner says since when, by whom and why (`frozenAt`, `frozenByUsername`, `frozenReason` of the
+  summary's account; an older API without `frozenAt` shows the reason only).
+- **Freeze** (`usePlayerFreeze`): since #565 the frozen state comes with the profile summary (`freezeStateOf(account)`),
+  so a profile load makes no `GET api/Users/{id}` and no `PlayerFrozen` audit lookup; `reload` re-reads the summary.
+  Freeze asks a required reason (max 200) in `confirmWithReason` and calls `PUT api/Users/{id}/freeze` (`knk.freeze`);
+  Unfreeze asks an optional reason (`UNFREEZE_TAKES_REASON = true`) and calls `PUT …/unfreeze` (`knk.unfreeze`) with
+  `{ reason }` or no body.
+- **Kick and Ban** (`usePlayerKickBan`, #565): `confirmWithReason` with an optional reason (kick) or a required one
+  (ban, the dialog says it is permanent and lifted with `/pardon` in game), max 200; `POST api/Users/{id}/kick`
+  (`knk.kick`) / `…/ban` (`knk.ban`); a toast on success, the API's refusal (409 not online, 503 no game server, 403
+  rank) in an error toast. The game server carries it out (knk-plugin, #574).
 - **Tabs** (`ProfileTabs`, an ARIA tablist with arrow keys; `?tab=` through `useTabParam`, default Overview): Overview
   (account, title, premium, statistics), Economy (payment lock, Adjust balance, salary, kits, balance history),
-  Permissions (groups, effective permissions), Moderation (freeze, mode, admission/web login, a note that kick and ban are
-  game commands), Activity (timeline, audit log, discoveries), Privacy (private messages, data deletion). Only the open tab
+  Permissions (groups, effective permissions: § Staff permission screens), Moderation (freeze, mode, admission/web login,
+  Kick and ban with Kick… / Ban…), Activity (timeline, audit log, discoveries), Privacy (private messages, data deletion). Only the open tab
   is mounted, so a panel's requests run when its tab opens.
 - **Timeline** (`PlayerTimeline`, `utils/playerTimeline.ts`): `TimelineMerger` merges the audit log about the player
-  (`GET api/audit-log?targetUserId=`) and, with `knk.admin.currency.history`, the balance ledger
+  (`GET api/audit-log?targetUserId=`), the game sessions (`GET api/statistics/users/{id}/sessions`, #565; placed at
+  their start, "Played on <server>" / "In game on <server>") and, with `knk.admin.currency.history`, the balance ledger
   (`GET api/currency/admin/ledger?userId=`), newest first, 25 per "Load older"; an event is shown only once every source
   that has rows left has one at least as old. Filter chips per category (Moderation, Economy, Permissions, Progress,
-  Account). Game sessions are not in it (no read endpoint).
+  Game sessions, Account).
 - **Audit log** (`PlayerAuditLog`): `DataTable` + `Pager`, paged by the server (25 per page) with an action filter.
 - **Actions without their node** are disabled with "Requires <node>" (`hooks/useActionGate.ts`, #280's rule):
-  `knk.freeze`, `knk.unfreeze`, `knk.admin.user.group`, `knk.admin.user.perm`, `knk.kit.give`, `knk.admin.currency.lock`.
+  `knk.freeze`, `knk.unfreeze`, `knk.kick`, `knk.ban`, `knk.admin.user.group`, `knk.admin.user.perm`, `knk.kit.give`,
+  `knk.admin.currency.lock`.
 - **Live:** an `EntityChanged` for this `User` from someone else (a freeze in game, another staff member) re-reads the
-  summary, the frozen state, the payment lock and the activity.
+  summary (with the frozen state), the payment lock and the activity.
 - **Robustness:** `normalizeProfileSummary` fills in a summary without groups, permissions, title or salary (an older
   API, a thin account) instead of crashing; "Back" is the layout's breadcrumb (no `navigate(-1)`).
 
 **Moderation player search** (#119 MOD-5, `UserModerationPage` "All players"): the term (username, email or UUID, a
 substring on the server) is sent trimmed, and a whole UUID without dashes gets its dashes (`utils/playerSearch.ts`).
-Username, Email and Coins sort on the server (`sortBy`/`sortDescending`; `aria-sort`). Term, page and sort are in the URL
+Username, Email, Last seen, Coins and XP sort on the server (`sortBy`/`sortDescending`, keys `lastseenat` and
+`experiencepoints` since #565; `aria-sort`). Since #565: **Online**, **Frozen** and **Payments** selects (Any / yes / no)
+send the API's `online`, `frozen`, `paymentsLocked` filters and stay in the URL (`?online=true&frozen=false`); rows show
+Frozen and Payments locked chips and a Created column. Term, page and sort are in the URL
 (`?q=&page=&sort=&dir=`, replace) so Back from a profile returns to them. **Recently opened** lists this viewer's last 8
 profiles (`utils/recentPlayers.ts`, localStorage per account, this browser only).
 
@@ -579,6 +641,16 @@ merged 2026-11-12):
   type's `relationships` entry for its `relatedEntityPropertyName` (`detailPage.ts` `findRelationship`); a link row
   (`storage: linkRow`, e.g. `ItemBlueprintTag`) stands for its other side (`relatedType` `Tag`, id from
   `relatedIdField` / `relatedNavigation`).
+- **Derived relationships** (#409, knk-web-app `next` `d3d7152`, not yet on `main`): `storage: derived` in the
+  metadata (`MetadataModels.ts`; today only `Town.Streets`, the distinct streets of the town's districts) is a
+  read-only collection computed from other links, with `canLink`/`canUnlink` false and the reason in `linkReason`
+  ("Streets are managed on the district: open a district to add or remove them."). `detailPage.ts` `isDerived` drives
+  three things: `ActionButtons` renders only View and Edit, whatever the display configuration's flags say (Add…,
+  Unlink, Create New and Delete are hidden, not greyed out); `DisplaySection` shows `linkReason` once under the
+  section title (`data-testid="derived-hint"`); `CollectionSection` drops the per-item "Unlink: …" / "Delete: …"
+  hints. The API refuses a link or unlink on it with 400 `RelationshipNotEditable` (web-api architecture § 4/§ 5.3).
+  Tests: `DisplayWizard.relationships.test.tsx` ("derived relationships (#409)"), `e2e/town-detail.spec.ts`,
+  `e2e/entity-detail.spec.ts` (the link-table cases run on District 1 "Old Quarter").
 - **Buttons** (`ActionButtons`): Select…/Change… (single), Add… (collection header), Unlink (single, and the
   configuration's "Remove" on items: never a delete), a separate red **Delete** on items (`showDeleteButton`, also in
   the section editor as "Delete item"), View, Edit, Create New (section only). Without a relationship entry (older
@@ -613,7 +685,11 @@ again); Hide/Show keeps the answer; focus still starts on the footer's first but
 refusal is now a dialog instead of a toast) and an item's Delete on the detail page. Each group reads like the message
 ("23 structures", `referenceNoun`); rows link to their detail page when the API says `readable` (the dialog closes),
 are plain text with "Opening … requires one of: …" otherwise, "… and n more" past 20, and groups the API only counts
-show its reason.
+show its reason. Since #289 also: Entity setup's form configuration Delete (`pages/FormWizardPage.tsx`; the form fields and steps that
+open it as a sub-form, named with their form, never linked) and, through `useReferenceDetailsToggle` (one row's button
+and panel inside a list), each `InUse` row of `BulkDeleteResultDialog` and each "skipped: in use" line of
+`FormWizard/CreatedEntitiesPrompt.tsx` (a cancelled form or a draft deleted with its entities; `?all=true`, so the
+list matches the in-use check; following a row ends the prompt as Done does).
 
 **Navigation** (`components/Navigation.tsx`, since #30): the bar's links come from the route-meta table
 (`topNav`): **Home**, **Leaderboards**, **Guides**, **Dashboard** for holders of the dashboard route's nodes
@@ -629,13 +705,71 @@ Dashboard is the current bar and sidebar link there (LW1-1, LW4-1). Pages reache
 (account menu), transaction details, siege matches and public profiles (links in lists), Entity setup (the
 dashboard's ⚙ per type, "All saved progress").
 
+## Staff permission screens (PandiO/knk-workspace#408, #50, #407; in `next`)
+
+Merged into knk-web-app `next`: #408 at `9a29623a` (2026-11-14), #50 at `42781025` and #407 at `b2589eb4`
+(2026-11-15); on `main` when the developer promotes `next`. Covered by the Jest and Playwright tests named below; the
+developer's manual steps ([dashboard access smoke test § 8.6, § 8.7](../guides/dashboard-access-smoke-test.md#86-the-permissiongrant-table-408),
+[player profile smoke test § 6](../guides/player-profile-smoke-test.md)) have not run yet. API side:
+[web-api architecture § 5.6](web-api-architecture.md#56-permission-grants-group-member-count-and-the-generic-audit-subject-pandioknk-workspace408-50-in-next).
+Decisions per link: [chain report § 4.1–4.3](../reports/2026-11-14-staff-web-followups-chain.md#4-link-blocks).
+
+- **`PermissionGrantClient`** (`apiClients/permissionGrantClient.ts`, `Controllers.PermissionGrants`):
+  - Reads (#408): `getById`, `searchPaged` (`POST api/PermissionGrants/search`), both on `knk.admin.user.manage`.
+    `getForHolder(holderId)` is `searchPaged` filtered on `holderId`, sorted by node, one page of
+    `HOLDER_GRANTS_PAGE_SIZE` (500), expired rows included.
+  - Writes (#50): only the by-node routes, `upsertByNode` (`PUT by-node`) and `revokeByNode` (`DELETE by-node`, holder
+    and node in the query string because `serviceCall` drops a DELETE body), on `knk.admin.user.perm`. There is no
+    create, update or delete by id on purpose: the generic form can't save a grant and the dashboard can't delete one
+    past the group panel's confirmation. The player profile writes through `userManagementClient.grantNode` /
+    `revokeNode`.
+- **The PermissionGrant table** (#408): `entityApiMapping.ts` has `permissiongrant` search and fetch-by-id cases and
+  no create, update or delete case, so the type is read-only; `objectConfigs.tsx` defines the columns ID, Node, Effect
+  ("Granted"/"Denied"), Holder ("Group #<id>" for a group, "User #<id>" for a player) and Expires (UTC) ("Never" without one), each sortable
+  on the server. New and Edit still render, greyed out without the write node (known gap
+  [#530](https://github.com/PandiO/knk-workspace/issues/530)); a refusal label from a lower-case URL reads
+  "Permissiongrant" ([#531](https://github.com/PandiO/knk-workspace/issues/531)).
+- **`GroupPermissionsPanel`** (`components/admin/permissionGroups/GroupPermissionsPanel.tsx`, #50), rendered by
+  `DisplayWizardPage` below the details of a `permissiongroup` record (`/display/PermissionGroup/{id}`). It needs only
+  the type's view node, not the form wizard's `knk.admin.content`.
+  - Reads (`GROUP_READ_NODE` = `knk.admin.user.manage`, `usePermission`): the group's own grants
+    (`getForHolder`), the member count (`PermissionGroupClient.getMemberCount`) and the **History**
+    (`userManagementClient.getAuditLog({ subjectType: 'PermissionGroup', subjectId })`, `HISTORY_PAGE_SIZE` 10, `Pager`,
+    rows labelled by `auditActionLabel` / `describeAuditDetails`). Without the node it reads nothing and shows
+    "Requires knk.admin.user.manage …".
+  - Writes (`GROUP_GRANT_WRITE_NODE` = `knk.admin.user.perm`, `useActionGate`): the form (Node, Grant/Deny, Expires,
+    empty by default = permanent) and each row's Edit (fills the form), change Granted ⇄ Denied and Remove. Without the
+    node every control is disabled with the gate's "Requires knk.admin.user.perm" (#280 rule, shown not hidden).
+  - Confirmation (`useConfirm`) only on a flip between Granted and Denied (row button or form) and on a removal, with
+    `blastRadiusText(memberCount, groupName)`: "This affects N players (members of X and of N groups that inherit
+    from it). Online players get the change within seconds." or "Couldn't count the players this affects." A new node
+    or an expiry change saves without asking. After every write the panel reloads grants, count and History (page 1).
+    API refusals show through `apiRefusalReason`.
+  - Inherited nodes from the group's parents are not shown (optional in #50; the player profile shows sources).
+- **`EffectivePermissionsCard`** (`pages/admin/playerProfile/EffectivePermissionsCard.tsx`, #407), the Permissions
+  tab's card, taken out of `PlayerProfilePage.tsx`. The grant/deny form sits on top (`userManagementClient.grantNode`,
+  default expiry one day ahead, `GRANT_DEFAULT_EXPIRY_DAYS`, **Clear** for permanent, **Reset to 1 day**), then a
+  search box and the shared `DataTable` with sortable Node, Value and Source (asc → desc → off through `nextSort`,
+  `aria-sort`). Only direct grants (`sourceHolderType === 'User'`) have a Remove button; inherited rows say "Inherited".
+  Helpers in `effectivePermissions.ts`: `filterEffectivePermissions` (node or source text, case-insensitive, trimmed),
+  `sortEffectivePermissions` (by the shown text, Denied before Granted ascending, ties by node; no sort keeps the API's
+  order), `permissionSourceLabel` ("Direct grant", the group's name, else "Group #<id>"). No Expires column: the
+  effective-permission DTO has no expiry ([#568](https://github.com/PandiO/knk-workspace/issues/568)).
+- **DTOs:** `PermissionGrantListDto`, `PermissionGrantDto` / `UpsertPermissionGrantByNodeDto`,
+  `PermissionGroupMemberCountDto`; `AuditLogEntryDto.targetUserId` is `number | null` with `subjectType` and `subjectId`.
+- **Tests:** Playwright `e2e/permission-grants.spec.ts`, `e2e/group-grants.spec.ts`, the #407 block of
+  `e2e/player-profile.spec.ts` (strict mocks; fixtures in `e2e/fixtures/permissionGrants.ts`, `groupGrants.ts`,
+  `players.ts`); Jest `permissionGrantClient.test.ts`, `permissionGroupClient.test.ts`, `userManagementClient.test.ts`,
+  `groupPermissionsHelpers.test.ts`, `effectivePermissions.test.ts`.
+
 ## Dashboard access model in the web app (PandiO/knk-workspace#280 AM3, #205 bulk delete)
 
 Merged 2026-11-13 (knk-web-app `main` `e02ee79`, with knk-web-api `master` `45043a7`; also on `next`). **Not
 live-tested:** [dashboard access smoke test § 8](../guides/dashboard-access-smoke-test.md#8-web-app-am3), closed alpha
 test run 2 checklist § 4c. Design: [DESIGN § 4.3, § 4.7, § 4.8](../specs/dashboard-access-model/DESIGN.md); API side:
 [web-api architecture § 5.1, § 5.2](web-api-architecture.md#51-dashboard-access-model-pandioknk-workspace280-am1-merged-2026-11-12-am3-2026-11-13).
-Decisions LAM3-1…12 in the [chain 3 report](../reports/2026-11-08-ux-chain-3.md). The web app only decides what it
+Decisions LAM3-1…12 in the [chain 3 report](../reports/2026-11-08-ux-chain-3.md). LAM3-1 (form wizard for any area node) was reverted by
+[#371](https://github.com/PandiO/knk-workspace/issues/371) (knk-web-app `next` `e6ba115`, 2026-11-13; not yet on `main`). The web app only decides what it
 offers; the API checks every call.
 
 - **Nodes** (`hooks/useStaffAccess.ts`): `DELETE_PERMISSION_NODE` (`knk.admin.delete`), `DELETE_BULK_PERMISSION_NODE`
@@ -647,9 +781,25 @@ offers; the API checks every call.
   turn the metadata's `actionNodes`, `readNodes`, `deletable`, `bulkDeletable` and `exportable` into gates `view`
   (area node), `read` (any read node), `create`, `edit`, `delete`, `bulkDelete`, `export` (all-of), each with
   `allowed`, `checking` and a `hint` ("Requires knk.admin.world and knk.admin.delete"; "Couldn't check …" on an error).
-  Nothing is hard-coded per type. Metadata without the access fields (an API before #280): every action open (the API
-  decides) except bulk delete and export. `accessNodesOf(metas)` lists every node to ask, including the global action
+  Nothing is hard-coded per type. **Create and edit also need `knk.admin.content`** (#371, developer 2026-11-13: area
+  staff work with the content that exists and don't change forms; reverts LAM3-1): `withContentNode(nodes)` adds it to
+  the type's create/edit nodes, because both open the form wizard. Not for Edit of a User, which opens the player
+  profile (`editOpensFormWizard`, `utils/returnTo.ts`). So a world-only account sees **New Town** and **Edit** disabled
+  with "Requires knk.admin.content", and a content-only account still can't create a Town (it lacks
+  `knk.admin.world`). The detail page's header Edit uses the same rule (`DisplayWizardPage`). Metadata without the
+  access fields (an API before #280): create and edit need `knk.admin.content`, every other action is open (the API
+  decides) except bulk delete and export. Since [#374](https://github.com/PandiO/knk-workspace/issues/374) (knk-web-app
+  `next` `ca1959d`, knk-web-api `next` `b65e66d`, 2026-11-13) the API refuses creates and edits without
+  `knk.admin.content` too and lists it in `actionNodes.create`/`edit`, so `withContentNode` is a no-op against it; it
+  stays so the gates are right against an API without #374 and the two deploy in either order. `accessNodesOf(metas)` lists every node to ask, including the global action
   nodes the gates fall back to.
+- **Detail page link buttons** (`components/DisplayWizard/DisplaySection.tsx`, #374): **Select…**, **Change…**,
+  **Unlink** and **Add…** gate on `withContentNode(relationship.nodes)` through `useAllNodesGate`
+  (`relationshipGate`): first what the API allows (`canLink`/`canUnlink` with its reason), then the nodes. Without
+  `knk.admin.content` they are disabled with "Requires knk.admin.content", shown on hover and once in the section's
+  hint line (`ActionButtons`). **Delete** of a related item keeps its own gate (`actionNodes.delete`). Not yet gated
+  beforehand: the Lootboxes Types tab's Enable/Disable and Road network's "New street", which now need the content node
+  in the API ([#383](https://github.com/PandiO/knk-workspace/issues/383)).
 - **Metadata only for staff** (LAM2-9 fixed, LAM3-2): `useEntityMetadata` loads `GET api/Metadata` and the entity type
   configurations only once an area node answered yes (or the check failed; the API decides), not for "denied"; players
   never request them. `hooks/loadedEntityMetadata.ts` reads the already loaded metadata without asking (the picker's
@@ -659,6 +809,22 @@ offers; the API checks every call.
   New with / Edit / Delete are disabled with the gate's hint; the ⚙ is disabled with "Requires knk.admin.content"
   for other area holders (LAM3-11). A single Delete asks with `useConfirm` (danger), a refusal keeps V6's error dialog
   with "Show what uses it", success is a toast and the row also leaves the bulk selection.
+- **Row actions and the row menu** (#405, #406; knk-web-app `next` `3f8ad46`): View / Edit / Delete are 32 px icon
+  buttons (`ROW_ACTION_BUTTON`) in `DataTable`'s sticky actions column, with `title` as tooltip and an `aria-label`
+  that adds the reason while disabled ("Delete – Requires knk.admin.delete", `gatedLabel`). One `RowActionGate` per
+  action (`viewGate` from `canView`, a display configuration, hint "No display configuration – set one up via ⚙";
+  `access.edit`, `access.delete`, `access.bulkDelete`, `access.export`) feeds both the buttons and the right-click
+  menu, so they can't disagree. `rowContextMenu(row, state)` builds View, Edit, Delete and Export as CSV; `menuGate`
+  turns a gate into `disabled` + `hint` ("Checking permission…" while the node check runs). When the clicked row is
+  ticked and more rows are ticked, Delete runs `handleBulkDelete` on the selection (gate `bulkDelete`, so the bulk
+  node; "A delete is running" during a bulk run) and Export takes `state.selected`; otherwise both act on the row.
+  View and Edit always open the clicked row. The menu's name is "Actions for <entity label>".
+- **Export, shared** (`ObjectDashboard/dashboardExport.ts`, #406): `exportDashboardRows({ entityTypeName, typeLabel,
+  columns, selected, query, isCancelled?, cancelledNotice? })` reads the rows through `readExportRows` /
+  `POST api/Dashboard/export` (the given rows by id, or with none the whole search), writes `<Type>-<yyyy-mm-dd>.csv`
+  and toasts the outcome (nothing to export, truncated at `EXPORT_ROW_LIMIT`, success, failure with the API's reason).
+  The bar's Export CSV (with its progress and Cancel) and the menu's Export call it; the permission check stays with
+  the caller (`access.export`).
 - **Bulk delete** (#205): "Delete (n)" (`btn-danger`) in `DashboardSelectionBar`'s `actions`, rendered only when the
   `bulkDelete` gate is allowed (hidden, not disabled; never for User and PermissionGroup). Confirm "Delete 3 Streets?"
   (no reason asked, LAM3-3), then `utils/bulkDelete.ts` sends the ids to `POST api/Dashboard/bulk-delete`
@@ -668,24 +834,26 @@ offers; the API checks every call.
   `code: "InUse"` rows offer "Show what uses it" (V6's `ReferenceDetails`, LAM3-5). A toast in every case. The API
   sends one `EntityChanged` per deleted row; other open tables refresh once, because the live refresh is debounced
   (`realtime/liveUpdates.ts`, X1).
-- **Routes and nav:** `staffAny` (see Routes below): the Dashboard link, the dashboard, the detail page and the form
-  wizard routes open for any area node; "Staff only" lists the nodes. `Navigation` and `routes/useAdminNav.ts` decide
+- **Routes and nav:** `staffAny` (see Routes below): the Dashboard link, the dashboard and the detail page open for
+  any area node; the form wizard routes need `knk.admin.content` (#371); "Staff only" lists the nodes. `Navigation` and `routes/useAdminNav.ts` decide
   with `routeAllowed`, so any one node of a `staffAny` route shows its link. The top bar's **Create New** menu is unchanged (content holders, every type): #353.
 - **Reads across areas:** a refused table read (`code: "NoReadAccess"`) says "You don't have access to Town. Requires one
   of: …" (`utils/readRefusal.ts` `readRefusalMessage`) in every `PagedEntityTable`, pickers' full tables included
   (LAM3-12). The open form's breadcrumb label (`useEntityLabel`) and the wizard's join-entry labels fall back to
   `GET api/Lookup/{type}/{id}` when the full read is refused (`utils/fetchOrLookup.ts` `fetchByIdOrLookup`). A
-  picker's **Create New** shows only with the related type's create node (hidden on a "no", LAM3-8); the wizard pickers'
+  picker's **Create New** shows only with the related type's create node plus `knk.admin.content` (`useCreateAllowed`;
+  hidden on a "no", LAM3-8, #371); the wizard pickers'
   lookup mode is V6's (`relationAccess`). Other pickers (Minecraft material and enchantment, the category filter) keep
   the full read; the material picker in the GateStructure and LootboxType forms needs the content read nodes (#352).
-- **Entity setup** (`FormWizardPage`): without `knk.admin.content` and without a wizard request (`?configId`,
-  `?resume`, an edit), `/forms/:type` shows "Entity setup needs knk.admin.content" with **Back to the dashboard**
-  instead of the lists. Both configuration tables disable **Delete** with "Requires knk.admin.delete" without it
+- **Entity setup** (`FormWizardPage`): `/forms/:type` (lists and wizard) is behind `staff(knk.admin.content)`, so
+  without it the route gate shows "Staff only" (#371 removed AM3's "Entity setup needs knk.admin.content" notice). Both configuration tables disable **Delete** with "Requires knk.admin.delete" without it
   (LV7-8; the API refuses it too).
 - **Audit labels** (`auditDetails`): "Bulk delete on the dashboard" and "Dashboard export" with type, counts and ids.
 - **Tests:** `useEntityAccess` (8), `bulkDelete` (5), `readRefusal` (2), `fetchOrLookup` (2), `ObjectDashboard` (#280
   per-type access, bulk flow, chunks, cancel), `DashboardSelectionBar` (endpoint), `tableExport`, `useEntityMetadata`,
-  `routeTable`, `AdminLayout`, `FormWizardPage.deleteConfig`, `auditDetails`, the nav tests for area nodes.
+  `routeTable`, `AdminLayout`, `FormWizardPage.deleteConfig`, `auditDetails`, the nav tests for area nodes; the row
+  menu (#406 block in `ObjectDashboard.test.tsx`: items, gates, selection, export) and e2e
+  `dashboard-row-actions.spec.ts`.
 
 ## Routes, layouts and the admin sidebar
 
@@ -705,9 +873,13 @@ PandiO/knk-workspace#30 (chain 2 link W4; merged 2026-11-12 in `main` `1371951`;
   without it), `staffAny` → `StaffRoute` with a list (any one opens it; "Staff only" lists the nodes; #280 AM3),
   `owner` → `OwnerRoute` (exact grants, D24). Display only: the API checks the same node. `nodesOf(access)` gives
   every node a route asks about, `routeAllowed(access, statuses)` the answer; `nodeOf` the first node (sidebar).
-  `staffAny(AREA_NODES)` (`DASHBOARD_ACCESS`) is on `dashboard`, `dashboardType`, `entityDetail` and the form wizard
-  routes `entitySetupType` (`/forms/:entityName`) and `entityEdit` (LAM3-1, decision open: #368); `entitySetup`
-  (`/forms`), the builders and the Minecraft catalogue stay `staff(knk.admin.content)`.
+  `staffAny(AREA_NODES)` (`DASHBOARD_ACCESS`) is on `dashboard`, `dashboardType` and `entityDetail`. `entitySetup`
+  (`/forms`), the form wizard routes `entitySetupType` (`/forms/:entityName`, also New / New with / Drafts) and
+  `entityEdit` (`/forms/:entityName/edit/:id`), the builders and the Minecraft catalogue are
+  `staff(knk.admin.content)` (#371 reverted AM3's LAM3-1, which had opened the wizard routes for any area node).
+  Links into the wizard from other pages (the Lootboxes tabs' New/Edit, Road network's street Rename, a detail page
+  section's edit and Create New) are not gated yet and lead to "Staff only" without the node:
+  [#380](https://github.com/PandiO/knk-workspace/issues/380).
 - **Layout routes** (`src/layouts/`, built by `routes/AppRoutes.tsx`): `PublicLayout` (landing, auth pages,
   invites, leaderboards, guides, public profiles, siege matches, the deletion confirmation, 404), `PlayerLayout`
   (`/account`, `/account/link`, `/account/transactions`), `AdminLayout` (`/admin`, the dashboard, Entity setup,
@@ -774,9 +946,13 @@ ignores a handled Escape). Single: a pick replaces the value and closes the list
 filter, pinned rows, selection; a single pick closes it). **Access** (#280, `relationAccess`): with one of the related
 type's metadata `readNodes` (or when the metadata names none) the type's own search; without one `lookupClient.search`
 (`api/Lookup`, names and one detail line, no full table, picked as `{ id, name }` like an edit-loaded reference); a
-type without a lookup says "can't be searched here. Requires one of: …". A lookup takes no filters: `prefer…` filters
-are dropped, `excludeIds` is applied on the page, any other pickerFilter makes the picker say why instead of offering an
-unfiltered list (`lookupFilterPlan`).
+type without a lookup says "can't be searched here. Requires one of: …". **Lookup filters** (PandiO/knk-workspace#288,
+knk-web-app branch `claude/lookup-picker-filters-288`, in review): the lookup gets the field's pickerFilters
+(`lookupFilterPlan`: every filter with a value, `prefer…` ones included; `excludeIds` stays on the page), so a filtered
+field (a siege team scoped to its scenario) offers the narrowed list. Only a 400 `LookupFilterNotAllowed` (a filter the
+type's lookup doesn't take, `lookupFilterRefusal`) makes the picker say "This list is narrowed by …, which only the full
+… search can do. Requires one of: …" instead of offering records the form would not accept; an unusable value shows the
+API's reason. Tests: `RelationPicker.test.tsx`, `relationPicker.test.ts`, `e2e/relation-picker-lookup-filters.spec.ts`.
 
 **Picker columns** (KNG-166): `PagedEntityTable` shows the entity's saved default table columns
 (Entity setup page → Default Table Columns) or else the built-in columns of
@@ -959,3 +1135,12 @@ a `REACT_APP_*` environment variable, matching the note already in this repo's
   the `knk-web-api` scan or the consolidated cross-repo report.
 - Whether the Minecraft-account link-code feature described above is actually
   consumed by `knk-plugin` today (this scan only covers `knk-web-app`).
+
+## Changes
+
+1. 2026-11-15: table scroll boxes `relative` on the admin pages, #535, knk-web-app `next` `5b87473`; detail page:
+   `derived` relationships are read-only sections with a hint, #409, knk-web-app `next` `d3d7152`, docs #559
+2. 2026-11-14: header in the standard format; § Data and format primitives: sticky columns, row lines on the cells,
+   `rowContextMenu` and `ContextMenu`; § Dashboard access model: row action gates shared by buttons and menu,
+   `dashboardExport.ts`; #404, #405, #406, docs #526
+3. Earlier history, as the header listed it before 2026-11-14 (newest first): 2026-11-14 (end-to-end tests on Playwright with a mocked API, in CI as `e2e.yml`; Cypress removed — #423, knk-web-app branch `claude/playwright-e2e-423`); 2026-11-14 (step-jump "Go to" saves in the background #413, failed step conditions mark their fields #414, knk-web-app `next` `399722d`, docs #482); 2026-11-13 (`test:ci` runs in the `Build and test` CI workflow; the "no CI workflow" note was stale); 2026-11-13 (step conditions in the builder #88 and clickable wizard steps #68, merged into `next` 2026-11-13, knk-web-app `1f848f7`; operators per field type, emptied lists, what a jump saves — docs #395); 2026-11-13 (detail page Select / Change / Unlink / Add need `knk.admin.content`, `withContentNode` kept as a no-op against an API with #374, knk-web-app `next` `ca1959d`, docs #385); 2026-11-13 (form wizard and create/edit back on `knk.admin.content`, #371, LAM3-1 reverted, knk-web-app `next` `e6ba115`, docs #378); 2026-11-13 (dashboard access model in the web app and bulk delete, #280 AM3 and #205, merged into `main` `e02ee79`: new section, export through `POST api/Dashboard/export`, `staffAny` routes, Dashboard link for any area node — docs #366); 2026-11-12 (chain 2 W1–W4 and X1 and chain 3 V1–V7 merged into `main` `1371951`; their sections below brought over and marked merged — docs issues #337–#345); 2026-11-05 (live updates on the dashboard, detail page, moderation list and profile — #183, branch `claude/realtime-web-live-183`, merged 2026-11-12); 2026-11-09 (form and display builders: Save keeps the builder open and stores a draft, Save and close, explicit Publish with what changes for staff, Duplicate, Generate from metadata, live preview, "Leave without saving?" — #71, branch `claude/builders-71`, not merged); 2026-11-09 (form wizard search-as-you-type relation picker with Open full table and a lookup mode for viewers without the type's read node, #191; FeedbackModal "Show details" and "Show what uses it" on a delete refused as in use, #44 — branch `claude/picker-details-191-44`, not merged); 2026-11-09 (entity detail page: real Select / Unlink / Add through `api/Relationships`, a separate Delete, actions disabled with "Requires …", values as text, related values as links, paged collections, readable load errors — #188, #189, branch `claude/entity-detail-188-189`, not merged); 2026-11-08 (settings pages: Lootbox settings tab, Currency policy and Road network on the SettingsPage shell, units and help, confirms on risky switches, lootbox announcement preview — #26, branch `claude/settings-pages-26`, not merged); 2026-11-08 (staff player profile: status strip, tabs, freeze/unfreeze, per-player timeline, paged audit log; moderation search by dashless UUID, sort, search in the URL, recently opened — #119, branch `claude/player-profile-119`, not merged); 2026-11-08 (dashboard checkbox selection and Export CSV behind `knk.admin.export` — #205 export part, branch `claude/dashboard-export-205`, not merged); 2026-11-08 (Entity setup at phone width, raw colours checked in `test:ci`, landing slideshow fade out → in, `usePrefersReducedMotion` — #266, #263, #258, branch `claude/web-fixes-266-263-258`, not merged); 2026-11-06 (Dashboard kept in the top bar — LW4-1, #30); 2026-11-06 (numbers in the viewer's locale — LW3-1, #187); 2026-11-06 (child form asks before closing with unsaved changes — LW2-2, #33); 2026-11-05 (admin information architecture: route-meta table, public/player/admin layout routes, grouped admin sidebar, breadcrumbs, `/admin` overview — #30, branch `claude/admin-ia-30`, stacked on #197 and #187 (which contains #33), not merged); 2026-11-05 (no "Entity setup" nav link, the Dashboard link is current on the content-tool pages — #197, branch `claude/nav-entity-setup-197`, not merged); 2026-11-05 (data and format primitives: `DataTable`/`Pager`, `utils/format.ts`, `Field`, `SettingsPage` shell with dirty state — #187, branch `claude/data-primitives-187`, stacked on #33, not merged); 2026-11-05 (feedback primitives: one accessible `Dialog`, `ConfirmDialog` with danger and a reason, general toasts, all overlays moved — #33, branch `claude/feedback-primitives-33`, not merged); 2026-11-05 (#239 offer permission check, #240 Send again merged); 2026-11-04 (#239, #240 on a feature branch); 2026-11-02 (`src/realtime/RealtimeProvider`, world tasks and catalogue scans over the web hub — #181, branch `claude/realtime-signalr`); 2026-11-01 (world tasks anchored to the draft, cancel/expired states, task code, builder task types — #180, branch `claude/world-task-hardening`); 2026-09-18 (scan basis: `knk-web-app` @ `4ff5dc6`, branch `claude/web-app-codebase-scan-4yqibi`); spot edits 2026-10-09 (ObjectTypeExplorer, KNG-61), 2026-10-10 (FormWizard Boolean fields, KNG-53), 2026-10-12 (FormWizard child forms, KNG-133, KNG-134; List edit load, step header, List validation, KNG-135, KNG-137, KNG-164; form session registry, KNG-136; cancel / delete-draft prompt, KNG-162; form configuration export/import, KNG-138); 2026-10-17 (form wizard chain merged to `main`; smoke-test follow-ups KNG-166..169, KNG-172, KNG-173: step strip, confirmations and refusals, rule builder parent forms, picker columns, metadata refresh); 2026-10-22 (display configuration export/import; KNG-195 hybrid picker submit); 2026-10-23 (step completion conditions run, KNG-186); 2026-10-23 (validation result log, batch validate, Re-check, KNG-269); 2026-10-25 (toast region, world-task polling; UX re-evaluation in `reports/2026-10-25-web-app-ux-reevaluation.md`); 2026-10-26 (dashboard type in the URL, `returnTo`, submit pending state, success toast — PandiO/knk-workspace#177 link 1, #58); 2026-10-26 (dashboard header New/Configure, flat explorer with marker, open form without the explorer + breadcrumb, detail page header, metadata-driven Create New, "Entity setup" — #177 link 2, #81, #39); 2026-10-26 (dashboard explorer: one scrollbar, favourite types — #194, branch `claude/dashboard-explorer-194`, merged into `main` `c3c0c9f`), 2026-10-26 (dashboard header row spacing — #195, branch `claude/dashboard-header-195`, merged into `main` `c3c0c9f`); 2026-10-26 (data router, unsaved-changes guard, sticky footer, blur validation + error summary, Save on any step in edit mode, single-line input, drafts owned by the login — #109, #186, #64 FormWizard part); 2026-10-27 (unsaved changes compared by value across all steps, Next's progress save no longer counts as saved — #109 fix round); 2026-11-01 (dashboard table state in the URL, rows as links, `aria-sort`, lootbox/moderation tab in the URL, "Drafts (n)" and "New with" — PandiO/knk-workspace#39, #177 follow-up, merged 2026-11-03); 2026-11-02 (design tokens and switchable themes — #95, merged 2026-11-03); 2026-11-03 (fix round after the live comparison: orange brand primary, heading font on player pages only, full-bleed auth pages); 2026-11-03 (explorer favourites are copies — #225, branch `claude/explorer-favourite-copies-225`, not merged); 2026-11-03 (explorer filter: display / form configuration — #226, merged 2026-11-04); 2026-11-03 (open form without the type overview card — #227, merged 2026-11-04)

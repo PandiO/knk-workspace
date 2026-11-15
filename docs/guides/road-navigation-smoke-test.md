@@ -44,7 +44,14 @@ start-leg rule, not KNG-108; follow-up [KNG-124](https://linear.app/kngpandi/iss
 **2026-10-15:** KNG-121 (walk paths keep KNG-110's "no way out" rule) and KNG-124 (finding N18: shut in close to a
 road) implemented on knk-plugin `wt/kng-121-124` - "KNG-121" (T1-T4) and "KNG-124" (U1-U5) in Findings. **2026-10-17:**
 T1-T3 passed (developer); T4 and U1-U5 accepted without a run; merged ([knk-plugin #14](https://github.com/PandiO/knk-plugin/pull/14)).
-**Last updated:** 2026-10-15
+**Last updated:** 2026-11-15 (automation note: Citizens on the CI server, NPC scenarios, [#543](https://github.com/PandiO/knk-workspace/issues/543)); 2026-11-14 (automation note, plugin backfill [#511](https://github.com/PandiO/knk-workspace/issues/511)); 2026-10-15
+**Automation (2026-11-14, #511):** no step here became a plugin scenario. `/navigate`, its compass and trail are a
+player's (simulated players, [#540](https://github.com/PandiO/knk-workspace/issues/540)); route planning and the walk
+path rules are already knk-core unit tests. NPC route following (the NPC navigation plan's developer tests, which
+build on this network) is partly automated since [#543](https://github.com/PandiO/knk-workspace/issues/543): the
+`paper-boot` server has Citizens, and three plugin scenarios walk NPCs on a fake road network through the router
+(tagged in the [NPC implementation plan](../specs/npc-platform/IMPLEMENTATION_PLAN.md)'s Phase 2 and Phase 4
+developer tests). Still no step of this guide is automated.
 **Sources:** the "Developer to-do" blocks of Phases 1, 3, 4 and 5 in `docs/specs/navigation/IMPLEMENTATION_PLAN.md`;
 progress report `docs/reports/2026-09-27-road-navigation-chain.md`. If this file and a plan block disagree, the plan wins.
 

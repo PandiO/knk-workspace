@@ -176,6 +176,28 @@ The target hosts/ports above are placeholders: use the networks and ports of you
 | Plugin task cost | `rate(knk_task_duration_seconds_sum[1m])` per `task` | seconds of work per second = share of one tick thread |
 | GC pause share | `rate(knk_jvm_gc_seconds_total[1m])` | GC stalls show up as tick spikes |
 
+**NPC navigation panels** ([PandiO/knk-workspace#358](https://github.com/PandiO/knk-workspace/issues/358), NAV-16; plugin branch `claude/npc-navigation`, not merged yet; series exist only with `metrics.enabled` and `npc.navigation.enabled` on). Put them in their own row so NPC load can be read next to TPS and tick time:
+
+| Panel | Query | Why |
+|---|---|---|
+| NPCs by state | `sum by (state)(knk_npc_nav_npcs)` (per world: `by (world, state)`) | how many NPCs walk, wait, pause or travel simulated |
+| NPC main-thread cost | `rate(knk_npc_nav_main_thread_seconds_sum[1m])` | seconds per second spent on NPC navigation on the tick thread |
+| Route planning p95 | `histogram_quantile(0.95, sum by (le,kind)(rate(knk_npc_nav_plan_seconds_bucket[5m])))` | road-graph and local planning time |
+| Planning queue wait p95 | `histogram_quantile(0.95, sum by (le)(rate(knk_npc_nav_queue_wait_seconds_bucket[5m])))` | too few plans in flight, or replan bursts |
+| NPC events | `sum by (event)(rate(knk_npc_nav_events_total[5m]))` | arrivals vs stuck (`stuck_engine`, `stuck_no_progress`), recoveries, retries used up, replans |
+| Trespasses | `increase(knk_npc_nav_events_total{event="trespass"}[1h])` | must stay 0: an NPC entered a region the current rules deny it (the trespass guard, Phase 3) |
+| Replans by cause | `sum by (event)(rate(knk_npc_nav_events_total{event=~"replan_recheck\|replan_event"}[5m]))` | `replan_recheck`: the periodic recheck found a denied region or a closed gate ahead; `replan_event`: a gate or access change concerned the NPC. A burst of `replan_event` at every cache refresh means NPCs replan for nothing (Phase 3) |
+| Rule checks | `rate(knk_npc_nav_events_total{event="rule_check"}[1m])` | about walking NPCs ÷ `recheck-ticks` × 20 per second; lower means `rule-checks-per-tick` is too small (Phase 3) |
+| Blocked NPCs | `sum by (event)(increase(knk_npc_nav_events_total{event=~"blocked_walk\|woken"}[15m]))` | `blocked_walk`: NPCs that set out for their blocking element; `woken`: NPCs at a blocking element woken by a gate or access change. Many `no_route_wait` and few `woken` after a gate opened: events do not arrive, the 5-second timer does the work (Phase 3) |
+| Engine block rules removed | `increase(knk_npc_nav_events_total{event="examiner_leak"}[1h])` | must stay 0: Citizens added a block rule of its own to a local search and K&K removed it (Phase 2) |
+| Waiting NPCs by cause | `sum by (event)(rate(knk_npc_nav_events_total{event=~"no_route_wait\|unloaded_wait"}[5m]))` | no allowed route (a closed gate, a denied region) vs the way ahead not loaded (Phase 2) |
+| Failed orders | `increase(knk_npc_nav_events_total{event="failed"}[1h])` | orders that ended as failed: no road connects, or retries and replans used up (Phase 2) |
+| Stretches handed over | `rate(knk_npc_nav_events_total{event="stretch"}[5m])` | how much route following goes on (Phase 2) |
+| Group folds | `sum by (event)(increase(knk_npc_nav_events_total{event=~"group_fold\|group_reform"}[15m]))` | groups that walked as a column where the road is too narrow for their formation, and took it up again. Many folds on a road that looks wide: `group-spacing` is too large for it (Phase 4) |
+| Followers' own legs | `sum by (event)(increase(knk_npc_nav_events_total{event=~"group_rejoin\|group_lost"}[15m]))` | `group_rejoin`: a follower left its lane or made no progress and planned one leg back; `group_lost`: its legs kept failing and the group went on without it (should stay near 0). Many rejoins at the same places point at stairs or corners followers cannot walk as waypoints (Phase 4) |
+| Leaders waiting | `increase(knk_npc_nav_events_total{event="group_regroup"}[15m])` | a leader stopped for followers more than `group-regroup-blocks` behind; each wait costs the group one more road plan (Phase 4) |
+| Chunks held for NPCs | `knk_npc_nav_chunks_held` | the travel bubble's cost (NAV-12) |
+
 ## 5. What KNG-232 adds (and how to use the guide before it is deployed)
 
 Both are merged but unverified live; build current plugin `main` / API `main` to try them, and read the numbers
@@ -317,4 +339,4 @@ Decision procedure (about one evening of data):
 
 Header history up to 2026-11-13, as the old `Last updated` line gave it (newer changes: the header and git history):
 
-2026-11-02 (§ 5.2: `Telemetry__Exporter=prometheus` stops the OTLP export, checked against API `master` `8df59b7` `Program.cs`; [PandiO/knk-workspace#48](https://github.com/PandiO/knk-workspace/issues/48)); 2026-10-22 (§ 4.2/§ 5 aligned with the implemented metric names)
+2026-11-13 (§ 4.2: NPC group panels, `group_*` events, PandiO/knk-workspace#377); 2026-11-13 (§ 4.2: NPC navigation panels, `knk_npc_nav_*`, PandiO/knk-workspace#358; Phase 2 events, #360; Phase 3 rule panels, #361); 2026-11-02 (§ 5.2: `Telemetry__Exporter=prometheus` stops the OTLP export, checked against API `master` `8df59b7` `Program.cs`; [PandiO/knk-workspace#48](https://github.com/PandiO/knk-workspace/issues/48)); 2026-10-22 (§ 4.2/§ 5 aligned with the implemented metric names)
