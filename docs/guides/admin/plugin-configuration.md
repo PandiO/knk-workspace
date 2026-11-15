@@ -1,6 +1,6 @@
 # Plugin configuration reference (`config.yml`)
 
-**Status:** Current · **Last updated:** 2026-11-15 (§ 4.27 `npc`: `local-legs-clearance`, #623); 2026-11-15 (§ 4.27 `npc`: `corridor-steering`, `corridor-half-width`, `wall-clearance`, #622); 2026-11-15 (§ 4.3 `realtime.moderation` and § 2.1, web kick/ban, #574); 2026-11-15 (§ 2.1: #522 merged into `next` `deb7ff49`, #589); 2026-11-15 (§ 4.27 `npc`: `group-lateral-spacing`, `group-width-hysteresis-blocks`, `group-followers-finish-trip`, `group-spacing` 2.0 → 1.5, `group-formation` and `group-ranks-width` texts, #522); 2026-11-15 (§ 4.27 `npc`: `corner-clearance`, `waypoint-margin`, `recovery-wait-ticks`, `stationary-ticks` and `no-progress-ticks` 40, `max-retries` reworded, #521); 2026-11-14 (§ 4.28 `testing.scenarios`, test servers only, #421); 2026-11-14 (§ 4.18 `messages.web-account-registered`, #485); 2026-11-14 (§ 2.1: the #377 `group-*` keys are in `next` since 2026-11-13, PandiO/knk-workspace#496); 2026-11-13 (§ 4.11 gates are discovered too; § 4.21 realtime push; § 4.26 the kit cache, PandiO/knk-workspace#300)
+**Status:** Current · **Last updated:** 2026-11-15 (§ 4.27 `npc`: `group-formation-keeping`, `group-lateral-spacing-min`, `group-spacing-min`, `group-lookahead-blocks`, #624); 2026-11-15 (§ 4.27 `npc`: `local-legs-clearance`, #623); 2026-11-15 (§ 4.27 `npc`: `corridor-steering`, `corridor-half-width`, `wall-clearance`, #622); 2026-11-15 (§ 4.3 `realtime.moderation` and § 2.1, web kick/ban, #574); 2026-11-15 (§ 2.1: #522 merged into `next` `deb7ff49`, #589); 2026-11-15 (§ 4.27 `npc`: `group-lateral-spacing`, `group-width-hysteresis-blocks`, `group-followers-finish-trip`, `group-spacing` 2.0 → 1.5, `group-formation` and `group-ranks-width` texts, #522); 2026-11-15 (§ 4.27 `npc`: `corner-clearance`, `waypoint-margin`, `recovery-wait-ticks`, `stationary-ticks` and `no-progress-ticks` 40, `max-retries` reworded, #521); 2026-11-14 (§ 4.28 `testing.scenarios`, test servers only, #421); 2026-11-14 (§ 4.18 `messages.web-account-registered`, #485); 2026-11-14 (§ 2.1: the #377 `group-*` keys are in `next` since 2026-11-13, PandiO/knk-workspace#496); 2026-11-13 (§ 4.11 gates are discovered too; § 4.21 realtime push; § 4.26 the kit cache, PandiO/knk-workspace#300)
 **Checked against:** knk-plugin `main` `121030f`; § 4.11, § 4.21 and § 4.26 against `57884e9`; § 4.27 `npc`, the `realtime.erasure` and `realtime.moderation` blocks and `regions.temp-retention.release-interval-minutes` against knk-plugin `next` (not on trunk yet). Update this page in place whenever a `config.yml` key is added, renamed, removed or gets a new default.
 **Source:** knk-plugin `knk-paper/src/main/resources/config.yml` (1,152 lines at `121030f`), read by
 `knk-paper/.../paper/config/ConfigLoader.java`, `EnchantmentConfigManager.java` and `KnKPlugin.java`
@@ -86,7 +86,8 @@ Newest first. Builds before this list: compare the files with the script.
 | Merged | Issue | Added (+), removed (−) or changed | Applies |
 |---|---|---|---|
 | in review, not in `next` yet (`claude/web-kick-ban-574`) | [#574](https://github.com/PandiO/knk-workspace/issues/574) | + `realtime.moderation` (`kick-default-reason`, `ban-message`; optional, defaults apply when missing) | Restart |
-| in review, not in `next` yet (`claude/npc-movement-m6`) | [#623](https://github.com/PandiO/knk-workspace/issues/623) | + `npc.navigation.local-legs-clearance` (false) | Restart |
+| in review, not in `next` yet (`claude/npc-movement-m3`) | [#624](https://github.com/PandiO/knk-workspace/issues/624) | + `npc.navigation.group-formation-keeping` (levels), + `group-lateral-spacing-min` (0.6), + `group-spacing-min` (1.0), + `group-lookahead-blocks` (4) | Restart |
+| in `next` (2026-11-15), not on trunk yet | [#623](https://github.com/PandiO/knk-workspace/issues/623) | + `npc.navigation.local-legs-clearance` (false) | Restart |
 | in `next` (`0fa74a67`, 2026-11-15), not on trunk yet | [#622](https://github.com/PandiO/knk-workspace/issues/622) | + `npc.navigation.corridor-steering` (false), + `corridor-half-width` (4), + `wall-clearance` (0.8) | Restart |
 | in `next` (`deb7ff49`, 2026-11-15), not on trunk yet | [#522](https://github.com/PandiO/knk-workspace/issues/522) | + `npc.navigation.group-lateral-spacing` (1.0), + `group-width-hysteresis-blocks` (3), + `group-followers-finish-trip` (false); `group-spacing` default 2.0 → 1.5 (now the gap between rows and in the column). A server whose `config.yml` still says `group-spacing: 2.0` keeps 2.0: change it to 1.5 | Restart |
 | in `next` (`5dc88cfd`, 2026-11-15), not on trunk yet | [#521](https://github.com/PandiO/knk-workspace/issues/521) | + `npc.navigation.corner-clearance` (1.0), + `waypoint-margin` (0.5), + `recovery-wait-ticks` (20); `stationary-ticks` and `no-progress-ticks` default 60 → 40; `max-retries` now counts the recovery steps (back-off, side-step, local leg ahead). A server whose `config.yml` still says 60 keeps 60: change the two lines to 40 | Restart |
@@ -666,7 +667,11 @@ each value with the layer it came from. A wrong value is reported at startup and
 | `group-spacing` | `1.5` | Blocks between the rows of a formation and between NPCs in a column; 1–8 (was 2.0 and also the gap in a row before #522) | Restart | #377, #522 |
 | `group-lateral-spacing` | `1.0` | Blocks between neighbours in a row of a group's formation (1 = shoulder to shoulder); 1–8. 3 abreast need a road 1 + 2 × this wide, rounded down to whole blocks (3 at 1.0 and 1.25, 4 at 1.5); the escort ring's first ring has a radius of 1.25 × this | Restart | #522 |
 | `group-ranks-width` | `2` | NPCs per row in the `ranks` formation (2 = pairs), its widest width; it narrows one by one down to 2 before it folds into a column; 2–8 | Restart | #377, #522 |
-| `group-width-hysteresis-blocks` | `3` | A group changes to a narrower width (still 2 abreast or more) or a wider one only when it lasts this many blocks along the path; a column at a gate or a stair is taken at once; 0–16 | Restart | #522 |
+| `group-width-hysteresis-blocks` | `3` | A group changes to a narrower width (still 2 abreast or more) or a wider one only when it lasts this many blocks along the path; with `group-formation-keeping: levels` a column at a gate or a stair is taken at once, with `elastic` the column needs it too (shorter tight places are passed by merging lanes); 0–16 | Restart | #522, #624 |
+| `group-formation-keeping` | `levels` | How a group keeps its formation (off until the developer has tested it). `levels`: fixed widths as above. `elastic`: the width is fitted from the free width across the path (walls, drops and regions the group's access rules deny end it); neighbours squeeze to `group-lateral-spacing-min` and the rows close up to `group-spacing-min` before the group narrows; it decides its width `group-lookahead-blocks` past its depth ahead of the leader; every width change, the column included, needs the tight place to last `group-width-hysteresis-blocks`, and shorter ones are passed with the lanes merged (counted as `merges` in `/knk npc nav stats` with their reason); the column only where 2 abreast squeezed don't fit; stairs as wide as the flight allows when each lane has its own steps; followers get the new slots by their place on every width change; the outer lanes keep `wall-clearance` from a wall where the road allows | Restart | #624 |
+| `group-lateral-spacing-min` | `0.6` | Blocks between neighbours in a row that an `elastic` formation squeezes to before it narrows (0.6 = the body's width, shoulders touch). 3 abreast then fit a 2-wide road (2 × 0.6 + 2 × 0.35 = 1.9), 2 abreast a road 1.3 wide; 0.5–8 | Restart | #624 |
+| `group-spacing-min` | `1.0` | Blocks between the rows that an `elastic` formation closes up to while it is squeezed (the body's depth plus 0.4), and the gap in its column; 0.6–8 | Restart | #624 |
+| `group-lookahead-blocks` | `4` | Blocks an `elastic` formation looks ahead of its leader past its own depth when it decides its width (the decided "depth + 4"), so it starts squeezing or narrowing before the tight place; 0–32 | Restart | #624 |
 | `group-followers-finish-trip` | `false` | When the leader has arrived and the group turns back, followers still on their way (held at a gate or a district edge, behind) finish their trip to the goal first and then rejoin the group (couriers); `false`: they follow the leader at once | Restart | #522 |
 | `group-rejoin-blocks` | `4.0` | A follower further than this from its lane plans its own leg back to the group's path (one local leg, never the whole route). A follower without progress for `no-progress-ticks` takes the recovery steps first (back-off, side-step), then its own leg back to a point ahead of it on its own floor; 2–16 | Restart | #377, #521 |
 | `group-regroup-blocks` | `24.0` | The leader waits when a follower is this many blocks behind its slot, until the group has closed up to half of it (30 seconds at most); 0–256, 0 = the leader never waits | Restart | #377 |
@@ -691,7 +696,8 @@ The block to paste (the Phase 1 keys with the Phase 2, 3 and 4 additions; Phase 
 lines; #521 adds `recovery-wait-ticks`, `corner-clearance` and `waypoint-margin` and sets `stationary-ticks` and
 `no-progress-ticks` to 40; #522 adds `group-lateral-spacing`, `group-width-hysteresis-blocks` and
 `group-followers-finish-trip` and sets `group-spacing` to 1.5; #622 adds `corridor-steering`,
-`corridor-half-width` and `wall-clearance`; #623 adds `local-legs-clearance`):
+`corridor-half-width` and `wall-clearance`; #623 adds `local-legs-clearance`; #624 adds `group-formation-keeping`,
+`group-lateral-spacing-min`, `group-spacing-min` and `group-lookahead-blocks`):
 
 ```yaml
 npc:
@@ -724,6 +730,10 @@ npc:
     group-lateral-spacing: 1.0
     group-ranks-width: 2
     group-width-hysteresis-blocks: 3
+    group-formation-keeping: levels
+    group-lateral-spacing-min: 0.6
+    group-spacing-min: 1.0
+    group-lookahead-blocks: 4
     group-followers-finish-trip: false
     group-rejoin-blocks: 4.0
     group-regroup-blocks: 24.0
@@ -773,14 +783,15 @@ testing:
 
 ## Changes
 
-1. 2026-11-15: § 4.27 `npc`: `local-legs-clearance` and the `wall-clearance` text (#623), § 2.1 row (and the #622 row now in `next`); checked against knk-plugin `claude/npc-movement-m6`, not merged into `next` yet
-2. 2026-11-15: § 4.27 `npc`: `corridor-steering`, `corridor-half-width`, `wall-clearance`, the `corner-clearance` and `waypoint-margin` texts (#622), § 2.1 row; checked against knk-plugin `claude/npc-movement-m2`, not merged into `next` yet
-3. 2026-11-15: § 4.27 `npc`: `group-lateral-spacing`, `group-width-hysteresis-blocks`, `group-followers-finish-trip`, `group-spacing` 2.0 → 1.5, the `group-formation` and `group-ranks-width` texts (#522), § 2.1 row (and the #521 row now in `next`); checked against knk-plugin `claude/npc-followups-l4`, not merged into `next` yet
-4. 2026-11-15: § 4.27 `npc`: `corner-clearance`, `waypoint-margin`, `recovery-wait-ticks`, `stationary-ticks` and `no-progress-ticks` 40, `max-retries` and `group-rejoin-blocks` reworded (#521), § 2.1 row; checked against knk-plugin `claude/npc-followups-l3`, not merged into `next` yet
-5. 2026-11-14: § 4.28 `testing.scenarios` (#421), § 2.1 and § 3 rows; checked against knk-plugin `next` `309d3580`
-6. 2026-11-14: § 4.18 `messages.web-account-registered` (#485), § 2.1 row; checked against knk-plugin `claude/smoke-fixes-484-485-487`, not merged into `next` yet
-7. 2026-11-13: § 4.3 `realtime.erasure` (#184) and the regions `temp-retention.release-interval-minutes` (#269), PR into `next` from `claude/plugin-chains-into-next`
-8. 2026-11-13: § 4.27 `npc`: six `group-*` keys, PandiO/knk-workspace#377
-9. 2026-11-13: § 4.27 `npc`: `rule-checks-per-tick`, `stop-on-trespass`, PandiO/knk-workspace#361
-10. 2026-11-13: § 4.27 `npc`, PandiO/knk-workspace#359 and #360; checked against knk-plugin `claude/npc-navigation`, not merged into trunk yet
-11. 2026-11-10: first version, PandiO/knk-workspace#295; checked against knk-plugin `main` `121030f`
+1. 2026-11-15: § 4.27 `npc`: `group-formation-keeping`, `group-lateral-spacing-min`, `group-spacing-min`, `group-lookahead-blocks` and the `group-width-hysteresis-blocks` text (#624), § 2.1 row (and the #623 row now in `next`); checked against knk-plugin `claude/npc-movement-m3`, not merged into `next` yet
+2. 2026-11-15: § 4.27 `npc`: `local-legs-clearance` and the `wall-clearance` text (#623), § 2.1 row (and the #622 row now in `next`); checked against knk-plugin `claude/npc-movement-m6`, not merged into `next` yet
+3. 2026-11-15: § 4.27 `npc`: `corridor-steering`, `corridor-half-width`, `wall-clearance`, the `corner-clearance` and `waypoint-margin` texts (#622), § 2.1 row; checked against knk-plugin `claude/npc-movement-m2`, not merged into `next` yet
+4. 2026-11-15: § 4.27 `npc`: `group-lateral-spacing`, `group-width-hysteresis-blocks`, `group-followers-finish-trip`, `group-spacing` 2.0 → 1.5, the `group-formation` and `group-ranks-width` texts (#522), § 2.1 row (and the #521 row now in `next`); checked against knk-plugin `claude/npc-followups-l4`, not merged into `next` yet
+5. 2026-11-15: § 4.27 `npc`: `corner-clearance`, `waypoint-margin`, `recovery-wait-ticks`, `stationary-ticks` and `no-progress-ticks` 40, `max-retries` and `group-rejoin-blocks` reworded (#521), § 2.1 row; checked against knk-plugin `claude/npc-followups-l3`, not merged into `next` yet
+6. 2026-11-14: § 4.28 `testing.scenarios` (#421), § 2.1 and § 3 rows; checked against knk-plugin `next` `309d3580`
+7. 2026-11-14: § 4.18 `messages.web-account-registered` (#485), § 2.1 row; checked against knk-plugin `claude/smoke-fixes-484-485-487`, not merged into `next` yet
+8. 2026-11-13: § 4.3 `realtime.erasure` (#184) and the regions `temp-retention.release-interval-minutes` (#269), PR into `next` from `claude/plugin-chains-into-next`
+9. 2026-11-13: § 4.27 `npc`: six `group-*` keys, PandiO/knk-workspace#377
+10. 2026-11-13: § 4.27 `npc`: `rule-checks-per-tick`, `stop-on-trespass`, PandiO/knk-workspace#361
+11. 2026-11-13: § 4.27 `npc`, PandiO/knk-workspace#359 and #360; checked against knk-plugin `claude/npc-navigation`, not merged into trunk yet
+12. 2026-11-10: first version, PandiO/knk-workspace#295; checked against knk-plugin `main` `121030f`
