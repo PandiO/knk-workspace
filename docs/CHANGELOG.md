@@ -4,6 +4,13 @@ This is a human-readable record of capabilities merged into the V3 default branc
 
 ## Unreleased — on feature branches, not merged
 
+- **Form wizard: list field cards stay readable on a phone**
+  ([PandiO/knk-workspace#290](https://github.com/PandiO/knk-workspace/issues/290); link L2 of the Chain 3 follow-ups
+  chain, [#564](https://github.com/PandiO/knk-workspace/issues/564)) — knk-web-app and knk-workspace
+  `claude/list-field-cards-290` (PRs into `next`, in review). In an Object List field the cards under "Selected (n):"
+  wrap at narrow widths: the name keeps the card's width (a long name wraps instead of being cut to one letter) and ×
+  and **Edit instance** move to their own line. Desktop layout unchanged. Playwright spec
+  `e2e/form-wizard-list-field.spec.ts`.
 - **Temp region releases: no server left out, no release stuck behind waiting ones**
   ([PandiO/knk-workspace#399](https://github.com/PandiO/knk-workspace/issues/399); link L1 of the Chain 3 follow-ups
   chain, [#564](https://github.com/PandiO/knk-workspace/issues/564)) — knk-web-api and knk-workspace branches
