@@ -1,18 +1,19 @@
 # Knights and Kings — production installation guide (admin)
 
-**Status:** Draft · **Last updated:** 2026-11-14 (§ 8.1: the web app install no longer skips a Cypress binary, Playwright replaced it, PandiO/knk-workspace#504); 2026-11-14 (§ 9.2 and § 9.5: Citizens as an optional plugin and the `npc.navigation` block, knk-plugin `next`, PandiO/knk-workspace#496); 2026-11-14 (knk-web-api's trunk renamed from `master` to `main`); 2026-11-13 (§ 8.1: the Node note points at the web app testing guide, PandiO/knk-workspace#304)
+**Status:** Draft · **Last updated:** 2026-11-15 (header and § 5.3: the migrations of releases v0.1 to v0.3 on knk-web-api `main` `2cc8254`, PandiO/knk-workspace#577)
 **State:** Draft v1 — written for review. Not yet followed on a real production host. The database, API, seed and
 web-server steps were rehearsed in a scratch environment on 2026-10-07 (see [Appendix A](#appendix-a--what-was-verified-and-how)).
 The Paper server steps and the release and deploy workflows are untested drafts; the CI workflows (§ 10.3) run on GitHub.
 **Applies to:** trunk only. knk-web-api `master` `1805cf9`, knk-web-app `main`, knk-plugin `main` `c7d5a1e`; 61 EF
 migrations, the latest being `20261006193103_UniquePermissionGrantHolderNode`. Feature branches that haven't been
 merged, such as road navigation, are not covered. Re-check § 2 and the seed table manifest after each trunk merge.
-**Migrations since (2026-11-12):** knk-web-api `master` `bc97b7d` has 113 migrations; the latest is
-`20261109101501_AddConfigurationDrafts` (#71), which runs after the same merge's `20261105200758_AddPrivacyErasureEvents`
-(#184 API part), `20261108162526_AddKitClaimDelivery` (#261 API part) and `20261108181026_SeedDashboardActionNodes`
-(#280 AM1). Before that: `20261105200617_AddCleavingCombatValues` (#259) after #233's `20261104121131_AddChatTokenSettings` and
-`20261104130000_SeedChatTokenNodes`. The migrator (§ 5.3) applies every missing one in order. Only this count and
-§ 5.3's note were updated for that commit; the rest of the guide still describes the commits above.
+**Migrations since (2026-11-15, release v0.3):** knk-web-api `main` `2cc8254` (tag `v0.3`) has 118 migrations; the
+latest is `20261115125459_SeedStaffKickBanNodes` (#119), which runs after the same release's
+`20261115082252_DropTownStreet` (#409, deletes the `TownStreet` rows) and `20261115092735_AddAuditLogSubject` (#50).
+Before that: `v0.2` (`58e3218`, 2026-11-14) added `20261109081203_AddTempRegionReleases` (#269), and `v0.1` (`6d5e9c1`,
+2026-11-13) `20261113161725_SeedStaffFreezeNodes` (#367) after `bc97b7d`'s `20261109101501_AddConfigurationDrafts`
+(#71). The migrator (§ 5.3) applies every missing one in order. Only this count and § 5.3's note were updated for
+these releases; the rest of the guide still describes the commits above.
 **Sources:** the three repos' code at those commits (file references inline); `docs/specs/*/…_FORMCONFIGS.md` for the
 dev-DB-only content; [`scripts/seed/`](../../scripts/seed/) for the seed tooling.
 
@@ -574,7 +575,28 @@ cd /opt/knk
 sudo docker compose run --rm migrator          # prints "Applying migration '…'" lines, then "Done."
 ```
 
-On knk-web-api `master` `bc97b7d` (2026-11-12) the latest migration is `20261109101501_AddConfigurationDrafts` (#71):
+**Release v0.3 (knk-web-api `main` `2cc8254`, 2026-11-15)** adds three migrations, in this order:
+
+1. `20261115082252_DropTownStreet` (#409): a town's streets now come from its districts, so the `TownStreet` link
+   table is dropped **with all its rows**, including streets that none of the town's districts has (they no longer
+   show on the town; link them to one of its districts to bring them back). The read-only check
+   [`scripts/maintenance/town-street-orphans-409.sql`](../../scripts/maintenance/town-street-orphans-409.sql) lists those streets, and Town form configurations with a streets
+   field, before you deploy. `Down` recreates the table and refills it from the districts only, so the backup is the
+   way back for the other rows.
+2. `20261115092735_AddAuditLogSubject` (#50): additive; the audit log gets nullable `SubjectType` and `SubjectId` and
+   an index, and `TargetUserId` becomes nullable (group permission changes are audited with the group as subject).
+3. `20261115125459_SeedStaffKickBanNodes` (#119): data only; gives the Staff group `knk.kick` and `knk.ban` for kick
+   and ban from the web app.
+
+Deploy v0.3 in this order: **back up the database first** (§ 5.5, because `DropTownStreet` deletes rows), deploy the
+API, run the migrator (`dotnet ef database update`; the API does not migrate on start), then deploy the web app, which
+needs the new endpoints. No settings and no plugin `config.yml` keys change; kick and ban reach the game with knk-plugin `v0.2`
+(#574) or later, running with `realtime.enabled: true`. Details per change: the
+[v0.3 changelog section](../CHANGELOG.md#v03--2026-11-15).
+
+Earlier: `v0.2` (`58e3218`, 2026-11-14) added `20261109081203_AddTempRegionReleases` (#269), and `v0.1` (`6d5e9c1`,
+2026-11-13) added `20261113161725_SeedStaffFreezeNodes` (gives the Staff group `knk.freeze` and `knk.unfreeze`, #367).
+Before them, on knk-web-api `master` `bc97b7d` (2026-11-12), the latest migration was `20261109101501_AddConfigurationDrafts` (#71):
 form and display configurations get a stored draft beside the published version; existing configurations stay
 published as they are. The same merge adds `AddPrivacyErasureEvents`, `AddKitClaimDelivery` and
 `SeedDashboardActionNodes` (the new `knk.admin.delete`, `knk.admin.delete.bulk` and `knk.admin.export` nodes and their
@@ -1620,6 +1642,9 @@ throwaway credentials. Nothing touched the dev DB or any real server.
 
 ## Changes
 
-Header history up to 2026-11-13, as the old `Last updated` line gave it (newer changes: the header and git history):
+1. 2026-11-15: header and § 5.3, the migrations of releases v0.1 to v0.3 (knk-web-api `main` `2cc8254`), PandiO/knk-workspace#577
+2. Header history from 2026-11-13 to 2026-11-14, as the old `Last updated` line gave it: 2026-11-14 (§ 8.1: the web app install no longer skips a Cypress binary, Playwright replaced it, PandiO/knk-workspace#504); 2026-11-14 (§ 9.2 and § 9.5: Citizens as an optional plugin and the `npc.navigation` block, knk-plugin `next`, PandiO/knk-workspace#496); 2026-11-14 (knk-web-api's trunk renamed from `master` to `main`); 2026-11-13 (§ 8.1: the Node note points at the web app testing guide, PandiO/knk-workspace#304)
+
+Header history up to 2026-11-13, as the old `Last updated` line gave it:
 
 2026-11-13 (§ 9.5 plugin `realtime.erasure` block — GDPR erasure push, siege vault given back before the kick, #184, brought into `claude/plugin-chains-into-next`); 2026-11-13 (§ 10.1 and § 10.3: CI shipped in knk-web-api and knk-web-app; G2, G3, § 8.1 build commands, Appendix A and B updated — #363); 2026-11-12 (header and § 5.3: latest migration `AddConfigurationDrafts`; § 4.3: optional `Realtime__WebLiveUpdatesEnabled` and `Realtime__WebPermissionCacheSeconds` — #341, #345); 2026-11-10 (§ 9.5 and § 13: the [plugin configuration reference](admin/plugin-configuration.md) and its per-deploy merge checklist; stale `config.yml` notes corrected, #295); 2026-11-10 (header and § 5.3: latest migration `AddCleavingCombatValues`, #259/#306); 2026-10-26 (§nginx: `/api/hubs/` without access log; § 9.5 plugin `realtime:` block — SignalR S1, #178, feature branch); 2026-11-02 (G10, § 12.3: the KNG-232 Prometheus endpoints of the API and the plugin, both off by default, [PandiO/knk-workspace#48](https://github.com/PandiO/knk-workspace/issues/48)); 2026-10-25 (§1/§3.4 G6: RegionHttpServer is loopback + `X-API-Key` since KNG-64; §nginx: WebSocket upgrade headers for the planned SignalR hub, #66); 2026-10-24 (§4.3, §9.3, §11 F/G: KNG-205 invitations merged, the feature-branch notes replaced); 2026-10-22 (§7.7: DisplayConfiguration export/import and the priority 2/3 form seeds and display seeds merged, KNG-139); 2026-10-21 (§4.3, §9.3, §11 F/G: invite-only sign-up, admission gate and Access sync — KNG-205/KNG-218); 2026-10-21 (§4.3 mail: the KNG-206 email engine on the invitations feature branch — `Email__Transport`, relay option, `App__PublicBaseUrl`, Log guard); 2026-10-17 (§7.7: FormConfiguration export/import and bundled seeds merged, KNG-138/139; two new migrations, see the note in §7.7); 2026-10-12 (§7.7: KNG-138 on a feature branch); 2026-10-08 (security and alpha-hosting update for KNG-64)

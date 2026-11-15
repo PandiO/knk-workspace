@@ -1,6 +1,6 @@
 # Ranks, titles and chat — player guide
 
-**Status:** Current · **Last updated:** 2026-11-15 (§ 8, § 9: kick and ban by staff on the website; #565, #574 in `next`, docs #597)
+**Status:** Current · **Last updated:** 2026-11-15 (§ 8: kick and ban from the website are released, v0.3 and knk-plugin v0.2; PandiO/knk-workspace#577)
 **Checked against:** knk-plugin `main` `57884e97`, knk-web-api `master` `75b5a00`, knk-web-app `main` `3ba747d`; not
 yet checked in game
 **Related:** [player handbook](player-handbook.md), [commands reference](commands.md), [chat tokens](../chat-tokens.md),
@@ -144,8 +144,8 @@ So you know what to expect:
      join again straight away.
    - **Banned:** you are disconnected with "You are banned from this server." and the reason, and you can't join
      again. A ban is permanent until staff lift it; there is no time limit.
-   - The texts can differ per server. *Kick and ban from the website are new and reach the servers with the next
-     release (PandiO/knk-workspace#565, #574).*
+   - The texts can differ per server. *Kick and ban from the website are new since release v0.3 of 2026-11-15
+     (PandiO/knk-workspace#565, #574).*
 5. There is no mute: a player who must stop chatting is frozen (PandiO/knk-workspace#466).
 
 ## 9. Messages you may see
@@ -166,5 +166,6 @@ So you know what to expect:
 
 ## Changes
 
-1. 2026-11-15: § 8, § 9 kick and ban by staff on the website, #565, #574, docs #597
-2. 2026-11-13: first version, PandiO/knk-workspace#301
+1. 2026-11-15: § 8 kick and ban from the website are released (v0.3), PandiO/knk-workspace#577
+2. 2026-11-15: § 8, § 9 kick and ban by staff on the website, #565, #574, docs #597
+3. 2026-11-13: first version, PandiO/knk-workspace#301
