@@ -4,6 +4,24 @@ This is a human-readable record of capabilities merged into the V3 default branc
 
 ## Unreleased — on feature branches, not merged
 
+- **Plugin: kick and ban sent from the web app are carried out in game**
+  ([PandiO/knk-workspace#574](https://github.com/PandiO/knk-workspace/issues/574); developer decisions 2026-11-15 on
+  [#565](https://github.com/PandiO/knk-workspace/issues/565); link L7 of the Chain 3 follow-ups chain,
+  [#564](https://github.com/PandiO/knk-workspace/issues/564)) — knk-plugin and knk-workspace branches
+  `claude/web-kick-ban-574` (PRs into `next`, in review, not merged). For players: a kick from the web app disconnects
+  them with the staff member's reason; a web ban puts them on the server's ban list like `/ban` (permanent, lifted with
+  `/pardon`) and disconnects them if online.
+  1. **Handlers.** The plugin handles the realtime `PlayerKick` / `PlayerBan` v1 events
+     ([contract](specs/realtime-signalr/DESIGN.md), § 6.10): kick if online here; ban = permanent entry on Paper's
+     profile ban list with the reason and the staff member as source (an existing entry is kept), then the kick. A
+     repeated `actionId` is skipped; a malformed payload is logged and ignored. Bukkit calls on the main thread.
+  2. **Texts.** New `config.yml` keys `realtime.moderation.kick-default-reason` and `realtime.moderation.ban-message`
+     ([configuration reference § 4.3](guides/admin/plugin-configuration.md#43-realtime)).
+  3. Docs: [smoke test § 7](guides/player-profile-smoke-test.md) steps 8–10 and 18 tagged with the plugin tests,
+     realtime DESIGN § 6.10 item 8, configuration reference.
+  - **Admin steps:** merge the `realtime.moderation` block into the dev and alpha `config.yml` (optional: defaults
+     apply when missing). Needs `realtime.enabled: true`. Deploy order: the API with L6 (#565) first or together; a
+     plugin without L7 ignores the events ("no handler"), so staff would see the action accepted without effect.
 - **Staff player profile, API part: frozen state in the summary, unfreeze reason, game sessions, search filters; kick and ban from the web**
   ([PandiO/knk-workspace#565](https://github.com/PandiO/knk-workspace/issues/565), part of #119; developer decisions
   2026-11-15 on kick and ban; link L6 of the Chain 3 follow-ups chain, [#564](https://github.com/PandiO/knk-workspace/issues/564))
