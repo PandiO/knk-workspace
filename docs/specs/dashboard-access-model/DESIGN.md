@@ -19,7 +19,7 @@ are back on `knk.admin.content` as § 4.3 has it, and in the web app create and 
 too (§ 4.3, § 7). Answers [#368](https://github.com/PandiO/knk-workspace/issues/368). Known gaps: #352 (material picker in world/lootbox forms),
 #353 (top bar Create New per area), #369 (Permission Group's list needs `knk.admin.user.perm`). **Staff web app follow-ups** (#408, #50, in `next` since 2026-11-14/15, on trunk when the developer promotes `next`; docs [#576](https://github.com/PandiO/knk-workspace/issues/576)): the PermissionGrant reads, a group's member count and the audit log's subject filter are in Appendix A.8. Developer 2026-11-08:
 the backfill (§ 4.5) **skips the Staff group**, and nobody changes a group ranked at or above their own (§ 4.4).
-**Last updated:** 2026-11-13 (status: #371 and #374 merged into `next`, docs #385); 2026-11-13 (the API asks for `knk.admin.content` on create, edit and link changes, § 4.3, § 4.7,
+**Last updated:** 2026-11-15 (§ 4.6.3: lookups take the narrowing pickerFilters, developer decision on #288, in review); 2026-11-13 (status: #371 and #374 merged into `next`, docs #385); 2026-11-13 (the API asks for `knk.admin.content` on create, edit and link changes, § 4.3, § 4.7,
 § 7, #374); 2026-11-13 (LAM3-1 reverted, § 7, #371); 2026-11-13 (status: implemented and merged, AM4 docs, LAM3-1 deviation #368; docs #366); 2026-11-12 (AM3 built; § 4.7 form/display configuration deletes need `knk.admin.delete`, developer
 decision on LV7-8; § 7 addendum); 2026-11-12 (AM1+AM2 merged); 2026-11-08 (AM2 built); 2026-11-08 (AM1 built, Staff decision); 2026-11-08 (decided version, with read gating per area, `knk.admin.export` and the read-endpoint
 appendix); 2026-11-08 (first version, chain 3 link D1)
@@ -417,7 +417,11 @@ also need `knk.admin.content` just to pick a Clan.
 
 - **Endpoints (category L):**
   - `POST api/Lookup/{entityType}/search` takes `{ searchTerm, page, pageSize ≤ 50 }` and returns
-    `{ items: [{ id, label, detail? }], total }`.
+    `{ items: [{ id, label, detail? }], total }`. **Changed by the developer on 2026-11-15**
+    ([#288](https://github.com/PandiO/knk-workspace/issues/288), replacing "no filters" of LAM2-7): it also takes
+    `filters`, the narrowing pickerFilters the type's own search accepts, and passes them to that search; results stay
+    labels only. Another filter, or a value the search would skip, answers 400 (never a wider list). Which keys each
+    type takes: [web-api architecture, lookups](../../architecture/web-api-architecture.md).
   - `GET api/Lookup/{entityType}/{id}` returns `{ id, label, detail? }`.
   - Both are implemented once, through the registry's search and label delegates.
   - `detail` is one short, non-sensitive line (a domain's parent, a location's world and coordinates); users get their
@@ -425,7 +429,8 @@ also need `knk.admin.content` just to pick a Clan.
 - **Who:** holders of any area node, or the plugin. The entity type must be in the registry; unknown types return 404.
 - **Web app:**
   - **Pickers:** when the user holds a read node of the related type, the picker works as today (full table, filters).
-    Otherwise it switches to **lookup mode**: a search box and a Name column, with no filters.
+    Otherwise it switches to **lookup mode**: a search box and a Name column, with no filter controls; the field's
+    pickerFilters still narrow the list through the lookup (#288).
   - **"Create new" from a picker** is shown only with that type's create (area) node.
   - **Labels:** `useEntityLabel`, the wizard's related-entity fetch for join entries (`FormWizard.tsx`, around line
     2319) and the display wizard's related values fall back to `GET api/Lookup/{type}/{id}` without a full read. The
