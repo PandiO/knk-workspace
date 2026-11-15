@@ -21,8 +21,8 @@
 
 | Link | Issue | Status | Branch heads | PR | CI | How started |
 |---|---|---|---|---|---|---|
-| L1 Temp region releases | #399 | Not started | — | — | — | — |
-| L2 List field cards at 390 px | #290 | Not started | — | — | — | — |
+| L1 Temp region releases | #399 | Running (2026-11-15) | — | — | — | create_session session_01R1w2Uvbubw539aKYxgnvjR |
+| L2 List field cards at 390 px | #290 | Running (2026-11-15) | — | — | — | create_session session_01R1w2UswAebrDAEEFqUHA3e |
 | L3 "Show what uses it" for more refusals | #289 | Not started | — | — | — | — |
 | L4 Builder rules and templates into the draft | #291 | Not started | — | — | — | — |
 | L5 Lookup applies picker filters | #288 | Not started | — | — | — | — |
