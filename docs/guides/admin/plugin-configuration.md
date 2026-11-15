@@ -1,6 +1,6 @@
 # Plugin configuration reference (`config.yml`)
 
-**Status:** Current · **Last updated:** 2026-11-15 (§ 4.27 `npc`: `corridor-steering`, `corridor-half-width`, `wall-clearance`, #622); 2026-11-15 (§ 4.3 `realtime.moderation` and § 2.1, web kick/ban, #574); 2026-11-15 (§ 2.1: #522 merged into `next` `deb7ff49`, #589); 2026-11-15 (§ 4.27 `npc`: `group-lateral-spacing`, `group-width-hysteresis-blocks`, `group-followers-finish-trip`, `group-spacing` 2.0 → 1.5, `group-formation` and `group-ranks-width` texts, #522); 2026-11-15 (§ 4.27 `npc`: `corner-clearance`, `waypoint-margin`, `recovery-wait-ticks`, `stationary-ticks` and `no-progress-ticks` 40, `max-retries` reworded, #521); 2026-11-14 (§ 4.28 `testing.scenarios`, test servers only, #421); 2026-11-14 (§ 4.18 `messages.web-account-registered`, #485); 2026-11-14 (§ 2.1: the #377 `group-*` keys are in `next` since 2026-11-13, PandiO/knk-workspace#496); 2026-11-13 (§ 4.11 gates are discovered too; § 4.21 realtime push; § 4.26 the kit cache, PandiO/knk-workspace#300)
+**Status:** Current · **Last updated:** 2026-11-15 (§ 4.27 `npc`: `local-legs-clearance`, #623); 2026-11-15 (§ 4.27 `npc`: `corridor-steering`, `corridor-half-width`, `wall-clearance`, #622); 2026-11-15 (§ 4.3 `realtime.moderation` and § 2.1, web kick/ban, #574); 2026-11-15 (§ 2.1: #522 merged into `next` `deb7ff49`, #589); 2026-11-15 (§ 4.27 `npc`: `group-lateral-spacing`, `group-width-hysteresis-blocks`, `group-followers-finish-trip`, `group-spacing` 2.0 → 1.5, `group-formation` and `group-ranks-width` texts, #522); 2026-11-15 (§ 4.27 `npc`: `corner-clearance`, `waypoint-margin`, `recovery-wait-ticks`, `stationary-ticks` and `no-progress-ticks` 40, `max-retries` reworded, #521); 2026-11-14 (§ 4.28 `testing.scenarios`, test servers only, #421); 2026-11-14 (§ 4.18 `messages.web-account-registered`, #485); 2026-11-14 (§ 2.1: the #377 `group-*` keys are in `next` since 2026-11-13, PandiO/knk-workspace#496); 2026-11-13 (§ 4.11 gates are discovered too; § 4.21 realtime push; § 4.26 the kit cache, PandiO/knk-workspace#300)
 **Checked against:** knk-plugin `main` `121030f`; § 4.11, § 4.21 and § 4.26 against `57884e9`; § 4.27 `npc`, the `realtime.erasure` and `realtime.moderation` blocks and `regions.temp-retention.release-interval-minutes` against knk-plugin `next` (not on trunk yet). Update this page in place whenever a `config.yml` key is added, renamed, removed or gets a new default.
 **Source:** knk-plugin `knk-paper/src/main/resources/config.yml` (1,152 lines at `121030f`), read by
 `knk-paper/.../paper/config/ConfigLoader.java`, `EnchantmentConfigManager.java` and `KnKPlugin.java`
@@ -86,7 +86,8 @@ Newest first. Builds before this list: compare the files with the script.
 | Merged | Issue | Added (+), removed (−) or changed | Applies |
 |---|---|---|---|
 | in review, not in `next` yet (`claude/web-kick-ban-574`) | [#574](https://github.com/PandiO/knk-workspace/issues/574) | + `realtime.moderation` (`kick-default-reason`, `ban-message`; optional, defaults apply when missing) | Restart |
-| in review, not in `next` yet (`claude/npc-movement-m2`) | [#622](https://github.com/PandiO/knk-workspace/issues/622) | + `npc.navigation.corridor-steering` (false), + `corridor-half-width` (4), + `wall-clearance` (0.8) | Restart |
+| in review, not in `next` yet (`claude/npc-movement-m6`) | [#623](https://github.com/PandiO/knk-workspace/issues/623) | + `npc.navigation.local-legs-clearance` (false) | Restart |
+| in `next` (`0fa74a67`, 2026-11-15), not on trunk yet | [#622](https://github.com/PandiO/knk-workspace/issues/622) | + `npc.navigation.corridor-steering` (false), + `corridor-half-width` (4), + `wall-clearance` (0.8) | Restart |
 | in `next` (`deb7ff49`, 2026-11-15), not on trunk yet | [#522](https://github.com/PandiO/knk-workspace/issues/522) | + `npc.navigation.group-lateral-spacing` (1.0), + `group-width-hysteresis-blocks` (3), + `group-followers-finish-trip` (false); `group-spacing` default 2.0 → 1.5 (now the gap between rows and in the column). A server whose `config.yml` still says `group-spacing: 2.0` keeps 2.0: change it to 1.5 | Restart |
 | in `next` (`5dc88cfd`, 2026-11-15), not on trunk yet | [#521](https://github.com/PandiO/knk-workspace/issues/521) | + `npc.navigation.corner-clearance` (1.0), + `waypoint-margin` (0.5), + `recovery-wait-ticks` (20); `stationary-ticks` and `no-progress-ticks` default 60 → 40; `max-retries` now counts the recovery steps (back-off, side-step, local leg ahead). A server whose `config.yml` still says 60 keeps 60: change the two lines to 40 | Restart |
 | in `next` (`309d3580`, 2026-11-14), not on trunk yet | [#421](https://github.com/PandiO/knk-workspace/issues/421) | + `testing.scenarios` (`enabled` false, `world`, `origin.x/y/z`). **Don't merge it into real servers:** a missing block means off, which is what they need | Restart |
@@ -654,7 +655,8 @@ each value with the layer it came from. A wrong value is reported at startup and
 | `waypoint-margin` | `0.5` | How close an NPC comes to a route waypoint before it heads for the next one; smaller walks turns through the corner point instead of cutting it (Citizens' own default is 1); 0.2–1.5. A stretch with a doorway that corridor steering lined up is walked with 0.35 | Restart | #521, #622 |
 | `corridor-steering` | `false` | Corridor steering (off until the developer has tested it): each stretch of the route line is re-placed in the walkable corridor around it before the NPC walks it: away from walls, posts and drops by `wall-clearance` where the road is wide enough (on straights too), straightened where the corridor allows, and through the middle of doorways and entrances on their axis (a waypoint 1.5 blocks before, one in it, one after). Corner clearance and the other safety steps still run on the shaped line. A stretch's corridor is built once and shared by every NPC on it | Restart | #622 |
 | `corridor-half-width` | `4` | Blocks either side of the route line the corridor looks at; 1–8 | Restart | #622 |
-| `wall-clearance` | `0.8` | Blocks from the NPC's centre to a wall, post or drop that corridor steering keeps where the road allows (the body's half width is 0.3); narrower places are walked through their middle, so one-block doors stay open; 0.35–2 | Restart | #622 |
+| `wall-clearance` | `0.8` | Blocks from the NPC's centre to a wall, post or drop that corridor steering keeps where the road allows (the body's half width is 0.3); narrower places are walked through their middle, so one-block doors stay open; also the preferred margin of `local-legs-clearance`; 0.35–2 | Restart | #622 |
+| `local-legs-clearance` | `false` | Clearance-aware local legs (off until the developer has tested it): short trips, a group follower's own leg back to its group and the recovery ladder's local leg are searched by K&K on its own walk grid with the corridor's clearance per cell (the body's width as the hard minimum, so one-block doors stay open; `wall-clearance` as a preferred margin), smoothed into a few straight steps and walked as waypoints. When K&K's search finds nothing within its cell budget, Citizens' own search walks the leg as before. `/knk npc nav stats` counts `local legs: k&k N, engine N, none N` | Restart | #623 |
 | `no-route-wait-ticks` | `100` | Ticks an NPC waits before asking again while the rules allow no route or the way ahead is not loaded; 20–6000. An NPC waiting at a closed gate or a district edge is woken by the gate or access change itself; this is the fallback | Restart | #360 |
 | `walk-only-blocks` | `64` | With an end too far from a road: the longest trip walked as off-road hops; further, the order fails; 0–256 (0 = never) | Restart | #360 |
 | `stop-on-trespass` | `false` | The trespass guard always logs and counts an NPC that entered a region its current rules deny. `true`: also stop that NPC and plan its route again; for dev servers | Restart | #361 |
@@ -689,7 +691,7 @@ The block to paste (the Phase 1 keys with the Phase 2, 3 and 4 additions; Phase 
 lines; #521 adds `recovery-wait-ticks`, `corner-clearance` and `waypoint-margin` and sets `stationary-ticks` and
 `no-progress-ticks` to 40; #522 adds `group-lateral-spacing`, `group-width-hysteresis-blocks` and
 `group-followers-finish-trip` and sets `group-spacing` to 1.5; #622 adds `corridor-steering`,
-`corridor-half-width` and `wall-clearance`):
+`corridor-half-width` and `wall-clearance`; #623 adds `local-legs-clearance`):
 
 ```yaml
 npc:
@@ -711,6 +713,7 @@ npc:
     corridor-steering: false
     corridor-half-width: 4
     wall-clearance: 0.8
+    local-legs-clearance: false
     no-route-wait-ticks: 100
     walk-only-blocks: 64
     stop-on-trespass: false
@@ -770,13 +773,14 @@ testing:
 
 ## Changes
 
-1. 2026-11-15: § 4.27 `npc`: `corridor-steering`, `corridor-half-width`, `wall-clearance`, the `corner-clearance` and `waypoint-margin` texts (#622), § 2.1 row; checked against knk-plugin `claude/npc-movement-m2`, not merged into `next` yet
-2. 2026-11-15: § 4.27 `npc`: `group-lateral-spacing`, `group-width-hysteresis-blocks`, `group-followers-finish-trip`, `group-spacing` 2.0 → 1.5, the `group-formation` and `group-ranks-width` texts (#522), § 2.1 row (and the #521 row now in `next`); checked against knk-plugin `claude/npc-followups-l4`, not merged into `next` yet
-3. 2026-11-15: § 4.27 `npc`: `corner-clearance`, `waypoint-margin`, `recovery-wait-ticks`, `stationary-ticks` and `no-progress-ticks` 40, `max-retries` and `group-rejoin-blocks` reworded (#521), § 2.1 row; checked against knk-plugin `claude/npc-followups-l3`, not merged into `next` yet
-4. 2026-11-14: § 4.28 `testing.scenarios` (#421), § 2.1 and § 3 rows; checked against knk-plugin `next` `309d3580`
-5. 2026-11-14: § 4.18 `messages.web-account-registered` (#485), § 2.1 row; checked against knk-plugin `claude/smoke-fixes-484-485-487`, not merged into `next` yet
-6. 2026-11-13: § 4.3 `realtime.erasure` (#184) and the regions `temp-retention.release-interval-minutes` (#269), PR into `next` from `claude/plugin-chains-into-next`
-7. 2026-11-13: § 4.27 `npc`: six `group-*` keys, PandiO/knk-workspace#377
-8. 2026-11-13: § 4.27 `npc`: `rule-checks-per-tick`, `stop-on-trespass`, PandiO/knk-workspace#361
-9. 2026-11-13: § 4.27 `npc`, PandiO/knk-workspace#359 and #360; checked against knk-plugin `claude/npc-navigation`, not merged into trunk yet
-10. 2026-11-10: first version, PandiO/knk-workspace#295; checked against knk-plugin `main` `121030f`
+1. 2026-11-15: § 4.27 `npc`: `local-legs-clearance` and the `wall-clearance` text (#623), § 2.1 row (and the #622 row now in `next`); checked against knk-plugin `claude/npc-movement-m6`, not merged into `next` yet
+2. 2026-11-15: § 4.27 `npc`: `corridor-steering`, `corridor-half-width`, `wall-clearance`, the `corner-clearance` and `waypoint-margin` texts (#622), § 2.1 row; checked against knk-plugin `claude/npc-movement-m2`, not merged into `next` yet
+3. 2026-11-15: § 4.27 `npc`: `group-lateral-spacing`, `group-width-hysteresis-blocks`, `group-followers-finish-trip`, `group-spacing` 2.0 → 1.5, the `group-formation` and `group-ranks-width` texts (#522), § 2.1 row (and the #521 row now in `next`); checked against knk-plugin `claude/npc-followups-l4`, not merged into `next` yet
+4. 2026-11-15: § 4.27 `npc`: `corner-clearance`, `waypoint-margin`, `recovery-wait-ticks`, `stationary-ticks` and `no-progress-ticks` 40, `max-retries` and `group-rejoin-blocks` reworded (#521), § 2.1 row; checked against knk-plugin `claude/npc-followups-l3`, not merged into `next` yet
+5. 2026-11-14: § 4.28 `testing.scenarios` (#421), § 2.1 and § 3 rows; checked against knk-plugin `next` `309d3580`
+6. 2026-11-14: § 4.18 `messages.web-account-registered` (#485), § 2.1 row; checked against knk-plugin `claude/smoke-fixes-484-485-487`, not merged into `next` yet
+7. 2026-11-13: § 4.3 `realtime.erasure` (#184) and the regions `temp-retention.release-interval-minutes` (#269), PR into `next` from `claude/plugin-chains-into-next`
+8. 2026-11-13: § 4.27 `npc`: six `group-*` keys, PandiO/knk-workspace#377
+9. 2026-11-13: § 4.27 `npc`: `rule-checks-per-tick`, `stop-on-trespass`, PandiO/knk-workspace#361
+10. 2026-11-13: § 4.27 `npc`, PandiO/knk-workspace#359 and #360; checked against knk-plugin `claude/npc-navigation`, not merged into trunk yet
+11. 2026-11-10: first version, PandiO/knk-workspace#295; checked against knk-plugin `main` `121030f`
