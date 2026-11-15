@@ -11,15 +11,16 @@
 ## 1. Waiting for the developer
 
 1. Nothing right now. The L1 note was approved with all defaults and the orphan rows are to be dropped (developer,
-   2026-11-14, recorded on #515). L2 is running; the developer's test steps follow after L2 and L3.
+   2026-11-14, recorded on #515). L1 and L2 are merged into `next`; L3 (smoke tests, changelog) is running. The
+   developer's test steps follow at the end of the chain.
 
 ## 2. Summary
 
 | Link | Issue | Status | Branch heads | PR | CI | How started | Test rule |
 |---|---|---|---|---|---|---|---|
 | L1 Design note and data check | #514 | Merged into next 2026-11-14 (knk-workspace `2d4418d2`, PR #525); #514 stays `status:in-review` until the developer promotes `next` | knk-workspace `claude/town-streets-409` `a24dcd2b` | [#525](https://github.com/PandiO/knk-workspace/pull/525) | n/a (docs) | create_session session_01R1w2UsgcJBhVZofGWWe6wN (`source_revision` `main`) | automated first, `main` `aa4208b3` |
-| L2 Implementation | #515 | Done, PRs open into `next` (not merged), #515 `status:in-review` | knk-web-api `claude/town-streets-409` `f26d966`; knk-web-app `1a7c2a7` (corrected 2026-11-15); knk-workspace `87ee436e` | [api#31](https://github.com/PandiO/knk-web-api/pull/31), [app#33](https://github.com/PandiO/knk-web-app/pull/33), [ws#554](https://github.com/PandiO/knk-workspace/pull/554) | api runs 43695899575 / 43695899524 green; app runs 43696786714 / 43696786710 green | subagent of the coordinator (knk-coordinator § 4.1.4: two component repos besides knk-workspace) | automated first, `main` `aa4208b3` |
-| L3 Smoke tests and changelog | #516 | Not started | — | — | — | — | — |
+| L2 Implementation | #515 | Merged into next 2026-11-15 (knk-web-api `de741909`, knk-web-app `d3d7152b`, knk-workspace `66c7c910`); #515 stays `status:in-review` until the developer promotes `next` | knk-web-api `claude/town-streets-409` `f26d966`; knk-web-app `1a7c2a7` (corrected 2026-11-15); knk-workspace `87ee436e` | [api#31](https://github.com/PandiO/knk-web-api/pull/31), [app#33](https://github.com/PandiO/knk-web-app/pull/33), [ws#554](https://github.com/PandiO/knk-workspace/pull/554) | api runs 43695899575 / 43695899524 green; app runs 43696786714 / 43696786710 green | subagent of the coordinator (knk-coordinator § 4.1.4: two component repos besides knk-workspace) | automated first, `main` `aa4208b3` |
+| L3 Smoke tests and changelog | #516 | Running | — | — | — | create_session session_01R1w2UtELGKcTZrWFhqdpxa (`source_revision` `main`) | automated first, `main` `aa4208b3` |
 
 ## 3. Coordinator decisions
 
@@ -66,6 +67,17 @@
 12. **Test rule for L2:** unchanged, "automated first" `aa4208b3`; knk-workspace `main` had no changes to the global
     instructions, the skills' testing parts or `web-app-testing.md` since. #421's scenario framework is now in
     knk-plugin `next`, but L2 does not change the plugin (L1 note § 5).
+13. **L2 check: sent back once, then merged (2026-11-15).** First check: API PR #31 and workspace PR #554 passed;
+    web-app PR #33 was textually clean but knk-web-app `next` had gained `e2e/entity-detail.spec.ts` (#511 backfill)
+    that used Town streets as the link-table example (Unlink on `Town/1/streets`), behaviour L2 removes. Chosen: send
+    it back to the L2 agent to merge `origin/next` and move those cases to a District, because a clean textual merge
+    would have left a spec testing removed behaviour against a mock that misstates the API. Alternatives: (a) merge and
+    file a follow-up (`next` would carry a misleading spec); (b) fix it myself (coordinators don't implement). After
+    the fix (head `1a7c2a7`, CI green, 0 behind `next` in all three repos) I merged the three PRs together with merge
+    commits (API `de741909`, web app `d3d7152b`, workspace `66c7c910`), API and web app back to back so `next` never
+    has one without the other. Codex skipped on all three for its usage limit (noted on each PR). The L2 agent flagged
+    `e2e/zz-e.spec.ts` in knk-web-app `next` (a leftover debug spec from #511, asserts nothing) on #511.
+14. **L3 route:** `create_session`, knk-workspace only, so the § 4.1.4 subagent rule does not apply.
 
 ## 4. Link blocks
 
