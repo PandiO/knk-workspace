@@ -20,7 +20,7 @@
 
 | Link | Issue | Status | Branch heads | PR | CI | How started |
 |---|---|---|---|---|---|---|
-| L1 Temp region releases | #399 | Done, in review (2026-11-15) | knk-web-api `a0b5ff3f`, knk-workspace `86adf724` | [knk-web-api#33](https://github.com/PandiO/knk-web-api/pull/33), [knk-workspace#572](https://github.com/PandiO/knk-workspace/pull/572) | green (runs 43702385149, 43702462646) | create_session session_01R1w2Uvbubw539aKYxgnvjR |
+| L1 Temp region releases | #399 | Merged into next (2026-11-15) | knk-web-api `a0b5ff3f`, knk-workspace `86adf724`; next: api `3b36edc6`, ws `5dafabac` | [knk-web-api#33](https://github.com/PandiO/knk-web-api/pull/33), [knk-workspace#572](https://github.com/PandiO/knk-workspace/pull/572) | green (runs 43702385149, 43702462646) | create_session session_01R1w2Uvbubw539aKYxgnvjR |
 | L2 List field cards at 390 px | #290 | Done, in review (2026-11-15) | web-app `8cb616b`, workspace `b61c6456` | [web-app#38](https://github.com/PandiO/knk-web-app/pull/38), [#571](https://github.com/PandiO/knk-workspace/pull/571) | green (PR run); push-run flake #573 | create_session session_01R1w2UswAebrDAEEFqUHA3e |
 | L3 "Show what uses it" for more refusals | #289 | Not started | — | — | — | — |
 | L4 Builder rules and templates into the draft | #291 | Not started | — | — | — | — |
@@ -64,6 +64,25 @@
     `/pardon`); new nodes `knk.kick` and `knk.ban`, both seeded on Staff. Recorded on #565 and in the charter.
     Alternatives offered: (a) all inside L6; (b) no plugin part now; (c) a timed, API-stored ban; (d) `knk.ban`
     Admin-only or both Admin-only.
+11. **L1 check and merge (2026-11-15).** Chosen: merge knk-web-api#33 and knk-workspace#572 into `next` with merge
+    commits, because every § 6 check held: heads match, both branches contain `next`, CI green on the API PR
+    (`build-and-test`, `fresh-database`), scope inside #399 (service, controller route, tests, two docs and the
+    CHANGELOG), 6 new xUnit tests (4169 → 4175 passed), decisions logged, no review threads, Codex at its usage limit
+    (noted on both PRs). I read the paging loop: it reads due rows by id past the ones it looked at until `max` are
+    listed, bounded by the 30-day keep period. Alternatives: (a) ask for a page cap: would bring the starvation back.
+12. **L2 check (2026-11-15).** Code and docs pass § 6 (CI green on the PR run, Playwright 110 → 112, scope inside
+    #290). The ruleset refused the web-app merge because the push run's `e2e` failed on the flaky
+    `data-table.spec.ts:36` (filed by L2 as #573, passed in the PR run): I re-ran the failed job rather than merge
+    around it. knk-workspace#571 conflicted with `next` (CHANGELOG entries; the guide header after the #511 full-steps
+    change): I merged `origin/next` into the branch (`080a4bdf`), kept both entries, took `next`'s header format with
+    the two new automated steps counted (21 of 26) and wrote § 6.2–6.3's tags in the new `[automated: <test>]` form.
+    Codex is at its usage limit, so no re-review of that push. Alternatives: (a) send L2 back for the merge: slower for
+    a mechanical conflict.
+13. **Route for L3.** Chosen: a subagent from the start, because "Show what uses it" for a form configuration needs
+    references that are not dashboard types (form steps, fields, sessions), so L3 very likely changes knk-web-api as
+    well as knk-web-app (coordinator skill § 4.1.4). L3 has no open developer decision. Alternatives: (a)
+    `create_session` and fall back on an `add_repo` refusal: the charter's first plan, changed now that the API part
+    looks needed.
 
 ## 4. Link blocks
 
