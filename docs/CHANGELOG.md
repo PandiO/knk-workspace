@@ -9,12 +9,13 @@ This is a human-readable record of capabilities merged into the V3 default branc
   changes on a server.
   1. The stair-house scenarios get the developer's whole schematic, both flights and the upper landings, in a bigger
      scenario box (`SizedScene`).
-  2. `npc-stairhouse-climb` (report mode) walks a leader, a group of 20 and the group with 20 singles from the street
-     east of the house up all five flights with short stretches. On `next` it shows falls under the landing at -490
-     and stretches handed out on the flight 5 to 10 blocks above the NPC (decision 34's main cause).
-  3. `SnapshotReplay` replays a zip of `/knk npc nav snapshot` in a scenario: blocks from its region files, its
-     domains as WorldGuard regions with fake access data, the stored line and settings. `npc-snapshot-replay` runs it on
-     a sample made from the schematic. CI's `paper-boot` now expects 50 scenarios.
+  2. `npc-stairhouse-climb` (report mode) walks a group of 20 with 20 singles on the real road line of the developer's
+     traces from the street east of the house up all five flights with short stretches. On `next` it shows falls
+     under the landings, stretches handed out on a flight above the NPC (decision 34's main cause) and a turn dropped
+     by the crowd's 30 s guard.
+  3. `SnapshotReplay` replays a zip of `/knk npc nav snapshot` in a scenario: blocks from its region files (Minecraft
+     26.x included), its domains as WorldGuard regions with fake access data, the stored line and settings.
+     `npc-replay-quarry-to-keep` replays the developer's snapshot of 2026-11-16, trimmed to the stair house. CI's `paper-boot` now expects 50 scenarios.
 
 - **NPC navigation: `/knk npc nav snapshot <route>`** ([PandiO/knk-workspace#670](https://github.com/PandiO/knk-workspace/issues/670),
   link B1a of the NPC navigation follow-ups chain). knk-plugin branch `claude/npc-movement-b1` (PR into `next`). An admin
