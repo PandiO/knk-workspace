@@ -1,7 +1,7 @@
 # NPC navigation follow-ups chain — charter
 
-**Status:** Running (2026-11-15): movement-quality links M1–M7 (plan Phase 4c), M1 first
-**Last updated:** 2026-11-15 (fix links L5–L7)
+**Status:** Done (2026-11-16): every link merged into `next`; developer smoke tests, the option-B decision and promotion open
+**Last updated:** 2026-11-16
 **Issues:** parent [PandiO/knk-workspace#358](https://github.com/PandiO/knk-workspace/issues/358); link sub-issues
 [#519](https://github.com/PandiO/knk-workspace/issues/519) (L1),
 [#520](https://github.com/PandiO/knk-workspace/issues/520) (L2),

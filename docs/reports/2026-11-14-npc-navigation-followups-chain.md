@@ -1,6 +1,6 @@
 # NPC navigation follow-ups chain — progress report
 
-**Status:** Running: fix links after the developer's retest (2026-11-15) · **Last updated:** 2026-11-15
+**Status:** In review: every link merged into `next`; developer smoke tests, the option-B decision and promotion open (2026-11-16) · **Last updated:** 2026-11-16
 
 **Issue:** [PandiO/knk-workspace#358](https://github.com/PandiO/knk-workspace/issues/358), links
 [#519](https://github.com/PandiO/knk-workspace/issues/519) (L1),
@@ -13,32 +13,26 @@
 
 ## 1. Waiting for the developer
 
-**Rerun needed first:** the 2026-11-15 retest ran an old jar (`0.1.0+a760c4a4`, decisions 17–18). Check the plugin's startup line `0.1.0+<sha>` names `8ad9df66` or later (L5 is in it), then rerun #521 steps 3–5, #520 step 10 and the #490 audit.
+Every link is merged into `next` (2026-11-16): L1–L6 and the movement links M1–M7. Build knk-plugin `next`
+`cc5262ff` or later and check the startup line `0.1.0+<sha>`. Merge the `config.yml` keys (YAML in the changelog and
+the configuration reference § 4.27), then restart. In test order:
 
-**Retest 2026-11-15 (manager's relay, comments on #520, #521, #490):** L3 fails at the #491 stair corner and the #492 landing; L2 step 10 fails (#506, overlapping gate region); the #490 audit still shows DROWNING 809. Fix links L5–L7 run one at a time. #522 (L4) is not tested yet. The steps below stay valid for what isn't being fixed.
-
-Every link is merged into `next` (2026-11-15). Build knk-plugin from `next` `deb7ff49` or later, merge the new
-`config.yml` keys (YAML in the changelog and the configuration reference § 4.27; `stationary-ticks` and
-`no-progress-ticks` 40, `group-spacing` 1.5), restart. In test order:
-
-1. **L2 (#520):** Phase 4 steps 9 and 10 (gate closing mid-group, access change mid-group).
-2. **L3 (#521):** the corner and recovery steps on `quarry-to-keep` (the stair corner 1411 73 -537, the 1433 44 -517
-   landing) and the short south-gate route.
-3. **L4 (#522):** narrowed formations, the followers-finish-trip toggle, and the #490 audit re-run
-   (`/knk npc test spawn 50 24`, no `DROWNING` in `causes:`).
-4. **Review of the agent decisions:** blocks 4.2 § 5, 4.3 § 5 (13), 4.4 § 5 (8). Behaviour-changing: 4.2 decisions 1–3
-   (followers stop short of a door; cache re-warm; the follower guard counts but does not stop); 4.3 decisions 1, 5, 6,
-   8; 4.4 decisions 2 (stairs as a column), 5 (toggle off: a held follower waits on the leader's new route), 6 (a
-   follower in the margin before a moving door steps back, changing L2's rule).
-5. **Promotion of `next`** once the tests pass; then the issues #519–#522, #506, #507, #508, #491, #492, #493 close.
-6. Docs: #589, in its own docs session (session_01R1w2UvjZEQ5uyXDYDCqAfs).
-
-3. M6 decision 6.1 (#623): local legs search a corridor grid instead of `WalkSearch` (reversible). Confirm or ask
-   for alternative (a).
-
-4. **Smoke test tonight with all movement keys on** (`corridor-steering`, `local-legs-clearance`,
-   `group-formation-keeping: elastic`, `plaza-lines`, `crowd-awareness`; YAML in the changelog), steps on #622, #624,
-   #625 and #626; it decides the option-B question (decision 30).
+1. **Smoke test tonight with all movement keys on** (`corridor-steering`, `local-legs-clearance`,
+   `group-formation-keeping: elastic`, `plaza-lines`, `crowd-awareness`). Steps on #622, #623, #624, #625 and #626.
+   The group of 20 in ranks on `quarry-to-keep` covers most of it. Name a plaza for #625.
+2. **Collision (M7, #627):** the real-client push test (comment 6912759522). Its last step decides whether
+   `npc.navigation.collidable` can become default on; today it stays false (block 4.15 decision 5).
+3. **Earlier steps still open:** L2 #520 step 10 (now with L6), L3/L5 #592 steps 3–5, L4 #522, the #490 audit.
+4. **Decisions for you:**
+   1. **Option B** (decision 30), after the smoke tests.
+   2. **Squeeze minimum with collision on** (0.7 to keep rows from overlapping; block 4.15 § 6).
+   3. **M6 decision 6.1** (corridor grid instead of `WalkSearch`).
+   4. **Review of the agent decisions** in blocks 4.5–4.15 § 6.
+5. **Promotion of `next`** once the tests pass; then the issues close.
+6. **Docs:**
+   1. #658 for M1–M7 is in its own session (session_01R1w2UsvN2p9uCZqKQGjgrH).
+   2. #590 (L2–L4 leftovers) waits for your test results.
+7. **Filed along the way:** #636 (a follower that never settles), #657 (door-mouth rule), #586 (intermittent fake-player log line in CI).
 
 ## 2. Summary
 
@@ -58,7 +52,7 @@ Every link is merged into `next` (2026-11-15). Build knk-plugin from `next` `deb
 | M3 Formation keeping | #624 | Merged into next (2026-11-16) | knk-plugin `94b30146` → `next` `138ebc66`; knk-workspace `1b4692ed` → `next` `a428eb3e` | PandiO/knk-plugin#50, PandiO/knk-workspace#635 | PR head green (build, paper-boot with 45 scenarios; one #586 log-check re-run); Codex at its usage limit | create_session session_01R1w2UufiGFpPfGevZxvtVD (2026-11-15) |
 | M5 Plaza lines | #625 | Merged into next (2026-11-16) | knk-plugin `727f020b` → `next` `3f116188`; knk-workspace `f5aa56e6` → `next` `f9be4963` | PandiO/knk-plugin#51, PandiO/knk-workspace#637 | PR head green (build, paper-boot with 45 scenarios, push and PR runs 43792722751, 43793671690); #586 did not hit; Codex at its usage limit | create_session session_01R1w2UwSt9YZCZUtsk5fQjU (2026-11-16) |
 | M4 Crowd awareness | #626 | Merged into next (2026-11-16); option-B checkpoint with the developer | knk-plugin `8c864f7a` → `next` `a35fed5a`; knk-workspace `9f09cf23` → `next` `5b8125e5` | PandiO/knk-plugin#52, PandiO/knk-workspace#638 | push and PR runs on `8c864f7a` green (build, paper-boot with 45 scenarios; runs 43799206281, 43800089307); #586 did not hit; 45/45 locally; Codex at its usage limit | create_session session_01R1w2UsvLHZouJWudj4FxjT (2026-11-16) |
-| M7 Collision with push resistance | #627 | Running | — | — | — | create_session session_01R1w2UtyxLznso8wdydHmQf (2026-11-16) |
+| M7 Collision with push resistance | #627 | Merged into next (2026-11-16); `collidable` stays false | knk-plugin `6393aa37` → `next` `cc5262ff`; knk-workspace `dc8a91c5` → `next` `8e3d7d06` | PandiO/knk-plugin#57, PandiO/knk-workspace#656 | push and PR runs on `6393aa37` green (build, paper-boot with 48 scenarios); Codex at its usage limit | create_session session_01R1w2UtyxLznso8wdydHmQf (2026-11-16) |
 
 ## 3. Coordinator decisions
 
@@ -237,6 +231,14 @@ Every link is merged into `next` (2026-11-15). Build knk-plugin from `next` `deb
     plaza +40 % → +4 %); what B would add is smoother curves and steering strays back. Chosen: **leave B for now and
     decide after the developer's smoke tests tonight** with all keys on; start M7 meanwhile. Alternatives: (a) plan a
     B link now; (b) drop B entirely. M7 started (session_01R1w2UtyxLznso8wdydHmQf).
+
+31. **M7 checked and merged; chain done** (2026-11-16). § 6 held: tests 2921/2860 → 2955/2865, 48 scenarios green on
+    the push and PR runs (`MIN_SCENARIOS` 48), the collision policy chosen by scenario (per-entity exemptions), players
+    can't push NPCs and a pushed guard never falls. `collidable` stays false: four older scenarios fail with it on
+    (block 4.15 decision 5), so the end-of-link condition for the default wasn't met. Merged PandiO/knk-plugin#57 →
+    `cc5262ff` and PandiO/knk-workspace#656 → `8e3d7d06`. #589 had already been closed for L1–L4 (its leftover is
+    #590), so a new documentation issue #658 covers M1–M7, with its docs session started. Tracker row set to In
+    review.
 
 ## 4. Link blocks
 
@@ -1114,3 +1116,98 @@ _(Each link appends its block here when it finishes.)_
     2. **M7 (collision):** `NpcNavigationService.occupancy()` gives positions, shared cells and the closest pair per look; `waitsBehind(...)` tells waiting from stuck for a pushed NPC too; recovery already skips occupied cells.
     3. **4c.7 (authority, closed formations first):** change `CrowdControl.earlier` (the only place two NPCs are ordered); a closed formation's followers could take tickets of their own through `setGroupMembers`.
     4. The free-width cache is keyed by cell and one of eight headings; a gate change clears it (`onGateChanged`). Other block changes (a door block placed by a player) wait up to 10 s.
+
+### 4.15 M7 — Collision on: push resistance and recovery (#627)
+
+1. **Scope done** (plan 4c.4 item 7, research report § 6; push resistance runs whenever `npc.navigation.collidable` is on; **`collidable` stays `false` by default**, item 10; `npc.navigation.enabled` still off by default).
+    1. **Collision policy** behind the knk-core port `NpcCollisionPolicy`, chosen by the scenario `npc-collision-policy` on Paper 26.3 b205 with Citizens b4269:
+        1. The Paper adapter `BukkitCollisionPolicy` uses Paper's per-entity collidable exemptions. Every online player is exempt from every NPC with collision on, kept up to date on joins, quits and respawns.
+        2. A scripted player carries an NPC 2.85–3.80 blocks with collision on and no policy; with the policy the NPC moves 0.00, and two NPCs 0.2 apart are still pushed to 1.06.
+        3. On the team caveats of research § 6.4: Citizens put the NPCs on no server team. Bukkit `FOR_OTHER_TEAMS` (vanilla `pushOtherTeams`) kept the player out. `FOR_OWN_TEAM` (vanilla `pushOwnTeam`, the research's suggestion) did not, because the names read backwards.
+    2. **Push detection** (`push/PushWatch`): a move the NPC's own walk doesn't explain (speed, back against its road line, sideways after a contact, away from a standing spot), with one push per episode. Stair steps and turns are its own walk. The contacts come from Citizens' `NPCCollisionEvent` and Paper's `EntityPushedByEntityAttackEvent`. An unreported push with an NPC within 1.5 blocks counts as that NPC's jostle.
+    3. **Return:** straight back, else along its footsteps (`RecentSteps`), else a local leg through the planning queue (`LocalLegSearch` with `local-legs-clearance`, M6 note 10.3), then on along its route. An NPC with no order returns to its post, and a group follower is left to its group. The teleport home comes last, after `push-teleport-ticks`, and only out of every player's sight (`NpcSight`, Paper `BukkitNpcSight`).
+    4. **Edge guard** (`push/EdgeGuard`, L5's drop rule): queue spots of NPCs with bodies skip cells next to a drop. A push towards a drop, checked on every look of the push, sends the NPC back and exempts the pushing player at once.
+    5. **Repeated pushes** (`push/PushLedger`, with `players-push-npcs`): 3 pushes in 200 ticks exempt the player for 1200 ticks.
+    6. **Attack knockback** stays; the NPC walks back. Citizens' NPCs are protected by default, so only unprotected ones are knocked back.
+    7. **New keys:** `players-push-npcs` (false), `push-return` (true), `push-exempt-after` (3), `push-exempt-window-ticks` (200), `push-exempt-ticks` (1200), `push-teleport-ticks` (600). The stats line `pushes: ...` and the events `pushed`, `push_returned`, `push_exempt`, `push_teleport` are new.
+    8. **M4 use** (block 4.14 § 10.2): `occupancy()` is unused. Push resistance reads positions directly, and only when a push happens. `waitsBehind` is unchanged. Recovery's occupied-cell rule applies to the walk back too, since it runs through the same ladder and leg code.
+    9. **knk-workspace:** the changelog with the YAML, configuration reference § 4.27 and § 2.1, plan 4c.4 item 7.4 (status, tests, before → after, why the default stays off, developer test) and 4c.7 item 3.
+2. **Commits and heads.**
+    1. knk-plugin `claude/npc-movement-m7` at `6393aa37`: 2 commits on `next` `a35fed5a`, then `next` `4b80cbd0` merged in (CI and agent files, mechanical).
+    2. knk-workspace `claude/npc-movement-m7` at `dc8a91c5`: 1 commit, then `next` merged in (the changelog conflict was two new entries; I kept both).
+3. **PRs.** PandiO/knk-plugin#57 (`Closes` #627) and PandiO/knk-workspace#656 (`Part of` #627), base `next`. Not merged.
+4. **Tests, baseline → result.**
+    1. `./gradlew build -x deployToDevServer`, all with 0 failures:
+        1. core 2921 → 2955 (+34).
+        2. api-client 344 → 344 (2 skipped).
+        3. paper 2860 → 2865 (+5, 18 skipped).
+    2. New tests:
+        1. `PushWatchTest` 12, `PushLedgerTest` 4, `EdgeGuardTest` 4, `NpcNavigationPushTest` 14.
+        2. `BukkitCollisionPolicyTest` 4 (MockBukkit).
+        3. `NpcNavigationConfigTest` +1.
+        4. `PaperScenariosTest` updated.
+    3. Scenarios run locally (`--min-scenarios 48 --npc-navigation`): baseline on `next` 45/45, branch 48/48 in 10 min 5 s. `MIN_SCENARIOS` is raised to 48; the 30-minute job timeout is kept.
+    4. CI: the push and PR runs on `6393aa37` are green (`build`, `paper-boot` with 48 scenarios). #586 did not hit. Codex is at its usage limit on both PRs; I said so on both and finished without it.
+5. **Numbers** (local, collision on, all 4c keys as in M4).
+    1. The 4c.5 scenarios pass with collision on as with it off:
+        1. Stair-house singles 12/12 with 0 stuck spells (31 NPC jostles, 0 returns).
+        2. The stair-house group of 20: 0 folds, 0 stuck spells.
+        3. The jagged straight 12/12, and its group of 9, with 0 stuck spells (34 jostles, 4 returns).
+        4. The doorway crowd 12/12 with 0 stuck spells.
+        5. The plaza at +4 %.
+    2. `npc-guard-ledge-push`:
+        1. Players never push: the guard moved 0.00.
+        2. With `players-push-npcs`: pushed 0.68, the player exempted at the edge, the guard 0.83 from the drop at most, never fell, back within 0.21 of its post.
+        3. Repeated pushes: the third exempts, the fourth moves it 0.00.
+        4. Knockback: 0.62 off its line, back on it in 0.5 s, seen as an attack.
+    3. `npc-door-column`: 12/12, 2.0 s of wait per NPC ahead, 2 stuck spells at the frame freed in 1.0 and 2.5 s. The same run with collision off has 0. Filed as #657.
+    4. Squeezed rows (scope item 8), `npc-stairhouse-group`: with collision on, bodies are under 0.6 apart in 7 of 31 looks (closest 0.19); with it off in 10 of 29 (closest 0.05). Not made to hold (decision 6).
+6. **Decisions (DESIGN § 4.3).**
+    1. *Collision mechanism.* Chosen: per-entity collidable exemptions for players. They worked in the scenario, touch no team, and the per-player exemption of item 5 is the same call. Alternatives:
+        1. (a) A K&K team with `FOR_OTHER_TEAMS`. It worked too, but Citizens sends its own per-NPC client teams for name tags, an entity is on one team only, and other plugins use teams.
+        2. (b) `FOR_OWN_TEAM`. It lets players push.
+        3. (c) Inverting: NPCs not collidable, with every other NPC exempt. It also worked, but needs an O(n²) exemption list.
+    2. *Players' bodies.* Chosen: by default, players never push NPCs, and `players-push-npcs: true` is the realistic mode. Item 5 (repeated pushes) only applies there, because with exemptions players can't push at all. Alternatives:
+        1. (a) Players always collide, with push resistance only. In the probe a player carried the NPC 2.85 blocks, so a guard near a ledge would fall before a return could act.
+    3. *Key names*, since the plan names only `collidable`. Chosen: `players-push-npcs`, `push-return`, `push-exempt-after`, `push-exempt-window-ticks`, `push-exempt-ticks`, `push-teleport-ticks`, with the defaults 3 pushes in 10 s, 60 s exempt, 30 s before a teleport. Alternatives:
+        1. (a) Fewer keys, with constants for the exemption window and length. These are values the developer will want to tune on the dev server.
+    4. *Which pushes start a walk back.* Chosen: a player, an attack or something unknown always does. Another NPC does only towards a drop, or for an NPC at its post moved a block or more. A group follower never does. Alternatives:
+        1. (a) Every push. That gave 13 returns and extra jostling in the door column.
+        2. (b) No NPC pushes at all. Then a guard at its post would be shoved away for good by a passing column.
+    5. *Return order details.* Chosen: straight back where that is a straight walk, before the footsteps. A push's track is not footsteps, and the straight line is the push reversed, checked by L5's floor continuity. An NPC standing without an order goes back by a K&K order home when there is no straight way. Alternatives:
+        1. (a) Footsteps first, as the plan words it. They are only recorded every 5 ticks while moving, so a 0.5-block push often has none.
+        2. (b) The engine's rule-free `walkTo`. That breaks NAV-02.
+    6. *Squeezed rows with collision on.* Chosen: recorded why not. Holding 0.6 needs slots wider than the body (0.7), and that changes which roads M3 squeezes 3 abreast into, a decision M3's developer already took (0.6). Alternatives:
+        1. (a) Raising `group-lateral-spacing-min` to 0.7 when collision is on.
+    7. *The column check.* Chosen: "no jam beyond the queue" means all arrive, at most 3 s of wait per NPC ahead, nobody still longer than 3 s outside a queue, none let go, and every stuck spell freed within 3 s. The door-mouth cause is M4's and filed as #657. Alternatives:
+        1. (a) 0 stuck spells as in `npc-doorway-crowd`. That fails on M4's door-mouth rule. Two tries in `CrowdControl` (1.6 spacing for bodies, a fresh-turn guard) changed nothing and were reverted.
+    8. *The default.* Chosen: `collidable` stays `false`. The literal condition (every 4c.5 scenario passes with collision on) holds, but a trial with collision on everywhere failed `npc-ledge-corner` (an NPC shoved off #491's corner fell), `npc-corners-walk` (a fall, 3 spells not freed), `npc-group-narrows` and `npc-stuck-ladder` (its scripted push is undone by design). Alternatives:
+        1. (a) Turn it on, and pin those four scenarios to collision off. That hides a fall at a real place of the dev world.
+    9. *Scripted pushes.* Chosen: the fake player is teleported in 0.12-block steps each tick. Its movement packets are refused on Paper 26.3 (`Invalid move player packet received`). `ScenarioPlayer.move()` is unused elsewhere and was left alone. Alternatives:
+        1. (a) Fix `NmsFakePlayer.move`. That is outside scope (#540's framework).
+7. **Out of scope, noted.**
+    1. #657: the door-mouth claim with bodies.
+    2. `ScenarioPlayer.move()` is refused on Paper 26.3 (above). Not filed; for the docs session.
+    3. Pushes on an NPC walking off its road line are judged only by speed, so a slow push by a player there is not seen. This is moot with players never pushing, and is in the plan's note.
+8. **Blockers.** None.
+9. **At merge / what the developer must do.**
+    1. `config.yml`: add the seven keys under `npc.navigation` (YAML in the changelog and § 4.27). No migration.
+    2. The developer test is on #627 (comment 6912759522) and in plan 4c.4 item 7.4.11. It decides the default, with item 7.4.10's list.
+    3. Review decisions 2, 4, 6 and 8.
+10. **Notes for later links, and for the docs session.**
+    1. **Before `collidable` can default on:**
+        1. Turns on 1-wide flights and ledges next to a drop.
+        2. The squeeze margin (decision 6).
+        3. #657.
+        4. `npc-stuck-ladder` and the L3–L5 scenarios run with collision on as well.
+    2. **The docs session** (#589, to be rescoped) should cover M1–M7:
+        1. `docs/guides/developer/plugin-scenarios.md`:
+            1. the schematic scenes (M1);
+            2. the report-mode lines and the asserting checks per scenario (M2–M5, M7);
+            3. scripted pushes (`ScenarioPushes`) and `CitizensBootstrap.entity`/`setProtected`;
+            4. the refused `move()`.
+        2. `docs/guides/developer/ci.md` § 7: 48 scenarios, timings.
+        3. An admin or ops guide for `/knk npc nav stats`: the `corridor`, `local legs`, `crowd:` and `pushes:` lines.
+        4. BEHAVIOR_MODEL NAV-24–NAV-28 status rows, NAV-26 with M7's push resistance.
+        5. The feature register and site/wiki rows for Phase 4c.
+        6. A smoke-test guide in `docs/guides/` assembled from the plan's 4c.4 developer tests M1–M7, every step in full.
