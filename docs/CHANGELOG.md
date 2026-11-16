@@ -4,6 +4,273 @@ This is a human-readable record of capabilities merged into the V3 default branc
 
 ## Unreleased — on feature branches, not merged
 
+- **CI: the Paper boot test's log check no longer fails at random on the player scenarios** ([PandiO/knk-workspace#586](https://github.com/PandiO/knk-workspace/issues/586)).
+  knk-plugin and knk-workspace branches `claude/paper-boot-flake-586` (PRs into `next`; the plugin fix also into `main`).
+  1. **What was wrong.** Now and then a `paper-boot` run failed its log check on `Failed to sync user data for
+     Scn…: RuntimeException: Failed to check duplicate`, though every scenario passed. The plugin printed that error's
+     stack trace with `printStackTrace()`, one line at a time, and another API-client thread could log a plain warning
+     in between; the check then gave the trace (with its "API unreachable" cause) to that warning.
+  2. **What changed.** The join's account sync (and its welcome message fallback) log the exception with the log entry;
+     the check prefers the entry that quotes the trace's exception. Nothing is excused that wasn't before. The teleport
+     audit's retry that hits a stopped plugin is one `INFO` line (on `next` since 2026-11-15, now with a test of that
+     exact race) ([CI § 7](guides/developer/ci.md#7-plugin-the-paper-boot-test)).
+  3. **Deploy.** Nothing to deploy; server logs show the sync error's cause as part of the same entry.
+
+- **CI: the API's MySQL tests run on every push** ([PandiO/knk-workspace#419](https://github.com/PandiO/knk-workspace/issues/419)).
+  knk-web-api `main` and `next` ([knk-web-api#43](https://github.com/PandiO/knk-web-api/pull/43)); knk-workspace branch
+  `claude/mysql-tests-ci-419` (PR into `next`).
+  1. **What changed.** The new `mysql-tests` job of the API's "Build and test" workflow runs the 100 `requires-mysql`
+     tests (row locks, transactions, unique indexes, ledger triggers) against a throwaway MySQL 8.0 service container,
+     in parallel with `build-and-test`, and fails if any of them was skipped. 99 run and pass; one is a known failure
+     ([#285](https://github.com/PandiO/knk-workspace/issues/285)). The job takes 7 to 8 minutes
+     ([CI § 1.1.1](guides/developer/ci.md#11-tests-that-ci-does-not-run)).
+  2. **Unchanged.** `build-and-test` keeps its name and duration, and local runs without `KNK_TEST_MYSQL` still skip
+     these tests. `mysql-tests` is not a required check yet (recommended once it has been green a few times).
+  3. **Deploy.** Nothing to deploy; workflows and one test mark only.
+
+- **NPC navigation: push resistance with collision on; `collidable` stays off by default** ([PandiO/knk-workspace#627](https://github.com/PandiO/knk-workspace/issues/627),
+  link M7 of the NPC navigation follow-ups chain, implementation plan Phase 4c.4 item 7, research report 2026-11-15
+  § 6). knk-plugin and knk-workspace branches `claude/npc-movement-m7` (PRs into `next`, in review). Nothing changes with
+  `npc.navigation.collidable: false` (still the default) or with `npc.navigation.enabled: false`.
+  1. **What it does with `collidable: true`.** NPCs push and block each other; players never move an NPC (each NPC is
+     exempt from every player's collision through Paper's per-entity collidable exemptions; no scoreboard team is
+     touched). A push the NPC's own walk doesn't explain (a body, an attack's knockback, water, a piston) is detected,
+     counted and logged with who did it, and the NPC walks back to its line or post: straight back, else along its own
+     footsteps, else a local leg, and last, after 30 s, a teleport home only where no player sees it. Another NPC's
+     jostle on its way is left to the crowd unless it goes towards a drop; queue spots never stand next to a drop of 3
+     blocks or more. With `players-push-npcs: true` players bump NPCs (the realistic mode for later): a player who pushes
+     an NPC 3 times in 10 s, or once towards a drop, stops colliding with it for 60 s. An attack's knockback stays and the
+     NPC walks back. `/knk npc nav stats` shows `pushes: N (players N, attacks N), returned N, exempted N (now N),
+     teleported N`; the metrics count `knk_npc_nav_events_total{event="pushed|push_returned|push_exempt|push_teleport"}`.
+  2. **Checked** (scenarios on Paper 26.3 with Citizens and a scripted player): a player walking through a standing NPC
+     carries it 2.85–3.80 blocks with collision on and no policy, 0.00 with K&K's; a guard on a wall walk pushed towards a
+     7-block drop doesn't move, and with `players-push-npcs` it is pushed 0.68, the player is exempted at the edge, it
+     never falls and walks back; the five Phase 4c scenes pass with collision on as with it off; 12 singles one way
+     through a one-block door all arrive with turns kept.
+  3. **Why the default stays off.** With bodies on everywhere, NPCs walking a 1-wide flight next to a drop can shove
+     each other off it (the #491 stair corner scene: one fell), which push resistance can't undo; bodies of a squeezed
+     row still overlap (closest 0.19). The plan (4c.4 item 7.4.10) lists what is missing before the default turns on.
+  4. **Deploy.** Add the keys to `npc.navigation` in `config.yml` (configuration reference § 4.27) and restart:
+
+     ```yaml
+     npc:
+       navigation:
+         collidable: false
+         players-push-npcs: false
+         push-return: true
+         push-exempt-after: 3
+         push-exempt-window-ticks: 200
+         push-exempt-ticks: 1200
+         push-teleport-ticks: 600
+     ```
+
+- **CI: GitHub Actions on Node.js 24, Release workflow fixes** ([PandiO/knk-workspace#426](https://github.com/PandiO/knk-workspace/issues/426)).
+  knk-web-api, knk-web-app and knk-plugin `main` and `next`; knk-workspace branch `claude/actions-node24-426` (PR into
+  `next`).
+  1. **Actions.** Every workflow uses the Node.js 24 majors: `checkout` v7, `setup-dotnet` v6, `setup-node` v7,
+     `setup-java` v6, `upload-artifact` v7, `cache` v6 and `gradle/actions/setup-gradle` v6 (with the open-source
+     `cache-provider: basic`). The Node.js 20 warning on every run is gone; job and artifact names are unchanged
+     ([CI § 6](guides/developer/ci.md#6-action-versions-nodejs-24)).
+  2. **Release workflow.** One concurrency group per tag, so a third dispatch no longer replaces a pending second one.
+     A tag that already exists at exactly the requested commit without a release gets its release from a new run
+     instead of a failure; a tag at another commit, or one with a release, still fails the run.
+  3. **Deploy.** Nothing to deploy; workflows only.
+
+- **NPC navigation: crowd awareness, off by default** ([PandiO/knk-workspace#626](https://github.com/PandiO/knk-workspace/issues/626),
+  link M4 of the NPC navigation follow-ups chain, implementation plan Phase 4c.4 item 4, decision 3; BEHAVIOR_MODEL
+  NAV-26). knk-plugin and knk-workspace branches `claude/npc-movement-m4` (PRs into `next`, in review). Nothing changes
+  with `crowd-awareness: false` (the default) or with `npc.navigation.enabled: false`.
+  1. **What it does.** NPCs know who stands where near them: every 5 ticks the navigation service hashes the feet cell
+     of every navigating NPC. A narrow place on an NPC's way (a door, an arch, a passage under 2 blocks wide) is taken
+     in turns, one direction at a time: an NPC already in it goes first, then first come (decided by the developer
+     2026-11-15). The others wait in a queue a block apart before it, a block to the side of the line, so the way out
+     stays free. Two NPCs that meet head-on in a narrow place: the second to enter steps back out and waits (a yield).
+     A group's leader keeps its turn until its followers are through. Waiting in a queue, yielding or standing behind
+     another NPC (a single or a group's follower) is counted as a wait, not as a stuck spell, and recovery back-offs and
+     side-steps never end on a cell where another NPC stands; K&K's local legs (`local-legs-clearance`) go round such a
+     cell. `/knk npc nav stats` shows `crowd: waits N, yields N, longest queue N`; the metrics count
+     `knk_npc_nav_events_total{event="crowd_wait"}` and `{event="crowd_yield"}`. Authority values and closed
+     formations first are later updates (plan 4c.7).
+  2. **Checked.** In `npc-doorway-crowd` (6 singles from each side of a one-block doorway at once) today's code gets
+     11 of 12 through with 2 stuck spells and an NPC still for 11.7 s by the door (collision off); with the clearance-aware
+     legs alone all 12 walk through each other (5 in the doorway at once) and, with collision on, open 6 stuck spells.
+     With crowd awareness all 12 arrive both ways with 0 stuck spells, they take the doorway one direction at a time
+     (at most 2 in its cell at once, the same way), the 7th in the queue waits 7.8–8.3 s, 1.5 s per NPC that went
+     first, and nobody stands still outside a queue longer than 0.4 s. Turn-taking costs time with collision off: trips
+     take 6.3 s on average instead of 3.7 s. The group of 20 through the stair-house entrance is unchanged (no narrow
+     place on its line; 0 waits, 0 stuck spells, entrance still 0.4 s). Both scenarios now assert this, with collision
+     off and on. The hash and the turns cost 0.0015–0.0063 ms per NPC per tick.
+  3. **Deploy.** Add the key to `npc.navigation` in `config.yml` (configuration reference § 4.27) and restart:
+
+     ```yaml
+     npc:
+       navigation:
+         crowd-awareness: false
+     ```
+
+- **NPC navigation: plaza lines, off by default** ([PandiO/knk-workspace#625](https://github.com/PandiO/knk-workspace/issues/625),
+  link M5 of the NPC navigation follow-ups chain, implementation plan Phase 4c.4 item 5, decision 6; BEHAVIOR_MODEL
+  NAV-27). knk-plugin and knk-workspace branches `claude/npc-movement-m5` (PRs into `next`, in review). Nothing
+  changes with `plaza-lines: false` (the default) or with `npc.navigation.enabled: false`.
+  1. **What it does.** The road graph collapses a plaza into one junction, so a route across a plaza runs to its
+     middle and out again. With `plaza-lines: true` an NPC crosses a plaza on the straight line from where its route
+     enters to where it leaves: the corridor widens to the plaza (a designed plaza's radius, or the open floor measured
+     round the junction when it is wider than `corridor-half-width`, at most `plaza-corridor-blocks`), and the line
+     goes round wells, stalls and trees with `wall-clearance` and never into a region the route does not pass.
+     Groups take the same line, kept their formation's half width plus `wall-clearance` from obstacles, and keep
+     their width on the open plaza. It works with or without `corridor-steering`. The players' trail and the road
+     graph are unchanged; through-edges in the road-graph builder are a later update (plan 4c.7).
+  2. **Checked.** In `npc-plaza-line` (a 15 × 15 plaza with a well on the chord) 3 singles walked +40 % over the
+     chord through the plaza's middle; with the key on they walk +4 % over the shortest line that keeps 0.8 from the
+     well and pass it at 0.64–0.75 blocks, never near the middle. A group of 7 in ranks of 3 takes the same line round
+     the well with its own margin, 3 abreast all the way. The scenario now asserts this, with collision off and on.
+     Known: with collision off the group there reports its arrival 20 s late (followers already in place), a bug in
+     `next` filed as [#636](https://github.com/PandiO/knk-workspace/issues/636).
+  3. **Deploy.** Add the keys to `npc.navigation` in `config.yml` (configuration reference § 4.27) and restart:
+
+     ```yaml
+     npc:
+       navigation:
+         plaza-lines: false
+         plaza-corridor-blocks: 16
+     ```
+
+- **NPC navigation: elastic formation keeping, off by default** ([PandiO/knk-workspace#624](https://github.com/PandiO/knk-workspace/issues/624),
+  link M3 of the NPC navigation follow-ups chain, implementation plan Phase 4c.4 item 3, decision 2; #522, #493).
+  knk-plugin and knk-workspace branches `claude/npc-movement-m3` (PRs into `next`, in review). Nothing changes with
+  `group-formation-keeping: levels` (the default) or with `npc.navigation.enabled: false`.
+  1. **What it does.** With `group-formation-keeping: elastic` a group fits its width to the free width across its
+     path instead of fixed widths: neighbours move closer, down to shoulder to shoulder (`group-lateral-spacing-min`
+     0.6), and the rows close up (`group-spacing-min` 1.0) before the group drops a width, so 3 abreast walk a 2-wide
+     road. It decides its width ahead (the formation's depth plus `group-lookahead-blocks`, 4), so the followers are
+     in their new lanes before the narrow place. It folds into single file only where 2 abreast squeezed don't fit
+     for longer than `group-width-hysteresis-blocks`; a shorter tight place (a post, a one-block gap) is passed with
+     the lanes merged. Stairs are walked as wide as the flight allows when each lane has its own steps; lanes may
+     cross into regions the group's access rules allow; followers take the new slots by where they stand, so nobody
+     crosses another's line. The group path follows the corridor-shaped line, and the outer lanes keep
+     `wall-clearance` from walls where the road allows.
+  2. **Stats.** The groups line of `/knk npc nav stats` has `merges N (reasons)` next to the narrowings, and the metric
+     `knk_npc_nav_group_width_reasons_total` has `change="merge"`.
+  3. **Checked.** `npc-stairhouse-group` (the developer's stair house, 20 in ranks of 3) now walks 3 abreast with no
+     fold where it folded at the first step, the leader arrives after 7.5 s instead of 27 s and no follower stands in
+     the entrance longer than 0.4 s (was 23.7 s); the group of 9 on the jagged straight has no stuck spells with
+     collision off (was 5, 3 not freed). Both scenarios, collision off and on, check plan 4c.4 item 3.3;
+     `npc-group-narrows` checks the squeeze on the corner scene.
+  4. **Deploy.** Add the keys to `npc.navigation` in `config.yml` (configuration reference § 4.27) and restart:
+
+     ```yaml
+     npc:
+       navigation:
+         group-formation-keeping: levels
+         group-lateral-spacing-min: 0.6
+         group-spacing-min: 1.0
+         group-lookahead-blocks: 4
+     ```
+
+- **NPC navigation: clearance-aware local legs, off by default** ([PandiO/knk-workspace#623](https://github.com/PandiO/knk-workspace/issues/623),
+  link M6 of the NPC navigation follow-ups chain, implementation plan Phase 4c.4 item 6, decision 8, add-on D).
+  knk-plugin and knk-workspace branches `claude/npc-movement-m6` (PRs into `next`, in review). Nothing changes with
+  `local-legs-clearance: false` (the default) or with `npc.navigation.enabled: false`.
+  1. **What it does.** A local leg is the part of a trip an NPC walks without the road line: a short trip, a group
+     follower's own leg back to its group, the recovery ladder's local leg when an NPC is stuck. Until now Citizens'
+     own path search found the way, which knows the body's size but keeps no margin from walls, and its failed
+     searches cost main-thread time before they came back with no path. With the key on, K&K searches the leg itself:
+     on the walkable corridor around it (its own floor, steps of at most a block), with K&K's access rules for the
+     NPC (gates, doors, regions it may not enter), keeping `wall-clearance` (0.8) from walls where the gap allows and
+     never less than the body's width, so one-block doors stay open. The found way is smoothed into a few straight
+     steps that keep the floor under the NPC and is walked as waypoints. When K&K finds nothing within its cell budget,
+     Citizens' search walks the leg as before.
+  2. **Stats.** `/knk npc nav stats` has a new line `local legs: k&k N, engine N, none N`: legs K&K's search found,
+     legs Citizens' search walked, and legs neither found a way for.
+  3. **Checked.** `npc-stuck-ladder` (now with the key on) checks that the ladder's local leg frees the pushed NPC as a
+     K&K leg without an engine search; `npc-stairhouse-singles` (key on, collision off and on) checks that no local
+     leg ends without a path. The other movement scenarios report the counts.
+  4. **Deploy.** Add the key to `npc.navigation` in `config.yml` (configuration reference § 4.27) and restart:
+
+     ```yaml
+     npc:
+       navigation:
+         local-legs-clearance: false
+     ```
+
+- **NPC navigation: corridor steering, off by default** ([PandiO/knk-workspace#622](https://github.com/PandiO/knk-workspace/issues/622),
+  link M2 of the NPC navigation follow-ups chain, implementation plan Phase 4c.4 item 2, decision 1 option A).
+  knk-plugin and knk-workspace branches `claude/npc-movement-m2` (PRs into `next`, in review). Nothing changes with
+  `corridor-steering: false` (the default) or with `npc.navigation.enabled: false`.
+  1. **What it does.** Before an NPC walks a stretch of its route (about 32 blocks), K&K builds the walkable corridor
+     around the road line (`corridor-half-width` blocks each side, the NPC's own floor and the road's regions), works
+     out each spot's clearance from walls, posts and drops, and moves the line: `wall-clearance` (0.8) off walls
+     where the road is wide enough, on straights too; through the middle where it is narrower, so one-block doors
+     stay open; straightened where the corridor allows; and through the middle of a doorway or entrance on its axis,
+     with a waypoint 1.5 blocks before it, one in it and one after it (walked with waypoint margin 0.35). The shaped
+     stretch is built once and shared by every NPC that gets it. Corner clearance and the waypoint chain still run on
+     it. Group members keep today's line until link M3 fits formations to the corridor.
+  2. **Checked.** With the key on, `npc-stairhouse-singles` and `npc-jagged-straight` (collision off and on) now
+     assert: all 12 singles arrive, 0 stuck spells, nobody still longer than 3 s, no fall, corridor steering's own cost
+     at most 0.03 ms per NPC per tick (the plan's budget; about 0.005 ms warm).
+  3. **Deploy.** Add the three keys to `npc.navigation` in `config.yml` (configuration reference § 4.27) and restart:
+
+     ```yaml
+     npc:
+       navigation:
+         corridor-steering: false
+         corridor-half-width: 4
+         wall-clearance: 0.8
+     ```
+
+- **NPC navigation: movement evidence and diagnostics** ([PandiO/knk-workspace#621](https://github.com/PandiO/knk-workspace/issues/621),
+  link M1 of the NPC navigation follow-ups chain, implementation plan Phase 4c.4 item 1 and 4c.5). knk-plugin and
+  knk-workspace branches `claude/npc-movement-m1` (PRs into `next`, in review). No behaviour change, no new
+  `config.yml` key; nothing changes for players or with `npc.navigation.enabled: false` (the default).
+  1. **Why a group folded.** Every fold and narrowing now names its cause in the log line ("folds into a column: the
+     path is too narrow for 2 abreast (stair) at …") and counts it: `stair` (a step on the path), `narrow` (no floor
+     where a lane would stand), `door` (a gate door on the route), `rules` (a lane in other WorldGuard regions) and
+     `edge` (a lane with floor but no room at its shoulder, a jutting wall piece). The groups line of
+     `/knk npc nav stats` shows them ("folds 3 (stair 2, door 1)") and the metrics have
+     `knk_npc_nav_group_width_reasons_total{change, reason}`. Counting only: the widths are chosen as before.
+  2. **How much room the line has.** `/knk npc nav trace` writes a `# corridor:` line after each `# waypoints:` line:
+     each waypoint's free width across the line (total, left, right in blocks, to the nearest wall, post, full-block
+     step or drop, at most 4 per side).
+  3. **Real places as test scenes.** Plugin scenarios can paste a WorldEdit schematic (`.schem`, the format
+     `//schem save` writes) from the plugin's `scenario-scenes/` resources into their box. Five new scenarios, each run
+     with `npc.navigation.collidable` off and on, measure today's movement in report mode (they log a
+     `KNK-NPC-REPORT` line and pass; later links turn the numbers into checks): `npc-stairhouse-singles`,
+     `npc-stairhouse-group`, `npc-jagged-straight`, `npc-doorway-crowd` and `npc-plaza-line`. The stair house is
+     the developer's own schematic (attached to [#603](https://github.com/PandiO/knk-workspace/issues/603)); the
+     other three scenes are synthetic by design. On it, a group of 20 folds at the first step and a follower stands
+     about 24 s in the entrance, the developer's jam. CI's
+     `paper-boot` job runs 45 scenarios now and copies the report lines into its summary.
+- **NPC navigation: movement-quality design (decided)** ([PandiO/knk-workspace#603](https://github.com/PandiO/knk-workspace/issues/603), link L8): implementation plan Phase 4c (steering options from a [research report](reports/2026-11-15-npc-movement-research.md) on how games handle obstacle avoidance and stuck recovery, formations that tighten before they fold, turns at chokepoints, natural lines on plazas; links M1–M5) and BEHAVIOR_MODEL NAV-24–NAV-28; docs only; decided by the developer 2026-11-15 (all fifteen questions).
+- **NPC navigation: entry removed in the web app with realtime on stops a group at the district's edge**
+  ([PandiO/knk-workspace#593](https://github.com/PandiO/knk-workspace/issues/593), the developer's retest of
+  [#506](https://github.com/PandiO/knk-workspace/issues/506) (Phase 4 developer test step 10); also
+  [#533](https://github.com/PandiO/knk-workspace/issues/533); link L6 of the NPC navigation follow-ups chain).
+  knk-plugin and knk-workspace branches `claude/npc-followups-l6` (PRs into `next`, in review). No change for players
+  or with `npc.navigation.enabled: false` (the default).
+  1. **Why the whole group walked in.** A district's entry changed in the web app arrives over realtime as
+     `EntityChanged` (the plugin clears its region → domain map) and `DomainAccessChanged` (the WorldGuard flag sync).
+     Neither told NPC navigation. The group kept its "may enter" answers from before the change, and the NPC checks
+     count a region missing from the map as open, so every follower outside walked in and the trespass guard counted
+     nothing. A `/knk cache refresh` afterwards came too late for the followers who were already inside.
+  2. **The fix.** Both realtime events now ask, coalesced into one run after half a second, for the roads' regions to
+     be asked about again in place (the last known rule is kept until the API answers) and then send the availability
+     event the refresh sends. Followers outside stop at the edge within about a second, without a refresh. Only while
+     NPC navigation runs.
+  3. **The gate region over the district's entry is not the cause.** The NPC entry rule judges each region on its own:
+     a step into `district_1000004` and `gate_2000131` at once is allowed only when both may be entered, so a gate
+     region that allows entry (or has no domain) never hides the district's denial. There is no region priority in
+     the entry rule. The rule is now one core class (`DomainEntryRule`) shared by the server and the tests.
+  4. **No false trespass for an NPC that crossed just before the change arrived.** An NPC's own trespass guard (the
+     leader's, and any NPC with an order of its own) now takes a fresh look when an availability event comes, as the
+     followers' guard already did. An entry made under the old rules is not judged by the new ones. Entries made after
+     the plugin knew still count.
+  5. **Tests.** New plugin scenario `npc-group-realtime-entry`: a district under a gate region on a real server, entry
+     removed and restored through the plugin's realtime classes mid-group (CI `paper-boot` now has `MIN_SCENARIOS` 35).
+     New knk-core `NavGroupDomainRulesTest` covers the realtime, `DomainAccessChanged` and refresh paths with the gate
+     region; on `next` the realtime path fails it (followers enter). There are also new resolver tests, two
+     `NpcNavigationRulesTest` cases and the knk-paper `NavigationDomainChangesTest`.
+  - **Admin steps:** none (no `config.yml` key, no new node, no API change). Developer retest: Phase 4 step 10 as
+    changed in the implementation plan (realtime on, no `/knk cache refresh`), posted on #593.
 - **NPC navigation: NPCs stay on the stair at a turn over a ledge, and falls are counted**
   ([PandiO/knk-workspace#592](https://github.com/PandiO/knk-workspace/issues/592), the developer's L3 retest of
   [#491](https://github.com/PandiO/knk-workspace/issues/491) and [#492](https://github.com/PandiO/knk-workspace/issues/492);
