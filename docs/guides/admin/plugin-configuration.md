@@ -1,6 +1,6 @@
 # Plugin configuration reference (`config.yml`)
 
-**Status:** Current · **Last updated:** 2026-11-16 (§ 4.27 `npc`: `crowd-awareness`, #626); 2026-11-16 (§ 4.27 `npc`: `plaza-lines`, `plaza-corridor-blocks`, #625); 2026-11-15 (§ 4.27 `npc`: `group-formation-keeping`, `group-lateral-spacing-min`, `group-spacing-min`, `group-lookahead-blocks`, #624); 2026-11-15 (§ 4.27 `npc`: `local-legs-clearance`, #623); 2026-11-15 (§ 4.27 `npc`: `corridor-steering`, `corridor-half-width`, `wall-clearance`, #622); 2026-11-15 (§ 4.3 `realtime.moderation` and § 2.1, web kick/ban, #574); 2026-11-15 (§ 2.1: #522 merged into `next` `deb7ff49`, #589); 2026-11-15 (§ 4.27 `npc`: `group-lateral-spacing`, `group-width-hysteresis-blocks`, `group-followers-finish-trip`, `group-spacing` 2.0 → 1.5, `group-formation` and `group-ranks-width` texts, #522); 2026-11-15 (§ 4.27 `npc`: `corner-clearance`, `waypoint-margin`, `recovery-wait-ticks`, `stationary-ticks` and `no-progress-ticks` 40, `max-retries` reworded, #521); 2026-11-14 (§ 4.28 `testing.scenarios`, test servers only, #421); 2026-11-14 (§ 4.18 `messages.web-account-registered`, #485); 2026-11-14 (§ 2.1: the #377 `group-*` keys are in `next` since 2026-11-13, PandiO/knk-workspace#496); 2026-11-13 (§ 4.11 gates are discovered too; § 4.21 realtime push; § 4.26 the kit cache, PandiO/knk-workspace#300)
+**Status:** Current · **Last updated:** 2026-11-16 (§ 4.27 `npc`: the per-NPC table no longer split by the `collidable` note, link to the NPC navigation admin guide, docs #658); 2026-11-16 (§ 4.27 `npc`: push resistance for `collidable` (still false), `players-push-npcs`, `push-return`, `push-exempt-after`, `push-exempt-window-ticks`, `push-exempt-ticks`, `push-teleport-ticks`, #627); 2026-11-16 (§ 4.27 `npc`: `crowd-awareness`, #626); 2026-11-16 (§ 4.27 `npc`: `plaza-lines`, `plaza-corridor-blocks`, #625); 2026-11-15 (§ 4.27 `npc`: `group-formation-keeping`, `group-lateral-spacing-min`, `group-spacing-min`, `group-lookahead-blocks`, #624); 2026-11-15 (§ 4.27 `npc`: `local-legs-clearance`, #623); 2026-11-15 (§ 4.27 `npc`: `corridor-steering`, `corridor-half-width`, `wall-clearance`, #622); 2026-11-15 (§ 4.3 `realtime.moderation` and § 2.1, web kick/ban, #574); 2026-11-15 (§ 2.1: #522 merged into `next` `deb7ff49`, #589); 2026-11-15 (§ 4.27 `npc`: `group-lateral-spacing`, `group-width-hysteresis-blocks`, `group-followers-finish-trip`, `group-spacing` 2.0 → 1.5, `group-formation` and `group-ranks-width` texts, #522); 2026-11-15 (§ 4.27 `npc`: `corner-clearance`, `waypoint-margin`, `recovery-wait-ticks`, `stationary-ticks` and `no-progress-ticks` 40, `max-retries` reworded, #521); 2026-11-14 (§ 4.28 `testing.scenarios`, test servers only, #421); 2026-11-14 (§ 4.18 `messages.web-account-registered`, #485); 2026-11-14 (§ 2.1: the #377 `group-*` keys are in `next` since 2026-11-13, PandiO/knk-workspace#496); 2026-11-13 (§ 4.11 gates are discovered too; § 4.21 realtime push; § 4.26 the kit cache, PandiO/knk-workspace#300)
 **Checked against:** knk-plugin `main` `121030f`; § 4.11, § 4.21 and § 4.26 against `57884e9`; § 4.27 `npc`, the `realtime.erasure` and `realtime.moderation` blocks and `regions.temp-retention.release-interval-minutes` against knk-plugin `next` (not on trunk yet). Update this page in place whenever a `config.yml` key is added, renamed, removed or gets a new default.
 **Source:** knk-plugin `knk-paper/src/main/resources/config.yml` (1,152 lines at `121030f`), read by
 `knk-paper/.../paper/config/ConfigLoader.java`, `EnchantmentConfigManager.java` and `KnKPlugin.java`
@@ -86,6 +86,7 @@ Newest first. Builds before this list: compare the files with the script.
 | Merged | Issue | Added (+), removed (−) or changed | Applies |
 |---|---|---|---|
 | in review, not in `next` yet (`claude/web-kick-ban-574`) | [#574](https://github.com/PandiO/knk-workspace/issues/574) | + `realtime.moderation` (`kick-default-reason`, `ban-message`; optional, defaults apply when missing) | Restart |
+| in review, not in `next` yet (`claude/npc-movement-m7`) | [#627](https://github.com/PandiO/knk-workspace/issues/627) | `npc.navigation.collidable` text (default still false); + `players-push-npcs` (false), + `push-return` (true), + `push-exempt-after` (3), + `push-exempt-window-ticks` (200), + `push-exempt-ticks` (1200), + `push-teleport-ticks` (600) | Restart |
 | in review, not in `next` yet (`claude/npc-movement-m4`) | [#626](https://github.com/PandiO/knk-workspace/issues/626) | + `npc.navigation.crowd-awareness` (false) | Restart |
 | in `next` (`3f116188`, 2026-11-16), not on trunk yet | [#625](https://github.com/PandiO/knk-workspace/issues/625) | + `npc.navigation.plaza-lines` (false), + `plaza-corridor-blocks` (16) | Restart |
 | in `next` (`138ebc66`, 2026-11-16), not on trunk yet | [#624](https://github.com/PandiO/knk-workspace/issues/624) | + `npc.navigation.group-formation-keeping` (levels), + `group-lateral-spacing-min` (0.6), + `group-spacing-min` (1.0), + `group-lookahead-blocks` (4) | Restart |
@@ -666,7 +667,13 @@ each value with the layer it came from. A wrong value is reported at startup and
 | `no-route-wait-ticks` | `100` | Ticks an NPC waits before asking again while the rules allow no route or the way ahead is not loaded; 20–6000. An NPC waiting at a closed gate or a district edge is woken by the gate or access change itself; this is the fallback | Restart | #360 |
 | `walk-only-blocks` | `64` | With an end too far from a road: the longest trip walked as off-road hops; further, the order fails; 0–256 (0 = never) | Restart | #360 |
 | `stop-on-trespass` | `false` | The trespass guard always logs and counts an NPC that entered a region its current rules deny. `true`: also stop that NPC and plan its route again; for dev servers | Restart | #361 |
-| `collidable` | `false` | Whether NPCs push and block each other | Restart | #359 |
+| `collidable` | `false` | Whether NPCs have bodies: they push and block each other, or walk through everything (`false`). With it on, players never move an NPC unless `players-push-npcs` is on (each NPC is exempt from every player's collision through Paper's per-entity collidable exemptions; no scoreboard team is touched), and push resistance runs: a displacement the NPC's own walk doesn't explain (a body, an attack's knockback, water, a piston) is detected, counted and logged with who did it, and the NPC walks back to its line or post; queue spots never stand on a cell next to a drop of 3 blocks or more. A real client still feels a slight nudge from an NPC's body; the NPC doesn't move. `/knk npc nav stats` shows `pushes: N (players N, attacks N), returned N, exempted N (now N), teleported N` | Restart | #359, #627 |
+| `players-push-npcs` | `false` | With `collidable` on: whether players' bodies push NPCs too. `true`: players bump NPCs, a pushed NPC walks back, and a player who keeps pushing one (below) stops colliding with it for a while, at once when the push goes towards a drop | Restart | #627 |
+| `push-return` | `true` | With `collidable` on: a pushed or knocked-back NPC walks back to its line or post: straight back where that is a straight walk, else along its own footsteps, else a local leg (K&K's search with `local-legs-clearance`, else Citizens'), last a teleport home. Another NPC's jostle on its way, in a queue or at its goal is the crowd's business (no walk back) unless it goes towards a drop; an NPC standing at its post is walked back when another NPC moves it a block or more; a group's follower is left to its group | Restart | #627 |
+| `push-exempt-after` | `3` | With `players-push-npcs` on: pushes by one player within `push-exempt-window-ticks` before that player stops colliding with that NPC for `push-exempt-ticks`; 1–20 | Restart | #627 |
+| `push-exempt-window-ticks` | `200` | The window in which `push-exempt-after` pushes count; 20–6000 | Restart | #627 |
+| `push-exempt-ticks` | `1200` | How long a player who kept pushing an NPC stops colliding with it; 20–72000 | Restart | #627 |
+| `push-teleport-ticks` | `600` | Ticks a pushed NPC may take to walk back before it teleports home, and only while no player (within 64 blocks with a line of sight) sees it where it stands or where it goes; 0 = never; 0–12000 | Restart | #627 |
 | `chunk-loading` | `load` | Outside player-loaded areas: `load` or `simulate` (read now, used in Phase 7b) | Restart | #359 |
 | `group-formation` | `column` | The formation of a group of NPCs (a leader plans the route once, the followers walk it in slots): `column` (single file), `ranks` (rows behind the leader), `cluster` (a loose crowd, 3 abreast) or `escort-ring` (an octagon around the leader, then wider rings). Where the road is too narrow a formation narrows before it folds: `ranks` one fewer abreast at a time down to 2, a `cluster` 3 then 2, the `escort-ring` rows of 3 with the leader in the middle of the second row, then 2 abreast; only where 2 abreast do not fit (a gate, stairs, a wall walk) the group walks as a column, and it takes up the widest width that fits again after | Restart | #377, #522 |
 | `group-spacing` | `1.5` | Blocks between the rows of a formation and between NPCs in a column; 1–8 (was 2.0 and also the gap in a row before #522) | Restart | #377, #522 |
@@ -681,6 +688,11 @@ each value with the layer it came from. A wrong value is reported at startup and
 | `group-rejoin-blocks` | `4.0` | A follower further than this from its lane plans its own leg back to the group's path (one local leg, never the whole route). A follower without progress for `no-progress-ticks` takes the recovery steps first (back-off, side-step), then its own leg back to a point ahead of it on its own floor; 2–16 | Restart | #377, #521 |
 | `group-regroup-blocks` | `24.0` | The leader waits when a follower is this many blocks behind its slot, until the group has closed up to half of it (30 seconds at most); 0–256, 0 = the leader never waits | Restart | #377 |
 | `group-catch-up-speed` | `1.3` | Walking speed, as a factor, of a follower that is behind its slot; 1–2, 1 = followers never walk faster | Restart | #377 |
+
+`collidable` stays `false` by default after #627: with bodies on, NPCs walking a 1-wide flight next to a drop can shove
+each other off it (the #491 stair corner scene, `npc-ledge-corner`), which push resistance cannot undo; see
+[implementation plan 4c.4 item 7.4.10](../../specs/npc-platform/IMPLEMENTATION_PLAN.md) for what is still missing. Turn it
+on per world or region where NPCs don't walk such places, after the developer test there. What each movement key does on a server, and the stats lines they add: [NPC navigation admin guide](npc-navigation-admin-guide.md).
 
 The `group-*` keys are per-NPC settings like the others, but a group takes them once, for its leader: a world, a
 region, an NPC template or an assignment can give groups their own formation and toggle.
@@ -703,7 +715,8 @@ lines; #521 adds `recovery-wait-ticks`, `corner-clearance` and `waypoint-margin`
 `group-followers-finish-trip` and sets `group-spacing` to 1.5; #622 adds `corridor-steering`,
 `corridor-half-width` and `wall-clearance`; #623 adds `local-legs-clearance`; #624 adds `group-formation-keeping`,
 `group-lateral-spacing-min`, `group-spacing-min` and `group-lookahead-blocks`; #625 adds `plaza-lines` and
-`plaza-corridor-blocks`; #626 adds `crowd-awareness`):
+`plaza-corridor-blocks`; #626 adds `crowd-awareness`; #627 adds `players-push-npcs`,
+`push-return`, `push-exempt-after`, `push-exempt-window-ticks`, `push-exempt-ticks` and `push-teleport-ticks`):
 
 ```yaml
 npc:
@@ -733,6 +746,12 @@ npc:
     walk-only-blocks: 64
     stop-on-trespass: false
     collidable: false
+    players-push-npcs: false
+    push-return: true
+    push-exempt-after: 3
+    push-exempt-window-ticks: 200
+    push-exempt-ticks: 1200
+    push-teleport-ticks: 600
     chunk-loading: load
     group-formation: column
     group-spacing: 1.5
@@ -792,6 +811,7 @@ testing:
 
 ## Changes
 
+1. 2026-11-16: § 4.27 `npc`: push resistance with `collidable` (default still false), `players-push-npcs`, `push-return`, `push-exempt-after`, `push-exempt-window-ticks`, `push-exempt-ticks`, `push-teleport-ticks` (#627), § 2.1 row; checked against knk-plugin `claude/npc-movement-m7`, not merged into `next` yet
 1. 2026-11-16: § 4.27 `npc`: `crowd-awareness` (#626), § 2.1 row (and the #625 row now in `next`); checked against knk-plugin `claude/npc-movement-m4`, not merged into `next` yet
 2. 2026-11-16: § 4.27 `npc`: `plaza-lines`, `plaza-corridor-blocks` (#625), § 2.1 row (and the #624 row now in `next`); checked against knk-plugin `claude/npc-movement-m5`, not merged into `next` yet
 3. 2026-11-15: § 4.27 `npc`: `group-formation-keeping`, `group-lateral-spacing-min`, `group-spacing-min`, `group-lookahead-blocks` and the `group-width-hysteresis-blocks` text (#624), § 2.1 row (and the #623 row now in `next`); checked against knk-plugin `claude/npc-movement-m3`, not merged into `next` yet

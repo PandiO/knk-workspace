@@ -1,6 +1,6 @@
 # Writing a plugin scenario
 
-**Status:** Active (in knk-plugin `next` since `309d3580`, 2026-11-14; not on trunk yet) · **Last updated:** 2026-11-15 (§ 2 item 3 and § 7: `npc-stuck-ladder` and `npc-stairhouse-singles` with `local-legs-clearance` on, report lines with the local legs, #623); 2026-11-15 (§ 7: the singles of `npc-stairhouse-singles` and `npc-jagged-straight` are checks with corridor steering on, #622); 2026-11-15 (§ 1, § 3 item 7 and § 7: scenes pasted from WorldEdit schematics (`SceneSchematic`, the developer's stair house), the five NPC movement scenarios in report mode with collision off and on, `KNK-NPC-REPORT` lines, 45 scenarios, [#621](https://github.com/PandiO/knk-workspace/issues/621)); 2026-11-15 (§ 1: `player-heal-needs-grant`, 32 scenarios with #522's, [#580](https://github.com/PandiO/knk-workspace/issues/580)); 2026-11-15 (§ 1 and § 4.7: the six NPC follow-up scenarios on the corner scene, `ScenarioNpcs` with access rules and gate crossings, `ScenarioNpcRules`, the short-trip rule; checked against knk-plugin `next` `deb7ff49`, [#589](https://github.com/PandiO/knk-workspace/issues/589)); 2026-11-15 (§ 5 rewritten: scripted players, `scene.player(...)`, six player scenarios; § 1, § 3.5, § 4.8, § 6 `run player-*`, new § 8 headless bot tests kept off, [#540](https://github.com/PandiO/knk-workspace/issues/540)); 2026-11-15 (§ 1, § 3.5, § 4.6, § 4.7 and § 6: NPC navigation scenarios on Citizens and a fake road network, `ScenarioRoadNpcs`, [#543](https://github.com/PandiO/knk-workspace/issues/543)); 2026-11-15 (§ 1 "Then" step 4: smoke-guide tag format, every step kept in full); 2026-11-14 (§ 1, § 3 and § 4: the scenarios and helpers of the plugin backfill, [#511](https://github.com/PandiO/knk-workspace/issues/511)); 2026-11-14 (§ 5 links #540); 2026-11-14 (first version, [PandiO/knk-workspace#421](https://github.com/PandiO/knk-workspace/issues/421))
+**Status:** Active (in knk-plugin `next` since `309d3580`, 2026-11-14; not on trunk yet) · **Last updated:** 2026-11-16 (§ 1: the checks of the NPC movement scenarios since links M3, M4, M5 and M7, the three collision scenarios of M7 (48 scenarios), scripted pushes with `ScenarioPushes`; § 5.2 item 3: `move()` is refused on Paper 26.3; checked against knk-plugin `next` `cc5262ff`, docs [#658](https://github.com/PandiO/knk-workspace/issues/658)); 2026-11-15 (§ 2 item 3 and § 7: `npc-stuck-ladder` and `npc-stairhouse-singles` with `local-legs-clearance` on, report lines with the local legs, #623); 2026-11-15 (§ 7: the singles of `npc-stairhouse-singles` and `npc-jagged-straight` are checks with corridor steering on, #622); 2026-11-15 (§ 1, § 3 item 7 and § 7: scenes pasted from WorldEdit schematics (`SceneSchematic`, the developer's stair house), the five NPC movement scenarios in report mode with collision off and on, `KNK-NPC-REPORT` lines, 45 scenarios, [#621](https://github.com/PandiO/knk-workspace/issues/621)); 2026-11-15 (§ 1: `player-heal-needs-grant`, 32 scenarios with #522's, [#580](https://github.com/PandiO/knk-workspace/issues/580)); 2026-11-15 (§ 1 and § 4.7: the six NPC follow-up scenarios on the corner scene, `ScenarioNpcs` with access rules and gate crossings, `ScenarioNpcRules`, the short-trip rule; checked against knk-plugin `next` `deb7ff49`, [#589](https://github.com/PandiO/knk-workspace/issues/589)); 2026-11-15 (§ 5 rewritten: scripted players, `scene.player(...)`, six player scenarios; § 1, § 3.5, § 4.8, § 6 `run player-*`, new § 8 headless bot tests kept off, [#540](https://github.com/PandiO/knk-workspace/issues/540)); 2026-11-15 (§ 1, § 3.5, § 4.6, § 4.7 and § 6: NPC navigation scenarios on Citizens and a fake road network, `ScenarioRoadNpcs`, [#543](https://github.com/PandiO/knk-workspace/issues/543)); 2026-11-15 (§ 1 "Then" step 4: smoke-guide tag format, every step kept in full); 2026-11-14 (§ 1, § 3 and § 4: the scenarios and helpers of the plugin backfill, [#511](https://github.com/PandiO/knk-workspace/issues/511)); 2026-11-14 (§ 5 links #540); 2026-11-14 (first version, [PandiO/knk-workspace#421](https://github.com/PandiO/knk-workspace/issues/421))
 **Related:** [CI § 7.1](ci.md#71-in-plugin-scenarios) (how CI runs them), [plugin architecture § Testing](../../architecture/plugin-architecture.md#testing),
 [`knk-test-writer` skill](../../../.claude/skills/knk-test-writer/SKILL.md) (which suite a behaviour belongs in),
 [AI agent workflow design § 6.3](../../specs/ai-agent-workflow/DESIGN.md#6-testing-and-ci),
@@ -165,6 +165,51 @@ every report line has a `local legs k&k N, engine N, none N` part:
 
 Every line also has falls, trespasses, `recovery no path` and K&K's navigation time per NPC per tick. The first
 numbers are the baseline in the chain report's M1 block.
+
+The later movement links ([#624](https://github.com/PandiO/knk-workspace/issues/624) M3,
+[#626](https://github.com/PandiO/knk-workspace/issues/626) M4, [#625](https://github.com/PandiO/knk-workspace/issues/625)
+M5) turned the rest into checks; every phase still logs its report line. The keys each scenario runs with
+(`NpcMovementReport.settings(...)`; `collidable` as its name says, `group-ranks-width` 3) and what fails it, as on
+knk-plugin `next` `cc5262ff`:
+
+| Scenario | Keys on | Fails when |
+|---|---|---|
+| `npc-stairhouse-singles` | `corridor-steering`, `local-legs-clearance` | a single doesn't arrive, a stuck spell, anyone still over 3 s, a fall, corridor cost over 0.03 ms per NPC per tick (`singlesFailures`); a local leg without a path (`localLegFailures`) |
+| `npc-stairhouse-group` | `corridor-steering`, `local-legs-clearance`, `group-formation-keeping: elastic`, `crowd-awareness` | the leader doesn't arrive, more folds than 1-wide places on the line (measured with M1's `FreeWidth`), a stuck spell open, not freed or near a wall (`groupFailures`); a follower in the entrance over 10 s; any stuck spell, a wait longer than 3 s per NPC that went first, an NPC let go after 30 s (`crowdFailures`) |
+| `npc-jagged-straight` | `corridor-steering`, `elastic` | the singles as above; the group of 9 with any fold or a stuck spell open, not freed or near a wall |
+| `npc-doorway-crowd` | `corridor-steering`, `local-legs-clearance`, `crowd-awareness` | `crowdFailures` |
+| `npc-plaza-line` | `elastic`, `plaza-lines` (not `corridor-steering`) | a single walks over 5 % more than the shortest line that keeps `wall-clearance` from the well, comes closer to the well than that clearance less 0.25 (the engine's walking slack), or within 2 blocks of the junction; its group of 7 in ranks of 3 also on the line round the well (at most 10 % over it, 1 block from the junction) and with no fold or stuck spell left (`groupFailures`) |
+
+`npc-group-narrows` (L4) runs `elastic` since M3, with its expectations moved to the squeeze (no narrowing in the
+2-wide passage, the column at the 1-wide one, 3 abreast after). [#627](https://github.com/PandiO/knk-workspace/issues/627)
+(M7) added three scenarios with collision on, all with scripted players:
+
+13. `npc-collision-policy` (`NpcCollisionPolicyScenario`): the scenario that chose the collision policy, kept as its
+    regression. A fake player walks straight through a standing NPC and two NPCs start 0.2 apart: with collision off
+    the player passes and the NPCs stay overlapped; with collision on (players never push) the NPC moves 0.00 and the
+    two NPCs push each other apart; with `players-push-npcs` (and `push-return` off) the player carries the NPC, the
+    reference.
+14. `npc-guard-ledge-push` (`NpcGuardLedgePushScenario`): a guard at its post on a wall walk beside a 7-block drop. A
+    fake player walks into it: without `players-push-npcs` it doesn't move; with it the player is exempted at the edge,
+    the guard never falls and is back at its post; the third push within the window exempts the player and the
+    fourth moves the guard 0.00; an attack knocks a walking, unprotected guard off its line and it walks back.
+15. `npc-door-column` (`NpcDoorColumnScenario`): 12 singles one way through a one-block door with `corridor-steering`,
+    `local-legs-clearance` and `crowd-awareness` on. Fails unless all arrive, no wait is longer than 3 s per NPC
+    ahead, nobody stands still over 3 s outside a queue, none is let go after 30 s and every stuck spell is freed
+    within 3 s. Stuck spells are allowed: the first two NPCs at the door mouth can both claim it and shove each other
+    against the frame ([#657](https://github.com/PandiO/knk-workspace/issues/657)).
+
+**Scripted pushes** (`ScenarioPushes.sweep(scene, player, from, to)`, knk-paper `scenario/scenarios/`): the fake
+player walks through the NPC at 0.12 blocks a tick (about 2.4 blocks a second, a slow push) by a short
+`ScenarioPlayer.teleport(...)` every tick; the server works collisions out from the bodies' boxes each tick, so a
+teleport this short pushes like walking. It does not use `move()`, which Paper 26.3 refuses (§ 5.2 item 3).
+`ScenarioPushes.ticks(from, to)` gives the sweep's length. To reach a Citizens NPC's body or let an attack land, use
+`CitizensBootstrap.entity(mover)` and `CitizensBootstrap.setProtected(mover, false)` (Citizens' NPCs are protected by
+default, so an attack neither hurts nor knocks them back).
+
+With `collidable` on for every NPC scenario (a trial, not on CI), `npc-ledge-corner`, `npc-corners-walk`,
+`npc-group-narrows` and `npc-stuck-ladder` fail; only the scenarios above run with collision on. That is why
+`collidable` stays off by default ([implementation plan 4c.4 item 7.4.10](../../specs/npc-platform/IMPLEMENTATION_PLAN.md)).
 
 A scenario must fail when its behaviour breaks (report-mode scenarios excepted until a link gives them checks). For the backfill each behaviour was broken once on a local server (the
 side rule, the other-door rule, the suffocation guard, the predictive push, the region rename, the lootbox area lookup,
@@ -354,9 +399,11 @@ plan.act("both join", () -> { refused.join(); granted.join(); })
    `join()` loads that saved position, inventory and game mode again, like a rejoin).
 2. `command("feed")` and `chat("hello")` go through `Player#chat`: the command preprocess event, dispatch with its
    permission checks; the chat events, the plugin's renderer and the viewers.
-3. `teleport(x, y, z)` (scene coordinates, cause PLUGIN, the teleport event fires) and `move(x, y, z)` (a movement
-   packet, so the server's movement checks and `PlayerMoveEvent` run; keep steps under a block, a fake player has no
-   gravity or physics of its own).
+3. `teleport(x, y, z)` (scene coordinates, cause PLUGIN, the teleport event fires) and `move(x, y, z)` (meant as a
+   movement packet, so the server's movement checks and `PlayerMoveEvent` run; a fake player has no gravity or physics
+   of its own). **`move()` does not work on Paper 26.3:** the server refuses the fake player's movement packets
+   (`Invalid move player packet received`, found by link M7, #627), so no scenario uses it. Walk a player with short
+   teleports instead, as `ScenarioPushes` does (§ 1); the fix is [#659](https://github.com/PandiO/knk-workspace/issues/659).
 4. `click(rawSlot)`, `rightClick`, `shiftClick`: a container-click packet in the open inventory (top inventory first),
    so the server's click handling, `InventoryClickEvent` and the plugin's listeners run.
 5. `messages()`, `received(text)`, `find(text)`, `clearMessages()`, `recentMessages()`: every chat line, system
