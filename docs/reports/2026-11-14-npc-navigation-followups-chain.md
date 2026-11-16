@@ -53,7 +53,7 @@ the configuration reference § 4.27), then restart. In test order:
 | M5 Plaza lines | #625 | Merged into next (2026-11-16) | knk-plugin `727f020b` → `next` `3f116188`; knk-workspace `f5aa56e6` → `next` `f9be4963` | PandiO/knk-plugin#51, PandiO/knk-workspace#637 | PR head green (build, paper-boot with 45 scenarios, push and PR runs 43792722751, 43793671690); #586 did not hit; Codex at its usage limit | create_session session_01R1w2UwSt9YZCZUtsk5fQjU (2026-11-16) |
 | M4 Crowd awareness | #626 | Merged into next (2026-11-16); option-B checkpoint with the developer | knk-plugin `8c864f7a` → `next` `a35fed5a`; knk-workspace `9f09cf23` → `next` `5b8125e5` | PandiO/knk-plugin#52, PandiO/knk-workspace#638 | push and PR runs on `8c864f7a` green (build, paper-boot with 45 scenarios; runs 43799206281, 43800089307); #586 did not hit; 45/45 locally; Codex at its usage limit | create_session session_01R1w2UsvLHZouJWudj4FxjT (2026-11-16) |
 | M7 Collision with push resistance | #627 | Merged into next (2026-11-16); `collidable` stays false | knk-plugin `6393aa37` → `next` `cc5262ff`; knk-workspace `dc8a91c5` → `next` `8e3d7d06` | PandiO/knk-plugin#57, PandiO/knk-workspace#656 | push and PR runs on `6393aa37` green (build, paper-boot with 48 scenarios); Codex at its usage limit | create_session session_01R1w2UtyxLznso8wdydHmQf (2026-11-16) |
-| L9 Fix: running groups ignore a realtime district deny | #668 | In review (PRs open, not merged) | knk-plugin `76259d86`; knk-workspace `1dffa06d` | PandiO/knk-plugin#61, PandiO/knk-workspace#669 | push run on `76259d86` green (build, paper-boot with 48 scenarios); PR run pending at the time of writing; 48/48 locally | create_session session_01R1w2UvV75PszFp2o3mNoHB (2026-11-16) |
+| L9 Fix: running groups ignore a realtime district deny | #668 | In review (PRs open, not merged) | knk-plugin `76259d86`; knk-workspace `1dffa06d` | PandiO/knk-plugin#61, PandiO/knk-workspace#669 | push and PR runs on `76259d86` green (build, paper-boot with 48 scenarios; runs 43941362118, 43944997333); #586 did not hit; 48/48 locally; Codex at its usage limit | create_session session_01R1w2UvV75PszFp2o3mNoHB (2026-11-16) |
 
 ## 3. Coordinator decisions
 
@@ -1290,7 +1290,7 @@ _(Each link appends its block here when it finishes.)_
     3. Scenarios, locally (Paper 26.3, pinned WorldEdit, WorldGuard, Citizens b4269, `--min-scenarios 48 --npc-navigation`):
         1. This branch with `next`'s start-time wiring: 46/48. `npc-group-realtime-entry` fails (`knk-sc-22002 entered the district`), and so does `npc-group-access-change` (`entered the region`).
         2. With the fix: 48/48, log check passed.
-    4. CI: the push run on `76259d86` is green (`build`, `paper-boot`). The PR run was pending when this was written; see the final message. #586 did not hit.
+    4. CI: the push run on `76259d86` is green (`build`, `paper-boot`). The PR run is green too (`paper-boot` 43944997333). #586 did not hit. Codex: at its usage limit (said on both PRs).
     5. A probe, not committed: L6's core test with all five movement keys on and `ranks` passes. So the core logic was never the problem.
     6. Known reds: none.
 5. **Decisions (DESIGN § 4.3).**
