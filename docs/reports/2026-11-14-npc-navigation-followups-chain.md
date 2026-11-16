@@ -53,7 +53,7 @@ Every link is merged into `next` (2026-11-15). Build knk-plugin from `next` `deb
 | M6 Clearance-aware local legs (add-on D) | #623 | Merged into next (2026-11-15) | knk-plugin `8fa83e09` → `next` `625c2c9c`; knk-workspace `f65d3c69` → `next` `e0783664` | PandiO/knk-plugin#49, PandiO/knk-workspace#634 | PR head green (build, paper-boot with 45 scenarios); Codex at its usage limit | create_session session_01R1w2UuwfDNhwngWZJue8wZ (2026-11-15) |
 | M3 Formation keeping | #624 | Merged into next (2026-11-16) | knk-plugin `94b30146` → `next` `138ebc66`; knk-workspace `1b4692ed` → `next` `a428eb3e` | PandiO/knk-plugin#50, PandiO/knk-workspace#635 | PR head green (build, paper-boot with 45 scenarios; one #586 log-check re-run); Codex at its usage limit | create_session session_01R1w2UufiGFpPfGevZxvtVD (2026-11-15) |
 | M5 Plaza lines | #625 | Merged into next (2026-11-16) | knk-plugin `727f020b` → `next` `3f116188`; knk-workspace `f5aa56e6` → `next` `f9be4963` | PandiO/knk-plugin#51, PandiO/knk-workspace#637 | PR head green (build, paper-boot with 45 scenarios, push and PR runs 43792722751, 43793671690); #586 did not hit; Codex at its usage limit | create_session session_01R1w2UwSt9YZCZUtsk5fQjU (2026-11-16) |
-| M4 Crowd awareness | #626 | In review (PRs open, not merged) | knk-plugin `8c864f7a`; knk-workspace `9f09cf2` | PandiO/knk-plugin#52, PandiO/knk-workspace#638 | push and PR runs on `8c864f7a` green (build, paper-boot with 45 scenarios; runs 43799206281, 43800089307); #586 did not hit; 45/45 locally; Codex at its usage limit | create_session session_01R1w2UsvLHZouJWudj4FxjT (2026-11-16) |
+| M4 Crowd awareness | #626 | Merged into next (2026-11-16); option-B checkpoint with the developer | knk-plugin `8c864f7a` → `next` `a35fed5a`; knk-workspace `9f09cf23` → `next` `5b8125e5` | PandiO/knk-plugin#52, PandiO/knk-workspace#638 | push and PR runs on `8c864f7a` green (build, paper-boot with 45 scenarios; runs 43799206281, 43800089307); #586 did not hit; 45/45 locally; Codex at its usage limit | create_session session_01R1w2UsvLHZouJWudj4FxjT (2026-11-16) |
 | M7 Collision with push resistance | #627 | Not started (gate: B checkpoint) | — | — | — | — |
 
 ## 3. Coordinator decisions
@@ -222,6 +222,11 @@ Every link is merged into `next` (2026-11-15). Build knk-plugin from `next` `deb
     § 6 held: tests 2880/2854 → 2899/2859, 45 scenarios green, `npc-plaza-line` asserting (+40 % → +4 % over the
     obstacle-aware shortest line), behind `plaza-lines` (off). #636 (a follower that never settles) filed. Merged
     PandiO/knk-plugin#51 → `3f116188` and PandiO/knk-workspace#637 → `f9be4963`. M4 started.
+
+29. **M4 checked and merged** (2026-11-16). § 6 held: tests 2899/2859 → 2921/2860, 45 scenarios green on the push
+    and PR runs, `npc-doorway-crowd` and `npc-stairhouse-group` asserting (doorway 12/12 with 0 stuck spells, collision
+    off and on). Merged PandiO/knk-plugin#52 → `a35fed5a` and PandiO/knk-workspace#638 → `5b8125e5`. The
+    option-B checkpoint (plan 4c.4 item 8) goes to the developer next.
 
 ## 4. Link blocks
 
