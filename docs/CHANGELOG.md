@@ -4,6 +4,18 @@ This is a human-readable record of capabilities merged into the V3 default branc
 
 ## Unreleased — on feature branches, not merged
 
+- **CI: GitHub Actions on Node.js 24, Release workflow fixes** ([PandiO/knk-workspace#426](https://github.com/PandiO/knk-workspace/issues/426)).
+  knk-web-api, knk-web-app and knk-plugin `main` and `next`; knk-workspace branch `claude/actions-node24-426` (PR into
+  `next`).
+  1. **Actions.** Every workflow uses the Node.js 24 majors: `checkout` v7, `setup-dotnet` v6, `setup-node` v7,
+     `setup-java` v6, `upload-artifact` v7, `cache` v6 and `gradle/actions/setup-gradle` v6 (with the open-source
+     `cache-provider: basic`). The Node.js 20 warning on every run is gone; job and artifact names are unchanged
+     ([CI § 6](guides/developer/ci.md#6-action-versions-nodejs-24)).
+  2. **Release workflow.** One concurrency group per tag, so a third dispatch no longer replaces a pending second one.
+     A tag that already exists at exactly the requested commit without a release gets its release from a new run
+     instead of a failure; a tag at another commit, or one with a release, still fails the run.
+  3. **Deploy.** Nothing to deploy; workflows only.
+
 - **NPC navigation: crowd awareness, off by default** ([PandiO/knk-workspace#626](https://github.com/PandiO/knk-workspace/issues/626),
   link M4 of the NPC navigation follow-ups chain, implementation plan Phase 4c.4 item 4, decision 3; BEHAVIOR_MODEL
   NAV-26). knk-plugin and knk-workspace branches `claude/npc-movement-m4` (PRs into `next`, in review). Nothing changes
