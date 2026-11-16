@@ -163,7 +163,7 @@ every report line has a `local legs k&k N, engine N, none N` part:
     (to the junction in the middle and out). Reports the walked length on the plaza against the chord and how close
     they came to the well.
 13. `npc-stairhouse-climb` ([#670](https://github.com/PandiO/knk-workspace/issues/670), link B1): the whole stair
-    house, from the street east of it up all five flights of the stacked hairpins to the top hall, with short
+    house on the real road line of the developer's traces, from the street east of it up all five flights of the stacked hairpins to the top hall, with short
     stretches (`stretch-blocks` 8) and the settings of the developer's server during the failed smoke test of
     2026-11-16. Three phases: a leader alone, a group of 20 in `ranks`, and the group with 20 singles beside it.
     Reports the falls (from where to where), places of the climb skipped or walked back to, stretch handovers and
@@ -310,9 +310,10 @@ cleared before and after the run, so keep it as small as the scene allows ([#670
       implement `SizedScene` with that box. `NpcMovementScene` has M1's hand-drawn line from the street through the
       entrance (1413 −508) up two steps into the hall (`houseLine`) and the climb from the street in the east up all
       five flights to the top hall (`climbLine`, with `climbPlace` naming the flight or landing a body is on). Use
-      `real(...)`, `realFeet(...)` and `realBlock(...)` to work in the dev world's coordinates. The climb was found
-      with a walk search along the middle of each flight on the schematic; when the developer's trace of the route is
-      committed, put its waypoints in. MockBukkit can't paste it (it knows no lantern properties), so only the Paper
+      `real(...)`, `realFeet(...)` and `realBlock(...)` to work in the dev world's coordinates. The climb is the real
+      road line: the `# waypoints:` lines of the developer's traces of 2026-11-16 (traces 69, 87 and 63, in knk-plugin
+      `src/test/resources/scenario/evidence/2026-11-16/`, `.log` files added with `git add -f`), and
+      `NpcMovementSceneTest` checks that every point was handed out in one of them. MockBukkit can't paste it (it knows no lantern properties), so only the Paper
       scenarios do.
 8. **A snapshot of a real route** ([#670](https://github.com/PandiO/knk-workspace/issues/670)): `/knk npc nav snapshot
    <route>` on a server writes a zip (commands guide, `/knk npc nav`). Put it in knk-paper
