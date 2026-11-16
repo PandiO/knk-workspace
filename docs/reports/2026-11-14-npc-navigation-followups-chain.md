@@ -240,6 +240,27 @@ the configuration reference § 4.27), then restart. In test order:
     #590), so a new documentation issue #658 covers M1–M7, with its docs session started. Tracker row set to In
     review.
 
+32. **Smoke test 2026-11-16 failed** (jar `0.1.0+0d9c55d6`, logs uploaded to the coordinator session). Problem A: L6's
+    fix doesn't reach a running group on the real path. The deny arrives as the access-rules sync, there are 0 event
+    replans and 19 of the 20 group NPCs are IDLE. L6's scenario faked a different message. **L9 #668 started**
+    (session_01R1w2UvV75PszFp2o3mNoHB). Problem B: no visible improvement:
+    1. falls at 1412 66 -537 and 1412 49 -501;
+    2. jumps on stairs;
+    3. a 39-NPC queue at 1412 74 -536;
+    4. stuck at 1410 49 -503.
+
+    A read-only root-cause pass runs in the coordinator session on the logs and the exact code. No B fix starts before
+    the plan goes to the developer and the manager.
+33. **Test material from the real world** (developer decision 2026-11-16, coordinator session). The scenes differ from
+    the real world in the hand-drawn road line, the fake API data and partial geometry. Chosen: replay the real route
+    on a snapshot of the dev world in CI. The **first B link adds `/knk npc nav snapshot <route>`**, which writes a zip
+    with the route's region files (here `r.2.-1.mca`, `r.2.-2.mca`), the stored route line, the road network in the
+    box, and the domain rules and WorldGuard regions from the plugin's caches. The developer uploads it to the
+    coordinator session; scenarios replay the real runs on it. It starts after L9, one knk-plugin link at a time.
+    Alternatives: (a) a full dev server with API and seeded database in CI (most faithful, heavy, a later nightly job);
+    (b) `/knk scenario run` on the dev server (real but manual, a complementary self-check); (c) the developer copies
+    region files by hand (no road export exists, so the line would still be missing).
+
 ## 4. Link blocks
 
 _(Each link appends its block here when it finishes.)_
