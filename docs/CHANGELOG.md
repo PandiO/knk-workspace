@@ -641,6 +641,17 @@ This is a human-readable record of capabilities merged into the V3 default branc
 
 ## 2026-11-16
 
+- **Code-recipe skills for endpoints, plugin commands and entities** ([PandiO/knk-workspace#424](https://github.com/PandiO/knk-workspace/issues/424))
+  — no game change; developer-facing. Three new project skills in `.claude/skills/`, built from each repo's `main`
+  with the real files to copy: `knk-api-endpoint` (a knk-web-api endpoint: controller, service, repository, DTOs,
+  AutoMapper, the default-deny access rule and the pinned access tests, migration, xUnit tests),
+  `knk-plugin-command` (a plugin command: plugin.yml, registration, in-house permission checks through
+  `CommandNodes` and `KnkPermissible`, the command-label takeover for clashes, messages, config keys with deploy notes,
+  unit, MockBukkit/Mockito and player-scenario tests) and `knk-entity-scaffold` (a new entity across API, web app and
+  plugin, with a per-repo checklist). Each points to `knk-test-writer` for its tests. The stale Copilot files
+  (`.github/copilot-instructions.md`, `.github/instructions/*`, `.github/prompts/scaffold-entity.prompt.md`) are
+  deleted and the links to them point to the skills.
+  - **Admin steps:** none.
 - **Docs sessions follow a skill** ([PandiO/knk-workspace#425](https://github.com/PandiO/knk-workspace/issues/425))
   — no game change; developer-facing. The docs-session procedure moved from `docs/ai-agents/docs-session-prompt.md`
   into the new skill `.claude/skills/knk-docs-session/` (with templates for the docs PR, the closing comment and the

@@ -705,7 +705,7 @@ the plain procedural formula.
 - **Rotation Gap-Fill**: [ROTATION_GAP_FILL_DESIGN.md](ROTATION_GAP_FILL_DESIGN.md) — Mechanisms 1 & 2, `GateOpenedBlockSnapshot`, `GateWorldSyncChecker`
 - **Gate World/DB Sync**: [GATE_WORLD_SYNC_DESIGN.md](GATE_WORLD_SYNC_DESIGN.md) — district-load-triggered reconciliation
 - **Backend Entity**: [Models/GateStructure.cs](../../../../Repository/knk-web-api/Models/GateStructure.cs)
-- **Backend Instructions**: [.github/instructions/knk-backend.instructions.md](../../../../.github/instructions/knk-backend.instructions.md)
+- **Backend conventions**: [`knk-api-endpoint` skill](../../../.claude/skills/knk-api-endpoint/SKILL.md)
 - **Plugin Architecture**: [archive/knk-plugin/ARCHITECTURE_AUDIT.md](../../archive/knk-plugin/ARCHITECTURE_AUDIT.md)
 - **CODEMAP**: [docs/CODEMAP.md](../../guides/developer/CODEMAP.md)
 

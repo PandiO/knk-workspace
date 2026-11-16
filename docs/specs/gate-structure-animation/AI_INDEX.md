@@ -133,7 +133,7 @@ All gate animation system documentation is organized in this directory. Start wi
 - **Architecture Overview**: [docs/CODEMAP.md](../../guides/developer/CODEMAP.md)
 - **Project Structure**: [docs/specs/project-overview/SOURCES_LOCATION.md](../../specs/project-overview/SOURCES_LOCATION.md)
 - **Minecraft Data**: [Repository/knk-minecraft-data/minecraft-materials.json](../../../Repository/knk-minecraft-data/minecraft-materials.json)
-- **Backend Instructions**: [.github/instructions/knk-backend.instructions.md](../../../.github/instructions/knk-backend.instructions.md)
+- **Backend conventions**: [`knk-api-endpoint` skill](../../../.claude/skills/knk-api-endpoint/SKILL.md)
 - **Plugin Architecture**: [archive/knk-plugin/ARCHITECTURE_AUDIT.md](../../archive/knk-plugin/ARCHITECTURE_AUDIT.md)
 
 ---
