@@ -1108,6 +1108,18 @@ a leftover debug spec was removed from the e2e suite (knk-web-app#34).
 
 ## 2026-11-16
 
+- **Design sessions follow one procedure** — no game change; a new skill `.claude/skills/knk-design/`
+  ([PandiO/knk-workspace#417](https://github.com/PandiO/knk-workspace/issues/417)) runs a feature's design: it reads the
+  vision, related specs and legacy V1/V2 behaviour, asks the developer one question at a time with the ask-user prompt,
+  writes `docs/specs/<feature>/DESIGN.md` with status header, decision log (agent decisions with their alternatives),
+  platform-specific parts and numbered open questions, and puts larger choices in a weighted decision matrix for the
+  developer. On approval it sets the spec to Decided, files a sub-issue with a `tier:` label per phase, writes each
+  phase's first smoke-test guide section sized to its tier (folds in
+  [#422](https://github.com/PandiO/knk-workspace/issues/422); `knk-test-writer` § 4 item 6 starts from it), drafts the
+  chain charter and posts "Ready to schedule" on the feature issue for the manager. Templates for the spec, the
+  decision matrix, the smoke-test section and the sub-issue are next to it.
+  - **Admin steps:** none.
+
 - **Intake skill: ideas are captured at once and shaped later** — no game change
   ([PandiO/knk-workspace#416](https://github.com/PandiO/knk-workspace/issues/416), phase 2 of the agent workflow,
   [DESIGN § 1.1](specs/ai-agent-workflow/DESIGN.md#1-roles)). New project skill `.claude/skills/knk-intake/`.

@@ -237,6 +237,11 @@ checks it and starts the next; links never start links. Two project skills in kn
 2. [`knk-link`](../../.claude/skills/knk-link/SKILL.md): setup (repos, base branch, push dry run, toolchains,
    baseline tests), hard rules, blockers, the pull request and the report block with agent decisions.
 
+A chain starts from an approved design. The [`knk-design`](../../.claude/skills/knk-design/SKILL.md) skill runs the
+design session (DESIGN § 1.2 and § 4): it asks the developer one question at a time, writes the spec with its decision
+log and open questions, and on approval splits it into phases with tiered sub-issues, writes each phase's first
+smoke-test section, drafts the charter and hands the feature to the manager to schedule.
+
 A chain's charter keeps only its links table, gates and binding documents. Facts the skills rely on:
 
 1. **Route (developer decision 2026-11-12):** `create_session` is the preferred route for every link. It attaches one

@@ -65,6 +65,10 @@ test everything by hand; steps a suite covers carry a tag, so they can also be s
    the rest, e.g. "12 of 20 steps automated in CI (tagged); every step can still be run by hand; manual steps not run".
    Give the time for a full manual run and for the untagged steps only.
 5. A change whose steps are all automated still gets its guide section, all steps tagged.
+6. **A designed feature already has a draft section per phase**, written by the design session from the spec's
+   acceptance items and sized to the tier (`knk-design` § 6.4, template `knk-design/smoke-section-template.md`). Start
+   from it: update the steps to what you built, keep every step in full, tag the ones your tests cover, and drop the
+   "Draft from the design" line.
 
 ## 5. PR Testing section
 
