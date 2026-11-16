@@ -53,6 +53,7 @@ the configuration reference § 4.27), then restart. In test order:
 | M5 Plaza lines | #625 | Merged into next (2026-11-16) | knk-plugin `727f020b` → `next` `3f116188`; knk-workspace `f5aa56e6` → `next` `f9be4963` | PandiO/knk-plugin#51, PandiO/knk-workspace#637 | PR head green (build, paper-boot with 45 scenarios, push and PR runs 43792722751, 43793671690); #586 did not hit; Codex at its usage limit | create_session session_01R1w2UwSt9YZCZUtsk5fQjU (2026-11-16) |
 | M4 Crowd awareness | #626 | Merged into next (2026-11-16); option-B checkpoint with the developer | knk-plugin `8c864f7a` → `next` `a35fed5a`; knk-workspace `9f09cf23` → `next` `5b8125e5` | PandiO/knk-plugin#52, PandiO/knk-workspace#638 | push and PR runs on `8c864f7a` green (build, paper-boot with 45 scenarios; runs 43799206281, 43800089307); #586 did not hit; 45/45 locally; Codex at its usage limit | create_session session_01R1w2UsvLHZouJWudj4FxjT (2026-11-16) |
 | M7 Collision with push resistance | #627 | Merged into next (2026-11-16); `collidable` stays false | knk-plugin `6393aa37` → `next` `cc5262ff`; knk-workspace `dc8a91c5` → `next` `8e3d7d06` | PandiO/knk-plugin#57, PandiO/knk-workspace#656 | push and PR runs on `6393aa37` green (build, paper-boot with 48 scenarios); Codex at its usage limit | create_session session_01R1w2UtyxLznso8wdydHmQf (2026-11-16) |
+| L9 Fix: running groups ignore a realtime district deny | #668 | In review (PRs open, not merged) | knk-plugin `76259d86`; knk-workspace `1dffa06d` | PandiO/knk-plugin#61, PandiO/knk-workspace#669 | push run on `76259d86` green (build, paper-boot with 48 scenarios); PR run pending at the time of writing; 48/48 locally | create_session session_01R1w2UvV75PszFp2o3mNoHB (2026-11-16) |
 
 ## 3. Coordinator decisions
 
@@ -1258,3 +1259,56 @@ _(Each link appends its block here when it finishes.)_
         4. BEHAVIOR_MODEL NAV-24–NAV-28 status rows, NAV-26 with M7's push resistance.
         5. The feature register and site/wiki rows for Phase 4c.
         6. A smoke-test guide in `docs/guides/` assembled from the plan's 4c.4 developer tests M1–M7, every step in full.
+
+### 4.16 L9 — Running groups ignore a realtime district deny: the NPC checks had no WorldGuard regions (#668)
+
+1. **Scope done** (behind `npc.navigation.enabled`, no new config key).
+    1. **The gap between L6's scenario and the real path.** `KnKPlugin.registerCommands()` starts `NpcNavigationModule` (about line 1086 of `onEnable`) before `regionTracker` is built (about line 1125). The module took `regionTracker.regionIds()` at start: `null` on every server. So `BukkitNavWorld.regionsAt` always returned an empty set, and every NPC rule check saw no region: the leader's way-ahead recheck, the trespass guard, and the followers' lanes and guard. The scenarios built their own `new RegionIds()` (`ScenarioNpcs`), and the core sim has its own region function, so no test read regions as the server does.
+    2. **The five questions.**
+        1. `npcNavigation.navigating()` is true once `/knk npc nav group 20` has run (route following is built on first use).
+        2. The realtime wiring runs on the hub's real events (`registerConfigSync` runs after `initializeNavigation`).
+        3. The rewarm's region set comes from the road edges. The router's own `you may not enter Residential District` comes from those edges' tags, so `district_1000004` and `gate_2000131` are in it.
+        4. `onAvailabilityChanged` reaches `NavGroup.rulesChanged`, and the follower recheck runs, but it found nothing denied with no regions.
+        5. `/knk cache refresh` triggers the same recheck, through the same empty-region world.
+    3. **This explains every symptom.** `replans: recheck 0, event 0` and `trespasses 0` (no entry was ever seen). Only the router's next plan blocked the group. Blocking at spawn and the release on re-allow worked, because the router uses the edges' tags. The per-region `npc.navigation` override scopes (`regionsOuterToInner`) never applied to NPCs either.
+    4. **The developer's question (the op's entry bypass): no.** `navGroup` takes the profile from the command's argument, else `default`, never from the sender. Every NPC check judges an `NpcAccessSubject` with `bypassesDomainRules() = profile.bypassDomainRules()`, which is false in the shipped `default`. Tested (`NavGroupDomainRulesTest`, `NpcNavigationModuleRegionsTest`).
+    5. **knk-plugin.**
+        1. `NpcNavigationModule` takes a `Supplier<RegionIds>`. `rulesWorld()` builds the rule checks' world when route following is built, and `regionsOuterToInner` asks too. It logs `[NPC] no WorldGuard region query …` when there is none.
+        2. `BukkitNavWorld.knowsRegions()`.
+        3. `KnKPlugin` passes `() -> regionTracker.regionIds()`.
+        4. `ScenarioServices.npcRules()`: `ScenarioNpcs` with domain rules reads regions through the live module.
+    6. **knk-workspace.** The changelog entry, and plan Phase 4 known limit 4 and step 10 (automated parts, startup-log check). Retest steps and the answer are posted on #668 (comment 6927589358).
+2. **Commits and heads.**
+    1. knk-plugin `claude/npc-followups-l9` at `76259d86`: 1 commit on `next` `0d9c55d6`.
+    2. knk-workspace `claude/npc-followups-l9` at `1dffa06d`: 1 docs commit on `next`.
+3. **PRs.** PandiO/knk-plugin#61 (`Closes` #668, `Part of` #506 and #593) and PandiO/knk-workspace#669 (`Part of`), base `next`. Not merged.
+4. **Tests, baseline → result.**
+    1. knk-plugin `./gradlew build -x deployToDevServer`: baseline on `next` `0d9c55d6` core 2955, api-client 344 (2 skipped), paper 2866 (18 skipped). Result on `76259d86`: core 2956 (+1), api-client 344, paper 2869 (+3). 0 failures.
+    2. New tests:
+        1. `NpcNavigationModuleRegionsTest` (3).
+        2. `NavGroupDomainRulesTest` +1 (the NPCs' subjects).
+    3. Scenarios, locally (Paper 26.3, pinned WorldEdit, WorldGuard, Citizens b4269, `--min-scenarios 48 --npc-navigation`):
+        1. This branch with `next`'s start-time wiring: 46/48. `npc-group-realtime-entry` fails (`knk-sc-22002 entered the district`), and so does `npc-group-access-change` (`entered the region`).
+        2. With the fix: 48/48, log check passed.
+    4. CI: the push run on `76259d86` is green (`build`, `paper-boot`). The PR run was pending when this was written; see the final message. #586 did not hit.
+    5. A probe, not committed: L6's core test with all five movement keys on and `ranks` passes. So the core logic was never the problem.
+    6. Known reds: none.
+5. **Decisions (DESIGN § 4.3).**
+    1. *Fix.* Chosen: a supplier asked for on use, because it is the smallest change and it keeps `KnKPlugin`'s start order. Alternatives:
+        1. (a) Move the NPC module's start after the region tracker. That reorders `registerCommands` and its takeovers, which is riskier.
+        2. (b) Let the module build its own `new RegionIds()`. That is a second query, which R8 wants shared.
+    2. *Test on the real path.* Chosen: scenarios read regions through the live module's `rulesWorld()`, so they fail on `next`'s wiring. Alternatives:
+        1. (a) A scenario that drives the whole hub, API and road network. There is no road network or API in CI, so the plugin's rewarm sends no event.
+        2. (b) A MockBukkit test of `KnKPlugin.onEnable` order. That is not feasible without the whole plugin.
+    3. *Warning.* Chosen: one warning when route following is built without regions. Alternative:
+        1. (a) Refuse to run. That is too strict for servers without WorldGuard.
+6. **Out of scope, noted.**
+    1. The coordinator's note 32 says 19 of the 20 group NPCs were IDLE. Followers are registered with the navigation service without an order of their own, so IDLE is their normal service state. Not filed.
+    2. The movement problems (B) are untouched.
+7. **Blockers.** None.
+8. **At merge / what the developer must do.**
+    1. Nothing in `config.yml`, no migration. Per-region `npc.navigation` overrides now take effect for NPCs.
+    2. The retest steps on #668 (plan Phase 4 step 10): no `[NPC] no WorldGuard region query` line, outside followers stop, `trespasses 0`.
+9. **Notes for later links.**
+    1. Anything the NPC module needs from `onEnable` after `registerCommands` must be a supplier.
+    2. The B links' snapshot replay should read regions through `ScenarioServices.npcRules()`.
