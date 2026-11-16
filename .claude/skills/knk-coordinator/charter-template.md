@@ -4,7 +4,7 @@ A charter holds only what is particular to one chain: its links, gates and bindi
 blockers and the report block format are in the `knk-link` skill; the loop, starting links, checks and merges are in the
 `knk-coordinator` skill. Do not copy them into the charter. Put a charter at
 `docs/ai-agents/handoffs/<FEATURE>_CHAIN.md` on knk-workspace `main` (chain bookkeeping). The design session drafts it
-(DESIGN § 4.2.3); the coordinator completes it at its first run.
+(DESIGN § 4.2.3, `knk-design` skill § 6.6); the coordinator completes it at its first run.
 
 Copy from the line below, replace every `<...>` and delete the hints in parentheses.
 

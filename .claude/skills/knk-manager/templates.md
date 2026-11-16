@@ -67,7 +67,20 @@ the parent issue); the developer reads the daily digest on PandiO/knk-workspace#
 Overlap found by the manager: <rows and the lines to keep to, or "none">.
 ```
 
-## 6. Asking back (digest § 7, reaction `confused`)
+## 6. "Issue start" prompt (§ 8.3, one issue outside a chain)
+
+Paste the filled permissions block (variant A, only the repositories the issue needs) first, then:
+
+```text
+Implement PandiO/knk-workspace#<n> (<title>, <tier>), started by the K&K manager on the developer's go (<link>). This
+is a single issue outside a chain. Read AGENTS.md, docs/ai-agents/GLOBAL_AGENT_INSTRUCTIONS.md (all "Branches" rules,
+"Testing: automated first", "Shipping a change") and docs/ACTIVE_SESSIONS.md first; claim a row. Branch from `next`,
+PR into `next`, and merge it yourself under "Branches" rule 3 once its checks hold. Use the knk-test-writer skill for
+the tests. Overlap found by the manager: <rows and the lines to keep to, or "none">. End with a numbered report as a
+comment on the issue.
+```
+
+## 7. Asking back (digest § 7, reaction `confused`)
 
 ```markdown
 <n>. Your reply "<quote, shortened>" (<link>): <what is unclear>. Reply with <the two or three readings, lettered>.

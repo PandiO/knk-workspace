@@ -1,6 +1,6 @@
 ---
 name: knk-manager
-description: Run the Knights and Kings (K&K) manager, the scheduled weekday run above the chain coordinators. Use when the "K&K manager" scheduled task starts you, or when asked to run the K&K manager, act on instructions the developer replied on the daily digest issue PandiO/knk-workspace#333 (pause, bump, promote, start a chain or docs session, the state of something), close issues after a promotion of `next`, sync `main` into `next`, tidy or archive the sessions board, or watch the docs debt cap. Covers the stateless run order, red CI first, promotion only on the developer's explicit go with releases through the Release workflow, closing promoted issues, `main` → `next` sync pull requests, board archiving and stale claims, docs and design scheduling, and the daily digest (through the knk-digest skill).
+description: Run the Knights and Kings (K&K) manager, the scheduled weekday run above the chain coordinators. Use when the "K&K manager" scheduled task starts you, or when asked to run the K&K manager, act on instructions the developer replied on the daily digest issue PandiO/knk-workspace#333 (pause, bump, promote, start a chain, issue or docs session, the state of something), close issues after a promotion of `next`, sync `main` into `next`, tidy or archive the sessions board, or watch the docs debt cap. Covers the stateless run order, red CI first, promotion only on the developer's explicit go with releases through the Release workflow, closing promoted issues, `main` → `next` sync pull requests, board archiving and stale claims, scheduling designs, intake "now" issues and docs sessions, and the daily digest (through the knk-digest skill).
 ---
 
 # K&K manager
@@ -165,20 +165,28 @@ commit and keep both sides of any conflict.
 
 ## 8. Scheduling: designs, chains and docs sessions
 
-1. **Approved designs waiting for a start:** a chain charter (`docs/ai-agents/handoffs/*_CHAIN.md` on `main`) whose
-   parent issue is open and that has no progress report and no board row. Check the board for overlap with the files
-   its links change (global "Parallel sessions" rule 1) and ask in the digest's "Decisions needed": "Start <chain>
-   now? (overlap: <rows or none>)".
+1. **Work handed to you to schedule** (each run, from GitHub; no session messages you, since you are not running):
+    1. **Designs:** open issues with a comment starting `Ready to schedule` from a design session (`knk-design` § 6.7),
+       or a chain charter (`docs/ai-agents/handoffs/*_CHAIN.md` on `main`) whose parent issue is open, with no progress
+       report and no board row yet.
+    2. **Intake "now":** open issues whose intake shaping comment's outcome is "now" (`knk-intake` § 3), with no
+       branch, pull request or board row yet.
+    3. For each, check the board for overlap with the repos and areas it changes (global "Parallel sessions" rule 1).
+       The developer already said "start now" (in the design handoff, the intake outcome or on #333) and there is no
+       blocking overlap: start it (3. below). Otherwise ask in the digest's "Decisions needed":
+       "Start <chain or issue> now? (overlap: <rows or none>)".
 2. **Docs debt cap** (global "Shipping a change"): more than five open `documentation` issues, or one older than two
    weeks. Over the cap, the digest suggests docs sessions: the oldest three without a running session, each "reply
    `start docs #n`". A `documentation` issue with no session noted in its comments or on the board is a missed start:
    list it too.
 3. **Starting on the developer's go** ("start <chain>", "start docs #n", "yes" to a § 8.1 question): `create_session`
    with `source_url` `https://github.com/PandiO/knk-workspace`, `model` explicit (yours from `get_session`), no
-   `effort` unless the developer named one. A chain gets the coordinator prompt (template "Coordinator start") and a
-   docs issue the filled [docs-session prompt](../../../docs/ai-agents/docs-session-prompt.md). Comment the session
+   `effort` unless the developer named one. A chain gets the coordinator prompt (template "Coordinator start"), a
+   single issue the issue prompt (template "Issue start") and a docs issue the filled
+   [docs-session prompt](../../../docs/ai-agents/docs-session-prompt.md). Comment the session
    link on the issue. `create_session` unavailable: put the filled prompt in the digest for the developer.
-4. Never start anything without the developer's go; the manager suggests, the developer decides.
+4. Never start anything without the developer's go (on #333, or recorded in the design handoff or intake outcome);
+   the manager suggests, the developer decides.
 
 ## 9. Health and the digest
 

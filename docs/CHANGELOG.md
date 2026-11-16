@@ -926,6 +926,33 @@ a leftover debug spec was removed from the e2e suite (knk-web-app#34).
   say so.
   - **Admin steps:** none. To give the manager an instruction, reply on #333.
 
+- **Design sessions follow one procedure** — no game change; a new skill `.claude/skills/knk-design/`
+  ([PandiO/knk-workspace#417](https://github.com/PandiO/knk-workspace/issues/417)) runs a feature's design: it reads the
+  vision, related specs and legacy V1/V2 behaviour, asks the developer one question at a time with the ask-user prompt,
+  writes `docs/specs/<feature>/DESIGN.md` with status header, decision log (agent decisions with their alternatives),
+  platform-specific parts and numbered open questions, and puts larger choices in a weighted decision matrix for the
+  developer. On approval it sets the spec to Decided, files a sub-issue with a `tier:` label per phase, writes each
+  phase's first smoke-test guide section sized to its tier (folds in
+  [#422](https://github.com/PandiO/knk-workspace/issues/422); `knk-test-writer` § 4 item 6 starts from it), drafts the
+  chain charter and posts "Ready to schedule" on the feature issue for the manager. Templates for the spec, the
+  decision matrix, the smoke-test section and the sub-issue are next to it.
+  - **Admin steps:** none.
+
+- **Intake skill: ideas are captured at once and shaped later** — no game change
+  ([PandiO/knk-workspace#416](https://github.com/PandiO/knk-workspace/issues/416), phase 2 of the agent workflow,
+  [DESIGN § 1.1](specs/ai-agent-workflow/DESIGN.md#1-roles)). New project skill `.claude/skills/knk-intake/`.
+  1. **Capture mode** (the default): drop an idea in a session, even one line, and walk away. The session searches open
+     and closed issues for duplicates, files an issue labelled `idea` with your words quoted as they are (or comments
+     on the open issue that already has it), asks nothing and confirms in one sentence.
+  2. **Shaping mode** ("let's go through ideas"): the open `idea` issues one at a time, each with a read-back, the repos
+     it touches, a proposed `tier:` label and whether it needs design, at most three questions in the ask-user prompt,
+     then "now, later or design first" (or drop). "Now" goes to the manager session, "design first" starts a design
+     session with the `knk-design` skill.
+  3. **Tier labels:** the global instructions now say that whoever files an issue sets a `tier:` label when the scope
+     is clear; intake's shaping proposes one otherwise.
+  - **Admin steps:** none. Optional: an `area:web-app` label, so intake can tag web-app ideas too (only `area:api` and
+    `area:plugin` exist; agents cannot create labels).
+
 ## 2026-11-15
 
 - **Smoke-test guides keep every step** — no game change; smoke-test guides keep each step's full manual instructions

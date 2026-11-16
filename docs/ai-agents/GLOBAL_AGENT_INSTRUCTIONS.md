@@ -67,6 +67,10 @@ Issue conventions:
 - Status: open without a status label = Backlog/Todo; `status:in-progress`;
   `status:in-review` (waiting for the developer's test); closed as completed
   = Done; closed as not planned = Canceled; closed as duplicate = Duplicate.
+- Risk tier: whoever files an issue sets a `tier:1|2|3` label when the scope
+  is clear (see "Branches, releases and risk tiers" item 7); otherwise the
+  intake skill's shaping mode proposes one. A new idea gets `idea` instead
+  until it is shaped.
 - Optional `priority:urgent|high|medium|low`. Phased work uses sub-issues
   under a parent issue.
 - PRs in any repo close an issue with `Closes PandiO/knk-workspace#123`.
@@ -86,6 +90,10 @@ Issue conventions:
    covers it, create one in that session (what was said, repro, where in the
    code, date) and give the developer its id. Never leave it only in chat, a
    handoff or a report.
+   An idea dropped in for later goes to the
+   [`knk-intake`](../../.claude/skills/knk-intake/SKILL.md) skill: capture
+   mode files it as an `idea` issue with the developer's words; "let's go
+   through ideas" starts its shaping mode.
 4. Do the same for what you find yourself and leave out of scope: a bug
    found in passing, a follow-up, a known gap. File it or comment on the
    issue that covers it; a "found in passing" list in a report is not enough.
@@ -190,7 +198,8 @@ branches start from the default branch, pull requests target it, and only the de
    2026-11-13).
 6. **Flags for risky work.** Big or risky features go into `next` behind a config flag that is off by default, so
    unreviewed work is harmless there. A rejected change is reverted or fixed in `next` before the release.
-7. **Risk tiers** are labels on each issue, proposed by intake or design and overridable by the developer:
+7. **Risk tiers** are labels on each issue, proposed by intake (the
+   [`knk-intake`](../../.claude/skills/knk-intake/SKILL.md) skill) or design and overridable by the developer:
    `tier:1` a tweak to existing behaviour (automated tests are the review, the developer does a quick pass); `tier:2` a
    feature change (automated tests plus a short manual check of what no suite covers); `tier:3` new foundations, schema
    changes or game feel (automated tests plus a full manual check of what no suite covers). See "Testing: automated
@@ -229,6 +238,11 @@ checks it and starts the next; links never start links. Two project skills in kn
    progress report are next to it.
 2. [`knk-link`](../../.claude/skills/knk-link/SKILL.md): setup (repos, base branch, push dry run, toolchains,
    baseline tests), hard rules, blockers, the pull request and the report block with agent decisions.
+
+A chain starts from an approved design. The [`knk-design`](../../.claude/skills/knk-design/SKILL.md) skill runs the
+design session (DESIGN § 1.2 and § 4): it asks the developer one question at a time, writes the spec with its decision
+log and open questions, and on approval splits it into phases with tiered sub-issues, writes each phase's first
+smoke-test section, drafts the charter and hands the feature to the manager to schedule.
 
 A chain's charter keeps only its links table, gates and binding documents. Facts the skills rely on:
 
