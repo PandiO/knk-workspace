@@ -53,7 +53,7 @@ Every link is merged into `next` (2026-11-15). Build knk-plugin from `next` `deb
 | M6 Clearance-aware local legs (add-on D) | #623 | Merged into next (2026-11-15) | knk-plugin `8fa83e09` → `next` `625c2c9c`; knk-workspace `f65d3c69` → `next` `e0783664` | PandiO/knk-plugin#49, PandiO/knk-workspace#634 | PR head green (build, paper-boot with 45 scenarios); Codex at its usage limit | create_session session_01R1w2UuwfDNhwngWZJue8wZ (2026-11-15) |
 | M3 Formation keeping | #624 | Merged into next (2026-11-16) | knk-plugin `94b30146` → `next` `138ebc66`; knk-workspace `1b4692ed` → `next` `a428eb3e` | PandiO/knk-plugin#50, PandiO/knk-workspace#635 | PR head green (build, paper-boot with 45 scenarios; one #586 log-check re-run); Codex at its usage limit | create_session session_01R1w2UufiGFpPfGevZxvtVD (2026-11-15) |
 | M5 Plaza lines | #625 | Merged into next (2026-11-16) | knk-plugin `727f020b` → `next` `3f116188`; knk-workspace `f5aa56e6` → `next` `f9be4963` | PandiO/knk-plugin#51, PandiO/knk-workspace#637 | PR head green (build, paper-boot with 45 scenarios, push and PR runs 43792722751, 43793671690); #586 did not hit; Codex at its usage limit | create_session session_01R1w2UwSt9YZCZUtsk5fQjU (2026-11-16) |
-| M4 Crowd awareness | #626 | Running | — | — | — | create_session session_01R1w2UsvLHZouJWudj4FxjT (2026-11-16) |
+| M4 Crowd awareness | #626 | In review (PRs open, not merged) | knk-plugin `8c864f7a`; knk-workspace `9f09cf2` | PandiO/knk-plugin#52, PandiO/knk-workspace#638 | push run on `8c864f7a` green (build, paper-boot with 45 scenarios); 45/45 locally; Codex at its usage limit | create_session session_01R1w2UsvLHZouJWudj4FxjT (2026-11-16) |
 | M7 Collision with push resistance | #627 | Not started (gate: B checkpoint) | — | — | — | — |
 
 ## 3. Coordinator decisions
@@ -1012,3 +1012,90 @@ _(Each link appends its block here when it finishes.)_
     2. **#636** needs `npc-corners-walk` looked at together with the fix (the turnaround right after arriving).
     3. In production every junction on a route is measured once per stretch shaping (rays, cached with the stretch). Watch `corridors().reads()` on a dense street grid.
 
+### 4.14 M4 — Crowd awareness: narrow places taken in turns, yielding, waiting is not stuck (#626)
+
+1. **Scope done** (plan 4c.4 item 4, decision 3, NAV-26; behind the new key `crowd-awareness: false`, with `npc.navigation.enabled` still off by default; with the key off no hash is built and no NPC is held; authority values and closed formations first (4c.7) are not built, only the hook `CrowdControl.earlier`).
+    1. **Occupancy** (knk-core `crowd/Occupancy`). Every 5 ticks the service hashes the feet cell of every spawned registered NPC in one pass, group followers included; lookups are O(1). It counts shared cells, the most NPCs in one cell, and the closest two bodies in one cell.
+    2. **Narrow places and turns** (knk-core `crowd/CrowdControl`). A run on the NPC's way ahead, 6 blocks looked at, where M1's `FreeWidth` is under 2 blocks.
+        1. The way ahead is its route line, its K&K leg or the engine's `pathAhead`. The doorway scene's trips are all short local legs.
+        2. NPCs that see the same cells share one place. Its axis is the first way through it.
+        3. The NPC arrives at 4 blocks. One direction at a time: an NPC already in the place first, then first come across both directions. Same direction: FIFO, and the one ahead is a block in first.
+        4. The others are held: stopped and sent to a queue spot 1.5 blocks before the place plus a block per NPC ahead, a block to the right where the floor allows, further back while the way is still narrow.
+        5. A turn ends 0.5 past the place. A leader keeps its turn until its followers are through. A queue lets go after 30 s.
+        6. The free-width cache per cell and heading is cleared every 10 s and on a gate change.
+    3. **Oncoming.** An NPC in a place without a turn, while one of the other direction entered first, steps back out to its queue spot (`yield`).
+    4. **Waiting is not stuck.** A held NPC is in state WAITING and the watchdog does not watch it. A single or follower behind another NPC within 1.5 blocks counts a wait instead of a stuck spell; an engine leg is walked again after 20 ticks. After 30 s behind the same jam it is stuck after all.
+    5. **Recovery.** Back-off, side-step and local-leg targets skip occupied cells, for singles and followers. `LocalLegSearch.Grid.extra` costs an occupied cell 4 and the smoothing does not cut through it (M6's note).
+    6. **Stats and metrics.** `crowd: waits N, yields N, longest queue N` in `/knk npc nav stats`; `crowd_wait` and `crowd_yield` in the metrics.
+    7. **Scenarios.** `npc-doorway-crowd` runs with `crowd-awareness` and `local-legs-clearance` on and asserts:
+        1. all arrive;
+        2. 0 stuck spells;
+        3. at most 3 s of wait per NPC that went first;
+        4. none let go after 30 s;
+        5. nobody still over 3 s outside a queue.
+
+        `npc-stairhouse-group` adds the key and the crowd checks. Both report the crowd numbers, the shared cells and the crowd's cost. `ScenarioNpcs`' longest still leaves out crowd-held NPCs.
+    8. **knk-workspace:** changelog, configuration reference § 4.27 and § 2.1, plan 4c.4 item 4.4 (status, tests, before → after, developer test) and the 4c.4 developer test steps 1 and 5.
+2. **Commits and heads.**
+    1. knk-plugin `claude/npc-movement-m4` at `8c864f7a`: 4 commits on `next` `3f116188`, still the head of `next`.
+    2. knk-workspace `claude/npc-movement-m4` at `9f09cf2`: 1 commit on `next` `f9be496`, still the head.
+3. **PRs.** PandiO/knk-plugin#52 (`Closes` #626) and PandiO/knk-workspace#638 (`Part of` #626), base `next`. Not merged.
+4. **Tests, baseline → result.**
+    1. `./gradlew build -x deployToDevServer`: core 2899 → 2921 (+22), api-client 344 → 344 (2 skipped), paper 2859 → 2860 (+1, 18 skipped), 0 failures. New tests:
+        1. `CrowdControlTest` 12
+        2. `NpcNavigationCrowdTest` 6
+        3. `NavGroupCrowdTest` 3
+        4. `LocalLegSearchTest` +1
+        5. `NpcNavigationConfigTest` +1
+    2. Scenarios, run locally (Paper 26.3 b205, WorldEdit 7.4.6, WorldGuard 7.0.20, Citizens b4269, `--min-scenarios 45 --npc-navigation --expect-timeout 1200`): baseline on `next` 45/45, branch 45/45, log check passed.
+    3. CI: push run on `8c864f7a` `build` and `paper-boot` green (45 scenarios); the PR run's result is in the coordinator message. #586 did not hit.
+    4. Known reds: none. Codex: at its usage limit on both PRs; said on both, finished without it.
+5. **Before (`next`, M1's baseline reproduced) → after; collision off / on.**
+    1. `npc-doorway-crowd`, before with all keys off:
+        1. 11/12 arrived (1 `Failed`) / 12/12.
+        2. Stuck spells 2 (1 not freed) / 1.
+        3. Longest still by the door 11.7 / 2.3 s.
+        4. Overlap in the doorway 21 ticks, 4 at once / 44 ticks, 4 at once.
+    2. Control run with `local-legs-clearance` alone:
+        1. 12/12 both.
+        2. Trips 3.7 / 6.9 s mean.
+        3. Overlap 19 ticks, 5 at once / 34 ticks, 3 at once.
+        4. Stuck spells 0 / **6** (5 near a wall): fails the M4 check with collision on.
+    3. After, with crowd awareness:
+        1. 12/12 both, **0 / 0 stuck spells**.
+        2. Waits 7, yields 0, longest queue 7 (both sides).
+        3. Longest wait 7.8 / 8.3 s, which is **1.5 s per NPC that went first**. None let go.
+        4. Longest still outside a queue 0.4 / 0.4 s.
+        5. Overlap 5 ticks / 8 ticks, at most 2 at once (the same direction a block apart).
+        6. Trips 6.3 / 6.6 s mean. Turn-taking costs time where bodies could pass through each other.
+    4. `npc-stairhouse-group` (20 in ranks of 3, the M2–M6 keys) is unchanged: leader 7.5 / 8.0 s, 0 folds, entrance 0.4 / 0.4 s, 0 stuck spells, 0 waits. The line has no narrow place.
+    5. **M3's note (lane merges with collision on), checked with the hash.**
+        1. Two NPCs share a cell in 22 / 19 of 29 / 31 looks.
+        2. In 10 / 7 looks two bodies in one cell stand closer than 0.6 (closest 0.05 / 0.19), so with collision on the squeezed rows still overlap.
+        3. Left for M7 (push resistance; how Citizens' `collidable` separates NPCs).
+    6. Cost: crowd awareness's own share is 0.0015–0.0063 ms per NPC per tick. The core test bounds the hash under 0.003 ms per NPC per tick for 1,000 NPCs.
+6. **Decisions (DESIGN § 4.3).**
+    1. *What is narrow.* Chosen: free width under 2 blocks (the corridor's chokepoint width, decision 1.4), with no length limit, so a 1-wide passage of any length is one place, one direction at a time. Alternatives: (a) only places of 3 blocks or less (decision 1.4's chokepoint; a long 1-wide passage would have no turns and NPCs would meet in it); (b) under 1.3 (two squeezed bodies; a 1.5-wide passage would let NPCs meet head-on).
+    2. *First come across directions.* Chosen: the earliest waiter of either direction goes next, so traffic alternates when both sides queue. Alternatives: (a) batch one direction while it has waiters (faster: the doorway's 12 would take about half the time, but an NPC on the other side could wait for a whole column); (b) first come per direction only, the direction switching when one side is empty (starves the other side under steady traffic).
+    3. *Arrival distance and queue spots.* Chosen: arrival at 4 blocks along the way; spots 1.5 + k blocks before the place, a block to the right of the line (else left, else on the line), further back while the way is narrow. Alternatives: (a) spots on the corridor cells with the most clearance (needs a corridor per place; the side offset gives the same in rooms and streets); (b) no spots, waiting where the NPC stands (queues bunch in the doorway's mouth and block the way out with collision on).
+    4. *Followers.* Chosen: followers don't ask for turns. Their leader asks, and keeps the turn until no follower is in the place or 1.5 blocks before it. Alternatives: (a) every follower asks (singles would cut into the column between two followers; the slots fight the queue spots); (b) groups before singles (proposed first; the developer chose first come, 4c.7).
+    5. *Others in a place.* Chosen: only NPCs with a turn (and their followers) block a place; an NPC standing in it without one (idle, another key scope) does not. Alternatives: (a) any NPC in the place blocks it (deadlock behind an idle NPC in a door).
+    6. *Turn ends.* Chosen: 0.5 past the place's end. Alternatives: (a) 0.8 (the first try: 2.8 s of wait per NPC ahead in the doorway, close to the 3 s check).
+    7. *Deadlock guard.* Chosen: a queue lets an NPC go after 30 s (logged and counted); a turn held 30 s is dropped. Alternatives: (a) no guard (a stuck NPC in a door would hold everyone).
+    8. *Waiting behind someone.* Chosen: another NPC's cell within 1.5 blocks along the way when the watchdog fires (or the engine reports a local-leg NPC stuck in one block): one wait, no spell; an engine leg is walked again after 20 ticks; after 30 s of the same jam it is a spell. Alternatives: (a) any NPC within 1.5 blocks in any direction (an NPC beside a stuck one would never be helped); (b) no limit (a real jam would never get recovery).
+    9. *The doorway scenario's keys.* Chosen: `crowd-awareness` with `local-legs-clearance` (and `corridor-steering`, which does nothing for these local legs), because every trip there is a short local leg and the engine's legs clip the door frame. Alternatives: (a) `crowd-awareness` alone (would mix M4's numbers with the engine's corner trouble, M1's 11.7 s); the control run above separates the two.
+    10. *"Nobody waits longer than the queue needs".* Chosen: the longest wait divided by the NPCs that entered before it (those in the place when it arrived included) at most 3 s, and longest still outside a queue at most 3 s (held NPCs left out of `ScenarioNpcs`' still measure). Alternatives: (a) longest still under 10 s for everyone (the 7th in a doorway queue legitimately waits about 8 s; a bigger queue would fail it).
+    11. *Overlap in the doorway with collision on.* Chosen: reported, not asserted (the same direction a block apart can put 2 in the door's cell for a few ticks). Alternatives: (a) assert at most 1 (flaky).
+7. **Out of scope, noted.**
+    1. With collision on, bodies of one squeezed row still overlap (5.5): for M7. Not filed.
+    2. `plugin-scenarios.md` § 7 and `ci.md` § 7: the two scenarios now assert with crowd awareness. Left for the docs session.
+    3. #636 did not block this link.
+8. **Blockers.** None.
+9. **At merge / what the developer must do.**
+    1. `config.yml`: add `crowd-awareness: false` under `npc.navigation` (YAML in the changelog and § 4.27). No migration.
+    2. The developer test is on #626 (comment 6906731496): `quarry-to-keep` with 50 singles, a one-block door with traffic both ways, a group of 20 against 10 singles, the cost line.
+10. **Notes for later links.**
+    1. **Option B checkpoint (plan 4c.4 item 8):** with the keys on, the doorway's head-on traffic is solved by turns (0 stuck spells both ways, 0 yields needed). What remains dynamic: trips are slower with collision off (6.3 vs 3.7 s mean), and strays in open rooms are not handled; nothing needed B in the five scenes.
+    2. **M7 (collision):** `NpcNavigationService.occupancy()` gives positions, shared cells and the closest pair per look; `waitsBehind(...)` tells waiting from stuck for a pushed NPC too; recovery already skips occupied cells.
+    3. **4c.7 (authority, closed formations first):** change `CrowdControl.earlier` (the only place two NPCs are ordered); a closed formation's followers could take tickets of their own through `setGroupMembers`.
+    4. The free-width cache is keyed by cell and one of eight headings; a gate change clears it (`onGateChanged`). Other block changes (a door block placed by a player) wait up to 10 s.
