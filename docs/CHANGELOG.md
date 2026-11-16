@@ -4,6 +4,18 @@ This is a human-readable record of capabilities merged into the V3 default branc
 
 ## Unreleased — on feature branches, not merged
 
+- **CI: the API's MySQL tests run on every push** ([PandiO/knk-workspace#419](https://github.com/PandiO/knk-workspace/issues/419)).
+  knk-web-api `main` and `next` ([knk-web-api#43](https://github.com/PandiO/knk-web-api/pull/43)); knk-workspace branch
+  `claude/mysql-tests-ci-419` (PR into `next`).
+  1. **What changed.** The new `mysql-tests` job of the API's "Build and test" workflow runs the 100 `requires-mysql`
+     tests (row locks, transactions, unique indexes, ledger triggers) against a throwaway MySQL 8.0 service container,
+     in parallel with `build-and-test`, and fails if any of them was skipped. 99 run and pass; one is a known failure
+     ([#285](https://github.com/PandiO/knk-workspace/issues/285)). The job takes 7 to 8 minutes
+     ([CI § 1.1.1](guides/developer/ci.md#11-tests-that-ci-does-not-run)).
+  2. **Unchanged.** `build-and-test` keeps its name and duration, and local runs without `KNK_TEST_MYSQL` still skip
+     these tests. `mysql-tests` is not a required check yet (recommended once it has been green a few times).
+  3. **Deploy.** Nothing to deploy; workflows and one test mark only.
+
 - **NPC navigation: push resistance with collision on; `collidable` stays off by default** ([PandiO/knk-workspace#627](https://github.com/PandiO/knk-workspace/issues/627),
   link M7 of the NPC navigation follow-ups chain, implementation plan Phase 4c.4 item 7, research report 2026-11-15
   § 6). knk-plugin and knk-workspace branches `claude/npc-movement-m7` (PRs into `next`, in review). Nothing changes with
