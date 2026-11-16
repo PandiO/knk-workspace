@@ -4,6 +4,38 @@ This is a human-readable record of capabilities merged into the V3 default branc
 
 ## Unreleased — on feature branches, not merged
 
+- **NPC navigation: crowd awareness, off by default** ([PandiO/knk-workspace#626](https://github.com/PandiO/knk-workspace/issues/626),
+  link M4 of the NPC navigation follow-ups chain, implementation plan Phase 4c.4 item 4, decision 3; BEHAVIOR_MODEL
+  NAV-26). knk-plugin and knk-workspace branches `claude/npc-movement-m4` (PRs into `next`, in review). Nothing changes
+  with `crowd-awareness: false` (the default) or with `npc.navigation.enabled: false`.
+  1. **What it does.** NPCs know who stands where near them: every 5 ticks the navigation service hashes the feet cell
+     of every navigating NPC. A narrow place on an NPC's way (a door, an arch, a passage under 2 blocks wide) is taken
+     in turns, one direction at a time: an NPC already in it goes first, then first come (decided by the developer
+     2026-11-15). The others wait in a queue a block apart before it, a block to the side of the line, so the way out
+     stays free. Two NPCs that meet head-on in a narrow place: the second to enter steps back out and waits (a yield).
+     A group's leader keeps its turn until its followers are through. Waiting in a queue, yielding or standing behind
+     another NPC (a single or a group's follower) is counted as a wait, not as a stuck spell, and recovery back-offs and
+     side-steps never end on a cell where another NPC stands; K&K's local legs (`local-legs-clearance`) go round such a
+     cell. `/knk npc nav stats` shows `crowd: waits N, yields N, longest queue N`; the metrics count
+     `knk_npc_nav_events_total{event="crowd_wait"}` and `{event="crowd_yield"}`. Authority values and closed
+     formations first are later updates (plan 4c.7).
+  2. **Checked.** In `npc-doorway-crowd` (6 singles from each side of a one-block doorway at once) today's code gets
+     11 of 12 through with 2 stuck spells and an NPC still for 11.7 s by the door (collision off); with the clearance-aware
+     legs alone all 12 walk through each other (5 in the doorway at once) and, with collision on, open 6 stuck spells.
+     With crowd awareness all 12 arrive both ways with 0 stuck spells, they take the doorway one direction at a time
+     (at most 2 in its cell at once, the same way), the 7th in the queue waits 7.8–8.3 s, 1.5 s per NPC that went
+     first, and nobody stands still outside a queue longer than 0.4 s. Turn-taking costs time with collision off: trips
+     take 6.3 s on average instead of 3.7 s. The group of 20 through the stair-house entrance is unchanged (no narrow
+     place on its line; 0 waits, 0 stuck spells, entrance still 0.4 s). Both scenarios now assert this, with collision
+     off and on. The hash and the turns cost 0.0015–0.0063 ms per NPC per tick.
+  3. **Deploy.** Add the key to `npc.navigation` in `config.yml` (configuration reference § 4.27) and restart:
+
+     ```yaml
+     npc:
+       navigation:
+         crowd-awareness: false
+     ```
+
 - **NPC navigation: plaza lines, off by default** ([PandiO/knk-workspace#625](https://github.com/PandiO/knk-workspace/issues/625),
   link M5 of the NPC navigation follow-ups chain, implementation plan Phase 4c.4 item 5, decision 6; BEHAVIOR_MODEL
   NAV-27). knk-plugin and knk-workspace branches `claude/npc-movement-m5` (PRs into `next`, in review). Nothing
