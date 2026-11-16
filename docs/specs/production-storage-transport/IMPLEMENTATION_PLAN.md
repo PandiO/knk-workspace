@@ -224,7 +224,13 @@ All **V1**; Backed mode is Later ([#113](https://github.com/PandiO/knk-workspace
 
 - terminal inventory view (paged; take and put as `SYS_WORLD` moves with idempotency keys);
 - display renderer;
-- logistics menus;
+- in-game menus (decided 2026-11-16, DESIGN §11.2, decision record §15.1 M1-M5): a "Structures" icon in the main
+  menu with the structures overview (search, filters, town filter pre-set from the player's position via the
+  territory lookup, #326), the structure menu (also from the worker NPC) and the transport orders list; read-only
+  for players, staff buttons for survey, dry run, order cancel/retry and area outline; layouts from V2's
+  `ProductionStructureMenu`, `StorageOverview` and overview pattern; seeded as menu content;
+- API: caller-filtered structure summary and detail reads (public summary; rates, stock, workers and orders for town
+  members and staff only);
 - `/knk storage|production|transport|logistics`;
 - notifications and Bukkit events.
 

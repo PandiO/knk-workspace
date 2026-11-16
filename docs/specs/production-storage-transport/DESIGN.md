@@ -702,7 +702,26 @@ Shops are **[V1]** since rev. 3 (they were deferred to KNG-91 before). Full desi
 
 ### 11.2 In game (secondary)
 
-- Menus: structure logistics, storage terminal, inbox, transport orders, shop menus (shops DESIGN).
+- Menus [V1], decided 2026-11-16 ([decision record §15.1](DECISIONS_2026-11-05.md#151-in-game-menus-2026-11-16), M1-M5):
+  1. **Structures overview:** a new "Structures" icon in the main menu (`HubMenuFeature`). One row per production
+     structure and warehouse, with search and filters (kind, town, status) on the menu engine's searchable content
+     section and FilterBar (`MenuContentQuery`). The town filter starts on the town whose district or territory the
+     player stands in (territory lookup, #326); outside any town's land it starts empty. Clicking a row opens the
+     structure menu.
+  2. **Structure menu** (production structures and warehouses), also opened by right-clicking the structure's
+     worker NPC: name, kind, town, level, what it produces and a status (working, stalled, no road, full) for every
+     player; for members of the structure's town and staff also exact rates, storage contents, workers present or
+     away and warnings. Layout from V2's `ProductionStructureMenu` and `StorageOverview` (M5).
+  3. **Transport orders list** per structure, opened from the structure menu: open and recent orders with cargo,
+     from, to, state and expected arrival. Town members and staff only (M3).
+  4. All three are **read-only for players**. Staff (`knk.admin.world`) get buttons that mirror the commands: survey
+     now, planner dry run, cancel or retry an order, show the area outline (M4). Player management waits for #246
+     and #256.
+  5. The API filters the detail fields by caller (M3), so the plugin never receives stock it may not show.
+  6. Already specified elsewhere: storage terminal (§6, decision record §2.3), inbox (§4.6, P7), shop menus (shops
+     DESIGN §8).
+  7. Every menu is seeded as menu content (like G17's form seeds), so it works on a fresh database and the developer
+     can reshape it in the web app menu editor.
 - Commands under `/knk storage|production|transport|logistics` for in-world actions and testing:
   - bind a container;
   - run a survey;
@@ -907,6 +926,18 @@ Each item is checked by an automated test or a smoke step; the phase that delive
     `DisplayConfigurationSeedFilesTests`) pass and the FormWizard opens the entity's create form from a fresh database
     (G17).
 
+24. A24 [P6] The main menu has a "Structures" icon; the overview lists production structures and warehouses with
+    search and filters, and its town filter starts on the town whose district or territory the player stands in
+    (empty outside any town's land) (M2).
+25. A25 [P6] Right-clicking a structure's worker NPC or a row in the overview opens the structure menu; a player who
+    is not in the structure's town sees only name, kind, town, level, products and status, and the API response for
+    that player holds no stock, rates, workers or orders (M3).
+26. A26 [P6] Town members and staff see exact rates, storage contents, workers present or away, warnings and the
+    transport orders list; players have no action buttons; staff buttons run survey now, dry run, cancel or retry an
+    order and show the area outline (M4).
+27. A27 [P6] The structures overview, structure menu and transport orders list are seeded as menu content and open
+    on a fresh database.
+
 ## 18. Phases, tiers and flag
 
 1. **Feature tier: `tier:3`** (new foundations, schema changes and game feel).
@@ -924,7 +955,7 @@ Each item is checked by an automated test or a smoke step; the phase that delive
 | P3 Production engine | [#86](https://github.com/PandiO/knk-workspace/issues/86) | 3 | accrual and sweep, game feel |
 | P4 Areas and surveys | [#138](https://github.com/PandiO/knk-workspace/issues/138) | 3 | async world reads, game feel |
 | P5 Transport core | [#79](https://github.com/PandiO/knk-workspace/issues/79) | 3 | order lifecycle, ledger |
-| P6 Terminals and menus | [#74](https://github.com/PandiO/knk-workspace/issues/74) | 2 | plugin UI over existing endpoints |
+| P6 Terminals and menus | [#74](https://github.com/PandiO/knk-workspace/issues/74) | 2 | plugin UI plus caller-filtered read endpoints; needs #326 for the default town filter |
 | P7 Delivery and inbox | [#60](https://github.com/PandiO/knk-workspace/issues/60) | 3 | replaces kit/lootbox delivery |
 | P8 Harvest and regeneration | [#134](https://github.com/PandiO/knk-workspace/issues/134) | 3 | changes the world, game feel |
 | P9 Town logistics | [#127](https://github.com/PandiO/knk-workspace/issues/127) | 3 | planner, game feel |
@@ -939,7 +970,7 @@ Each item is checked by an automated test or a smoke step; the phase that delive
 ## 19. Open questions
 
 None blocking. Everything the developer was asked on 2026-11-16 is in the [decision record §15](DECISIONS_2026-11-05.md#15-design-pass-to-decided-2026-11-16)
-(G1-G17). Agent decisions to review: G12 (numbers), G13, G14, G15, G16.
+(G1-G17, and the in-game menus M1-M5 in §15.1). Agent decisions to review: G12 (numbers), G13, G14, G15, G16.
 
 ### After v1
 
