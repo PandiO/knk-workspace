@@ -1,6 +1,6 @@
 # Shops, shopkeepers and display stalls — Design
 
-**Status:** Draft. Written from the developer's voice design review of 2026-11-05
+**Status:** **Proposed** (2026-11-16, with the production [DESIGN](../production-storage-transport/DESIGN.md); [decision record §15](../production-storage-transport/DECISIONS_2026-11-05.md#15-design-pass-to-decided-2026-11-16)). Before: draft. Written from the developer's voice design review of 2026-11-05
 ([decision record](../production-storage-transport/DECISIONS_2026-11-05.md) §6-8). Shops, shopkeepers and display
 stalls are **[V1]** of the production, storage and transport feature. Nothing is implemented. Tags: **[V1]**,
 **[Later]**, **[Open]** (as in the production [DESIGN](../production-storage-transport/DESIGN.md) header).
@@ -241,4 +241,4 @@ Answered by the developer on 2026-11-11 ([decision record §11](../production-st
 | S-6 | What a shop's absent worker lowers | **Processing only** for now; sales too once hired workers exist (F6). |
 | S-7 | Shop tax modifier vs a later town tax | Later turnover tax and margin pricing, [#325](https://github.com/PandiO/knk-workspace/issues/325) (F4). The per-shop modifier stays in V1. |
 
-Still open: the turnover tax design (#325) and the shop vs vendor question (S-1).
+Still open: none. The turnover tax (#325) and the shop vs vendor question (S-1, with the pricing model #120) are After v1 (G15).

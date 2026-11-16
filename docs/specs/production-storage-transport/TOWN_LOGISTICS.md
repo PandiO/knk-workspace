@@ -1,6 +1,6 @@
 # Town logistics: warehouses, distribution and saving rules, trade and pricing
 
-**Status:** Draft (rev. 3 companion to [DESIGN.md](DESIGN.md)). It covers the developer's notes 15, 16 and 17
+**Status:** **Proposed** (2026-11-16, with [DESIGN.md](DESIGN.md); [decision record §15](DECISIONS_2026-11-05.md#15-design-pass-to-decided-2026-11-16)). Before: draft (rev. 3 companion to [DESIGN.md](DESIGN.md)). It covers the developer's notes 15, 16 and 17
 (2026-10-09) and the voice design review of 2026-11-05 ([decision record](DECISIONS_2026-11-05.md) §5). The whole rule
 catalogue in §4 belongs to the concept; rev. 3 splits it into a **V1 subset** and **Later** rules. Tags: **[V1]**,
 **[Later]**, **[Parked]** (DESIGN header).
@@ -253,7 +253,7 @@ Outcomes of the 2026-11-05 review ([decision record](DECISIONS_2026-11-05.md) §
 | D-L1 | Push or pull distribution | **Pull via reserve and collect** (§5): warehouses reserve, consumers collect with their own worker. No push of surplus in V1. |
 | D-L2 | Planner interval | **Confirmed:** 10 minutes per town, plus on-demand dry runs. |
 | D-L3 | Default policy for unmanaged towns | **Confirmed:** a template per town size and specialization, edited by admins in the web app. |
-| D-L4 | Who bears trade losses | [Later], with trade. Recommendation stands: the sender until delivery (CIF-like). Insurance or escort contracts can shift it later. |
+| D-L4 | Who bears trade losses | [Later], with trade. **Changed 2026-11-16 (G9):** set per trade agreement (sender until delivery, or buyer from pickup), [#124](https://github.com/PandiO/knk-workspace/issues/124). |
 | D-L5 | Town treasury | **Changed 2026-11-11 (F2):** a minimal currency `AccountKind.Town` ships in **V1** so shop income goes to the town. Designed with the currency owner. Trade, tax and spending from it (for example the carrier pool for hire) stay [Later] ([#124](https://github.com/PandiO/knk-workspace/issues/124)). |
 | D-L6 | Pricing model | **Still required:** import the developer's pricing documents (Word files, iPhone notes) into `docs/specs/` first, then replace §7's placeholder (#120). |
 | D-L7 | Player sales to warehouses (concept L168) | **Player sales now happen through shops in V1** ([shops DESIGN](../shops/DESIGN.md)). Selling to a warehouse terminal is not part of V1. |

@@ -1,6 +1,6 @@
 # Production, storage and transport — Implementation plan
 
-**Status:** Draft, **rev. 3** (after the developer's voice design review of 2026-11-05,
+**Status:** **Proposed** (2026-11-16, with [DESIGN.md](DESIGN.md) §18 for tiers and flags). Draft **rev. 3** (after the developer's voice design review of 2026-11-05,
 [decision record](DECISIONS_2026-11-05.md) §10). No phase has started. Decisions are in
 [DESIGN §14](DESIGN.md#14-decisions), [PRODUCTION_KINDS §9](PRODUCTION_KINDS.md#9-decisions) and
 [TOWN_LOGISTICS §8](TOWN_LOGISTICS.md#8-decisions); the few still open are listed there. Every item is marked

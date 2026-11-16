@@ -1,9 +1,9 @@
 # Territory, grasp and public safety — Design
 
-**Status:** Draft. Written from the developer's voice design session of 2026-11-11. Nothing is implemented. Items
+**Status:** **Proposed** (2026-11-16, with the production design, #22). Before: draft. Written from the developer's voice design session of 2026-11-11. Nothing is implemented. Items
 are tagged **[V1]**, **[Later]** or **[Parked]** (as in the production [DESIGN](../production-storage-transport/DESIGN.md)
 header).
-**Last updated:** 2026-11-11 (§10: production reconciled; issue #326)
+**Last updated:** 2026-11-16 (§2 crown land anchor, §10; #22 design pass); 2026-11-11 (§10: production reconciled; issue #326)
 **Supersedes:** the region-based parts of production [DESIGN §3.4](../production-storage-transport/DESIGN.md#34-territory-and-region-rules-v1-2026-11-11)
 (a required `WgRegionId`, region rules T1, T3, T4 and T7 as WorldGuard checks, the `TERRITORY` managed region kind).
 See [decision record §13](../production-storage-transport/DECISIONS_2026-11-05.md#13-territory-is-computed-not-a-worldguard-region-2026-11-11).
@@ -19,6 +19,10 @@ territory), [navigation](../navigation/DESIGN.md) (the access-rule registry patt
   grasp (§5).
 - **[V1]** Range = base range + power × factor. Base range and factor live in game settings. Capital districts get a
   range bonus (setting).
+- **[V1]** **Distance and capital bonus** (developer, 2026-11-16, G11): distance is measured from the **nearest edge**
+  of the district's (or crown land's) WorldGuard region, so the border follows the region's shape. The capital bonus
+  **multiplies**: a capital district's range = (base range + power × factor) × capital multiplier (game setting, for
+  example 1.5).
 - **[V1]** Results are **cached per chunk**. Most chunks belong wholly to one holder or none. Chunks a border crosses
   are marked **split** and resolved per block column on demand, so borders can run diagonally instead of in 16-block
   steps.
@@ -38,6 +42,11 @@ territory), [navigation](../navigation/DESIGN.md) (the access-rule registry patt
 - **[V1]** Territory belongs to a **holder**, not hard-wired to a town. V1 holder kinds: **town** and **kingdom**.
 - **[V1]** **Crown land** (kingdom-held land, e.g. frontier forts, royal forests) outranks town territory: where they
   overlap, crown land wins without a conflict.
+- **[V1]** **Crown land anchor** (developer, 2026-11-16, [decision record §15 G10](../production-storage-transport/DECISIONS_2026-11-05.md#15-design-pass-to-decided-2026-11-16)):
+  crown land is a **domain entity with a WorldGuard region**, like towns and districts, owned by a kingdom and created
+  through the same web-app form and world-task region capture. Its territory is computed exactly as for a town: the
+  distance from its region against its range (a radius setting on the entity), cached per chunk. The anchor's
+  region is a normal domain region; the territory around it stays computed (§1).
 - **[V1]** A kingdom's total territory = its towns' territories + its crown land, worked out for the map and for
   conflict rules. It has no separate border of its own.
 - **[V1]** **Province** is an optional level between town and kingdom: a governmental body grouping towns. A town
@@ -134,5 +143,5 @@ territory), [navigation](../navigation/DESIGN.md) (the access-rule registry patt
 - ~~How the computed territory replaces production DESIGN §3.4's region rules~~: done 2026-11-11. Production DESIGN
   §3.4 now uses a rural structure's `TownId`, the territory lookup and placement rules P-1 to P-3, and P2 follows it.
   V1 work: [#326](https://github.com/PandiO/knk-workspace/issues/326).
-- Whether crown land needs its own anchor entity (a point or a set of chunks) and how admins define it.
-- Range distance metric (to the nearest district region edge or centre) and the capital bonus formula.
+- ~~Whether crown land needs its own anchor entity and how admins define it~~: decided 2026-11-16 (§2, G10): a domain entity with a WorldGuard region and a range.
+- ~~Range distance metric and the capital bonus formula~~: decided 2026-11-16 (§1, G11): nearest region edge; the capital bonus is a multiplier.

@@ -1,10 +1,10 @@
 # Production, storage and transport — Design
 
-**Status:** Draft, **rev. 3**. Rev. 3 takes in the developer's voice design review of 2026-11-05, recorded in
+**Status:** **Proposed** (2026-11-16): no open questions (§19); waiting for the developer's approval. Every recommendation the developer had not discussed was confirmed or changed in the 2026-11-16 design pass ([decision record §15](DECISIONS_2026-11-05.md#15-design-pass-to-decided-2026-11-16), G1-G16). Before that: draft **rev. 3**. Rev. 3 takes in the developer's voice design review of 2026-11-05, recorded in
 [DECISIONS_2026-11-05.md](DECISIONS_2026-11-05.md). Rev. 2 took in the 18 notes of 2026-10-09. §14 lists what is
 settled and what is still open. Nothing is implemented. Items are tagged **[V1]** (first version), **[Later]** (in the
 concept, a future update) or **[Parked]** (direction agreed, details open).
-**Last updated:** 2026-11-11 (open questions answered, [decision record §11](DECISIONS_2026-11-05.md#11-follow-up-decisions-2026-11-11))
+**Last updated:** 2026-11-16 (design pass: §14 confirmations, §15-§19 platform parts, risks, acceptance, tiers, open questions; #22); 2026-11-11 (open questions answered, [decision record §11](DECISIONS_2026-11-05.md#11-follow-up-decisions-2026-11-11))
 **Companion documents:**
 - [PRODUCTION_KINDS.md](PRODUCTION_KINDS.md): farms, loggers, quarries, mines, fisheries, flower farms and florists,
   animal farms, hunters. Covers yield areas, surveys, levels, player harvesting and block regeneration.
@@ -782,27 +782,165 @@ Rev. 1 decisions now superseded:
 | # | Question | Outcome (2026-11-05) |
 |---|---|---|
 | D1 | Territory scope now | **V1 requirement (developer, 2026-11-11):** territory is **computed and chunk-cached**, not a WorldGuard region ([territory DESIGN](../territory/DESIGN.md), [#326](https://github.com/PandiO/knk-workspace/issues/326), decision record §13-14). A rural structure has `TownId` (district XOR town); placement rules P-1 to P-3 warn by default and admins can make each block; contested structures keep producing; rural regions have no parent (PvP allowed); structure NPCs are invulnerable (§3.4). |
-| D2 | Ownership and payouts (vision §4.5) | Not discussed; recommendation stands: still deferred. Storages and holders are ready for it. Producers stay town/staff-run until the property economy design. |
+| D2 | Ownership and payouts (vision §4.5) | **Confirmed 2026-11-16 (G1):** deferred. Storages and holders are ready for it. Producers stay town/staff-run until the property economy design. |
 | D3 | Capacity weighting | **Replaced** (§4.4): raw units everywhere; container-derived caps = slots × `UnitsPerSlot`; `ItemBlueprint.StorageWeight` default 1; `StackSlots` dropped. |
 | D4 | Output full | **Confirmed:** stall without accruing. Shown on the dashboard. |
 | D5 | Unconnected rural producer | **Confirmed** with the §7.6 wording: produce into local storage until full, then stop; automatic transport held; warnings for the missing road and the full storage. No off-road transport. |
 | D6 | Simulated-mode robbery | **Off in V1.** |
 | D7 | Inbox limits | **Replaced** (§4.6): hard cap raised by premium tiers; overflow to `SYS_LOSS`; near-cap warnings and a loss notification; 30-day expiry with reminders. |
 | D8 | Container modes first | **Confirmed:** Terminal + Display. Backed with housing [Later]. |
-| D9 | Courier crates | Not discussed; recommendation stands: an `ItemInstance` bound to the order. Not soulbound, so it can be stolen. It expires with the order. [Later] |
-| D10 | Ledger retention | Not discussed; recommendation stands: keep all moves. Roll `Production` moves up per line per day after 30 days. |
-| D11 | Vanilla shadow blueprints (§8) | Not discussed; recommendation stands: generate automatically for every obtainable material, in an "Uncurated" category. Admins curate later. |
+| D9 | Courier crates | **Confirmed 2026-11-16 (G2):** an `ItemInstance` bound to the order. Not soulbound, so it can be stolen. It expires with the order. [Later] |
+| D10 | Ledger retention | **Confirmed 2026-11-16 (G3):** keep all moves. Roll `Production` moves up per line per day after 30 days. |
+| D11 | Vanilla shadow blueprints (§8) | **Confirmed 2026-11-16 (G4):** generate automatically for every obtainable material, in an "Uncurated" category. Admins curate later. |
 
 **Settled 2026-11-11** ([decision record §11](DECISIONS_2026-11-05.md#11-follow-up-decisions-2026-11-11) F1-F12): the shop pricing details, shop income to a town account in V1,
 display stalls, the shop worker effect, the modifier order, the harvest rules and reservation expiry. See the
 companion documents and the shops design §11.
 
-**Still open:**
+**Settled 2026-11-16** ([decision record §15](DECISIONS_2026-11-05.md#15-design-pass-to-decided-2026-11-16)): G1-G4 above; crown land is a domain entity with a WorldGuard region (G10); range
+from the nearest region edge, capital bonus as a multiplier (G11); NPC activation radius per consumer (G12) and the
+registry in plugin memory (G13); worker carrying simulated in V1 (G14); flags (G16).
 
-- Exact activation radius for spawn-on-demand NPCs ([NPC platform](../npc-platform/DESIGN.md)).
-- [Parked] producer worker count growing with structure level (§7.7).
-- Whether selling to a shop should be more or less attractive than selling to a marketplace vendor: decided later
-  (shops DESIGN).
-- The shop turnover tax design ([#325](https://github.com/PandiO/knk-workspace/issues/325)).
+**Still open:** none. Moved to After v1 (G15, §19): worker count by level, shop vs vendor, the turnover tax (#325).
 
 Production- and logistics-specific decisions are in the companion documents.
+
+## 15. Platform-specific parts
+
+This spec predates the [design template](../../../.claude/skills/knk-design/design-template.md); §15-§19 add the
+template's sections it lacked (2026-11-16). The game logic stays out of Paper (vision principle, platform
+independence):
+
+1. **API (`knk-web-api`), engine-free, the source of truth:** storages, stock lines and units, the ledger and
+   reconciler, capacity, production lines, accrual and the sweep, the modifier pipeline, levels, transport orders and
+   their lifecycle, the LogisticsPlanner, shops, pricing, the town account, the territory computation inputs, the
+   reward inbox. Nothing here knows Minecraft beyond the `Material` names in the catalogue.
+2. **knk-core (Bukkit-free):** survey counting over a block-snapshot port (`BlockSnapshotSource`: material, position,
+   biome), the shared-area split, harvest bookkeeping (`ResourcePool`, floor 0.5), regeneration scheduling, the
+   territory chunk-cache and split-chunk resolution over a region-geometry port, the item-conversion rule
+   (material → blueprint), NPC lifecycle registry rules (one live entity per id, orphan rule). Unit-tested without a
+   server.
+3. **knk-paper adapters (Paper/Bukkit only):**
+   1. `ChunkSnapshot` reader behind `BlockSnapshotSource` (async surveys).
+   2. Block-break/harvest listeners and the block placer for placeholders and regeneration (tree snapshot restore).
+   3. Containers: storage terminals and display containers (inventory menus, `menu/`), the deposit/withdraw menus.
+   4. Item conversion hooks on pickup, drops, crafting, fishing and villager trades (#141).
+   5. NPC entities through the NPC platform's Citizens runtime (`paper/npc/citizens/`): shopkeepers, workers,
+      display-stall item display entities.
+   6. Region capture through the existing world tasks (`DefineRegion`, new `CaptureRadius`).
+   7. BlueMap markers for territory outlines (in-game maps work, #224).
+4. **WorldGuard:** only for the domain regions that already use it (districts, structures, crown land, G10). Territory
+   is computed, not a region (territory §1). No new WorldGuard flags.
+5. **Pragmatic exceptions (no port):** inventory menu layout, particle outlines (`/knk production area show`) and
+   item display entities have no game logic and stay Paper details.
+
+## 16. Risks and integration checks
+
+1. **Stock concurrency.** Every stock move is one ledger transaction with an idempotency key; `requires-mysql`
+   concurrency tests (P1) and the reconciler stay green in every phase.
+2. **Survey cost on the main thread.** Surveys read `ChunkSnapshot`s async; entity counts (pastures) are the only main
+   thread part. Budget checked with `PluginMetrics.timed` (KNG-232).
+3. **NPC load.** Shopkeepers and workers share the NPC budgets of the navigation work (0.03 ms per NPC per tick,
+   BEHAVIOR_MODEL §13); spawns paced by `spawns-per-tick`. Workers carry goods simulated in V1 (G14), so production
+   doesn't wait on navigation Phases 5-8 or the stair gate (#358).
+4. **Item conversion (#141)** touches every item path in the game (kits, lootboxes, siege rewards, enchantment books).
+   It ships first and on its own, with a conversion log, before any phase relies on it.
+5. **Delivery change (P7)** replaces drop-at-feet for kits and lootboxes; kit claim delivery (#261) is the current
+   path and must keep working.
+6. **Overlap with running work:** the town account touches currency (`AccountKind`); territory touches districts and
+   towns (towns streets #409 merged); shopkeepers depend on the NPC platform lifecycle (§6a); garrison/guard NPC work
+   (#234, #236, #238, #245) ships in the same test phase.
+7. **Realtime.** Plugin caches are invalidated through the notification outbox now and SignalR when
+   `realtime.enabled` (#66); every new entity type registers its invalidation.
+
+## 17. Acceptance checklist
+
+Each item is checked by an automated test or a smoke step; the phase that delivers it is in brackets.
+
+1. A01 [P1] A stock move debits one storage and credits another in one ledger transaction; a repeated idempotency
+   key applies once; the reconciler finds no difference after 1000 concurrent moves.
+2. A02 [P1] A storage refuses a move over its capacity (raw units × `StorageWeight`, §4.4); `Partial` mode accepts
+   what fits and reports the rest.
+3. A03 [P1] Unique items keep their identity (`StockUnit`) through deposit, transport and withdrawal.
+4. A04 [#141] Every obtainable vanilla material has exactly one blueprint; uncurated ones are in "Uncurated" (G4); an
+   item picked up, crafted, fished or traded resolves to its blueprint.
+5. A05 [#326] A position's territory holder is the town (or crown land) whose district or crown-land region edge is
+   within range; a capital's range is multiplied (G11); overlapping equal-rank territory is contested and creates a
+   `TerritoryConflict`.
+6. A06 [P2] A rural structure has exactly one of `DistrictId` and `TownId`; placement rules P-1 to P-3 warn by
+   default and block when an admin sets them to blocking (R2).
+7. A07 [P2] A structure whose land becomes contested keeps its town, keeps producing and is flagged (R3).
+8. A08 [P3] A production line accrues by the rate formula with modifiers in order (additions, then
+   multiplications); a full output storage stalls the line without accruing (D4); the cycle trace shows each factor.
+9. A09 [P3] Levels 1-10 per kind (G8) change the multiplier and the area cap.
+10. A10 [P4] A `Derived` or `Hybrid` structure is surveyed on creation, once a day while its chunks are loaded, on
+    demand and after a notable change; a `Configured` structure never is (G5).
+11. A11 [P4] An area over the kind's maximum volume for its level is refused (G6); overlapping shared areas split
+    each unit equally (G7).
+12. A12 [P5] A transport order moves goods sender → transit → receiver with the ledger balanced at every step; a
+    worker carrying an order lowers output to 50% (one of two away) and stops it (both away) (§7.7); the trip takes
+    route length ÷ speed (G14).
+13. A13 [P5] An unconnected rural producer fills local storage and stops; automatic transport is held; the dashboard
+    warns about the missing road and the full storage (D5).
+14. A14 [P6] A storage terminal shows the storage's stock and moves items in and out through the ledger; a display
+    container mirrors stock read-only.
+15. A15 [P7] An undeliverable reward goes to the inbox; at the hard cap (raised by premium tiers) the overflow is
+    logged as `InboxOverflow` to `SYS_LOSS` with a loss notification; items expire after 30 days with reminders (D7).
+16. A16 [P8] A player harvest in a yield area draws from the shared `ResourcePool` (floor 0.5); the harvested block
+    shows a placeholder and regenerates (ores to the neutral block, trees by snapshot restore with a sapling in
+    between).
+17. A17 [P9] The planner runs every 10 minutes per town; warehouses reserve and consumers collect with their own
+    worker (D-L1); a dry run explains the plan.
+18. A18 [P10] A shop sells at the midpoint base price with its modifiers; purchase coins go to the town account
+    (S-3); hourly trade stats are recorded per shop and blueprint.
+19. A19 [P11] A shopkeeper spawns when a player comes within its radius (48 blocks default), despawns when no player
+    has been within radius + 16 for 10 s, and is never duplicated after a restart, crash or chunk reload (G12, §6a).
+20. A20 [P12] A display stall shows its items as item display entities; sold-out items are greyed out by default;
+    a quick buy asks for confirmation.
+21. A21 [all] With `production.enabled: false` (plugin) and `Production:Enabled` false (API) nothing of this feature
+    runs: no sweeps, surveys, NPCs or listeners.
+22. A22 [P1, P3, P10] Ledger roll-up: `Production` and `ProductionInput` moves older than 30 days are summed per line
+    per day with totals unchanged (G3).
+
+## 18. Phases, tiers and flag
+
+1. **Feature tier: `tier:3`** (new foundations, schema changes and game feel).
+2. **Flags (agent decision G16):** plugin `production.enabled` (default `false`) and API `Production:Enabled`
+   (default `false`, a game setting) gate the sweeps, surveys, planner, NPCs and listeners. Web-app CRUD stays
+   available to admins so content can be prepared while it is off.
+3. **Phases** are in [IMPLEMENTATION_PLAN.md](IMPLEMENTATION_PLAN.md) with their issues. Proposed tiers:
+
+| Phase | Issue | Tier | Why |
+|---|---|---|---|
+| Item identity | [#141](https://github.com/PandiO/knk-workspace/issues/141) | 3 | touches every item path |
+| Territory V1 | [#326](https://github.com/PandiO/knk-workspace/issues/326) | 3 | new holder model, crown land entity, schema |
+| P1 Stock core | [#97](https://github.com/PandiO/knk-workspace/issues/97) | 3 | ledger, schema, concurrency |
+| P2 World | [#91](https://github.com/PandiO/knk-workspace/issues/91) | 3 | structure subtypes, schema |
+| P3 Production engine | [#86](https://github.com/PandiO/knk-workspace/issues/86) | 3 | accrual and sweep, game feel |
+| P4 Areas and surveys | [#138](https://github.com/PandiO/knk-workspace/issues/138) | 3 | async world reads, game feel |
+| P5 Transport core | [#79](https://github.com/PandiO/knk-workspace/issues/79) | 3 | order lifecycle, ledger |
+| P6 Terminals and menus | [#74](https://github.com/PandiO/knk-workspace/issues/74) | 2 | plugin UI over existing endpoints |
+| P7 Delivery and inbox | [#60](https://github.com/PandiO/knk-workspace/issues/60) | 3 | replaces kit/lootbox delivery |
+| P8 Harvest and regeneration | [#134](https://github.com/PandiO/knk-workspace/issues/134) | 3 | changes the world, game feel |
+| P9 Town logistics | [#127](https://github.com/PandiO/knk-workspace/issues/127) | 3 | planner, game feel |
+| P10 Shops | [#248](https://github.com/PandiO/knk-workspace/issues/248) | 3 | money, town account |
+| P11 Shopkeepers | [#249](https://github.com/PandiO/knk-workspace/issues/249) | 2 | NPC platform consumer |
+| P12 Display stalls | [#250](https://github.com/PandiO/knk-workspace/issues/250) | 2 | display entities, quick buy |
+| Web-app insight | [#65](https://github.com/PandiO/knk-workspace/issues/65) | 2 | read-only views, grows per phase |
+
+4. On approval each phase is checked for size (more than one repo plus tests and docs in a day's link is split
+   again) and gets its `tier:` label and smoke section.
+
+## 19. Open questions
+
+None blocking. Everything the developer was asked on 2026-11-16 is in the [decision record §15](DECISIONS_2026-11-05.md#15-design-pass-to-decided-2026-11-16)
+(G1-G15). Agent decisions to review: G12 (numbers), G13, G14, G15, G16.
+
+### After v1
+
+1. Producer worker count growing with level: with the staffing source, [#257](https://github.com/PandiO/knk-workspace/issues/257).
+2. Shop vs marketplace vendor attractiveness (shops S-1): with the pricing model, [#120](https://github.com/PandiO/knk-workspace/issues/120).
+3. Shop turnover tax and margin pricing: [#325](https://github.com/PandiO/knk-workspace/issues/325).
+4. Professions, paid work and quests for harvesting (F12): with town runtime management, [#246](https://github.com/PandiO/knk-workspace/issues/246).
+5. Trade loss bearer per agreement (G9) and treasury spending: [#124](https://github.com/PandiO/knk-workspace/issues/124).
+6. Courier crates (G2): with player couriers, [#53](https://github.com/PandiO/knk-workspace/issues/53).

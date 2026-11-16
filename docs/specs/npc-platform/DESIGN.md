@@ -192,7 +192,7 @@ Developer decision of 2026-11-05 ([production/storage/transport decision record 
 Requirements:
 
 - **Never persist NPC entities in chunks.** Spawn them as non-persistent entities. Only the definition (owner structure, location, look, behaviour) lives in the API.
-- **Spawn on demand.** Spawn when a player is within range of the shop, district or town; **despawn** when nobody is near. The exact activation radius is still to be designed.
+- **Spawn on demand.** Spawn when a player is within range of the shop, district or town; **despawn** when nobody is near. **Activation radius (decided 2026-11-16, [decision record §15](../production-storage-transport/DECISIONS_2026-11-05.md#15-design-pass-to-decided-2026-11-16) G12):** per consumer, as a setting in the layered NPC configuration (global → world → region/domain → template → assignment, IMPLEMENTATION_PLAN Phase 1); template defaults 48 blocks for shopkeepers and display-stall NPCs, 64 for workers; despawn when no player has been within radius + 16 for 10 s; spawns paced through `spawns-per-tick` (NAV-13).
 - **One live entity per NPC id.** Entities carry their NPC id in a PDC tag. A registry permits one live entity per id; a second spawn request reuses the first entity.
 - **Orphan sweep.** On chunk load, any tagged entity that is not in the registry is removed.
 - **Correct after API or server stop, crash, kill or restart:** NPCs spawn when needed and never otherwise.
@@ -204,7 +204,7 @@ How this fits the rest of this design:
 - Virtual movement for carriers (an NPC that despawns and advances along its route on a timer while no players are near, [production DESIGN §7.8](../production-storage-transport/DESIGN.md)) builds on spawn on demand: the actor's position is state outside the entity.
 - O05 in §10 (visibility, concurrent instances and lifecycle on restart, teleport and world change) is narrowed by this decision: restart and duplicate handling are settled here; visibility, teleport and world change stay open.
 
-Open: the activation radius per consumer, the registry's home (plugin memory with a rebuild on start is the obvious choice), and how a consumer asks for an NPC to be present while no player is near (for example a guard post during a siege).
+Decided 2026-11-16: the activation radius (above, G12) and the registry's home: plugin memory, rebuilt on start from the API's definitions, on Citizens' in-memory registry (G13). Open: how a consumer asks for an NPC to be present while no player is near (for example a guard post during a siege).
 
 ## 7. Permissions and closed gates
 

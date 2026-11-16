@@ -1,6 +1,6 @@
 # Production kinds, yield areas, levels, harvesting and regeneration
 
-**Status:** Draft (rev. 3 companion to [DESIGN.md](DESIGN.md)). It records the developer's notes 7, 8, 11, 13 and 18
+**Status:** **Proposed** (2026-11-16, with [DESIGN.md](DESIGN.md); [decision record §15](DECISIONS_2026-11-05.md#15-design-pass-to-decided-2026-11-16)). Before: draft (rev. 3 companion to [DESIGN.md](DESIGN.md)). It records the developer's notes 7, 8, 11, 13 and 18
 of 2026-10-09 and the voice design review of 2026-11-05 ([decision record](DECISIONS_2026-11-05.md)). §9 lists what is
 settled and what is still open. Nothing is implemented. Tags: **[V1]**, **[Later]**, **[Parked]** (DESIGN header).
 **Last updated:** 2026-11-11 (open questions answered, [decision record §11](DECISIONS_2026-11-05.md#11-follow-up-decisions-2026-11-11))
@@ -458,10 +458,10 @@ five area models (with the exclusive vs shared split) are confirmed.
 | # | Question | Outcome |
 |---|---|---|
 | P-D1 | Default yield source | **Confirmed:** `Hybrid` for every kind. `Configured` is allowed for testing and special structures. |
-| P-D2 | Survey frequency | Not discussed; recommendation stands: daily when chunks are loaded, plus on demand and after large changes. |
-| P-D3 | Survey cost limit | Not discussed; recommendation stands: max area volume per kind and level (for example 64×64×64 for quarries at level 1). Surveys run async on snapshots and are throttled per tick budget. |
-| P-D4 | Shared-area split | Not discussed; recommendation stands: equal split per unit between overlapping structures. |
-| P-D5 | Number of levels | Not discussed; **10** per production kind stands. (Concept v0.2 had 20 per shop; shops can choose their own.) |
+| P-D2 | Survey frequency | **Confirmed 2026-11-16 (G5):** once a day, daily when chunks are loaded, plus on demand and after large changes. |
+| P-D3 | Survey cost limit | **Confirmed 2026-11-16 (G6):** max area volume per kind and level (for example 64×64×64 for quarries at level 1). Surveys run async on snapshots and are throttled per tick budget. |
+| P-D4 | Shared-area split | **Confirmed 2026-11-16 (G7):** equal split per unit between overlapping structures. |
+| P-D5 | Number of levels | **Confirmed 2026-11-16 (G8):** **10** per production kind. (Concept v0.2 had 20 per shop; shops can choose their own.) |
 | P-D6 | Player harvesting vs structure yield | **Refined** (§6.2-6.3): an automatic worker's share, the rest to Output; the town gains net output. The shared `ResourcePool` with a floor of 0.5 stands. |
 | P-D7 | Ore placeholder | **Confirmed:** a neutral "depleted" block (stone for overworld ores, netherrack in the nether). |
 | P-D8 | Tree regeneration | **Confirmed:** snapshot restore (exact tree), with a sapling placeholder in between. |
@@ -473,8 +473,8 @@ harvest when Output is full (§6.2), and the net-positive check (§6.3).
 
 **Still open:**
 
-- [Parked] worker count growing with level (§4.5).
-- Professions, paid work and quests for harvesting: a later stage than the logistics rules; no issue yet (F12).
+None. Moved to After v1 (G15): worker count growing with level (#257); professions, paid work and quests for
+harvesting (F12, with #246).
 
 ## 10. Later (rev. 3)
 
