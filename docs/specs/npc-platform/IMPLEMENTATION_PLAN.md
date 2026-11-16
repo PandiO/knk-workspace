@@ -801,11 +801,12 @@ B4 ([#673](https://github.com/PandiO/knk-workspace/issues/673)) puts waypoints a
        those waypoints, measured in 3D. Before: the horizontal distance to the stretch end, which on stacked hairpins
        counted the flight above as near.
     3. **Appended, not replaced.** The new stretch goes after the waypoints not yet walked (`Trail.appended`), so the
-       landing between two flights is always walked. The joined list starts at the furthest of its first waypoints
-       within 3 blocks that the feet reach in a straight walk on their own level (`Trail.fromFeet`), so the NPC never
-       turns back to a waypoint it is already past. A waypoint on another level or across a drop is never skipped.
-       Without this, a leader on `npc-jagged-straight-collision-on` walked back to a corner waypoint into its
-       followers, and a follower was not freed.
+       landing between two flights is always walked. The joined list drops only its first waypoints the NPC is already
+       past (`Trail.fromFeet`): the feet beyond the waypoint along the step to the next one, on its level, and the next
+       one a straight walk. Without that, a leader on `npc-jagged-straight-collision-on` walked back to a corner
+       waypoint into its followers, and a follower was not freed. Nothing ahead of the NPC is skipped. A first version
+       that cut ahead to any straight-walkable waypoint within 3 blocks skipped L5's corner clearance, and
+       `npc-stairhouse-group` failed.
     4. **Bridged from the feet** (`WaypointChain.split`): the first step starts at the NPC's feet (when it is on the
        ground), every step a straight walk with the bridge's cells where needed.
     5. **A step the bridge cannot make is a local leg.** The list is cut before it. Once the waypoints up to it are

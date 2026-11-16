@@ -10,8 +10,8 @@ This is a human-readable record of capabilities merged into the V3 default branc
   `npc.navigation.enabled` on; no new `config.yml` key, no migration.
   1. The next stretch is handed out by progress along the waypoints in 3D, not by horizontal distance to the stretch
      end, so a stretch end on the flight above no longer counts as near.
-  2. The new stretch is appended to the waypoints not yet walked, starting from the furthest one the NPC reaches in a
-     straight walk on its own level, and the join is bridged from the NPC's feet.
+  2. The new stretch is appended to the waypoints not yet walked (those the NPC is already past are dropped), and the
+     join is bridged from the NPC's feet.
   3. A step of the line the bridge cannot make is walked as a local leg, never as a straight walk across air.
   4. A group leader that falls below the group path no longer takes the path with it: followers don't walk off the same
      edge.
