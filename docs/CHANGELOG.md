@@ -911,6 +911,21 @@ a leftover debug spec was removed from the e2e suite (knk-web-app#34).
   - **Admin steps:** none; deploy the web app. Smoke test:
     [dashboard access smoke test § 8.5](guides/dashboard-access-smoke-test.md) (mostly automated in CI).
 
+## 2026-11-16
+
+- **A manager run each weekday keeps the agent workflow tidy** ([PandiO/knk-workspace#418](https://github.com/PandiO/knk-workspace/issues/418))
+  — no game change; developer-facing. The scheduled task "K&K daily digest" is now "K&K manager": each weekday at
+  16:40 Europe/Amsterdam a fresh session follows the new `.claude/skills/knk-manager/` skill. It reports red CI on
+  `next` or trunk first, acts on the developer's replies on the digest issue #333 ("2.3: yes", "pause X", "bump Y",
+  "promote", "start docs #n"; each handled reply gets a reaction), promotes only on the developer's explicit go with
+  release tags through the Release workflow, closes `status:in-review` issues whose work and docs reached trunk (unless
+  a docs follow-up is open), opens and merges `main` → `next` sync pull requests, archives finished board rows and
+  lists stale claims, suggests docs sessions over the debt cap and asks before starting an approved chain. It ends with
+  the digest (`knk-digest`, which gained a § 7 "Manager run"). Coordinators now report to the manager with a comment
+  on the chain's parent issue. DESIGN § 1.3, § 7, § 8.4 and the global instructions ("Manager run and daily digest")
+  say so.
+  - **Admin steps:** none. To give the manager an instruction, reply on #333.
+
 ## 2026-11-15
 
 - **Smoke-test guides keep every step** — no game change; smoke-test guides keep each step's full manual instructions

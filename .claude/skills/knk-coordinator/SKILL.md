@@ -186,9 +186,12 @@ All of these must hold:
 
 ## 9. Reporting
 
-1. **To the manager** (DESIGN § 1.3) after every finished, merged or blocked link: `send_message` to the manager
-   session when one runs, else a comment on the chain's parent issue. One numbered message: what the link built,
-   heads, tests vs baseline, merged into `next` or not, decisions to review, the next link started.
+1. **To the manager** (DESIGN § 1.3) after every finished, merged or blocked link: a comment on the chain's parent
+   issue. The manager is a fresh session each weekday run ([knk-manager skill](../knk-manager/SKILL.md)), so there is
+   no session to `send_message`; it reads the parent issue, your progress report and the board for the digest. One
+   numbered comment: what the link built, heads, tests vs baseline, merged into `next` or not, decisions to review, the
+   next link started. Keep your board row's status and "Last updated" current, so the manager does not list it as a
+   stale claim. The manager may `send_message` you a developer decision or "pause" from #333; follow it.
 2. **Report § 1** stays current: what waits for the developer, in merge or test order.
 3. **To the developer directly** only for blockers and decisions only the developer can make. Steps the tools cannot
    do go there as "What the developer must do" items: as of 2026-11-12 the GitHub MCP tools cannot create labels or
