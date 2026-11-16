@@ -4,6 +4,42 @@ This is a human-readable record of capabilities merged into the V3 default branc
 
 ## Unreleased — on feature branches, not merged
 
+- **NPC navigation: push resistance with collision on; `collidable` stays off by default** ([PandiO/knk-workspace#627](https://github.com/PandiO/knk-workspace/issues/627),
+  link M7 of the NPC navigation follow-ups chain, implementation plan Phase 4c.4 item 7, research report 2026-11-15
+  § 6). knk-plugin and knk-workspace branches `claude/npc-movement-m7` (PRs into `next`, in review). Nothing changes with
+  `npc.navigation.collidable: false` (still the default) or with `npc.navigation.enabled: false`.
+  1. **What it does with `collidable: true`.** NPCs push and block each other; players never move an NPC (each NPC is
+     exempt from every player's collision through Paper's per-entity collidable exemptions; no scoreboard team is
+     touched). A push the NPC's own walk doesn't explain (a body, an attack's knockback, water, a piston) is detected,
+     counted and logged with who did it, and the NPC walks back to its line or post: straight back, else along its own
+     footsteps, else a local leg, and last, after 30 s, a teleport home only where no player sees it. Another NPC's
+     jostle on its way is left to the crowd unless it goes towards a drop; queue spots never stand next to a drop of 3
+     blocks or more. With `players-push-npcs: true` players bump NPCs (the realistic mode for later): a player who pushes
+     an NPC 3 times in 10 s, or once towards a drop, stops colliding with it for 60 s. An attack's knockback stays and the
+     NPC walks back. `/knk npc nav stats` shows `pushes: N (players N, attacks N), returned N, exempted N (now N),
+     teleported N`; the metrics count `knk_npc_nav_events_total{event="pushed|push_returned|push_exempt|push_teleport"}`.
+  2. **Checked** (scenarios on Paper 26.3 with Citizens and a scripted player): a player walking through a standing NPC
+     carries it 2.85–3.80 blocks with collision on and no policy, 0.00 with K&K's; a guard on a wall walk pushed towards a
+     7-block drop doesn't move, and with `players-push-npcs` it is pushed 0.68, the player is exempted at the edge, it
+     never falls and walks back; the five Phase 4c scenes pass with collision on as with it off; 12 singles one way
+     through a one-block door all arrive with turns kept.
+  3. **Why the default stays off.** With bodies on everywhere, NPCs walking a 1-wide flight next to a drop can shove
+     each other off it (the #491 stair corner scene: one fell), which push resistance can't undo; bodies of a squeezed
+     row still overlap (closest 0.19). The plan (4c.4 item 7.4.10) lists what is missing before the default turns on.
+  4. **Deploy.** Add the keys to `npc.navigation` in `config.yml` (configuration reference § 4.27) and restart:
+
+     ```yaml
+     npc:
+       navigation:
+         collidable: false
+         players-push-npcs: false
+         push-return: true
+         push-exempt-after: 3
+         push-exempt-window-ticks: 200
+         push-exempt-ticks: 1200
+         push-teleport-ticks: 600
+     ```
+
 - **NPC navigation: crowd awareness, off by default** ([PandiO/knk-workspace#626](https://github.com/PandiO/knk-workspace/issues/626),
   link M4 of the NPC navigation follow-ups chain, implementation plan Phase 4c.4 item 4, decision 3; BEHAVIOR_MODEL
   NAV-26). knk-plugin and knk-workspace branches `claude/npc-movement-m4` (PRs into `next`, in review). Nothing changes
