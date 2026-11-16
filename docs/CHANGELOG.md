@@ -4,6 +4,26 @@ This is a human-readable record of capabilities merged into the V3 default branc
 
 ## Unreleased — on feature branches, not merged
 
+- **NPC navigation: the NPC rule checks see WorldGuard regions on a server** ([PandiO/knk-workspace#668](https://github.com/PandiO/knk-workspace/issues/668),
+  link L9 of the NPC navigation follow-ups chain; #506, #593). knk-plugin and knk-workspace branches
+  `claude/npc-followups-l9` (PRs into `next`). Nothing changes with `npc.navigation.enabled: false`.
+  1. **What was wrong.** The NPC module starts while the plugin registers its commands, before the plugin builds its
+     WorldGuard region tracker, so the region query it took at start was empty on every server. The NPC rule checks
+     (the recheck of an NPC's way ahead, its trespass guard, and a group's follower lanes and guard) then saw no region
+     anywhere: a district whose entry was removed mid-walk (realtime or `/knk cache refresh`) stopped nobody until the
+     router's next plan, and `rules: trespasses` stayed 0 because no entry was ever seen. The per-region
+     `npc.navigation` override scopes did not apply to NPCs either. The tests had passed because the scenarios built a
+     region query of their own.
+  2. **What changed.** The module asks for the region query when route following is built (on the first
+     `/knk npc nav`) and logs `[NPC] no WorldGuard region query …` when there is none. The NPC scenarios with domain
+     rules now read regions through the live module, as the server's checks do. L6's realtime path is unchanged; it
+     was correct but had nothing to act on.
+  3. **The op's entry bypass is not involved.** A group started with `/knk npc nav group` is judged as NPCs with its
+     access profile (the command's profile argument, else `default`, whose `bypass-domain-rules` is `false`), never
+     as the player who ran the command.
+  4. **Deploy.** No new `config.yml` key, no migration. Check the startup line `0.1.0+<sha>`; per-region
+     `npc.navigation` overrides now take effect for NPCs.
+
 - **CI: the Paper boot test's log check no longer fails at random on the player scenarios** ([PandiO/knk-workspace#586](https://github.com/PandiO/knk-workspace/issues/586)).
   knk-plugin and knk-workspace branches `claude/paper-boot-flake-586` (PRs into `next`; the plugin fix also into `main`).
   1. **What was wrong.** Now and then a `paper-boot` run failed its log check on `Failed to sync user data for
