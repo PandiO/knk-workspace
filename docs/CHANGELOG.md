@@ -4,6 +4,18 @@ This is a human-readable record of capabilities merged into the V3 default branc
 
 ## Unreleased — on feature branches, not merged
 
+- **CI: the Paper boot test's log check no longer fails at random on the player scenarios** ([PandiO/knk-workspace#586](https://github.com/PandiO/knk-workspace/issues/586)).
+  knk-plugin and knk-workspace branches `claude/paper-boot-flake-586` (PRs into `next`; the plugin fix also into `main`).
+  1. **What was wrong.** Now and then a `paper-boot` run failed its log check on `Failed to sync user data for
+     Scn…: RuntimeException: Failed to check duplicate`, though every scenario passed. The plugin printed that error's
+     stack trace with `printStackTrace()`, one line at a time, and another API-client thread could log a plain warning
+     in between; the check then gave the trace (with its "API unreachable" cause) to that warning.
+  2. **What changed.** The join's account sync (and its welcome message fallback) log the exception with the log entry;
+     the check prefers the entry that quotes the trace's exception. Nothing is excused that wasn't before. The teleport
+     audit's retry that hits a stopped plugin is one `INFO` line (on `next` since 2026-11-15, now with a test of that
+     exact race) ([CI § 7](guides/developer/ci.md#7-plugin-the-paper-boot-test)).
+  3. **Deploy.** Nothing to deploy; server logs show the sync error's cause as part of the same entry.
+
 - **CI: the API's MySQL tests run on every push** ([PandiO/knk-workspace#419](https://github.com/PandiO/knk-workspace/issues/419)).
   knk-web-api `main` and `next` ([knk-web-api#43](https://github.com/PandiO/knk-web-api/pull/43)); knk-workspace branch
   `claude/mysql-tests-ci-419` (PR into `next`).
