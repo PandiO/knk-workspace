@@ -52,7 +52,7 @@ Every link is merged into `next` (2026-11-15). Build knk-plugin from `next` `deb
 | M2 Corridor steering (option A) | #622 | Merged into next (2026-11-15) | knk-plugin `4e247835` → `next` `0fa74a67`; knk-workspace `a837776d` → `next` `8927eab2` | PandiO/knk-plugin#48, PandiO/knk-workspace#633 | PR head green (build, paper-boot with 45 scenarios, both runs); Codex at its usage limit | create_session session_01R1w2UszyqgMVxpBHaUa2oH (2026-11-15) |
 | M6 Clearance-aware local legs (add-on D) | #623 | Merged into next (2026-11-15) | knk-plugin `8fa83e09` → `next` `625c2c9c`; knk-workspace `f65d3c69` → `next` `e0783664` | PandiO/knk-plugin#49, PandiO/knk-workspace#634 | PR head green (build, paper-boot with 45 scenarios); Codex at its usage limit | create_session session_01R1w2UuwfDNhwngWZJue8wZ (2026-11-15) |
 | M3 Formation keeping | #624 | Merged into next (2026-11-16) | knk-plugin `94b30146` → `next` `138ebc66`; knk-workspace `1b4692ed` → `next` `a428eb3e` | PandiO/knk-plugin#50, PandiO/knk-workspace#635 | PR head green (build, paper-boot with 45 scenarios; one #586 log-check re-run); Codex at its usage limit | create_session session_01R1w2UufiGFpPfGevZxvtVD (2026-11-15) |
-| M5 Plaza lines | #625 | Running | — | — | — | create_session session_01R1w2UwSt9YZCZUtsk5fQjU (2026-11-16) |
+| M5 Plaza lines | #625 | In review (2026-11-16) | knk-plugin `727f020b`; knk-workspace `f5aa56e` | PandiO/knk-plugin#51, PandiO/knk-workspace#637 | local 45/45 scenarios on the head; PR CI pending at writing; Codex: see the PRs | create_session session_01R1w2UwSt9YZCZUtsk5fQjU (2026-11-16) |
 | M4 Crowd awareness | #626 | Not started (gate: M5 merged); then the option-B checkpoint | — | — | — | — |
 | M7 Collision with push resistance | #627 | Not started (gate: B checkpoint) | — | — | — | — |
 
@@ -944,3 +944,66 @@ _(Each link appends its block here when it finishes.)_
     1. **M4 (crowding):** the entrance jam is gone in the scenarios with formation keeping alone (0.4 s), so there is nothing left of it for M4 to fix on this scene. Turn-taking at real chokepoints and merges under collision remain.
     2. **M5 (plazas):** the group path uses `CorridorShaper` per chunk (`NavGroup.shapedLinePoint`); plaza widening of the corridor will reach groups through it.
     3. `GroupPath.fit` and `NavGroup.elasticWidest` are the per-point cache; `forgetFits()` on rule changes.
+
+### 4.13 M5 — Plaza lines: string pulling across plaza junctions, NPC side (#625)
+
+1. **Scope done** (plan 4c.4 item 5, decision 6, NAV-27; behind the new key `plaza-lines: false`, with `npc.navigation.enabled` still off by default; nothing changes with the key off; the road-graph builder is untouched, 4c.7 stays a future update).
+    1. **Which junctions.** The road plan names every junction a route passes (`RoadPlanner.PlazaCrossing`; knk-paper `NavigationService.plazaCrossingsOf`): a designed plaza's centre with its `PlazaRadius`, every other junction with radius 0. The stored network doesn't mark automatic plazas, so the NPC side measures each junction with 16 rays over standable floor in its regions and takes the fourth shortest as the open radius. A junction no wider than `corridor-half-width` is a street junction and is left alone (under 800 reads, no corridor). A plaza's footprint is the open radius less `wall-clearance` (a designed plaza's radius as given), at most `plaza-corridor-blocks` (16).
+    2. **The line** (knk-core `corridor/PlazaLine`). The stretch's corridor also covers the footprint (`Corridor.build(…, discs)`, additive). From where the route enters the footprint to where it leaves (never past a pinned chokepoint waypoint) it runs a bounded A* on M2's clearance map: 8 directions, never under 0.35, 10 per block lacking to the clearance, at most 4,096 cells. The A* path is string pulled by line of sight and its bends are slid to the tangent points. A step keeps the least clearance of the cells it replaces, less only near an end that has less itself. Regions the route doesn't pass are obstacles (M2's rule). The plaza points are pinned, and their line indexes are the entry's or the exit's, so the corner clearance at the junction's turn leaves them alone.
+    3. **Stretches.** A stretch that would end on a plaza holds the way across it, at most one stretch more (a street grid must not chain). Group chunks likewise, at most a chunk more either way.
+    4. **Singles.** The plaza line is part of the shaped stretch with `corridor-steering`; without it only the plaza part changes (`Options.plazaOnly`), the rest stays at the block centres.
+    5. **Groups.** The group path takes the plaza line per chunk (`elastic`: the full shape; `levels`: the plaza only), and the leader's stretches get it too (plaza only, since the leader's line is otherwise unshaped). Both keep the formation's half width plus `wall-clearance` (`NavGroup.plazaClearance`, 1.8 for 3 abreast at 1.0) through `NpcNavigationService.setPlazaClearance` and `plazaOptions(leaderId)`.
+    6. **Keys:** `plaza-lines` (false) and `plaza-corridor-blocks` (16, 4–32) in `NavigationSettings` and `NpcNavigationService.Settings` (a 15-argument constructor keeps the old callers), with `config.yml` comments and the layer test.
+    7. **Scenario** `npc-plaza-line` (collision off and on) turns the key on and asserts. Singles: all arrive, walked within 5 % of the shortest line that keeps `wall-clearance` from the well, well ≥ 0.55, at least 2 from the junction, a plaza line placed. A new group phase (7 in ranks of 3, `elastic`): the leader arrives within 10 % of the line round the well with the group's clearance and at least 1 from the junction, no member under 0.35 from the well, M3's group checks with 0 folds, shaping in the phase ≤ 0.03 ms per NPC per tick. The scenario count stays 45.
+    8. **knk-workspace:** changelog with the YAML, configuration reference § 4.27 and § 2.1, plan 4c.4 item 5.4.
+2. **Commits and heads.**
+    1. knk-plugin `claude/npc-movement-m5` at `727f020b`: 8 commits on `next` `138ebc66`, still the head of `next`.
+    2. knk-workspace `claude/npc-movement-m5` at `f5aa56e`: 3 docs commits on `next` `a428eb3`, still its head.
+3. **PRs.** PandiO/knk-plugin#51 (`Closes` #625) and PandiO/knk-workspace#637 (`Part of` #625), base `next`. Not merged.
+4. **Tests, baseline → result.**
+    1. knk-plugin `./gradlew build -x deployToDevServer`.
+        1. Baseline on `next` `138ebc66`: core 2880, api-client 344 (2 skipped), paper 2854 (18 skipped).
+        2. Result: core 2899 (+19), api-client 344, paper 2859 (+5), 0 failures.
+        3. New tests:
+            1. `PlazaLineTest` 10: the scenario plaza's chord within 5 % (+1.9 %; M2 alone +39.6 %); straight through the junction when it is on the chord; a well on the chord passed at 0.75; a group's line 1.8 off it; a region the line doesn't pass kept out of; a designed radius; a narrow-street junction is no plaza; plaza-only mode; the cost (about 3,700 reads per plaza stretch, 38 cells, a second NPC reads nothing); the open radius.
+            2. `RouteFollowerPlazaTest` 5.
+            3. `NavGroupPlazaTest` 4.
+            4. `PlazaGeometryTest` 3.
+            5. `NpcNavigationConfigTest` +1, `NpcRoadPlanningTest` +1.
+    2. Scenarios, local (Paper 26.3 b205, WorldEdit 7.4.6, WorldGuard 7.0.20, Citizens b4269, `--scenarios --npc-navigation --min-scenarios 45 --expect-timeout 1200`).
+        1. Baseline on `next` 45/45.
+        2. Branch head `727f020b`: 45/45, log check passed.
+        3. An earlier branch run failed `npc-corners-walk`, three times in a row, with my settle-tolerance fix for #636 in. With it reverted the scenario passes (decision 5.8).
+    3. CI on PandiO/knk-plugin#51: pending when this block was written; the coordinator checks it.
+    4. Known reds: none.
+5. **Before (`next`, M1's baseline reproduced) → after (key on); collision off / on.**
+    1. `npc-plaza-line`, 3 singles from the west road to the north road.
+        1. Walked on the plaza: +40–41 % over the chord (14.6–14.8 against 10.4–10.5), through the junction (0.0–0.1) → +4 % over the shortest line keeping 0.8 from the well and +11 % over the chord (the well stands on the chord), 2.7–2.8 from the junction.
+        2. Well: 2.50 → 0.73–0.75 / 0.64–0.75.
+        3. A key-off run of the same build fails the new singles checks.
+    2. The group of 7 in ranks of 3 (new phase).
+        1. Key off: the leader walks the V (+21 % over its line round the well, through the junction).
+        2. Key on: +6 %, 1.5 from the junction, 0 folds, 3 abreast; closest member to the well 0.58 / 0.55.
+        3. The leader stands at the goal after about 7 s either way. The group's result comes after 7.7 s (key off), 26.4 s (key on, collision off, #636) and 7.0 s (collision on).
+    3. Cost. Corridor shaping in the group phase 0.0016–0.0076 ms per NPC per tick. The singles' phase is the server's first plaza shaping: 0.024–0.029 on a fresh server, reported. A plaza stretch takes about 1.3 ms to shape once (M2's plain stretch 0.65 ms) and is shared; amortised over a stretch's walk that is about 0.008 ms per NPC per tick.
+6. **Decisions (DESIGN § 4.3).**
+    1. *Automatic plazas.* Chosen: every junction on the route is a candidate, measured by 16 rays on the NPC side (the fourth shortest ray). Alternatives: (a) designed plazas only (the developer's plazas are probably automatic); (b) the builder's plaza flag in the API (schema change); (c) a `NavWorld` method for the road floor material, to bound the footprint by road blocks (new port method). Caveat: a junction in open ground without walls measures as a plaza, and the NPC may cut its corner over the grass within 16 blocks.
+    2. *The search.* Chosen: A*, line-of-sight pulling and bend refinement on M2's clearance map. Alternatives: (a) M2's string pull in a wider corridor (jumps only between line points: +21 % round the well in the first try); (b) full Theta* (a line-of-sight check per expansion).
+    3. *Scenario reference.* Chosen: within 5 % of the shortest line that keeps `wall-clearance` from the well, the plain chord % reported. Alternatives: (a) 5 % of the chord (impossible with M1's well on the chord); (b) move the well (M1's scene is the baseline).
+    4. *Groups' clearance.* Chosen: the formation's half width plus `wall-clearance`, at most 2 (the corridor's cap). Alternatives: (a) `wall-clearance` only (the outer lanes squeeze or merge at the well).
+    5. *Without corridor steering.* Chosen: plaza lines work alone (plaza-only mode). Alternatives: (a) only with `corridor-steering`.
+    6. *Cost check.* Chosen: the group phase's share ≤ 0.03; the singles' phase reported. Alternatives: (a) the whole run (0.024–0.029 cold, flaky against 0.03).
+    7. *Footprint edge.* Chosen: open radius less `wall-clearance`. Alternatives: (a) the full radius (the entry point lay in the road's opening in the plaza wall).
+    8. *The settle bug.* Chosen: filed as #636 and left as it is on `next`. Alternatives: (a) a shared settle tolerance (fixed the 20 s wait but made `npc-corners-walk` fail: the patrolling group turns round sooner and a follower stands 4 s at the stair corner).
+7. **Out of scope, noted.**
+    1. #636 (filed): a follower 0.1–0.2 short of its slot never settles; the group reports arrival after its 20 s settle time.
+    2. `plugin-scenarios.md` § 7 and `ci.md` § 7: `npc-plaza-line` now asserts and has a group phase. Left for the docs session.
+8. **Blockers.** None.
+9. **At merge / what the developer must do.**
+    1. `config.yml`: add `plaza-lines: false` and `plaza-corridor-blocks: 16` under `npc.navigation` (YAML in the changelog and § 4.27). No migration.
+    2. The developer test is on #625 (comment 6905814391): name a plaza and a route across it, then trace one NPC with `/knk npc nav trace 60` and walk a group of 9 across.
+10. **Notes for later links.**
+    1. **M4 (crowding):** `PlazaLine.search` is a small A* over corridor cells. An occupancy cost per cell would go into its cell cost (next to `CLEARANCE_COST`) if crowds should spread over a plaza.
+    2. **#636** needs `npc-corners-walk` looked at together with the fix (the turnaround right after arriving).
+    3. In production every junction on a route is measured once per stretch shaping (rays, cached with the stretch). Watch `corridors().reads()` on a dense street grid.
+
