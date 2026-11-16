@@ -51,8 +51,8 @@ Every link is merged into `next` (2026-11-15). Build knk-plugin from `next` `deb
 | M1 Evidence and diagnostics | #621 | Merged into next (2026-11-15) | knk-plugin `3ce748e0` → `next` `a527c980`; knk-workspace `1310c3d9` → `next` `a8dbfa80` | PandiO/knk-plugin#47, PandiO/knk-workspace#632 | PR head green (build, paper-boot with 45 scenarios, both runs); Codex at its usage limit | create_session session_01R1w2Uv6Untjy5RbmJTDd1T (2026-11-15) |
 | M2 Corridor steering (option A) | #622 | Merged into next (2026-11-15) | knk-plugin `4e247835` → `next` `0fa74a67`; knk-workspace `a837776d` → `next` `8927eab2` | PandiO/knk-plugin#48, PandiO/knk-workspace#633 | PR head green (build, paper-boot with 45 scenarios, both runs); Codex at its usage limit | create_session session_01R1w2UszyqgMVxpBHaUa2oH (2026-11-15) |
 | M6 Clearance-aware local legs (add-on D) | #623 | Merged into next (2026-11-15) | knk-plugin `8fa83e09` → `next` `625c2c9c`; knk-workspace `f65d3c69` → `next` `e0783664` | PandiO/knk-plugin#49, PandiO/knk-workspace#634 | PR head green (build, paper-boot with 45 scenarios); Codex at its usage limit | create_session session_01R1w2UuwfDNhwngWZJue8wZ (2026-11-15) |
-| M3 Formation keeping | #624 | In review (2026-11-16), not merged | knk-plugin `94b30146`; knk-workspace `1b4692ed` | PandiO/knk-plugin#50, PandiO/knk-workspace#635 | PR head green (build, paper-boot with 45 scenarios; one #586 log-check re-run); Codex at its usage limit | create_session session_01R1w2UufiGFpPfGevZxvtVD (2026-11-15) |
-| M5 Plaza lines | #625 | Not started (gate: M3 merged) | — | — | — | — |
+| M3 Formation keeping | #624 | Merged into next (2026-11-16) | knk-plugin `94b30146` → `next` `138ebc66`; knk-workspace `1b4692ed` → `next` `a428eb3e` | PandiO/knk-plugin#50, PandiO/knk-workspace#635 | PR head green (build, paper-boot with 45 scenarios; one #586 log-check re-run); Codex at its usage limit | create_session session_01R1w2UufiGFpPfGevZxvtVD (2026-11-15) |
+| M5 Plaza lines | #625 | Running | — | — | — | create_session session_01R1w2UwSt9YZCZUtsk5fQjU (2026-11-16) |
 | M4 Crowd awareness | #626 | Not started (gate: M5 merged); then the option-B checkpoint | — | — | — | — |
 | M7 Collision with push resistance | #627 | Not started (gate: B checkpoint) | — | — | — | — |
 
@@ -212,6 +212,11 @@ Every link is merged into `next` (2026-11-15). Build knk-plugin from `next` `deb
     the plan's `WalkPathfinder`/`WalkSearch`) is put to the developer for confirmation. Chosen: merge without waiting,
     because it is reversible behind the key and § 7.1 merges on the checks. Alternatives: (a) hold the merge for the
     developer (blocks M3 on a reversible detail). M3 started.
+
+27. **M3 checked and merged** (2026-11-16). § 6 held: tests 2866/2853 → 2880/2854, 45 scenarios green (one #586
+    re-run), `npc-stairhouse-group` asserting. With `elastic` on the developer's stair house: folds 1 → 0, leader 27 s
+    → 7.5–8 s, entrance jam 23.7 s → 0.4 s; the unsteady group of 9 on the jagged straight 5 stuck spells → 0. Merged
+    PandiO/knk-plugin#50 → `138ebc66` and PandiO/knk-workspace#635 → `a428eb3e`. M5 started.
 
 ## 4. Link blocks
 
