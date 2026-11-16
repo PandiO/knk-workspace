@@ -1,15 +1,16 @@
 # Siege Minigame — Siege Weapons
 
-**Status:** Design complete for V1 gameplay (2026-11-15). Placement, operation, aiming, ammunition, damage, limits,
-economy, operator rules and the main engineering choices are decided by the developer. Remaining items are balance
-values and the open questions in §12. No implementation plan, no code.
-**Last updated:** 2026-11-15 (size classes from reference designs, with links; aiming, firing, ammunition, limits, unlocks, siege points, operator rules, defenders,
+**Status:** Design complete for V1 gameplay (2026-11-16). Placement, operation, aiming, ammunition, damage, knockback,
+armour, limits, economy, operator rules, spawn protection and the main engineering choices are decided by the
+developer. Remaining items are balance values and the open questions in §12. No implementation plan, no code.
+**Last updated:** 2026-11-16 (operating by right-click, objectives, knockback, damage fall-off, vanilla damage types and armour, scroll-wheel bolt choice, cone per template, whistle sound, animated projectiles, armed/fired/wreck schematics, spawn safe zones, balancing statistics); 2026-11-15 (size classes from reference designs, with links; aiming, firing, ammunition, limits, unlocks, siege points, operator rules, defenders,
 siege fire, tactical/targeting map, entities and forms, siege shop, schematic storage, crash safety, token and lease;
 "siege coins" renamed "siege points"); 2026-11-12 (first version)
 **Issue:** [PandiO/knk-workspace#354](https://github.com/PandiO/knk-workspace/issues/354). Sub-issues: #355 aiming,
 firing and damage design (recorded here), #356 siege points, #357 spot picker on the web map, #613 tactical map and
 targeting page, #616 turning ballista research. Related issues from the same sessions: #611 siege shop, #612 notable
-events, #614 schematic and snapshot pipeline, #615 siege fire.
+events, #614 schematic and snapshot pipeline, #615 siege fire, #651 balancing statistics, #652 test-run recording,
+#653 usability testing.
 **Related:**
 - [DESIGN.md](DESIGN.md): the Siege minigame this extends (`SiegeScenario` §3.3, `SiegeTeam` §3.4, gates §8, rewards §7.6, menus §10)
 - [../in-game-maps/DESIGN.md](../in-game-maps/DESIGN.md) and #224: battle map tables, a later in-game addition to the browser targeting page
@@ -19,7 +20,7 @@ events, #614 schematic and snapshot pipeline, #615 siege fire.
 - [../realtime-signalr/](../realtime-signalr/): the SignalR channel for the operator lease heartbeat and web app notifications (§8)
 
 **Authority:** the developer's design conversations of 2026-11-12 (text) and the voice design sessions recorded on
-2026-11-15. Items marked *proposal* are suggestions the developer has not explicitly confirmed; treat them as defaults
+2026-11-15 and 2026-11-16. Items marked *proposal* are suggestions the developer has not explicitly confirmed; treat them as defaults
 for the implementation plan, not as decisions.
 
 ## 1. Goal
@@ -102,6 +103,24 @@ Scope: the Siege minigame (PvP). Siege Survival may get siege weapons later; not
 | W43 | **Pasting near players:** just before a paste, players inside the spot are pushed to its edge (as gate animations do). Placement is refused if the area holds anything other than air or the spot's recorded original blocks. |
 | W44 | **Defenders use the same weapons and spots.** Spots belong to any team; whether defenders get spots (for example a catapult on a wall tower) is up to the scenario designer. |
 
+### 2.5 Operating, impact, armour, visuals and spawn protection (voice session 2026-11-16)
+
+| ID | Decision |
+|---|---|
+| W45 | **Operating a trebuchet or catapult starts with a right-click on any block of the weapon.** The spot bounds tell the plugin where to look: a right-click inside an occupied spot means that spot's weapon. An NPC "siege engineer" may come later as flavour. (Resolves Q1.) |
+| W46 | **Capture points get no special effect** from shots. Players standing on one are hurt like anywhere else. Most objectives are indoors today, so shots rarely reach them. (Resolves Q3.) |
+| W47 | **Knockback, configurable per ammo type.** A **blast** pushes players away from the impact point, weaker towards the edge (same curve as the damage, W48). A **direct hit** (ballista bolt, boulder) pushes along the projectile's flight direction, taken from the projectile entity's velocity, so a bolt flying north pushes north, angled slightly up or down. Solid projectiles push modestly; explosions push hard. |
+| W48 | **Damage fall-off by effect:** **impact** (boulder, kinetic bolt): full damage in a small inner core, then a steep drop; **explosion** (bomb, explosive bolt): even fall-off from centre to edge; **fire**: no fall-off, players in the area are set alight, plus ground fire for the fire bomb; **poison**: the same poison effect for everyone in the radius. Numbers come from balance tests. (Resolves the curve part of Q5.) |
+| W49 | **Vanilla damage types, so armour, enchantments and shields work by themselves.** Bolts and boulders deal projectile damage (Projectile Protection helps; boulders from trebuchets and catapults count too), bombs deal explosion damage (Blast Protection), fire bombs and incendiary bolts fire damage (Fire Protection), poison is a potion effect (armour doesn't help). Plain Protection reduces all of them a little. Shields block bolts from the front and soften blasts the vanilla way. Each ammo type gets an **optional armour-piercing factor**, because a full set of high-protection armour can cut damage by up to 80% (the vanilla enchantment cap). |
+| W50 | **Capture progress earns siege points**, alongside personal play (W34). (Resolves the open part of Q4; amounts stay with #356.) |
+| W51 | **Ballista bolt choice by scroll wheel, without touching the inventory.** While mounted, the plugin cancels the hotbar slot change and cycles the bolt type instead; the current bolt and its price show on the action bar. No items are swapped, so a crash or API outage can't lose any. An inventory menu stays as a fallback. (Resolves the second part of Q6.) |
+| W52 | **The ballista's cone is set per template**, default 60° either side of the spot's facing. (Resolves Q6.) |
+| W53 | **Impact warning: sound only, no visual marker.** An incoming shot whistles like modern artillery, then explodes. V1 uses pitch-shifted vanilla sounds (no server resource pack yet). |
+| W54 | **Projectiles are visible in flight.** Trebuchet and catapult shots are **block display entities** (for example stone for a boulder, TNT for a bomb) moved along the arc every tick with a particle trail (smoke for bombs, flames for fire bombs); the client smooths the movement. The ballista bolt is a real arrow entity. A player watching the weapon sees the launch and can follow the path. |
+| W55 | **Three schematics per template: armed, fired and wreck**, all on the same footprint. On firing the weapon swaps to **fired**, and back to **armed** when the reload ends, so its state shows from a distance. More in-between frames can come later, using the frame-swap approach of the gate animations. |
+| W56 | **Spawn safe zones are fully protected.** A player inside their own team's spawn safe zone takes **no damage, poison, fire or knockback** from siege weapons. Firing at a spawn zone is **allowed**; protection is checked **per player at impact**, which is correct in 3D: a shot landing on a tower's upper floor hurts the players there, even with a spawn room directly below. The targeting map **shades spawn zones** and, when the target circle overlaps one, shows "Be advised: projectiles don't harm players inside their spawn zone." |
+| W57 | **Balancing statistics:** siege weapon stats per match (shots, hits, damage and kills per weapon and ammo type) are logged, as part of general Siege balancing statistics for player kills, deaths and more (#651), recorded per alpha test run (#652). |
+
 ## 3. Weapon templates, ammo types and size classes
 
 A **weapon template** defines one weapon type:
@@ -111,12 +130,12 @@ A **weapon template** defines one weapon type:
 | Name, description | Shown in menus and on the targeting page. |
 | Kind | Indirect (map-targeted: trebuchet, catapult) or direct (mounted: ballista). |
 | Size class | small / medium / large (W3). |
-| Schematic, wreck schematic | The working weapon and its destroyed variant (W2, W8), from the schematic pipeline (W40). |
+| Armed, fired and wreck schematics | Ready to fire, just fired (shown during the reload) and destroyed, all on one footprint (W2, W8, W55), from the schematic pipeline (W40). |
 | Max health | HP at the end of the build (W6). |
 | Build time | Seconds from paste to full HP (W7). |
 | Reload time | Seconds between shots (W21). |
 | Max range, min range | Blocks from the spot; min range optional (W22). |
-| Cone half-angle | Direct-fire weapons only (W24). |
+| Cone half-angle | Direct-fire weapons only; default 60° (W24, W52). |
 | Gate damage multiplier | Damage factor against gates (W25). |
 | Spot cooldown | Seconds the spot stays locked after destruction (W11). |
 | Match price | Siege points to place it (W13). |
@@ -128,9 +147,12 @@ An **ammo type** is its own entity, so heavy and light variants are simply diffe
 | Field | Notes |
 |---|---|
 | Name, description | For example "Heavy boulder", "Incendiary bolt". |
-| Effect | Impact, explosion, fire or poison. |
-| Damage | Player damage at the centre; *proposal:* falls off towards the edge, with impact-type ammo concentrated near the centre. |
+| Effect | Impact, explosion, fire or poison; sets the vanilla damage type (W49) and the fall-off curve (W48). |
+| Damage | Player damage at the centre, with the effect's fall-off (W48). |
 | Blast radius | Blocks, with a default (W18). |
+| Knockback | Strength, with the same fall-off as the damage; direction away from impact for blasts, along the flight path for direct hits (W47). |
+| Armour piercing | Optional factor that reduces how much armour and enchantments cut the damage (W49). |
+| Projectile look | Block for the display entity and particle trail (W54). |
 | Effect radius and duration | Fire area for fire bombs, poison level and duration for carcasses. |
 | Price per shot | Siege points (W20). |
 
@@ -200,25 +222,28 @@ fixed direction (for example north) so they can be rotated in 90° steps to the 
 
 ### 5.2 Firing a trebuchet or catapult
 
-1. A team member right-clicks the weapon. If no one holds its lease, they get it (W36) and a clickable chat link with
+1. A team member right-clicks any block of the weapon (W45). If no one holds its lease, they get it (W36) and a clickable chat link with
    a one-time token (W29, W42).
 2. The link opens the **targeting page** (§8): the scenario map with range rings, the targeting circle and the
    allowed ammo types with their prices.
 3. They pick an ammo type and a target inside range and press fire. The server checks the token, lease, range, reload
    and the shooter's siege points, charges the shot, and starts the reload (W21).
-4. The plugin launches one projectile on an arc to a random point inside the targeting circle (W16). On impact it
-   applies the ammo type's damage and effect (W17–W19) and plays the explosion effect.
-5. The page shows the reload countdown; the operator can fire again when it ends, or close the page (the lease then
+4. The weapon swaps to its **fired** schematic (W55) and the plugin launches one visible projectile on an arc to a
+   random point inside the targeting circle (W16, W54). Players near the impact hear the incoming whistle (W53). On
+   impact it applies the ammo type's damage, effect and knockback (W17–W19, W47–W49), skipping players inside their
+   own spawn safe zone (W56), and plays the explosion effect.
+5. The page shows the reload countdown; when it ends the weapon swaps back to **armed**. The operator can fire again, or close the page (the lease then
    expires, W36).
 
 ### 5.3 Firing a ballista
 
-1. A team member mounts the ballista and gets its lease (W36). An in-game menu or the hotbar picks the bolt type
-   (*proposal*).
+1. A team member mounts the ballista and gets its lease (W36). The scroll wheel cycles the bolt type, shown with its
+   price on the action bar, without changing the inventory (W51); a menu is the fallback.
 2. They aim by looking, inside the cone around the spot's facing (W24), and fire. The server checks reload and siege
    points and charges the shot.
-3. The bolt flies straight and applies its ammo type's damage and effect, with the gate damage multiplier against
-   gates (W25).
+3. The ballista swaps to **fired** until the reload ends (W55). The bolt, a real arrow entity, flies straight and
+   applies its ammo type's damage, effect and knockback along its flight direction (W47, W49), with the gate damage
+   multiplier against gates (W25) and no effect on players in their own spawn safe zone (W56).
 4. Dismounting, dying or leaving the match releases the lease.
 
 ## 6. Health, build phase and destruction
@@ -234,6 +259,8 @@ fixed direction (for example north) so they can be rotated in 90° steps to the 
   **swaps the schematic for the template's wreck schematic**.
 - **Spot cooldown (W10, W11):** only that spot is locked, for the template's cooldown or the scenario override. The
   wreck stays while the spot is locked and is cleared when the spot frees up.
+- **Spawn protection (W56):** players inside their own team's spawn safe zone take nothing from siege weapons: no
+  damage, poison, fire or knockback. Checked per player at impact.
 - **Team info display (W21):** a per-player display near the weapon shows its state (building with HP, ready,
   reloading with countdown, in use) to the owning team only.
 - **Match end:** every weapon and wreck is removed and every spot restored from its snapshot (W41).
@@ -259,6 +286,10 @@ One BlueMap-based web page in the player's browser, in two modes (W28):
   tiles, live markers of the player's own team, and gate and objective markers (W27).
 - **Targeting mode:** opened from a trebuchet or catapult (§5.2). Adds the weapon's range rings, the targeting circle
   under the cursor, ammo choice with prices, the player's siege points, the reload countdown and the fire button.
+  Spawn safe zones are shaded; a target circle that overlaps one shows "Be advised: projectiles don't harm players
+  inside their spawn zone." The shot is still allowed (W56).
+- **Usability:** the page ships with usability logging and a few scripted tasks for test runs, such as "pick a target
+  and fire a trebuchet" (#653).
 - **Later:** a spot picker mode (#357) and the in-game battle map tables (#224).
 
 Rules:
@@ -320,15 +351,18 @@ destroyed gate variants, region snapshots for siege fire restores and resettable
 - **Notable events** (#612) are a Siege and Siege Survival feature; they pay siege points (W34) and mission score.
 - **Siege shop** (#611) is shared by weapons and future consumables and magic.
 - **Schematic pipeline** (#614) is shared infrastructure.
+- **Balancing statistics** (#651), **test-run recording** (#652) and **usability testing** (#653) cover the whole
+  Siege minigame and the web app; siege weapons add their own events to them (W57). Plan balance runs with the
+  [alpha balance test plan template](../../guides/alpha-balance-test-plan-template.md).
 
 ## 12. Open questions
 
 | # | Question |
 |---|---|
-| Q1 | How a player starts operating a trebuchet or catapult: right-click the schematic, or an NPC standing at it. |
+| Q1 | ~~How a player starts operating a trebuchet or catapult.~~ Decided 2026-11-16: right-click (W45). |
 | Q2 | Confirm the size classes in §3 once our own schematics are built (current numbers are estimates from reference screenshots). |
-| Q3 | Objectives: Siege objectives are capture points without health. Should shots affect them (for example pausing capture progress), or only players, gates and weapons? |
-| Q4 | (#356) Siege-point amounts per action, and whether capture progress still pays points, given the wish to earn from personal play rather than siege progress. |
-| Q5 | Damage fall-off curve per ammo effect and the default numbers per ammo type (balance tests). |
-| Q6 | Ballista cone angle and how the bolt type is chosen while mounted. |
+| Q3 | ~~Effect of shots on objectives.~~ Decided 2026-11-16: none beyond hurting players (W46). |
+| Q4 | (#356) Siege-point amounts per action. Capture progress pays too (W50). |
+| Q5 | Default numbers per ammo type: damage, radius, knockback, armour piercing (balance tests, #651). Curves decided (W48). |
+| Q6 | ~~Ballista cone and bolt choice.~~ Decided 2026-11-16: per template, default 60° (W52); scroll wheel (W51). |
 | Q7 | Which object store to run on the NAS (#614). |
