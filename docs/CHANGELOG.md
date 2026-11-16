@@ -911,6 +911,23 @@ a leftover debug spec was removed from the e2e suite (knk-web-app#34).
   - **Admin steps:** none; deploy the web app. Smoke test:
     [dashboard access smoke test § 8.5](guides/dashboard-access-smoke-test.md) (mostly automated in CI).
 
+## 2026-11-16
+
+- **Intake skill: ideas are captured at once and shaped later** — no game change
+  ([PandiO/knk-workspace#416](https://github.com/PandiO/knk-workspace/issues/416), phase 2 of the agent workflow,
+  [DESIGN § 1.1](specs/ai-agent-workflow/DESIGN.md#1-roles)). New project skill `.claude/skills/knk-intake/`.
+  1. **Capture mode** (the default): drop an idea in a session, even one line, and walk away. The session searches open
+     and closed issues for duplicates, files an issue labelled `idea` with your words quoted as they are (or comments
+     on the open issue that already has it), asks nothing and confirms in one sentence.
+  2. **Shaping mode** ("let's go through ideas"): the open `idea` issues one at a time, each with a read-back, the repos
+     it touches, a proposed `tier:` label and whether it needs design, at most three questions in the ask-user prompt,
+     then "now, later or design first" (or drop). "Now" goes to the manager session, "design first" starts a design
+     session with the `knk-design` skill.
+  3. **Tier labels:** the global instructions now say that whoever files an issue sets a `tier:` label when the scope
+     is clear; intake's shaping proposes one otherwise.
+  - **Admin steps:** none. Optional: an `area:web-app` label, so intake can tag web-app ideas too (only `area:api` and
+    `area:plugin` exist; agents cannot create labels).
+
 ## 2026-11-15
 
 - **Smoke-test guides keep every step** — no game change; smoke-test guides keep each step's full manual instructions
