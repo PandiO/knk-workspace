@@ -290,7 +290,7 @@ public async Task YourScenarioName_WithCondition_ExpectedOutcome()
 ## Related Documentation
 
 - [PHASE_8_IMPLEMENTATION_SUMMARY.md](./PHASE_8_IMPLEMENTATION_SUMMARY.md) - Full implementation details
-- [Backend Instructions](../../../.github/instructions/knk-backend.instructions.md) - Backend conventions
+- [`knk-api-endpoint` skill](../../../../.claude/skills/knk-api-endpoint/SKILL.md) - Backend conventions (replaced the Copilot backend instructions, PandiO/knk-workspace#424)
 - [Git Conventions](../../../guides/developer/GIT_COMMIT_CONVENTIONS.md) - Commit message format
 
 ---

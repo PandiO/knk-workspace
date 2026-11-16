@@ -1,6 +1,6 @@
 # CI: what runs on every push and how to mark a known failure
 
-**Status:** Active · **Last updated:** 2026-11-15 (§ 7: `npc-stuck-ladder` and `npc-stairhouse-singles` with `local-legs-clearance` on, #623); 2026-11-15 (§ 7: the singles of two NPC movement scenarios are checks, #622); 2026-11-15 (§ 7 and § 7.1: `MIN_SCENARIOS` 45 with the ten NPC movement runs in report mode, `--expect-timeout 1200`, job timeout 30 minutes, the `KNK-NPC-REPORT` lines in the job summary, [#621](https://github.com/PandiO/knk-workspace/issues/621)); 2026-11-15 (§ 7.1: `MIN_SCENARIOS` 35 with `npc-group-realtime-entry`, [#593](https://github.com/PandiO/knk-workspace/issues/593)); 2026-11-15 (§ 7.1: `MIN_SCENARIOS` 34 with `npc-ledge-corner` and `npc-landing-ranks`, [#592](https://github.com/PandiO/knk-workspace/issues/592)); 2026-11-15 (§ 7.1: `player-heal-needs-grant`, `MIN_SCENARIOS` 32 with the three NPC group scenarios of #522, [#580](https://github.com/PandiO/knk-workspace/issues/580)); 2026-11-15 (§ 7, § 7.1, new § 7.3: player scenarios, the printStackTrace rule of the log check and the headless bot tests kept off, [#540](https://github.com/PandiO/knk-workspace/issues/540)); 2026-11-15 (§ 1, § 7, § 7.1 and the new § 7.2: Citizens on the boot-test server (pinned by [#521](https://github.com/PandiO/knk-workspace/issues/521)), NPC navigation on and checked, six NPC scenarios, `MIN_SCENARIOS` 22, [#543](https://github.com/PandiO/knk-workspace/issues/543), in knk-plugin `next`); 2026-11-14 (§ 7 and § 7.1: 16 scenarios, `MIN_SCENARIOS` 16, plugin backfill [#511](https://github.com/PandiO/knk-workspace/issues/511), in knk-plugin `next`); 2026-11-14 (§ 1.1.2: the `requires-bukkit` tests run in CI with MockBukkit, [#499](https://github.com/PandiO/knk-workspace/issues/499), in knk-plugin `next`); 2026-11-14 (plugin scenarios in `paper-boot.yml`, § 7.1, [#421](https://github.com/PandiO/knk-workspace/issues/421), in knk-plugin `next`); 2026-11-14 (web app end-to-end tests: `e2e.yml`, § 1.1.3, [#423](https://github.com/PandiO/knk-workspace/issues/423)); 2026-11-14 (plugin Paper boot test `paper-boot.yml`, § 1, § 1.1.2 and § 7, [#420](https://github.com/PandiO/knk-workspace/issues/420)); 2026-11-13 (workflows renamed "Build and test"; Codex review comments are not CI, § 1); 2026-11-13 (§ 4 the CI run decides, § 5 reading runs as an agent, § 6 the Node.js 20 warning, [#363](https://github.com/PandiO/knk-workspace/issues/363)); 2026-11-13 (first version, [PandiO/knk-workspace#362](https://github.com/PandiO/knk-workspace/issues/362), docs follow-up of [#327](https://github.com/PandiO/knk-workspace/issues/327); checked against knk-web-api `master` `210f731`, knk-web-app `main` `33d68f8`, knk-plugin `main` `e8b651d`)
+**Status:** Active · **Last updated:** 2026-11-16 (§ 6: action versions on Node.js 24 and the Release workflow's per-tag concurrency and reuse of an existing tag, #426); 2026-11-15 (§ 7: `npc-stuck-ladder` and `npc-stairhouse-singles` with `local-legs-clearance` on, #623); 2026-11-15 (§ 7: the singles of two NPC movement scenarios are checks, #622); 2026-11-15 (§ 7 and § 7.1: `MIN_SCENARIOS` 45 with the ten NPC movement runs in report mode, `--expect-timeout 1200`, job timeout 30 minutes, the `KNK-NPC-REPORT` lines in the job summary, [#621](https://github.com/PandiO/knk-workspace/issues/621)); 2026-11-15 (§ 7.1: `MIN_SCENARIOS` 35 with `npc-group-realtime-entry`, [#593](https://github.com/PandiO/knk-workspace/issues/593)); 2026-11-15 (§ 7.1: `MIN_SCENARIOS` 34 with `npc-ledge-corner` and `npc-landing-ranks`, [#592](https://github.com/PandiO/knk-workspace/issues/592)); 2026-11-15 (§ 7.1: `player-heal-needs-grant`, `MIN_SCENARIOS` 32 with the three NPC group scenarios of #522, [#580](https://github.com/PandiO/knk-workspace/issues/580)); 2026-11-15 (§ 7, § 7.1, new § 7.3: player scenarios, the printStackTrace rule of the log check and the headless bot tests kept off, [#540](https://github.com/PandiO/knk-workspace/issues/540)); 2026-11-15 (§ 1, § 7, § 7.1 and the new § 7.2: Citizens on the boot-test server (pinned by [#521](https://github.com/PandiO/knk-workspace/issues/521)), NPC navigation on and checked, six NPC scenarios, `MIN_SCENARIOS` 22, [#543](https://github.com/PandiO/knk-workspace/issues/543), in knk-plugin `next`); 2026-11-14 (§ 7 and § 7.1: 16 scenarios, `MIN_SCENARIOS` 16, plugin backfill [#511](https://github.com/PandiO/knk-workspace/issues/511), in knk-plugin `next`); 2026-11-14 (§ 1.1.2: the `requires-bukkit` tests run in CI with MockBukkit, [#499](https://github.com/PandiO/knk-workspace/issues/499), in knk-plugin `next`); 2026-11-14 (plugin scenarios in `paper-boot.yml`, § 7.1, [#421](https://github.com/PandiO/knk-workspace/issues/421), in knk-plugin `next`); 2026-11-14 (web app end-to-end tests: `e2e.yml`, § 1.1.3, [#423](https://github.com/PandiO/knk-workspace/issues/423)); 2026-11-14 (plugin Paper boot test `paper-boot.yml`, § 1, § 1.1.2 and § 7, [#420](https://github.com/PandiO/knk-workspace/issues/420)); 2026-11-13 (workflows renamed "Build and test"; Codex review comments are not CI, § 1); 2026-11-13 (§ 4 the CI run decides, § 5 reading runs as an agent, § 6 the Node.js 20 warning, [#363](https://github.com/PandiO/knk-workspace/issues/363)); 2026-11-13 (first version, [PandiO/knk-workspace#362](https://github.com/PandiO/knk-workspace/issues/362), docs follow-up of [#327](https://github.com/PandiO/knk-workspace/issues/327); checked against knk-web-api `master` `210f731`, knk-web-app `main` `33d68f8`, knk-plugin `main` `e8b651d`)
 
 The GitHub workflows of the component repos are the automated gate for every change. They run on every push (all
 branches), every pull request and on manual dispatch (`workflow_dispatch`). Under the
@@ -123,11 +123,33 @@ component repository must be attached to the session (`add_repo`); otherwise the
 Don't poll in a loop for a run to finish: a session that watches a pull request (`subscribe_pr_activity`) gets CI
 results as events.
 
-## 6. Known warning
+## 6. Action versions (Node.js 24)
 
-Every run is annotated with a warning that `actions/checkout@v4`, `setup-dotnet@v4`, `setup-node@v4` and
-`upload-artifact@v4` target Node.js 20 and are forced onto Node.js 24 (`migrations.yml` too). It doesn't fail a run; a
-later bump to the next major versions of these actions clears it.
+Every workflow in knk-web-api, knk-web-app and knk-plugin uses action majors that run on Node.js 24, so runs no longer
+carry the "Node.js 20 is deprecated" warning ([#426](https://github.com/PandiO/knk-workspace/issues/426), 2026-11-16).
+Job names stayed the same, because the rulesets require the checks by name.
+
+| Action | Version | Used in |
+|---|---|---|
+| `actions/checkout` | `v7` | every workflow |
+| `actions/setup-dotnet` | `v6` | knk-web-api `ci.yml`, `migrations.yml` |
+| `actions/setup-node` | `v7` | knk-web-app `ci.yml`, `e2e.yml`; knk-plugin `paper-boot.yml` (`package-manager-cache: false`, no `package.json` at the repo root) |
+| `actions/setup-java` | `v6` | knk-plugin `build.yml`, `paper-boot.yml` |
+| `gradle/actions/setup-gradle` | `v6` with `cache-provider: basic` | knk-plugin `build.yml`, `paper-boot.yml` |
+| `actions/cache` | `v6` | knk-plugin `paper-boot.yml` |
+| `actions/upload-artifact` | `v7` (artifact names unchanged: `api-test-results`, `playwright-report`, `playwright-traces`, `paper-boot-log`) | knk-web-api `ci.yml`, knk-web-app `e2e.yml`, knk-plugin `paper-boot.yml` |
+
+`setup-gradle` v6 caches with Gradle's proprietary "enhanced" provider by default; `cache-provider: basic` keeps the
+MIT-licensed provider built on `actions/cache`, which is what v4 did. A workflow file is read from the branch it runs
+on, and the Release workflow only from the default branch, so a bump goes into `main` first and then into `next`
+(merge `main` into `next`).
+
+**The Release workflow** (`release.yml` in the three repos; how to run it:
+[closed-alpha deployment runbook § Every deploy](../closed-alpha-deployment-runbook.md), step 2) has one concurrency
+group per tag (`release-<tag>`, `cancel-in-progress: false`): runs for different tags all wait their turn, while a
+single shared group kept only one pending run, so a third dispatch replaced the second. When the tag already exists at
+exactly the requested commit and has no GitHub release yet (an earlier run stopped after creating the tag), a new run
+creates the release instead of failing. It still fails when the tag points at another commit or already has a release.
 
 ## 7. Plugin: the Paper boot test
 

@@ -141,9 +141,9 @@ See [DECISIONS.md](./DECISIONS.md) for detailed rationale.
 - **Project Structure**: [docs/specs/project-overview/SOURCES_LOCATION.md](../../specs/project-overview/SOURCES_LOCATION.md)
 
 ### Instruction Guides
-- **Backend Instructions**: [.github/instructions/knk-backend.instructions.md](../../../../.github/instructions/knk-backend.instructions.md)
-- **Frontend Instructions**: [.github/instructions/knk-frontend.instructions.md](../../../../.github/instructions/knk-frontend.instructions.md)
-- **Plugin Instructions**: [.github/instructions/knk-minecraft.instructions.md](../../../../.github/instructions/knk-minecraft.instructions.md)
+- **Backend conventions**: [`knk-api-endpoint` skill](../../../.claude/skills/knk-api-endpoint/SKILL.md)
+- **Entity across API, web app and plugin**: [`knk-entity-scaffold` skill](../../../.claude/skills/knk-entity-scaffold/SKILL.md)
+- **Plugin commands**: [`knk-plugin-command` skill](../../../.claude/skills/knk-plugin-command/SKILL.md)
 
 ### External Resources
 - **Minecraft Materials**: [minecraft-materials.json](../../../../Repository/knk-minecraft-data/minecraft-materials.json)

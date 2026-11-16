@@ -146,5 +146,6 @@ shadow jar to the local dev server (path set by `devServerDirectory` in
   [archive/knk-plugin](../archive/knk-plugin/README.md) on 2026-11-13) are self-authored
   progress notes — useful for history, but treat their claims as claims to
   verify against current code rather than ground truth (this scan found at
-  least one stale doc, `.github/copilot-instructions.md`, making that
+  least one stale doc, the former `.github/copilot-instructions.md` (replaced by
+  the code-recipe skills in PandiO/knk-workspace#424), making that
   exact mistake about GUI/menu support).

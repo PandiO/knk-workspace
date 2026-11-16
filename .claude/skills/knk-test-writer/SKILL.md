@@ -39,7 +39,8 @@ the guide and name it in the PR so a later backfill picks it up.
    1. Start from a spec in `e2e/` that is close (for example `dashboard.spec.ts`).
    2. Log in with `startLoggedIn` and `mockSession` from `e2e/fixtures/auth.ts`, and register only the endpoints the
       page calls with `api.on` / `api.json`.
-   3. An unmocked call is listed on the test; use `strict` once the spec is complete.
+   3. An unmocked call is listed on the test; turn on `test.use({ strictApi: true })` once the
+      spec is complete.
    4. Use role-based selectors (`getByRole`, `getByLabel`), Playwright's auto-wait, no `waitForTimeout`.
    5. Typed fixtures only: a DTO change must break `typecheck:e2e`.
    6. One behaviour per test, named for what the user sees.

@@ -40,6 +40,18 @@ This is a human-readable record of capabilities merged into the V3 default branc
          push-teleport-ticks: 600
      ```
 
+- **CI: GitHub Actions on Node.js 24, Release workflow fixes** ([PandiO/knk-workspace#426](https://github.com/PandiO/knk-workspace/issues/426)).
+  knk-web-api, knk-web-app and knk-plugin `main` and `next`; knk-workspace branch `claude/actions-node24-426` (PR into
+  `next`).
+  1. **Actions.** Every workflow uses the Node.js 24 majors: `checkout` v7, `setup-dotnet` v6, `setup-node` v7,
+     `setup-java` v6, `upload-artifact` v7, `cache` v6 and `gradle/actions/setup-gradle` v6 (with the open-source
+     `cache-provider: basic`). The Node.js 20 warning on every run is gone; job and artifact names are unchanged
+     ([CI § 6](guides/developer/ci.md#6-action-versions-nodejs-24)).
+  2. **Release workflow.** One concurrency group per tag, so a third dispatch no longer replaces a pending second one.
+     A tag that already exists at exactly the requested commit without a release gets its release from a new run
+     instead of a failure; a tag at another commit, or one with a release, still fails the run.
+  3. **Deploy.** Nothing to deploy; workflows only.
+
 - **NPC navigation: crowd awareness, off by default** ([PandiO/knk-workspace#626](https://github.com/PandiO/knk-workspace/issues/626),
   link M4 of the NPC navigation follow-ups chain, implementation plan Phase 4c.4 item 4, decision 3; BEHAVIOR_MODEL
   NAV-26). knk-plugin and knk-workspace branches `claude/npc-movement-m4` (PRs into `next`, in review). Nothing changes
@@ -872,6 +884,17 @@ This is a human-readable record of capabilities merged into the V3 default branc
 
 ## 2026-11-16
 
+- **Code-recipe skills for endpoints, plugin commands and entities** ([PandiO/knk-workspace#424](https://github.com/PandiO/knk-workspace/issues/424))
+  — no game change; developer-facing. Three new project skills in `.claude/skills/`, built from each repo's `main`
+  with the real files to copy: `knk-api-endpoint` (a knk-web-api endpoint: controller, service, repository, DTOs,
+  AutoMapper, the default-deny access rule and the pinned access tests, migration, xUnit tests),
+  `knk-plugin-command` (a plugin command: plugin.yml, registration, in-house permission checks through
+  `CommandNodes` and `KnkPermissible`, the command-label takeover for clashes, messages, config keys with deploy notes,
+  unit, MockBukkit/Mockito and player-scenario tests) and `knk-entity-scaffold` (a new entity across API, web app and
+  plugin, with a per-repo checklist). Each points to `knk-test-writer` for its tests. The stale Copilot files
+  (`.github/copilot-instructions.md`, `.github/instructions/*`, `.github/prompts/scaffold-entity.prompt.md`) are
+  deleted and the links to them point to the skills.
+  - **Admin steps:** none.
 - **Docs sessions follow a skill** ([PandiO/knk-workspace#425](https://github.com/PandiO/knk-workspace/issues/425))
   — no game change; developer-facing. The docs-session procedure moved from `docs/ai-agents/docs-session-prompt.md`
   into the new skill `.claude/skills/knk-docs-session/` (with templates for the docs PR, the closing comment and the
