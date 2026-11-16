@@ -3,7 +3,9 @@
 **Status:** Approved by the developer (voice design review, 2026-11-05). This record is **authoritative** where it
 differs from DESIGN.md, PRODUCTION_KINDS.md, TOWN_LOGISTICS.md or IMPLEMENTATION_PLAN.md (all rev. 2, 2026-10-09)
 until those documents are revised to rev. 3.
-**Last updated:** 2026-11-05
+**Folded in:** 2026-11-05, rev. 3 of all four documents takes in this record. The record stays the source for the
+wording of each decision.
+**Last updated:** 2026-11-11 (§11 follow-up answers; §12-14 Territory)
 **Parent issue:** KNG-83 (now tracked as a `[KNG-83]` issue in `PandiO/knk-workspace`).
 **Scope of the review:** principles, storage, production structures, transport, NPC transporters, warehouses and
 town logistics, shops, shopkeepers and display stalls, NPC lifecycle.
@@ -360,3 +362,108 @@ carriers; the **NPC platform owns all of this**:
   fertility map, technologies, seasons, staffing, exhaustion, events, neighbour bonuses, upkeep, war disruption,
   per-player weather, ceilings/quotas/exports/emergency modes, clan councils, in-game runtime management, trade,
   pricing, professions/paid work for harvesting.
+
+## 11. Follow-up decisions (2026-11-11)
+
+The developer answered the open questions left by rev. 3 (question round in the rev. 3 session, 2026-11-11). Where an
+answer changes a §1-10 item, it says so.
+
+| # | Question | Decision |
+|---|---|---|
+| F1 | Shops: which blueprint base price | The **midpoint** of `BasePriceMin` and `BasePriceMax`. |
+| F2 | Shops: who receives purchase coins before town treasury accounts | **Town accounts now.** A minimal town account kind ships in V1 for shop income. Changes §5.4 / D-L5 (town treasury was Later). Trade and tax stay Later. |
+| F3 | Shops: value of enchantments on unique items | **A percentage** of the base price for now (§6.3 "value per enchantment"). |
+| F4 | Shops: shop tax modifier vs a later town tax | Direction, not built in V1: the town will tax shops, for example one global shop tax collected each period (a week, to be decided) as a percentage of that period's turnover. Inspiration undecided: Dutch law, US law, a hybrid, or medieval law. Shops then set a **margin** from item base prices, the cost of resources and manufacturing, and taxes, so they still make a profit; supply and demand still influence prices. The V1 per-shop tax modifier stays as the interim stand-in. Issue [#325](https://github.com/PandiO/knk-workspace/issues/325). |
+| F5 | Display stalls: sold-out items | **Greyed out** by default; hiding is an option per shop. |
+| F6 | Shops: what a shop's absent worker lowers | **Processing only** for now. This also drives the need for workers-for-hire and transport-for-hire. Once those exist, **sales** are affected too when a shop has only one NPC and it is out fetching stock. |
+| F7 | Selling to a shop vs a marketplace vendor | **Decide later.** |
+| F8 | Modifier order in the pipeline | **Additions first, then multiplications.** |
+| F9 | Net-positive harvest check | **Use the proposed check:** production lost while the pool refills must be below the town's share of one harvest; the web app warns per rule. |
+| F10 | Town's share of a harvest when Output is full | **Lost to the town** (rejected, stays in `SYS_PRODUCTION`, like a full line); the player's share is still paid. |
+| F11 | Uncollected warehouse reservations | **Expire**, released at the next planner run. The exact model is settled in P9. |
+| F12 | Filing Later items | File the Later logistics rules ([#324](https://github.com/PandiO/knk-workspace/issues/324)) and the shop turnover tax ([#325](https://github.com/PandiO/knk-workspace/issues/325)). Clan council governance and harvest professions/paid work are for a **later stage** than those; not filed yet. |
+
+## 12. Territory as a V1 requirement (2026-11-11)
+
+Developer request, 2026-11-11: **Territory is required for V1.** Production structures mostly stand in the rural
+parts of towns, they must still be connected to a town, and their regions need the same field validation as
+districts and gate structures. Replaces the "minimal, optional region" recommendation of DESIGN D1.
+
+Folded into DESIGN §3.4 and IMPLEMENTATION_PLAN P2. Proposals there still to confirm: a required region and town
+claim, which region rules block or warn (T1-T7), and no overlap with other territories or towns (a new
+`RegionNoOverlap` rule type).
+
+## 13. Territory is computed, not a WorldGuard region (2026-11-11)
+
+Developer voice design session, 2026-11-11, after §12. Written up in [territory DESIGN](../territory/DESIGN.md).
+
+- **No WorldGuard region for territory.** Ownership is calculated from distance to the holder's districts and its
+  range (base + power × factor, capital bonus), cached per chunk; border chunks are split and resolved per block.
+  Entry and exit run on chunk crossing; BlueMap draws from the cache. A one-way WorldGuard export is **parked**.
+- **Holders:** territory belongs to a town or a kingdom. Crown land outranks towns. Provinces are optional, between
+  town and kingdom.
+- **Overlap** of equal rank becomes a contested zone with a `TerritoryConflict` entity, resolved by admins in V1.
+- **Structures** belong to a town by a database link; the territory check at creation is a warning. A separate
+  `Loyalty` field is stored in V1; switching and revolts come later.
+- **World modification:** admins only; harvesting at production structures is the one exception.
+- **Later:** expansion points (range or grasp), grasp fading with distance, public safety, a cell grid with layers
+  (base grasp, structure bubbles, patrol trails) fed by a source registry of pull providers and pushed modifiers.
+
+This replaces §12's region proposals (required region, T1/T3/T4/T7 as WorldGuard checks). DESIGN §3.3-3.4 and
+IMPLEMENTATION_PLAN P2 were reconciled the same day: rural structures link to a town (`TownId`), placement rules P-1
+to P-3, territory V1 work in [#326](https://github.com/PandiO/knk-workspace/issues/326).
+
+## 14. Rural structures: confirmations (2026-11-11)
+
+The developer's answers on the reconciled DESIGN §3.4:
+
+| # | Question | Decision |
+|---|---|---|
+| R1 | How a rural structure links to its town | **`Structure.TownId`**, with exactly one of `DistrictId` and `TownId` set. Effective town = `District.Town ?? Town`. |
+| R2 | Do placement rules (P-1 to P-3) block or warn? | **It depends on the rule and admins configure it; warn by default.** Every placement rule is seeded as a warning; an admin can make it blocking. |
+| R3 | Production on contested land or outside the town's territory | **Keeps producing**, flagged with a dashboard warning. |
+| R4 | WorldGuard parent of a rural structure's region | **No parent for now**, so PvP stays allowed there. |
+| R5 | The structure's own NPCs (workers, shopkeeper) | **Invulnerable in V1**: players can fight each other there but can't kill a structure's NPCs. |
+
+## 15. Design pass to Decided (2026-11-16)
+
+Design session for [#22](https://github.com/PandiO/knk-workspace/issues/22). The developer went through each
+recommendation that was never discussed ("recommendation stands") and the open points of the territory design. The
+answers are binding and replace the "not discussed" wording in DESIGN §14, PRODUCTION_KINDS §9 and TOWN_LOGISTICS §8.
+
+| # | Question | Decision | By |
+|---|---|---|---|
+| G1 | D2 Ownership and payouts | **Deferred; producers are town-run (town or staff) in V1.** Player/clan ownership and payouts come with the later property-economy design. | developer |
+| G2 | D9 Courier crates [Later] | **An `ItemInstance` bound to the order, not soulbound:** it can be dropped, stolen or looted (route risk) and expires with the order. | developer |
+| G3 | D10 Ledger retention | **Keep every move; `Production` and `ProductionInput` moves older than 30 days are rolled up per line per day.** The roll-up keeps totals, so the reconciler stays green. | developer |
+| G4 | D11 Vanilla shadow blueprints | **Generated automatically for every obtainable material from the Minecraft catalogue, in an "Uncurated" category;** admins curate later ([#141](https://github.com/PandiO/knk-workspace/issues/141)). | developer |
+| G5 | P-D2 Survey frequency | **Once a day per structure when its chunks are loaded (or cheaply loadable), plus on demand (admin command, web app button) and after a notable change.** The developer asked to state that a structure can use the surveyed area (`Derived`), an admin-defined yield (`Configured`) or both (`Hybrid`, default); surveys run only for `Derived` and `Hybrid` (PRODUCTION_KINDS §3.2). | developer |
+| G6 | P-D3 Survey cost limit | **A maximum area volume per production kind and level** (for example 64×64×64 for a level 1 quarry), editable in the web app; surveys run async on chunk snapshots, throttled to a per-tick budget. | developer |
+| G7 | P-D4 Shared-area split | **Equal split per unit** between the structures whose areas contain it. | developer |
+| G8 | P-D5 Number of levels | **10 per production kind.** Shops keep their own level count (shops DESIGN). | developer |
+| G9 | D-L4 Who bears trade losses [Later] | **Set per trade agreement:** each agreement says whether the sender (until delivery) or the buyer (from pickup) bears the risk of goods robbed or lost on the road. Designed with inter-town trade ([#124](https://github.com/PandiO/knk-workspace/issues/124)). | developer |
+| G10 | Crown land anchor (territory §2) | **A domain entity with a WorldGuard region, like towns and districts,** owned by a kingdom, plus a range (radius). Its territory is computed from the region the same way a town's is from its districts; the territory itself stays computed and chunk-cached. | developer |
+| G11 | Range metric and capital bonus (territory §1) | **Distance from the nearest edge of the district's (or crown land's) region; the capital bonus multiplies the range** (game setting, for example ×1.5). | developer |
+| G12 | NPC activation radius (NPC platform §6a) | **Configured per consumer.** Built on what the NPC navigation work already has (#358, npc-platform IMPLEMENTATION_PLAN Phase 1): the radius is an `npc` setting in the layered configuration (global default → world → region/domain → NPC template → assignment), with a default per consumer kind on its template: shopkeepers and display-stall NPCs 48 blocks, producer and consumer workers 64. An NPC despawns only when no player has been within radius + 16 blocks (hysteresis, setting) for 10 seconds, so it doesn't flicker at the edge. On-demand spawns go through the paced spawn queue (`spawns-per-tick`, NAV-13). | developer (radius per consumer); agent (numbers, hysteresis, layering) |
+| G13 | Where the NPC registry lives (NPC platform §6a open point) | **Plugin memory, rebuilt on start from the API's NPC definitions**, on the Citizens in-memory registry Phase 1 already uses (`SHOULD_SAVE = false`). Alternatives: (a) persist the registry in the API: rejected, it duplicates the definitions and would be stale after a crash, which §6a forbids; (b) Citizens' saved registry: rejected, it persists entities, the V1 cause of duplicates. | agent |
+| G14 | Rendered or simulated carrying by producer workers in V1 (DESIGN §7.7 leaves it open) | **Carrying is simulated in V1:** the trip takes road route length ÷ walking speed (the Phase 7b abstract mover's timing), with the worker counted as away. A rendered worker stands and works at its structure (spawn on demand, G12) and is not shown while away. Walking rendered carriers come with NPC caravans (#251), after navigation Phase 7b and the stair release gate (#358). Alternatives: (a) rendered walking workers in V1: rejected, it ties P5 to the unfinished navigation Phases 5-8 and the stair gate; (b) no rendered workers at all in V1: rejected, the structure looks empty and the 2026-11-05 decision asks for rendered workers where wanted. | agent |
+| G15 | Items still open, moved to After v1 | **Parked worker count by level (§7.7) → After v1, with #257 (staffing source).** **Shop vs marketplace vendor attractiveness (shops S-1) → After v1, decided with the pricing model (#120).** **Shop turnover tax → After v1 ([#325](https://github.com/PandiO/knk-workspace/issues/325)).** **Professions, paid work and quests for harvesting (F12) → After v1, no issue yet (filed with the town runtime design, #246).** **NPC visibility, teleport and world change (npc-platform O05) → NPC platform, not this feature.** | agent |
+| G16 | Feature flags | **Plugin `production.enabled` and API `Production:Enabled`, both off by default**, gating sweeps, surveys, the planner, NPCs and listeners; web-app CRUD stays on for admins. Alternatives: (a) one flag per phase: rejected, a dozen keys that must agree; (b) API flag only: rejected, the plugin listeners (harvest, conversion) would still run. | agent |
+| G17 | Form and display seeds for every new entity | **Every new entity this design adds (in every phase, plus territory #326, shops P10-P12 and the town account) ships a FormConfiguration seed (`knk-web-api` `Data/FormConfigurationSeeds/<Entity>.json` plus its README row, format in [DEFAULT_FORM_SEEDS.md](../form-configurations/DEFAULT_FORM_SEEDS.md)) and a DisplayConfiguration seed (`Data/DisplayConfigurationSeeds/`) for the web app's FormWizard and detail pages,** in the same phase as the entity, checked by `FormConfigurationSeedFilesTests` and `DisplayConfigurationSeedFilesTests`. System-written records (ledger moves, cycle traces, trade stats) get a display seed and a read-only form. | developer |
+
+### 15.1 In-game menus (2026-11-16)
+
+The developer asked to settle the in-game menus before approval (DESIGN §11.2 named them but did not design them).
+Legacy: V1's property menu had an owner-only "Assignments" item (chest-full warning, start a warehouse transport);
+V2's storage overview, add-items stepper and `ProductionStructureMenu` were reachable only from debug browsers
+([legacy menu screens §4.3](../legacy/inventory-menu-screens.md)).
+
+| # | Question | Decision | By |
+|---|---|---|---|
+| M1 | Which production and distribution menus V1 has in game, beyond the storage terminal, shop and inbox menus | **Two more: (1) a structure menu for production structures and warehouses (status, output and rates, workers present or away, level, storage fill, warnings such as no road or full storage) and (2) a transport orders list per structure.** A town logistics overview stays in the web app; in-game runtime management stays Later (#256). | developer |
+| M2 | How a player opens the structure menu | **Two ways: (1) right-click a structure's worker NPC (spawned on demand, G12) and (2) a new "Structures" icon in the main menu (`HubMenuFeature`) that opens a structures overview with search and filters** (the menu engine's searchable content section and FilterBar, `MenuContentQuery`, as the items catalogue uses). **The town filter is pre-set to the town the player stands in: inside one of its districts or in its territory** (territory lookup, #326). The player can clear or change it. Clicking a row opens that structure's menu. *Agent default:* outside any town's land (wilderness, contested land, crown land) the town filter starts empty and lists every structure the player may see; on contested land, the filter offers the contesting towns first. | developer; agent (the outside-a-town default) |
+| M3 | Who may see what | **Public information, detail for the town.** Every player sees every structure in the overview and its menu: name, kind, town, level, what it produces, and a status (working, stalled, no road, full). Members of the structure's town and staff (`knk.admin.world`) also see exact rates, storage contents, workers present or away, and the transport orders list. The API filters the detail fields by caller, so a client can't read stock it isn't allowed to see. | developer |
+| M4 | Actions in the structure menu and orders list | **Read-only for players. Staff (`knk.admin.world`) get test buttons that mirror the commands:** survey now, planner dry run for the town, cancel or retry a transport order, show the area outline. Player management (pausing a producer, requesting transport) waits for the town roles of #246 and runtime management (#256). | developer |
+| M5 | Menu layouts | **Build on the legacy templates, checked in this session.** (1) Structure menu: V2 `ProductionStructureMenu` (knk-v2-archive branch `2023/09/ProductionStructures`, `menu/preset/menu/dominion/structure/`): a details header plus "Storages" and "Productions" drop-downs and a storage list. (2) Storage view in the structure menu: V2 `StorageOverview` (branch `2023/09/CommandEvents`, `model/menu/dominion/structure/`): "Contents of storage" header item, items with "Amount: N"; its `StorageAddMenu` stepper is not needed (players don't add stock from this menu, M4). (3) Structures overview: V2 has none; use the V2 overview pattern (`TownOverview`, `FactoriesOverview`: header item at slot 4 explaining the list, one item per object, left-click opens details) on the current engine's searchable content section and FilterBar. (4) Warnings and orders: V1's shopkeeper "Assignments" item (chest-full warning, start a transport; [legacy menu screens §3.7.1](../legacy/inventory-menu-screens.md)) is the forerunner of the structure menu's warnings and the transport orders entry. Layouts are seeded as menu content, so the developer can reshape them in the web app menu editor. | developer (use the legacy templates); agent (which template per menu) |
+
+**Approved:** the developer approved the design on 2026-11-16 after §15.1; status **Decided 2026-11-16**.
