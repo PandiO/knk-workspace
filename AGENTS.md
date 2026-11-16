@@ -20,7 +20,8 @@ conventions.
 Essential docs (docs impact list, deploy notes including plugin `config.yml` keys, changelog entry, status)
 ship with the feature before merge. At merge, put the remaining docs (guides, register, site/wiki pages) in a
 `documentation` sub-issue, start a new docs session for it right away with
-[the docs-session prompt](docs/ai-agents/docs-session-prompt.md), and close the feature issue. Once the `next` branch
+[the docs-session prompt](docs/ai-agents/docs-session-prompt.md) (the session follows the
+[`knk-docs-session` skill](.claude/skills/knk-docs-session/SKILL.md)), and close the feature issue. Once the `next` branch
 model applies, the sub-issue and docs session start at the merge into `next` and the feature issue is closed when the
 developer promotes `next` to trunk. See
 [global instructions § Shipping a change](docs/ai-agents/GLOBAL_AGENT_INSTRUCTIONS.md#shipping-a-change-documentation)
