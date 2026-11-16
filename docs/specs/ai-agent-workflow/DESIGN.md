@@ -1,6 +1,6 @@
 # AI agent workflow: roles, branches, skills and testing
 
-**Status:** Decided 2026-11-12 (developer, voice discussion) · **Last updated:** 2026-11-14 (knk-web-api's trunk renamed from `master` to `main`) · 2026-11-13 (§ 9.3 done, PandiO/knk-workspace#362) · 2026-11-12
+**Status:** Decided 2026-11-12 (developer, voice discussion) · **Last updated:** 2026-11-16 (§ 1.3, § 7, § 8.4: the manager run is built, PandiO/knk-workspace#418) · 2026-11-14 (knk-web-api's trunk renamed from `master` to `main`) · 2026-11-13 (§ 9.3 done, PandiO/knk-workspace#362) · 2026-11-12
 
 This design adds a delegation layer (intake, design, manager and coordinator roles), a `next` integration branch with
 risk tiers, project skills in knk-workspace, and CI as the gate agents must pass. It builds on the
@@ -33,6 +33,12 @@ Aims:
     3. Takes instructions such as "pause X", "bump Y", "what's the state of Z".
     4. Schedules approved designs: picks the start, checks overlap on the sessions board, and can ask "start now?".
     5. Keeps the sessions board true and tidy, so the developer never has to read it.
+    6. **Built 2026-11-16** ([PandiO/knk-workspace#418](https://github.com/PandiO/knk-workspace/issues/418)) as a
+       fresh, stateless session per weekday run, not one long-lived session: the scheduled task "K&K manager" starts
+       it and it follows the [`knk-manager` skill](../../../.claude/skills/knk-manager/SKILL.md). Everything it needs
+       is on GitHub (issues, pull requests, CI, the replies on the digest issue, which it marks with a reaction once
+       handled) and in knk-workspace `main` (board, reports, charters). It also closes promoted issues and keeps
+       `main` and `next` in sync. Coordinators report to it with a comment on the chain's parent issue.
 4. **Feature coordinators and links**: as today. The coordinator starts links, checks gates and results, merges into
    `next` (§ 5) and reports up to the manager.
 5. Handoffs between roles go through GitHub issues and spec files, not chat.
@@ -144,7 +150,11 @@ Aims:
 
 ## 7. Manager digest and notifications
 
-1. A scheduled manager run each weekday evening (around 17:00 Europe/Amsterdam) writes the digest.
+1. A scheduled manager run each weekday evening (around 17:00 Europe/Amsterdam) writes the digest. **Status:** in
+   place since 2026-11-16: the scheduled task "K&K manager" (16:40 Europe/Amsterdam, weekdays) runs the
+   [`knk-manager` skill](../../../.claude/skills/knk-manager/SKILL.md), whose last step is the
+   [`knk-digest` skill](../../../.claude/skills/knk-digest/SKILL.md); the digest gained a § 7 "Manager run"
+   (PandiO/knk-workspace#418). The interim digest-only task (2026-11-13) was renamed and its prompt changed.
 2. **Sections:**
     1. Ready for the developer's test in `next`: tier, smoke-step links, biggest first.
     2. Decisions needed: agent decisions to review, open design questions.
@@ -167,7 +177,9 @@ Aims:
    than every file).
 3. **Lose nothing:** finished rows and long detail move verbatim to monthly archive files (for example
    `docs/reports/sessions-archive/2026-11.md`), linked from the board. Nothing is deleted.
-4. The manager keeps the board tidy and flags stale claims.
+4. The manager keeps the board tidy and flags stale claims. **Status:** in place since 2026-11-16 (`knk-manager`
+   § 7): finished rows are moved with the archive script; a stale row (over three days old, no recent activity) is
+   listed in the digest and archived only on the developer's reply.
 
 ## 9. Stale agent files
 
@@ -192,7 +204,7 @@ Aims:
 1. Notifications: the developer turns off GitHub Actions emails (5 minutes).
 2. Setup chain (§ 12), run by one coordinator during the day; everything lands on feature branches.
 3. Developer reviews and merges the setup branches in the evening.
-4. Later evenings: intake and design skills; manager session as a scheduled run; Paper boot test in plugin CI;
+4. Later evenings: intake and design skills; manager session as a scheduled run (done 2026-11-16, #418); Paper boot test in plugin CI;
    in-plugin scenarios; Playwright replacing Cypress; Testcontainers for the API's MySQL tests.
 
 ## 12. Setup chain (daytime handoff)
