@@ -1,19 +1,23 @@
 ---
 name: knk-digest
-description: Write the Knights and Kings (K&K) daily digest and post it as one comment on the pinned "Daily digest" issue PandiO/knk-workspace#333. Use when asked to write, post or run the K&K daily digest, or when a scheduled weekday run starts you for it. Covers the six digest sections (ready for test in next, decisions needed, blocked, progress, new ideas, health), where each fact comes from (branches, PRs, issues, chain reports, the sessions board, CI), the quiet-day comment and the rule that the digest reads and reports but changes nothing.
+description: Write the Knights and Kings (K&K) daily digest and post it as one comment on the pinned "Daily digest" issue PandiO/knk-workspace#333. Use when asked to write, post or run the K&K daily digest, and as the last step of the K&K manager run (knk-manager skill). Covers the digest sections (ready for test in next, decisions needed, blocked, progress, new ideas, health, manager run), where each fact comes from (branches, PRs, issues, chain reports, the sessions board, CI), the quiet-day comment and the rule that the digest reads and reports but changes nothing.
 ---
 
 # K&K daily digest
 
 You write one comment on PandiO/knk-workspace#333 for the developer, each weekday evening (developer decisions
 2026-11-12 and 2026-11-13; [DESIGN § 7](../../../docs/specs/ai-agent-workflow/DESIGN.md#7-manager-digest-and-notifications)).
-The developer reads it after work and decides what to test, decide or unblock. Until the manager session exists, a
-scheduled task starts a fresh session for this at 16:40 Europe/Amsterdam on weekdays.
+The developer reads it after work and decides what to test, decide or unblock. Since 2026-11-16 the digest is the last
+step of the manager run ([knk-manager skill](../knk-manager/SKILL.md), PandiO/knk-workspace#418), which the scheduled
+task "K&K manager" starts in a fresh session at 16:40 Europe/Amsterdam on weekdays. The procedure stays here so a
+digest can also be written on its own.
 
 ## 1. Rules
 
-1. **Read and report only.** Do not merge, push, close, label, comment anywhere else or start sessions. The one write
-   is the digest comment on #333. A blocker you find goes into section 3; you do not fix it.
+1. **Read and report only.** The digest step does not merge, push, close, label, comment anywhere else or start
+   sessions; its one write is the digest comment on #333. A blocker you find goes into section 3; you do not fix it.
+   In a manager run, the manager's own writes (knk-manager §§ 3–8) come before this step and are reported in § 7;
+   a digest written on its own leaves § 7 out.
 2. **Exactly one digest per weekday.** Before posting, read #333's comments: if a digest comment from today
    (Europe/Amsterdam date) already exists, one whose body starts with `## Daily digest <today's date>`, post nothing
    and stop. Other comments, such as the developer's replies, don't count.
@@ -21,8 +25,8 @@ scheduled task starts a fresh session for this at 16:40 Europe/Amsterdam on week
    comment means the run failed (developer decision 2026-11-13).
 4. **Every list is numbered** (DESIGN § 4.6), so the developer can answer "2.3: yes". Link every issue, PR and report
    you mention. Keep it short: one line per item, details behind the link.
-5. **Session link** (DESIGN § 7.2.7): the digest ends with a link to the session that wrote it; once the manager
-   session exists, that is the manager's link.
+5. **Session link** (DESIGN § 7.2.7): the digest ends with a link to the session that wrote it, normally the manager
+   run's session.
 6. **Since the last digest** means since the creation time of the latest digest comment (`## Daily digest …`) on
    #333; for the first digest,
    the last 24 hours.
@@ -52,11 +56,13 @@ repository).
 5. **Ideas:** issues labelled `idea` created since the last digest.
 6. **Health:**
    1. The latest CI run on `next` and on trunk for knk-web-api (`Build and test`, `Migrations (fresh DB)`),
-      knk-web-app (`Build and test`) and knk-plugin (`Build`). A red run on `next` or trunk is the first line of the
+      knk-web-app (`Build and test`) and knk-plugin (`Build`, `paper-boot`). A red run on `next` or trunk is the first line of the
       digest, above section 1.
    2. Open `documentation` issues: count, and any older than two weeks (global instructions, Shipping a change: debt
       cap above five or older than two weeks).
-   3. Stale claims: "In progress" board rows whose last-updated date is more than three days old.
+   3. Stale claims: "In progress" board rows whose last-updated date is more than three days old (in a manager run,
+      only those without recent activity on their branch or issue, knk-manager § 7.2, each with "reply `archive <n>`
+      or `keep <n>`").
    4. Open Codex review findings on PRs already merged into `next` (the triage issue PandiO/knk-workspace#391 and any
       newer ones).
 
@@ -84,6 +90,9 @@ Post with `add_issue_comment` on PandiO/knk-workspace#333, in this layout (secti
 2. Documentation issues: <count open>, oldest <age> (<links when over the cap>)
 3. Stale claims: <rows or "none">
 4. Open Codex findings on merged work: <count, link>
+### 7. Manager run
+1. <instruction handled, issue closed or left open (why), sync or promotion PR, board rows moved, session started,
+   issue filed, a reversible choice and its alternatives>
 
 `next` is <n> merges ahead of trunk in total (<per repo>). Reply here to answer a numbered item.
 
