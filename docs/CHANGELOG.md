@@ -4,6 +4,13 @@ This is a human-readable record of capabilities merged into the V3 default branc
 
 ## Unreleased — on feature branches, not merged
 
+- **NPC navigation: `/knk npc nav snapshot <route>`** ([PandiO/knk-workspace#670](https://github.com/PandiO/knk-workspace/issues/670),
+  link B1a of the NPC navigation follow-ups chain). knk-plugin branch `claude/npc-movement-b1` (PR into `next`). An admin
+  command (`knk.admin.npc`) that writes one zip to `plugins/KnightsAndKings/npc-snapshots/` with a saved route's road line
+  and stretches, the road graph, domains (whole regions, parents, priorities, entry and exit flags, gate state) and
+  settings around it, and the region files its box touches, so the route can be replayed in CI (the replay follows in
+  B1b). Refused while `npc.navigation.enabled` is off. Deploy: no `config.yml` key, no migration.
+
 - **NPC navigation: the NPC rule checks see WorldGuard regions on a server** ([PandiO/knk-workspace#668](https://github.com/PandiO/knk-workspace/issues/668),
   link L9 of the NPC navigation follow-ups chain; #506, #593). knk-plugin and knk-workspace branches
   `claude/npc-followups-l9` (PRs into `next`). Nothing changes with `npc.navigation.enabled: false`.
