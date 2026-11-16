@@ -261,6 +261,32 @@ the configuration reference § 4.27), then restart. In test order:
     (b) `/knk scenario run` on the dev server (real but manual, a complementary self-check); (c) the developer copies
     region files by hand (no road export exists, so the line would still be missing).
 
+34. **Root cause of the movement failures** (2026-11-16, a read-only pass in the coordinator session on the developer's
+    logs and `next` `0d9c55d6`).
+    1. **Main cause: the stretch handover.** `NpcNavigationService` hands out the next stretch when the NPC is within 4
+       blocks of the stretch end, measured horizontally only. `follow()` replaces the waypoints not yet walked.
+       `WaypointChain` bridges the join from the last waypoint, not from the NPC's feet. On the Keep stair's stacked
+       hairpins this skips flights and heads across the stairwell, as traces 69 and 81 show. It explains the falls
+       at 1412 66 -537 and 1412 49 -500 (followers copy the leader's fall into the group path), the stuck spot at
+       1410 49 -503 and the entrance trouble.
+    2. **Separate causes:**
+       1. `CrowdControl` turns are judged horizontally only. A holder that fell under the landing never passes, so
+          the 30 s guard releases the 39-NPC queue at 1412 74 -536.
+       2. The stair "jumps" are mostly half-block step-ups that the trace flags as jumps. The 12 real ones come from
+          whole-block waypoint heights at the flight entries.
+    3. **Why no scenario caught it:** M1's hand-drawn line stops at y 51; the scene route is a single stretch, so no
+       handover ever runs; it enters from the north instead of the east; and the upper landings lie outside the box.
+    4. **Plan, after L9, one knk-plugin link at a time:**
+       1. B1: evidence, the snapshot command (decision 33) plus the stair-house line extended along the real route with
+          short stretches, failing on today's `next`.
+       2. B2: the stretch handover (3D progress, append instead of replace, bridge from the feet, an unbridgeable step
+          becomes a local leg, no falls copied into the group path).
+       3. B3: 3D crowd turns.
+       4. B4: waypoints at the real stair surface heights, and jump detection by upward speed.
+    5. Sent to the developer and the manager before any B link starts. Asked the developer for a second schematic
+       (x 1397–1423, y 48–87, z -553..-486) and whether `group-formation-keeping` was `elastic`; the logs suggest
+       `levels`.
+
 ## 4. Link blocks
 
 _(Each link appends its block here when it finishes.)_
