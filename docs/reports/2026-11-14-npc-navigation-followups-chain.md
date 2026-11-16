@@ -36,6 +36,10 @@ Every link is merged into `next` (2026-11-15). Build knk-plugin from `next` `deb
 3. M6 decision 6.1 (#623): local legs search a corridor grid instead of `WalkSearch` (reversible). Confirm or ask
    for alternative (a).
 
+4. **Smoke test tonight with all movement keys on** (`corridor-steering`, `local-legs-clearance`,
+   `group-formation-keeping: elastic`, `plaza-lines`, `crowd-awareness`; YAML in the changelog), steps on #622, #624,
+   #625 and #626; it decides the option-B question (decision 30).
+
 ## 2. Summary
 
 | Link | Issue | Status | Branch heads | PR | CI | How started |
@@ -54,7 +58,7 @@ Every link is merged into `next` (2026-11-15). Build knk-plugin from `next` `deb
 | M3 Formation keeping | #624 | Merged into next (2026-11-16) | knk-plugin `94b30146` → `next` `138ebc66`; knk-workspace `1b4692ed` → `next` `a428eb3e` | PandiO/knk-plugin#50, PandiO/knk-workspace#635 | PR head green (build, paper-boot with 45 scenarios; one #586 log-check re-run); Codex at its usage limit | create_session session_01R1w2UufiGFpPfGevZxvtVD (2026-11-15) |
 | M5 Plaza lines | #625 | Merged into next (2026-11-16) | knk-plugin `727f020b` → `next` `3f116188`; knk-workspace `f5aa56e6` → `next` `f9be4963` | PandiO/knk-plugin#51, PandiO/knk-workspace#637 | PR head green (build, paper-boot with 45 scenarios, push and PR runs 43792722751, 43793671690); #586 did not hit; Codex at its usage limit | create_session session_01R1w2UwSt9YZCZUtsk5fQjU (2026-11-16) |
 | M4 Crowd awareness | #626 | Merged into next (2026-11-16); option-B checkpoint with the developer | knk-plugin `8c864f7a` → `next` `a35fed5a`; knk-workspace `9f09cf23` → `next` `5b8125e5` | PandiO/knk-plugin#52, PandiO/knk-workspace#638 | push and PR runs on `8c864f7a` green (build, paper-boot with 45 scenarios; runs 43799206281, 43800089307); #586 did not hit; 45/45 locally; Codex at its usage limit | create_session session_01R1w2UsvLHZouJWudj4FxjT (2026-11-16) |
-| M7 Collision with push resistance | #627 | Not started (gate: B checkpoint) | — | — | — | — |
+| M7 Collision with push resistance | #627 | Running | — | — | — | create_session session_01R1w2UtyxLznso8wdydHmQf (2026-11-16) |
 
 ## 3. Coordinator decisions
 
@@ -227,6 +231,12 @@ Every link is merged into `next` (2026-11-15). Build knk-plugin from `next` `deb
     and PR runs, `npc-doorway-crowd` and `npc-stairhouse-group` asserting (doorway 12/12 with 0 stuck spells, collision
     off and on). Merged PandiO/knk-plugin#52 → `a35fed5a` and PandiO/knk-workspace#638 → `5b8125e5`. The
     option-B checkpoint (plan 4c.4 item 8) goes to the developer next.
+
+30. **Option-B checkpoint** (developer decision 2026-11-16, coordinator session). With A, D and turn-taking on, the
+    five scenes no longer need B (entrance 23.7 → 0.4 s, 0 folds, 0 stuck spells at the jagged wall and the doorway,
+    plaza +40 % → +4 %); what B would add is smoother curves and steering strays back. Chosen: **leave B for now and
+    decide after the developer's smoke tests tonight** with all keys on; start M7 meanwhile. Alternatives: (a) plan a
+    B link now; (b) drop B entirely. M7 started (session_01R1w2UtyxLznso8wdydHmQf).
 
 ## 4. Link blocks
 

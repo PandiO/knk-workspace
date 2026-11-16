@@ -84,7 +84,7 @@ The ObjectConfig pattern is flexible enough to support all gate workflows while 
 - PagedEntityTable: `Repository/knk-web-app/src/components/PagedEntityTable.tsx`
 - ObjectConfig pattern: `Repository/knk-web-app/src/config/objectConfigs.tsx`
 - Entity routing: `Repository/knk-web-app/src/utils/entityApiMapping.ts`
-- Copilot instructions: `.github/copilot-instructions.md` (Global rules section)
+- Code recipes: the `knk-entity-scaffold` skill (`.claude/skills/knk-entity-scaffold/`, replaced the Copilot instructions in PandiO/knk-workspace#424)
 
 ---
 
@@ -201,7 +201,7 @@ One rebuild mechanic for **every** destroyed-door rebuild: normal world gates (`
 
 ## References
 
-- `.github/copilot-instructions.md` - Global architectural rules
+- `.claude/skills/knk-entity-scaffold/SKILL.md` - Entity scaffold across API, web app and plugin (replaced `.github/copilot-instructions.md`, PandiO/knk-workspace#424)
 - `docs/CODEMAP.md` - KnK codebase architecture overview
 - `Repository/knk-web-app/src/config/objectConfigs.tsx` - ObjectConfig pattern examples
 - `Repository/knk-web-app/src/pages/FormWizardPage.tsx` - Generic form wizard

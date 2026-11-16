@@ -1,6 +1,6 @@
 # AI agent workflow: roles, branches, skills and testing
 
-**Status:** Decided 2026-11-12 (developer, voice discussion) · **Last updated:** 2026-11-16 (§ 1.3, § 7, § 8.4: the manager run is built, PandiO/knk-workspace#418) · 2026-11-14 (knk-web-api's trunk renamed from `master` to `main`) · 2026-11-13 (§ 9.3 done, PandiO/knk-workspace#362) · 2026-11-12
+**Status:** Decided 2026-11-12 (developer, voice discussion) · **Last updated:** 2026-11-16 (§ 3.2.7 and § 9.2 done: code-recipe skills, Copilot files deleted, PandiO/knk-workspace#424) · 2026-11-16 (§ 1.3, § 7, § 8.4: the manager run is built, PandiO/knk-workspace#418) · 2026-11-14 (knk-web-api's trunk renamed from `master` to `main`) · 2026-11-13 (§ 9.3 done, PandiO/knk-workspace#362) · 2026-11-12
 
 This design adds a delegation layer (intake, design, manager and coordinator roles), a `next` integration branch with
 risk tiers, project skills in knk-workspace, and CI as the gate agents must pass. It builds on the
@@ -78,7 +78,8 @@ Aims:
     5. **Smoke test writer**: turns a change into test steps, later into automated scenarios (§ 6.3).
     6. **Docs session**: the existing [docs-session prompt](../../ai-agents/docs-session-prompt.md) as a skill.
     7. **Code recipes** per repo (new API endpoint, new plugin command, entity scaffold), replacing the stale Copilot
-       instruction files (§ 9.2).
+       instruction files (§ 9.2). Done 2026-11-16: `knk-api-endpoint`, `knk-plugin-command` and `knk-entity-scaffold`
+       ([PandiO/knk-workspace#424](https://github.com/PandiO/knk-workspace/issues/424)).
 3. **Coordinator and link skills come first.** Sources: the
    [Siege Survival charter](../../ai-agents/handoffs/SIEGE_SURVIVAL_CHAIN.md) (§ 0 permissions, § 2 setup, § 4 hard
    rules, § 5 blockers, § 6 report) and the
@@ -186,6 +187,8 @@ Aims:
 1. Delete the empty `docs/ai-agents/AGENT-GUIDE.md` and `docs/ai-agents/guardrails.md`.
 2. Replace `.github/copilot-instructions.md`, `.github/instructions/*` and `.github/prompts/scaffold-entity.prompt.md`
    (old `Repository/` paths, missing `docs/ai/ENTITY_SCAFFOLD_CHECKLIST.md`) with the code-recipe skills (§ 3.2.7).
+   Done 2026-11-16: the files are deleted and their links point to the skills
+   ([PandiO/knk-workspace#424](https://github.com/PandiO/knk-workspace/issues/424)).
 3. Retire `guides/developer/AI_FEATURE_IMPLEMENTATION_WORKFLOW.md` to `archive/` once the skills exist. Done
    2026-11-13 ([PandiO/knk-workspace#362](https://github.com/PandiO/knk-workspace/issues/362)).
 

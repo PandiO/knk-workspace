@@ -315,6 +315,14 @@ covers only what no suite can check and the developer's time goes to designing f
 5. **Backfill:** when you touch a feature whose smoke-test guide still has automatable manual steps, automate the ones
    in your scope. PandiO/knk-workspace#511 tracks the backfill of features already in `next`.
 
+**Code recipes** (PandiO/knk-workspace#424): three project skills give the files to copy and the tests to write for
+recurring changes, built from each repo's `main`:
+[`knk-api-endpoint`](../../.claude/skills/knk-api-endpoint/SKILL.md) (a knk-web-api endpoint with its default-deny
+access rule and pinned access tests), [`knk-plugin-command`](../../.claude/skills/knk-plugin-command/SKILL.md) (a
+plugin command with in-house permission checks, the label takeover, config keys and a player scenario) and
+[`knk-entity-scaffold`](../../.claude/skills/knk-entity-scaffold/SKILL.md) (a new entity across API, web app and
+plugin). They replace the former Copilot instruction files under `.github/`.
+
 ## Shipping a change: documentation
 
 Documentation is part of done (developer decisions 2026-11-03 and 2026-11-10, PandiO/knk-workspace#292). The
