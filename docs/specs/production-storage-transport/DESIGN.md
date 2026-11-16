@@ -902,6 +902,11 @@ Each item is checked by an automated test or a smoke step; the phase that delive
 22. A22 [P1, P3, P10] Ledger roll-up: `Production` and `ProductionInput` moves older than 30 days are summed per line
     per day with totals unchanged (G3).
 
+23. A23 [every phase] Every new entity has a FormConfiguration seed and a DisplayConfiguration seed in
+    `knk-web-api` `Data/`; the seed dry-run tests (`FormConfigurationSeedFilesTests`,
+    `DisplayConfigurationSeedFilesTests`) pass and the FormWizard opens the entity's create form from a fresh database
+    (G17).
+
 ## 18. Phases, tiers and flag
 
 1. **Feature tier: `tier:3`** (new foundations, schema changes and game feel).
@@ -934,7 +939,7 @@ Each item is checked by an automated test or a smoke step; the phase that delive
 ## 19. Open questions
 
 None blocking. Everything the developer was asked on 2026-11-16 is in the [decision record §15](DECISIONS_2026-11-05.md#15-design-pass-to-decided-2026-11-16)
-(G1-G15). Agent decisions to review: G12 (numbers), G13, G14, G15, G16.
+(G1-G17). Agent decisions to review: G12 (numbers), G13, G14, G15, G16.
 
 ### After v1
 

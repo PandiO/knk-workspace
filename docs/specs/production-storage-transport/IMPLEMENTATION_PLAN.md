@@ -32,6 +32,10 @@ knk-workspace branch of that name was merged into `main` and deleted on 2026-10-
   - their FormConfig CRUD;
   - a detail view with the insight data it produces: ledger, cycle trace, event log, plan explanation.
   - In-game menus and commands follow in P6, or within the phase when they are needed to test.
+- **Form and display seeds for every new entity** (developer, 2026-11-16, decision record §15 G17): each entity a
+  phase adds ships its FormConfiguration seed (`Data/FormConfigurationSeeds/<Entity>.json` + README row) and its
+  DisplayConfiguration seed (`Data/DisplayConfigurationSeeds/`) in the same phase, so the FormWizard and detail pages
+  work without hand-made configs. The `knk-entity-scaffold` skill covers the steps.
 - **Checks per phase:**
   - `dotnet test` (API, including `requires-mysql` concurrency tests for stock);
   - `npm run test:ci` + `npm run build` (web app);
