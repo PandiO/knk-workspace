@@ -801,7 +801,11 @@ B4 ([#673](https://github.com/PandiO/knk-workspace/issues/673)) puts waypoints a
        those waypoints, measured in 3D. Before: the horizontal distance to the stretch end, which on stacked hairpins
        counted the flight above as near.
     3. **Appended, not replaced.** The new stretch goes after the waypoints not yet walked (`Trail.appended`), so the
-       landing between two flights is always walked.
+       landing between two flights is always walked. The joined list starts at the furthest of its first waypoints
+       within 3 blocks that the feet reach in a straight walk on their own level (`Trail.fromFeet`), so the NPC never
+       turns back to a waypoint it is already past. A waypoint on another level or across a drop is never skipped.
+       Without this, a leader on `npc-jagged-straight-collision-on` walked back to a corner waypoint into its
+       followers, and a follower was not freed.
     4. **Bridged from the feet** (`WaypointChain.split`): the first step starts at the NPC's feet (when it is on the
        ground), every step a straight walk with the bridge's cells where needed.
     5. **A step the bridge cannot make is a local leg.** The list is cut before it. Once the waypoints up to it are
@@ -812,16 +816,17 @@ B4 ([#673](https://github.com/PandiO/knk-workspace/issues/673)) puts waypoints a
        blocks below the group path where it last was (the lower of its path point and the one before) has fallen.
        Its points stay out of the path, so no follower walks off the same edge. After 30 s below, the path follows
        it again as before.
-    7. **Tests.** knk-core: `TrailTest` (7), `WaypointChainTest` (+5), `NpcNavigationServiceTest` (+3: appended,
+    7. **Tests.** knk-core: `TrailTest` (9), `WaypointChainTest` (+5), `NpcNavigationServiceTest` (+3: appended,
        no handover from the flight below, a gap walked as a local leg). Scenarios, pass/fail since B2
        (`ClimbWatch.failures`): `npc-stairhouse-climb` (no fall from the climb, no handover onto another level, no turn
        dropped by the guard after a fall, the leader arrives, no follower lost) and `npc-replay-quarry-to-keep` (the
        same for the leader alone and the group, both configurations; lost followers report only, item 1.9.1).
     8. **Before → after** (local runs, Paper 26.3 b205 with Citizens b4269; before = `next` `80902942`):
        `npc-stairhouse-climb`: falls 42 → 0, handovers onto another level 446 → 0, stuck spells 117 → 2, followers
-       lost 0 → 0, top hall reached 11 → 25 of 40. `npc-replay-quarry-to-keep`, stored settings: the leader alone
-       arrives (54.7 → 56.7 s), 1 → 0 handovers onto another level; the group of 20: stuck spells 32 → 26, lost 6 → 3,
-       0 falls and 0 handovers onto another level both times.
+       lost 0 → 0, top hall reached 11 → 25 of 40, the leader arrives in 86.0 → 94.0 s.
+       `npc-replay-quarry-to-keep`: the leader alone arrives in 54.7 → 56.7 s, 1 → 0 handovers onto another level (both
+       configurations). The group of 20 with the stored settings: stuck spells 32 → 22, lost 6 → 2. With the smoke
+       test's: 0 stuck spells and 0 lost both times. 0 falls and 0 handovers onto another level in every walk.
     9. **Known limits:**
         1. **Followers on half-block stairs** (found by B2, proposed for B4 on
            [#673](https://github.com/PandiO/knk-workspace/issues/673#issuecomment-6931558660)): when the leader stops in
