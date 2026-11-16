@@ -1,6 +1,6 @@
 # Writing a plugin scenario
 
-**Status:** Active (in knk-plugin `next` since `309d3580`, 2026-11-14; not on trunk yet) · **Last updated:** 2026-11-16 (§ 1: the checks of the NPC movement scenarios since links M3, M4, M5 and M7, the three collision scenarios of M7 (48 scenarios), scripted pushes with `ScenarioPushes`; § 5.2 item 3: `move()` is refused on Paper 26.3; checked against knk-plugin `next` `cc5262ff`, docs [#658](https://github.com/PandiO/knk-workspace/issues/658)); 2026-11-15 (§ 2 item 3 and § 7: `npc-stuck-ladder` and `npc-stairhouse-singles` with `local-legs-clearance` on, report lines with the local legs, #623); 2026-11-15 (§ 7: the singles of `npc-stairhouse-singles` and `npc-jagged-straight` are checks with corridor steering on, #622); 2026-11-15 (§ 1, § 3 item 7 and § 7: scenes pasted from WorldEdit schematics (`SceneSchematic`, the developer's stair house), the five NPC movement scenarios in report mode with collision off and on, `KNK-NPC-REPORT` lines, 45 scenarios, [#621](https://github.com/PandiO/knk-workspace/issues/621)); 2026-11-15 (§ 1: `player-heal-needs-grant`, 32 scenarios with #522's, [#580](https://github.com/PandiO/knk-workspace/issues/580)); 2026-11-15 (§ 1 and § 4.7: the six NPC follow-up scenarios on the corner scene, `ScenarioNpcs` with access rules and gate crossings, `ScenarioNpcRules`, the short-trip rule; checked against knk-plugin `next` `deb7ff49`, [#589](https://github.com/PandiO/knk-workspace/issues/589)); 2026-11-15 (§ 5 rewritten: scripted players, `scene.player(...)`, six player scenarios; § 1, § 3.5, § 4.8, § 6 `run player-*`, new § 8 headless bot tests kept off, [#540](https://github.com/PandiO/knk-workspace/issues/540)); 2026-11-15 (§ 1, § 3.5, § 4.6, § 4.7 and § 6: NPC navigation scenarios on Citizens and a fake road network, `ScenarioRoadNpcs`, [#543](https://github.com/PandiO/knk-workspace/issues/543)); 2026-11-15 (§ 1 "Then" step 4: smoke-guide tag format, every step kept in full); 2026-11-14 (§ 1, § 3 and § 4: the scenarios and helpers of the plugin backfill, [#511](https://github.com/PandiO/knk-workspace/issues/511)); 2026-11-14 (§ 5 links #540); 2026-11-14 (first version, [PandiO/knk-workspace#421](https://github.com/PandiO/knk-workspace/issues/421))
+**Status:** Active (in knk-plugin `next` since `309d3580`, 2026-11-14; not on trunk yet) · **Last updated:** 2026-11-16 (§ 1, § 3 items 1, 7.5 and 8, § 7: a bigger box per scenario (`SizedScene`), the whole stair house, `npc-stairhouse-climb` and `npc-replay-quarry-to-keep` (50 scenarios), snapshot replay with `SnapshotReplay`, the developer's snapshot trimmed, link B1, [#670](https://github.com/PandiO/knk-workspace/issues/670)); 2026-11-16 (§ 1: the checks of the NPC movement scenarios since links M3, M4, M5 and M7, the three collision scenarios of M7 (48 scenarios), scripted pushes with `ScenarioPushes`; § 5.2 item 3: `move()` is refused on Paper 26.3; checked against knk-plugin `next` `cc5262ff`, docs [#658](https://github.com/PandiO/knk-workspace/issues/658)); 2026-11-15 (§ 2 item 3 and § 7: `npc-stuck-ladder` and `npc-stairhouse-singles` with `local-legs-clearance` on, report lines with the local legs, #623); 2026-11-15 (§ 7: the singles of `npc-stairhouse-singles` and `npc-jagged-straight` are checks with corridor steering on, #622); 2026-11-15 (§ 1, § 3 item 7 and § 7: scenes pasted from WorldEdit schematics (`SceneSchematic`, the developer's stair house), the five NPC movement scenarios in report mode with collision off and on, `KNK-NPC-REPORT` lines, 45 scenarios, [#621](https://github.com/PandiO/knk-workspace/issues/621)); 2026-11-15 (§ 1: `player-heal-needs-grant`, 32 scenarios with #522's, [#580](https://github.com/PandiO/knk-workspace/issues/580)); 2026-11-15 (§ 1 and § 4.7: the six NPC follow-up scenarios on the corner scene, `ScenarioNpcs` with access rules and gate crossings, `ScenarioNpcRules`, the short-trip rule; checked against knk-plugin `next` `deb7ff49`, [#589](https://github.com/PandiO/knk-workspace/issues/589)); 2026-11-15 (§ 5 rewritten: scripted players, `scene.player(...)`, six player scenarios; § 1, § 3.5, § 4.8, § 6 `run player-*`, new § 8 headless bot tests kept off, [#540](https://github.com/PandiO/knk-workspace/issues/540)); 2026-11-15 (§ 1, § 3.5, § 4.6, § 4.7 and § 6: NPC navigation scenarios on Citizens and a fake road network, `ScenarioRoadNpcs`, [#543](https://github.com/PandiO/knk-workspace/issues/543)); 2026-11-15 (§ 1 "Then" step 4: smoke-guide tag format, every step kept in full); 2026-11-14 (§ 1, § 3 and § 4: the scenarios and helpers of the plugin backfill, [#511](https://github.com/PandiO/knk-workspace/issues/511)); 2026-11-14 (§ 5 links #540); 2026-11-14 (first version, [PandiO/knk-workspace#421](https://github.com/PandiO/knk-workspace/issues/421))
 **Related:** [CI § 7.1](ci.md#71-in-plugin-scenarios) (how CI runs them), [plugin architecture § Testing](../../architecture/plugin-architecture.md#testing),
 [`knk-test-writer` skill](../../../.claude/skills/knk-test-writer/SKILL.md) (which suite a behaviour belongs in),
 [AI agent workflow design § 6.3](../../specs/ai-agent-workflow/DESIGN.md#6-testing-and-ci),
@@ -162,6 +162,17 @@ every report line has a `local legs k&k N, engine N, none N` part:
 12. `npc-plaza-line`: 3 singles cross a 15 × 15 plaza from the west road to the north road on the road graph's line
     (to the junction in the middle and out). Reports the walked length on the plaza against the chord and how close
     they came to the well.
+13. `npc-stairhouse-climb` ([#670](https://github.com/PandiO/knk-workspace/issues/670), link B1), the light scene:
+    the whole stair house on the real road line of the developer's traces, from the street east of it up all five
+    flights to the top hall, with short stretches (`stretch-blocks` 8) and the settings of the developer's server
+    during the failed smoke test of 2026-11-16. One phase: a group of 20 in `ranks` with 20 singles beside it. Reports
+    the falls (from where to where), places of the climb skipped or walked back to, stretch handovers and those onto
+    another level, queues let go and turns dropped by the crowd's 30 s guards, stuck spells and where each NPC got
+    to. Report only, collision off only (as on the dev server); B2 to B4 turn it into checks.
+14. `npc-replay-quarry-to-keep` (#670), the main replay: the developer's snapshot of `quarry-to-keep` (2026-11-16
+    21:25) trimmed to the stair house (§ 3 item 8). Checks the replay (blocks placed, the regions seen by the NPC rule
+    checks at the start, every stored setting known), then reports a leader alone and a group of 20 from the street
+    east of the house (1436 43 −492) to the top hall, once with the stored settings and once with the smoke test's.
 
 Every line also has falls, trespasses, `recovery no path` and K&K's navigation time per NPC per tick. The first
 numbers are the baseline in the chain report's M1 block.
@@ -246,6 +257,9 @@ the gate scenarios count suffocation events, cancelled ones included, so a mob t
 ## 3. The scene
 
 Each scenario gets a `ScenarioScene`: an empty box of 32 × 24 × 32 blocks (x, y, z), given out by `PaperScenarioHost`.
+A scenario that needs more implements `SizedScene` and returns its `ScenarioScene.Box` (at most 64 wide along x, so it
+never reaches the next scene; up to 384 high and 256 deep); `scene.box()` gives the size. Every block of the box is
+cleared before and after the run, so keep it as small as the scene allows ([#670](https://github.com/PandiO/knk-workspace/issues/670)).
 
 1. **Coordinates** are relative to the box's lowest corner: x and z from 0 to 31, y from 0 to 23. `scene.block(x, y, z)`
    and `scene.location(x, y, z)` turn them into world blocks and locations; `worldX/Y/Z` give the absolute numbers
@@ -290,11 +304,45 @@ Each scenario gets a `ScenarioScene`: an empty box of 32 × 24 × 32 blocks (x, 
       points the scenarios use for each scene (the road line, starts, goals, watched areas), and
       `NpcMovementSceneTest` checks that each of them stands on a floor of its schematic.
    5. **The developer's stair house:** `knk-stairhouse.schem` (copied in the dev world, 1407 49 -549 to
-      1418 79 -487) is pasted in the frame box = real − (1400, 46, −515) at box (7, 3, −34), with a stone floor at
-      real y 48 under its footprint (the copy starts one block above the street's floor). Rows outside the box are
-      left out. `NpcMovementScene` draws its road line by hand from the street through the entrance (1413 −508) and
-      the straight (1414 −503) up two steps into the hall. When the developer posts a trace, put its waypoints in.
-      MockBukkit can't paste it (it knows no lantern properties), so only the Paper scenarios do.
+      1418 79 -487, both flights and the upper landings) is pasted whole in its own box
+      (`NpcMovementScene.STAIRHOUSE_BOX`, 32 × 40 × 72) in the frame box = real − (1400, 46, −553) at box (7, 3, 4),
+      with a stone floor at real y 48 under its footprint (the copy starts one block above the street's floor) and on
+      the street east of it (1419..1431, −530..−510), where the real route comes in. The stair-house scenarios
+      implement `SizedScene` with that box. `NpcMovementScene` has M1's hand-drawn line from the street through the
+      entrance (1413 −508) up two steps into the hall (`houseLine`) and the climb from the street in the east up all
+      five flights to the top hall (`climbLine`, with `climbPlace` naming the flight or landing a body is on). Use
+      `real(...)`, `realFeet(...)` and `realBlock(...)` to work in the dev world's coordinates. The climb is the real
+      road line: the `# waypoints:` lines of the developer's traces of 2026-11-16 (traces 69, 87 and 63, in knk-plugin
+      `src/test/resources/scenario/evidence/2026-11-16/`, `.log` files added with `git add -f`), and
+      `NpcMovementSceneTest` checks that every point was handed out in one of them. MockBukkit can't paste it (it knows no lantern properties), so only the Paper
+      scenarios do.
+8. **A snapshot of a real route** ([#670](https://github.com/PandiO/knk-workspace/issues/670)): `/knk npc nav snapshot
+   <route>` on a server writes a zip (commands guide, `/knk npc nav`). Put it in knk-paper
+   `src/main/resources/scenario-snapshots/` and replay it with `SnapshotReplay`:
+   1. `SnapshotReplay.fromResource("name.zip")` reads it; `placeBlocks(scene)` places the blocks of the region files
+      inside the snapshot's box (`AnvilRegion` reads the Anvil format without the server: gzip, zlib and uncompressed
+      chunks, palettes and packed indexes; LZ4 and `.mcc` chunks are skipped and counted). The box's lowest corner
+      goes to the scene's 0 0 0 (`at(x, y, z)` moves it); give the scenario the snapshot's box as its `SizedScene`.
+   2. `buildRegions(scene)` builds the domains' WorldGuard regions (whole shapes, priorities, parents, the
+      `knk-allow-entry` and `knk-allow-exit` flags) under `regionId(scene, realId)`; register `removeRegions` as a
+      cleanup.
+   3. `accessRules(scene)` answers the rules as the caches did when the snapshot was taken (the fake API data): a
+      domain with AllowEntry false may not be entered unless the NPC bypasses domain rules or stands in it; a gate
+      door that was not open blocks unless the NPC is a gate admin.
+   4. `loop(scene)`, `from`, `to`, `gates`, `plazas` and `settings(rejected)` give the stored line, its ends, gate
+      crossings and plaza junctions in the scene, and the stored settings as one global layer:
+      `ScenarioNpcs.start(scene, replay.loop(scene), replay.settings(rejected), replay.accessRules(scene),
+      replay.gates(scene))`.
+   5. **A real snapshot is trimmed before it is committed.** The command copies whole region files (8 to 9 MB each),
+      and a scene is at most 64 blocks wide. `tools/scenario-scenes/trim_snapshot.py IN.zip OUT.zip minX minY minZ
+      maxX maxY maxZ` keeps the chunks round a window and sets the box to it (deterministic bytes). The developer's
+      `quarry-to-keep` of 2026-11-16 (17.5 MB, on knk-plugin `evidence/smoke-2026-11-16`) is committed as
+      `quarry-to-keep-stairhouse.zip` (x 1391..1454, y 36..96, z −559..−480, 30 chunks, 371 KB) and replayed by
+      `npc-replay-quarry-to-keep`.
+   6. `AnvilRegion` reads Minecraft 26.x palettes: a list of block state strings, each wrapped in `{"": ...}` in a list
+      of mixed types; and the older `{Name, Properties}`.
+   7. `stairhouse-sample.zip`, made from the schematic by `tools/scenario-scenes/make_snapshot_sample.py`, is kept for
+      the unit tests (`AnvilRegionTest`, `SnapshotReplayTest`).
 
 ## 4. Fake data instead of the API
 
