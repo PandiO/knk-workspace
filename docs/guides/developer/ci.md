@@ -1,6 +1,6 @@
 # CI: what runs on every push and how to mark a known failure
 
-**Status:** Active · **Last updated:** 2026-11-15 (§ 7.1: `MIN_SCENARIOS` 34 with `npc-ledge-corner` and `npc-landing-ranks`, [#592](https://github.com/PandiO/knk-workspace/issues/592)); 2026-11-15 (§ 7.1: `player-heal-needs-grant`, `MIN_SCENARIOS` 32 with the three NPC group scenarios of #522, [#580](https://github.com/PandiO/knk-workspace/issues/580)); 2026-11-15 (§ 7, § 7.1, new § 7.3: player scenarios, the printStackTrace rule of the log check and the headless bot tests kept off, [#540](https://github.com/PandiO/knk-workspace/issues/540)); 2026-11-15 (§ 1, § 7, § 7.1 and the new § 7.2: Citizens on the boot-test server (pinned by [#521](https://github.com/PandiO/knk-workspace/issues/521)), NPC navigation on and checked, six NPC scenarios, `MIN_SCENARIOS` 22, [#543](https://github.com/PandiO/knk-workspace/issues/543), in knk-plugin `next`); 2026-11-14 (§ 7 and § 7.1: 16 scenarios, `MIN_SCENARIOS` 16, plugin backfill [#511](https://github.com/PandiO/knk-workspace/issues/511), in knk-plugin `next`); 2026-11-14 (§ 1.1.2: the `requires-bukkit` tests run in CI with MockBukkit, [#499](https://github.com/PandiO/knk-workspace/issues/499), in knk-plugin `next`); 2026-11-14 (plugin scenarios in `paper-boot.yml`, § 7.1, [#421](https://github.com/PandiO/knk-workspace/issues/421), in knk-plugin `next`); 2026-11-14 (web app end-to-end tests: `e2e.yml`, § 1.1.3, [#423](https://github.com/PandiO/knk-workspace/issues/423)); 2026-11-14 (plugin Paper boot test `paper-boot.yml`, § 1, § 1.1.2 and § 7, [#420](https://github.com/PandiO/knk-workspace/issues/420)); 2026-11-13 (workflows renamed "Build and test"; Codex review comments are not CI, § 1); 2026-11-13 (§ 4 the CI run decides, § 5 reading runs as an agent, § 6 the Node.js 20 warning, [#363](https://github.com/PandiO/knk-workspace/issues/363)); 2026-11-13 (first version, [PandiO/knk-workspace#362](https://github.com/PandiO/knk-workspace/issues/362), docs follow-up of [#327](https://github.com/PandiO/knk-workspace/issues/327); checked against knk-web-api `master` `210f731`, knk-web-app `main` `33d68f8`, knk-plugin `main` `e8b651d`)
+**Status:** Active · **Last updated:** 2026-11-15 (§ 7: `npc-stuck-ladder` and `npc-stairhouse-singles` with `local-legs-clearance` on, #623); 2026-11-15 (§ 7: the singles of two NPC movement scenarios are checks, #622); 2026-11-15 (§ 7 and § 7.1: `MIN_SCENARIOS` 45 with the ten NPC movement runs in report mode, `--expect-timeout 1200`, job timeout 30 minutes, the `KNK-NPC-REPORT` lines in the job summary, [#621](https://github.com/PandiO/knk-workspace/issues/621)); 2026-11-15 (§ 7.1: `MIN_SCENARIOS` 35 with `npc-group-realtime-entry`, [#593](https://github.com/PandiO/knk-workspace/issues/593)); 2026-11-15 (§ 7.1: `MIN_SCENARIOS` 34 with `npc-ledge-corner` and `npc-landing-ranks`, [#592](https://github.com/PandiO/knk-workspace/issues/592)); 2026-11-15 (§ 7.1: `player-heal-needs-grant`, `MIN_SCENARIOS` 32 with the three NPC group scenarios of #522, [#580](https://github.com/PandiO/knk-workspace/issues/580)); 2026-11-15 (§ 7, § 7.1, new § 7.3: player scenarios, the printStackTrace rule of the log check and the headless bot tests kept off, [#540](https://github.com/PandiO/knk-workspace/issues/540)); 2026-11-15 (§ 1, § 7, § 7.1 and the new § 7.2: Citizens on the boot-test server (pinned by [#521](https://github.com/PandiO/knk-workspace/issues/521)), NPC navigation on and checked, six NPC scenarios, `MIN_SCENARIOS` 22, [#543](https://github.com/PandiO/knk-workspace/issues/543), in knk-plugin `next`); 2026-11-14 (§ 7 and § 7.1: 16 scenarios, `MIN_SCENARIOS` 16, plugin backfill [#511](https://github.com/PandiO/knk-workspace/issues/511), in knk-plugin `next`); 2026-11-14 (§ 1.1.2: the `requires-bukkit` tests run in CI with MockBukkit, [#499](https://github.com/PandiO/knk-workspace/issues/499), in knk-plugin `next`); 2026-11-14 (plugin scenarios in `paper-boot.yml`, § 7.1, [#421](https://github.com/PandiO/knk-workspace/issues/421), in knk-plugin `next`); 2026-11-14 (web app end-to-end tests: `e2e.yml`, § 1.1.3, [#423](https://github.com/PandiO/knk-workspace/issues/423)); 2026-11-14 (plugin Paper boot test `paper-boot.yml`, § 1, § 1.1.2 and § 7, [#420](https://github.com/PandiO/knk-workspace/issues/420)); 2026-11-13 (workflows renamed "Build and test"; Codex review comments are not CI, § 1); 2026-11-13 (§ 4 the CI run decides, § 5 reading runs as an agent, § 6 the Node.js 20 warning, [#363](https://github.com/PandiO/knk-workspace/issues/363)); 2026-11-13 (first version, [PandiO/knk-workspace#362](https://github.com/PandiO/knk-workspace/issues/362), docs follow-up of [#327](https://github.com/PandiO/knk-workspace/issues/327); checked against knk-web-api `master` `210f731`, knk-web-app `main` `33d68f8`, knk-plugin `main` `e8b651d`)
 
 The GitHub workflows of the component repos are the automated gate for every change. They run on every push (all
 branches), every pull request and on manual dispatch (`workflow_dispatch`). Under the
@@ -142,8 +142,10 @@ spawn scenarios, which wait for the spawn scheduler's one-second tries. The thre
 local run, 2026-11-15), the three corner scenarios of [#521](https://github.com/PandiO/knk-workspace/issues/521)
 about 110 s (`npc-corners-walk` alone walks 90 s), and the first run after a cache change about 5 s for Citizens'
 library downloads. The six player scenarios of [#540](https://github.com/PandiO/knk-workspace/issues/540) take about
-8 s (fake players join, act and quit; about 160 ticks of scenario time on a local run, 2026-11-15). The boot step waits up to
-360 s for the summary line and the job's timeout is 15 minutes. The headless bot tests (§ 7.3) are off and cost a few
+8 s (fake players join, act and quit; about 160 ticks of scenario time on a local run, 2026-11-15). The ten NPC
+movement runs of [#621](https://github.com/PandiO/knk-workspace/issues/621) (five scenarios, collision off and on)
+add about 3.2 minutes of walking (3,866 ticks on a local run). The boot step waits up to 1200 s for the summary line and the job's timeout is 30
+minutes (since #621; 600 s and 20 minutes before). A whole local run of the 45 took 9 min 40 s (6 min 40 s for the 35 before; 2026-11-15). The headless bot tests (§ 7.3) are off and cost a few
 seconds while off (their unit tests and a support report).
 
 1. **Build:** `./gradlew :knk-paper:shadowJar -PgitCommit=<8-character commit>` (JDK 25 toolchain, Gradle on JDK 21,
@@ -210,15 +212,17 @@ seconds while off (their unit tests and a support report).
 in knk-plugin `next` (`309d3580`, 2026-11-14), not on trunk yet. How to write one:
 [writing a plugin scenario](plugin-scenarios.md).
 
-1. **What runs:** the boot step passes `--scenarios --min-scenarios "$MIN_SCENARIOS" --expect-timeout 180`. The script
+1. **What runs:** the boot step passes `--scenarios --min-scenarios "$MIN_SCENARIOS" --expect-timeout 1200`. The script
    sets `testing.scenarios.enabled: true` in the KnK config (off in the shipped `config.yml`), and after the 15 s
    settle sends `knk scenario run all` to the console. The plugin runs every scenario one after the other and logs
    `KNK-SCENARIO START <name>`, then `KNK-SCENARIO PASS <name> (<n> ticks)` or `KNK-SCENARIO FAIL <name>: <reason>`,
    and finally `KNK-SCENARIO SUMMARY passed=<p> failed=<f> total=<t>`. The script waits for the summary line (at most
-   180 s), stops the server and runs both checks.
+   1200 s), stops the server and runs both checks. A step after it copies the `KNK-NPC-REPORT` lines of the
+   report-mode NPC movement scenarios ([#621](https://github.com/PandiO/knk-workspace/issues/621),
+   [writing a plugin scenario § 7](plugin-scenarios.md#7-report-lines)) into the job summary, also when the job failed.
 2. **Pass/fail** (`tools/paper-boot/check_scenarios.py`, with its own unit tests in the "Test the log check" step): the
    job fails on any `FAIL` line, a scenario that started without a result, a missing summary line, a summary that
-   doesn't match the lines, or fewer than `MIN_SCENARIOS` scenarios (34 since the stair corner and landing scenarios of #592; 32 since the `/heal` scenario of #580 and the NPC group scenarios of #522, 2026-11-15; raise it in the workflow's boot
+   doesn't match the lines, or fewer than `MIN_SCENARIOS` scenarios (45 since the NPC movement scenarios of #621, each with collision off and on; 35 since `npc-group-realtime-entry` of #593; 34 since the stair corner and landing scenarios of #592; 32 since the `/heal` scenario of #580 and the NPC group scenarios of #522, 2026-11-15; raise it in the workflow's boot
    step when you add one, so a scenario that silently stops registering is caught). A failed scenario doesn't stop the
    run: every result is in the log and in the table the check writes to the job summary. The boot check of § 7 item 4
    still applies, so an `ERROR` a scenario causes fails the job too.
@@ -236,7 +240,15 @@ in knk-plugin `next` (`309d3580`, 2026-11-14), not on trunk yet. How to write on
    (`player-command-needs-grant`, `player-chat-group-colours`, `player-join-loading-hold`, `player-menu-click`,
    `player-tp-into-closed-gate`, `player-rejoin-in-closed-gate`; [writing a plugin scenario § 5](plugin-scenarios.md#5-players)),
    and [#580](https://github.com/PandiO/knk-workspace/issues/580) `player-heal-needs-grant` (the plain `/heal` is
-   K&K's next to WorldGuard).
+   K&K's next to WorldGuard). [#621](https://github.com/PandiO/knk-workspace/issues/621) added the five NPC movement
+   scenarios of implementation plan 4c.5 in report mode, each also as `…-collision-on` (`npc-stairhouse-singles`,
+   `npc-stairhouse-group`, `npc-jagged-straight`, `npc-doorway-crowd`, `npc-plaza-line`; they pass whatever they
+   measure until a later link gives them checks). Since [#622](https://github.com/PandiO/knk-workspace/issues/622)
+   the singles of `npc-stairhouse-singles` and `npc-jagged-straight` (both collision settings) are checks with
+   `corridor-steering` on and fail the job when a single gets stuck or stands still over 3 s. Since
+   [#623](https://github.com/PandiO/knk-workspace/issues/623) `npc-stuck-ladder` and `npc-stairhouse-singles` run
+   with `local-legs-clearance` on and fail the job when a local leg needs the engine's search (`npc-stuck-ladder`) or
+   ends without a path.
    They need a server without a reachable knk-web-api, which the CI server is.
 4. **Server setting:** `server.properties` gets `pause-when-empty-seconds=-1`, so the server keeps ticking with nobody
    online (vanilla pauses an empty server after 60 s).
