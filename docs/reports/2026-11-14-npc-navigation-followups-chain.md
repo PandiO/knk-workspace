@@ -54,7 +54,7 @@ the configuration reference § 4.27), then restart. In test order:
 | M4 Crowd awareness | #626 | Merged into next (2026-11-16); option-B checkpoint with the developer | knk-plugin `8c864f7a` → `next` `a35fed5a`; knk-workspace `9f09cf23` → `next` `5b8125e5` | PandiO/knk-plugin#52, PandiO/knk-workspace#638 | push and PR runs on `8c864f7a` green (build, paper-boot with 45 scenarios; runs 43799206281, 43800089307); #586 did not hit; 45/45 locally; Codex at its usage limit | create_session session_01R1w2UsvLHZouJWudj4FxjT (2026-11-16) |
 | M7 Collision with push resistance | #627 | Merged into next (2026-11-16); `collidable` stays false | knk-plugin `6393aa37` → `next` `cc5262ff`; knk-workspace `dc8a91c5` → `next` `8e3d7d06` | PandiO/knk-plugin#57, PandiO/knk-workspace#656 | push and PR runs on `6393aa37` green (build, paper-boot with 48 scenarios); Codex at its usage limit | create_session session_01R1w2UtyxLznso8wdydHmQf (2026-11-16) |
 | L9 Fix: running groups ignore a realtime district deny | #668 | In review (PRs open, not merged) | knk-plugin `76259d86`; knk-workspace `1dffa06d` | PandiO/knk-plugin#61, PandiO/knk-workspace#669 | push and PR runs on `76259d86` green (build, paper-boot with 48 scenarios; runs 43941362118, 43944997333); #586 did not hit; 48/48 locally; Codex at its usage limit | create_session session_01R1w2UvV75PszFp2o3mNoHB (2026-11-16) |
-| B1 Evidence: snapshot command (B1a), whole stair house and replay (B1b) | #670 | B1a merged into next (2026-11-16, `0f039203`); B1b in review (PRs open, not merged) | B1a: knk-plugin `1d9e3209`, knk-workspace `383cd24d`; B1b: knk-plugin `99c27a40`, knk-workspace `824cb6c5` (both merged `next` after B1a) | PandiO/knk-plugin#62, PandiO/knk-workspace#691 (B1a); PandiO/knk-plugin#63, PandiO/knk-workspace#692 (B1b) | #62: build and paper-boot green (both runs); #63: pending at the time of this block; 50/50 scenarios locally in 15 min 23 s; Codex at its usage limit | create_session session_01R1w2Uvzb6xQBt2SwiokGoe (2026-11-16) |
+| B1 Evidence: snapshot command (B1a), whole stair house and replay (B1b) | #670 | B1a merged into next (2026-11-16, `0f039203`); B1b in review (PRs open, not merged) | B1a: knk-plugin `1d9e3209`, knk-workspace `383cd24d`; B1b: knk-plugin `6d81d59a`, knk-workspace `6684a815` (both merged `next` after B1a) | PandiO/knk-plugin#62, PandiO/knk-workspace#691 (B1a); PandiO/knk-plugin#63, PandiO/knk-workspace#692 (B1b) | #62: build and paper-boot green (both runs); #63: green on `99c27a40` (19 min), head `6d81d59a` pending; 50/50 scenarios locally in 15 min 23 s; Codex at its usage limit | create_session session_01R1w2Uvzb6xQBt2SwiokGoe (2026-11-16) |
 
 ## 3. Coordinator decisions
 
@@ -1334,75 +1334,92 @@ _(Each link appends its block here when it finishes.)_
     1. Anything the NPC module needs from `onEnable` after `registerCommands` must be a supplier.
     2. The B links' snapshot replay should read regions through `ScenarioServices.npcRules()`.
 
-### 4.17 B1 — Evidence: the snapshot command, the whole stair house climbed, snapshot replay (#670)
+### 4.17 B1 — Evidence: the snapshot command (B1a), the whole stair house on the real line, the developer's snapshot replayed (B1b) (#670)
 
-1. **Scope done.** The coordinator split the link at 20:40 (its message: ship the command alone first). So there are two parts: B1a (the command, merged) and B1b (the scene and the replay, on `claude/npc-movement-b1-scene`). The coordinator's message of 20:22 did not reach this session.
-    1. **B1a, `/knk npc nav snapshot <route>`** (knk-plugin #62, merged into `next` `0f039203`). Node `knk.admin.npc`. It is refused while `npc.navigation.enabled` is off. It needs road navigation, not Citizens. It writes `plugins/KnightsAndKings/npc-snapshots/<route>-<UTC>.zip`:
-        1. `route.json`: the road line for the default NPC profile, the stretches as the route follower hands them out from the start, gate crossings and plaza junctions.
-        2. `roads.json`: nodes in the box and edges through it, whole.
-        3. `domains.json`: every WorldGuard region touching the box, whole (cuboid or polygon with min and max y), with parent, priority, `knk-allow-entry` and `knk-allow-exit`, the cached domain id, name, type, AllowEntry and AllowExit, and each gate door's state and whether it is open.
-        4. `settings.json`: every setting with its layer.
-        5. `manifest.json`: box, world, time, version, counts and notes, plus a README.
-        6. The region files the box touches, wherever the world folder keeps them, including the 26.x dimension folders. They are copied off the main thread, 2 s after a `world.save()`.
-        7. The box is the line with 8 blocks round it, 6 below and 12 above. Model and zip are in knk-core `core/npc/nav/snapshot/`; the Paper side is `npc/nav/NavSnapshotTaker`, plus `NavigationService.roadNetwork` and `NpcNavigationModule.setSnapshotSources` (both additive).
-        8. Docs: the commands guide row and the changelog (knk-workspace #691, merged `21e3e103`).
-    2. **B1b, the scene** (knk-plugin #63).
-        1. `SizedScene` and `ScenarioScene.Box`: a scenario may ask for a bigger box (at most 64 wide along x).
-        2. The stair house goes whole into `STAIRHOUSE_BOX` 32 × 40 × 72, in the frame real − (1400, 46, −553). Its decision is 6.4 below.
-        3. `npc-stairhouse-climb`, in report mode: a leader alone, a group of 20 in ranks, then the group with 20 singles beside it. They use `stretch-blocks` 8 and the dev server's smoke-test settings (decision 35.3).
-        4. **The line is the real route line.** `NpcMovementScene.CLIMB` is the `# waypoints:` lines of the developer's traces of 2026-11-16, going up: trace 69 reversed for the entrance from the east, trace 87 for the hall to the −536 landing, trace 63 for the top. The traces arrived at 21:08 (`evidence/smoke-2026-11-16` `2e46cb90`); the first version used a line found on the schematic. The eight traces are test resources (`.log`, added with `-f`). `NpcMovementSceneTest` checks that every point was handed out in a trace.
-        5. `ClimbWatch` reports falls, places skipped or walked back to, handovers onto another level, queue let-gos and turns dropped by the 30 s guards, and where each NPC got to.
+1. **Scope done.** The coordinator split the link at 20:40: B1a (the command, merged) and B1b (scene and replay, on `claude/npc-movement-b1-scene`). The coordinator's messages of 20:18 and 20:22 reached this session only at 21:08.
+    1. **B1a, `/knk npc nav snapshot <route>`** (knk-plugin #62, merged into `next` `0f039203`).
+        1. Node `knk.admin.npc`. It is refused while `npc.navigation.enabled` is off. It needs road navigation, not Citizens.
+        2. It writes `plugins/KnightsAndKings/npc-snapshots/<route>-<UTC>.zip` with:
+            1. the road line for the default NPC profile;
+            2. the stretches handed out from the start;
+            3. gate crossings and plazas;
+            4. the roads in the box;
+            5. the WorldGuard regions touching the box, whole, with parent, priority, flags, the cached domain data and gate doors;
+            6. the settings with their layers;
+            7. a manifest;
+            8. the region files the box touches, copied off the main thread after a save.
+        3. Model and zip format live in knk-core `core/npc/nav/snapshot/`; the Paper side is `NavSnapshotTaker`. Docs: the commands guide and the changelog (#691, merged).
+        4. The developer took the first snapshot at 21:25.
+    2. **B1b, the scene.**
+        1. `SizedScene` and `ScenarioScene.Box` let a scenario ask for a bigger box.
+        2. The whole stair house sits in `STAIRHOUSE_BOX` (32 × 40 × 72, frame real − (1400, 46, −553)).
+        3. `NpcMovementScene.CLIMB` is the **real road line**: the `# waypoints:` lines of the developer's traces 69 (reversed), 87 and 63. The traces arrived at 21:08 on `evidence/smoke-2026-11-16` `2e46cb90`; the first version used a line found on the schematic. The eight traces are test resources (`.log`, `git add -f`).
+        4. `npc-stairhouse-climb` is the light scene, in report mode: a group of 20 with 20 singles, `stretch-blocks` 8, and the smoke test's settings (decision 35.3).
+        5. `ClimbWatch` reports falls, places skipped, handovers onto another level, the 30 s guards (including a turn dropped by `STALE_TICKS`, which the crowd does not count), and where each NPC got to.
     3. **B1b, the replay.**
-        1. `AnvilRegion` reads `.mca` files without the server.
-        2. `SnapshotReplay` (with `SnapshotRegions`) places the blocks and builds the regions with parents, priorities and flags. Its fake access rules come from the cached AllowEntry and gate door states. It also gives the stored line, gates, plazas and settings.
-        3. `tools/scenario-scenes/make_snapshot_sample.py` writes `scenario-snapshots/stairhouse-sample.zip` from the schematic, with deterministic bytes and `r.2.-2.mca` / `r.2.-1.mca` as in decision 33.
-        4. `npc-snapshot-replay` checks the replay and reports a leader on the stored line.
-    4. **CI** (B1b): `MIN_SCENARIOS` 50, `--expect-timeout 1800`, job timeout 40 minutes. Docs: plugin-scenarios § 1, § 3 items 7.5 and 8; ci.md § 7; changelog (knk-workspace #692).
+        1. `AnvilRegion` reads `.mca` files without the server, including Minecraft 26.x palettes (block state strings, each wrapped in `{"": ...}` in mixed lists).
+        2. `SnapshotReplay` (with `SnapshotRegions`) places the blocks, builds the regions, and gives fake access rules, the line, gates, plazas and settings.
+        3. **The developer's snapshot of `quarry-to-keep`** (21:25, plugin `0f039203`, 17.5 MB, `evidence/smoke-2026-11-16` `4a7bcca9`) is committed **trimmed**: `tools/scenario-scenes/trim_snapshot.py` keeps the 30 chunks round the stair house, in 371 KB.
+        4. **`npc-replay-quarry-to-keep`** is the main replay. It checks the replay: 111,286 blocks placed, 13 regions seen by the NPC checks, settings known. It then reports a leader alone and a group of 20, once with the stored settings and once with the smoke test's.
+        5. `make_snapshot_sample.py` writes a sample made from the schematic; it is kept for the unit tests.
+    4. **B1a fix in B1b.** The dev server's gate domains have type `GateStructure`, so the taker recorded no gate door states. The taker and `isGate` now treat that type as a gate.
+    5. **CI.** `MIN_SCENARIOS` 50, `--expect-timeout 1800`, job timeout 40 minutes. Docs: plugin-scenarios § 1 and § 3 items 7.5 and 8, ci.md § 7, the changelog (#692).
 2. **Commits and heads.**
-    1. knk-plugin `claude/npc-movement-b1`: `1d9e3209` (1 commit on `a78fcce8`, merged).
-    2. knk-plugin `claude/npc-movement-b1-scene`: `99c27a40` (WIP, merge fix, replay, CI, the real line; merges of B1a and `next` `0f039203`).
+    1. knk-plugin `claude/npc-movement-b1`: `1d9e3209` (merged).
+    2. knk-plugin `claude/npc-movement-b1-scene`: `6d81d59a`.
     3. knk-workspace `claude/npc-movement-b1`: `383cd24d` (merged).
-    4. knk-workspace `claude/npc-movement-b1-scene`: `824cb6c5` (3 docs commits; merge of `next` `21e3e103`).
-3. **PRs.** PandiO/knk-plugin#62 and PandiO/knk-workspace#691 (B1a, `Part of`, merged by the coordinator). PandiO/knk-plugin#63 (`Part of`) and PandiO/knk-workspace#692 (`Closes #670`), both base `next` and not merged.
+    4. knk-workspace `claude/npc-movement-b1-scene`: `6684a815`.
+3. **PRs.**
+    1. B1a: PandiO/knk-plugin#62 and PandiO/knk-workspace#691 (`Part of`), merged.
+    2. B1b: PandiO/knk-plugin#63 (`Part of`) and PandiO/knk-workspace#692 (`Closes #670`), base `next`, not merged.
 4. **Tests, baseline → result.**
-    1. knk-plugin `./gradlew build -x deployToDevServer`. Baseline on `next` `a78fcce8`: core 2956, api-client 344 (2 skipped), paper 2869 (18 skipped). B1a: core 2968 (+12), paper 2874 (+5). B1b: paper 2882 (+8). 0 failures. New tests:
-        1. `NavSnapshotZipTest` 4.
-        2. `SnapshotBoxTest` 4.
-        3. `SnapshotPartsTest` 4.
-        4. `NavSnapshotTakerTest` 5.
-        5. `AnvilRegionTest` 3: the sample's region files hold the schematic block for block.
-        6. `SnapshotReplayTest` 3.
-        7. `NpcMovementSceneTest` +2: the climb line stands on the stairs and passes every flight in order; every point is in a trace. The frame test was updated.
-    2. CI: #62 `build` and `paper-boot` green on both runs (43952687158/43952687294 and 43952631925/43952631894). #63 was pending when this block was written.
-    3. Scenarios, locally (Paper 26.3 b205, WorldEdit 7.4.6, WorldGuard 7.0.20, Citizens b4269, `--min-scenarios 50 --npc-navigation`): 50/50 passed and the log check passed, in 15 min 23 s. That run was on the schematic line; the real line makes the climb about 2 minutes longer. The M3/M4 checks of the stair-house singles and group hold in the bigger box (leader 7.5 s, 0 folds).
-    4. **What the climb shows on `next`, on the real line.** All three failures of the smoke test show:
-        1. Leader alone: still walking after 90 s, with 17 stuck spells near 1411 50 −499 (the smoke test's stuck spot 1410 49 −503). **37 handovers onto another level**; for example, at 1411 49 −501 it got a stretch from 1415 56 −500, 7 blocks up.
-        2. Group of 20: the leader arrived after 125.7 s.
-            1. **30 falls from 1411 51 −496 to 1411 49 −500**: the smoke test's fall at 1412 49 −500.
-            2. 22 handovers onto another level.
-            3. **1 turn dropped by the crowd's 30 s guard**: the leader held its turn from 1409 54 −499 for 30.3 s.
-            4. 1 follower lost.
-        3. Group of 20 with 20 singles: the leader was still walking after 150 s. **78 falls**, among them from the −490 landing to 56. **434 handovers onto another level**. 111 stuck spells. 6 NPCs reached the top hall.
-        4. `npc-snapshot-replay`: 15,044 blocks from 13 chunks and 4 regions; the leader arrived after 52.5 s, with 1 stuck spell. That run was on the schematic line; the sample now carries the real line.
-        5. The first version, on the schematic line, showed the same causes more weakly: 8 / 104 handovers onto another level, 1 / 13 falls under the −490 landing, and no guard release.
-    5. Known reds: none. Codex: at its usage limit on #62 (said on the PR).
+    1. knk-plugin `./gradlew build -x deployToDevServer`.
+        1. Baseline on `next` `a78fcce8`: core 2956, api-client 344 (2 skipped), paper 2869 (18 skipped).
+        2. B1a: core 2968 (+12), paper 2874 (+5).
+        3. B1b: paper 2885 (+11). 0 failures.
+        4. New tests:
+            1. `NavSnapshotZipTest` 4, `SnapshotBoxTest` 4, `SnapshotPartsTest` 4, `NavSnapshotTakerTest` 5.
+            2. `AnvilRegionTest` 5: the sample block for block; the developer's 26.x files, where 85% of the schematic's blocks are the same with their state.
+            3. `SnapshotReplayTest` 4.
+            4. `NpcMovementSceneTest` +2: the climb on the stairs and in order; every point is in a trace.
+    2. CI.
+        1. #62: `build` and `paper-boot` green on both runs.
+        2. #63: run 43958612478 green on `99c27a40`, with the earlier set of 50 (`paper-boot` 19 min).
+        3. The head `6d81d59a` was pending at the time of this block.
+    3. Scenarios, locally: 50/50 on the earlier set (15 min 23 s). `npc-replay-quarry-to-keep` passes in 354 s.
+    4. **What shows on `next`.**
+        1. **The schematic climb** (real line, short stretches, the smoke test's settings):
+            1. Falls from 1411 51 −496 to 1411 49 −500, the smoke test's fall spot: 30 with a group of 20, 78 with the crowd.
+            2. Handovers onto another level: 37 for a leader alone, 434 with the crowd.
+            3. **A turn dropped by the 30 s guard** (the group's leader, 30.3 s at 1409 54 −499).
+            4. Stuck spells near 1411 50 −499, the smoke test's stuck spot.
+            5. These numbers come from the three-phase run; CI now runs only the crowd phase.
+        2. **The real replay** (real blocks, 32-block stretches, no crowd):
+            1. Stored settings: the leader alone arrives in 54.7 s with no falls and 1 handover onto another level (on the street slope). In the group of 20, the leader arrives in 87.0 s, followed by **32 stuck spells and 6 followers lost**; 9 followers end on flight 5 and the −536 landing.
+            2. Smoke-test settings: the leader alone is the same. The group's leader arrives in 67.3 s with 0 stuck spells; 5 members reach the top hall and the rest are spread over flights 4 and 5.
+            3. So the handover and fall faults need the crowd and short stretches. A single leader or group on 32-block stretches does not trigger them on the real blocks.
+    5. Known reds: none. Codex was at its usage limit (said on #62).
 5. **Decisions (DESIGN § 4.3).**
-    1. *The route line.* Chosen: the traces' `# waypoints:` lines as handed out (feet blocks; at stretch joins the duplicate is dropped). The street east of x 1418 is the scene's own flat street at feet 49; the real street falls to 1433 44 −516, beyond the schematic. Alternatives: (a) the road graph's own polyline (only in a snapshot; it will come with the developer's zip); (b) the line found on the schematic, used until the traces arrived (it showed the failures more weakly).
-    2. *Short stretches.* Chosen: `stretch-blocks` 8 in the climb, so handovers fall on the hairpins of 10 to 13-block flights. Alternatives: (a) the default 32 (fewer handovers; the traces would show which the server used); (b) 4 (more handovers than any real setting).
-    3. *Box for the whole house.* Chosen: a scenario-sized box (`SizedScene`), with 32 × 40 × 72 for the stair house. Alternatives: (a) a second 32 × 24 × 32 box above the first (two scenes for one walk; the host has no stacked boxes); (b) a bigger default box for every scenario (every scene would clear 92k blocks twice).
-    4. *Group phases.* Chosen: three phases, the third with 20 singles beside the group, as in the smoke test's 39-NPC queue. Alternatives: (a) only the group of 20 the issue names (no crowd; no falls shown); (b) a collision-on variant (the dev server ran collision off; it would add 5 minutes in CI).
-    5. *Snapshot refused while the flag is off.* Chosen: refuse, like every `nav` action, so nothing runs by default (`NpcNavigationModuleDisabledTest` keeps road navigation untouched). Alternatives: (a) allow it without the flag (it needs no Citizens, but it would break that invariant).
-    6. *Stretches in the snapshot.* Chosen: the stretches as the route follower hands them out from the start (`stretchesNote` says so). Alternatives: (a) only the line (the issue asks for stretches); (b) a recorded NPC's real handovers (that is what the trace's `# waypoints:` lines are for).
-    7. *Sample snapshot.* Chosen: a zip generated from the schematic, so the replay runs in CI now and the developer's zip drops in the same way. Alternatives: (a) no replay scenario until the developer's zip arrives (the replay would go untested on Paper).
-    8. *Region files.* Chosen: search the world folder up to 6 levels deep for `region/r.x.z.mca`, keeping each path in the zip. Alternatives: (a) a fixed `region/` path (it breaks with 26.x's dimension folders).
+    1. *The scene's route line.* Chosen: the traces' `# waypoints:` lines going up, with duplicates at stretch joins dropped. East of x 1418 the scene keeps its own flat street, because the real street falls to 1433 44 −516 beyond the schematic. Alternatives: (a) the line found on the schematic (used until the traces arrived; it showed the faults more weakly); (b) the snapshot's road polyline on the schematic (the replay already runs it on the real blocks).
+    2. *The real snapshot in the repository.* Chosen: trimmed to the stair house (371 KB) with a deterministic tool, committed in main resources so it ships in the jar the scenarios run from; the full 17.5 MB zip stays on the evidence branch. Alternatives: (a) the whole zip in the jar (17.5 MB in every jar); (b) fetch it from the evidence branch in CI (network and a second source of truth; local runs need it too).
+    3. *Which scene runs where.* Chosen: both in `paper-boot`. The real replay (leader and group, two configurations, about 6 minutes) is the main evidence. The schematic climb keeps only its crowd phase (about 2.5 minutes), because only the crowd with short stretches shows the falls, the handovers onto another level and the guard. The sample replay left CI. Alternatives: (a) only the replay (the faults would not show); (b) every phase of both (about 4 minutes more).
+    4. *Two configurations in the replay.* Chosen: the stored settings (the merged dev config) and the smoke test's (decision 35.3), so B2 sees whether a fix holds in both. Alternative: (a) the stored settings only.
+    5. *Short stretches in the climb.* Chosen: `stretch-blocks` 8, so handovers fall on the hairpins. Alternatives: (a) 32, which the real replay already runs.
+    6. *Box for the whole house.* Chosen: a scenario-sized box (`SizedScene`). Alternatives: (a) two stacked 32 × 24 × 32 boxes; (b) a bigger default for every scenario.
+    7. *Snapshot refused while the flag is off.* Chosen: refuse, like every `nav` action, which keeps `NpcNavigationModuleDisabledTest`'s invariant. Alternative: (a) allow it without the flag.
+    8. *Stretches in the snapshot.* Chosen: as handed out from the start (`stretchesNote` says so). Alternatives: (a) the line only; (b) a recorded NPC's own (that is the trace's job).
+    9. *Region files.* Chosen: search the world folder for `region/r.x.z.mca` and keep each path. Alternative: (a) a fixed `region/` path (it breaks with 26.x dimension folders).
+    10. *Gate type.* Chosen: any domain type containing "gate" (`gate`, `GateStructure`). Alternative: (a) an exact list of type names.
 6. **Out of scope, noted.**
-    1. The crowd's own counter `let go` stays 0. The guard that fired drops a turn (`STALE_TICKS`), and the crowd does not count that; `ClimbWatch` counts it. For B3 to note. Not filed.
-    2. The traces were missing from `evidence/smoke-2026-11-16` at the start (`*.log` is git-ignored); the coordinator added them at `2e46cb90`.
+    1. The crowd's own `let go` counter stays 0. The guard that fired drops a turn (`STALE_TICKS`), and the crowd does not count that; `ClimbWatch` does. For B3. Not filed.
+    2. The traces were missing from `evidence/smoke-2026-11-16` at the start (`*.log` is git-ignored). The coordinator added them at `2e46cb90`.
 7. **Blockers.** None.
 8. **At merge / what the developer must do.**
     1. Nothing in `config.yml`, no migration.
-    2. On the dev server (B1a, in `next`): `/knk npc nav snapshot quarry-to-keep`, then upload the zip from `plugins/KnightsAndKings/npc-snapshots/` to the coordinator session.
+    2. After B1b is merged into `next`, take a new `/knk npc nav snapshot quarry-to-keep`. The first one has no gate door states (the `GateStructure` fix). Then trim it with `trim_snapshot.py` and replace the committed zip.
 9. **Notes for later links.**
-    1. To replay the developer's zip: put it in `knk-paper/src/main/resources/scenario-snapshots/` and copy `NpcSnapshotReplayScenario` with its name. The scene box is the snapshot's own box (`boxOf`), at most 64 wide.
-    2. `ClimbWatch`'s numbers turn into checks in B2 (handovers onto another level 0, falls 0), B3 (no turn dropped by the guard) and B4 (jumps).
+    1. B2 to B4 turn the `ClimbWatch` numbers into checks:
+        1. in `npc-stairhouse-climb`: handovers onto another level 0, falls 0, no turn dropped by the guard;
+        2. in `npc-replay-quarry-to-keep`: the group arrives, no stuck spells, nobody lost.
+    2. A new snapshot: run `trim_snapshot.py IN OUT 1391 36 -559 1454 96 -480` and commit OUT as `scenario-snapshots/quarry-to-keep-stairhouse.zip`. A scene is at most 64 wide along x.
     3. `NpcMovementScene.CLIMB` and `make_snapshot_sample.py`'s `CLIMB` hold the same line; change both together. A new trace file needs `git add -f`.
