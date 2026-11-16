@@ -4,31 +4,30 @@ Templates for the [knk-docs-session skill](SKILL.md). Fill in the `<…>` parts;
 
 ## 1. Docs PR body
 
-Use the repo's `.github/pull_request_template.md` headings when the PR has one; fill them like this.
+Fill in knk-workspace's `.github/pull_request_template.md`; for a docs PR its sections read like this.
 
 ```markdown
+Closes PandiO/knk-workspace#<docs issue>
+
 ## Summary
 
 Docs for PandiO/knk-workspace#<feature issue>, written against <repo> `<branch>` `<commit>`, ... (PRs: <links>).
 
-Closes PandiO/knk-workspace#<docs issue>
-
 1. <file>: <what changed>
 2. ...
 
-## Differs from the plan
-
-1. <behaviour>: documented as the code does it; PandiO/knk-workspace#<issue> filed. (Or: none.)
+Differs from the plan: <behaviour, documented as the code does it; PandiO/knk-workspace#<issue> filed>, or none.
 
 ## Testing
 
-Docs only; relative links checked. <Smoke-test guide steps amended, if any.>
+1. Automated: docs only; the relative links added were checked.
+2. Live / smoke test: <smoke-test guide steps amended, or n/a>.
 
 ## Docs impact
 
-This PR is the docs follow-up. Left over: <issues, or none>.
+This PR is the docs follow-up; each line names the file changed or "n/a". Left over: <issues, or none>.
 
-## Admin steps
+## Admin steps for deploy (essential, before merge)
 
 None.
 
