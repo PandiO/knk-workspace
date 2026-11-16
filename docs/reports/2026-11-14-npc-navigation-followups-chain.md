@@ -52,7 +52,7 @@ Every link is merged into `next` (2026-11-15). Build knk-plugin from `next` `deb
 | M2 Corridor steering (option A) | #622 | Merged into next (2026-11-15) | knk-plugin `4e247835` → `next` `0fa74a67`; knk-workspace `a837776d` → `next` `8927eab2` | PandiO/knk-plugin#48, PandiO/knk-workspace#633 | PR head green (build, paper-boot with 45 scenarios, both runs); Codex at its usage limit | create_session session_01R1w2UszyqgMVxpBHaUa2oH (2026-11-15) |
 | M6 Clearance-aware local legs (add-on D) | #623 | Merged into next (2026-11-15) | knk-plugin `8fa83e09` → `next` `625c2c9c`; knk-workspace `f65d3c69` → `next` `e0783664` | PandiO/knk-plugin#49, PandiO/knk-workspace#634 | PR head green (build, paper-boot with 45 scenarios); Codex at its usage limit | create_session session_01R1w2UuwfDNhwngWZJue8wZ (2026-11-15) |
 | M3 Formation keeping | #624 | Merged into next (2026-11-16) | knk-plugin `94b30146` → `next` `138ebc66`; knk-workspace `1b4692ed` → `next` `a428eb3e` | PandiO/knk-plugin#50, PandiO/knk-workspace#635 | PR head green (build, paper-boot with 45 scenarios; one #586 log-check re-run); Codex at its usage limit | create_session session_01R1w2UufiGFpPfGevZxvtVD (2026-11-15) |
-| M5 Plaza lines | #625 | In review (2026-11-16) | knk-plugin `727f020b`; knk-workspace `f5aa56e` | PandiO/knk-plugin#51, PandiO/knk-workspace#637 | local 45/45 scenarios on the head; PR CI pending at writing; Codex: see the PRs | create_session session_01R1w2UwSt9YZCZUtsk5fQjU (2026-11-16) |
+| M5 Plaza lines | #625 | In review (2026-11-16) | knk-plugin `727f020b`; knk-workspace `f5aa56e` | PandiO/knk-plugin#51, PandiO/knk-workspace#637 | PR head green (build, paper-boot with 45 scenarios, push and PR runs 43792722751, 43793671690); #586 did not hit; Codex at its usage limit | create_session session_01R1w2UwSt9YZCZUtsk5fQjU (2026-11-16) |
 | M4 Crowd awareness | #626 | Not started (gate: M5 merged); then the option-B checkpoint | — | — | — | — |
 | M7 Collision with push resistance | #627 | Not started (gate: B checkpoint) | — | — | — | — |
 
@@ -974,7 +974,7 @@ _(Each link appends its block here when it finishes.)_
         1. Baseline on `next` 45/45.
         2. Branch head `727f020b`: 45/45, log check passed.
         3. An earlier branch run failed `npc-corners-walk`, three times in a row, with my settle-tolerance fix for #636 in. With it reverted the scenario passes (decision 5.8).
-    3. CI on PandiO/knk-plugin#51: pending when this block was written; the coordinator checks it.
+    3. CI on PandiO/knk-plugin#51 at `727f020b`: `build` and `paper-boot` green on the push run (43792722765, 43792722751) and the PR run (43793671677, 43793671690), 45/45 scenarios, log check passed; #586 did not hit. Codex: at its usage limit on both PRs (said on both); finished without it.
     4. Known reds: none.
 5. **Before (`next`, M1's baseline reproduced) → after (key on); collision off / on.**
     1. `npc-plaza-line`, 3 singles from the west road to the north road.
