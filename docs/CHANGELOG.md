@@ -4,6 +4,33 @@ This is a human-readable record of capabilities merged into the V3 default branc
 
 ## Unreleased — on feature branches, not merged
 
+- **NPC navigation: plaza lines, off by default** ([PandiO/knk-workspace#625](https://github.com/PandiO/knk-workspace/issues/625),
+  link M5 of the NPC navigation follow-ups chain, implementation plan Phase 4c.4 item 5, decision 6; BEHAVIOR_MODEL
+  NAV-27). knk-plugin and knk-workspace branches `claude/npc-movement-m5` (PRs into `next`, in review). Nothing
+  changes with `plaza-lines: false` (the default) or with `npc.navigation.enabled: false`.
+  1. **What it does.** The road graph collapses a plaza into one junction, so a route across a plaza runs to its
+     middle and out again. With `plaza-lines: true` an NPC crosses a plaza on the straight line from where its route
+     enters to where it leaves: the corridor widens to the plaza (a designed plaza's radius, or the open floor measured
+     round the junction when it is wider than `corridor-half-width`, at most `plaza-corridor-blocks`), and the line
+     goes round wells, stalls and trees with `wall-clearance` and never into a region the route does not pass.
+     Groups take the same line, kept their formation's half width plus `wall-clearance` from obstacles, and keep
+     their width on the open plaza. It works with or without `corridor-steering`. The players' trail and the road
+     graph are unchanged; through-edges in the road-graph builder are a later update (plan 4c.7).
+  2. **Checked.** In `npc-plaza-line` (a 15 × 15 plaza with a well on the chord) 3 singles walked +40 % over the
+     chord through the plaza's middle; with the key on they walk +4 % over the shortest line that keeps 0.8 from the
+     well and pass it at 0.64–0.75 blocks, never near the middle. A group of 7 in ranks of 3 takes the same line round
+     the well with its own margin, 3 abreast all the way. The scenario now asserts this, with collision off and on.
+     Known: with collision off the group there reports its arrival 20 s late (followers already in place), a bug in
+     `next` filed as [#636](https://github.com/PandiO/knk-workspace/issues/636).
+  3. **Deploy.** Add the keys to `npc.navigation` in `config.yml` (configuration reference § 4.27) and restart:
+
+     ```yaml
+     npc:
+       navigation:
+         plaza-lines: false
+         plaza-corridor-blocks: 16
+     ```
+
 - **NPC navigation: elastic formation keeping, off by default** ([PandiO/knk-workspace#624](https://github.com/PandiO/knk-workspace/issues/624),
   link M3 of the NPC navigation follow-ups chain, implementation plan Phase 4c.4 item 3, decision 2; #522, #493).
   knk-plugin and knk-workspace branches `claude/npc-movement-m3` (PRs into `next`, in review). Nothing changes with
