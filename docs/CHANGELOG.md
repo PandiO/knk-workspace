@@ -834,6 +834,19 @@ This is a human-readable record of capabilities merged into the V3 default branc
     3. To test: `enabled: true`, restart, then the steps under "Developer test" of Phases 1, 2, 3 and 4 in the
        implementation plan.
 
+## 2026-11-16
+
+- **Docs sessions follow a skill** ([PandiO/knk-workspace#425](https://github.com/PandiO/knk-workspace/issues/425))
+  — no game change; developer-facing. The docs-session procedure moved from `docs/ai-agents/docs-session-prompt.md`
+  into the new skill `.claude/skills/knk-docs-session/` (with templates for the docs PR, the closing comment and the
+  sessions-archive entry), so a docs session loads it instead of carrying it in its prompt. The rules are unchanged:
+  branch from knk-workspace `next`, merge its own docs PR into `next` once the checks pass and the Codex findings are
+  handled (or Codex is at its usage limit), agent workflow files by their own PR into `main`, smoke-test guides keep
+  every step with automated steps tagged, the tracker row goes straight to the sessions archive. The prompt is now a
+  short starter (issue numbers, merged commits, base, the skill to follow); the global instructions, the documentation
+  maintenance guide, `AGENTS.md` and `CLAUDE.md` point to the skill.
+  - **Admin steps:** none.
+
 ## v0.3 — 2026-11-15
 
 Release v0.3: the developer promoted `next` to trunk after testing it as a whole (knk-web-api `main` `2cc8254`,
