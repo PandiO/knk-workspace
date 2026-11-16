@@ -3,7 +3,9 @@
 **Status:** Approved by the developer (voice design review, 2026-11-05). This record is **authoritative** where it
 differs from DESIGN.md, PRODUCTION_KINDS.md, TOWN_LOGISTICS.md or IMPLEMENTATION_PLAN.md (all rev. 2, 2026-10-09)
 until those documents are revised to rev. 3.
-**Last updated:** 2026-11-05
+**Folded in:** 2026-11-05, rev. 3 of all four documents takes in this record. The record stays the source for the
+wording of each decision.
+**Last updated:** 2026-11-11 (§11 follow-up answers; §12-14 Territory)
 **Parent issue:** KNG-83 (now tracked as a `[KNG-83]` issue in `PandiO/knk-workspace`).
 **Scope of the review:** principles, storage, production structures, transport, NPC transporters, warehouses and
 town logistics, shops, shopkeepers and display stalls, NPC lifecycle.
@@ -360,3 +362,65 @@ carriers; the **NPC platform owns all of this**:
   fertility map, technologies, seasons, staffing, exhaustion, events, neighbour bonuses, upkeep, war disruption,
   per-player weather, ceilings/quotas/exports/emergency modes, clan councils, in-game runtime management, trade,
   pricing, professions/paid work for harvesting.
+
+## 11. Follow-up decisions (2026-11-11)
+
+The developer answered the open questions left by rev. 3 (question round in the rev. 3 session, 2026-11-11). Where an
+answer changes a §1-10 item, it says so.
+
+| # | Question | Decision |
+|---|---|---|
+| F1 | Shops: which blueprint base price | The **midpoint** of `BasePriceMin` and `BasePriceMax`. |
+| F2 | Shops: who receives purchase coins before town treasury accounts | **Town accounts now.** A minimal town account kind ships in V1 for shop income. Changes §5.4 / D-L5 (town treasury was Later). Trade and tax stay Later. |
+| F3 | Shops: value of enchantments on unique items | **A percentage** of the base price for now (§6.3 "value per enchantment"). |
+| F4 | Shops: shop tax modifier vs a later town tax | Direction, not built in V1: the town will tax shops, for example one global shop tax collected each period (a week, to be decided) as a percentage of that period's turnover. Inspiration undecided: Dutch law, US law, a hybrid, or medieval law. Shops then set a **margin** from item base prices, the cost of resources and manufacturing, and taxes, so they still make a profit; supply and demand still influence prices. The V1 per-shop tax modifier stays as the interim stand-in. Issue [#325](https://github.com/PandiO/knk-workspace/issues/325). |
+| F5 | Display stalls: sold-out items | **Greyed out** by default; hiding is an option per shop. |
+| F6 | Shops: what a shop's absent worker lowers | **Processing only** for now. This also drives the need for workers-for-hire and transport-for-hire. Once those exist, **sales** are affected too when a shop has only one NPC and it is out fetching stock. |
+| F7 | Selling to a shop vs a marketplace vendor | **Decide later.** |
+| F8 | Modifier order in the pipeline | **Additions first, then multiplications.** |
+| F9 | Net-positive harvest check | **Use the proposed check:** production lost while the pool refills must be below the town's share of one harvest; the web app warns per rule. |
+| F10 | Town's share of a harvest when Output is full | **Lost to the town** (rejected, stays in `SYS_PRODUCTION`, like a full line); the player's share is still paid. |
+| F11 | Uncollected warehouse reservations | **Expire**, released at the next planner run. The exact model is settled in P9. |
+| F12 | Filing Later items | File the Later logistics rules ([#324](https://github.com/PandiO/knk-workspace/issues/324)) and the shop turnover tax ([#325](https://github.com/PandiO/knk-workspace/issues/325)). Clan council governance and harvest professions/paid work are for a **later stage** than those; not filed yet. |
+
+## 12. Territory as a V1 requirement (2026-11-11)
+
+Developer request, 2026-11-11: **Territory is required for V1.** Production structures mostly stand in the rural
+parts of towns, they must still be connected to a town, and their regions need the same field validation as
+districts and gate structures. Replaces the "minimal, optional region" recommendation of DESIGN D1.
+
+Folded into DESIGN §3.4 and IMPLEMENTATION_PLAN P2. Proposals there still to confirm: a required region and town
+claim, which region rules block or warn (T1-T7), and no overlap with other territories or towns (a new
+`RegionNoOverlap` rule type).
+
+## 13. Territory is computed, not a WorldGuard region (2026-11-11)
+
+Developer voice design session, 2026-11-11, after §12. Written up in [territory DESIGN](../territory/DESIGN.md).
+
+- **No WorldGuard region for territory.** Ownership is calculated from distance to the holder's districts and its
+  range (base + power × factor, capital bonus), cached per chunk; border chunks are split and resolved per block.
+  Entry and exit run on chunk crossing; BlueMap draws from the cache. A one-way WorldGuard export is **parked**.
+- **Holders:** territory belongs to a town or a kingdom. Crown land outranks towns. Provinces are optional, between
+  town and kingdom.
+- **Overlap** of equal rank becomes a contested zone with a `TerritoryConflict` entity, resolved by admins in V1.
+- **Structures** belong to a town by a database link; the territory check at creation is a warning. A separate
+  `Loyalty` field is stored in V1; switching and revolts come later.
+- **World modification:** admins only; harvesting at production structures is the one exception.
+- **Later:** expansion points (range or grasp), grasp fading with distance, public safety, a cell grid with layers
+  (base grasp, structure bubbles, patrol trails) fed by a source registry of pull providers and pushed modifiers.
+
+This replaces §12's region proposals (required region, T1/T3/T4/T7 as WorldGuard checks). DESIGN §3.3-3.4 and
+IMPLEMENTATION_PLAN P2 were reconciled the same day: rural structures link to a town (`TownId`), placement rules P-1
+to P-3, territory V1 work in [#326](https://github.com/PandiO/knk-workspace/issues/326).
+
+## 14. Rural structures: confirmations (2026-11-11)
+
+The developer's answers on the reconciled DESIGN §3.4:
+
+| # | Question | Decision |
+|---|---|---|
+| R1 | How a rural structure links to its town | **`Structure.TownId`**, with exactly one of `DistrictId` and `TownId` set. Effective town = `District.Town ?? Town`. |
+| R2 | Do placement rules (P-1 to P-3) block or warn? | **It depends on the rule and admins configure it; warn by default.** Every placement rule is seeded as a warning; an admin can make it blocking. |
+| R3 | Production on contested land or outside the town's territory | **Keeps producing**, flagged with a dashboard warning. |
+| R4 | WorldGuard parent of a rural structure's region | **No parent for now**, so PvP stays allowed there. |
+| R5 | The structure's own NPCs (workers, shopkeeper) | **Invulnerable in V1**: players can fight each other there but can't kill a structure's NPCs. |
