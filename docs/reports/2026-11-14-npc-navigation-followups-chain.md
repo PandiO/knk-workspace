@@ -58,7 +58,7 @@ Every link is merged into `next` (2026-11-15). Build knk-plugin from `next` `deb
 | M3 Formation keeping | #624 | Merged into next (2026-11-16) | knk-plugin `94b30146` → `next` `138ebc66`; knk-workspace `1b4692ed` → `next` `a428eb3e` | PandiO/knk-plugin#50, PandiO/knk-workspace#635 | PR head green (build, paper-boot with 45 scenarios; one #586 log-check re-run); Codex at its usage limit | create_session session_01R1w2UufiGFpPfGevZxvtVD (2026-11-15) |
 | M5 Plaza lines | #625 | Merged into next (2026-11-16) | knk-plugin `727f020b` → `next` `3f116188`; knk-workspace `f5aa56e6` → `next` `f9be4963` | PandiO/knk-plugin#51, PandiO/knk-workspace#637 | PR head green (build, paper-boot with 45 scenarios, push and PR runs 43792722751, 43793671690); #586 did not hit; Codex at its usage limit | create_session session_01R1w2UwSt9YZCZUtsk5fQjU (2026-11-16) |
 | M4 Crowd awareness | #626 | Merged into next (2026-11-16); option-B checkpoint with the developer | knk-plugin `8c864f7a` → `next` `a35fed5a`; knk-workspace `9f09cf23` → `next` `5b8125e5` | PandiO/knk-plugin#52, PandiO/knk-workspace#638 | push and PR runs on `8c864f7a` green (build, paper-boot with 45 scenarios; runs 43799206281, 43800089307); #586 did not hit; 45/45 locally; Codex at its usage limit | create_session session_01R1w2UsvLHZouJWudj4FxjT (2026-11-16) |
-| M7 Collision with push resistance | #627 | In review (PRs open; `collidable` default kept off) | knk-plugin `a916fcc2`; knk-workspace `14c71afd` | PandiO/knk-plugin#57, PandiO/knk-workspace#656 | 48/48 scenarios locally; CI on the PR: see block 4.15 | create_session session_01R1w2UtyxLznso8wdydHmQf (2026-11-16) |
+| M7 Collision with push resistance | #627 | In review (PRs open; `collidable` default kept off) | knk-plugin `6393aa37`; knk-workspace `dc8a91c5` | PandiO/knk-plugin#57, PandiO/knk-workspace#656 | push and PR runs on `6393aa37` green (build, paper-boot with 48 scenarios); Codex at its usage limit | create_session session_01R1w2UtyxLznso8wdydHmQf (2026-11-16) |
 
 ## 3. Coordinator decisions
 
@@ -1131,8 +1131,8 @@ _(Each link appends its block here when it finishes.)_
     8. **M4 use** (block 4.14 § 10.2): `occupancy()` is unused. Push resistance reads positions directly, and only when a push happens. `waitsBehind` is unchanged. Recovery's occupied-cell rule applies to the walk back too, since it runs through the same ladder and leg code.
     9. **knk-workspace:** the changelog with the YAML, configuration reference § 4.27 and § 2.1, plan 4c.4 item 7.4 (status, tests, before → after, why the default stays off, developer test) and 4c.7 item 3.
 2. **Commits and heads.**
-    1. knk-plugin `claude/npc-movement-m7` at `a916fcc2`: 2 commits on `next` `f8f7fb2e`, which is still the head of `next` at the PR.
-    2. knk-workspace `claude/npc-movement-m7` at `14c71afd`: 1 commit on `next`.
+    1. knk-plugin `claude/npc-movement-m7` at `6393aa37`: 2 commits on `next` `a35fed5a`, then `next` `4b80cbd0` merged in (CI and agent files, mechanical).
+    2. knk-workspace `claude/npc-movement-m7` at `dc8a91c5`: 1 commit, then `next` merged in (the changelog conflict was two new entries; I kept both).
 3. **PRs.** PandiO/knk-plugin#57 (`Closes` #627) and PandiO/knk-workspace#656 (`Part of` #627), base `next`. Not merged.
 4. **Tests, baseline → result.**
     1. `./gradlew build -x deployToDevServer`, all with 0 failures:
@@ -1145,7 +1145,7 @@ _(Each link appends its block here when it finishes.)_
         3. `NpcNavigationConfigTest` +1.
         4. `PaperScenariosTest` updated.
     3. Scenarios run locally (`--min-scenarios 48 --npc-navigation`): baseline on `next` 45/45, branch 48/48 in 10 min 5 s. `MIN_SCENARIOS` is raised to 48; the 30-minute job timeout is kept.
-    4. CI and Codex on the PRs: in the final message to the coordinator.
+    4. CI: the push and PR runs on `6393aa37` are green (`build`, `paper-boot` with 48 scenarios). #586 did not hit. Codex is at its usage limit on both PRs; I said so on both and finished without it.
 5. **Numbers** (local, collision on, all 4c keys as in M4).
     1. The 4c.5 scenarios pass with collision on as with it off:
         1. Stair-house singles 12/12 with 0 stuck spells (31 NPC jostles, 0 returns).
