@@ -51,7 +51,7 @@ Every link is merged into `next` (2026-11-15). Build knk-plugin from `next` `deb
 | M1 Evidence and diagnostics | #621 | Merged into next (2026-11-15) | knk-plugin `3ce748e0` → `next` `a527c980`; knk-workspace `1310c3d9` → `next` `a8dbfa80` | PandiO/knk-plugin#47, PandiO/knk-workspace#632 | PR head green (build, paper-boot with 45 scenarios, both runs); Codex at its usage limit | create_session session_01R1w2Uv6Untjy5RbmJTDd1T (2026-11-15) |
 | M2 Corridor steering (option A) | #622 | Merged into next (2026-11-15) | knk-plugin `4e247835` → `next` `0fa74a67`; knk-workspace `a837776d` → `next` `8927eab2` | PandiO/knk-plugin#48, PandiO/knk-workspace#633 | PR head green (build, paper-boot with 45 scenarios, both runs); Codex at its usage limit | create_session session_01R1w2UszyqgMVxpBHaUa2oH (2026-11-15) |
 | M6 Clearance-aware local legs (add-on D) | #623 | Merged into next (2026-11-15) | knk-plugin `8fa83e09` → `next` `625c2c9c`; knk-workspace `f65d3c69` → `next` `e0783664` | PandiO/knk-plugin#49, PandiO/knk-workspace#634 | PR head green (build, paper-boot with 45 scenarios); Codex at its usage limit | create_session session_01R1w2UuwfDNhwngWZJue8wZ (2026-11-15) |
-| M3 Formation keeping | #624 | Running | — | — | — | create_session session_01R1w2UufiGFpPfGevZxvtVD (2026-11-15) |
+| M3 Formation keeping | #624 | In review (2026-11-16), not merged | knk-plugin `94b30146`; knk-workspace `1b4692ed` | PandiO/knk-plugin#50, PandiO/knk-workspace#635 | PR head green (build, paper-boot with 45 scenarios; one #586 log-check re-run); Codex at its usage limit | create_session session_01R1w2UufiGFpPfGevZxvtVD (2026-11-15) |
 | M5 Plaza lines | #625 | Not started (gate: M3 merged) | — | — | — | — |
 | M4 Crowd awareness | #626 | Not started (gate: M5 merged); then the option-B checkpoint | — | — | — | — |
 | M7 Collision with push resistance | #627 | Not started (gate: B checkpoint) | — | — | — | — |
@@ -879,3 +879,63 @@ _(Each link appends its block here when it finishes.)_
     1. **M3 (formations):** the corridor API is unchanged apart from the additive `Corridor.build(…, anyRegion)`. Group members still walk the unshaped line; a follower's own leg back is a K&K leg when the key is on.
     2. **M4 (crowding):** `LocalLegSearch.Grid.extra` is where an occupancy cost per cell would go; the leg avoids a cell when its access cost rises.
     3. **M7 (collision):** a pushed NPC's walk back can use `LocalLegSearch` directly (it needs only `NavWorld`, a `LocalLeg` and `wall-clearance`).
+
+### 4.12 M3 — Formation keeping: elastic widths, squeeze, look-ahead, fold last (#624)
+
+1. **Scope done** (plan 4c.4 item 3 and decision 2, with the developer's values of 2026-11-15; behind the new key `group-formation-keeping: levels|elastic`, default `levels`; `npc.navigation.enabled` stays off by default; with `levels` nothing changes but a `merges 0` in the stats line).
+    1. **Fit** (knk-core `GroupPath.fit`): per group path point, the free width left and right across the path, to the exact face of a wall, a drop, a cell of another step height on a flight, or a region the group's access rules deny, at most 4 a side; looked up once per point. A width fits where its lanes at `group-lateral-spacing-min` plus 0.35 each side fit.
+    2. **Squeeze:** neighbours as far apart as the road allows, from `group-lateral-spacing` down to `group-lateral-spacing-min` (0.6); the formation's centre off the path's centre where that keeps the outer lanes `wall-clearance` (0.8) from the faces, never under 0.35. Rows close up from `group-spacing` towards `group-spacing-min` (1.0) in quarter steps while the stretch squeezes; a column walks at the closed-up gap.
+    3. **Decision** (`NavGroup.decideElastic`): over the stretch from the rearmost slot to the formation's depth plus `group-lookahead-blocks` (4) ahead of the leader. A width is given up only for a tight place longer than `group-width-hysteresis-blocks` (measured half way to the neighbouring points), for the widest width without one, the column last; a wider width when the stretch has none for it. Same rule for the column (L8 finding 1 fixed).
+    4. **Merges:** a shorter tight place is passed with the lanes kept inside the free width (hard margin); logged (`merges its lanes for N blocks: … (reason) at …`) and counted once as the new event `GROUP_MERGE` with its reason (`WIDTH_CHANGES` now has fold, narrow, merge; metric label `merge`; the groups stats line `merges N (reasons)`; the scenario reports `merges`).
+    5. **Lanes:** each lane keeps within the bands of the points a path step behind to `LANE_RETURN` ahead, the preferred margin first, then the hard one.
+    6. **Stairs:** no rule of their own; on a flight only cells at the path's step height count (reason `stair` when a lane has no step of its own).
+    7. **Rules:** a lane cell in other regions is allowed when the group's cached verdicts (the leader's subject) let it enter; the fits are forgotten on a rule change.
+    8. **Re-assignment** (`NavGroup.reassign`): on every width change, followers by place (foremost first, each row by side) to the new width's slots sorted by back then side (L8 finding 2 fixed).
+    9. **Group path on the corridor** (decision 1.5; M2's note 10.2.3): each route point goes onto the line the shared `CorridorShaper` gives for its chunk of 20 points (one path point per route point kept, so the leader's index mapping is unchanged). The leader keeps the unshaped route (`setUnshapedMembers` unchanged).
+    10. **Keys:** `group-formation-keeping`, `group-lateral-spacing-min`, `group-spacing-min`, `group-lookahead-blocks` in `NavigationSettings` (`GroupSettings.Keeping`) with `config.yml` comments and the layer test.
+    11. **Scenarios:** `npc-stairhouse-group` (corridor and local-leg keys on too) and the group phase of `npc-jagged-straight` run elastic and check item 3.3 (`NpcMovementReport.groupFailures`: leader arrived, folds at most the 1-wide places measured with M1's `FreeWidth`, no spell open or not freed, none near a wall; failures list the spell lines); the stair house also checks 4c.5 item 3 (no follower still in the entrance over 10 s). `npc-group-narrows` runs elastic with its expectations moved to the squeeze. Scenario count stays 45.
+    12. **knk-workspace:** changelog with the YAML, configuration reference § 4.27 and § 2.1, plan 4c.4 item 3.4 (status, before → after, developer test).
+2. **Commits and heads.**
+    1. knk-plugin `claude/npc-movement-m3` at `94b30146`: 5 commits on `next` `625c2c9c`, still the head of `next`.
+    2. knk-workspace `claude/npc-movement-m3` at `1b4692ed`: 2 docs commits on `next` `e0783664`, still its head.
+3. **PRs.** PandiO/knk-plugin#50 (`Closes` #624, `Part of` #522, #493) and PandiO/knk-workspace#635 (`Part of` #624, #522, #493), base `next`. Not merged.
+4. **Tests, baseline → result.**
+    1. knk-plugin `./gradlew build -x deployToDevServer`: baseline on `next` `625c2c9c` core 2866, api-client 344 (2 skipped), paper 2853 (18 skipped); result core 2880 (+14), api-client 344, paper 2854 (+1), 0 failures. New: `NavGroupElasticTest` 14 (every case of item 3.2, the rows closing up, the column 0.8 off a wall, reads per point bounded and none on a second look), `NpcNavigationConfigTest` +1. Changed: `NpcNavRunnerTest` (merges), `GroupSim` (walls and floor heights).
+    2. Scenarios, local (Paper 26.3 b205, WorldEdit 7.4.6, WorldGuard 7.0.20, Citizens b4269, `--scenarios --npc-navigation --min-scenarios 45`): baseline on `next` 45/45, the log check failed only on #586 (a player scenario's API error); branch 45/45, log check passed; the converted `npc-group-narrows` passed again alone.
+    3. CI on PandiO/knk-plugin#50: `build` green on both runs (43781096479, 43781152888); `paper-boot` green on run 43781152887 (45/45, log check passed). Run 43781096517 passed 45/45 but its log check hit #586 (a player scenario's API error, also on my local baseline on `next`); its one re-run (job 133021397522) went green. Said on the PR.
+    4. Known reds: none. Codex: at its usage limit on both PRs (said on both); finished without it.
+5. **Before (`next`, `levels`; M1's baseline reproduced) → after (`elastic`); collision off / on.**
+    1. `npc-stairhouse-group` (20 in ranks of 3):
+        1. Folds 1 (`stair`, box 12 2 15, real 1412 -500) → 0; the line has 0 1-wide places; 3 abreast all the way, 0 narrows, 0 merges.
+        2. Leader 27.0 / 27.0 s → 7.5 / 8.0 s.
+        3. Longest follower still in the entrance 1413 -508: 23.7 / 23.5 s → 0.4 / 0.4 s.
+        4. Furthest behind its slot 0.8 / 0.6 → 1.0 / 0.9 blocks; lost 0; stuck spells 0 → 0.
+        5. Intermediate run (elastic, group path on the raw line): collision off 3 spells not freed, 1 lost; fixed by the shaped group path and the band smoothing.
+    2. `npc-jagged-straight`, group of 9:
+        1. Collision off: leader 23.4 → 9.7 s; stuck spells 5 (2 near a wall, 3 not freed, 1 left behind) → 0; lost 1 → 0. This is M2's and M6's unsteady group: elastic alone did not change it (identical numbers on the raw line); the cause was a follower crossing a notch's wall corner (a lane pulled into a one-sided notch for one point) and the last follower short of a slot measured along the wobbling skeleton line.
+        2. Collision on: 9.5 → 9.8 s, 0 → 0 spells.
+        3. 0 folds both ways, before and after.
+    3. K&K nav figure in these runs 0.01–0.03 ms per NPC per tick (start-up included, M1 § 5.6); the group's fits are cached per path point.
+6. **Decisions (DESIGN § 4.3).**
+    1. *Fit source.* Chosen: a lateral grid walk per group path point (floor continuity, stairs at the path's step, access verdicts), cached per point. Alternatives: (a) M2's `Corridor.freeWidth` (needs a corridor per group stretch with the regions of the line, not the group's verdicts; decision 2.6 asks for verdicts); (b) M1's `FreeWidth` (no regions, no step rule).
+    2. *`group-lookahead-blocks`.* Chosen: the key is the 4 blocks past the formation's depth (the decided "depth + 4"), default 4, 0–32. Alternatives: (a) the whole distance as one number (depends on group size).
+    3. *Merges.* Chosen: lanes clamped into the free width with the hard margin, no change of the slots' distance along the path. Alternatives: (a) a zipper with an along offset per merged lane (more state per follower; with collision on, bodies in one row converge for the length of the tight place: reported for M4/M7).
+    4. *Tight place length.* Chosen: half way to the points before and after it, so a 1-block place is about 1.5 blocks and a 4-block gate about 4.5. Alternatives: (a) first to last point (a 1-point place has length 0, a 4-block gate 3: not over the hysteresis 3).
+    5. *Row squeeze.* Chosen: the gap follows the lateral squeeze over the stretch, in quarter steps; the column at `group-spacing-min`. Alternatives: (a) rows only at the squeeze's end (abrupt); (b) the column at `group-spacing` (a longer column through 1-wide places).
+    6. *Reason mapping.* Chosen: door (gate box) first, then the fit's nearer side: step → `stair`, region → `rules`, drop → `edge`, wall or unloaded → `narrow`. Alternatives: (a) keep L4's `misfitReason` (judges lane points, not the fit).
+    7. *Group path shaping.* Chosen: route points moved onto the shared shaper's line per chunk of 20, one path point per route point; the leader still walks the unshaped route. Alternatives: (a) shape the leader too (M2's first run: slower with collision on); (b) rebuild the path from the shaped stretch the leader walks (breaks the leader-to-path index mapping); (c) no shaping (the jagged group kept its stuck spells).
+    8. *Access subject for lanes.* Chosen: the leader's name with the group's profile (members share a profile). Alternatives: (a) per follower (a fit per follower, no shared cache).
+    9. *npc-group-narrows.* Chosen: converted to elastic in place; L4's fixed widths stay covered by `NavGroupWidthsTest`. Alternatives: (a) an elastic copy (46 scenarios, more CI time near the 30-minute timeout).
+    10. *Stair-house entrance check.* Chosen: asserted now (0.4 s against 10 s). Alternatives: (a) leave it to M4 (plan 4c.4 item 4.3).
+7. **Out of scope, noted.**
+    1. With collision on, a merge brings a row's bodies into the same cell for the length of the tight place; M4 (turn-taking) or M7 (collision) should look at it. Not filed.
+    2. The scene's stair-house line has no 1-wide place, so the scenarios show no fold at all; a fold at a 1-wide place is covered by the knk-core gate test and `npc-group-narrows`. The developer's run on `quarry-to-keep` checks the real route's narrow places.
+    3. `plugin-scenarios.md` § 7 and `ci.md` § 7 (which scenarios run elastic): left for the docs session.
+8. **Blockers.** None.
+9. **At merge / what the developer must do.**
+    1. `config.yml`: add `group-formation-keeping: levels`, `group-lateral-spacing-min: 0.6`, `group-spacing-min: 1.0`, `group-lookahead-blocks: 4` under `npc.navigation` (YAML in the changelog and § 4.27). No migration.
+    2. The developer test is on #624 (comment 6904056605): `quarry-to-keep` and `south-gate-short` with a group of 20 in ranks and the key on.
+10. **Notes for later links.**
+    1. **M4 (crowding):** the entrance jam is gone in the scenarios with formation keeping alone (0.4 s), so there is nothing left of it for M4 to fix on this scene. Turn-taking at real chokepoints and merges under collision remain.
+    2. **M5 (plazas):** the group path uses `CorridorShaper` per chunk (`NavGroup.shapedLinePoint`); plaza widening of the corridor will reach groups through it.
+    3. `GroupPath.fit` and `NavGroup.elasticWidest` are the per-point cache; `forgetFits()` on rule changes.
