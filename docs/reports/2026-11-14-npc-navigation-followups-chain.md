@@ -301,6 +301,12 @@ the configuration reference § 4.27), then restart. In test order:
        (default 1.5) and no `group-formation-keeping`, so `levels`, not `elastic`; the M3 squeeze and look-ahead
        keys were not set either. The coordinator merged the file for the developer (`next` defaults, the dev
        server's own values kept, the old defaults replaced). The next smoke test runs on the merged file.
+36. **L9 checked and merged; B links created** (2026-11-16). § 6 held: CI `build` and `paper-boot` (48) green on
+    head `76259d86`, diff reviewed (a region-query supplier asked for on use; scenarios read regions through the live
+    module), Codex at its usage limit. Merged knk-plugin#61 → `a78fcce8`, knk-workspace#669 → `6e92b112`; retest
+    steps on #668. Side effect noted for B: per-region `npc.navigation` overrides never applied to NPCs before L9.
+    Created B1 #670, B2 #671, B3 #672, B4 #673 (sub-issues of #358) and started B1. B2–B4 are fixes; the manager has
+    the plan (decision 34).
 
 ## 4. Link blocks
 
