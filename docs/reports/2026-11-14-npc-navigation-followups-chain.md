@@ -308,6 +308,13 @@ the configuration reference § 4.27), then restart. In test order:
     steps on #668. Side effect noted for B: per-region `npc.navigation` overrides never applied to NPCs before L9.
     Created B1 #670, B2 #671, B3 #672, B4 #673 (sub-issues of #358) and started B1. B2–B4 are fixes; the manager has
     the plan (decision 34).
+37. **B1 checked and merged; B2 started** (2026-11-16). B1a (snapshot command) merged early at the developer's request
+    (knk-plugin#62 → `0f039203`, knk-workspace#691 → `21e3e103`); the developer took the snapshot at 21:25 UTC
+    (evidence branch `evidence/smoke-2026-11-16`). B1b (replay and scenes) § 6 held: CI `build` and `paper-boot` (50)
+    green on `6d81d59a`, production change only the gate-type fix of the snapshot taker; merged knk-plugin#63 →
+    `80902942`, knk-workspace#692 → `2da5d798`. On `next` the replay shows a group of 20 with 32 stuck spells and 6
+    followers lost while a leader alone arrives; the schematic climb with short stretches shows the falls, the
+    handovers onto another level and the guard-released turn. These are B2's pass/fail proof.
 
 ## 4. Link blocks
 
