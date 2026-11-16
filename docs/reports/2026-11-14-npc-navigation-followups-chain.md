@@ -54,7 +54,7 @@ the configuration reference § 4.27), then restart. In test order:
 | M4 Crowd awareness | #626 | Merged into next (2026-11-16); option-B checkpoint with the developer | knk-plugin `8c864f7a` → `next` `a35fed5a`; knk-workspace `9f09cf23` → `next` `5b8125e5` | PandiO/knk-plugin#52, PandiO/knk-workspace#638 | push and PR runs on `8c864f7a` green (build, paper-boot with 45 scenarios; runs 43799206281, 43800089307); #586 did not hit; 45/45 locally; Codex at its usage limit | create_session session_01R1w2UsvLHZouJWudj4FxjT (2026-11-16) |
 | M7 Collision with push resistance | #627 | Merged into next (2026-11-16); `collidable` stays false | knk-plugin `6393aa37` → `next` `cc5262ff`; knk-workspace `dc8a91c5` → `next` `8e3d7d06` | PandiO/knk-plugin#57, PandiO/knk-workspace#656 | push and PR runs on `6393aa37` green (build, paper-boot with 48 scenarios); Codex at its usage limit | create_session session_01R1w2UtyxLznso8wdydHmQf (2026-11-16) |
 | L9 Fix: running groups ignore a realtime district deny | #668 | In review (PRs open, not merged) | knk-plugin `76259d86`; knk-workspace `1dffa06d` | PandiO/knk-plugin#61, PandiO/knk-workspace#669 | push and PR runs on `76259d86` green (build, paper-boot with 48 scenarios; runs 43941362118, 43944997333); #586 did not hit; 48/48 locally; Codex at its usage limit | create_session session_01R1w2UvV75PszFp2o3mNoHB (2026-11-16) |
-| B1 Evidence: snapshot command (B1a), whole stair house and replay (B1b) | #670 | B1a merged into next (2026-11-16, `0f039203`); B1b in review (PRs open, not merged) | B1a: knk-plugin `1d9e3209`, knk-workspace `383cd24d`; B1b: knk-plugin `696bfee1`, knk-workspace `3685d70c` (both merged `next` after B1a) | PandiO/knk-plugin#62, PandiO/knk-workspace#691 (B1a); PandiO/knk-plugin#63, PandiO/knk-workspace#692 (B1b) | #62: build and paper-boot green (both runs); #63: pending at the time of this block; 50/50 scenarios locally in 15 min 23 s; Codex at its usage limit | create_session session_01R1w2Uvzb6xQBt2SwiokGoe (2026-11-16) |
+| B1 Evidence: snapshot command (B1a), whole stair house and replay (B1b) | #670 | B1a merged into next (2026-11-16, `0f039203`); B1b in review (PRs open, not merged) | B1a: knk-plugin `1d9e3209`, knk-workspace `383cd24d`; B1b: knk-plugin `99c27a40`, knk-workspace `824cb6c5` (both merged `next` after B1a) | PandiO/knk-plugin#62, PandiO/knk-workspace#691 (B1a); PandiO/knk-plugin#63, PandiO/knk-workspace#692 (B1b) | #62: build and paper-boot green (both runs); #63: pending at the time of this block; 50/50 scenarios locally in 15 min 23 s; Codex at its usage limit | create_session session_01R1w2Uvzb6xQBt2SwiokGoe (2026-11-16) |
 
 ## 3. Coordinator decisions
 
@@ -1349,8 +1349,9 @@ _(Each link appends its block here when it finishes.)_
     2. **B1b, the scene** (knk-plugin #63).
         1. `SizedScene` and `ScenarioScene.Box`: a scenario may ask for a bigger box (at most 64 wide along x).
         2. The stair house goes whole into `STAIRHOUSE_BOX` 32 × 40 × 72, in the frame real − (1400, 46, −553). Its decision is 6.4 below.
-        3. `npc-stairhouse-climb`, in report mode: a leader alone, a group of 20 in ranks, then the group with 20 singles beside it. They go from the street east of the house up all five flights to the top hall. They use `stretch-blocks` 8 and the dev server's smoke-test settings (decision 35.3).
-        4. `ClimbWatch` reports falls, places skipped or walked back to, handovers onto another level, queue let-gos and turns dropped by the 30 s guards, and where each NPC got to.
+        3. `npc-stairhouse-climb`, in report mode: a leader alone, a group of 20 in ranks, then the group with 20 singles beside it. They use `stretch-blocks` 8 and the dev server's smoke-test settings (decision 35.3).
+        4. **The line is the real route line.** `NpcMovementScene.CLIMB` is the `# waypoints:` lines of the developer's traces of 2026-11-16, going up: trace 69 reversed for the entrance from the east, trace 87 for the hall to the −536 landing, trace 63 for the top. The traces arrived at 21:08 (`evidence/smoke-2026-11-16` `2e46cb90`); the first version used a line found on the schematic. The eight traces are test resources (`.log`, added with `-f`). `NpcMovementSceneTest` checks that every point was handed out in a trace.
+        5. `ClimbWatch` reports falls, places skipped or walked back to, handovers onto another level, queue let-gos and turns dropped by the 30 s guards, and where each NPC got to.
     3. **B1b, the replay.**
         1. `AnvilRegion` reads `.mca` files without the server.
         2. `SnapshotReplay` (with `SnapshotRegions`) places the blocks and builds the regions with parents, priorities and flags. Its fake access rules come from the cached AllowEntry and gate door states. It also gives the stored line, gates, plazas and settings.
@@ -1359,29 +1360,34 @@ _(Each link appends its block here when it finishes.)_
     4. **CI** (B1b): `MIN_SCENARIOS` 50, `--expect-timeout 1800`, job timeout 40 minutes. Docs: plugin-scenarios § 1, § 3 items 7.5 and 8; ci.md § 7; changelog (knk-workspace #692).
 2. **Commits and heads.**
     1. knk-plugin `claude/npc-movement-b1`: `1d9e3209` (1 commit on `a78fcce8`, merged).
-    2. knk-plugin `claude/npc-movement-b1-scene`: `696bfee1` (WIP, merge fix, replay, CI; merges of B1a and `next` `0f039203`).
+    2. knk-plugin `claude/npc-movement-b1-scene`: `99c27a40` (WIP, merge fix, replay, CI, the real line; merges of B1a and `next` `0f039203`).
     3. knk-workspace `claude/npc-movement-b1`: `383cd24d` (merged).
-    4. knk-workspace `claude/npc-movement-b1-scene`: `3685d70c` (2 docs commits; merge of `next` `21e3e103`).
+    4. knk-workspace `claude/npc-movement-b1-scene`: `824cb6c5` (3 docs commits; merge of `next` `21e3e103`).
 3. **PRs.** PandiO/knk-plugin#62 and PandiO/knk-workspace#691 (B1a, `Part of`, merged by the coordinator). PandiO/knk-plugin#63 (`Part of`) and PandiO/knk-workspace#692 (`Closes #670`), both base `next` and not merged.
 4. **Tests, baseline → result.**
-    1. knk-plugin `./gradlew build -x deployToDevServer`. Baseline on `next` `a78fcce8`: core 2956, api-client 344 (2 skipped), paper 2869 (18 skipped). B1a: core 2968 (+12), paper 2874 (+5). B1b: paper 2881 (+7). 0 failures. New tests:
+    1. knk-plugin `./gradlew build -x deployToDevServer`. Baseline on `next` `a78fcce8`: core 2956, api-client 344 (2 skipped), paper 2869 (18 skipped). B1a: core 2968 (+12), paper 2874 (+5). B1b: paper 2882 (+8). 0 failures. New tests:
         1. `NavSnapshotZipTest` 4.
         2. `SnapshotBoxTest` 4.
         3. `SnapshotPartsTest` 4.
         4. `NavSnapshotTakerTest` 5.
         5. `AnvilRegionTest` 3: the sample's region files hold the schematic block for block.
         6. `SnapshotReplayTest` 3.
-        7. `NpcMovementSceneTest` +1: the climb line stands on the stairs and passes every flight in order. The frame test was updated.
+        7. `NpcMovementSceneTest` +2: the climb line stands on the stairs and passes every flight in order; every point is in a trace. The frame test was updated.
     2. CI: #62 `build` and `paper-boot` green on both runs (43952687158/43952687294 and 43952631925/43952631894). #63 was pending when this block was written.
-    3. Scenarios, locally (Paper 26.3 b205, WorldEdit 7.4.6, WorldGuard 7.0.20, Citizens b4269, `--min-scenarios 50 --npc-navigation`): 50/50 passed and the log check passed, in 15 min 23 s. The M3/M4 checks of the stair-house singles and group hold in the bigger box (leader 7.5 s, 0 folds).
-    4. **What the climb shows on `next`** (the same on four runs):
-        1. Leader alone: arrived after 70.5 s. **8 handovers onto another level**: at 1410 52 −493 it got a stretch from 1409 61 −497, 9 blocks up (decision 34's main cause). **1 fall** from the −490 landing (1411 59 −491) down to 56. 1 stuck spell; longest still 11.5 s.
-        2. Group of 20: the leader arrived after 51.2 s; 5 reached the top hall, and the rest were on flights 4 and 5.
-        3. Group of 20 with 20 singles: **13 falls under the −490 landing**, **104 handovers onto another level**, 13 stuck spells, 19 of 40 in the top hall. The longest queue wait was 28.3 s, with **0 let go and 0 turns dropped by the 30 s guard**.
-        4. `npc-snapshot-replay`: 15,044 blocks from 13 chunks, 4 regions, the leader arrived after 52.5 s, 1 stuck spell.
+    3. Scenarios, locally (Paper 26.3 b205, WorldEdit 7.4.6, WorldGuard 7.0.20, Citizens b4269, `--min-scenarios 50 --npc-navigation`): 50/50 passed and the log check passed, in 15 min 23 s. That run was on the schematic line; the real line makes the climb about 2 minutes longer. The M3/M4 checks of the stair-house singles and group hold in the bigger box (leader 7.5 s, 0 folds).
+    4. **What the climb shows on `next`, on the real line.** All three failures of the smoke test show:
+        1. Leader alone: still walking after 90 s, with 17 stuck spells near 1411 50 −499 (the smoke test's stuck spot 1410 49 −503). **37 handovers onto another level**; for example, at 1411 49 −501 it got a stretch from 1415 56 −500, 7 blocks up.
+        2. Group of 20: the leader arrived after 125.7 s.
+            1. **30 falls from 1411 51 −496 to 1411 49 −500**: the smoke test's fall at 1412 49 −500.
+            2. 22 handovers onto another level.
+            3. **1 turn dropped by the crowd's 30 s guard**: the leader held its turn from 1409 54 −499 for 30.3 s.
+            4. 1 follower lost.
+        3. Group of 20 with 20 singles: the leader was still walking after 150 s. **78 falls**, among them from the −490 landing to 56. **434 handovers onto another level**. 111 stuck spells. 6 NPCs reached the top hall.
+        4. `npc-snapshot-replay`: 15,044 blocks from 13 chunks and 4 regions; the leader arrived after 52.5 s, with 1 stuck spell. That run was on the schematic line; the sample now carries the real line.
+        5. The first version, on the schematic line, showed the same causes more weakly: 8 / 104 handovers onto another level, 1 / 13 falls under the −490 landing, and no guard release.
     5. Known reds: none. Codex: at its usage limit on #62 (said on the PR).
 5. **Decisions (DESIGN § 4.3).**
-    1. *The route line without the traces.* Chosen: a walk search on the schematic along the middle of each 3-wide flight (columns 1409 and 1415), joined to M1's line, entering from the street in the east, with whole-block heights. It is checked in `NpcMovementSceneTest`. Alternatives: (a) wait for the traces (the branch `evidence/smoke-2026-11-16` holds only the README; I told the coordinator at the start); (b) a hand-drawn line (slower, less exact).
+    1. *The route line.* Chosen: the traces' `# waypoints:` lines as handed out (feet blocks; at stretch joins the duplicate is dropped). The street east of x 1418 is the scene's own flat street at feet 49; the real street falls to 1433 44 −516, beyond the schematic. Alternatives: (a) the road graph's own polyline (only in a snapshot; it will come with the developer's zip); (b) the line found on the schematic, used until the traces arrived (it showed the failures more weakly).
     2. *Short stretches.* Chosen: `stretch-blocks` 8 in the climb, so handovers fall on the hairpins of 10 to 13-block flights. Alternatives: (a) the default 32 (fewer handovers; the traces would show which the server used); (b) 4 (more handovers than any real setting).
     3. *Box for the whole house.* Chosen: a scenario-sized box (`SizedScene`), with 32 × 40 × 72 for the stair house. Alternatives: (a) a second 32 × 24 × 32 box above the first (two scenes for one walk; the host has no stacked boxes); (b) a bigger default box for every scenario (every scene would clear 92k blocks twice).
     4. *Group phases.* Chosen: three phases, the third with 20 singles beside the group, as in the smoke test's 39-NPC queue. Alternatives: (a) only the group of 20 the issue names (no crowd; no falls shown); (b) a collision-on variant (the dev server ran collision off; it would add 5 minutes in CI).
@@ -1390,14 +1396,13 @@ _(Each link appends its block here when it finishes.)_
     7. *Sample snapshot.* Chosen: a zip generated from the schematic, so the replay runs in CI now and the developer's zip drops in the same way. Alternatives: (a) no replay scenario until the developer's zip arrives (the replay would go untested on Paper).
     8. *Region files.* Chosen: search the world folder up to 6 levels deep for `region/r.x.z.mca`, keeping each path in the zip. Alternatives: (a) a fixed `region/` path (it breaks with 26.x's dimension folders).
 6. **Out of scope, noted.**
-    1. **The 30 s guard release is not reproduced.** The crowd phase's longest wait is 28.3 s and nothing is let go. The smoke test's queue formed at the top landing (1412 74 −536) under a holder that fell. In this run the falls are at the −490 landing, and the followers jam on flights 4 and 5. Proposal: B3 adds a holder that falls under the −536 landing (a scripted push from the top landing) once the developer's snapshot is replayed. Not filed.
-    2. The developer's traces of 2026-11-16 are not on `evidence/smoke-2026-11-16` (README only).
+    1. The crowd's own counter `let go` stays 0. The guard that fired drops a turn (`STALE_TICKS`), and the crowd does not count that; `ClimbWatch` counts it. For B3 to note. Not filed.
+    2. The traces were missing from `evidence/smoke-2026-11-16` at the start (`*.log` is git-ignored); the coordinator added them at `2e46cb90`.
 7. **Blockers.** None.
 8. **At merge / what the developer must do.**
     1. Nothing in `config.yml`, no migration.
     2. On the dev server (B1a, in `next`): `/knk npc nav snapshot quarry-to-keep`, then upload the zip from `plugins/KnightsAndKings/npc-snapshots/` to the coordinator session.
-    3. Push the traces of 2026-11-16 to `evidence/smoke-2026-11-16`.
 9. **Notes for later links.**
     1. To replay the developer's zip: put it in `knk-paper/src/main/resources/scenario-snapshots/` and copy `NpcSnapshotReplayScenario` with its name. The scene box is the snapshot's own box (`boxOf`), at most 64 wide.
     2. `ClimbWatch`'s numbers turn into checks in B2 (handovers onto another level 0, falls 0), B3 (no turn dropped by the guard) and B4 (jumps).
-    3. `NpcMovementScene.CLIMB` / `make_snapshot_sample.py` `CLIMB` hold the same line; change both together, or replace both with the trace's waypoints.
+    3. `NpcMovementScene.CLIMB` and `make_snapshot_sample.py`'s `CLIMB` hold the same line; change both together. A new trace file needs `git add -f`.
