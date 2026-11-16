@@ -53,7 +53,7 @@ Every link is merged into `next` (2026-11-15). Build knk-plugin from `next` `deb
 | M6 Clearance-aware local legs (add-on D) | #623 | Merged into next (2026-11-15) | knk-plugin `8fa83e09` → `next` `625c2c9c`; knk-workspace `f65d3c69` → `next` `e0783664` | PandiO/knk-plugin#49, PandiO/knk-workspace#634 | PR head green (build, paper-boot with 45 scenarios); Codex at its usage limit | create_session session_01R1w2UuwfDNhwngWZJue8wZ (2026-11-15) |
 | M3 Formation keeping | #624 | Merged into next (2026-11-16) | knk-plugin `94b30146` → `next` `138ebc66`; knk-workspace `1b4692ed` → `next` `a428eb3e` | PandiO/knk-plugin#50, PandiO/knk-workspace#635 | PR head green (build, paper-boot with 45 scenarios; one #586 log-check re-run); Codex at its usage limit | create_session session_01R1w2UufiGFpPfGevZxvtVD (2026-11-15) |
 | M5 Plaza lines | #625 | Merged into next (2026-11-16) | knk-plugin `727f020b` → `next` `3f116188`; knk-workspace `f5aa56e6` → `next` `f9be4963` | PandiO/knk-plugin#51, PandiO/knk-workspace#637 | PR head green (build, paper-boot with 45 scenarios, push and PR runs 43792722751, 43793671690); #586 did not hit; Codex at its usage limit | create_session session_01R1w2UwSt9YZCZUtsk5fQjU (2026-11-16) |
-| M4 Crowd awareness | #626 | In review (PRs open, not merged) | knk-plugin `8c864f7a`; knk-workspace `9f09cf2` | PandiO/knk-plugin#52, PandiO/knk-workspace#638 | push run on `8c864f7a` green (build, paper-boot with 45 scenarios); 45/45 locally; Codex at its usage limit | create_session session_01R1w2UsvLHZouJWudj4FxjT (2026-11-16) |
+| M4 Crowd awareness | #626 | In review (PRs open, not merged) | knk-plugin `8c864f7a`; knk-workspace `9f09cf2` | PandiO/knk-plugin#52, PandiO/knk-workspace#638 | push and PR runs on `8c864f7a` green (build, paper-boot with 45 scenarios; runs 43799206281, 43800089307); #586 did not hit; 45/45 locally; Codex at its usage limit | create_session session_01R1w2UsvLHZouJWudj4FxjT (2026-11-16) |
 | M7 Collision with push resistance | #627 | Not started (gate: B checkpoint) | — | — | — | — |
 
 ## 3. Coordinator decisions
@@ -1048,7 +1048,7 @@ _(Each link appends its block here when it finishes.)_
         4. `LocalLegSearchTest` +1
         5. `NpcNavigationConfigTest` +1
     2. Scenarios, run locally (Paper 26.3 b205, WorldEdit 7.4.6, WorldGuard 7.0.20, Citizens b4269, `--min-scenarios 45 --npc-navigation --expect-timeout 1200`): baseline on `next` 45/45, branch 45/45, log check passed.
-    3. CI: push run on `8c864f7a` `build` and `paper-boot` green (45 scenarios); the PR run's result is in the coordinator message. #586 did not hit.
+    3. CI: push and PR runs on `8c864f7a`, `build` and `paper-boot` green (45 scenarios; paper-boot runs 43799206281 and 43800089307). #586 did not hit.
     4. Known reds: none. Codex: at its usage limit on both PRs; said on both, finished without it.
 5. **Before (`next`, M1's baseline reproduced) → after; collision off / on.**
     1. `npc-doorway-crowd`, before with all keys off:
