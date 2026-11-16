@@ -1,6 +1,6 @@
 # knk-web-api — Architecture
 
-**Status:** Current · **Last updated:** 2026-11-15 (§5.7: player profile API part, kick and ban from the web, #565 in review); 2026-11-15 (lookups take the picker's narrowing filters, #288 in review); 2026-11-15 (§5.5: validation rules in the builder draft, add-from-template endpoints removed; #291 in review); 2026-11-15 (§5.4: "Show what uses it" for form configurations and `?all=true`, #289, knk-web-api#34 in `next`); 2026-11-15 (§5.2 grant reads, §5.6 permission grants, group member count and the generic audit subject; #408, #50 in `next`, docs #576)
+**Status:** Current · **Last updated:** 2026-11-15 (release v0.3: #408, #50, #288, #291, #565 on knk-web-api `main` `2cc8254`, PandiO/knk-workspace#577)
 
 ## 1. Stack & shape
 
@@ -208,8 +208,8 @@ pinned):
   - `POST api/Lookup/{entityType}/search` `{ searchTerm, page, pageSize ≤ 50, filters? }` → `{ items: [{ id, label,
     detail? }], total }` through the type's own search (no sort); `GET api/Lookup/{entityType}/{id}` → `{ id, label,
     detail? }` through its own get by id.
-  - **Filters** (PandiO/knk-workspace#288, developer decision 2026-11-15; knk-web-api branch
-    `claude/lookup-picker-filters-288`, in review): a relation field's narrowing pickerFilters, passed to the type's own
+  - **Filters** (PandiO/knk-workspace#288, developer decision 2026-11-15; knk-web-api#36,
+    released in v0.3): a relation field's narrowing pickerFilters, passed to the type's own
     search, which applies them as for its `POST …/search`. Each type's lookup lists the keys it takes
     (`DashboardLookup.Filters` in `DashboardLookups.cs`, a subset of what its search reads, in its spelling, kind `Id`,
     `Flag` or `Prefer`): Category `parentCategoryId`; ItemBlueprint `CategoryId`; Clan `preferTownId`; District
@@ -229,7 +229,7 @@ pinned):
     No rate limit (like the searches it replaces).
 - **The plugin** passes every gated read with its key (`api.auth.type: apikey`); `ReadAccessRulesTests` lists every
   GET and search POST of knk-plugin's `knk-api-client` and runs them through the filters.
-- **Permission grants** (#408, knk-web-api `next` `2425f181`): `GET api/PermissionGrants`, `GET {id}` and `POST
+- **Permission grants** (#408, knk-web-api `2425f181`, released in v0.3): `GET api/PermissionGrants`, `GET {id}` and `POST
   search` are all U on `knk.admin.user.manage`, the PermissionGrant type's view node; the search was on
   `knk.admin.user.perm` before, so a `manage`-only rank saw the type listed and couldn't open it. The writes stay on
   `knk.admin.user.perm` (§ 5.6). `GET api/PermissionGroups/{id}/member-count` (#50) is U on `knk.admin.user.manage`
@@ -344,10 +344,10 @@ saved wizard drafts and detail pages read. The builder's working copy waits besi
   default flag in step (`SyncDraftDefaultAsync`, also for display).
 - **Templates**: `{configId}/steps/add-from-template` and `steps/{stepId}/fields/add-from-template` (they wrote into the
   published rows) and `FormTemplateReusableService` were **removed** in
-  [#291](https://github.com/PandiO/knk-workspace/issues/291) (in `next`): since #71 the web app copies templates into the
+  [#291](https://github.com/PandiO/knk-workspace/issues/291) (since v0.3): since #71 the web app copies templates into the
   working copy, and no caller was left (web app, plugin, scripts checked 2026-11-15). The display builder never had
   such endpoints.
-- **Field validation rules in the copy** ([#291](https://github.com/PandiO/knk-workspace/issues/291), in `next`): the
+- **Field validation rules in the copy** ([#291](https://github.com/PandiO/knk-workspace/issues/291), since v0.3): the
   form copy carries `validationRules` (`FormDraftValidationRuleDto`: `id` of the published rule or none, `fieldGuid`,
   `dependsOnFieldGuid` for a field of this form or `dependsOnFieldId` for another form's field, and the rule's values).
   `GET {id}/builder` fills `configuration.validationRules` from the copy, or with the published rules when the copy has
@@ -370,10 +370,10 @@ saved wizard drafts and detail pages read. The builder's working copy waits besi
   builder's working copy (`POST …/health-check/configuration/draft`). Severity `Warning`, or `Info` when the condition is
   switched off; it never blocks a save or a publish. Only JSON in the builder's shape is judged.
 
-### 5.6 Permission grants, group member count and the generic audit subject (PandiO/knk-workspace#408, #50; in `next`)
+### 5.6 Permission grants, group member count and the generic audit subject (PandiO/knk-workspace#408, #50; released in v0.3)
 
-Merged into knk-web-api `next`: #408 at `2425f181` (2026-11-14), #50 at `dcbb1f82` (2026-11-15); on `master` when the
-developer promotes `next`. Covered by the API tests named below; the developer's manual steps of the
+Merged into knk-web-api `next`: #408 at `2425f181` (2026-11-14), #50 at `dcbb1f82` (2026-11-15); on `main` since
+release v0.3 (2026-11-15, `2cc8254`). Covered by the API tests named below; the developer's manual steps of the
 [dashboard access smoke test § 8.6 and § 8.7](../guides/dashboard-access-smoke-test.md#86-the-permissiongrant-table-408)
 have not run yet. Web app side: [web-app architecture § Staff permission screens](web-app-architecture.md#staff-permission-screens-pandioknk-workspace408-50-407-in-next).
 
@@ -422,9 +422,10 @@ have not run yet. Web app side: [web-app architecture § Staff permission screen
   the plugin late ([#558](https://github.com/PandiO/knk-workspace/issues/558)); effective permissions carry no expiry
   ([#568](https://github.com/PandiO/knk-workspace/issues/568)).
 
-### 5.7 Player profile API part, kick and ban from the web (PandiO/knk-workspace#565; in review)
+### 5.7 Player profile API part, kick and ban from the web (PandiO/knk-workspace#565; released in v0.3)
 
-Link L6 of the Chain 3 follow-ups chain, branch `claude/player-profile-api-119` (PR into `next`).
+Link L6 of the Chain 3 follow-ups chain, branch `claude/player-profile-api-119` (knk-web-api#37 `5e10185f` into `next`, on
+`main` since release v0.3).
 
 1. **Unfreeze reason:** `PUT api/Users/{id}/unfreeze` takes an optional body `{ "reason" }`
    (`EmptyBodyBehavior.Allow`, so the plugin's body-less call still works); `UserService.SetFrozenAsync` writes the
@@ -530,6 +531,9 @@ Contrary to what both this repo's and knk-plugin's CLAUDE.md currently say ("no 
 Full detail, file:line citations, and the complete endpoint/service/repository/entity tables are in `docs/reports/web-api-scan-2026-09-18.md`. Practical "how to work in this repo" guidance is in `docs/guides/web-api-reading-guide.md`.
 
 ## Changes
+
+- 2026-11-15 (release v0.3: §5.2, §5.3, §5.6, §5.7 markers of #408, #50, #288, #291, #565; PandiO/knk-workspace#577)
+- Header history from 2026-11-13 to 2026-11-15, as the old `Last updated` line gave it: 2026-11-15 (§5.7: player profile API part, kick and ban from the web, #565 in review); 2026-11-15 (lookups take the picker's narrowing filters, #288 in review); 2026-11-15 (§5.5: validation rules in the builder draft, add-from-template endpoints removed; #291 in review); 2026-11-15 (§5.4: "Show what uses it" for form configurations and `?all=true`, #289, knk-web-api#34 in `next`); 2026-11-15 (§5.2 grant reads, §5.6 permission grants, group member count and the generic audit subject; #408, #50 in `next`, docs #576)
 
 Header history up to 2026-11-13, as the old `Last updated` line gave it, newest first (newer changes: the header and git history):
 

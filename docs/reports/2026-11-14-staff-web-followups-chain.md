@@ -1,6 +1,6 @@
 # Staff web app follow-ups chain — progress report
 
-**Status:** Running (2026-11-14) · **Last updated:** 2026-11-14
+**Status:** Done, in review (2026-11-15): all three links in `next`; waiting for the developer's test and promotion · **Last updated:** 2026-11-15
 
 **Issue:** [PandiO/knk-workspace#517](https://github.com/PandiO/knk-workspace/issues/517), links
 [#408](https://github.com/PandiO/knk-workspace/issues/408) (L1),
@@ -10,8 +10,12 @@
 
 ## 1. Waiting for the developer
 
-1. Nothing yet. L2 (#50) will ask the developer two questions inside the link before coding (group-level audit,
-   plugin freshness).
+1. **Test `next` and promote** (merge order already done; deploy order: DB backup, API, `dotnet ef database update`, web app):
+    1. L1 #408: dashboard access smoke test § 8.6, untagged steps (owner view with real data; a `knk.admin.user.manage`-only rank).
+    2. L2 #50: § 8.7, untagged steps (migration on an alpha copy; group source on a member's Effective Permissions and History; in-game freshness; rank refusal).
+    3. L3 #407: player profile smoke test § 6, untagged steps (real player with many nodes; phone/desktop, light/dark).
+2. Docs: #576, docs session session_01R1w2UwNAdyiXgxPZJbXqdo (merges its own docs PR into `next`).
+3. Follow-ups filed by the links: #530, #531, #558 (plugin: inheriting groups refresh), #568 (expiry on effective permissions).
 
 ## 2. Summary
 
@@ -19,7 +23,7 @@
 |---|---|---|---|---|---|---|---|
 | L1 PermissionGrant table | #408 | Merged into next (2026-11-14) | api `6e34af5`, app `110d5f2`, ws `b6547485`; next: api `2425f181`, app `9a29623a`, ws `aef2f99f` | knk-web-api#30, knk-web-app#29, knk-workspace#529 | green on the PRs; next running | create_session session_01R1w2Ut6UjJQM8QpXM4o6co | automated first, `main` `aa4208b3` (unchanged at start) |
 | L2 Group grants panel | #50 | Merged into next (2026-11-15) | api `00b8060`, app `28c0d47`, ws `da034e05`; next: api `dcbb1f82`, app `42781025`, ws `685a4677` | knk-web-api#32, knk-web-app#35, knk-workspace#560 | green on the code PRs; Codex at its usage limit | subagent (coordinator skill § 4.1.4: two component repos) | automated first, `main` `aa4208b3` (unchanged at start) |
-| L3 Profile Permissions tab | #407 | Running (2026-11-15) | — | — | — | create_session session_01R1w2Uu4cu227Le97QQaG5U | automated first, `main` `aa4208b3` (unchanged) |
+| L3 Profile Permissions tab | #407 | Merged into next (2026-11-15) | app `567f15d`, ws `c5de65d5`; next: app `b2589eb4`, ws `02ab9c05` (guides rewritten, head `807e7ff2`) | knk-web-app#37, knk-workspace#569 | green on knk-web-app#37; Codex at its usage limit | create_session session_01R1w2Uu4cu227Le97QQaG5U | automated first, `main` `aa4208b3` (unchanged) |
 
 ## 3. Coordinator decisions
 
@@ -52,6 +56,10 @@
 
 12. **L2 check and merge (2026-11-15).** Chosen: merge knk-web-api#32, knk-web-app#35, knk-workspace#560 into `next` with merge commits, because every § 6 check held: heads match, the API branch contains `next`, the web-app and workspace branches were 2 and 4 commits behind but merge cleanly (a removed debug spec; town streets docs), CI green on both code PRs (incl. `fresh-database` for the migration), no review threads, Codex at its usage limit (rule 4, noted on each PR), scope inside #50 plus the developer's audit decision, automated proof (31 xUnit, Jest, 11 Playwright tests). The migration `AddAuditLogSubject` is additive (nullable columns, index, `TargetUserId` nullable); its Down maps null targets to 0, documented. Alternatives: (a) send L2 back to merge `next` first: the missing commits touch no file L2 changed; `next` CI covers the merge result.
 13. **L3 route and recheck.** Chosen: `create_session` (knk-web-app only besides knk-workspace), after rechecking: no rule change since `aa4208b3` (only coordinator skill `ffbc7176`), #387 still open, no open knk-web-app PRs, the only other web-app claim (#535) is on `EmailLogPage`/`InvitationsPage`. Alternatives: (a) subagent: not needed for one component repo, and a session can ask the developer.
+
+14. **L3 check (2026-11-15): code merged, guides sent back.** knk-web-app#37 merged into `next` (`b2589eb4`): CI green on the PR, the 5 commits it lacked (#535, #290) don't touch `DataTable` or its files, scope inside #407 (the Expires column left out because `EffectivePermissionEntryDto` has no expiry, #568 filed: accepted as a logged decision), Codex at its usage limit. `next` CI green in both repos at heads containing L2. knk-workspace#569 held back: the test rule changed on `main` at 09:38 (`4effca89`, developer decision 2026-11-15: smoke guides keep every step in full, automated steps tagged), after L3 read `aa4208b3`. I merged `next` into the branch (CHANGELOG, kept both) and sent L3 back to rewrite its § 6 and this chain's merged § 8.6 (L1) and § 8.7 (L2) in the new format. Rule versions: L1 and L2 `aa4208b3`; L3 code `aa4208b3`, guides `4effca89`. Alternatives: (a) merge #569 and leave the three sections to a later backfill: the rule applies to every guide at once; (b) rewrite them myself: links write docs, the coordinator does bookkeeping.
+
+15. **End of chain (2026-11-15).** knk-workspace#569 merged into `next` (`02ab9c05`) after L3's rewrite (`9b361028`) and the status-line recount (`807e7ff2`, 66 of 106 steps tagged); Codex at its usage limit. One `documentation` sub-issue for the whole chain (#576 under #517) instead of one per feature, because the three features share the same guides and architecture sections. Docs session started with create_session. Issues #408, #50, #407 stay `status:in-review` until promotion. Alternatives: (a) three docs issues: three sessions editing the same admin guides at once.
 
 ## 4. Link blocks
 
@@ -233,3 +241,85 @@ _(Each link appends its block here when it finishes.)_
        `userManagementClient.grantNode`/`revokeNode`; `GroupPermissionsPanel` shows one way to do a grant form with
        gates and a confirmation.
     2. `mockSession` already answers `hubs/` with 404, so strict specs need no extra negotiate mock.
+
+### 4.3 L3 — Player profile Permissions tab: form on top, search, sortable columns (#407)
+
+1. **Scope done.**
+    1. knk-web-app: the Effective Permissions card is now its own component,
+       `src/pages/admin/playerProfile/EffectivePermissionsCard.tsx`, and `PlayerProfilePage.tsx` loses its inline
+       section, state and handlers (182 lines out). The grant/deny form sits above the list. A search box filters by
+       node and source (a group's name, "direct") and shows "n of N nodes" and "No permissions match “…”.". Node, Value
+       and Source sort through the shared `DataTable` (asc → desc → off, arrow, `aria-sort`); with no sort the API's
+       order stays. The helpers are in `effectivePermissions.ts`. Unchanged: the 1-day default expiry, the
+       `knk.admin.user.perm` gate, grant/deny/remove with the refresh, and the "Remove direct grant of …" labels. The
+       group panel (#50), the PermissionGrant table (#408), `EmailLogPage`/`InvitationsPage` (#535) and every e2e helper
+       line are untouched; `e2e/fixtures/players.ts` has new exports only (`mockProfilePermissions`, `directNode`,
+       `groupNode`), and `e2e/player-profile.spec.ts` gets a new block plus its import lines.
+    2. knk-workspace: a `docs/CHANGELOG.md` entry and the new `docs/guides/player-profile-smoke-test.md` § 6 (7
+       automated lines, 2 manual steps); no other lines in the guide changed. `dashboard-access-smoke-test.md` § 5 is
+       unchanged because granting works as before.
+2. **Commits and heads.** knk-web-app `claude/profile-permissions-407` at `567f15d` (1 commit, base `next` at
+   `4278102`); knk-workspace at `c5de65d5` (1 commit, base `next` at `685a4677`).
+3. **PRs.** https://github.com/PandiO/knk-web-app/pull/37 (`Part of #407`), https://github.com/PandiO/knk-workspace/pull/569
+   (`Closes #407`), base `next`. Not merged. **Codex:** at its usage limit on both (no findings to handle); said so on
+   each PR.
+4. **Tests, baseline → result.** Test rule: "Testing: automated first", knk-workspace `main` `aa4208b3` (PR #512); I
+   checked `origin/main` at the start and the rule files (global instructions, knk-test-writer, knk-link,
+   `web-app-testing.md`) had not changed since.
+    1. knk-web-app: the baseline ran on `next` `4278102` in a clean worktree: `npm run test:ci` 304 suites / 2615
+       tests, `tsc` clean, `typecheck:e2e` clean, e2e 109 passed + 1 flaky (`data-table.spec.ts` sort test, green on
+       retry, not touched). Result: 305 / 2624, clean, clean, `CI=true npm run build` compiles, e2e 122 passed. New
+       tests:
+        1. Jest: `effectivePermissions.test.ts` (9).
+        2. Playwright: 12 strict tests in `e2e/player-profile.spec.ts`. They cover the form above the list and the
+           default order; Save with the 1-day default; a permanent deny via Clear; removing a direct grant (inherited
+           rows have no remove); search by node, by source and the empty message; each column asc/desc/off with
+           `aria-sort` (3 tests); a sort kept across search and refresh; read-only without `knk.admin.user.perm`.
+        3. Mutation check: with the source match removed, the descending sort broken and a 2-day default expiry, 4
+           Jest and 7 Playwright tests fail.
+        4. CI `build-and-test` and `e2e` green on the PR.
+    2. Known reds: none (the one flaky e2e test is on the base and passes on retry).
+5. **Decisions (DESIGN § 4.3).**
+    1. *Extraction.* Chosen: the whole card (form, search, list) as one component, because the form and the list share
+       the gate and the refresh. Alternatives: (a) only the table: the form state would keep growing the page.
+    2. *Table.* Chosen: the shared `DataTable` (compact, bordered), because it already has `aria-sort`, the icons and
+       the keyboard handling. The headers now look like the app's other tables. Alternatives: (a) a hand-made table
+       with sort buttons: it would duplicate `DataTable`.
+    3. *Third click.* Chosen: asc → desc → off (`nextSort`), like every other `DataTable`, so the default order is one
+       click away. Alternatives: (a) toggle asc/desc only: the default order would come back only on reload.
+    4. *Value order.* Chosen: by the label (Denied before Granted ascending), ties by node. Alternatives: (a) Granted
+       first: does not match the visible text.
+    5. *Expires column.* Chosen: none, because `EffectivePermissionEntryDto` carries no expiry; filed #568.
+       Alternatives: (a) fetch the direct grants' expiries through `PermissionGrantClient`: an extra call, and only the
+       direct rows would get one; (b) an API change in this link: the charter scopes L3 to knk-web-app.
+    6. *Search reach.* Chosen: node and the shown source text, case-insensitive and trimmed. Alternatives: (a) node
+       only: #407 asks for source too; (b) also the Value: "grant" would match "Direct grant" anyway and confuse.
+    7. *Where the tests live.* Chosen: a new strict block in the #511 `e2e/player-profile.spec.ts` plus new fixture
+       exports, as the prompt prefers. Alternatives: (a) a new `e2e/profile-permissions.spec.ts`.
+6. **Out of scope, noted.** #568 filed (an expiry on effective permissions: API and web app). On #511 I commented
+   that a killed e2e run leaves `serve-build.mjs` on port 4173, and that the baseline should run in a worktree.
+7. **Blockers.** None.
+8. **At merge / what the developer must do.**
+    1. Deploy the web app (no API change, no migration, no setting, no `config.yml` key).
+    2. Manual test steps (smoke test § 6):
+        1. On a player with many nodes from several groups, grant `knk.test.profile` with the default expiry. Check
+           that the form is in view without scrolling, the new row appears with "Direct grant", and searching
+           `knk.test` or the group's name finds it. Remove the node again.
+        2. At phone width and on a desktop, in light and dark themes, check that the search box, the sort arrows and
+           the "Inherited" labels read well.
+    3. Covered by automated tests (no manual step): the form position and default order, grant with the 1-day
+       default, permanent deny, removal and refresh, search by node and source with the empty message, sorting of
+       each column with `aria-sort`, and the read-only state without the node (`e2e/player-profile.spec.ts`,
+       `effectivePermissions.test.ts`).
+    4. At merge: a `documentation` sub-issue covering the web-app architecture (`EffectivePermissionsCard`), the staff
+       web app guide (search and sort on the Permissions tab) and the feature register row.
+9. **Notes for later links.** None (last link). `DataTable` with `density="compact"` and a client-side
+   `sortEffectivePermissions`-style helper is a quick way to make a small in-card list sortable.
+10. **Correction 2026-11-15 (after the coordinator's check).** Test rule version changed to `main` `4effca89` (developer
+    decision 2026-11-15: smoke-test guides keep every step in full and tag the automated ones). On knk-workspace
+    `claude/profile-permissions-407` (head `9b361028`, after the coordinator's merge of `next` at `51a98449`) I rewrote
+    `player-profile-smoke-test.md` § 6 (10 of 12 steps tagged, 2 manual) and `dashboard-access-smoke-test.md` § 8.6
+    (L1: 8 of 10 tagged, 2 manual) and § 8.7 (L2: 14 of 18 tagged, 4 manual; it gains the uncounted blast radius and
+    the staff-only detail page, both already in `e2e/group-grants.spec.ts`). No other lines changed. The guide's top
+    status line ("57 of 97 steps (§ 1–8)") now undercounts § 8.6–8.7 (7 → 10 and 12 → 18 steps: +9 steps, all 9 tagged) and was left for the
+    coordinator. `@codex review` requested on knk-workspace#569. knk-web-app#37 merged into `next` by the coordinator.

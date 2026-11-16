@@ -1,7 +1,7 @@
 # Staff web app follow-ups chain — charter
 
-**Status:** Running (2026-11-14)
-**Last updated:** 2026-11-14 (first version, coordinator)
+**Status:** Done (2026-11-15): L1–L3 merged into `next`, docs #576
+**Last updated:** 2026-11-15 (chain done); 2026-11-14 (first version, coordinator)
 **Issues:** parent [PandiO/knk-workspace#517](https://github.com/PandiO/knk-workspace/issues/517); sub-issues per
 link below. Reference issues as `PandiO/knk-workspace#n` in component repos.
 **Progress report:** [reports/2026-11-14-staff-web-followups-chain.md](../../reports/2026-11-14-staff-web-followups-chain.md)

@@ -249,38 +249,6 @@ This is a human-readable record of capabilities merged into the V3 default branc
   - **Admin steps:** merge the `realtime.moderation` block into the dev and alpha `config.yml` (optional: defaults
      apply when missing). Needs `realtime.enabled: true`. Deploy order: the API with L6 (#565) first or together; a
      plugin without L7 ignores the events ("no handler"), so staff would see the action accepted without effect.
-- **Staff player profile, API part: frozen state in the summary, unfreeze reason, game sessions, search filters; kick and ban from the web**
-  ([PandiO/knk-workspace#565](https://github.com/PandiO/knk-workspace/issues/565), part of #119; developer decisions
-  2026-11-15 on kick and ban; link L6 of the Chain 3 follow-ups chain, [#564](https://github.com/PandiO/knk-workspace/issues/564))
-  — knk-web-api, knk-web-app and knk-workspace branches `claude/player-profile-api-119`, merged into `next` 2026-11-15
-  (knk-web-api#37 `5e10185f`, knk-web-app#42 `98e108f0`, docs knk-workspace#595); on the trunk when the developer
-  promotes `next`. For players: staff can now kick and ban them from the web app (carried out by the game server once
-  knk-plugin link L7, [#574](https://github.com/PandiO/knk-workspace/issues/574), is in).
-  1. **Frozen state from the summary.** `GET api/users/{id}/profile-summary` carries `frozenAt`, `frozenByUserId` and
-     `frozenByUsername` next to `isFrozen` / `frozenReason`; the profile's frozen banner reads them and no longer
-     reads the user and the audit log on every load.
-  2. **Unfreeze reason.** `PUT api/Users/{id}/unfreeze` takes an optional `{ "reason" }`, written into the
-     `PlayerUnfrozen` audit entry; the profile's unfreeze confirm asks for it (optional).
-  3. **Game sessions in the timeline.** New `GET api/statistics/users/{id}/sessions?page=&pageSize=`
-     (`knk.admin.user.manage`), newest first; the profile timeline shows them ("Played on {server}", end reason, active
-     time) with a **Game sessions** chip.
-  4. **Moderation search.** `POST api/Users/search` takes `online`, `frozen` and `paymentsLocked` filters, sorts by
-     `lastseenat` and `experiencepoints`, and matches a UUID with or without dashes; list rows carry `isFrozen`,
-     `paymentsLocked` and `createdAt`. Moderation → All players has Online / Frozen / Payments selects (in the URL),
-     sortable Last seen and XP, Frozen / Payments locked chips and a Created column.
-  5. **Kick and ban from the web.** `POST api/Users/{id}/kick` (`knk.kick`, reason optional, player must be online) and
-     `POST api/Users/{id}/ban` (`knk.ban`, reason required; permanent on the game server's ban list, unban is `/pardon`
-     in game). Audited (`PlayerKicked`, `PlayerBanned`) and sent to the game servers as realtime `PlayerKick` /
-     `PlayerBan` v1 ([contract](specs/realtime-signalr/DESIGN.md)); refused for oneself, an account without
-     Minecraft, a player ranked at or above the caller, a kick of an offline player (409) and while no game server is
-     connected (503). Kick and Ban buttons on the profile (status strip and Moderation tab), greyed out with
-     "Requires knk.kick / knk.ban" without the node.
-  6. Docs: [smoke test § 7](guides/player-profile-smoke-test.md) (and § 2.2, 2.5, 3.1), realtime DESIGN § 6.10 (the
-     event contract for L7), web-api architecture § 5.7, web-app architecture (staff player profile, moderation search).
-  - **Admin steps:** apply the migration `SeedStaffKickBanNodes` (gives the Staff group `knk.kick` and `knk.ban`; data
-     only). Deploy the **API first** (or together): an older API has no sessions, kick or ban endpoints (the web app's
-     timeline then names the sessions as not loaded, and Kick/Ban answer 404). Kick and ban only take effect in game
-     once knk-plugin with L7 (#574) is deployed with `realtime.enabled: true`.
 - **Plugin: the plain `/heal` is K&K's also on servers with WorldGuard**
   ([PandiO/knk-workspace#580](https://github.com/PandiO/knk-workspace/issues/580); developer decision 2026-11-15:
   option 1) — knk-plugin and knk-workspace branches `claude/heal-takeover-580` (PRs into `next`).
@@ -346,47 +314,6 @@ This is a human-readable record of capabilities merged into the V3 default branc
 
      Then run the developer test steps of plan 4b.3 (posted on #522), which include the #490 audit re-run.
 
-- **Relation picker: lookup mode applies the field's narrowing filters**
-  ([PandiO/knk-workspace#288](https://github.com/PandiO/knk-workspace/issues/288), developer decision 2026-11-15; link
-  L5 of the Chain 3 follow-ups chain, [#564](https://github.com/PandiO/knk-workspace/issues/564)) — knk-web-api,
-  knk-web-app and knk-workspace branches `claude/lookup-picker-filters-288`, merged into `next` 2026-11-15 (knk-web-api#36
-  `d8514ed4`, knk-web-app#41 `990af482`, docs knk-workspace#587); on the trunk when the developer promotes `next`.
-  No change for players.
-  1. **Filtered fields work without the read node.** Staff who search a related type through `api/Lookup` (no read
-     node of that type) can now use a relation field whose picker filters narrow the list, e.g. a siege objective's
-     holder team scoped to its scenario: the picker offers the narrowed list, names only, instead of "This list is
-     narrowed by …, which only the full … search can do".
-  2. **API:** `POST api/Lookup/{type}/search` takes `filters` and passes those the type's lookup lists to the type's own
-     search (one list per type in `DashboardLookups.cs`; users take none). Results stay `{ id, label, detail? }`.
-     Another key answers 400 `LookupFilterNotAllowed`, an unusable value (an id that isn't a positive number, a flag
-     that isn't true/false) 400 `LookupFilterInvalid`, so a lookup never lists more than the form asked for.
-     `prefer…` filters only order; `excludeIds` stays in the browser. Access rule unchanged (any area node or the
-     plugin key).
-  3. **Web app:** the picker sends the filters and only shows the "narrowed by" refusal when the API refuses a filter.
-  4. Docs: [smoke test § 2.4–2.5](guides/relation-picker-and-delete-details-smoke-test.md), web-api architecture
-     (lookups), web-app architecture (relation picker), [access model § 4.6.3](specs/dashboard-access-model/DESIGN.md).
-  - **Admin steps:** none (no migration, no setting, no new node). Deploy the **API first** (or together): an older API
-     ignores `filters` and would answer with the unfiltered list, which the old web app refused to show.
-- **Form builder: field validation rules are part of the draft and go live on Publish; add-from-template endpoints removed**
-  ([PandiO/knk-workspace#291](https://github.com/PandiO/knk-workspace/issues/291); link L4 of the Chain 3 follow-ups
-  chain, [#564](https://github.com/PandiO/knk-workspace/issues/564)) — knk-web-api, knk-web-app and knk-workspace
-  branches `claude/builder-draft-rules-291`, merged into `next` 2026-11-15 (knk-web-api#35 `93c3d50f`, knk-web-app#40
-  `cd730f29`, docs knk-workspace#583); on the trunk when the developer promotes `next`. No change for players.
-  1. **Rules in the draft.** In the form builder a field's cross-field validation rules are kept in the draft (keyed by
-     field GUID) with **Save Field** and **Save**, marked *Not published*, and applied on **Publish** (adds, edits and
-     deletes); the form wizard keeps the published rules until then. **Discard** drops rule changes.
-  2. **Draft-only fields** (added but not published yet) can get rules; a dependency on a field of the same form is
-     chosen by GUID, on a parent form's field by id.
-  3. **Publish** names rule changes ("Validation rules: 1 added, 1 changed, 1 removed.") and is refused when a rule's
-     field or dependency left the form, or rules depend on each other in a circle.
-  4. A draft saved before this change (no rules in it) keeps the published rules, unchanged.
-  5. API: `GET api/FormConfigurations/{id}/builder` and the draft carry `validationRules`; `POST
-     api/FormConfigurations/{configId}/steps/add-from-template` and `steps/{stepId}/fields/add-from-template` are
-     **removed** (they wrote into the published rows; no caller since #71).
-  6. Docs: [smoke test § 11](guides/form-display-builders-smoke-test.md), web-api architecture § 5.5, web-app
-     architecture (builders).
-  - **Admin steps:** none (no migration, no setting, no new node). Deploy API and web app together, **API first**: an
-    older API ignores the rules in the draft, so they would be lost on Save.
 - **Plugin scenarios: scripted players (server-side fake players), headless bot tests kept off**
   ([PandiO/knk-workspace#540](https://github.com/PandiO/knk-workspace/issues/540); developer decision 2026-11-15:
   build both). knk-plugin and knk-workspace branches `claude/scripted-players-540` (PRs into `next`). No change for
@@ -412,34 +339,6 @@ This is a human-readable record of capabilities merged into the V3 default branc
   5. **Boot log check:** errors printed with `printStackTrace()` (one timestamped line per frame) are now joined to
      their entry, so the join's unreachable-API error is excused like the others.
 
-- **"Show what uses it" for more refusals: form configuration delete, bulk delete rows, "skipped: in use"**
-  ([PandiO/knk-workspace#289](https://github.com/PandiO/knk-workspace/issues/289); link L3 of the Chain 3 follow-ups
-  chain, [#564](https://github.com/PandiO/knk-workspace/issues/564)) — knk-web-api, knk-web-app and knk-workspace
-  branches `claude/show-what-uses-it-289`, merged into `next` 2026-11-15 (knk-web-api#34 `378921c6`, knk-web-app#39
-  `2dfd5883`); on the trunk when the developer promotes `next`. No change for players.
-  1. **Entity setup.** A form configuration whose delete is refused because another form opens it as a sub-form offers
-     **Show what uses it**: the form fields and steps, each with the form (and step) it sits in. Not links: they have
-     no page of their own.
-  2. **Bulk delete.** Each row refused as in use keeps its **Show what uses it** (from #205), now through one shared
-     component; covered end to end.
-  3. **Cancelled form / deleted draft.** An entity skipped as in use after **Delete them** / **Delete draft and them**
-     offers **Show what uses it** with every reference, as the in-use check counted them.
-  4. API: `GET api/EntityReferences/{type}/{id}/rows` also takes `FormConfiguration` (needs `knk.admin.content`) and
-     `?all=true` (every reference, cascades included); the read rules per referencing type stay as in #44.
-  5. Docs: [smoke test § 4.8–4.12, § 5.3](guides/relation-picker-and-delete-details-smoke-test.md),
-     [web-api architecture § 5.4](architecture/web-api-architecture.md), web-app architecture ("Show details").
-  - **Admin steps:** none (no migration, no setting, no new node; deploy API and web app together, API first: an older
-    API answers 404 for a form configuration, shown as an error line under the button).
-- **Staff web app: the player profile's Permissions tab gets the grant form on top, a search and sortable columns**
-  ([PandiO/knk-workspace#407](https://github.com/PandiO/knk-workspace/issues/407); link L3 of the staff web app
-  follow-ups chain, [#517](https://github.com/PandiO/knk-workspace/issues/517)). knk-web-app and knk-workspace
-  branches `claude/profile-permissions-407` (PRs into `next`, in review, not merged). On a player's profile
-  (`/admin/users/<id>?tab=permissions`), Effective Permissions now has the grant/deny form above the list, a search box
-  that filters by node and by source (a group's name, or "direct" for direct grants) and says when nothing matches,
-  and Node, Value and Source headers that sort ascending, descending and back to the original order, with an arrow and
-  `aria-sort`. The 1-day default expiry for direct grants and the `knk.admin.user.perm` gate are unchanged.
-  - **Admin steps:** none; web app only (no API change, no migration, no setting). To test: § 6 of the
-    [player profile smoke test](guides/player-profile-smoke-test.md).
 - **Plugin CI: Citizens on the Paper boot test, NPC navigation scenarios on a fake road network**
   ([PandiO/knk-workspace#543](https://github.com/PandiO/knk-workspace/issues/543); developer decision 2026-11-15:
   pinned download). knk-plugin and knk-workspace branches `claude/citizens-ci-543` (PRs into `next`). No change for
@@ -462,36 +361,6 @@ This is a human-readable record of capabilities merged into the V3 default branc
      [writing a plugin scenario](guides/developer/plugin-scenarios.md), the NPC implementation plan's developer tests
      (Phase 1 step 1, Phase 2 steps 3 and 4, Phase 4 step 3 tagged `[partly automated: …]`).
   - **Admin steps:** none (CI only; the plugin's `config.yml` is unchanged).
-- **Form wizard: list field cards stay readable on a phone**
-  ([PandiO/knk-workspace#290](https://github.com/PandiO/knk-workspace/issues/290); link L2 of the Chain 3 follow-ups
-  chain, [#564](https://github.com/PandiO/knk-workspace/issues/564)) — knk-web-app and knk-workspace
-  `claude/list-field-cards-290`, merged into `next` 2026-11-15 (knk-web-app#38 `9b5f9ddf`, docs knk-workspace#571); on the
-  trunk when the developer promotes `next`. In an Object List field the cards under "Selected (n):"
-  wrap at narrow widths: the name keeps the card's width (a long name wraps instead of being cut to one letter) and ×
-  and **Edit instance** move to their own line. Desktop layout unchanged. Playwright spec
-  `e2e/form-wizard-list-field.spec.ts`.
-- **Temp region releases: no server left out, no release stuck behind waiting ones**
-  ([PandiO/knk-workspace#399](https://github.com/PandiO/knk-workspace/issues/399); link L1 of the Chain 3 follow-ups
-  chain, [#564](https://github.com/PandiO/knk-workspace/issues/564)) — knk-web-api and knk-workspace branches
-  `claude/temp-region-releases-399`, merged into `next` 2026-11-15 (knk-web-api#33 `3b36edc6`, docs knk-workspace#572);
-  on the trunk when the developer promotes `next`. No change for players.
-  1. `GET api/WorldTasks/temp-region-releases` answers 400 for a blank or missing `serverId`, as `GET open` does.
-     The plugin always sends `realtime.server-id`, so it is not affected.
-  2. Unused temp regions of abandoned drafts are no longer kept past their release when more than 200 older releases
-     wait on a region that is still in use: the API reads the due releases in pages until it has `max` to give.
-  3. Admin steps: none (no settings, no migration, no plugin `config.yml` change).
-- **Web app: admin tables no longer scroll the page sideways at phone width**
-  ([PandiO/knk-workspace#535](https://github.com/PandiO/knk-workspace/issues/535); staff web app only). knk-web-app
-  branch `claude/admin-mobile-overflow-535`, merged into `next` 2026-11-15 (knk-web-app#36 `5b87473`, docs
-  knk-workspace#567); on the trunk when the developer promotes `next`.
-  1. At 390 px Mail log, Invitations, the Lootboxes Types, Specials, Areas and Active boxes tabs and the Minecraft
-     catalogue audit made the whole page 70 to 450 px wider than the screen. The tables scroll inside their own box
-     again. The cause was the visually hidden "Actions" head cell, positioned outside the table's scroll box; each box
-     is now `relative` (the fix the form and display configuration tables got in #266).
-  2. Tests: `e2e/admin-navigation.spec.ts` checks Mail log and Invitations (staff with some nodes) and the four
-     Lootboxes tables plus the catalogue audit (owner) at 390 px; fixtures `e2e/fixtures/adminTables.ts`. Guide:
-     [admin navigation § 2.4 and § 4.4](guides/admin-navigation-smoke-test.md).
-  - **Admin steps:** none (web app only, no setting).
 - **NPC navigation: wall corners, stuck recovery on the NPC's own floor, stuck counted per spell**
   ([PandiO/knk-workspace#521](https://github.com/PandiO/knk-workspace/issues/521) for
   [#508](https://github.com/PandiO/knk-workspace/issues/508), [#491](https://github.com/PandiO/knk-workspace/issues/491)
@@ -596,73 +465,6 @@ This is a human-readable record of capabilities merged into the V3 default branc
     ([#540](https://github.com/PandiO/knk-workspace/issues/540)). No plugin behaviour changed; `testing.scenarios.enabled`
     stays off by default.
   - **Admin steps:** none.
-- **Staff web app: edit a permission group's own nodes, with a History**
-  ([PandiO/knk-workspace#50](https://github.com/PandiO/knk-workspace/issues/50); link L2 of the staff web app follow-ups
-  chain, [#517](https://github.com/PandiO/knk-workspace/issues/517)). knk-web-api, knk-web-app and knk-workspace
-  branches `claude/group-grants-50` (PRs into `next`, in review, not merged). A permission group's detail page
-  (Dashboard → Permission Group → a group) has a **Permissions** panel: the group's own nodes (Granted/Denied, expiry),
-  a grant/deny form whose expiry is empty (permanent) by default, Edit, change Granted/Denied and Remove per row.
-  Changing Granted/Denied or removing asks first with the blast radius ("This affects N players", members of groups
-  that inherit from it included; online players get the change within seconds). A **History** list shows each change
-  to the group's nodes. Without `knk.admin.user.perm` the panel is read-only with "Requires knk.admin.user.perm".
-  1. **API:** the audit log has a generic subject (developer decision 2026-11-15): `audit_log_entries` gets nullable
-     `SubjectType` and `SubjectId` and `TargetUserId` becomes optional. A change to a group's own grants (added,
-     updated, removed) leaves one entry with the group as subject (`PermissionGroup`), the staff member as actor and the
-     node, before/after value and expiry in the details; player grant audits are unchanged. `GET api/audit-log` takes
-     `subjectType` and `subjectId` (`knk.admin.user.manage`). New `GET api/PermissionGroups/{id}/member-count`
-     (`knk.admin.user.manage` or the plugin key): active members of the group and of every group inheriting from it,
-     each player once. Writes stay on the by-node routes and `knk.admin.user.perm`; nobody changes a group ranked at or
-     above their own.
-  2. **Follow-up:** [#558](https://github.com/PandiO/knk-workspace/issues/558) (plugin: members of inheriting groups
-     and changes while realtime is down).
-  - **Admin steps:** one additive migration, `AddAuditLogSubject` (two nullable columns, one index, `TargetUserId`
-    nullable). The API does not migrate on start: back up the database, deploy the API, run `dotnet ef database update`,
-    then deploy the web app (it needs the new endpoints). No settings, no `config.yml` key, no plugin change. Smoke
-    test: [dashboard access smoke test § 8.7](guides/dashboard-access-smoke-test.md) (mostly automated in CI).
-- **Dashboard: the PermissionGrant table loads** ([PandiO/knk-workspace#408](https://github.com/PandiO/knk-workspace/issues/408);
-  API and staff web app). knk-web-api and knk-web-app branches `claude/permission-grant-table-408` (PRs into `next`, in
-  review, not merged). Dashboard → Permission Grant lists every grant and deny (node, Granted/Denied, holder, expiry)
-  and pages, sorts and searches by node; it is read-only (no New, Edit or Delete that saves: grants are still changed
-  on the player profile and with `/knk user … perm`; #50 adds the group editor).
-  - **API:** `POST api/PermissionGrants/search` now needs `knk.admin.user.manage`, like `GET` and `GET {id}` (it needed
-    `knk.admin.user.perm`), so whoever the dashboard lists the type for can read it. Writes still need
-    `knk.admin.user.perm`. The search sorts by the column asked (`id`, `holderId`, `value`, `expiresAt`, `node`).
-  - **Admin steps:** none; deploy the API and the web app together (no migration, no settings). Smoke test:
-    [dashboard access smoke test § 8.6](guides/dashboard-access-smoke-test.md) (mostly automated in CI).
-- **Town streets come from their districts; the `TownStreet` table is dropped**
-  ([PandiO/knk-workspace#409](https://github.com/PandiO/knk-workspace/issues/409), L1
-  [#514](https://github.com/PandiO/knk-workspace/issues/514) design, L2
-  [#515](https://github.com/PandiO/knk-workspace/issues/515) implementation) — knk-web-api, knk-web-app and
-  knk-workspace branches `claude/town-streets-409` (PRs into `next`, in review). Design
-  [specs/towns/DESIGN_TOWN_STREETS.md](specs/towns/DESIGN_TOWN_STREETS.md) (approved 2026-11-14 with its defaults).
-  1. **API.** A town's streets (`TownDto.streets` / `streetIds` of `GET api/Towns/{id}`) are the distinct streets of
-     its districts, ordered by name then id, read-only; they follow every street linked to or unlinked from a district
-     at once. Metadata lists Town `streets` as `storage: "derived"`; `POST api/Relationships/Town/{id}/streets/link`
-     and `/unlink` answer 400 `RelationshipNotEditable` "Streets are managed on the district: open a district to add or
-     remove them." (403 without the nodes, as before). `GET api/Towns` still carries no streets. Saving a town no
-     longer writes its districts back.
-  2. **Web app.** The Streets section of a town's detail page lists the streets with View and Edit, without Add…,
-     Unlink, Create New or Delete (whatever the stored display configuration says), and shows the hint above. Streets
-     are added to a town on a district's detail page (District → Streets → Add…).
-  3. **Plugin:** no change (the JSON shape stays; `/knk towns` debug output shows the derived list).
-  - **Admin steps:**
-    1. Back up the database before deploying (the migration drops a table).
-    2. Deploy the API and the web app together.
-    3. Apply the migration `DropTownStreet` (dev: `dotnet ef database update`; alpha: the migrator image, runbook
-       [§ API updates with migrations](guides/closed-alpha-deployment-runbook.md)). It drops `TownStreet` with **all**
-       its rows, including streets no district of the town has (developer decision 2026-11-14 on #515). Such a street
-       no longer shows on the town; link it to one of the town's districts to bring it back.
-    4. Rollback: the migration's `Down` (`dotnet ef database update SeedStaffFreezeNodes`, the migration before it)
-       recreates `TownStreet` and refills it from the districts; the dropped rows no district covered come back only
-       from the backup.
-    5. A Town form with a `Streets` / `StreetIds` field or step (the API ignores it) can be removed in the form builder;
-       the read-only check `scripts/maintenance/town-street-orphans-409.sql` (result set 3) lists such configurations.
-    6. Smoke test: [town streets smoke test](guides/town-streets-smoke-test.md) (L3
-       [#516](https://github.com/PandiO/knk-workspace/issues/516)): the manual steps are the deploy and migration on dev
-       and alpha and a look at a real town's Streets; the read-only section, the refused link, the derived list and the
-       migration are automated (knk-web-app `e2e/town-detail.spec.ts`, knk-web-api `TownStreetsDerivedTests`,
-       `RelationshipsControllerTests`, `DropTownStreetMigrationTests`). The dashboard access smoke test § 2.2 step 2
-       and § 8 step 9b now use a district's streets as the link example.
 - **Plugin: the 52 tests that CI skipped now run, with MockBukkit**
   ([PandiO/knk-workspace#499](https://github.com/PandiO/knk-workspace/issues/499); developer-facing, nothing changes
   in game). Merged into `next` 2026-11-14 (knk-plugin#32, merge `0810a6c7`; docs knk-workspace#539); on the trunk when the developer promotes `next`.
@@ -691,45 +493,6 @@ This is a human-readable record of capabilities merged into the V3 default branc
   - Guide: [writing a plugin scenario](guides/developer/plugin-scenarios.md); [CI § 7.1](guides/developer/ci.md#71-in-plugin-scenarios).
   - **Admin steps:** none. Don't add the `testing` block to dev, alpha or production configs; a missing block is off
     ([plugin configuration § 4.28](guides/admin/plugin-configuration.md#428-testing)).
-- **Smoke tests: the web app's checks move into the automated suites** ([PandiO/knk-workspace#511](https://github.com/PandiO/knk-workspace/issues/511))
-  — no game or player change; developer-facing. Playwright specs with a mocked API in knk-web-app `e2e/` now check what
-  the developer did by hand in the smoke tests of features already on the trunk, and each guide marks those steps
-  `[automated]` with the test, so the evening check covers only what is left (game server, real client, themes).
-  Batch 1 (knk-web-app branch `claude/test-backfill-511`, PR into `next`): `e2e/player-profile.spec.ts` (player
-  profile and player search, 21 of 26 steps) and `e2e/settings-pages.spec.ts` (settings pages, 22 of 26 steps), new
-  helpers `e2e/support/layout.ts` (no sideways scroll at phone width), `e2e/fixtures/players.ts` and
-  `e2e/fixtures/settings.ts`; `mockSession` keeps the realtime hub offline. Guides:
-  [player profile](guides/player-profile-smoke-test.md), [settings pages](guides/settings-pages-smoke-test.md);
-  [web app testing § 3](guides/developer/web-app-testing.md#3-end-to-end-tests-playwright). Merged into `next`
-  2026-11-14 (knk-web-app#28, knk-workspace#528).
-  Batch 2: `e2e/admin-navigation.spec.ts` (admin navigation, 20 of 24 steps) and `e2e/dashboard-access.spec.ts`
-  (dashboard access § 8, with the API's xUnit tests marked in § 2.2, § 3, § 4 and § 7; 31 checks), fixture
-  `e2e/fixtures/dashboardAccess.ts`. Found: Mail log and Invitations scroll sideways at phone width
-  ([#535](https://github.com/PandiO/knk-workspace/issues/535)). Guides: [admin navigation](guides/admin-navigation-smoke-test.md),
-  [dashboard access](guides/dashboard-access-smoke-test.md). Merged 2026-11-14 (knk-web-app#30, knk-workspace#537).
-  Batch 3: `e2e/entity-detail.spec.ts` (entity detail, 14 of 21 steps) and "Show what uses it" in
-  `e2e/dashboard-access.spec.ts`; the relation picker's Jest tests marked in its guide (19 of 24 steps), fixture
-  `e2e/fixtures/entityDetail.ts`. Guides: [entity detail](guides/entity-detail-smoke-test.md),
-  [relation picker and delete details](guides/relation-picker-and-delete-details-smoke-test.md). Merged 2026-11-14
-  (knk-web-app#31, knk-workspace#538).
-  Batch 4: `e2e/data-table.spec.ts` (shared table, pager and confirm; numbers in a Dutch browser) and the existing Jest
-  and API tests marked in [data primitives](guides/data-primitives-smoke-test.md) (20 of 28 steps),
-  [feedback primitives](guides/feedback-primitives-smoke-test.md) (15 of 28) and
-  [form step conditions and step jump](guides/form-step-conditions-and-step-jump-smoke-test.md) (29 of 36).
-  - **Admin steps:** none (tests and docs only).
-- **Dashboard tables: every row looks the same, the row actions stay in view, and a right-click menu**
-  (PandiO/knk-workspace#404, #405, #406; staff web app only). knk-web-app branch `claude/dashboard-table-actions-404-406`,
-  merged into `next` 2026-11-14 (knk-web-app#17); on the trunk when the developer promotes `next`.
-  - **#404:** rows from the second on no longer show a thick grey left edge; every row has the same 1px line.
-  - **#405:** View / Edit / Delete sit in a column pinned to the table's right edge (the checkbox column to the left),
-    so they stay in view on types with many columns and at phone width; a shadow shows on the pinned edge only while
-    columns scroll under it.
-  - **#406:** a right-click on a row (or Shift+F10 / the context-menu key on a focused row) opens View, Edit, Delete and
-    Export as CSV. Items follow the same permission nodes as the buttons and are greyed out with "Requires <node>",
-    not hidden. On a ticked row Delete and Export act on the whole selection (bulk delete needs
-    `knk.admin.delete.bulk`). Ctrl/Cmd + right-click keeps the browser's menu.
-  - **Admin steps:** none; deploy the web app. Smoke test:
-    [dashboard access smoke test § 8.5](guides/dashboard-access-smoke-test.md) (mostly automated in CI).
 - **Smoke-test fixes on `next` from 2026-11-14** (PandiO/knk-workspace#484, #485, #487) — knk-web-api, knk-plugin and
   knk-workspace branches `claude/smoke-fixes-484-485-487` (PRs into `next`, in review, not merged). **Deploy order:**
   API and plugin together (no migration). One entry per issue follows.
@@ -1070,6 +833,295 @@ This is a human-readable record of capabilities merged into the V3 default branc
        `enabled: false`.
     3. To test: `enabled: true`, restart, then the steps under "Developer test" of Phases 1, 2, 3 and 4 in the
        implementation plan.
+
+## v0.3 — 2026-11-15
+
+Release v0.3: the developer promoted `next` to trunk after testing it as a whole (knk-web-api `main` `2cc8254`,
+knk-web-api#38; knk-web-app `main` `947923c`, knk-web-app#45; tags `v0.3` in both). knk-plugin is not part of this
+release. The entries below were merged into `next` earlier (their dates are in each entry) and moved here from
+Unreleased. Also in the release: the kick and freeze/unfreeze reason labels say "(optional)" once (knk-web-app#44) and
+a leftover debug spec was removed from the e2e suite (knk-web-app#34).
+
+- **Admin steps for the whole release** ([production installation § 5.3](guides/production-installation.md#53-apply-the-migrations)):
+  three migrations, in this order: `20261115082252_DropTownStreet` (deletes the `TownStreet` rows, #409),
+  `20261115092735_AddAuditLogSubject` (additive, #50) and `20261115125459_SeedStaffKickBanNodes` (data only, #119).
+  No settings and no plugin `config.yml` keys. Kick and ban from the web take effect in game with knk-plugin `v0.2`
+  (`f8f7fb2e`, which carries [#574](https://github.com/PandiO/knk-workspace/issues/574)) or later, running with
+  `realtime.enabled: true`. Deploy order:
+  1. Back up the database first: `DropTownStreet` drops the `TownStreet` table with its rows.
+  2. Deploy the API.
+  3. Run `dotnet ef database update` (the migrator, § 5.3). The API does not migrate on start.
+  4. Deploy the web app.
+- **Staff player profile, API part: frozen state in the summary, unfreeze reason, game sessions, search filters; kick and ban from the web**
+  ([PandiO/knk-workspace#565](https://github.com/PandiO/knk-workspace/issues/565), part of #119; developer decisions
+  2026-11-15 on kick and ban; link L6 of the Chain 3 follow-ups chain, [#564](https://github.com/PandiO/knk-workspace/issues/564))
+  — knk-web-api, knk-web-app and knk-workspace branches `claude/player-profile-api-119`, merged into `next` 2026-11-15
+  (knk-web-api#37 `5e10185f`, knk-web-app#42 `98e108f0`, docs knk-workspace#595); promoted to trunk in v0.3 (2026-11-15). For players: staff can now kick and ban them from the web app (carried out by the game server once
+  knk-plugin link L7, [#574](https://github.com/PandiO/knk-workspace/issues/574), is in).
+  1. **Frozen state from the summary.** `GET api/users/{id}/profile-summary` carries `frozenAt`, `frozenByUserId` and
+     `frozenByUsername` next to `isFrozen` / `frozenReason`; the profile's frozen banner reads them and no longer
+     reads the user and the audit log on every load.
+  2. **Unfreeze reason.** `PUT api/Users/{id}/unfreeze` takes an optional `{ "reason" }`, written into the
+     `PlayerUnfrozen` audit entry; the profile's unfreeze confirm asks for it (optional).
+  3. **Game sessions in the timeline.** New `GET api/statistics/users/{id}/sessions?page=&pageSize=`
+     (`knk.admin.user.manage`), newest first; the profile timeline shows them ("Played on {server}", end reason, active
+     time) with a **Game sessions** chip.
+  4. **Moderation search.** `POST api/Users/search` takes `online`, `frozen` and `paymentsLocked` filters, sorts by
+     `lastseenat` and `experiencepoints`, and matches a UUID with or without dashes; list rows carry `isFrozen`,
+     `paymentsLocked` and `createdAt`. Moderation → All players has Online / Frozen / Payments selects (in the URL),
+     sortable Last seen and XP, Frozen / Payments locked chips and a Created column.
+  5. **Kick and ban from the web.** `POST api/Users/{id}/kick` (`knk.kick`, reason optional, player must be online) and
+     `POST api/Users/{id}/ban` (`knk.ban`, reason required; permanent on the game server's ban list, unban is `/pardon`
+     in game). Audited (`PlayerKicked`, `PlayerBanned`) and sent to the game servers as realtime `PlayerKick` /
+     `PlayerBan` v1 ([contract](specs/realtime-signalr/DESIGN.md)); refused for oneself, an account without
+     Minecraft, a player ranked at or above the caller, a kick of an offline player (409) and while no game server is
+     connected (503). Kick and Ban buttons on the profile (status strip and Moderation tab), greyed out with
+     "Requires knk.kick / knk.ban" without the node.
+  6. Docs: [smoke test § 7](guides/player-profile-smoke-test.md) (and § 2.2, 2.5, 3.1), realtime DESIGN § 6.10 (the
+     event contract for L7), web-api architecture § 5.7, web-app architecture (staff player profile, moderation search).
+  - **Admin steps:** apply the migration `SeedStaffKickBanNodes` (gives the Staff group `knk.kick` and `knk.ban`; data
+     only). Deploy the **API first** (or together): an older API has no sessions, kick or ban endpoints (the web app's
+     timeline then names the sessions as not loaded, and Kick/Ban answer 404). Kick and ban only take effect in game
+     once knk-plugin with L7 (#574) is deployed with `realtime.enabled: true`.
+- **Relation picker: lookup mode applies the field's narrowing filters**
+  ([PandiO/knk-workspace#288](https://github.com/PandiO/knk-workspace/issues/288), developer decision 2026-11-15; link
+  L5 of the Chain 3 follow-ups chain, [#564](https://github.com/PandiO/knk-workspace/issues/564)) — knk-web-api,
+  knk-web-app and knk-workspace branches `claude/lookup-picker-filters-288`, merged into `next` 2026-11-15 (knk-web-api#36
+  `d8514ed4`, knk-web-app#41 `990af482`, docs knk-workspace#587); promoted to trunk in v0.3 (2026-11-15).
+  No change for players.
+  1. **Filtered fields work without the read node.** Staff who search a related type through `api/Lookup` (no read
+     node of that type) can now use a relation field whose picker filters narrow the list, e.g. a siege objective's
+     holder team scoped to its scenario: the picker offers the narrowed list, names only, instead of "This list is
+     narrowed by …, which only the full … search can do".
+  2. **API:** `POST api/Lookup/{type}/search` takes `filters` and passes those the type's lookup lists to the type's own
+     search (one list per type in `DashboardLookups.cs`; users take none). Results stay `{ id, label, detail? }`.
+     Another key answers 400 `LookupFilterNotAllowed`, an unusable value (an id that isn't a positive number, a flag
+     that isn't true/false) 400 `LookupFilterInvalid`, so a lookup never lists more than the form asked for.
+     `prefer…` filters only order; `excludeIds` stays in the browser. Access rule unchanged (any area node or the
+     plugin key).
+  3. **Web app:** the picker sends the filters and only shows the "narrowed by" refusal when the API refuses a filter.
+  4. Docs: [smoke test § 2.4–2.5](guides/relation-picker-and-delete-details-smoke-test.md), web-api architecture
+     (lookups), web-app architecture (relation picker), [access model § 4.6.3](specs/dashboard-access-model/DESIGN.md).
+  - **Admin steps:** none (no migration, no setting, no new node). Deploy the **API first** (or together): an older API
+     ignores `filters` and would answer with the unfiltered list, which the old web app refused to show.
+- **Form builder: field validation rules are part of the draft and go live on Publish; add-from-template endpoints removed**
+  ([PandiO/knk-workspace#291](https://github.com/PandiO/knk-workspace/issues/291); link L4 of the Chain 3 follow-ups
+  chain, [#564](https://github.com/PandiO/knk-workspace/issues/564)) — knk-web-api, knk-web-app and knk-workspace
+  branches `claude/builder-draft-rules-291`, merged into `next` 2026-11-15 (knk-web-api#35 `93c3d50f`, knk-web-app#40
+  `cd730f29`, docs knk-workspace#583); promoted to trunk in v0.3 (2026-11-15). No change for players.
+  1. **Rules in the draft.** In the form builder a field's cross-field validation rules are kept in the draft (keyed by
+     field GUID) with **Save Field** and **Save**, marked *Not published*, and applied on **Publish** (adds, edits and
+     deletes); the form wizard keeps the published rules until then. **Discard** drops rule changes.
+  2. **Draft-only fields** (added but not published yet) can get rules; a dependency on a field of the same form is
+     chosen by GUID, on a parent form's field by id.
+  3. **Publish** names rule changes ("Validation rules: 1 added, 1 changed, 1 removed.") and is refused when a rule's
+     field or dependency left the form, or rules depend on each other in a circle.
+  4. A draft saved before this change (no rules in it) keeps the published rules, unchanged.
+  5. API: `GET api/FormConfigurations/{id}/builder` and the draft carry `validationRules`; `POST
+     api/FormConfigurations/{configId}/steps/add-from-template` and `steps/{stepId}/fields/add-from-template` are
+     **removed** (they wrote into the published rows; no caller since #71).
+  6. Docs: [smoke test § 11](guides/form-display-builders-smoke-test.md), web-api architecture § 5.5, web-app
+     architecture (builders).
+  - **Admin steps:** none (no migration, no setting, no new node). Deploy API and web app together, **API first**: an
+    older API ignores the rules in the draft, so they would be lost on Save.
+- **"Show what uses it" for more refusals: form configuration delete, bulk delete rows, "skipped: in use"**
+  ([PandiO/knk-workspace#289](https://github.com/PandiO/knk-workspace/issues/289); link L3 of the Chain 3 follow-ups
+  chain, [#564](https://github.com/PandiO/knk-workspace/issues/564)) — knk-web-api, knk-web-app and knk-workspace
+  branches `claude/show-what-uses-it-289`, merged into `next` 2026-11-15 (knk-web-api#34 `378921c6`, knk-web-app#39
+  `2dfd5883`); promoted to trunk in v0.3 (2026-11-15). No change for players.
+  1. **Entity setup.** A form configuration whose delete is refused because another form opens it as a sub-form offers
+     **Show what uses it**: the form fields and steps, each with the form (and step) it sits in. Not links: they have
+     no page of their own.
+  2. **Bulk delete.** Each row refused as in use keeps its **Show what uses it** (from #205), now through one shared
+     component; covered end to end.
+  3. **Cancelled form / deleted draft.** An entity skipped as in use after **Delete them** / **Delete draft and them**
+     offers **Show what uses it** with every reference, as the in-use check counted them.
+  4. API: `GET api/EntityReferences/{type}/{id}/rows` also takes `FormConfiguration` (needs `knk.admin.content`) and
+     `?all=true` (every reference, cascades included); the read rules per referencing type stay as in #44.
+  5. Docs: [smoke test § 4.8–4.12, § 5.3](guides/relation-picker-and-delete-details-smoke-test.md),
+     [web-api architecture § 5.4](architecture/web-api-architecture.md), web-app architecture ("Show details").
+  - **Admin steps:** none (no migration, no setting, no new node; deploy API and web app together, API first: an older
+    API answers 404 for a form configuration, shown as an error line under the button).
+- **Staff web app: the player profile's Permissions tab gets the grant form on top, a search and sortable columns**
+  ([PandiO/knk-workspace#407](https://github.com/PandiO/knk-workspace/issues/407); link L3 of the staff web app
+  follow-ups chain, [#517](https://github.com/PandiO/knk-workspace/issues/517)). knk-web-app and knk-workspace
+  branches `claude/profile-permissions-407` (merged into `next` as knk-web-app#37 `b2589eb`, promoted in v0.3). On a player's profile
+  (`/admin/users/<id>?tab=permissions`), Effective Permissions now has the grant/deny form above the list, a search box
+  that filters by node and by source (a group's name, or "direct" for direct grants) and says when nothing matches,
+  and Node, Value and Source headers that sort ascending, descending and back to the original order, with an arrow and
+  `aria-sort`. The 1-day default expiry for direct grants and the `knk.admin.user.perm` gate are unchanged.
+  - **Admin steps:** none; web app only (no API change, no migration, no setting). To test: § 6 of the
+    [player profile smoke test](guides/player-profile-smoke-test.md).
+- **Form wizard: list field cards stay readable on a phone**
+  ([PandiO/knk-workspace#290](https://github.com/PandiO/knk-workspace/issues/290); link L2 of the Chain 3 follow-ups
+  chain, [#564](https://github.com/PandiO/knk-workspace/issues/564)) — knk-web-app and knk-workspace
+  `claude/list-field-cards-290`, merged into `next` 2026-11-15 (knk-web-app#38 `9b5f9ddf`, docs knk-workspace#571); promoted to
+  trunk in v0.3 (2026-11-15). In an Object List field the cards under "Selected (n):"
+  wrap at narrow widths: the name keeps the card's width (a long name wraps instead of being cut to one letter) and ×
+  and **Edit instance** move to their own line. Desktop layout unchanged. Playwright spec
+  `e2e/form-wizard-list-field.spec.ts`.
+- **Temp region releases: no server left out, no release stuck behind waiting ones**
+  ([PandiO/knk-workspace#399](https://github.com/PandiO/knk-workspace/issues/399); link L1 of the Chain 3 follow-ups
+  chain, [#564](https://github.com/PandiO/knk-workspace/issues/564)) — knk-web-api and knk-workspace branches
+  `claude/temp-region-releases-399`, merged into `next` 2026-11-15 (knk-web-api#33 `3b36edc6`, docs knk-workspace#572);
+  promoted to trunk in v0.3 (2026-11-15). No change for players.
+  1. `GET api/WorldTasks/temp-region-releases` answers 400 for a blank or missing `serverId`, as `GET open` does.
+     The plugin always sends `realtime.server-id`, so it is not affected.
+  2. Unused temp regions of abandoned drafts are no longer kept past their release when more than 200 older releases
+     wait on a region that is still in use: the API reads the due releases in pages until it has `max` to give.
+  3. Admin steps: none (no settings, no migration, no plugin `config.yml` change).
+- **Web app: admin tables no longer scroll the page sideways at phone width**
+  ([PandiO/knk-workspace#535](https://github.com/PandiO/knk-workspace/issues/535); staff web app only). knk-web-app
+  branch `claude/admin-mobile-overflow-535`, merged into `next` 2026-11-15 (knk-web-app#36 `5b87473`, docs
+  knk-workspace#567); promoted to trunk in v0.3 (2026-11-15).
+  1. At 390 px Mail log, Invitations, the Lootboxes Types, Specials, Areas and Active boxes tabs and the Minecraft
+     catalogue audit made the whole page 70 to 450 px wider than the screen. The tables scroll inside their own box
+     again. The cause was the visually hidden "Actions" head cell, positioned outside the table's scroll box; each box
+     is now `relative` (the fix the form and display configuration tables got in #266).
+  2. Tests: `e2e/admin-navigation.spec.ts` checks Mail log and Invitations (staff with some nodes) and the four
+     Lootboxes tables plus the catalogue audit (owner) at 390 px; fixtures `e2e/fixtures/adminTables.ts`. Guide:
+     [admin navigation § 2.4 and § 4.4](guides/admin-navigation-smoke-test.md).
+  - **Admin steps:** none (web app only, no setting).
+- **Staff web app: edit a permission group's own nodes, with a History**
+  ([PandiO/knk-workspace#50](https://github.com/PandiO/knk-workspace/issues/50); link L2 of the staff web app follow-ups
+  chain, [#517](https://github.com/PandiO/knk-workspace/issues/517)). knk-web-api, knk-web-app and knk-workspace
+  branches `claude/group-grants-50` (merged into `next` as knk-web-api#32 `dcbb1f8` and knk-web-app#35 `4278102`, promoted in v0.3). A permission group's detail page
+  (Dashboard → Permission Group → a group) has a **Permissions** panel: the group's own nodes (Granted/Denied, expiry),
+  a grant/deny form whose expiry is empty (permanent) by default, Edit, change Granted/Denied and Remove per row.
+  Changing Granted/Denied or removing asks first with the blast radius ("This affects N players", members of groups
+  that inherit from it included; online players get the change within seconds). A **History** list shows each change
+  to the group's nodes. Without `knk.admin.user.perm` the panel is read-only with "Requires knk.admin.user.perm".
+  1. **API:** the audit log has a generic subject (developer decision 2026-11-15): `audit_log_entries` gets nullable
+     `SubjectType` and `SubjectId` and `TargetUserId` becomes optional. A change to a group's own grants (added,
+     updated, removed) leaves one entry with the group as subject (`PermissionGroup`), the staff member as actor and the
+     node, before/after value and expiry in the details; player grant audits are unchanged. `GET api/audit-log` takes
+     `subjectType` and `subjectId` (`knk.admin.user.manage`). New `GET api/PermissionGroups/{id}/member-count`
+     (`knk.admin.user.manage` or the plugin key): active members of the group and of every group inheriting from it,
+     each player once. Writes stay on the by-node routes and `knk.admin.user.perm`; nobody changes a group ranked at or
+     above their own.
+  2. **Follow-up:** [#558](https://github.com/PandiO/knk-workspace/issues/558) (plugin: members of inheriting groups
+     and changes while realtime is down).
+  - **Admin steps:** one additive migration, `AddAuditLogSubject` (two nullable columns, one index, `TargetUserId`
+    nullable). The API does not migrate on start: back up the database, deploy the API, run `dotnet ef database update`,
+    then deploy the web app (it needs the new endpoints). No settings, no `config.yml` key, no plugin change. Smoke
+    test: [dashboard access smoke test § 8.7](guides/dashboard-access-smoke-test.md) (mostly automated in CI).
+- **Dashboard: the PermissionGrant table loads** ([PandiO/knk-workspace#408](https://github.com/PandiO/knk-workspace/issues/408);
+  API and staff web app). knk-web-api and knk-web-app branches `claude/permission-grant-table-408` (merged into `next` as
+  knk-web-api#30 `2425f18` and knk-web-app#29 `9a29623`, promoted in v0.3). Dashboard → Permission Grant lists every grant and deny (node, Granted/Denied, holder, expiry)
+  and pages, sorts and searches by node; it is read-only (no New, Edit or Delete that saves: grants are still changed
+  on the player profile and with `/knk user … perm`; #50 adds the group editor).
+  - **API:** `POST api/PermissionGrants/search` now needs `knk.admin.user.manage`, like `GET` and `GET {id}` (it needed
+    `knk.admin.user.perm`), so whoever the dashboard lists the type for can read it. Writes still need
+    `knk.admin.user.perm`. The search sorts by the column asked (`id`, `holderId`, `value`, `expiresAt`, `node`).
+  - **Admin steps:** none; deploy the API and the web app together (no migration, no settings). Smoke test:
+    [dashboard access smoke test § 8.6](guides/dashboard-access-smoke-test.md) (mostly automated in CI).
+- **Town streets come from their districts; the `TownStreet` table is dropped**
+  ([PandiO/knk-workspace#409](https://github.com/PandiO/knk-workspace/issues/409), L1
+  [#514](https://github.com/PandiO/knk-workspace/issues/514) design, L2
+  [#515](https://github.com/PandiO/knk-workspace/issues/515) implementation) — knk-web-api, knk-web-app and
+  knk-workspace branches `claude/town-streets-409` (merged into `next` as knk-web-api#31 `de74190` and knk-web-app#33 `d3d7152`, promoted in v0.3). Design
+  [specs/towns/DESIGN_TOWN_STREETS.md](specs/towns/DESIGN_TOWN_STREETS.md) (approved 2026-11-14 with its defaults).
+  1. **API.** A town's streets (`TownDto.streets` / `streetIds` of `GET api/Towns/{id}`) are the distinct streets of
+     its districts, ordered by name then id, read-only; they follow every street linked to or unlinked from a district
+     at once. Metadata lists Town `streets` as `storage: "derived"`; `POST api/Relationships/Town/{id}/streets/link`
+     and `/unlink` answer 400 `RelationshipNotEditable` "Streets are managed on the district: open a district to add or
+     remove them." (403 without the nodes, as before). `GET api/Towns` still carries no streets. Saving a town no
+     longer writes its districts back.
+  2. **Web app.** The Streets section of a town's detail page lists the streets with View and Edit, without Add…,
+     Unlink, Create New or Delete (whatever the stored display configuration says), and shows the hint above. Streets
+     are added to a town on a district's detail page (District → Streets → Add…).
+  3. **Plugin:** no change (the JSON shape stays; `/knk towns` debug output shows the derived list).
+  - **Admin steps:**
+    1. Back up the database before deploying (the migration drops a table).
+    2. Deploy the API and the web app together.
+    3. Apply the migration `DropTownStreet` (dev: `dotnet ef database update`; alpha: the migrator image, runbook
+       [§ API updates with migrations](guides/closed-alpha-deployment-runbook.md)). It drops `TownStreet` with **all**
+       its rows, including streets no district of the town has (developer decision 2026-11-14 on #515). Such a street
+       no longer shows on the town; link it to one of the town's districts to bring it back.
+    4. Rollback: the migration's `Down` (`dotnet ef database update SeedStaffFreezeNodes`, the migration before it)
+       recreates `TownStreet` and refills it from the districts; the dropped rows no district covered come back only
+       from the backup.
+    5. A Town form with a `Streets` / `StreetIds` field or step (the API ignores it) can be removed in the form builder;
+       the read-only check `scripts/maintenance/town-street-orphans-409.sql` (result set 3) lists such configurations.
+    6. Smoke test: [town streets smoke test](guides/town-streets-smoke-test.md) (L3
+       [#516](https://github.com/PandiO/knk-workspace/issues/516)): the manual steps are the deploy and migration on dev
+       and alpha and a look at a real town's Streets; the read-only section, the refused link, the derived list and the
+       migration are automated (knk-web-app `e2e/town-detail.spec.ts`, knk-web-api `TownStreetsDerivedTests`,
+       `RelationshipsControllerTests`, `DropTownStreetMigrationTests`). The dashboard access smoke test § 2.2 step 2
+       and § 8 step 9b now use a district's streets as the link example.
+- **Smoke tests: the web app's checks move into the automated suites** ([PandiO/knk-workspace#511](https://github.com/PandiO/knk-workspace/issues/511))
+  — no game or player change; developer-facing. Playwright specs with a mocked API in knk-web-app `e2e/` now check what
+  the developer did by hand in the smoke tests of features already on the trunk, and each guide marks those steps
+  `[automated]` with the test, so the evening check covers only what is left (game server, real client, themes).
+  Batch 1 (knk-web-app branch `claude/test-backfill-511`, PR into `next`): `e2e/player-profile.spec.ts` (player
+  profile and player search, 21 of 26 steps) and `e2e/settings-pages.spec.ts` (settings pages, 22 of 26 steps), new
+  helpers `e2e/support/layout.ts` (no sideways scroll at phone width), `e2e/fixtures/players.ts` and
+  `e2e/fixtures/settings.ts`; `mockSession` keeps the realtime hub offline. Guides:
+  [player profile](guides/player-profile-smoke-test.md), [settings pages](guides/settings-pages-smoke-test.md);
+  [web app testing § 3](guides/developer/web-app-testing.md#3-end-to-end-tests-playwright). Merged into `next`
+  2026-11-14 (knk-web-app#28, knk-workspace#528).
+  Batch 2: `e2e/admin-navigation.spec.ts` (admin navigation, 20 of 24 steps) and `e2e/dashboard-access.spec.ts`
+  (dashboard access § 8, with the API's xUnit tests marked in § 2.2, § 3, § 4 and § 7; 31 checks), fixture
+  `e2e/fixtures/dashboardAccess.ts`. Found: Mail log and Invitations scroll sideways at phone width
+  ([#535](https://github.com/PandiO/knk-workspace/issues/535)). Guides: [admin navigation](guides/admin-navigation-smoke-test.md),
+  [dashboard access](guides/dashboard-access-smoke-test.md). Merged 2026-11-14 (knk-web-app#30, knk-workspace#537).
+  Batch 3: `e2e/entity-detail.spec.ts` (entity detail, 14 of 21 steps) and "Show what uses it" in
+  `e2e/dashboard-access.spec.ts`; the relation picker's Jest tests marked in its guide (19 of 24 steps), fixture
+  `e2e/fixtures/entityDetail.ts`. Guides: [entity detail](guides/entity-detail-smoke-test.md),
+  [relation picker and delete details](guides/relation-picker-and-delete-details-smoke-test.md). Merged 2026-11-14
+  (knk-web-app#31, knk-workspace#538).
+  Batch 4: `e2e/data-table.spec.ts` (shared table, pager and confirm; numbers in a Dutch browser) and the existing Jest
+  and API tests marked in [data primitives](guides/data-primitives-smoke-test.md) (20 of 28 steps),
+  [feedback primitives](guides/feedback-primitives-smoke-test.md) (15 of 28) and
+  [form step conditions and step jump](guides/form-step-conditions-and-step-jump-smoke-test.md) (29 of 36).
+  - **Admin steps:** none (tests and docs only).
+- **Dashboard tables: the row actions scroll with the table again, and Export as CSV downloads at once**
+  ([PandiO/knk-workspace#606](https://github.com/PandiO/knk-workspace/issues/606),
+  [#607](https://github.com/PandiO/knk-workspace/issues/607), from the developer's smoke test of `next` on 2026-11-15;
+  staff web app only). knk-web-app and knk-workspace branches `claude/dashboard-fixes-606-607` (knk-web-app#43 `6c1cf4a`
+  into `next`, promoted in v0.3).
+  - **#606:** View / Edit / Delete are the last column of the row again and scroll with the table; the pinned actions
+    column of #405 cut off the table's other columns. The right-click / Shift+F10 row menu (#406) stays and is the fast
+    way to view or edit a row at any width. The checkbox column stays pinned on the left and the row lines (#404) are
+    unchanged.
+  - **#607:** checked first: Export as CSV (the row menu and the bar above the table) already downloads the file
+    straight away through a `Blob` and an `<a download>` link, named `<type>-<yyyy-mm-dd>.csv`, with no dialog or save
+    picker of the app's own. A browser set to ask where to save each file still asks; that is the browser's setting.
+    New Playwright tests catch the download and check the file name and the CSV header row.
+  - **Admin steps:** none; deploy the web app. Smoke test:
+    [dashboard access smoke test § 8.5](guides/dashboard-access-smoke-test.md) (9 of 11 steps automated in CI).
+- **Dashboard tables: every row looks the same, the row actions stay in view, and a right-click menu**
+  (PandiO/knk-workspace#404, #405, #406; staff web app only). knk-web-app branch `claude/dashboard-table-actions-404-406`,
+  merged into `next` 2026-11-14 (knk-web-app#17); promoted to trunk in v0.3 (2026-11-15).
+  - **#404:** rows from the second on no longer show a thick grey left edge; every row has the same 1px line.
+  - **#405:** View / Edit / Delete sit in a column pinned to the table's right edge (the checkbox column to the left),
+    so they stay in view on types with many columns and at phone width; a shadow shows on the pinned edge only while
+    columns scroll under it.
+    Reverted for the actions column by #606 (2026-11-15): they scroll with the table again; the checkbox column stays
+    pinned.
+  - **#406:** a right-click on a row (or Shift+F10 / the context-menu key on a focused row) opens View, Edit, Delete and
+    Export as CSV. Items follow the same permission nodes as the buttons and are greyed out with "Requires <node>",
+    not hidden. On a ticked row Delete and Export act on the whole selection (bulk delete needs
+    `knk.admin.delete.bulk`). Ctrl/Cmd + right-click keeps the browser's menu.
+  - **Admin steps:** none; deploy the web app. Smoke test:
+    [dashboard access smoke test § 8.5](guides/dashboard-access-smoke-test.md) (mostly automated in CI).
+
+## 2026-11-16
+
+- **Intake skill: ideas are captured at once and shaped later** — no game change
+  ([PandiO/knk-workspace#416](https://github.com/PandiO/knk-workspace/issues/416), phase 2 of the agent workflow,
+  [DESIGN § 1.1](specs/ai-agent-workflow/DESIGN.md#1-roles)). New project skill `.claude/skills/knk-intake/`.
+  1. **Capture mode** (the default): drop an idea in a session, even one line, and walk away. The session searches open
+     and closed issues for duplicates, files an issue labelled `idea` with your words quoted as they are (or comments
+     on the open issue that already has it), asks nothing and confirms in one sentence.
+  2. **Shaping mode** ("let's go through ideas"): the open `idea` issues one at a time, each with a read-back, the repos
+     it touches, a proposed `tier:` label and whether it needs design, at most three questions in the ask-user prompt,
+     then "now, later or design first" (or drop). "Now" goes to the manager session, "design first" starts a design
+     session with the `knk-design` skill.
+  3. **Tier labels:** the global instructions now say that whoever files an issue sets a `tier:` label when the scope
+     is clear; intake's shaping proposes one otherwise.
+  - **Admin steps:** none. Optional: an `area:web-app` label, so intake can tag web-app ideas too (only `area:api` and
+    `area:plugin` exist; agents cannot create labels).
 
 ## 2026-11-15
 

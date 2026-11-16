@@ -1,12 +1,12 @@
 # Ranks, permissions and moderation — admin guide
 
-**Status:** Current · **Last updated:** 2026-11-15 (§ 5.1, § 5.4, § 5.6, § 7–10: kick and ban from the web app, unfreeze reason, game sessions in the timeline, the moderation search's filters; #565, #574 in `next`, docs #597)
+**Status:** Current · **Last updated:** 2026-11-15 (release v0.3: the group Permissions panel, the PermissionGrant table, the profile's permission search, kick and ban from the web app, the unfreeze reason, game sessions and the search filters are released; PandiO/knk-workspace#577)
 **Checked against:** knk-web-api `master` `75b5a00`, knk-web-app `main` `3ba747d`, knk-plugin `main` `57884e97`; not
 live-tested as a whole (the parts' own smoke tests are linked in § 9). The group Permissions panel, the PermissionGrant
-table and the profile's permission search (#50, #408, #407) are in `next` (knk-web-api `dcbb1f82`, knk-web-app
-`b2589eb4`), not yet released; covered by automated tests, their manual smoke-test steps not run yet. Kick and ban
-from the web app, the unfreeze reason, game sessions and the search filters (#565, #574) are in `next` (knk-web-api
-`5e10185f`, knk-web-app `98e108f0`, knk-plugin `1adcb497`), not yet released; automated in CI, the in-game steps of
+table and the profile's permission search (#50, #408, #407), and kick and ban from the web app, the unfreeze reason,
+game sessions and the search filters (#565, part of #119) were released in `v0.3` (2026-11-15, knk-web-api `main`
+`2cc8254`, knk-web-app `main` `947923c`); the plugin side of kick and ban (#574) is in knk-plugin `v0.2` (`f8f7fb2e`).
+Covered by automated tests and the developer's smoke test of `next` before the promotion; the in-game steps of
 [player profile smoke test § 7](../player-profile-smoke-test.md#7-profile-api-part-frozen-state-unfreeze-reason-sessions-search-filters-kick-and-ban-565)
 not run
 **Related:** [ranks, titles and chat (player guide)](../users/ranks-and-chat-player-guide.md) (what players see),
@@ -25,7 +25,7 @@ of all this is in the [player guide](../users/ranks-and-chat-player-guide.md); t
 1. **Web app:** a web account linked to your Minecraft account with `knk.admin.user.manage` opens **Players & support →
    Player moderation** (`/admin/users`) and the player profiles. Changing groups needs `knk.admin.user.group`, changing
    nodes `knk.admin.user.perm`; freezing `knk.freeze` / `knk.unfreeze`; kicking and banning `knk.kick` / `knk.ban`
-   (§ 5.4, in `next`). A button you lack the node for is greyed out with "Requires <node>".
+   (§ 5.4, since v0.3). A button you lack the node for is greyed out with "Requires <node>".
 2. **In game:** the same nodes, through `/knk user …`, `/freeze`, `/unfreeze` and the Player manager (`/menu` →
    **Player manager**, shown with `knk.admin.user.manage`).
 3. **When changes arrive in game:** a change made in game (`/knk user`, Player manager) applies at once. A change made in
@@ -98,7 +98,7 @@ Open **Player moderation**, search the player (username, email or UUID), open th
      Click **Node**, **Value** or **Source** to sort: ascending, descending, then back to the original order.
    - The **X** on a direct grant removes it; an inherited row says **Inherited** and is changed on its group (§ 3.3)
      or by removing the membership. The list shows no expiry (#568).
-   - *In `next` since 2026-11-15 (#407); before that the form was under the list and the list had no search or sort.*
+   - *Since v0.3 (2026-11-15, #407); before that the form was under the list and the list had no search or sort.*
 3. **Overview → Premium Tier** lists the player's premium memberships; ended ones are struck through. **Player
    moderation → Premium expiring soon** lists tiers that end within the days you choose.
 
@@ -122,7 +122,7 @@ message (PandiO/knk-workspace#466). After a premium change you see which tier th
 1. **New group, name, weight, parent, premium flag, multipliers:** **Dashboard → Permission group → New** or **Edit**
    (needs `knk.admin.user.perm`; deleting needs `knk.admin.delete` too, and a group with child groups can't be deleted).
    *Parent Group Id* is a plain number: the parent group's id.
-2. **A group's nodes** (#50, in `next`, not yet released): **Dashboard → Permission Group** → the group → **View**
+2. **A group's nodes** (#50, since v0.3): **Dashboard → Permission Group** → the group → **View**
    (the eye). Below the group's details, the **Permissions** panel lists the group's own nodes (Node, Effect
    **Granted**/**Denied**, Expires, "expired" on a lapsed one) and how many players it reaches ("12 players (with 2
    inheriting groups)"). Nodes inherited from parent groups are not listed here; the member's profile shows them with
@@ -147,9 +147,9 @@ message (PandiO/knk-workspace#466). After a premium change you see which tier th
    for the tab list; how to add them to the form: [rank display spec § 7](../../specs/user-features/RANK_DISPLAY.md#7-admin-how-to-editing-the-colors-in-the-web-app)):
    Minecraft `&` codes only, such as `&e` or `&6&l`. They only show for Default and premium tiers (§ 2). If the form configuration doesn't carry the colour fields,
    saving the group may blank them (PandiO/knk-workspace#465): check the colours after a save.
-4. Changes to a group's **nodes** are audited and listed in the group's History (#50, in `next`); changes to its
+4. Changes to a group's **nodes** are audited and listed in the group's History (#50, since v0.3); changes to its
    **settings** (name, weight, parent, colours) and deleting a group are not (PandiO/knk-workspace#464).
-5. **All grants at once:** **Dashboard → Permission Grant** (#408, in `next`) lists every grant and deny of every
+5. **All grants at once:** **Dashboard → Permission Grant** (#408, since v0.3) lists every grant and deny of every
    player and group: ID, Node, Effect, Holder ("Group #<id>" or "User #<id>") and Expires (UTC) ("Never" without one).
    Search by node, sort by any column. It needs `knk.admin.user.manage` and is read-only: change grants on the player
    profile or the group's Permissions panel. **New** and **Edit** show but don't save a grant (#530).
@@ -188,7 +188,7 @@ they don't hold (PandiO/knk-workspace#469, not yet checked live). Until that is 
 
 | Where | How |
 |---|---|
-| Web app | Player profile → **Freeze** (top right, or the **Moderation** tab's Freeze card) → type a **Reason** (required, up to 200 characters) → **Freeze**. **Unfreeze** asks "Unfreeze <player>?" with an optional **Reason (optional)**, saved in the audit log's **Player unfrozen** entry (in `next`, #565; before, it asked no reason). |
+| Web app | Player profile → **Freeze** (top right, or the **Moderation** tab's Freeze card) → type a **Reason** (required, up to 200 characters) → **Freeze**. **Unfreeze** asks "Unfreeze <player>?" with an optional **Reason (optional)**, saved in the audit log's **Player unfrozen** entry (since v0.3, #565; before, it asked no reason). |
 | In game | `/freeze <player> <reason…>`, `/unfreeze <player>` |
 | Player manager | the Freeze / Unfreeze button; the reason is always "Frozen by a member of staff" |
 
@@ -239,8 +239,8 @@ they don't hold (PandiO/knk-workspace#469, not yet checked live). Until that is 
 
 ### 5.4 Kick and ban
 
-**From the web app** (in `next` since 2026-11-15, [#565](https://github.com/PandiO/knk-workspace/issues/565) and
-[#574](https://github.com/PandiO/knk-workspace/issues/574); not yet released, the in-game steps not live-tested):
+**From the web app** (since v0.3, [#565](https://github.com/PandiO/knk-workspace/issues/565); carried out in game by
+knk-plugin `v0.2` or later, [#574](https://github.com/PandiO/knk-workspace/issues/574); the in-game steps not live-tested):
 
 1. **Where:** the player profile's status strip (**Kick**, **Ban**, next to Freeze) or the **Moderation** tab's **Kick
    and ban** card (**Kick…**, **Ban…**). Only for an account with a Minecraft account; otherwise the card says "This
@@ -292,9 +292,9 @@ clicks are collected until you close the menu and type the reason in chat.
 
 **Player moderation** (`/admin/users`, `knk.admin.user.manage`) → **All players** lists every account, 20 per page.
 
-1. **Search username / email / UUID**: part of a name or email, or part of a UUID with or without dashes (in `next`,
+1. **Search username / email / UUID**: part of a name or email, or part of a UUID with or without dashes (since v0.3,
    #565; before, only a whole dashless UUID matched). Leave it blank to list everyone.
-2. **Online**, **Frozen** and **Payments** (in `next`, #565): each is *Any*, or yes or no (*Online* / *Offline*,
+2. **Online**, **Frozen** and **Payments** (since v0.3, #565): each is *Any*, or yes or no (*Online* / *Offline*,
    *Frozen* / *Not frozen*, *Locked* / *Not locked*). Choosing one searches at once.
 3. **Sort** by Username, Email, Last seen, Coins or XP: click the header, again for the other direction. Last seen
    ascending puts players who were never seen first.
@@ -334,14 +334,14 @@ and **Recently demoted** (§ 7).
    removed **on a player**, title changes, balance adjustments with the reason, salary payouts, freeze and unfreeze
    with the reason, mode changes, kit grants, staff teleports, lootbox spawns and grants, discovery resets, currency
    reversals and payment locks, private-message log reads, invitations, Minecraft link changes, admissions, dashboard
-   bulk deletes and exports, and kicks and bans from the web app (§ 5.4, in `next`). A change made by the system (an
+   bulk deletes and exports, and kicks and bans from the web app (§ 5.4, since v0.3). A change made by the system (an
    expiry) has no actor ("system").
-3. **Game sessions** (in `next`, #565): each visit to a game server is a timeline entry at its start, "Played on
+3. **Game sessions** (since v0.3, #565): each visit to a game server is a timeline entry at its start, "Played on
    <server>" with "Until <time>", how it ended ("Left the game", "Server stopped", "Kicked", "Closed without a
    heartbeat (timeout)") and "Active <time>"; "In game on <server>" with "Still open" while it lasts. The **Game
    sessions** chip shows or hides them. They are not audit entries, so the **Audit log** table doesn't list them. If
    they can't be read, the timeline says "Could not load the game sessions." and shows the rest.
-4. **A group's node changes** (#50, in `next`) are recorded with the group as subject, not on a player: they show in
+4. **A group's node changes** (#50, since v0.3) are recorded with the group as subject, not on a player: they show in
    the group's **History** (§ 3.3), not in the members' audit logs. They survive a member's data deletion.
 5. **Not recorded:** changes to a group's settings and group deletes (#464), kick and ban **in game** (#460), staff
    chat, social spy toggles and ignore lists (#466).
@@ -357,7 +357,7 @@ and **Recently demoted** (§ 7).
 | `knk.admin.user.perm` | Grant, deny and revoke nodes, on players and on groups ranked below you; create and edit groups | Staff |
 | `knk.admin.user.mode`, `knk.admin.user.salary`, `knk.admin.user.coins`, `.gems`, `.xp`, `.info`, `.history` | The Player manager and `/knk user` actions of that name | Staff |
 | `knk.freeze`, `knk.unfreeze` | Freeze and unfreeze | Staff |
-| `knk.kick`, `knk.ban` | Kick and ban from the web app (in `next`, § 5.4); in game kick and ban stay op-only (#460) | Staff |
+| `knk.kick`, `knk.ban` | Kick and ban from the web app (since v0.3, § 5.4); in game kick and ban stay op-only (#460) | Staff |
 | `knk.mode.staff`, `knk.mode.owner` | Staff mode, owner mode; seeing vanished staff; `[STAFF]` / `[OWNER]` in chat | Staff; the owner |
 | `knk.staffchat`, `knk.socialspy` | Staff chat, social spy | Staff |
 | `knk.socialspy.exempt` | Your private messages stay hidden from spies without it | the owner |
@@ -415,14 +415,16 @@ Never test kick and ban on a real player. For dashboard rights use the [dashboar
 | "You can only kick or ban players ranked below you." | The player ranks as high as you or higher | Ask someone ranked higher |
 | "… is not online, so there is nothing to kick." | A kick needs the player online | Ban instead, or wait |
 | "No game server is connected, so the kick (ban) can't be carried out now. …" | No game server is connected to the API | Start the game server, check `realtime.enabled` and the hub, or use `/kick` / `/ban` in game |
-| The web app says "<player> is banned" but they can still join | The plugin on that server is older than #574 or has `realtime.enabled: false`, or that server wasn't connected at that moment | Deploy the plugin with #574 and realtime on; ban again or use `/ban` in game |
+| The web app says "<player> is banned" but they can still join | The plugin on that server is older than `v0.2` (#574) or has `realtime.enabled: false`, or that server wasn't connected at that moment | Deploy knk-plugin `v0.2` or later with realtime on; ban again or use `/ban` in game |
 | A banned player must be let back in | There is no unban in the web app | `/pardon <player>` in game |
 | Frozen player still breaks blocks | Freeze doesn't cover building and interaction | Known gap #463 |
 
 ## Changes
 
-1. 2026-11-15: § 5.4 kick and ban from the web app, § 5.1 unfreeze reason and frozen since/by, § 5.6 the moderation
+1. 2026-11-15: release v0.3: "in `next`" markers of #50, #408, #407, #565 now "since v0.3"; the plugin side
+   of kick and ban (#574) is in knk-plugin `v0.2`; PandiO/knk-workspace#577
+2. 2026-11-15: § 5.4 kick and ban from the web app, § 5.1 unfreeze reason and frozen since/by, § 5.6 the moderation
    search's filters and sort, § 7 game sessions in the timeline, § 8–10; #565, #574 in `next`, docs #597
-2. 2026-11-15: § 3.1, § 3.3, § 7: a group's nodes with History, the PermissionGrant table, the profile's permission
+3. 2026-11-15: § 3.1, § 3.3, § 7: a group's nodes with History, the PermissionGrant table, the profile's permission
    search; #50, #408, #407 in `next`, docs #576
-3. 2026-11-13: first version, PandiO/knk-workspace#301
+4. 2026-11-13: first version, PandiO/knk-workspace#301

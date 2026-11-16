@@ -1,6 +1,6 @@
 # Dashboard access, staff ranks and area nodes — admin guide
 
-**Status:** Current · **Last updated:** 2026-11-15 (§ 6: a group's nodes in the group's Permissions panel, #50 in `next`, docs #576)
+**Status:** Current · **Last updated:** 2026-11-15 (release v0.3: a group's nodes in its Permissions panel (#50) and read-only town Streets (#409) are released; PandiO/knk-workspace#577)
 **Checked against:** knk-web-api `master` `45043a7` and knk-web-app `next` `e6ba115`
 (the dashboard access model, [#280](https://github.com/PandiO/knk-workspace/issues/280) AM1–AM3, and bulk delete,
 [#205](https://github.com/PandiO/knk-workspace/issues/205), merged 2026-11-12/13 on `main`; create and edit back on
@@ -167,10 +167,10 @@ deploy). In game: `/knk user <player> perm grant knk.admin.world`.
 
 1. Pick or create the group. A new group goes in with **Dashboard → Permission group → New** (needs
    `knk.admin.user.perm` and `knk.admin.content`); give it a weight below your own rank.
-2. Give the group its nodes. With [#50](https://github.com/PandiO/knk-workspace/issues/50) (in `next`, not yet
-   released) that is the group's **Permissions** panel: **Dashboard → Permission Group** → the group → **View**, then
+2. Give the group its nodes. Since v0.3 ([#50](https://github.com/PandiO/knk-workspace/issues/50)) that is the group's
+   **Permissions** panel: **Dashboard → Permission Group** → the group → **View**, then
    **Node**, **Grant**, **Save** (details in the [ranks guide § 3.3](ranks-permissions-moderation-admin-guide.md#33-a-groups-own-nodes-and-new-groups)).
-   On trunk until `next` is promoted, the owner or an Admin sets them through
+   On an API and web app older than v0.3, the owner or an Admin sets them through
    the API with the group's id as the holder (holder ids are shared by users and groups):
    `PUT api/PermissionGrants/by-node` with `{ "holderId": <group id>, "node": "knk.admin.world", "value": true }`, and
    the same for `knk.admin.delete` and `knk.admin.export`. Never add `knk.admin.delete.bulk` unless the owner does it
@@ -204,7 +204,7 @@ delete on test records first: it can't be undone, and each refused row stays sel
 | "You can only hand out or remove groups ranked below your own." / "… change groups ranked below your own." | The group ranks at or above your highest group | Ask someone ranked higher |
 | **New** / **Edit** greyed out: "Requires knk.admin.content" | Creating and editing need the content node on top of the area node ([#371](https://github.com/PandiO/knk-workspace/issues/371)) | Expected for area staff; grant `knk.admin.content` if they should create and edit |
 | **Select…**, **Change…**, **Unlink** or **Add…** on a detail page greyed out: "Requires knk.admin.content" | Changing links is an edit ([#374](https://github.com/PandiO/knk-workspace/issues/374)) | Expected for area staff; grant `knk.admin.content` if they should |
-| A town's **Streets** have no **Add…**, **Unlink**, **Create New** or **Delete**, with "Streets are managed on the district: open a district to add or remove them."; a direct link call answers 400 `RelationshipNotEditable` | Not a permission: a town's streets are the streets of its districts and can't be changed on the town ([#409](https://github.com/PandiO/knk-workspace/issues/409), in `next`) | Open a district of the town and use its **Streets → Add…** or **Unlink** (needs `knk.admin.world` and `knk.admin.content`) |
+| A town's **Streets** have no **Add…**, **Unlink**, **Create New** or **Delete**, with "Streets are managed on the district: open a district to add or remove them."; a direct link call answers 400 `RelationshipNotEditable` | Not a permission: a town's streets are the streets of its districts and can't be changed on the town ([#409](https://github.com/PandiO/knk-workspace/issues/409), since v0.3) | Open a district of the town and use its **Streets → Add…** or **Unlink** (needs `knk.admin.world` and `knk.admin.content`) |
 | An API call or a page's save answers "Creating or editing Kit requires knk.kit.manage and knk.admin.content." | The API asks for the content node on every create and edit since [#374](https://github.com/PandiO/knk-workspace/issues/374) (also the lootbox Enable/Disable toggle and Road network's New street, [#383](https://github.com/PandiO/knk-workspace/issues/383)) | Grant `knk.admin.content`, or use the in-game command for kits and siege setup |
 | "Staff only — This page needs the knk.admin.content permission" on `/forms/…` | The form wizard, Entity setup and the builders need the content node; also reached from the Lootboxes tabs, Road network's Rename and detail page sections ([#380](https://github.com/PandiO/knk-workspace/issues/380)) | Expected without `knk.admin.content`; grant it if they should create and edit |
 | Permission group listed, but its table answers "Requires the knk.admin.user.perm permission." | Known bug [#369](https://github.com/PandiO/knk-workspace/issues/369): the list needs `knk.admin.user.perm` | Grant `knk.admin.user.perm`, or wait for the fix |
@@ -213,7 +213,8 @@ delete on test records first: it can't be undone, and each refused row stays sel
 
 ## Changes
 
-1. 2026-11-15: § 8: a town's Streets have no Add…/Unlink because they come from the districts; #409, docs #559
-2. 2026-11-13: the API refuses creates, edits and link changes without `knk.admin.content`; Staff no longer edits kits or siege setup on the web; #374, docs #385
-3. 2026-11-13: area ranks view, delete and export but don't create or edit; #371, docs #378
-4. 2026-11-13: first version, PandiO/knk-workspace#366
+1. 2026-11-15: release v0.3: § 6 and § 8 markers of #50 and #409 now "since v0.3"; PandiO/knk-workspace#577
+2. 2026-11-15: § 8: a town's Streets have no Add…/Unlink because they come from the districts; #409, docs #559
+3. 2026-11-13: the API refuses creates, edits and link changes without `knk.admin.content`; Staff no longer edits kits or siege setup on the web; #374, docs #385
+4. 2026-11-13: area ranks view, delete and export but don't create or edit; #371, docs #378
+5. 2026-11-13: first version, PandiO/knk-workspace#366
