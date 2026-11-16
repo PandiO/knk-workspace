@@ -287,6 +287,20 @@ the configuration reference § 4.27), then restart. In test order:
     5. Sent to the developer and the manager before any B link starts. Asked the developer for a second schematic
        (x 1397–1423, y 48–87, z -553..-486) and whether `group-formation-keeping` was `elastic`; the logs suggest
        `levels`.
+35. **Developer answers, B1 scope and the test configuration** (2026-11-16, coordinator session).
+    1. The schematic of 2026-11-15 already holds both flights of the stair house (x 1407–1418, y 49–79,
+       z -549..-487), so no second schematic is needed. B1 places the scene box around that whole schematic, upper
+       landings included, instead of M1's box (y 46–69).
+    2. The snapshot also takes the **domains along the route** (developer request): every Town, District, Structure
+       and gate whose WorldGuard region touches the route's box, with its id, name and type, its region id and shape
+       (cuboid corners or polygon points with min and max y, whole, not clipped to the box), parent, priority, entry
+       and exit rules (`knk-allow-entry`, `knk-allow-exit`) and the gate's open or closed state. The replay builds
+       these regions and the matching fake API data, so access rules (#506, L9) can be tested on the real layout.
+    3. The developer's dev-server `config.yml` was missing every key added since 2026-11-14. During the failed smoke
+       test the server ran `stationary-ticks` and `no-progress-ticks` 60 (default 40 since L3), `group-spacing` 2.0
+       (default 1.5) and no `group-formation-keeping`, so `levels`, not `elastic`; the M3 squeeze and look-ahead
+       keys were not set either. The coordinator merged the file for the developer (`next` defaults, the dev
+       server's own values kept, the old defaults replaced). The next smoke test runs on the merged file.
 
 ## 4. Link blocks
 
