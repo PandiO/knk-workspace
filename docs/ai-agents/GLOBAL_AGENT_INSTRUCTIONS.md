@@ -348,8 +348,9 @@ Until the branch model applies it means the merge into the default branch, and a
    feature issue, titled `Docs: <feature>`, labelled `documentation` and `tier:1`. Copy the list into it, link the merged commits and PRs, and say which
    items are player/admin guides (these gate deploys, see below).
 3. **Start a new session for it right away.** Use `create_session` (claude-code-remote) with `source_url`
-   `https://github.com/PandiO/knk-workspace` and the prompt in
-   [docs-session prompt](docs-session-prompt.md), filled in. Pass the model explicitly. If `create_session` is
+   `https://github.com/PandiO/knk-workspace` and the starter in
+   [docs-session prompt](docs-session-prompt.md), filled in (issue numbers, merged commits, base). The docs session
+   follows the [`knk-docs-session` skill](../../.claude/skills/knk-docs-session/SKILL.md). Pass the model explicitly. If `create_session` is
    unavailable or refused, queue it with `spawn_task`. If that is unavailable too, give the developer the filled
    prompt in your final message. Note the session or the fallback in the documentation issue and the tracker row.
    Don't write those docs in the implementing session unless the developer asks: a separate session keeps the merge
