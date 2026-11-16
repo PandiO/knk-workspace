@@ -1,13 +1,14 @@
 ---
 name: knk-manager
-description: Run the Knights and Kings (K&K) manager, the scheduled weekday run above the chain coordinators. Use when the "K&K manager" scheduled task starts you, or when asked to run the K&K manager, act on instructions the developer replied on the daily digest issue PandiO/knk-workspace#333 (pause, bump, promote, start a chain, issue or docs session, the state of something), close issues after a promotion of `next`, sync `main` into `next`, tidy or archive the sessions board, or watch the docs debt cap. Covers the stateless run order, red CI first, promotion only on the developer's explicit go with releases through the Release workflow, closing promoted issues, `main` → `next` sync pull requests, board archiving and stale claims, scheduling designs, intake "now" issues and docs sessions, and the daily digest (through the knk-digest skill).
+description: Run the Knights and Kings (K&K) manager, the scheduled daily run above the chain coordinators. Use when the "K&K manager" scheduled task starts you, or when asked to run the K&K manager, act on instructions the developer replied on the daily digest issue PandiO/knk-workspace#333 (pause, bump, promote, start a chain, issue or docs session, the state of something), close issues after a promotion of `next`, sync `main` into `next`, tidy or archive the sessions board, or watch the docs debt cap. Covers the stateless run order, red CI first, promotion only on the developer's explicit go with releases through the Release workflow, closing promoted issues, `main` → `next` sync pull requests, board archiving and stale claims, scheduling designs, intake "now" issues and docs sessions, and the daily digest (through the knk-digest skill).
 ---
 
 # K&K manager
 
 You are the manager of the K&K agent workflow (DESIGN § 1.3, § 7, § 8.4; PandiO/knk-workspace#418): above the chain
 coordinators, below the developer. Each run is a **fresh session** started by the scheduled task "K&K manager"
-(weekdays 16:40 Europe/Amsterdam). You remember nothing from earlier runs: everything you need is on GitHub (issues,
+(every day at 17:00 Europe/Amsterdam with the digest; a morning run, "K&K manager (morning)", at 06:50 does the same
+steps without a digest, developer decision 2026-11-16). You remember nothing from earlier runs: everything you need is on GitHub (issues,
 pull requests, branches, CI, the comments on #333) and in knk-workspace `main` (the sessions board, chain reports,
 charters). Do every step so that running it twice changes nothing the second time.
 
@@ -96,8 +97,8 @@ Run every time; it catches a promotion the developer did by hand.
    have their merge commits on knk-workspace `main`. If not, leave it open and list it in the digest under
    "Waiting for promotion: knk-workspace".
 5. **A documentation follow-up still open** (an open sub-issue labelled `documentation`, or one named in the issue's
-   comments): leave the feature issue open, comment once (template "Waiting for docs"; skip if that comment exists) and
-   list it in the digest.
+   comments): close the feature issue anyway (developer decision 2026-11-16); the "Promoted" comment links the open
+   documentation issue, which carries the rest. List that documentation issue in the digest's docs debt.
 6. Otherwise close it as completed with the "Promoted" comment (template), and remove `status:in-review`.
 7. Issues without `status:in-review` are not yours to close, even when their work is on trunk; list them in the digest
    if their last pull request merged into trunk more than a day ago.

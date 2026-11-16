@@ -262,7 +262,8 @@ A chain's charter keeps only its links table, gates and binding documents. Facts
 ## Manager run and daily digest
 
 Developer decision 2026-11-12 (DESIGN § 1.3, § 7, § 8.4), built 2026-11-16 (PandiO/knk-workspace#418). The scheduled
-task "K&K manager" starts a fresh session each weekday at 16:40 Europe/Amsterdam that follows the
+task "K&K manager" starts a fresh session every day at 17:00 Europe/Amsterdam (and "K&K manager (morning)" at 06:50,
+without a digest; developer decision 2026-11-16) that follows the
 [`knk-manager`](../../.claude/skills/knk-manager/SKILL.md) skill. It keeps no state of its own: what it needs is on
 GitHub and in knk-workspace `main`. Each run:
 
@@ -270,7 +271,8 @@ GitHub and in knk-workspace `main`. Each run:
 2. acts on the developer's replies on the pinned "Daily digest" issue PandiO/knk-workspace#333 (a numbered item's
    answer, "pause X", "bump Y", "promote", "start …"), marking each handled reply with a reaction;
 3. promotes `next` to trunk only on the developer's explicit go, with release tags only through the Release workflow;
-4. closes `status:in-review` issues whose work and docs reached trunk, unless a documentation follow-up is still open;
+4. closes `status:in-review` issues whose work and docs reached trunk; an open documentation follow-up carries the rest
+   (developer decision 2026-11-16);
 5. syncs `main` into `next` in every repo through a pull request when `main` has commits `next` lacks;
 6. archives finished board rows and lists stale claims; suggests docs sessions over the debt cap and asks before
    starting an approved chain;
