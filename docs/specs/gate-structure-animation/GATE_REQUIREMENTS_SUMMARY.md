@@ -379,7 +379,7 @@ public class GateBlockSnapshot
 **Next Immediate Steps**:
 1. Update GateStructure.cs with animation fields (see field list above)
 2. Create GateBlockSnapshot.cs entity
-3. Follow entity scaffold checklist (docs/ai/ENTITY_SCAFFOLD_CHECKLIST.md)
+3. Follow the entity scaffold recipe ([`knk-entity-scaffold` skill](../../../.claude/skills/knk-entity-scaffold/SKILL.md))
 4. Begin Phase 1 implementation (core animation system)
 
 ---
