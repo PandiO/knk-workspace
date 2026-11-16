@@ -1,6 +1,6 @@
 # Town logistics: warehouses, distribution and saving rules, trade and pricing
 
-**Status:** **Proposed** (2026-11-16, with [DESIGN.md](DESIGN.md); [decision record §15](DECISIONS_2026-11-05.md#15-design-pass-to-decided-2026-11-16)). Before: draft (rev. 3 companion to [DESIGN.md](DESIGN.md)). It covers the developer's notes 15, 16 and 17
+**Status:** **Decided 2026-11-16** (developer, with [DESIGN.md](DESIGN.md); [decision record §15](DECISIONS_2026-11-05.md#15-design-pass-to-decided-2026-11-16)). Before: draft (rev. 3 companion to [DESIGN.md](DESIGN.md)). It covers the developer's notes 15, 16 and 17
 (2026-10-09) and the voice design review of 2026-11-05 ([decision record](DECISIONS_2026-11-05.md) §5). The whole rule
 catalogue in §4 belongs to the concept; rev. 3 splits it into a **V1 subset** and **Later** rules. Tags: **[V1]**,
 **[Later]**, **[Parked]** (DESIGN header).

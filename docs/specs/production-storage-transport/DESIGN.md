@@ -1,6 +1,6 @@
 # Production, storage and transport — Design
 
-**Status:** **Proposed** (2026-11-16): no open questions (§19); waiting for the developer's approval. Every recommendation the developer had not discussed was confirmed or changed in the 2026-11-16 design pass ([decision record §15](DECISIONS_2026-11-05.md#15-design-pass-to-decided-2026-11-16), G1-G16). Before that: draft **rev. 3**. Rev. 3 takes in the developer's voice design review of 2026-11-05, recorded in
+**Status:** **Decided 2026-11-16** (developer), after the in-game menus pass (M1-M5); no open questions (§19). Every recommendation the developer had not discussed was confirmed or changed in the 2026-11-16 design pass ([decision record §15](DECISIONS_2026-11-05.md#15-design-pass-to-decided-2026-11-16), G1-G16). Before that: draft **rev. 3**. Rev. 3 takes in the developer's voice design review of 2026-11-05, recorded in
 [DECISIONS_2026-11-05.md](DECISIONS_2026-11-05.md). Rev. 2 took in the 18 notes of 2026-10-09. §14 lists what is
 settled and what is still open. Nothing is implemented. Items are tagged **[V1]** (first version), **[Later]** (in the
 concept, a future update) or **[Parked]** (direction agreed, details open).
@@ -964,8 +964,44 @@ Each item is checked by an automated test or a smoke step; the phase that delive
 | P12 Display stalls | [#250](https://github.com/PandiO/knk-workspace/issues/250) | 2 | display entities, quick buy |
 | Web-app insight | [#65](https://github.com/PandiO/knk-workspace/issues/65) | 2 | read-only views, grows per phase |
 
-4. On approval each phase is checked for size (more than one repo plus tests and docs in a day's link is split
-   again) and gets its `tier:` label and smoke section.
+4. **Links (on approval, 2026-11-16).** A phase spanning several repos is split into one link per repo; the original
+   issue keeps the first link (usually the API). Order: top to bottom, a link starts when the links it depends on
+   are merged into `next`. Smoke sections are in the
+   [smoke-test guide](../../guides/production-storage-transport-smoke-test.md).
+
+| Link | Issue | Repo | Tier | Depends on | Smoke |
+|---|---|---|---|---|---|
+| Item identity | [#141](https://github.com/PandiO/knk-workspace/issues/141) | API, plugin | 3 | — (prerequisite, own issue) | — |
+| T-a Territory API | [#326](https://github.com/PandiO/knk-workspace/issues/326) | knk-web-api | 3 | — | § 1 |
+| T-b Territory plugin | [#689](https://github.com/PandiO/knk-workspace/issues/689) | knk-plugin | 3 | #326 | § 1 |
+| T-c Territory web app | [#690](https://github.com/PandiO/knk-workspace/issues/690) | knk-web-app | 2 | #326 | § 1 |
+| P1 Stock core API | [#97](https://github.com/PandiO/knk-workspace/issues/97) | knk-web-api | 3 | #141 | § 2 |
+| P1b Stock web app | [#675](https://github.com/PandiO/knk-workspace/issues/675) | knk-web-app | 2 | #97 | § 2 |
+| P2 World API | [#91](https://github.com/PandiO/knk-workspace/issues/91) | knk-web-api | 3 | #97, #326 | § 3 |
+| P2b World web app | [#676](https://github.com/PandiO/knk-workspace/issues/676) | knk-web-app | 2 | #91 | § 3 |
+| P2c World plugin | [#677](https://github.com/PandiO/knk-workspace/issues/677) | knk-plugin | 2 | #91 | § 3 |
+| P3 Production engine API | [#86](https://github.com/PandiO/knk-workspace/issues/86) | knk-web-api | 3 | #91 | § 4 |
+| P3b Production web app | [#678](https://github.com/PandiO/knk-workspace/issues/678) | knk-web-app | 2 | #86 | § 4 |
+| P4 Yield areas API | [#138](https://github.com/PandiO/knk-workspace/issues/138) | knk-web-api | 3 | #86 | § 5 |
+| P4b Surveys plugin | [#679](https://github.com/PandiO/knk-workspace/issues/679) | knk-plugin | 3 | #138 | § 5 |
+| P4c Yield areas web app | [#680](https://github.com/PandiO/knk-workspace/issues/680) | knk-web-app | 2 | #138 | § 5 |
+| P5 Transport API | [#79](https://github.com/PandiO/knk-workspace/issues/79) | knk-web-api | 3 | #86 | § 6 |
+| P5b Lanes plugin | [#681](https://github.com/PandiO/knk-workspace/issues/681) | knk-plugin | 2 | #79 | § 6 |
+| P5c Transport web app | [#682](https://github.com/PandiO/knk-workspace/issues/682) | knk-web-app | 2 | #79 | § 6 |
+| P6a Terminals/menus API | [#683](https://github.com/PandiO/knk-workspace/issues/683) | knk-web-api | 2 | #97, #91, #79 | § 7 |
+| P6 Terminals and menus plugin | [#74](https://github.com/PandiO/knk-workspace/issues/74) | knk-plugin | 2 | #683, #689 | § 7 |
+| P7 Delivery API | [#60](https://github.com/PandiO/knk-workspace/issues/60) | knk-web-api | 3 | #97 | § 8 |
+| P7b Inbox plugin | [#684](https://github.com/PandiO/knk-workspace/issues/684) | knk-plugin | 3 | #60 | § 8 |
+| P8a Harvest API | [#685](https://github.com/PandiO/knk-workspace/issues/685) | knk-web-api | 3 | #86, #138 | § 9 |
+| P8 Harvest plugin | [#134](https://github.com/PandiO/knk-workspace/issues/134) | knk-plugin | 3 | #685, #679 | § 9 |
+| P9 Town logistics API | [#127](https://github.com/PandiO/knk-workspace/issues/127) | knk-web-api | 3 | #79 | § 10 |
+| P9b Logistics web app | [#686](https://github.com/PandiO/knk-workspace/issues/686) | knk-web-app | 2 | #127 | § 10 |
+| P10 Shops API | [#248](https://github.com/PandiO/knk-workspace/issues/248) | knk-web-api | 3 | #97, #91, #86 (restocking: #127) | § 11 |
+| P10b Shop menus plugin | [#687](https://github.com/PandiO/knk-workspace/issues/687) | knk-plugin | 2 | #248, developer's menu templates | § 11 |
+| P10c Shops web app | [#688](https://github.com/PandiO/knk-workspace/issues/688) | knk-web-app | 2 | #248 | § 11 |
+| P11 Shopkeepers | [#249](https://github.com/PandiO/knk-workspace/issues/249) | knk-plugin | 2 | #687, NPC platform §6a lifecycle (#358) | § 12 |
+| P12 Display stalls | [#250](https://github.com/PandiO/knk-workspace/issues/250) | knk-plugin | 2 | #687 | § 13 |
+| Web-app insight | [#65](https://github.com/PandiO/knk-workspace/issues/65) | knk-web-app | 2 | grows with each phase | — |
 
 ## 19. Open questions
 

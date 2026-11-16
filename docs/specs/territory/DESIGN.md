@@ -1,6 +1,6 @@
 # Territory, grasp and public safety — Design
 
-**Status:** **Proposed** (2026-11-16, with the production design, #22). Before: draft. Written from the developer's voice design session of 2026-11-11. Nothing is implemented. Items
+**Status:** **Decided 2026-11-16** (developer, with the production design, #22). Before: draft. Written from the developer's voice design session of 2026-11-11. Nothing is implemented. Items
 are tagged **[V1]**, **[Later]** or **[Parked]** (as in the production [DESIGN](../production-storage-transport/DESIGN.md)
 header).
 **Last updated:** 2026-11-16 (§2 crown land anchor, §10; #22 design pass); 2026-11-11 (§10: production reconciled; issue #326)

@@ -1,6 +1,6 @@
 # Production kinds, yield areas, levels, harvesting and regeneration
 
-**Status:** **Proposed** (2026-11-16, with [DESIGN.md](DESIGN.md); [decision record §15](DECISIONS_2026-11-05.md#15-design-pass-to-decided-2026-11-16)). Before: draft (rev. 3 companion to [DESIGN.md](DESIGN.md)). It records the developer's notes 7, 8, 11, 13 and 18
+**Status:** **Decided 2026-11-16** (developer, with [DESIGN.md](DESIGN.md); [decision record §15](DECISIONS_2026-11-05.md#15-design-pass-to-decided-2026-11-16)). Before: draft (rev. 3 companion to [DESIGN.md](DESIGN.md)). It records the developer's notes 7, 8, 11, 13 and 18
 of 2026-10-09 and the voice design review of 2026-11-05 ([decision record](DECISIONS_2026-11-05.md)). §9 lists what is
 settled and what is still open. Nothing is implemented. Tags: **[V1]**, **[Later]**, **[Parked]** (DESIGN header).
 **Last updated:** 2026-11-11 (open questions answered, [decision record §11](DECISIONS_2026-11-05.md#11-follow-up-decisions-2026-11-11))

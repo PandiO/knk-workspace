@@ -1,6 +1,6 @@
 # Shops, shopkeepers and display stalls — Design
 
-**Status:** **Proposed** (2026-11-16, with the production [DESIGN](../production-storage-transport/DESIGN.md); [decision record §15](../production-storage-transport/DECISIONS_2026-11-05.md#15-design-pass-to-decided-2026-11-16)). Before: draft. Written from the developer's voice design review of 2026-11-05
+**Status:** **Decided 2026-11-16** (developer, with the production [DESIGN](../production-storage-transport/DESIGN.md); [decision record §15](../production-storage-transport/DECISIONS_2026-11-05.md#15-design-pass-to-decided-2026-11-16)). Before: draft. Written from the developer's voice design review of 2026-11-05
 ([decision record](../production-storage-transport/DECISIONS_2026-11-05.md) §6-8). Shops, shopkeepers and display
 stalls are **[V1]** of the production, storage and transport feature. Nothing is implemented. Tags: **[V1]**,
 **[Later]**, **[Open]** (as in the production [DESIGN](../production-storage-transport/DESIGN.md) header).
