@@ -1,7 +1,7 @@
 # Shared NPC platform — traits, behavior and tutorial guide
 
 **Status:** Working design; agreed tutorial requirements recorded, platform architecture and implementation investigations still open. No NPC implementation delivered by this document.
-**Last updated:** 2026-11-11 (§9: spike and benchmark result, navigation adapter requirements and implementation plan, #243/#244); 2026-11-10 (§9: Citizens desk check result, #242); 2026-11-05 (§9 and O11/O12: design pass 3 decisions in BEHAVIOR_MODEL, Citizens verification planned as #241; #234); 2026-11-04 (§9 hybrid navigation decision: K&K plans routes, Citizens moves NPCs; #234); 2026-11-04 (guard behavior model concept in [BEHAVIOR_MODEL.md](BEHAVIOR_MODEL.md), #234; pointers in §1 and §10); 2026-11-03 (§5b reusable, code-configurable attack rate and movement speed; developer decision); 2026-10-30 (automatic navigation and shared optional lane overrides; developer decision, #146)
+**Last updated:** 2026-11-16 (§6a NPC lifecycle and reliability, from the production/storage/transport decision record of 2026-11-05, #22); 2026-11-11 (§9: spike and benchmark result, navigation adapter requirements and implementation plan, #243/#244); 2026-11-10 (§9: Citizens desk check result, #242); 2026-11-05 (§9 and O11/O12: design pass 3 decisions in BEHAVIOR_MODEL, Citizens verification planned as #241; #234); 2026-11-04 (§9 hybrid navigation decision: K&K plans routes, Citizens moves NPCs; #234); 2026-11-04 (guard behavior model concept in [BEHAVIOR_MODEL.md](BEHAVIOR_MODEL.md), #234; pointers in §1 and §10); 2026-11-03 (§5b reusable, code-configurable attack rate and movement speed; developer decision); 2026-10-30 (automatic navigation and shared optional lane overrides; developer decision, #146)
 **Linear:** [KNG-36](https://linear.app/kngpandi/issue/KNG-36/design-shared-npc-traits-and-pathfinding-platform)
 **Standing workspace branch:** none; `codex/kng-36-npc-platform-design` was merged into `main` on 2026-10-18 and deleted
 **Authority:** Developer navigation correction on 2026-10-30 and discussion through 2026-10-06 and KNG-36 description/comments read on that date. Confirmed decisions below preserve that discussion; proposed interfaces and unresolved questions are explicitly labeled. This is the consolidated design reference for continued discussion, not a completed platform design or implementation plan.
@@ -182,6 +182,29 @@ The profile describes allowable physical movement; behavior determines destinati
 Validate the supplied world's existence, chunk availability, collision-free space appropriate to the actor and safe support. Return a concrete reason when invalid. Chunk availability validation does not authorize automatically loading/generating arbitrary chunks; that policy remains open.
 
 Tutorial configuration owns candidate locations and selection order. If the preferred location fails, the tutorial behavior may try its configured fallback. Do not silently introduce a generic “spawn anywhere near the player” rule. Separately check whether the spawned NPC can reach the intended target under its movement/access profile.
+
+## 6a. NPC lifecycle and reliability (confirmed 2026-11-05)
+
+Developer decision of 2026-11-05 ([production/storage/transport decision record §8](../production-storage-transport/DECISIONS_2026-11-05.md#8-npc-lifecycle-and-reliability-v1--applies-to-the-npc-platform)). **[V1]**. V1 (legacy) suffered from disappearing and duplicated NPCs. The **NPC platform owns all of this**; consumers don't build their own spawn bookkeeping.
+
+**Consumers:** guards (garrisons; behavior model in [#234](https://github.com/PandiO/knk-workspace/issues/234), PR #235), shopkeepers ([shops DESIGN §6](../shops/DESIGN.md), #249), producer and consumer workers when rendered ([production DESIGN §7.7](../production-storage-transport/DESIGN.md)), and later carriers (NPC caravans, #251).
+
+Requirements:
+
+- **Never persist NPC entities in chunks.** Spawn them as non-persistent entities. Only the definition (owner structure, location, look, behaviour) lives in the API.
+- **Spawn on demand.** Spawn when a player is within range of the shop, district or town; **despawn** when nobody is near. The exact activation radius is still to be designed.
+- **One live entity per NPC id.** Entities carry their NPC id in a PDC tag. A registry permits one live entity per id; a second spawn request reuses the first entity.
+- **Orphan sweep.** On chunk load, any tagged entity that is not in the registry is removed.
+- **Correct after API or server stop, crash, kill or restart:** NPCs spawn when needed and never otherwise.
+
+How this fits the rest of this design:
+
+- It is the generic part of the "Lifecycle" concept in §2 (validates spawn requests, creates and removes runtime actors). Spawn validation (§6, "Generic spawn validation") still applies to each on-demand spawn.
+- Personal tutorial NPCs (NPC-05, NPC-06) already despawn on expiry or logout; the same registry and tag rules apply to them.
+- Virtual movement for carriers (an NPC that despawns and advances along its route on a timer while no players are near, [production DESIGN §7.8](../production-storage-transport/DESIGN.md)) builds on spawn on demand: the actor's position is state outside the entity.
+- O05 in §10 (visibility, concurrent instances and lifecycle on restart, teleport and world change) is narrowed by this decision: restart and duplicate handling are settled here; visibility, teleport and world change stay open.
+
+Open: the activation radius per consumer, the registry's home (plugin memory with a rebuild on start is the obvious choice), and how a consumer asks for an NPC to be present while no player is near (for example a guard post during a siege).
 
 ## 7. Permissions and closed gates
 

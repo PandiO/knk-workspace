@@ -424,3 +424,21 @@ The developer's answers on the reconciled DESIGN §3.4:
 | R3 | Production on contested land or outside the town's territory | **Keeps producing**, flagged with a dashboard warning. |
 | R4 | WorldGuard parent of a rural structure's region | **No parent for now**, so PvP stays allowed there. |
 | R5 | The structure's own NPCs (workers, shopkeeper) | **Invulnerable in V1**: players can fight each other there but can't kill a structure's NPCs. |
+
+## 15. Design pass to Decided (2026-11-16)
+
+Design session for [#22](https://github.com/PandiO/knk-workspace/issues/22). The developer went through each
+recommendation that was never discussed ("recommendation stands") and the open points of the territory design. The
+answers are binding and replace the "not discussed" wording in DESIGN §14, PRODUCTION_KINDS §9 and TOWN_LOGISTICS §8.
+
+| # | Question | Decision | By |
+|---|---|---|---|
+| G1 | D2 Ownership and payouts | **Deferred; producers are town-run (town or staff) in V1.** Player/clan ownership and payouts come with the later property-economy design. | developer |
+| G2 | D9 Courier crates [Later] | **An `ItemInstance` bound to the order, not soulbound:** it can be dropped, stolen or looted (route risk) and expires with the order. | developer |
+| G3 | D10 Ledger retention | **Keep every move; `Production` and `ProductionInput` moves older than 30 days are rolled up per line per day.** The roll-up keeps totals, so the reconciler stays green. | developer |
+| G4 | D11 Vanilla shadow blueprints | **Generated automatically for every obtainable material from the Minecraft catalogue, in an "Uncurated" category;** admins curate later ([#141](https://github.com/PandiO/knk-workspace/issues/141)). | developer |
+| G5 | P-D2 Survey frequency | **Once a day per structure when its chunks are loaded (or cheaply loadable), plus on demand (admin command, web app button) and after a notable change.** The developer asked to state that a structure can use the surveyed area (`Derived`), an admin-defined yield (`Configured`) or both (`Hybrid`, default); surveys run only for `Derived` and `Hybrid` (PRODUCTION_KINDS §3.2). | developer |
+| G6 | P-D3 Survey cost limit | **A maximum area volume per production kind and level** (for example 64×64×64 for a level 1 quarry), editable in the web app; surveys run async on chunk snapshots, throttled to a per-tick budget. | developer |
+| G7 | P-D4 Shared-area split | **Equal split per unit** between the structures whose areas contain it. | developer |
+| G8 | P-D5 Number of levels | **10 per production kind.** Shops keep their own level count (shops DESIGN). | developer |
+| G9 | D-L4 Who bears trade losses [Later] | **Set per trade agreement:** each agreement says whether the sender (until delivery) or the buyer (from pickup) bears the risk of goods robbed or lost on the road. Designed with inter-town trade ([#124](https://github.com/PandiO/knk-workspace/issues/124)). | developer |

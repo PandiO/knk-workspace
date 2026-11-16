@@ -108,10 +108,14 @@ Survey history is kept so that the dashboard can show trends (a forest being cut
 - **How:** async `ChunkSnapshot` reads (no main-thread block access), the same technique as road tile scans.
   - Trees: connected log clusters with leaves within reach; species by log type; size class by log count.
   - Pastures and hunting grounds count entities (main thread, cheap). Hunting grounds also sample spawn conditions.
-- **When:**
+- **Only for world-driven yields** (2026-11-16, decision record §15 G5): a structure's yield source (§4.1) is
+  `Derived` (the surveyed area), `Configured` (rates the admin enters, no area needed) or `Hybrid` (the survey plus
+  admin pins, exclusions and scales; the default, P-D1). Surveys run for `Derived` and `Hybrid` structures only; a
+  `Configured` structure is never surveyed.
+- **When** (P-D2, confirmed 2026-11-16):
   - on creation;
   - on admin request (`/knk production survey <structure>`, web app button);
-  - on a schedule (default daily) when the chunks are loaded or can be loaded cheaply;
+  - on a schedule, **once a day**, when the chunks are loaded or can be loaded cheaply;
   - after notable change (for example, harvested blocks in the area exceeding a threshold).
 - **Placeholders:** blocks waiting to regenerate (§7) count as present. A survey measures the **intended** state,
   so harvesting doesn't make the structure's yield flap.
