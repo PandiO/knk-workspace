@@ -4,6 +4,38 @@ This is a human-readable record of capabilities merged into the V3 default branc
 
 ## Unreleased — on feature branches, not merged
 
+- **NPC navigation: elastic formation keeping, off by default** ([PandiO/knk-workspace#624](https://github.com/PandiO/knk-workspace/issues/624),
+  link M3 of the NPC navigation follow-ups chain, implementation plan Phase 4c.4 item 3, decision 2; #522, #493).
+  knk-plugin and knk-workspace branches `claude/npc-movement-m3` (PRs into `next`, in review). Nothing changes with
+  `group-formation-keeping: levels` (the default) or with `npc.navigation.enabled: false`.
+  1. **What it does.** With `group-formation-keeping: elastic` a group fits its width to the free width across its
+     path instead of fixed widths: neighbours move closer, down to shoulder to shoulder (`group-lateral-spacing-min`
+     0.6), and the rows close up (`group-spacing-min` 1.0) before the group drops a width, so 3 abreast walk a 2-wide
+     road. It decides its width ahead (the formation's depth plus `group-lookahead-blocks`, 4), so the followers are
+     in their new lanes before the narrow place. It folds into single file only where 2 abreast squeezed don't fit
+     for longer than `group-width-hysteresis-blocks`; a shorter tight place (a post, a one-block gap) is passed with
+     the lanes merged. Stairs are walked as wide as the flight allows when each lane has its own steps; lanes may
+     cross into regions the group's access rules allow; followers take the new slots by where they stand, so nobody
+     crosses another's line. The group path follows the corridor-shaped line, and the outer lanes keep
+     `wall-clearance` from walls where the road allows.
+  2. **Stats.** The groups line of `/knk npc nav stats` has `merges N (reasons)` next to the narrowings, and the metric
+     `knk_npc_nav_group_width_reasons_total` has `change="merge"`.
+  3. **Checked.** `npc-stairhouse-group` (the developer's stair house, 20 in ranks of 3) now walks 3 abreast with no
+     fold where it folded at the first step, the leader arrives after 7.5 s instead of 27 s and no follower stands in
+     the entrance longer than 0.4 s (was 23.7 s); the group of 9 on the jagged straight has no stuck spells with
+     collision off (was 5, 3 not freed). Both scenarios, collision off and on, check plan 4c.4 item 3.3;
+     `npc-group-narrows` checks the squeeze on the corner scene.
+  4. **Deploy.** Add the keys to `npc.navigation` in `config.yml` (configuration reference § 4.27) and restart:
+
+     ```yaml
+     npc:
+       navigation:
+         group-formation-keeping: levels
+         group-lateral-spacing-min: 0.6
+         group-spacing-min: 1.0
+         group-lookahead-blocks: 4
+     ```
+
 - **NPC navigation: clearance-aware local legs, off by default** ([PandiO/knk-workspace#623](https://github.com/PandiO/knk-workspace/issues/623),
   link M6 of the NPC navigation follow-ups chain, implementation plan Phase 4c.4 item 6, decision 8, add-on D).
   knk-plugin and knk-workspace branches `claude/npc-movement-m6` (PRs into `next`, in review). Nothing changes with
