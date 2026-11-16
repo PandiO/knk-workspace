@@ -4,6 +4,18 @@ This is a human-readable record of capabilities merged into the V3 default branc
 
 ## Unreleased — on feature branches, not merged
 
+- **CI: the API's MySQL tests run on every push** ([PandiO/knk-workspace#419](https://github.com/PandiO/knk-workspace/issues/419)).
+  knk-web-api `main` and `next` ([knk-web-api#43](https://github.com/PandiO/knk-web-api/pull/43)); knk-workspace branch
+  `claude/mysql-tests-ci-419` (PR into `next`).
+  1. **What changed.** The new `mysql-tests` job of the API's "Build and test" workflow runs the 100 `requires-mysql`
+     tests (row locks, transactions, unique indexes, ledger triggers) against a throwaway MySQL 8.0 service container,
+     in parallel with `build-and-test`, and fails if any of them was skipped. 99 run and pass; one is a known failure
+     ([#285](https://github.com/PandiO/knk-workspace/issues/285)). The job takes 7 to 8 minutes
+     ([CI § 1.1.1](guides/developer/ci.md#11-tests-that-ci-does-not-run)).
+  2. **Unchanged.** `build-and-test` keeps its name and duration, and local runs without `KNK_TEST_MYSQL` still skip
+     these tests. `mysql-tests` is not a required check yet (recommended once it has been green a few times).
+  3. **Deploy.** Nothing to deploy; workflows and one test mark only.
+
 - **CI: GitHub Actions on Node.js 24, Release workflow fixes** ([PandiO/knk-workspace#426](https://github.com/PandiO/knk-workspace/issues/426)).
   knk-web-api, knk-web-app and knk-plugin `main` and `next`; knk-workspace branch `claude/actions-node24-426` (PR into
   `next`).

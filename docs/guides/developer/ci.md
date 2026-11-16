@@ -1,6 +1,6 @@
 # CI: what runs on every push and how to mark a known failure
 
-**Status:** Active · **Last updated:** 2026-11-16 (§ 6: action versions on Node.js 24 and the Release workflow's per-tag concurrency and reuse of an existing tag, #426); 2026-11-15 (§ 7: `npc-stuck-ladder` and `npc-stairhouse-singles` with `local-legs-clearance` on, #623); 2026-11-15 (§ 7: the singles of two NPC movement scenarios are checks, #622); 2026-11-15 (§ 7 and § 7.1: `MIN_SCENARIOS` 45 with the ten NPC movement runs in report mode, `--expect-timeout 1200`, job timeout 30 minutes, the `KNK-NPC-REPORT` lines in the job summary, [#621](https://github.com/PandiO/knk-workspace/issues/621)); 2026-11-15 (§ 7.1: `MIN_SCENARIOS` 35 with `npc-group-realtime-entry`, [#593](https://github.com/PandiO/knk-workspace/issues/593)); 2026-11-15 (§ 7.1: `MIN_SCENARIOS` 34 with `npc-ledge-corner` and `npc-landing-ranks`, [#592](https://github.com/PandiO/knk-workspace/issues/592)); 2026-11-15 (§ 7.1: `player-heal-needs-grant`, `MIN_SCENARIOS` 32 with the three NPC group scenarios of #522, [#580](https://github.com/PandiO/knk-workspace/issues/580)); 2026-11-15 (§ 7, § 7.1, new § 7.3: player scenarios, the printStackTrace rule of the log check and the headless bot tests kept off, [#540](https://github.com/PandiO/knk-workspace/issues/540)); 2026-11-15 (§ 1, § 7, § 7.1 and the new § 7.2: Citizens on the boot-test server (pinned by [#521](https://github.com/PandiO/knk-workspace/issues/521)), NPC navigation on and checked, six NPC scenarios, `MIN_SCENARIOS` 22, [#543](https://github.com/PandiO/knk-workspace/issues/543), in knk-plugin `next`); 2026-11-14 (§ 7 and § 7.1: 16 scenarios, `MIN_SCENARIOS` 16, plugin backfill [#511](https://github.com/PandiO/knk-workspace/issues/511), in knk-plugin `next`); 2026-11-14 (§ 1.1.2: the `requires-bukkit` tests run in CI with MockBukkit, [#499](https://github.com/PandiO/knk-workspace/issues/499), in knk-plugin `next`); 2026-11-14 (plugin scenarios in `paper-boot.yml`, § 7.1, [#421](https://github.com/PandiO/knk-workspace/issues/421), in knk-plugin `next`); 2026-11-14 (web app end-to-end tests: `e2e.yml`, § 1.1.3, [#423](https://github.com/PandiO/knk-workspace/issues/423)); 2026-11-14 (plugin Paper boot test `paper-boot.yml`, § 1, § 1.1.2 and § 7, [#420](https://github.com/PandiO/knk-workspace/issues/420)); 2026-11-13 (workflows renamed "Build and test"; Codex review comments are not CI, § 1); 2026-11-13 (§ 4 the CI run decides, § 5 reading runs as an agent, § 6 the Node.js 20 warning, [#363](https://github.com/PandiO/knk-workspace/issues/363)); 2026-11-13 (first version, [PandiO/knk-workspace#362](https://github.com/PandiO/knk-workspace/issues/362), docs follow-up of [#327](https://github.com/PandiO/knk-workspace/issues/327); checked against knk-web-api `master` `210f731`, knk-web-app `main` `33d68f8`, knk-plugin `main` `e8b651d`)
+**Status:** Active · **Last updated:** 2026-11-16 (§ 1 and § 1.1.1: the API's `requires-mysql` tests run in the new `mysql-tests` job against a MySQL 8.0 service container, § 2.1: the first known failure, [#419](https://github.com/PandiO/knk-workspace/issues/419)); 2026-11-16 (§ 6: action versions on Node.js 24 and the Release workflow's per-tag concurrency and reuse of an existing tag, #426); 2026-11-15 (§ 7: `npc-stuck-ladder` and `npc-stairhouse-singles` with `local-legs-clearance` on, #623); 2026-11-15 (§ 7: the singles of two NPC movement scenarios are checks, #622); 2026-11-15 (§ 7 and § 7.1: `MIN_SCENARIOS` 45 with the ten NPC movement runs in report mode, `--expect-timeout 1200`, job timeout 30 minutes, the `KNK-NPC-REPORT` lines in the job summary, [#621](https://github.com/PandiO/knk-workspace/issues/621)); 2026-11-15 (§ 7.1: `MIN_SCENARIOS` 35 with `npc-group-realtime-entry`, [#593](https://github.com/PandiO/knk-workspace/issues/593)); 2026-11-15 (§ 7.1: `MIN_SCENARIOS` 34 with `npc-ledge-corner` and `npc-landing-ranks`, [#592](https://github.com/PandiO/knk-workspace/issues/592)); 2026-11-15 (§ 7.1: `player-heal-needs-grant`, `MIN_SCENARIOS` 32 with the three NPC group scenarios of #522, [#580](https://github.com/PandiO/knk-workspace/issues/580)); 2026-11-15 (§ 7, § 7.1, new § 7.3: player scenarios, the printStackTrace rule of the log check and the headless bot tests kept off, [#540](https://github.com/PandiO/knk-workspace/issues/540)); 2026-11-15 (§ 1, § 7, § 7.1 and the new § 7.2: Citizens on the boot-test server (pinned by [#521](https://github.com/PandiO/knk-workspace/issues/521)), NPC navigation on and checked, six NPC scenarios, `MIN_SCENARIOS` 22, [#543](https://github.com/PandiO/knk-workspace/issues/543), in knk-plugin `next`); 2026-11-14 (§ 7 and § 7.1: 16 scenarios, `MIN_SCENARIOS` 16, plugin backfill [#511](https://github.com/PandiO/knk-workspace/issues/511), in knk-plugin `next`); 2026-11-14 (§ 1.1.2: the `requires-bukkit` tests run in CI with MockBukkit, [#499](https://github.com/PandiO/knk-workspace/issues/499), in knk-plugin `next`); 2026-11-14 (plugin scenarios in `paper-boot.yml`, § 7.1, [#421](https://github.com/PandiO/knk-workspace/issues/421), in knk-plugin `next`); 2026-11-14 (web app end-to-end tests: `e2e.yml`, § 1.1.3, [#423](https://github.com/PandiO/knk-workspace/issues/423)); 2026-11-14 (plugin Paper boot test `paper-boot.yml`, § 1, § 1.1.2 and § 7, [#420](https://github.com/PandiO/knk-workspace/issues/420)); 2026-11-13 (workflows renamed "Build and test"; Codex review comments are not CI, § 1); 2026-11-13 (§ 4 the CI run decides, § 5 reading runs as an agent, § 6 the Node.js 20 warning, [#363](https://github.com/PandiO/knk-workspace/issues/363)); 2026-11-13 (first version, [PandiO/knk-workspace#362](https://github.com/PandiO/knk-workspace/issues/362), docs follow-up of [#327](https://github.com/PandiO/knk-workspace/issues/327); checked against knk-web-api `master` `210f731`, knk-web-app `main` `33d68f8`, knk-plugin `main` `e8b651d`)
 
 The GitHub workflows of the component repos are the automated gate for every change. They run on every push (all
 branches), every pull request and on manual dispatch (`workflow_dispatch`). Under the
@@ -13,7 +13,7 @@ the start condition of that branch model (developer decision 2026-11-12,
 
 | Repo | Workflow | What it does |
 |---|---|---|
-| knk-web-api | `.github/workflows/ci.yml` ("Build and test", named "CI" until 2026-11-13; added by [knk-web-api#12](https://github.com/PandiO/knk-web-api/pull/12)) | .NET 8 (`actions/setup-dotnet` 8.0.x): `dotnet restore` of `knkwebapi_v2.csproj` and the test project, `dotnet build knkwebapi_v2.csproj`, then `dotnet test Tests/knkwebapi_v2.Tests/knkwebapi_v2.Tests.csproj --filter "Category!=KnownFailure"`. The TRX results are uploaded as the `api-test-results` artifact, also when the tests fail. Timeout 30 minutes. |
+| knk-web-api | `.github/workflows/ci.yml` ("Build and test", named "CI" until 2026-11-13; added by [knk-web-api#12](https://github.com/PandiO/knk-web-api/pull/12)) | .NET 8 (`actions/setup-dotnet` 8.0.x): `dotnet restore` of `knkwebapi_v2.csproj` and the test project, `dotnet build knkwebapi_v2.csproj`, then `dotnet test Tests/knkwebapi_v2.Tests/knkwebapi_v2.Tests.csproj --filter "Category!=KnownFailure"`. The TRX results are uploaded as the `api-test-results` artifact, also when the tests fail. Timeout 30 minutes. A second job, `mysql-tests`, runs the `requires-mysql` tests against a MySQL 8.0 service container in parallel (§ 1.1.1, [#419](https://github.com/PandiO/knk-workspace/issues/419)); its TRX is the `api-mysql-test-results` artifact. |
 | knk-web-api | `.github/workflows/migrations.yml` ("Migrations (fresh DB)") | Older than `ci.yml`. Starts a MySQL 8.0 service, applies every EF Core migration to the empty database, checks that the model snapshot has no pending changes (`dotnet ef migrations has-pending-model-changes`), rolls every migration back to 0 and applies them again. |
 | knk-web-app | `.github/workflows/ci.yml` ("Build and test", named "CI" until 2026-11-13; added by [knk-web-app#9](https://github.com/PandiO/knk-web-app/pull/9)) | Node 22 with the npm cache: `npx --yes npm@11 ci` (the lock file is valid for npm 11 only), `npm run test:ci` (`react-scripts test --watchAll=false --passWithNoTests`), `npx tsc --noEmit`, and `npm run build` with `CI=true`, so build warnings fail the job. Timeout 20 minutes. |
 | knk-web-app | `.github/workflows/e2e.yml` ("End-to-end tests", job `e2e`; added by [#423](https://github.com/PandiO/knk-workspace/issues/423)) | Playwright end-to-end tests in Chromium against the production build with a mocked API (§ 1.1.3). Not a required check. Timeout 10 minutes. |
@@ -31,13 +31,32 @@ Both `ci.yml` workflows cancel an earlier run of the same branch and event when 
 
 ### 1.1 Tests that CI does not run
 
-1. **MySQL tests of the API.** Tests marked `[MySqlFact]` (`Tests/knkwebapi_v2.Tests/MySql/MySqlTestDatabase.cs`) and
-   the other `requires-mysql` tests skip themselves when the `KNK_TEST_MYSQL` environment variable is unset. The CI test
-   job has no database and sets no `KNK_TEST_MYSQL`, so they show as skipped (88 at the setup on 2026-11-12). Run them
-   locally against a scratch server, for example
-   `KNK_TEST_MYSQL="Server=localhost;User=knk_test;Password=…" dotnet test …`; the user needs the right to create and
-   drop databases named `KNK_TEST_MYSQL_DB_PREFIX`* (default `knk_test_`). Fresh-database migration bugs are caught by
-   `migrations.yml` instead.
+1. **MySQL tests of the API: they run in CI since 2026-11-16** ([#419](https://github.com/PandiO/knk-workspace/issues/419)).
+   Tests marked `[MySqlFact]` (`Tests/knkwebapi_v2.Tests/MySql/MySqlTestDatabase.cs`) and the other `requires-mysql`
+   tests (all in classes with `[Trait("Category", "requires-mysql")]`) skip themselves when the `KNK_TEST_MYSQL`
+   environment variable is unset.
+   1. **In CI** the job `mysql-tests` of `ci.yml` starts a throwaway `mysql:8.0` service container (data directory on
+      tmpfs), sets `KNK_TEST_MYSQL` to its root connection without `Database=` and runs `dotnet test … --filter
+      "Category=requires-mysql&Category!=KnownFailure"`. Each test class creates and drops its own `knk_test_*`
+      database with every migration applied; root may create the ledger triggers, so they are tested too. A step first raises `max_connections` to 1000 (the
+      parallel test classes and the concurrency tests ran out of MySQL's default 151 once). A step then
+      fails the job if any of these tests was skipped, so a test that stops reaching the database can't pass silently.
+      100 tests, 99 run and pass, 1 is a known failure ([#285](https://github.com/PandiO/knk-workspace/issues/285)).
+      The job takes 7 to 8 minutes (test step about 5 minutes; 2026-11-16, [knk-web-api#43](https://github.com/PandiO/knk-web-api/pull/43)); `build-and-test` still takes 2 to 3.5 minutes and still shows
+      the MySQL tests as skipped, so its required check is unchanged. The two jobs run in parallel.
+   2. **Why a service container, not Testcontainers.** The tests already read `KNK_TEST_MYSQL`, so a service container
+      needs no code and no new package and matches `migrations.yml`; Testcontainers would add a dependency and start
+      Docker containers in local runs (agent decision, #419).
+   3. **Why a separate job.** Every test class migrates a database from empty, so the MySQL tests take several times
+      longer than the rest of the suite; inside `build-and-test` they would slow down the required check.
+   4. **Required check.** `mysql-tests` is not a required check of the ruleset yet. Recommendation: make it required on
+      `main` and `next` once it has been green on a few pull requests; that is the developer's call.
+   5. **Locally** nothing changes: without `KNK_TEST_MYSQL` the tests skip. To run them, point it at a scratch server,
+      for example `KNK_TEST_MYSQL="Server=localhost;User=knk_test;Password=…" dotnet test
+      Tests/knkwebapi_v2.Tests/knkwebapi_v2.Tests.csproj --filter Category=requires-mysql`; the user needs the right to
+      create and drop databases named `KNK_TEST_MYSQL_DB_PREFIX`* (default `knk_test_`), and with binary logging on
+      SUPER (or `log_bin_trust_function_creators=1`) for the ledger triggers, or `KNK_SKIP_LEDGER_TRIGGERS=true`.
+      Fresh-database migration bugs are caught by `migrations.yml`.
 2. **Plugin tests tagged `requires-bukkit`: none any more** ([#499](https://github.com/PandiO/knk-workspace/issues/499),
    in knk-plugin `next` since `0810a6c7`, 2026-11-14). The seven test files that `excludeTags` kept out of `test`
    (52 tests, 32 failing on 2026-11-14: Bukkit statics without a server, stale stubs and expectations) pass and run in
@@ -66,7 +85,8 @@ test green.
 
 1. **File or reuse the issue first.** One GitHub issue in `PandiO/knk-workspace` lists every marked test, labelled `bug`
    and `priority:high`. Add the test to it, or create it if it doesn't exist yet. At the setup on 2026-11-12 no test was
-   red, so no test is marked and the issue doesn't exist yet.
+   red. The first mark (2026-11-16, when the API's MySQL tests started to run in CI, § 1.1.1) is tracked by
+   [#285](https://github.com/PandiO/knk-workspace/issues/285), one issue per root cause.
 2. **API (xUnit):** add the trait and name the issue:
 
    ```csharp
