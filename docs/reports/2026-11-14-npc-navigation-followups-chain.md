@@ -1,6 +1,6 @@
 # NPC navigation follow-ups chain — progress report
 
-**Status:** Running: fix links after the developer's retest (2026-11-15) · **Last updated:** 2026-11-15
+**Status:** In review: every link merged into `next`; developer smoke tests, the option-B decision and promotion open (2026-11-16) · **Last updated:** 2026-11-16
 
 **Issue:** [PandiO/knk-workspace#358](https://github.com/PandiO/knk-workspace/issues/358), links
 [#519](https://github.com/PandiO/knk-workspace/issues/519) (L1),
@@ -13,32 +13,26 @@
 
 ## 1. Waiting for the developer
 
-**Rerun needed first:** the 2026-11-15 retest ran an old jar (`0.1.0+a760c4a4`, decisions 17–18). Check the plugin's startup line `0.1.0+<sha>` names `8ad9df66` or later (L5 is in it), then rerun #521 steps 3–5, #520 step 10 and the #490 audit.
+Every link is merged into `next` (2026-11-16): L1–L6 and the movement links M1–M7. Build knk-plugin `next`
+`cc5262ff` or later and check the startup line `0.1.0+<sha>`. Merge the `config.yml` keys (YAML in the changelog and
+the configuration reference § 4.27), then restart. In test order:
 
-**Retest 2026-11-15 (manager's relay, comments on #520, #521, #490):** L3 fails at the #491 stair corner and the #492 landing; L2 step 10 fails (#506, overlapping gate region); the #490 audit still shows DROWNING 809. Fix links L5–L7 run one at a time. #522 (L4) is not tested yet. The steps below stay valid for what isn't being fixed.
-
-Every link is merged into `next` (2026-11-15). Build knk-plugin from `next` `deb7ff49` or later, merge the new
-`config.yml` keys (YAML in the changelog and the configuration reference § 4.27; `stationary-ticks` and
-`no-progress-ticks` 40, `group-spacing` 1.5), restart. In test order:
-
-1. **L2 (#520):** Phase 4 steps 9 and 10 (gate closing mid-group, access change mid-group).
-2. **L3 (#521):** the corner and recovery steps on `quarry-to-keep` (the stair corner 1411 73 -537, the 1433 44 -517
-   landing) and the short south-gate route.
-3. **L4 (#522):** narrowed formations, the followers-finish-trip toggle, and the #490 audit re-run
-   (`/knk npc test spawn 50 24`, no `DROWNING` in `causes:`).
-4. **Review of the agent decisions:** blocks 4.2 § 5, 4.3 § 5 (13), 4.4 § 5 (8). Behaviour-changing: 4.2 decisions 1–3
-   (followers stop short of a door; cache re-warm; the follower guard counts but does not stop); 4.3 decisions 1, 5, 6,
-   8; 4.4 decisions 2 (stairs as a column), 5 (toggle off: a held follower waits on the leader's new route), 6 (a
-   follower in the margin before a moving door steps back, changing L2's rule).
-5. **Promotion of `next`** once the tests pass; then the issues #519–#522, #506, #507, #508, #491, #492, #493 close.
-6. Docs: #589, in its own docs session (session_01R1w2UvjZEQ5uyXDYDCqAfs).
-
-3. M6 decision 6.1 (#623): local legs search a corridor grid instead of `WalkSearch` (reversible). Confirm or ask
-   for alternative (a).
-
-4. **Smoke test tonight with all movement keys on** (`corridor-steering`, `local-legs-clearance`,
-   `group-formation-keeping: elastic`, `plaza-lines`, `crowd-awareness`; YAML in the changelog), steps on #622, #624,
-   #625 and #626; it decides the option-B question (decision 30).
+1. **Smoke test tonight with all movement keys on** (`corridor-steering`, `local-legs-clearance`,
+   `group-formation-keeping: elastic`, `plaza-lines`, `crowd-awareness`). Steps on #622, #623, #624, #625 and #626.
+   The group of 20 in ranks on `quarry-to-keep` covers most of it. Name a plaza for #625.
+2. **Collision (M7, #627):** the real-client push test (comment 6912759522). Its last step decides whether
+   `npc.navigation.collidable` can become default on; today it stays false (block 4.15 decision 5).
+3. **Earlier steps still open:** L2 #520 step 10 (now with L6), L3/L5 #592 steps 3–5, L4 #522, the #490 audit.
+4. **Decisions for you:**
+   1. **Option B** (decision 30), after the smoke tests.
+   2. **Squeeze minimum with collision on** (0.7 to keep rows from overlapping; block 4.15 § 6).
+   3. **M6 decision 6.1** (corridor grid instead of `WalkSearch`).
+   4. **Review of the agent decisions** in blocks 4.5–4.15 § 6.
+5. **Promotion of `next`** once the tests pass; then the issues close.
+6. **Docs:**
+   1. #658 for M1–M7 is in its own session (session_01R1w2UsvN2p9uCZqKQGjgrH).
+   2. #590 (L2–L4 leftovers) waits for your test results.
+7. **Filed along the way:** #636 (a follower that never settles), #657 (door-mouth rule), #586 (intermittent fake-player log line in CI).
 
 ## 2. Summary
 
@@ -58,7 +52,7 @@ Every link is merged into `next` (2026-11-15). Build knk-plugin from `next` `deb
 | M3 Formation keeping | #624 | Merged into next (2026-11-16) | knk-plugin `94b30146` → `next` `138ebc66`; knk-workspace `1b4692ed` → `next` `a428eb3e` | PandiO/knk-plugin#50, PandiO/knk-workspace#635 | PR head green (build, paper-boot with 45 scenarios; one #586 log-check re-run); Codex at its usage limit | create_session session_01R1w2UufiGFpPfGevZxvtVD (2026-11-15) |
 | M5 Plaza lines | #625 | Merged into next (2026-11-16) | knk-plugin `727f020b` → `next` `3f116188`; knk-workspace `f5aa56e6` → `next` `f9be4963` | PandiO/knk-plugin#51, PandiO/knk-workspace#637 | PR head green (build, paper-boot with 45 scenarios, push and PR runs 43792722751, 43793671690); #586 did not hit; Codex at its usage limit | create_session session_01R1w2UwSt9YZCZUtsk5fQjU (2026-11-16) |
 | M4 Crowd awareness | #626 | Merged into next (2026-11-16); option-B checkpoint with the developer | knk-plugin `8c864f7a` → `next` `a35fed5a`; knk-workspace `9f09cf23` → `next` `5b8125e5` | PandiO/knk-plugin#52, PandiO/knk-workspace#638 | push and PR runs on `8c864f7a` green (build, paper-boot with 45 scenarios; runs 43799206281, 43800089307); #586 did not hit; 45/45 locally; Codex at its usage limit | create_session session_01R1w2UsvLHZouJWudj4FxjT (2026-11-16) |
-| M7 Collision with push resistance | #627 | In review (PRs open; `collidable` default kept off) | knk-plugin `6393aa37`; knk-workspace `dc8a91c5` | PandiO/knk-plugin#57, PandiO/knk-workspace#656 | push and PR runs on `6393aa37` green (build, paper-boot with 48 scenarios); Codex at its usage limit | create_session session_01R1w2UtyxLznso8wdydHmQf (2026-11-16) |
+| M7 Collision with push resistance | #627 | Merged into next (2026-11-16); `collidable` stays false | knk-plugin `6393aa37` → `next` `cc5262ff`; knk-workspace `dc8a91c5` → `next` `8e3d7d06` | PandiO/knk-plugin#57, PandiO/knk-workspace#656 | push and PR runs on `6393aa37` green (build, paper-boot with 48 scenarios); Codex at its usage limit | create_session session_01R1w2UtyxLznso8wdydHmQf (2026-11-16) |
 
 ## 3. Coordinator decisions
 
@@ -237,6 +231,14 @@ Every link is merged into `next` (2026-11-15). Build knk-plugin from `next` `deb
     plaza +40 % → +4 %); what B would add is smoother curves and steering strays back. Chosen: **leave B for now and
     decide after the developer's smoke tests tonight** with all keys on; start M7 meanwhile. Alternatives: (a) plan a
     B link now; (b) drop B entirely. M7 started (session_01R1w2UtyxLznso8wdydHmQf).
+
+31. **M7 checked and merged; chain done** (2026-11-16). § 6 held: tests 2921/2860 → 2955/2865, 48 scenarios green on
+    the push and PR runs (`MIN_SCENARIOS` 48), the collision policy chosen by scenario (per-entity exemptions), players
+    can't push NPCs and a pushed guard never falls. `collidable` stays false: four older scenarios fail with it on
+    (block 4.15 decision 5), so the end-of-link condition for the default wasn't met. Merged PandiO/knk-plugin#57 →
+    `cc5262ff` and PandiO/knk-workspace#656 → `8e3d7d06`. #589 had already been closed for L1–L4 (its leftover is
+    #590), so a new documentation issue #658 covers M1–M7, with its docs session started. Tracker row set to In
+    review.
 
 ## 4. Link blocks
 
