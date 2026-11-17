@@ -825,10 +825,11 @@ B4 ([#673](https://github.com/PandiO/knk-workspace/issues/673)) puts waypoints a
        same for the leader alone and the group, both configurations; lost followers report only, item 1.9.1).
     8. **Before → after** (local runs, Paper 26.3 b205 with Citizens b4269; before = `next` `80902942`):
        `npc-stairhouse-climb`: falls 42 → 0, handovers onto another level 446 → 0, stuck spells 117 → 2, followers
-       lost 0 → 0, top hall reached 11 → 25 of 40, the leader arrives in 86.0 → 94.0 s.
+       lost 0 → 0, top hall reached 11 → 25 of 40, the leader arrives in 86.0 → 100.7 s.
        `npc-replay-quarry-to-keep`: the leader alone arrives in 54.7 → 56.7 s, 1 → 0 handovers onto another level (both
-       configurations). The group of 20 with the stored settings: stuck spells 32 → 22, lost 6 → 2. With the smoke
-       test's: 0 stuck spells and 0 lost both times. 0 falls and 0 handovers onto another level in every walk.
+       configurations). The group of 20 with the stored settings: stuck spells 32 → 26, lost 6 → 3 (known limit 9.1).
+       With the smoke test's: 0 stuck spells and 0 lost both times. 0 falls and 0 handovers onto another level in every
+       walk. The whole suite: 50/50 on the final head.
     9. **Known limits:**
         1. **Followers on half-block stairs** (found by B2, proposed for B4 on
            [#673](https://github.com/PandiO/knk-workspace/issues/673#issuecomment-6931558660)): when the leader stops in
