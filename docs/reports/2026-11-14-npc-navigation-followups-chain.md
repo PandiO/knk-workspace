@@ -375,6 +375,13 @@ the configuration reference § 4.27), then restart. In test order:
     caps, road join by reachability, hops as fallback) → E1. NPC use of #698's long walks moves into that design's v1.
     Recorded on #698 and #700. Alternative: C1 as filed first (rejected: it would collide with the move and duplicate
     the long walks).
+45. **B5 checked and merged; C1 waits for #698's L2** (2026-11-17). § 6 held: CI `build` and `paper-boot` (50) green on
+    `6b186840`, no debug code, no files in `core/roads/walk` (the off-road chain's L1), `GroupPath.addShaped` reviewed.
+    Merged knk-plugin#67 → `55ea7df3`, knk-workspace#716 → `c54786ac`. Cause: corridor-shaped line points cut the
+    stacked hairpin across the stairwell, so the group path skipped flight 5's top and followers looped off their
+    lanes. Replay on the 2026-11-17 snapshot: 21 off-lane legs → 0, 0 looping, 0 lost. For the developer's review: B5
+    decisions 5.1 and 5.2. The off-road chain's coordinator (session_01R1w2UuBBnWjqekMFxEMefN) was told; its L2 (#704,
+    the move to `core/navigation/shape/`) starts now; C1 starts when L2 is merged (decision 44).
 
 ## 4. Link blocks
 
