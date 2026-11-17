@@ -1,10 +1,10 @@
 # Off-road navigation and points of interest — mixed routes, indoor and wilderness walking, better trails
 
-**Status:** **Proposed** (2026-11-17) — 9 open questions in § 15. (On approval: **Decided <date>** (developer).)
-**Last updated:** 2026-11-17 (first draft from the developer's voice session of 2026-11-17, checked against knk-plugin `next` `e69dba6` and the docs on knk-workspace `next` `6be8222`)
-**Issue:** not filed yet — filing was not possible in the drafting session (the GitHub token of the session was invalid). The intake or manager session files one parent issue and the sub-issues of § 11, and puts the number here.
-**Dependencies:** [navigation](../navigation/DESIGN.md) (road graph, `/navigate`, walk paths, all merged), [navigation destination engine](../navigation-destination-engine/DESIGN.md) (proposed; the POI provider of § 6 plugs into it), the NPC movement quality work on `next` ([architecture § 12](../../architecture/npc-navigation.md#12-movement-quality-phase-4c-links-m1m7), merged 2026-11-16: `corridor/Corridor`, `CorridorShaper`, `PlazaLine`, `LocalLegSearch`).
-**Authority:** the developer's answers of 2026-11-17 (decision log O01–O10). Supersedes nothing: the road-navigation design stays binding for the road graph; this document extends its § 6.2 "off-road legs" and "Phase 6" rows. This document is the canonical specification, not a claim that the proposed entities, endpoints or behaviour exist.
+**Status:** **Proposed** (2026-11-17) — open questions in § 15. (On approval: **Decided <date>** (developer).)
+**Last updated:** 2026-11-17 (design session: the draft's code claims checked against knk-plugin `next` `e69dba6` and corrected (§ 3.1, § 3.4); a compile-and-test check of the shared shaping package (§ 3.4); the sources re-read and the draft corrected (§ 3.5); question 15.9 answered (O16)); 2026-11-17 (first draft from the developer's voice session of 2026-11-17, checked against knk-plugin `next` `e69dba6` and the docs on knk-workspace `next` `6be8222`)
+**Issue:** [PandiO/knk-workspace#698](https://github.com/PandiO/knk-workspace/issues/698); phases as sub-issues in § 14.
+**Dependencies:** [navigation](../navigation/DESIGN.md) (road graph, `/navigate`, walk paths, all merged), [navigation destination engine](../navigation-destination-engine/DESIGN.md) (proposed; the POI provider of § 6 plugs into it), the NPC movement quality work on `next` ([architecture § 12](../../architecture/npc-navigation.md#12-movement-quality-phase-4c-links-m1m7), merged 2026-11-16, not yet live tested (#621 to #627 open): `corridor/Corridor`, `CorridorShaper`, `FreeWidth`, `PlazaLine`, `LocalLegSearch`). Related issues: #603 (NPC movement quality), #625 (NPC plaza lines), #110 (KNG-93, entrances), #25 (KNG-235, destination engine).
+**Authority:** the developer's answers of 2026-11-17 (decision log O01–O10 and the answers of the design session, O16 onward). Supersedes nothing yet (question 15.10 asks about the builder through-edges of the NPC plan): the road-navigation design stays binding for the road graph; this document extends its § 6.2 "off-road legs" and "Phase 6" rows. This document is the canonical specification, not a claim that the proposed entities, endpoints or behaviour exist.
 
 Related: [LAST_MILE_PATHFINDING](../navigation/LAST_MILE_PATHFINDING.md), [REV6_PROPOSAL](../navigation/REV6_PROPOSAL.md) (areas before the centreline), [REV7_PROPOSAL](../navigation/REV7_PROPOSAL.md) (routing view, entrances), [NPC movement research](../../reports/2026-11-15-npc-movement-research.md), [NPC platform plan 4c](../npc-platform/IMPLEMENTATION_PLAN.md), [domain discovery](../domain-discovery/DESIGN.md).
 
@@ -24,8 +24,8 @@ Related: [LAST_MILE_PATHFINDING](../navigation/LAST_MILE_PATHFINDING.md), [REV6_
     1. Explicit POI to POI links (decision O05: inferred only in v1; the data model leaves room, § 6.3).
     2. A hand-built indoor road graph (decision O02: skipped; preference weights come from POI areas).
     3. The plaza POI subtype and plaza area effects (decision O10: planned extension, § 10.1).
-    4. Changes to the road graph builder (plaza through-edges stay a future update, plan 4c.7).
-    5. Swimming, flying and boat routes, vertical shortcuts with elevators (as in LAST_MILE § 1).
+    4. Changes to the road graph builder. The NPC plan's decision of 2026-11-15 puts plaza through-edges in the builder "later, so the players' trail improves too" (npc-platform IMPLEMENTATION_PLAN decision 6, 4c.7); how § 8 relates to it is question 15.10.
+    5. Swimming, flying and boat routes, vertical shortcuts with elevators. (LAST_MILE § 1 lists a navmesh, vines and swimming and async chunk loading as its non-goals; ladders were allowed later.)
     6. NPC use of the new layers: the NPC side reuses the same core modules later (§ 7.5.7, § 10); no NPC behaviour changes here.
 
 ## 2. Decision log
@@ -42,18 +42,26 @@ Related: [LAST_MILE_PATHFINDING](../navigation/LAST_MILE_PATHFINDING.md), [REV6_
 | O08 | 2026-11-17 | developer | When a player walks back along the route, the navigation must wind back: on a road the road trail is shown again from the player's point on it. Only a player who left the road gets a walk trail to the road. Today the trail is drawn from the point where the player was closest to the destination. |
 | O09 | 2026-11-17 | developer | Plazas get their own issue. Where a route enters and leaves a plaza, the trail takes a rounded, shorter line from road A to road B instead of a right angle at the plaza node. The plaza node must still pull on the curve, so the line does not run along the plaza's edges and does not go to the centre and back. The line must be aware of walls and obstacles on the plaza. An earlier attempt at rounding was made and did not work out. |
 | O10 | 2026-11-17 | developer | Planned, not for this run: a plaza as a child entity of the POI. The builder keeps recognising plazas and offers the admin a suggestion ("create a plaza POI for this spot"); the admin customises it (WorldGuard region for the exact shape) and the road nodes are connected to it. Area effects and special features attach to the plaza entity later. |
-| O11 | 2026-11-17 | agent | Reuse the NPC movement corridor modules for the players' trail: promote them to a shared package (alternatives in 2.1). |
+| O11 | 2026-11-17 | agent | Reuse the NPC movement corridor modules for the players' trail: move `Corridor`, `CorridorShaper`, `FreeWidth`, `PlazaLine` with the world primitives they need (`NavWorld`, `NavPoint`, `NavGeometry`, and `PlazaCrossing` taken out of `RoadPlanner`) to a shared package `core/navigation/shape/`; `LocalLegSearch` stays NPC-side. The player side reads terrain through a `NavWorld` adapter over the captured walk terrain, off the main thread (§ 3.4; alternatives in 2.1). |
 | O12 | 2026-11-17 | agent | One planner with road legs and walk legs: dynamic "walk links" between road nodes in the routing view, plus the existing off-road ends (alternatives in 2.1). |
 | O13 | 2026-11-17 | agent | Long off-road legs by a lazy hierarchical search over loaded chunks first; persisted walk tiles for wilderness beyond loaded chunks later (matrix in § 5.6, alternatives in 2.1). |
 | O14 | 2026-11-17 | agent | Three route modes, default preferred: `shortest` (length only), `efficient` (walking time, with the walk profile's costs for stairs, ladders, doors and water), `preferred` (efficient with the weights). Without weights preferred equals efficient (alternatives in 2.1). |
 | O15 | 2026-11-17 | agent | Rewind by splitting the route's progress (never decreases, for ETA and maneuvers) from the player's cursor (follows the player forwards and backwards) (alternatives in 2.1). |
+| O16 | 2026-11-17 | developer | Question 15.9: the developer cannot recall the details of the earlier plaza rounding attempt. Record it as a risk (§ 12.5) and design § 8 on the evidence of the NPC plaza line (M5); phase 7 starts with a short check on two real plazas before the full build. |
+| O17 | 2026-11-17 | agent | Walk links (§ 5.2) are a separate edge kind with their own id space, disjoint from road edges, cut pieces (2 000 000 000 upward) and the router's negative virtual nodes; a test asserts it (alternatives in 2.1). |
+| O18 | 2026-11-17 | agent | Walk links and clusters are invalidated by a new block-change hook (a `TerrainChangeListener` port in core, a Paper listener for block changes in loaded chunks, batched per chunk), not by the road dirty tracker, which sees road blocks only; until it fires, entries also expire after a TTL (alternatives in 2.1). |
+| O19 | 2026-11-17 | agent | Plaza lines (§ 8) apply at plazas only, with the NPC rule: a designed plaza (`PlazaRadius`) or a junction whose open radius exceeds `corridor-half-width`. Street T and L junctions get no plaza line; their corners are rounded by the road trail as today (alternatives in 2.1). |
+| O20 | 2026-11-17 | agent | Walk trails keep the binding look of the navigation DESIGN (sparser than the road trail, leg colour): `trail-leg-spacing` default 3.0, now on fixed anchors (§ 7.2) (alternatives in 2.1). |
+| O21 | 2026-11-17 | agent | No chunk loading for walk legs in v1: LAST_MILE decision 6 stays as it is (explained to the developer 2026-10-02, not a veto); legs plan to the edge of the loaded terrain and continue as the player moves, as Baritone does (alternatives in 2.1). |
+| O22 | 2026-11-17 | agent | The POI phase is split in two sub-issues: 5.1 the POI entity (API, web app, plugin, destination) and 5.2 POI preference weights in the walk search, which depends on the route modes of phase 4 (alternatives in 2.1). |
 
 ### 2.1 Agent decisions: alternatives
 
-1. **O11 Where the shaping code lives.** Chosen: move `core/npc/nav/corridor/` to a neutral package `core/navigation/shape/` (the NPC code imports from there), because the player trail needs exactly its clearance map, string pulling and plaza line, and the NPC package name would mislead.
+1. **O11 Where the shaping code lives.** Chosen: move the shaping classes and the world primitives they read to a neutral package `core/navigation/shape/` (the NPC code imports from there), because the player trail needs exactly its clearance map, string pulling and plaza line, and the NPC package name would mislead. The code check of § 3.4 showed that moving the `corridor` package alone is not enough: it imports `NavWorld`, `NavPoint`, `NavGeometry`, `RoadPlanner.PlazaCrossing` (and `LocalLegSearch` also `HopPlanner` and `LocalLeg`) from `core/npc/nav`, so the primitives move with it, `PlazaCrossing` becomes a top-level record, `HopPlanner`'s floor helpers (`floor`, `feet`, `floorNear`, `CONTINUITY_RANGE`) move into `NavGeometry`, and `LocalLegSearch` (NPC legs, main thread, 2 048 cells) stays in `core/npc/nav/corridor/`. A compile-and-test check of the move passed (§ 3.4.3).
     1. (a) Copy the classes for the player trail: two copies drift apart, and every fix to corners would be made twice.
     2. (b) Let the player trail import `core/npc/nav/corridor/` as it is: works, but makes the player feature depend on the NPC package, which is off by default and Citizens-oriented.
     3. (c) Write a new shaper for walk paths only: duplicates tested code (`CorridorTest`, `PlazaLineTest`, `CorridorShaperTest`).
+    4. (d) Move only the `corridor` package and leave the primitives in `core/npc/nav`: a smaller diff (about 15 files), but the shared package would still import the NPC package, the dependency (b) was meant to avoid.
 2. **O12 Mixed routes.** Chosen: keep the road A* as the planner and give it extra edges the routing view creates lazily, "walk links" between road nodes (and POI nodes) that lie within a walking distance of each other and whose road distance is much longer than the straight distance. A walk link's cost comes from a bounded walk search, cached, invalidated by the dirty tracker. Start and goal legs stay as today (walk path to the road, walk path from the road end), generalised to many candidate join points.
     1. (a) One big search over road cells and walk cells together: exact, but it loads every road cell near the route into the walk grid and breaks the "road graph is cheap" property.
     2. (b) A second planner for off-road, with the road planner calling it at the ends only (today's state): cannot produce road, off-road, road shortcuts in the middle of a route, which is what O01 asks for.
@@ -65,25 +73,53 @@ Related: [LAST_MILE_PATHFINDING](../navigation/LAST_MILE_PATHFINDING.md), [REV6_
 5. **O15 Rewind.** Chosen: separate progress from cursor.
     1. (a) Raise the session parameter `offRouteLookBackBlocks` to a large value: the projection then jumps to the wrong branch on a route that passes the same place twice (a loop, a switchback).
     2. (b) Recompute the route when the player walks back: costs a search and flickers, and loses the "same route" property the player has seen.
+6. **O17 Walk link ids.** Chosen: a separate edge kind with its own id space, because REV7 § 7.2 leaves no defined room above the cut pieces and the pieces grow upward.
+    1. (a) Ids above the cut pieces, as the draft said: about 147 million ids remain under the int maximum and the pieces grow into them, a silent collision risk (REV7 § 2.6).
+    2. (b) Negative ids: taken by the router's virtual start and goal nodes.
+7. **O18 Invalidation of links and clusters.** Chosen: a new block-change hook with a TTL as a backstop.
+    1. (a) Reuse `RoadDirtyTracker`: it sees road materials and road headroom only, so a wall built across a courtyard shortcut or inside a castle would go unseen.
+    2. (b) TTL only (as walk capture today, 10 s): simple, but a cached link would have to be rebuilt every few seconds, which removes the point of caching it.
+8. **O19 Which junctions get a plaza line.** Chosen: the NPC rule, so NPC and player lines agree (risk 12.6) and the developer's wish ("where a route enters and leaves a plaza") is met.
+    1. (a) Every junction, street T and L crossings included: on a 3 wide street the curve has no room, and the road trail already rounds there.
+    2. (b) Designed plazas only: misses the automatic plazas the builder collapses (navigation DESIGN § 5.6 step 4).
+9. **O20 Walk trail spacing.** Chosen: keep 3.0 and the leg colour, fix the snapping by anchoring (§ 7.2). The snapping comes from the window starting at the projection, not from the spacing.
+    1. (a) 1.5 like the road trail, as the draft said: changes a Decided look (navigation DESIGN, LAST_MILE "no new visual state in v1") without the developer.
+10. **O21 Chunk loading.** Chosen: none in v1.
+    1. (a) Load chunks in the background for a long leg, as live-tag cross-sections do: loads terrain for one player's guidance, a server cost the measurements of phase 0 do not cover yet; reconsider with phase 8.
+11. **O22 POI phase split.** Chosen: two sub-issues, so the entity can ship without waiting for the route modes.
+    1. (a) One POI phase that waits for phase 4: delays POI destinations, which need no weights.
+    2. (b) Weights inside phase 4: phase 4 would then need the POI entity, a dependency in the wrong direction.
 
 ## 3. Current state and legacy behaviour
 
 1. **Built today (V3, knk-plugin `next` `e69dba6`):**
     1. Road graph, router, routing view, `/navigate`, compass: see [navigation DESIGN](../navigation/DESIGN.md). Router: A* with class and edge cost, per-player `AccessPolicy`; edges cut at gate doors and region borders (rev. 7 Part A).
-    2. Walk search `core/roads/walk/WalkSearch` (bounded A*, packed `long` keys, `MovementProfile`, `CellAccess`): stairs, slabs, 2 to 3 block drops at +10 per block, ladders, doors and gates by interaction rights, water at x3, `wall-cost` 1.0 for a cell beside a wall (a step cost, whole cells). Config `navigation.walk.*`: `max-expansions` 20000, `max-length` 144, `max-length-factor` 1.75, `detour-allowance` 48, `climb-allowance` 5, `capture-margin` 16, `chunk-ttl-seconds` 10, `recompute-distance` 6, `max-concurrent-searches` 2. Capture of loaded chunks only (`WalkSnapshotService`); at most 64 chunks per request.
+    2. Walk search `core/roads/walk/WalkSearch` (bounded A*, packed `long` keys, `MovementProfile`, `CellAccess`): stairs, slabs, 2 to 3 block drops at +10 per block, ladders, doors and gates by interaction rights, water at x3, `wall-cost` 1.0 for a cell beside a wall (checked: `besideWall` adds it when any of the eight neighbours is solid and not passable at any height from 1 to the headroom; a step cost on whole cells, no distance). Config `navigation.walk.*`: `max-expansions` 20000, `max-length` 144, `max-length-factor` 1.75, `detour-allowance` 48, `climb-allowance` 5, `capture-margin` 16, `chunk-ttl-seconds` 10, `recompute-distance` 6, `max-concurrent-searches` 2. Capture of loaded chunks only (`WalkSnapshotService`); at most 64 chunks per request.
     3. Where walk paths are used: direct mode (target within 48 blocks), the leg from the player to the road (start up to 96 blocks from a road), the last leg from the road's end to the destination (destination up to 256 blocks from a road, walk path within 96, the HUD arrow beyond). They are separate legs at the two ends of a route. There is no walk leg in the middle of a route and no route without a road when the distance exceeds 144 blocks.
-    4. Trail drawing `paper/navigation/TrailRenderer`: road trail on fixed spots every 1.5 blocks, centred across the road (`TrailCentring`, KNG-76, KNG-110); walk and straight legs: `drawPath` takes `pathWindow` from the player's projection onto the path and draws it every 3.0 blocks (`LEG_SPACING`), straight segments between block centres, no smoothing, no anchoring. The window is redrawn every `trail-period-ticks` (10 ticks).
-    5. Session `core/navigation/NavigationSession`: `along` is `max(along, projection)` with a look-back the session parameter `offRouteLookBackBlocks`; the road trail is drawn from `along`. Direct and walk legs: `DirectLeg.best` is the least remaining distance seen; "heading away" is farther than `best` plus `reroute-distance`.
-    6. NPC movement quality (merged into `next` 2026-11-16, behind off-by-default keys): `corridor/Corridor` (clearance map), `CorridorShaper` (wall clearance 0.8, hard minimum 0.35, string pulling), `PlazaLine` (bounded A* on a plaza's footprint, string pulling, tangent bends; +4 % over the chord against +40 % without), `LocalLegSearch`. Architecture [§ 12](../../architecture/npc-navigation.md#12-movement-quality-phase-4c-links-m1m7). The road graph and the players' trail are untouched by it ("`TrailCentring` is applied to the player trail only").
+    4. Trail drawing `paper/navigation/TrailRenderer` (checked): road trail every `SPACING` 1.5 blocks, centred across the road (`centredWindow`, `TrailCentring`, KNG-76, KNG-110); walk legs: `drawPath` takes `pathWindow(points, feet, length, LEG_SPACING)`, which starts at the player's projection onto the path (`project`) and places a point every `LEG_SPACING` 3.0 blocks from there, straight segments between block centres, no smoothing, no anchoring. Straight legs (`drawLeg`) use the same 3.0 spacing; `drawRoute` adds a straight leg from the player to the trail's first point when it is more than `LEG_MIN` 2.0 blocks away (or the walk leg to the road instead, KNG-75). The window is redrawn every `trail-period-ticks` (10 ticks), over `trail-length` 30 blocks.
+    5. Session `core/navigation/NavigationSession.tick` (checked): projects with `route.project(x, floorY, z, along - offRouteLookBackBlocks)` and then keeps `along = max(along, projection.along())`; the road trail, the HUD distance, the percentage and the next maneuver are all drawn from `along`. Walk legs, in `paper/navigation/NavigationService`: `DirectLeg.best` is the least remaining distance seen; `recheckDirect` treats `remaining > best + reroute-distance` as "heading away" and recomputes towards a target re-derived from the player's position (at most once per `reroute-min-interval`). The walk leg to the road (start leg) needs both measures: farther along the leg **and** farther from the route than its closest approach (N16, live test S3), and is dropped when the player comes within `reroute-distance` of the route.
+    6. NPC movement quality (merged into `next` 2026-11-16, behind off-by-default keys, not yet live tested: #621 to #627 open): `corridor/Corridor` (clearance map; `Corridor.build` reads the live world through `NavWorld`), `CorridorShaper` (wall clearance 0.8, hard minimum 0.35, string pulling), `FreeWidth`, `PlazaLine` (bounded A* on a plaza's footprint, string pulling, tangent bends; on the test plaza +11 % over the chord and +4 % over the shortest line that keeps 0.8 from the well, against +40 % over the chord before), `LocalLegSearch` (main thread, at most 2 048 cells). A junction whose open radius (the 4th shortest of 16 rays) is no more than `corridor-half-width` counts as a street junction and gets no plaza line. Architecture [§ 12](../../architecture/npc-navigation.md#12-movement-quality-phase-4c-links-m1m7). The road graph and the players' trail are untouched by it ("`TrailCentring` is applied to the player trail only").
 2. **V1/V2:** the legacy plugins had no navigation (the V1 tutorial joked that it did not exist). Nothing to keep or drop. The legacy `Location` and WorldGuard region use is kept as is.
-3. **Related open work:** #603 and its links M1–M7 (merged), #625 plaza lines for NPCs (merged), KNG-93 entrances (not built), the destination engine KNG-235 (proposed), REV6 Part A areas-first (not built). The developer's earlier attempt at rounding a plaza route from edge to edge is not documented in the docs read for this design; see risk 12.5.
+3. **Related open work:** #603 and its links M1–M7 (merged into `next`), #625 plaza lines for NPCs (merged into `next`), #110 (KNG-93) entrances and the `entrance` mode (not built), #25 (KNG-235) the destination engine (proposed), REV6 Part A areas-first (not built). LAST_MILE kept chained walk legs in the middle of a route "only on request"; decision O01 is that request. The developer's earlier attempt at rounding a plaza route from edge to edge is not documented and the developer cannot recall its details (O16); see risk 12.5.
+4. **Code check of the shared shaping package (O11), 2026-11-17, knk-plugin `next` `e69dba6`:**
+    1. `core/npc/nav/corridor/` holds `Corridor` (486 lines), `CorridorShaper` (910), `FreeWidth` (119), `PlazaLine` (416), `LocalLegSearch` (460). Imports from `core/npc/nav`: `NavWorld`, `NavPoint`, `NavGeometry` (all five), `RoadPlanner.PlazaCrossing` (`CorridorShaper`), `HopPlanner` and `LocalLeg` (`LocalLegSearch`). `NavGeometry` itself calls `HopPlanner.floorNear` and `CONTINUITY_RANGE`. Importers of the package: `NpcNavigationService`, `RouteFollower`, `NavGroup`, `CrowdControl`, paper `NpcNavRunner`, the scenario `NpcMovementReport`, and seven test classes. `NavWorld` is implemented by `BukkitNavWorld` (paper, live world) and five test worlds; `NavPoint` and friends are used in about 80 files.
+    2. The player trail's walk paths come from `core/roads/walk/WalkSearch` over captured `WalkCells`, off the main thread. To shape them off the main thread the player side needs a `NavWorld` over the captured walk terrain (`WalkTerrainNavWorld`, Bukkit-free), not `BukkitNavWorld`.
+    3. Throwaway check (a scratch worktree, not committed): `Corridor`, `CorridorShaper`, `FreeWidth`, `PlazaLine`, `NavWorld`, `NavPoint`, `NavGeometry` and an extracted `PlazaCrossing` moved to `core/navigation/shape/`, imports rewritten (120 files, 11 renames). `./gradlew :knk-core:test :knk-paper:test` passed: knk-core 3 011 tests, knk-paper 2 891 tests (18 skipped), no failures. Two leftovers for phase 1: `NavGeometry` still imported `HopPlanner` (its floor helpers move into `NavGeometry`), and the package-private test world `GridWorld` was needed in both test packages (it becomes a shared test fixture). The paper-boot scenarios were not run; phase 1 runs them.
+5. **Corrections to the first draft from the sources (2026-11-17):**
+    1. The road dirty tracker does not see general block changes: `RoadDirtyTracker` reacts only to blocks that touch a road-profile material or a road span's headroom, batched every 30 s, by tile (navigation DESIGN § 6). Walk capture relies on its 10 s chunk TTL; dirty-tracker invalidation was "a possible later optimisation, not v1" (LAST_MILE). Walk links and clusters therefore need a new block-change hook (§ 5.2.3, § 5.3.5, § 11).
+    2. Virtual edge ids: REV7 § 7.2 puts split nodes and cut pieces at 2 000 000 000 upward and the router's virtual nodes below zero, so "above the cut pieces" leaves no defined room. Walk links get their own disjoint id space, asserted in tests (§ 5.2.3).
+    3. The plaza collapse rule is navigation DESIGN § 5.6 step 4, not REV6 § 1.
+    4. `entrance` is not a `/navigate` mode today (only `spawn` and `region`); it comes with #110 (§ 4.4).
+    5. The road router's "under 5 ms" is a target of the navigation DESIGN, not a measurement (§ 9.1).
+    6. The navigation DESIGN wants off-road legs "sparser and in another colour" and LAST_MILE "no new visual state in v1"; the draft's walk spacing of 1.5 contradicted that (§ 7.2.2, O20).
+    7. The HPA* figure "within 1 %, up to 10 times faster" is for the variant that precomputes the entrance costs (Botea 2004), not for a lazy one (§ 5.6).
 
 ## 4. Player and admin experience
 
 1. **Player, indoors:** the player stands in a castle hall and types `/navigate throne room` (a POI name). The trail leads along the corridors on the shortest sensible walk; at stairs it leads up the stair, and it keeps a block or more from the inner wall of a spiral stair. If the player walks back down a few steps, the trail is drawn again from where the player stands, not from the highest point reached.
 2. **Player, mixed:** from a field the trail leads over a walk path to the road, along the road, takes a shortcut across a courtyard where that is much shorter than the road around it, joins the road again, and ends with a walk path into the building to the POI. The player sees one trail; the HUD says the same as today.
 3. **Player, wilderness:** a destination 300 blocks from the road over open country: the trail follows a smooth line over walkable ground around lakes and cliffs. Where the terrain between is not loaded the HUD arrow guides until the leg comes within range (as today beyond 96 blocks), see § 5.5.
-4. **Command:** `/navigate <destination> [shortest|efficient|preferred] [spawn|region|entrance]` (alias `/nav`). The mode word is optional; the default is `preferred`. Tab completion offers POIs the player may navigate to (§ 6.5).
+4. **Command:** `/navigate <destination> [shortest|efficient|preferred] [spawn|region]` (alias `/nav`; `entrance` joins the trailing words with #110). The mode word is optional; the default is `preferred` (question 15.4). The trailing `spawn`/`region` stays last, so the compass's general targets (`/navigate` arguments with a trailing `spawn`/`region`, compass DESIGN) keep working. Tab completion offers POIs the player may navigate to (§ 6.5).
 5. **Admin, POI:** in game `/knk poi create <name> [region <id> | radius <n>]` at the position the admin stands on, `/knk poi list|show|move|delete|link <domain>|unlink`. In the web app a POI page and a POI list on the domain form (§ 6.4). A recognised plaza is offered as a suggestion only in the later plaza extension (§ 10.1).
 6. **Admin, preference:** a POI that has an extent can carry a `preference` weight (for example 0.8 for the great hall, 2.0 for the servants' corridor). Routes prefer low weights. The existing road edge `cost` stays the road's equivalent (`/knk road edge set <id> cost <x>`).
 7. **Admin, tuning of the trail:** config keys of § 7.6.
@@ -100,7 +136,7 @@ Related: [LAST_MILE_PATHFINDING](../navigation/LAST_MILE_PATHFINDING.md), [REV6_
 
 1. **Candidates.** For every pair of road nodes (including POI nodes of § 6.2 when they lie on the road) within `walk-link-range` (default 40 blocks, straight line) whose road distance is more than `walk-link-ratio` (default 2.0) times the straight distance, the planner may ask the walk search for a link. The pair list per tile is computed from the stored graph once and cached.
 2. **Lazy.** A link is searched only when the road A* reaches one of its ends and the link could improve the route (its straight-line bound beats the road distance). One request per candidate, off the main thread, within the global limit `max-concurrent-searches`.
-3. **Cached.** A found link is stored as a virtual edge (id range above the cut pieces of the routing view, REV7 § 2) with its walk path, its cost, and the gate and region tags a road edge has. It is dropped when the dirty tracker marks a tile within the link's box dirty, and on a gate or region change as for road edges. A search that found no path is cached as "none" for `walk-link-retry-seconds` (default 600).
+3. **Cached.** A found link is stored as a walk-link edge (its own edge kind and id space, O17) with its walk path, its cost, and the gate and region tags a road edge has. It is dropped when the block-change hook (O18) reports a change in a chunk of the link's box, on a gate or region change as for road edges, and after `walk-link-ttl-seconds` (default 600) as a backstop. A search that found no path is cached as "none" for `walk-link-retry-seconds` (default 600).
 4. **Access.** A link is checked by the player's `CellAccess` like a walk leg, and by the per-player `AccessPolicy` for its tags, so a link through a region the player may not enter is not offered.
 5. **Never mandatory.** A road without links behaves as today. Links only add choices.
 
@@ -110,8 +146,8 @@ Related: [LAST_MILE_PATHFINDING](../navigation/LAST_MILE_PATHFINDING.md), [REV6_
 2. **Clusters.** Loaded chunks are cut into clusters of one chunk column by level (a level is a connected stack of walk cells, the span idea of the road builder). A cluster's entrances are its walk cells on the border to a neighbour cluster, grouped into at most `cluster-entrances` (default 6) entrance points per border segment.
 3. **Abstract graph.** Nodes are entrance points. Edges inside a cluster get their cost from the bounded walk search between the two entrances, computed when the abstract search first asks for them and cached with the cluster. Edges between clusters cost one step. POI nodes (§ 6.2) join the abstract graph as nodes of the cluster they stand in.
 4. **Search.** A* on the abstract graph from the cluster of the start to the cluster of the goal, then a refinement: the plain walk search along the winning chain of clusters only (the corridor), which gives the exact path. The expansion budget applies to the refinement, per cluster.
-5. **Invalidation.** A cluster is dropped when a block change touches its chunk (the dirty tracker of the road build already receives them) or when its chunk unloads.
-6. **Limits.** Only loaded chunks take part, as today (decision 6 of LAST_MILE: no chunk loading). A route whose clusters are not all loaded is planned over the loaded part and the remainder is guided by the HUD arrow, as today beyond the walk range.
+5. **Invalidation.** A cluster is dropped when the block-change hook (O18) reports a change in its chunk, or when its chunk unloads. The road dirty tracker does not see these changes (§ 3.5.1).
+6. **Limits.** Only loaded chunks take part, as today (LAST_MILE decision 6, no chunk loading; kept in v1 by O21). A route whose clusters are not all loaded is planned over the loaded part and the remainder is guided by the HUD arrow, as today beyond the walk range.
 
 ### 5.4 Route modes and preference (O02, O14)
 
@@ -122,6 +158,8 @@ Related: [LAST_MILE_PATHFINDING](../navigation/LAST_MILE_PATHFINDING.md), [REV6_
 5. **No weights, no change.** A world without preference POIs behaves like `efficient`.
 
 ### 5.5 Wilderness (O03, decision matrix § 5.6)
+
+0. **Practice in other games (research reports of 2026-09-27 and 2026-11-15).** Open-world games use two layers: a road graph for the GPS and a generated navmesh for characters; GPS legs off the road are straight lines. Minecraft bots (Baritone) plan in segments up to the edge of the loaded terrain, off the main thread, with costs in ticks. The road graph already is the coarse layer of an HPA*-style hierarchy, so hierarchy pays off only at scale. Smoothing is by line of sight (Theta*, Lazy Theta*) or the funnel algorithm; the simplified funnel can produce illegal paths, so samples are checked against the clearance map (§ 7.1.3). Flow fields fit many units with one goal, not players with their own goals. Clearance is a soft margin plus a hard minimum; hard erosion (Recast style) closes one-block doors. This design follows that: the walk grid and its clusters are the navmesh equivalent, roads stay the GPS layer, and wilderness legs are planned in segments over the loaded terrain.
 
 1. **What differs.** Wilderness legs are long, open and rarely blocked by doors and regions; accuracy to the block matters less than a smooth line and a bounded cost. Indoor legs are short in volume, complex in shape and full of doors and stairs.
 2. **Phase W1 (with the hierarchical search).** The hierarchical search of § 5.3 also runs over open terrain. Clusters of open terrain are large and have many entrances; therefore a coarse cluster size of 2 by 2 chunk columns is used when a leg is longer than `coarse-above` (default 160 blocks) and open (`openness` of its straight corridor above a threshold). Line of sight smoothing (§ 7.1) then straightens the path.
@@ -135,7 +173,7 @@ Related: [LAST_MILE_PATHFINDING](../navigation/LAST_MILE_PATHFINDING.md), [REV6_
 
 1. **Options:**
     1. **A. Raise the caps of the existing bounded A*:** `max-length` and `max-expansions` up, chunks up. No new code.
-    2. **B. Lazy HPA* over loaded chunks (§ 5.3):** clusters and entrances built on demand, refinement along the corridor. In the spirit of the road graph as the coarse layer (research report § 3.9: HPA* finds paths within 1 % of optimal, up to 10 times faster).
+    2. **B. Lazy HPA* over loaded chunks (§ 5.3):** clusters and entrances built on demand, refinement along the corridor. In the spirit of the road graph as the coarse layer (research report § 3.9: HPA* with precomputed entrance costs finds paths within 1 % of optimal, up to 10 times faster; the lazy variant pays for the entrance costs on first use, so its first request in an area is slower).
     3. **C. Persisted walk tiles (§ 5.5 W2):** an offline built navigation structure per tile, queried like the road graph.
     4. **D. POI skeleton only:** POIs as nodes, connected by inferred walk searches between neighbours, nothing else.
 2. **Considerations and weights:**
@@ -170,6 +208,7 @@ Related: [LAST_MILE_PATHFINDING](../navigation/LAST_MILE_PATHFINDING.md), [REV6_
 
 1. A POI is a named place: a `Location` (world, x, y, z, yaw, pitch) with a name, optionally linked to one domain (town, district, structure, gate structure, any domain), optionally with an extent. It is a separate entity so the destination work does not grow.
 2. It answers "where is the throne room" for players and the walk planner. It is not a domain: a POI has no region of its own unless given one, no access rules of its own (access follows the domain it is linked to and the region it uses), and no discovery rewards in v1.
+3. **Scopes.** POIs follow the destination rules: a POI in another world is not offered in tab completion (destination engine E11), and an exclusive scope such as a siege match hides them (E2).
 
 ### 6.2 What a POI gives navigation
 
@@ -220,7 +259,7 @@ Room for explicit links later (O05): a table `poi_links (FromPoiId, ToPoiId, Wei
 ### 7.2 Particles that do not snap
 
 1. **Cause (checked in the code).** `drawPath` takes the window from the player's projection onto the path (`pathWindow`) and places particles at `start + k * spacing`, every `trail-period-ticks` (10 ticks). The particle positions therefore move with the player's projection: at a corner the projection can jump onto the other side of a wall, and particles slide along the path with every redraw. The road trail has fixed spots every 1.5 blocks (KNG-76) for exactly this reason; the walk trail does not. The figure of "every four blocks" in the developer's observation does not appear in the code: walk legs use 3.0 blocks and a 6 block recompute distance; the likely source is that spacing.
-2. **Rule.** Walk trails use the same fixed anchoring as road trails: anchors at multiples of the spacing from the path's start, the window is the anchors at or after the cursor and within `trail-length`. The spacing of a walk trail becomes a config key `navigation.trail-leg-spacing` (default 1.5, the same as the road trail; today 3.0 is a constant).
+2. **Rule.** Walk trails use fixed anchoring like road trails: anchors at multiples of the spacing from the path's start, the window is the anchors at or after the cursor and within `trail-length`. The spacing of a walk trail becomes a config key `navigation.trail-leg-spacing` with today's 3.0 as default, and the leg colour stays (O20: the navigation DESIGN wants off-road legs sparser and in another colour).
 3. **Cursor projection.** The cursor is projected with continuity (§ 7.5): a jump of more than 3 blocks along the path in one redraw is ignored unless the player really is nearer to it, so a player standing at a wall's other side does not make the trail jump.
 
 ### 7.3 Redraw cadence
@@ -239,7 +278,8 @@ See § 8: a separate issue that depends on § 7.1 (the shared shaping module and
 4. **Off the road.** The player leaves the road: a walk leg to the nearest join point, chosen by remaining cost (walk distance plus remaining route length), not by distance only, so a player who walked a short way backwards past a better join point is guided to the better one in either direction.
 5. **Walk legs.** `best` and "heading away" are replaced by the player's distance to the leg's path polyline: within `recompute-distance` the leg stays and the window is drawn from the cursor on it; beyond it the leg is recomputed from the player's position (at most once per `reroute-min-interval`, as today).
 6. **Loops.** A route passing the same place twice (a loop, a switchback) keeps its cursor by continuity (a candidate more than `cursor-jump` blocks away along the route, default 12, is taken only when the previous cursor candidate is farther than `reroute-distance`).
-7. **NPCs.** The NPC navigation service follows its own route and is unchanged.
+7. **Rules kept and replaced.** Kept: the near-road check-only leg (KNG-124), "Having trouble determining the route…" for a search over budget on the way to the road (N17), "No conventional path to X found." (rev. 9) and the partial path rule. Replaced under `guidance-v2` only: the two-measure "heading away" of the start leg (N16) and `DirectLeg.best`, by the distance to the leg's path (item 5). With `guidance-v2: false` both stay as today.
+8. **NPCs.** The NPC navigation service follows its own route and is unchanged.
 
 ### 7.6 Configuration
 
@@ -249,14 +289,15 @@ New keys under `navigation`: `walk.clearance-cost` (5), `walk.wall-clearance` (0
 
 **Why a separate issue.** It touches the router's output and the trail, it depends on § 7.1 (shared shaping, curve drawing, clearance map), and the developer named an earlier attempt that did not work out. It can ship after § 7 without changing the rest.
 
-1. **Problem.** The builder collapses a plaza into one junction (REV6 § 1, plan 4c.1 item 6). A route that enters a plaza on road A and leaves on road B is a polyline through the node: a sharp bend at the plaza's centre or at the node of a T crossing.
+1. **Problem.** The builder collapses a plaza into one junction (navigation DESIGN § 5.6 step 4, plan 4c.1 item 6). Plaza lines apply at plazas only (O19). A route that enters a plaza on road A and leaves on road B is a polyline through the node: a sharp bend at the plaza's centre or at the node of a T crossing.
 2. **Where it runs.** The road plan already names every plaza crossing of a route (`RoadPlanner.PlazaCrossing`, `NavigationService.plazaCrossingsOf`: a designed plaza's centre with its `PlazaRadius`, other junctions measured with 16 rays). The players' trail uses the same list. The route graph, the router's result, the HUD length and the ETA keep using the graph's edges; only the drawn polyline and the cursor's projection use the shaped line (a plaza line is a replacement for the stretch inside the footprint).
-3. **The line (pulled curve).** From where the route enters the footprint (entry point P0 with tangent t0 along road A) to where it leaves (exit point P1 with tangent t1 along road B), a cubic Hermite or Bezier curve with the plaza node N as an attractor: the control points are P0 + a·t0 and P1 − a·t1 with a = `length(P0,P1) / 3`, then the curve's midpoint is pulled towards N by `pull` times the distance from the chord's midpoint to N (default `plaza-pull` 0.35; 0 = the chord with rounded ends, 1 = the curve passes through N). A T crossing with a path from the stem to the right arm therefore bends gently towards the node and does not run to the corner of the square, nor to the node and back.
+3. **The line (pulled curve).** From where the route enters the footprint (entry point P0 with tangent t0 along road A) to where it leaves (exit point P1 with tangent t1 along road B), a cubic Hermite or Bezier curve with the plaza node N as an attractor: the control points are P0 + a·t0 and P1 − a·t1 with a = `length(P0,P1) / 3`, then the curve's midpoint is pulled towards N by `pull` times the distance from the chord's midpoint to N (default `plaza-pull` 0.35; 0 = the chord with rounded ends, 1 = the curve passes through N). A plaza with three roads (T shape) and a route from the stem to the right arm therefore bends gently towards the node and does not run to the corner of the square, nor to the node and back.
 4. **Validation.** The curve is sampled every 0.5 block against the clearance map of the plaza footprint (`Corridor.build(..., discs)` as M5 does). A sample under the hard minimum clearance, in a region the player may not enter, or without floor continuity rejects the curve; then the existing `PlazaLine` result (bounded A* on the footprint, string pulled, bends at tangent points) is used with the curve as the guide: its A* cost adds a penalty for distance from the curve (`plaza-guide-cost`, default 2 per block). When that finds nothing the unshaped route polyline stays (today's behaviour).
 5. **Shape knowledge.** The footprint is the designed `PlazaRadius` where set; otherwise the measured open radius (NPC side already does this). With a plaza POI (§ 10.1) the footprint is the POI's WorldGuard region, which gives odd-shaped squares exactly.
 6. **Cost.** At most one A* of 4 096 cells per plaza crossing per route computation, cached per (plaza, entry, exit) for the route's life.
 7. **Config:** `navigation.plaza-lines` (false until live tested), `plaza-pull` (0.35), `plaza-guide-cost` (2), `plaza-corridor-blocks` (shared with the NPC key, 16).
-8. **Tests.** The synthetic plaza scene of the NPC scenarios (15 by 15, four 3 wide roads, a 2 by 2 well on the west to north chord), extended with a T crossing, an L crossing and a plaza with a stall on the curve.
+8. **Tests.** The synthetic plaza scene of the NPC scenarios (15 by 15, four 3 wide roads, a 2 by 2 well on the west to north chord), extended with a plaza with three roads (T shape), a plaza with two roads at a right angle (L shape), a plaza with a stall on the curve, and a street T junction that must get no plaza line (O19).
+9. **First step: a check on real plazas (O16).** Because the earlier attempt is not documented, the phase starts by running the curve and the A* fallback on two real plazas (Cinix and Brink, from a snapshot as the NPC scenarios do) and showing the developer the lines before the trail uses them.
 
 ## 9. Performance
 
@@ -270,7 +311,7 @@ New keys under `navigation`: `walk.clearance-cost` (5), `walk.wall-clearance` (0
 | Chunk capture | 0.4 to 0.7 ms per chunk (synthetic), about 12 KB per chunk | LAST_MILE Phase B status |
 | Chunks per request | up to 64 (15 % of 96 block legs need 50 to 64) | KNG-75 step 2a report |
 | Budgets today | 20 000 expansions, 144 blocks, 2 concurrent searches | `config.yml` |
-| Road router | under 5 ms for a few thousand nodes | DESIGN § 6.2 |
+| Road router | target under 5 ms for a few thousand nodes (a target, not a measurement) | DESIGN § 6.2 |
 
 ### 9.2 Phase 0: measure before building (O06)
 
@@ -295,6 +336,7 @@ New keys under `navigation`: `walk.clearance-cost` (5), `walk.wall-clearance` (0
 3. A linked plaza POI gives § 8 its footprint. Deleting the POI sets the node back to its designed or automatic plaza behaviour (`SetNull`), so nothing breaks.
 4. Area effects and plaza features attach to the plaza entity, not to the road graph; the graph builder stays free of gameplay.
 5. Domain discovery (`UserDomainDiscovery`) could later reward entering a plaza POI; that is a separate decision.
+6. The link column must be reconciled with REV6 Part A, which proposes a nullable `road_nodes.PlazaRegionId` for designed areas (not built): one column that points to the plaza POI (which holds the region) is the likely answer, decided with the extension.
 
 ### 10.2 Explicit POI links (O05)
 
@@ -311,7 +353,8 @@ New keys under `navigation`: `walk.clearance-cost` (5), `walk.wall-clearance` (0
 | Terrain capture for the walk grid | Paper chunk snapshots | `knk-paper` `navigation/walk/WalkSnapshotService`, `WalkChunkExtractor` | `WalkTerrain`, `WalkCells` (exist) |
 | POI extents from WorldGuard regions | WorldGuard region lookup | `knk-paper` `WorldGuardRegionShapes` (exists) | `RegionShape` (exists), `PoiExtent` (new) |
 | Trail particles and the HUD | Paper particles and boss bar | `knk-paper` `TrailRenderer`, `NavigationHud` | none: no game logic, the shaped polyline is computed in core |
-| Dirty block events for cluster invalidation | Bukkit events | `knk-paper` `RoadDirtyTracker` (exists) | a small `TerrainChangeListener` port in core (new) |
+| Block changes for link and cluster invalidation (O18) | Bukkit block events | `knk-paper` a new walk-terrain listener beside `RoadDirtyTracker` (which sees road blocks only) | a small `TerrainChangeListener` port in core (new) |
+| Terrain reads for shaping walk paths off the main thread | captured chunk data | none at runtime: `WalkSnapshotService` captures, the adapter reads the capture | `NavWorld` (moved to `core/navigation/shape/`), `WalkTerrainNavWorld` over `WalkCells` (new, Bukkit-free) |
 | Walk legs, links, clusters, route modes, cursor, shaping, plaza curve | pure game logic | `knk-core` `roads/walk/`, `roads/route/`, `navigation/`, `navigation/shape/` | the logic itself |
 | POI command | Bukkit commands | `knk-paper` `/knk poi` | `PoiQueryApi` port (new) |
 
@@ -323,7 +366,8 @@ Everything that decides a route, a cost or a curve stays in Bukkit-free `knk-cor
 2. **Changing which cells the walk search picks** (clearance cost, § 7.1.4) can change routes players know; the kill switch and the A/B transcript tests of the existing walk scenarios guard it.
 3. **Walk links** can add routes through places not meant as roads (across a farm field); the `walk-link-range` and `ratio` limits, the access policy and per-POI or per-domain exclusion (a `Blocked` flag on a domain's road access rule, reusing REV7 Part C's "Ignored/Applies") are the guards.
 4. **Cursor continuity** (§ 7.5) on loops and switchbacks needs the tests listed in § 13 (loop route, switchback, a player who stands between two branches).
-5. **The earlier plaza rounding attempt** is not described in the docs read for this design. Before implementation the developer or the session that made it should say what was tried (builder side, through-edges, polyline fillets) and what failed, so that § 8 does not repeat it. The NPC side result (+40 % to +4 % over the shortest line, plan 4c.3 decision 6) is the available evidence that a footprint search works.
+5. **The earlier plaza rounding attempt** is not described in the docs, and the developer cannot recall its details (O16, 2026-11-17). § 8 may repeat a failure nobody wrote down. Guards: phase 7 starts with a check on two real plazas shown to the developer (§ 8.9), the A* fallback on the footprint, and the flag `plaza-lines` off by default. The available evidence that a footprint search works is the NPC plaza line (on the test plaza +40 % over the chord before, +11 % after; plan 4c.3 decision 6), which is not live tested yet.
+10. **The NPC movement quality code is not live tested** (#621 to #627 open). Phase 1 moves it and phases 6 and 7 build on it for players; a live finding on the NPC side may change the shared code. Phase 1 changes no behaviour, and the shared regression test of risk 6 keeps NPC and player lines one code path.
 6. **Two shaping paths** (NPC and player) must stay one code path: a regression test runs the same scene through both and compares the line.
 7. **Destination engine order.** If KNG-235 is built after this, POIs first register in the old catalogue (§ 6.5.3) and move to a provider later; no data change.
 8. **Main-thread safety:** all new searches and the shaping run off the main thread; the new capture work is within `TickBudget`; the scenario with 20 navigating players (as the Citizens stress test guide does for NPCs) is part of phase 4.
@@ -341,8 +385,8 @@ Everything that decides a route, a cost or a curve stays in Bukkit-free `knk-cor
 | A06 | A castle-wide indoor route of at least 250 blocks is found without a road, within the budget of § 9.3 | 3 |
 | A07 | The hierarchical path equals the plain A* path in length within 5 percent on the test scenes | 3 |
 | A08 | Unloaded chunks are never loaded; a route over a partly loaded area plans the loaded part and the HUD arrow guides the rest | 3 |
-| A09 | `shortest`, `efficient` and `preferred` give different routes on a scene with a spiral stair beside a ramp and a weighted corridor | 4 |
-| A10 | A POI with a `preference` of 2.0 is avoided in `preferred` and ignored in `shortest` | 4 |
+| A09 | `shortest`, `efficient` and `preferred` give different routes on a scene with a spiral stair beside a ramp and a road edge with a cost multiplier | 4 |
+| A10 | A POI with a `preference` of 2.0 is avoided in `preferred` and ignored in `shortest` | 5.2 |
 | A11 | A world without preference POIs gives the same route in `preferred` and `efficient` | 4 |
 | A12 | A POI is created, linked to a domain, listed, renamed and deleted from the web app and in game; its reads are anonymous, its writes pinned by the access tests | 5 |
 | A13 | Navigating to a POI with a region ends the navigation inside the region; with a radius inside the radius; with neither within `arrive-distance` | 5 |
@@ -354,7 +398,7 @@ Everything that decides a route, a cost or a curve stays in Bukkit-free `knk-cor
 | A19 | A player who leaves the road is guided to the join point with the smallest remaining cost, forwards or backwards | 6 |
 | A20 | A looped route keeps the cursor on the right branch; a switchback does not jump | 6 |
 | A21 | A walk leg is not recomputed while the player is within `recompute-distance` of it, also when walking back | 6 |
-| A22 | The plaza line from the stem of a T to its right arm is rounded, passes within `plaza-pull` of the node as configured, keeps `wall-clearance` from obstacles and stays inside the footprint | 7 |
+| A22 | On a plaza with three roads (T shape) the line from the stem to the right arm is rounded, passes within `plaza-pull` of the node as configured, keeps `wall-clearance` from obstacles and stays inside the footprint; a street T junction gets no plaza line (O19) | 7 |
 | A23 | A plaza with an obstacle on the curve gets the A* line, not a line through the obstacle | 7 |
 | A24 | `plaza-lines: false` gives today's route polyline | 7 |
 | A25 | The route length, ETA and maneuvers are unchanged by plaza lines | 7 |
@@ -369,13 +413,14 @@ Everything that decides a route, a cost or a curve stays in Bukkit-free `knk-cor
 | 1 | Shared shaping module: move `core/npc/nav/corridor` to `core/navigation/shape`, no behaviour change (O11) | NPC tests unchanged | knk-plugin | tier:2 | none | to file | none |
 | 2 | Walk links in the routing view, mixed routes (§ 5.1, § 5.2) | A02–A05 | knk-plugin | tier:3 | `navigation.walk-links` (off) | to file | 0 |
 | 3 | Hierarchical walk search, indoor routes, wilderness W1 (§ 5.3, § 5.5) | A06–A08 | knk-plugin | tier:3 | `navigation.walk.hierarchical` (off) | to file | 0, 1 |
-| 4 | Route modes and weights (§ 5.4), plugin side | A09–A11 | knk-plugin | tier:2 | none | to file | 2 |
-| 5 | POI entity: API, web app, plugin, destination provider (§ 6) | A12–A14 | knk-web-api, knk-web-app, knk-plugin | tier:3 (schema) | `navigation.poi` (off) | to file | 1 (for weights: 4) |
+| 4 | Route modes and road weights (§ 5.4), plugin side | A09, A11 | knk-plugin | tier:2 | none | to file | 2 |
+| 5.1 | POI entity: API, web app, plugin, destination provider (§ 6), separate issue | A12–A14 | knk-web-api, knk-web-app, knk-plugin | tier:3 (schema) | `navigation.poi` (off) | to file | none |
+| 5.2 | POI preference weights in the walk search (§ 5.4.3), POIs as walk-planner nodes (§ 6.2.2) | A10 | knk-plugin | tier:2 | `navigation.poi` (off) | to file | 4, 5.1 (and 3 for POI nodes in clusters) |
 | 6 | Guidance quality: shaping and curve on walk paths, anchored particles, cursor and winding back (§ 7) | A15–A21 | knk-plugin | tier:3 (game feel) | `navigation.guidance-v2` (off) | to file | 1 |
 | 7 | Plaza lines for the players' trail (§ 8), separate issue | A22–A25 | knk-plugin | tier:2 | `navigation.plaza-lines` (off) | to file | 6 |
 | 8 | Persisted walk tiles (§ 5.5 W2) | to be written | knk-web-api, knk-plugin | tier:3 | to be set | to file later | 0, 3 |
 
-Order: 0 and 1 first (independent), then 6 (the corner, snapping and rewind items are the developer's short-term wish) alongside 2 and 3; POI (5) when 4 is in; plaza lines (7) after 6. Smoke test: [guides/navigation-offroad-smoke-test.md](../../guides/navigation-offroad-smoke-test.md) (written on approval).
+Order: 0 and 1 first (independent), then 6 (the corner, snapping and rewind items are the developer's short-term wish) alongside 2 and 3; the POI entity (5.1) at any time, POI weights (5.2) after 4 and 5.1; plaza lines (7) after 6. Smoke test: [guides/navigation-offroad-smoke-test.md](../../guides/navigation-offroad-smoke-test.md) (written on approval).
 
 ## 15. Open questions
 
@@ -387,7 +432,8 @@ Order: 0 and 1 first (independent), then 6 (the corner, snapping and rewind item
 6. **POI and the destination engine.** Options: (a) POIs in the old catalogue until KNG-235 is built; (b) build the engine's phase 1 and 2 first. Recommendation: (a), because the engine is proposed and unstarted.
 7. **Cluster persistence.** Options: (a) memory only in v1 (rebuilt after restart, within budget); (b) persist the clusters at once with the offline snapshot. Recommendation: (a), since persisted tiles are phase 8.
 8. **Plaza pull default.** `plaza-pull` 0.35. Options: (a) 0.35; (b) 0.5 (stronger bend to the node); (c) tune live with a command that sets it per plaza. Recommendation: (a), tuned on the real plazas of Cinix and Brink.
-9. **Earlier plaza attempt.** What was tried and what failed (§ 12.5)? The developer or the session that did it answers on the parent issue; recommendation: before phase 7 starts.
+9. ~~**Earlier plaza attempt.** What was tried and what failed (§ 12.5)?~~ Answered 2026-11-17: the developer cannot recall the details; recorded as risk 12.5 with guards (O16).
+10. **Plaza through-edges in the builder (NPC plan decision 6, 2026-11-15).** That decision puts plaza through-edges in the road-graph builder "later, so the players' trail improves too". § 8 instead shapes the drawn line at runtime and leaves the graph alone. Options: (a) § 8's runtime line now, the builder through-edges stay a later option for route length and ETA; (b) build the through-edges instead and drop § 8; (c) both in phase 7. Recommendation: (a).
 
 ### After v1
 
