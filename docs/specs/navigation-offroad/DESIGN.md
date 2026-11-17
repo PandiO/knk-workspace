@@ -1,7 +1,7 @@
 # Off-road navigation and landmarks (points of interest) — mixed routes, indoor and wilderness walking, better trails
 
-**Status:** **Proposed** (2026-11-17) — all questions of § 15 answered by the developer on 2026-11-17; waiting for approval. (On approval: **Decided <date>** (developer).)
-**Last updated:** 2026-11-17 (design session: the draft's code claims checked against knk-plugin `next` `e69dba6` and corrected (§ 3.1, § 3.4); a compile-and-test check of the shared shaping package (§ 3.4); the sources re-read and the draft corrected (§ 3.5); question 15.9 answered (O16)); 2026-11-17 (first draft from the developer's voice session of 2026-11-17, checked against knk-plugin `next` `e69dba6` and the docs on knk-workspace `next` `6be8222`)
+**Status:** **Decided 2026-11-17** (developer). Proposed 2026-11-17; all questions of § 15 answered on 2026-11-17.
+**Last updated:** 2026-11-17 (approved by the developer; status Decided, smoke-test guide drafted, phases with sub-issues); 2026-11-17 (design session: the draft's code claims checked against knk-plugin `next` `e69dba6` and corrected (§ 3.1, § 3.4); a compile-and-test check of the shared shaping package (§ 3.4); the sources re-read and the draft corrected (§ 3.5); question 15.9 answered (O16)); 2026-11-17 (first draft from the developer's voice session of 2026-11-17, checked against knk-plugin `next` `e69dba6` and the docs on knk-workspace `next` `6be8222`)
 **Issue:** [PandiO/knk-workspace#698](https://github.com/PandiO/knk-workspace/issues/698); phases as sub-issues in § 14: #703 (0), #704 (1), #705 (2), #706 (3), #707 (4), #708 (5.1 landmark entity), #709 (5.2 landmark weights), #710 (6.1), #711 (6.2), #712 (7 plaza lines), #713 (8). Later: #714 (plaza landmark, § 10.1). Related: #603, #625, #110 (KNG-93), #25 (KNG-235).
 **Dependencies:** [navigation](../navigation/DESIGN.md) (road graph, `/navigate`, walk paths, all merged), [navigation destination engine](../navigation-destination-engine/DESIGN.md) (proposed; the landmark provider of § 6 plugs into it), the NPC movement quality work on `next` ([architecture § 12](../../architecture/npc-navigation.md#12-movement-quality-phase-4c-links-m1m7), merged 2026-11-16, not yet live tested (#621 to #627 open): `corridor/Corridor`, `CorridorShaper`, `FreeWidth`, `PlazaLine`, `LocalLegSearch`). Related issues: #603 (NPC movement quality), #625 (NPC plaza lines), #110 (KNG-93, entrances), #25 (KNG-235, destination engine).
 **Authority:** the developer's answers of 2026-11-17 (decision log O01–O10 and the answers of the design session, O16 onward). Supersedes, conditionally, the builder through-edges of the NPC plan (decision 6 of 2026-11-15, 4c.7; O29). Otherwise the road-navigation design stays binding for the road graph; this document extends its § 6.2 "off-road legs" and "Phase 6" rows. This document is the canonical specification, not a claim that the proposed entities, endpoints or behaviour exist.
@@ -422,7 +422,7 @@ Everything that decides a route, a cost or a curve stays in Bukkit-free `knk-cor
 
 ## 14. Phases
 
-(Sub-issues filed 2026-11-17 at the developer's request, before approval; their scope is final on approval. Each phase merges into `next` on its own, behind its flag.)
+(Sub-issues filed 2026-11-17; the design was approved the same day. Each phase merges into `next` on its own, behind its flag.)
 
 | Phase | Scope | Acceptance | Repos | Tier | Flag | Sub-issue | Depends on |
 |---|---|---|---|---|---|---|---|
@@ -438,9 +438,12 @@ Everything that decides a route, a cost or a curve stays in Bukkit-free `knk-cor
 | 7 | Plaza lines for the players' trail (§ 8), separate issue | A22–A25 | knk-plugin | tier:2 | `navigation.plaza-lines` (off) | [#712](https://github.com/PandiO/knk-workspace/issues/712) | 6.1 and 6.2 (trail quality) |
 | 8 | Persisted walk tiles (§ 5.5 W2) | to be written | knk-web-api, knk-plugin | tier:3 | to be set | [#713](https://github.com/PandiO/knk-workspace/issues/713) | 0, 3 |
 
-Order (O23): 0 and 1 first (independent), then 6 (6.1, 6.2) and 2 side by side (6 first when only one chain runs), then 3; the landmark entity (5.1) after destination engine P1 and P2 (#96, #103), landmark weights (5.2) after 4 and 5.1; plaza lines (7) after 6.1 and 6.2. Phase 6 is split in two links because shaping (6.1) and the cursor (6.2) are each a day's work with their own tests (agent, skill § 6.2). Smoke test: [guides/navigation-offroad-smoke-test.md](../../guides/navigation-offroad-smoke-test.md) (written on approval).
+Order (O23): 0 and 1 first (independent), then 6 (6.1, 6.2) and 2 side by side (6 first when only one chain runs), then 3; the landmark entity (5.1) after destination engine P1 and P2 (#96, #103), landmark weights (5.2) after 4 and 5.1; plaza lines (7) after 6.1 and 6.2. Phase 6 is split in two links because shaping (6.1) and the cursor (6.2) are each a day's work with their own tests (agent, skill § 6.2). Smoke test: [guides/navigation-offroad-smoke-test.md](../../guides/navigation-offroad-smoke-test.md), one section per phase (draft from the design).
 
 ## 15. Open questions
+
+None open: all were answered by the developer on 2026-11-17.
+
 
 1. ~~**Long walks (matrix § 5.6).** Which approach for long off-road legs? Options: (a) B, lazy HPA* over loaded chunks now, persisted tiles later; (b) A, only raise the caps, decide again after phase 0; (c) C, persisted walk tiles from the start. Recommendation: (a), because it bounds the cost by the route and shares clusters with NPCs; it is reversible toward (c).~~ Answered 2026-11-17 (O32): (a), B now, C later.
 2. ~~**Order of the work.** The short-term wishes are indoor and mixed routes (phases 2 and 3) and the trail quality (phase 6). Options: (a) phase 0 and 1, then 6 and 2 in parallel, then 3; (b) 6 first alone because it is the smallest and most visible; (c) 3 first. Recommendation: (a) with phase 6 first of the two if only one chain runs.~~ Answered 2026-11-17 (O23): (a), phases 0 and 1, then 6 and 2 side by side (6 first with one chain), then 3.
