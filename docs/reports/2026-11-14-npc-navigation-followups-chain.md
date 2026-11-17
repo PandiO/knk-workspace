@@ -342,6 +342,11 @@ the configuration reference § 4.27), then restart. In test order:
     30 s in which nobody entered the place, not 30 s since arrival; a place nobody enters still releases after 30 s).
     Open: the developer's smoke test of `quarry-to-keep` on `next` `e69dba6a` (#358 comment), #695 (report only), the
     option-B decision, the `collidable` default, promotion.
+41. **Developer decision on B3 5.4: accepted** (2026-11-17, coordinator session; recorded on #672). Also checked
+    for the developer: the NPC walking checks (recheck, trespass guard, follower lanes; L9) apply the entry rule of
+    every region mapped to a domain, whatever its type (town, district, structure, gate). Exit rules hold where a
+    route is planned, from the NPC's position, but the walking checks do not re-check them (`DomainEntryRule` is
+    entry only; the module's own warning says "exit rules hold only where a route is planned").
 
 ## 4. Link blocks
 
