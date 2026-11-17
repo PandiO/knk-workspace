@@ -347,6 +347,20 @@ the configuration reference § 4.27), then restart. In test order:
     every region mapped to a domain, whatever its type (town, district, structure, gate). Exit rules hold where a
     route is planned, from the NPC's position, but the walking checks do not re-check them (`DomainEntryRule` is
     entry only; the module's own warning says "exit rules hold only where a route is planned").
+42. **Developer smoke test of 2026-11-17 on `e69dba6a`; links B5 and C1** (evidence on knk-plugin
+    `evidence/smoke-2026-11-16` under `.../evidence/2026-11-17/`).
+    1. Passed: the leader alone through the stair house (no fall, no skipped flight, no stop at 1410 49 -503, arrives;
+       about 4 small hops after a stair step, added to #695); the access change mid-group (#668), completely; the
+       singles of the crowd step.
+    2. Failed: a `ranks` group (elastic) on the second-last flight; the leader ended up one flight directly above its
+       group and the followers looped on the flight below ("off its lane at 1413 67 -539: its own leg back to 1416 69
+       -542" repeated). Same in the crowd step. Link **B5** (#699) started.
+    3. New route `northern-wearway-upper-keep-tower`: the road part went well; the ~100-block off-road end through the
+       throne room and up a spiral staircase failed (stuck at 1405 85 -510). Link **C1** (#700, off-road legs with the
+       walk navigator's search) after B5. The developer's question about off-road parts is answered in the coordinator
+       session; the exit-rule gap (decision 41) waits for the developer's answer.
+    4. The developer noted that there are no places on the test routes narrow enough to make groups queue; a route for
+       that comes later. Collision stayed off.
 
 ## 4. Link blocks
 
