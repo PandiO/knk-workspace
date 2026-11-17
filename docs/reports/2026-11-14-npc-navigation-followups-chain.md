@@ -55,6 +55,7 @@ the configuration reference § 4.27), then restart. In test order:
 | M7 Collision with push resistance | #627 | Merged into next (2026-11-16); `collidable` stays false | knk-plugin `6393aa37` → `next` `cc5262ff`; knk-workspace `dc8a91c5` → `next` `8e3d7d06` | PandiO/knk-plugin#57, PandiO/knk-workspace#656 | push and PR runs on `6393aa37` green (build, paper-boot with 48 scenarios); Codex at its usage limit | create_session session_01R1w2UtyxLznso8wdydHmQf (2026-11-16) |
 | L9 Fix: running groups ignore a realtime district deny | #668 | In review (PRs open, not merged) | knk-plugin `76259d86`; knk-workspace `1dffa06d` | PandiO/knk-plugin#61, PandiO/knk-workspace#669 | push and PR runs on `76259d86` green (build, paper-boot with 48 scenarios; runs 43941362118, 43944997333); #586 did not hit; 48/48 locally; Codex at its usage limit | create_session session_01R1w2UvV75PszFp2o3mNoHB (2026-11-16) |
 | B1 Evidence: snapshot command (B1a), whole stair house and replay (B1b) | #670 | B1a merged into next (2026-11-16, `0f039203`); B1b in review (PRs open, not merged) | B1a: knk-plugin `1d9e3209`, knk-workspace `383cd24d`; B1b: knk-plugin `6d81d59a`, knk-workspace `6684a815` (both merged `next` after B1a) | PandiO/knk-plugin#62, PandiO/knk-workspace#691 (B1a); PandiO/knk-plugin#63, PandiO/knk-workspace#692 (B1b) | #62: build and paper-boot green (both runs); #63: green on `99c27a40` (19 min), head `6d81d59a` pending; 50/50 scenarios locally in 15 min 23 s; Codex at its usage limit | create_session session_01R1w2Uvzb6xQBt2SwiokGoe (2026-11-16) |
+| B2 Stretch handover in 3D, appended, bridged from the feet | #671 | In review (PRs open, not merged) | knk-plugin `a30ac085`; knk-workspace `cbff95cc` | PandiO/knk-plugin#64, PandiO/knk-workspace#693 | `build` and `paper-boot` (50) green on `a30ac085` (runs 43988727914, 43988727937); 50/50 locally; Codex at its usage limit | create_session (2026-11-16) |
 
 ## 3. Coordinator decisions
 
@@ -1430,3 +1431,76 @@ _(Each link appends its block here when it finishes.)_
         2. in `npc-replay-quarry-to-keep`: the group arrives, no stuck spells, nobody lost.
     2. A new snapshot: run `trim_snapshot.py IN OUT 1391 36 -559 1454 96 -480` and commit OUT as `scenario-snapshots/quarry-to-keep-stairhouse.zip`. A scene is at most 64 wide along x.
     3. `NpcMovementScene.CLIMB` and `make_snapshot_sample.py`'s `CLIMB` hold the same line; change both together. A new trace file needs `git add -f`.
+
+### 4.18 B2 — Stretch handover in 3D, appended, bridged from the feet; gaps as local legs; no leader fall in the group path (#671)
+
+1. **Scope done** (decision 34.1, plan § 4c.8). Behind `npc.navigation.enabled` (off by default); no new key.
+    1. **Handover by 3D progress.** knk-core `Trail` keeps the waypoint list the mover was given and the index of the one the NPC walks to: the nearest in 3D from the current one on, or the next once reached (0.6) or passed, never back. `NpcNavigationService.watch` hands out the next stretch once fewer than `HANDOVER_DISTANCE` (4) blocks are left along those waypoints in 3D. Without a list (after a crowd hold, a push or a recovery move), it uses the 3D distance to the stretch end.
+    2. **Appended, not replaced.** `Trail.appended` puts the new stretch after the waypoints not yet walked. `Trail.fromFeet` drops only those the NPC is already past: its feet beyond the waypoint along the next step, no further from the next waypoint than the waypoint is, on its level, and the next one a straight walk.
+    3. **Bridged from the feet.** `WaypointChain.split` starts at the NPC's feet when it is on the ground.
+    4. **An unbridgeable step becomes a local leg.** `split` returns the gap. The list is cut before it. When the cut list is walked, `startGapLeg` sends a local leg to the waypoint after the step, then the follower restarts where the NPC stands. Logged (`no walk from … to … on the line, a local leg takes that step`) and counted (`gapLegs()`, in the scenario report lines).
+    5. **No leader fall in the group path.** `NavGroup.leaderFell`: a leader with a route line that is more than 1.75 blocks below the lower of its path point and the one before has fallen. Its points stay out of the path. After 30 s below, the path follows it as before. Counted as `leaderFalls()`.
+    6. **Proof turned into checks** (`ClimbWatch.failures`).
+        1. `npc-stairhouse-climb` fails on a fall from a climb place, a handover onto another level, a turn dropped by the 30 s guard after its holder fell, a group leader that does not arrive, and a lost follower.
+        2. `npc-replay-quarry-to-keep` fails on the same for the leader alone and the group in both configurations, except lost followers (item 6.1).
+        3. "Onto another level" is now judged on the list the NPC walks: the waypoint it walks to next after a handover is 2.5 blocks or more above or below its feet. B1's measure (the new stretch's waypoint nearest the feet horizontally) is still reported as `new stretches starting off the feet level (B1's measure)`. Decision 5.3 explains why.
+    7. **The group failure in the real replay (prompt § 2.6): a separate cause, not fixed here.**
+        1. With B2, the replay group has 0 falls and 0 handovers onto another level, but followers are still lost (stored settings: 26 stuck spells, 3 lost).
+        2. The cause is on flight 5 (x 1408–1410, z −544…−534), which is built of alternating bottom slabs and full blocks: each step is half a block. When the leader stops in the top hall, the rear rows' slots lie on that flight, by design. The slots stand at whole-block heights, for example feet 73 over a slab whose surface is 72.5.
+        3. Followers 0.5–1 block short of their slots get the same two waypoints every 5 ticks and do not progress. Their no-progress spell backs them off down the flight, and the ladder's local leg finds `no point ahead on its floor to aim at` (every point ahead on a half-block stair is on a higher floor). They are then lost.
+        4. Evidence: run log with traces at real 1409.6 72.5 −541.6 (knk-sc-14, -16, -19). Proposal on [#673](https://github.com/PandiO/knk-workspace/issues/673#issuecomment-6931558660): slots at real surface heights, a follower within a block of its slot on the same flight counts as settled, and `PathTargets.ahead` accepts a point a step above.
+        5. Not small and not in the handover code, so lost followers stay report-only in the replay (the climb checks them).
+2. **Commits and heads.**
+    1. knk-plugin `claude/npc-movement-b2`: `ce1def6b`, `fd88545f`, `36822ec4`, `b3cf6a91`, head **`a30ac085`**.
+    2. knk-workspace `claude/npc-movement-b2`: head **`cbff95cc`**.
+3. **PRs** (base `next`, not merged).
+    1. PandiO/knk-plugin#64 (`Part of #671`).
+    2. PandiO/knk-workspace#693 (`Closes #671`).
+4. **Tests, baseline → result.**
+    1. `./gradlew build -x deployToDevServer`.
+        1. Baseline on `next` `80902942`: core 2968, api-client 344 (2 skipped), paper 2885 (18 skipped).
+        2. Result: core 2987 (+19), api-client 344, paper 2885; 0 failures.
+        3. New tests: `TrailTest` 10 (index, never back, the flight above not taken for the NPC's place, rest in 3D, a stretch end right above is still a flight away, appended, duplicate join, waypoints already passed dropped, one not reached kept, nothing ahead skipped).
+        4. `WaypointChainTest` +5 (split, the join from the feet, a gap handed back, a gap at the feet, the level above as a gap).
+        5. `NpcNavigationServiceTest` +3 (appended, no handover from a flight below the stretch end, a gap walked as a local leg).
+    2. Scenarios, locally (Paper 26.3 b205, Citizens b4269, `--npc-navigation`): **50/50 on the final head.**
+    3. **Before (`next`) → after.**
+        1. `npc-stairhouse-climb`:
+            1. falls 42 → 0;
+            2. handovers onto another level 446 → 0 (B1's measure → 0);
+            3. stuck spells 117 → 2;
+            4. lost 0 → 0;
+            5. no turn dropped by the guard;
+            6. top hall reached 11 → 25 of 40;
+            7. leader 86.0 → 100.7 s.
+        2. `npc-replay-quarry-to-keep`:
+            1. The leader alone: 1 → 0 handovers onto another level, 54.7 → 56.7 s.
+            2. The group with the stored settings: stuck spells 32 → 26, lost 6 → 3, 0 falls.
+            3. The group with the smoke test's settings: 0 stuck spells, 0 lost.
+    4. **Three regressions found and fixed on the way** (each deterministic, checked against `next` twice):
+        1. With plain appending, `npc-jagged-straight-collision-on` failed: the leader walked back to a corner zig it was past, into its followers.
+        2. With the join cut ahead to any straight-walkable waypoint within 3 blocks, `npc-stairhouse-group` (off and on) failed: L5's corner clearance was skipped.
+        3. With "passed" judged by projection only, `npc-jagged-straight` failed: a row stayed 0.6 short of its slots and the group waited out its 20 s settle (#636).
+    5. CI: `build` and `paper-boot` (50 scenarios) green on `a30ac085` (runs 43988727914, 43988727937).
+    6. Known reds: none. Codex: at its usage limit (said on #64).
+5. **Decisions (DESIGN § 4.3).**
+    1. *Where the NPC is on its list.* Chosen: the service keeps the list and estimates the index itself, nearest in 3D, never back (`Trail`). Alternatives: (a) a `waypointIndex()` on `NpcMover` read from Citizens (a port change, and Citizens' navigator does not expose it cleanly); (b) the follower's line index (it knows the line, not the bridged waypoints).
+    2. *Handover distance.* Chosen: keep 4 blocks, now in 3D along the waypoints left. Alternatives: (a) hand out only at the list's end (a stop at every join); (b) a new key (not needed, prompt: no new key unless needed).
+    3. *What "onto another level" measures.* Chosen: the next waypoint the NPC walks to after a handover, on the list it was given. B1's measure stays in the report. With 3D handovers, a correct stretch going up the next flight is a flight above the NPC before it gets there, so B1's measure would count correct handovers. Alternatives: (a) B1's measure as the check (it would fail correct behaviour); (b) hand out only within 2.5 blocks of rise of the end to satisfy it (the stop at every join again).
+    4. *Joining at the feet.* Chosen: drop only waypoints already passed (beyond along the next step and no further from the next waypoint). Alternatives, both tried: (a) keep everything (failed `npc-jagged-straight-collision-on`); (b) cut ahead to the furthest straight walk within 3 blocks (skipped corner clearance, failed `npc-stairhouse-group`).
+    5. *Unbridgeable step.* Chosen: cut the list before it, walk to the cut, then a local leg to the waypoint after the step, then restart the line where the NPC stands. Only steps from the feet are checked when the NPC is on the ground (a jump or fall mid-air is not a gap). Alternatives: (a) a local leg at once from wherever the NPC is (it would skip the walkable part); (b) a replan (heavier, same result).
+    6. *A leader's fall.* Chosen: 1.75 blocks below the lower of its path point and the one before, path frozen up to 30 s, then as before. Alternatives: (a) the nearest line point instead of the path (on stacked flights the flight below is on the line); (b) no time limit (a leader that never comes back would freeze its group); (c) the engine's vertical speed (NaN on some engines).
+    7. *Lost followers in the replay.* Chosen: report-only with the cause and proposal on #673. Alternatives: (a) fail on them (the replay would stay red for a cause outside B2); (b) fix slot heights here (B4's scope, not small).
+6. **Out of scope, noted.**
+    1. The half-block stair follower failure (item 1.7): proposed for B4 on #673.
+    2. The line's own zigs on the jagged straight (corner clearance on a 3-wide road) are walked now. Before, a handover cut them. Not filed; noted for B4's look at waypoint heights and shapes.
+    3. #636 (a follower just short of its slot never settles) showed up again in the third regression; not changed here.
+7. **Blockers.** None.
+8. **At merge / what the developer must do.**
+    1. Nothing in `config.yml`, no migration.
+    2. The smoke test on `quarry-to-keep` with the group of 20 and the singles (plan § 4c.4 developer test) after B2 is merged, preferably after B3 and B4.
+    3. Review the decisions above, mainly 5.3 (what "onto another level" means now) and 5.7.
+9. **Notes for later links.**
+    1. B3: the climb still runs the crowd. A turn dropped by the guard without a fall stays report-only (`ClimbWatch.staleTurns`). B3 can make it a check.
+    2. B4: start from the #673 comment. The replay's lost followers are the check to turn on (`NpcSnapshotReplayScenario`, the comment at the lost check).
+    3. `npc-jagged-straight` (collision off) is sensitive to the leader's final approach because of #636: a group can wait 20 s for a follower 0.6 short of its slot, against the scenario's 30 s.
