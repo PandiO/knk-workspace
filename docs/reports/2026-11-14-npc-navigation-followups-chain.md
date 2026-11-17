@@ -1540,7 +1540,7 @@ _(Each link appends its block here when it finishes.)_
         1. `npc-replay-quarry-to-keep` fails on a lost follower, with their run-log lines in the reason, and reports where each stuck spell opened.
         2. `npc-stairhouse-climb` fails on a jump toward a waypoint on the flights and their entries.
 2. **Commits and heads.**
-    1. knk-plugin `claude/npc-movement-b4`: 8 commits, from `4f91ce8f` to head **`2a261289`** (base `next` `36ea2da0`).
+    1. knk-plugin `claude/npc-movement-b4`: 8 commits, from `4f91ce87` to head **`2a261289`** (base `next` `36ea2da0`).
     2. knk-workspace `claude/npc-movement-b4`: head **`73160c65`** (base `next` `a8e77d7d`).
 3. **PRs** (base `next`, not merged).
     1. PandiO/knk-plugin#65 (`Part of #673`).
