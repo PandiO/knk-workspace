@@ -1,6 +1,6 @@
 # NPC navigation in knk-plugin (Citizens adapter)
 
-**Status:** Current · **Last updated:** 2026-11-16 (§ 12 new: Phase 4c movement quality, links M1–M7, each behind its own key; § 10 and § 11 extended; PandiO/knk-workspace#658)
+**Status:** Current · **Last updated:** 2026-11-17 (§ 1 and § 12: the shaping classes and `NavWorld`, `NavPoint`, `NavGeometry` moved to `core/navigation/shape/`, PandiO/knk-workspace#704; before: 2026-11-16, § 12 new, PandiO/knk-workspace#658)
 **Checked against:** knk-plugin `next` `cc5262ff` (Phases 1–4, the Phase 1 follow-ups, Phase 4b: links L2 `11e07d64`,
 L3 `5dc88cfd`, L4 `deb7ff49`; Phase 4c: links M1–M7, last `cc5262ff`). None of it is on trunk yet.
 **Applies to:** knk-plugin `next` only. Everything below runs only with `npc.navigation.enabled: true` (default
@@ -36,6 +36,7 @@ and `/knk npc status` then says why NPC navigation is unavailable.
 | Layer | Package | What it holds | Engine types |
 |---|---|---|---|
 | Core | `knk-core` `core/npc/nav/` | The navigation service (state machine, planning queue, watchdog, retries), the route follower, hop planner, layered settings, access subjects and profiles, metrics, and the ports the engine implements | None (decision Q1: Bukkit-free, engine-neutral) |
+| Shape | `knk-core` `core/navigation/shape/` | Shared with the players' navigation (off-road design O11, PandiO/knk-workspace#704): the world port `NavWorld`, `NavPoint`, `NavGeometry` (body size, walls, headroom, floor helpers), `PlazaCrossing`, and the shaping code `Corridor`, `CorridorShaper`, `FreeWidth`, `PlazaLine`. Imports nothing from `core/npc/` (`ArchitectureGuardTest`) | None |
 | Groups | `knk-core` `core/npc/nav/group/` | Groups that plan once: leader, followers in formation slots, narrowing to fewer abreast and folding into a column where the way is narrow, followers that finish their trip | None |
 | Adapter | `knk-paper` `paper/npc/citizens/` | `CitizensBootstrap`, `CitizensNpcRuntime` (the K&K NPC registry), `CitizensNpcMover`, `KnkBlockExaminer` | The only package that names Citizens types |
 | Wiring | `knk-paper` `paper/npc/nav/` | `NpcNavigationModule` (start and stop, `/knk npc`), config, the Bukkit implementations of the ports, the test drivers, the event audit, run files, `NpcEntities` | Bukkit, no Citizens |
@@ -59,7 +60,7 @@ and `/knk npc status` then says why NPC navigation is unavailable.
 
 The core reaches the server only through these interfaces. All of them are called on the main thread unless noted.
 
-| Port (`core/npc/nav/`) | Paper implementation | What it answers |
+| Port (`core/npc/nav/`; `NavWorld` in `core/navigation/shape/`) | Paper implementation | What it answers |
 |---|---|---|
 | `NpcMover`, `NpcMoverFactory` | `CitizensNpcMover`, created by `CitizensBootstrap` | Spawn, walk a stretch of waypoints (`follow(waypoints, margin)`: Citizens moves on to the next waypoint only within `waypoint-margin`; local legs keep Citizens' own margin) or a local leg, stop, despawn. The listener's `stuck(mover, StuckKind)` says what made Citizens give up: `STATIONARY` (its stationary check) or `NO_PATH` (a path search that found nothing). The factory is absent without Citizens |
 | `RoadPlanner` | `NavigationService.planRoadFor` (road router with the subject's access policy) | The road part of a route on the K&K road graph, with the gate crossings on it; needs no loaded chunks (NAV-14) |
@@ -345,17 +346,23 @@ Every feature has its own key and is off by default; with all keys at their defa
 Decided: steering option A with add-on D. Open: option B (a short-horizon steering layer, plan 4c.4 item 8) and
 whether `collidable` turns on by default; both wait for the developer's tests.
 
+Package (PandiO/knk-workspace#704): `Corridor`, `CorridorShaper`, `FreeWidth` and `PlazaLine` live in the shared
+package `knk-core` `core/navigation/shape/`, beside `NavWorld`, `NavPoint`, `NavGeometry` and `PlazaCrossing` (formerly
+`RoadPlanner.PlazaCrossing`), so the players' trail can reuse them (off-road design O11). `LocalLegSearch` stays in
+`core/npc/nav/corridor/`. `HopPlanner.floor`, `feet`, `floorNear` and `CONTINUITY_RANGE` delegate to `NavGeometry`. The
+move changed no behaviour.
+
 ### 12.1 The corridor (M1, M2: `corridor-steering`)
 
-1. **`corridor/FreeWidth`** (M1): the free width across a line at a point, left and right, to a wall, post, full-block
+1. **`shape/FreeWidth`** (M1): the free width across a line at a point, left and right, to a wall, post, full-block
    step or drop, at most 4 a side. `/knk npc nav trace` writes it as a `# corridor:` line after each `# waypoints:`
    line; M3 and M4 judge widths with it.
-2. **`corridor/Corridor`**: the standable cells within `corridor-half-width` of a stretch's waypoints, flooded from the
+2. **`shape/Corridor`**: the standable cells within `corridor-half-width` of a stretch's waypoints, flooded from the
    line with floor continuity (a step of at most a block, the body's headroom) and in the regions the line passes;
    everything else in the strip is an obstacle. Each cell's clearance is its distance to the nearest obstacle (capped
    at 2), judged from its own floor, so stairs work. A line that passes one column on two levels gets a corridor per
    piece.
-3. **`corridor/CorridorShaper`**: samples the line every 0.5 block and moves each point square to the line to the
+3. **`shape/CorridorShaper`**: samples the line every 0.5 block and moves each point square to the line to the
    place nearest the road line that keeps `wall-clearance` (looking ±2 blocks along, so a notch doesn't pull it and a
    jutting piece is seen early), the most clearance where the road is narrower than twice it. A chokepoint (under 2
    blocks for at most 3 blocks, wider before and after) gets three pinned waypoints on its axis and the stretch the
@@ -395,11 +402,11 @@ group's rules deny):
 
 ### 12.4 Plaza lines (M5: `plaza-lines`)
 
-The road plan names every junction a route passes (`RoadPlanner.PlazaCrossing`, knk-paper
+The road plan names every junction a route passes (`shape/PlazaCrossing`, knk-paper
 `NavigationService.plazaCrossingsOf`), designed plazas with their `PlazaRadius`. Automatic plazas are measured on the
 NPC side: 16 rays from the junction over standable floor; a junction whose open radius is no more than
 `corridor-half-width` is a street junction and left alone. The stretch's corridor is widened by the plaza's footprint
-(at most `plaza-corridor-blocks`), and **`corridor/PlazaLine`** runs a bounded A* (at most 4,096 cells) from where the
+(at most `plaza-corridor-blocks`), and **`shape/PlazaLine`** runs a bounded A* (at most 4,096 cells) from where the
 line enters the footprint to where it leaves, string-pulls it and slides its bends to the tangent points round
 obstacles; regions the route line doesn't pass stay obstacles. The plaza's points are pinned. With `corridor-steering`
 off only the plaza part changes. A group's path and its leader take the line with the formation's half width plus

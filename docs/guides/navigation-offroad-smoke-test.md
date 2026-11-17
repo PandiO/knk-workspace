@@ -1,7 +1,7 @@
 # Off-road navigation and landmarks — smoke test
 
-**Status:** Draft from the design (2026-11-17); no steps run. Phase 0 (§ 1): 1 of 9 steps automated; the other phases not yet automated (the links tag them).
-**Last updated:** 2026-11-17 (§ 1 phase 0 updated to what link L1 built, #703: the measurement steps and the `/knk road status` lines); 2026-11-17 (draft from the design, phases 0, 1, 2, 3, 4, 5.1, 5.2, 6.1, 6.2, 7)
+**Status:** Draft from the design (2026-11-17); no steps run. Phase 0 (§ 1): 1 of 9 steps automated; phase 1 (§ 2): 4 of 4 steps automated; the other phases not yet automated (the links tag them).
+**Last updated:** 2026-11-17 (§ 2 phase 1 updated to what link L2 built, #704: every step automated); 2026-11-17 (§ 1 phase 0 updated to what link L1 built, #703: the measurement steps and the `/knk road status` lines); 2026-11-17 (draft from the design, phases 0, 1, 2, 3, 4, 5.1, 5.2, 6.1, 6.2, 7)
 **Design:** [specs/navigation-offroad/DESIGN.md](../specs/navigation-offroad/DESIGN.md) · **Issue:**
 [PandiO/knk-workspace#698](https://github.com/PandiO/knk-workspace/issues/698)
 
@@ -104,7 +104,10 @@ What `/knk road status` shows (staff, `knk.admin.road`), under the existing `wal
 
 ## 2. Phase 1: shared shaping package (#704, tier:2)
 
-*Draft from the design (2026-11-17); the link updates it to what was built and tags the automated steps.*
+*Built 2026-11-17 (link L2, knk-plugin `claude/offroad-shape-package`): `Corridor`, `CorridorShaper`, `FreeWidth`,
+`PlazaLine`, `NavWorld`, `NavPoint`, `NavGeometry` and `PlazaCrossing` (formerly `RoadPlanner.PlazaCrossing`) moved to
+`knk-core` `core/navigation/shape/`; no behaviour change. Every step is covered by automated tests; the manual check
+is one look at the startup log.*
 
 ### 2.0 Preconditions
 
@@ -117,10 +120,17 @@ What `/knk road status` shows (staff, `knk.admin.road`), under the existing `wal
 
 1. As staff, run the NPC movement scenes of the NPC navigation smoke test (stair house route, plaza crossing, corridor
    steering). **Expected:** NPCs walk the same lines as before the move; no errors in the console. (A26)
+   [automated: knk-core NPC unit tests, among them `CorridorTest`, `CorridorShaperTest`, `FreeWidthTest`,
+   `PlazaLineTest` (now in `core/navigation/shape`), `LocalLegSearchTest`, `RouteFollowerPlazaTest`; paper-boot
+   scenarios `npc-stairhouse-climb`, `npc-stairhouse-group`, `npc-plaza-line`, `npc-keeps-to-road-around-obstacle`,
+   `npc-replay-quarry-to-keep` and the other `npc-*` scenarios in CI's `paper-boot` job]
 2. As a player, run `/navigate` to a town gate with the off-road flags off. **Expected:** the trail looks as before.
-   (A26)
+   (A26) [automated: knk-paper `TrailRendererTest`, `NavigationServiceTest`; the player trail does not use the moved
+   classes yet]
 3. Check the server log at startup. **Expected:** no class-loading or missing-class errors from the navigation or NPC
-   packages. (A26)
+   packages. (A26) [automated: CI's `paper-boot` job starts the plugin on a Paper server and fails on such errors]
+4. Package rule. **Expected:** `core/navigation/shape` imports nothing from `core/npc`. (A26) [automated: knk-core
+   `ArchitectureGuardTest.sharedShapingPackageDoesNotUseNpcPackages`]
 
 ## 3. Phase 2: walk links and mixed routes (#705, tier:3)
 
