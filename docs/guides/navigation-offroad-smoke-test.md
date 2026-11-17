@@ -1,7 +1,7 @@
 # Off-road navigation and landmarks — smoke test
 
-**Status:** Draft from the design (2026-11-17); no steps run. Steps not yet automated (the links tag them).
-**Last updated:** 2026-11-17 (draft from the design, phases 0, 1, 2, 3, 4, 5.1, 5.2, 6.1, 6.2, 7)
+**Status:** Draft from the design (2026-11-17); no steps run. Phase 0 (§ 1): 1 of 9 steps automated; the other phases not yet automated (the links tag them).
+**Last updated:** 2026-11-17 (§ 1 phase 0 updated to what link L1 built, #703: the measurement steps and the `/knk road status` lines); 2026-11-17 (draft from the design, phases 0, 1, 2, 3, 4, 5.1, 5.2, 6.1, 6.2, 7)
 **Design:** [specs/navigation-offroad/DESIGN.md](../specs/navigation-offroad/DESIGN.md) · **Issue:**
 [PandiO/knk-workspace#698](https://github.com/PandiO/knk-workspace/issues/698)
 
@@ -18,10 +18,89 @@ Every phase is behind its own flag, off by default. With every flag off, navigat
 
 ## 1. Phase 0: measurements (#703, tier:1)
 
-*Draft from the design (2026-11-17); the link updates it to what was built.*
+*Updated by link L1 (2026-11-17) to what was built: the counters are on knk-plugin `claude/offroad-measurements`
+(PR into `next`). 1 of 9 steps automated (tagged); every step can still be run by hand; not run yet. The live run
+is the developer's: steps 2 to 8 fill the report
+[reports/2026-11-17-offroad-navigation-measurements.md](../reports/2026-11-17-offroad-navigation-measurements.md).
+Time: about 1 h 30 min for the whole run (two restarts included); step 1 alone 5 min.*
 
-Covered by the measurement report of #703. Quick pass: as staff, run `/knk road status` after one `/navigate` into the
-keep. **Expected:** the walk counters (searches, expansions, capture µs, search µs) show non-zero values. (A01)
+What `/knk road status` shows (staff, `knk.admin.road`), under the existing `walk paths:` line:
+
+1. `walk search:` searched requests since the last reset, then over the last 512 of them: found, no path, budget
+   (how many ended at `max-expansions` and at `max-length`), and `length-pruned` (searches that dropped steps at the
+   length cap even if they arrived: a higher `max-length` could give another path).
+2. `walk cost:` three lines with `max`, `p95` and `p50` of: search µs (the walk thread's search time) and queue µs
+   (the wait for a free walk thread, `max-concurrent-searches`); expansions and cells (cells touched, expanded or
+   not); capture µs (main-thread time spent extracting the request's chunks; cached chunks cost nothing), chunks
+   per request and wait ms (from the request to the capture being ready; chunks are captured 4 per tick).
+3. `walk recent:` the five newest requests, newest first, one line each: running number, outcome (and the cap that
+   ended it), straight distance, path length, expansions, cells, chunks (cached), capture µs, search µs.
+4. `/knk road status reset` clears these numbers (not the `walk paths:` outcome counters), so each scene is read on
+   its own. A request that was not captured (`not captured` in `walk paths:`: a chunk not loaded, or more chunks
+   than `max-chunks-per-request`) has no search and no line here.
+
+### 1.0 Preconditions
+
+1. Deployed: the plugin build from `next` with #703 on the dev server.
+2. Settings for run 1: `navigation.walk.*` as shipped (`max-expansions: 20000`, `max-length: 144`,
+   `max-chunks-per-request: 64`; merge the new key by hand, see the deploy notes) and `navigation.max-snap-distance: 48`.
+3. Accounts and data: a staff account with `knk.admin.road`; the five scenes of the measurement report § 2 with a
+   named `/navigate` destination at each target that resolves to a point: a Location, or a domain with `spawn`
+   (`/navigate <name> spawn`). `/navigate` takes no coordinates, and streets and regions are not walked to directly
+   (run 2 relies on direct mode). Write the start point and the destination of each scene in the report's § 2 table
+   first.
+4. Chunks: walk legs use loaded chunks only. For the open-country legs, load the whole box from start to target
+   (plus 16 blocks) before the run: `/forceload add <x1> <z1> <x2> <z2>` (at most 256 chunks per command; repeat
+   for a longer box), and `/forceload remove all` after the run.
+5. Optional: `spark` or `/tps` open in a second window, to note the server's tick time during the long captures.
+
+### 1.1 Steps
+
+1. [automated: knk-paper `RoadAdminCommandTest$Status`, `NavigationServiceTest#walkSearchesAreMeasuredForRoadStatusAndTheTrailIsUnchanged`]
+   Quick pass. As staff, stand 20 to 40 blocks from a named destination with no road between you and it, run
+   `/knk road status reset`, then `/navigate <destination>`, wait until the trail follows the ground (about one
+   second), and run `/knk road status`. **Expected:** `walk search: 1 searches since the last reset ...`, three
+   `walk cost:` lines with non-zero `search µs`, `expansions`, `cells`, `capture µs` (0 when every chunk came from
+   the cache) and `chunks`, and one `walk recent:` line `#<n> FOUND, <d> blocks straight, path <l>, ...`. The trail
+   is the same as before the change. (A01)
+2. Run 1, scene 1, keep (today's caps). Stand at the keep's entrance, `/knk road status reset`,
+   `/navigate <the destination in the keep's farthest room>`. Wait until the trail is shown or "No conventional path"
+   appears, stand still for 2 s, then `/knk road status`. Copy the first `walk recent:` line (the cold capture) and
+   the three `walk cost:` lines into the report, table 3.1, row "keep, run 1". Then walk the route to the end and run
+   `/knk road status` again: copy the `walk search:` line and the `walk cost:` lines (these now include the
+   recomputes on the way) into the same row's "whole walk" cells. **Expected:** numbers in every cell; when the
+   destination is more than 48 blocks away, today's route is road plus walk legs (each walk leg is one request).
+3. Run 1, scene 2, stair house. As in step 2, from the bottom of the spiral stair to a destination at its top. Copy
+   into row "stair house, run 1". **Expected:** as step 2; note `length-pruned` (the climb allowance is 5 blocks per
+   block of height).
+4. Run 1, scene 3, courtyard. As in step 2, from one side of the courtyard to a destination on the far side (the road
+   goes round). Copy into row "courtyard, run 1". **Expected:** as step 2.
+5. Run 1, scenes 4 and 5, open country 200 and 400 blocks. As in step 2, with destinations 200 and 400 blocks away
+   over open ground with a lake or a cliff in between. Copy into rows "200, run 1" and "400, run 1". **Expected:**
+   today's behaviour: the route uses the roads and only the legs at the ends are walk searches (at most 96 blocks).
+6. Run 2, option A (raised caps, DESIGN § 5.6). Stop the server, set in `config.yml`:
+
+   ```yaml
+   navigation:
+     max-snap-distance: 450        # measurement only: /navigate walks to anything within 450 blocks directly
+     walk:
+       max-expansions: 200000
+       max-length: 600
+       max-chunks-per-request: 512 # a 400-block diagonal leg + margin needs about 21 x 21 = 441 chunks
+   ```
+
+   and start it (every key needs a restart). Repeat steps 2 to 5 and copy into the "run 2" rows. **Expected:** each
+   scene is one walk search from start to target. Note in the report: the `wait ms` of the cold capture (441 chunks
+   at 4 per tick is about 5.5 s), the tick time while it runs, and whether a search ended at `max-expansions` or
+   `max-length` (the `walk recent:` line names the cap).
+7. Run 3, only if a run 2 search ended at `max-expansions`: set `max-expansions: 500000`, restart, repeat that scene
+   and copy into its "run 3" row. **Expected:** the search arrives, or the report says how far it got.
+8. Concurrency (optional, two staff accounts). With run 2's settings, both players `/navigate` to the 400-block
+   destination within the same second. **Expected:** the second request's `queue µs` in `walk recent:` is about the
+   first one's `search µs` (two walk threads: both run at once; a third waits).
+9. Restore the shipped settings: `max-snap-distance: 48`, `max-expansions: 20000`, `max-length: 144`,
+   `max-chunks-per-request: 64`; restart; `/forceload remove all`. Repeat step 1. **Expected:** step 1's result,
+   and a destination 60 blocks away is routed over the road again (direct mode only within 48 blocks).
 
 ## 2. Phase 1: shared shaping package (#704, tier:2)
 

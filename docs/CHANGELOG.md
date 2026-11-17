@@ -4,6 +4,24 @@ This is a human-readable record of capabilities merged into the V3 default branc
 
 ## Unreleased — on feature branches, not merged
 
+- **Off-road navigation: walk-search measurements in `/knk road status`** ([PandiO/knk-workspace#703](https://github.com/PandiO/knk-workspace/issues/703),
+  link L1 of the off-road navigation chain, phase 0). knk-plugin and knk-workspace branches `claude/offroad-measurements`
+  (PRs into `next`). Players see no change: routes and trails are the same; staff get numbers to set the off-road
+  budgets with.
+  1. Every walk search reports its expansions, cells touched, search time and the cap that ended it
+     (`max-expansions`, `max-length`), and whether steps were cut at the length cap; every chunk capture its chunks,
+     cache hits, main-thread time and wait.
+  2. `/knk road status` shows them under `walk paths:`: max, p95 and p50 over the last 512 searches and the five
+     newest requests. `/knk road status reset` clears them, so one scene can be read at a time.
+  3. The measurement steps are in the [off-road smoke test § 1](guides/navigation-offroad-smoke-test.md#1-phase-0-measurements-703-tier1);
+     the [report skeleton](reports/2026-11-17-offroad-navigation-measurements.md) waits for the developer's live run.
+  4. Admin steps: new key `navigation.walk.max-chunks-per-request` (default 64, the limit that was built in). Paste
+     under `navigation.walk:`, then restart:
+
+     ```yaml
+         max-chunks-per-request: 64
+     ```
+
 - **NPC navigation: a group's path stays on the walk on stacked flights** ([PandiO/knk-workspace#699](https://github.com/PandiO/knk-workspace/issues/699),
   link B5 of the NPC navigation follow-ups chain). knk-plugin and knk-workspace branches `claude/npc-movement-b5` (PRs
   into `next`). Only with `npc.navigation.enabled` on and `group-formation-keeping: elastic` or `plaza-lines` on (all
