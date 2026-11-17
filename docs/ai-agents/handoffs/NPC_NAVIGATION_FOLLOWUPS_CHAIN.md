@@ -66,7 +66,7 @@ component repos.
 | B3 | #672 | tier:2 | Crowd turns judged in 3D | knk-plugin, knk-workspace | `claude/npc-movement-b3` | `next` | `crowd-awareness` (off) | B4 merged; needed (report decision 39) |
 | B4 | #673 | tier:2 | Waypoints and group slots at real stair heights; jump detection by upward speed | knk-plugin, knk-workspace | `claude/npc-movement-b4` | `next` | `npc.navigation.enabled` (off) | B2 merged (report decision 38) |
 | B5 | #699 | tier:3 | Group followers under a leader one flight above: lanes, rejoin and slots in 3D (smoke test 2026-11-17) | knk-plugin, knk-workspace | `claude/npc-movement-b5` | `next` | `npc.navigation.enabled` (off) | B3 merged |
-| C1 | #700 | tier:3 | Off-road legs with the walk navigator's search; road join by reachability; snapshot box over from/to | knk-plugin, knk-workspace | `claude/npc-movement-c1` | `next` | `npc.navigation.enabled` (off) | B5 merged; the developer's navigator design read first (comment on #700) |
+| C1 | #700 | tier:3 | Off-road starts and ends with today's walk search within its caps, walked like stretches; road join by reachability; hops as fallback; snapshot box over from/to (long walks come from #698) | knk-plugin, knk-workspace | `claude/npc-movement-c1` | `next` | `npc.navigation.enabled` (off) | B5 merged and #698 phase 1 (move to `core/navigation/shape/`) merged (report decision 44) |
 | E1 | #701 | tier:2 | Exit rules checked while NPCs walk (recheck, trespass guard, follower lanes), not only when planned | knk-plugin, knk-workspace | `claude/npc-movement-e1` | `next` | `npc.navigation.enabled` (off) | C1 merged |
 
 ## 2. Gates

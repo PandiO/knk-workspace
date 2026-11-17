@@ -366,6 +366,14 @@ the configuration reference § 4.27), then restart. In test order:
     future, `idea`). (3) The developer is designing road graph and knk navigator improvements (walk legs, plaza
     navigation) in a separate session, implementation from 2026-11-18. C1 therefore uses the walk navigator through its
     entry points without changing its code, and the coordinator reads that design before C1 starts (comment on #700).
+44. **Order with the off-road navigation design #698 (developer decision 2026-11-17).** The coordinator had missed
+    #698's sessions board row (on the board since 14:11 UTC; a keyword search instead of a match by issue and files;
+    the board-fetch rule is being fixed on `claude/board-fetch-before-read`). #698's phase 1 moves the corridor code and
+    `NavWorld`, `NavPoint`, `NavGeometry` and `HopPlanner`'s floor helpers to `core/navigation/shape/`; its long walks
+    (clusters, O32) cover most of C1. Agreed order: B5 → #698 phase 1 → a narrowed C1 (today's walk search within its
+    caps, road join by reachability, hops as fallback) → E1. NPC use of #698's long walks moves into that design's v1.
+    Recorded on #698 and #700. Alternative: C1 as filed first (rejected: it would collide with the move and duplicate
+    the long walks).
 
 ## 4. Link blocks
 
