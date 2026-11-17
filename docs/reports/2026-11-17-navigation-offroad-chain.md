@@ -28,7 +28,7 @@ on `next` (Decided 2026-11-17).
 | Link | Issue | Status | Branch heads | PR | CI | How started |
 |---|---|---|---|---|---|---|
 | L1 Phase 0 measurements | #703 | Merged into next (2026-11-17); waits for the developer's live measurements and the filled report | knk-plugin `claude/offroad-measurements` `71a43bc1`; knk-workspace `claude/offroad-measurements` `2337d3a4` | [knk-plugin#68](https://github.com/PandiO/knk-plugin/pull/68) → `next` `04506d8c`, [#717](https://github.com/PandiO/knk-workspace/pull/717) → `next` `a6240f5d` | green (build, paper-boot on `71a43bc1`) | create_session `session_01R1w2Uub8CZ7NuvatVUifP7` (2026-11-17) |
-| L2 Phase 1 shared shaping package | #704 | Running (started 2026-11-17 22:12 from plugin `next` `04506d8c`) | `claude/offroad-shape-package` | — | — | create_session `session_01R1w2UwTnENVNKzfaXudBUh` (2026-11-17) |
+| L2 Phase 1 shared shaping package | #704 | In review (2026-11-17): PRs open, not merged | knk-plugin `claude/offroad-shape-package` `0d0cff84`; knk-workspace `claude/offroad-shape-package` `ef17bcc3` | [knk-plugin#69](https://github.com/PandiO/knk-plugin/pull/69), [#718](https://github.com/PandiO/knk-workspace/pull/718) | green (build, paper-boot on `0d0cff84`) | create_session `session_01R1w2UwTnENVNKzfaXudBUh` (2026-11-17) |
 | L3 Phase 6.1 trail corners | #710 | Not started (gate: L2 in `next`) | `claude/offroad-trail-corners` | — | — | — |
 | L4 Phase 6.2 anchored particles, winding back | #711 | Not started (gate: L3 in `next`) | `claude/offroad-trail-cursor` | — | — | — |
 | L5 Phase 2 walk links | #705 | Not started (gate: L1 done, L4 in `next`) | `claude/offroad-walk-links` | — | — | — |
@@ -161,3 +161,84 @@ _(Each link appends its block here when it finishes.)_
        (`~/.gradle/init.d/`, not committed) that points Maven Central at Google's mirror
        `https://maven-central.storage-download.googleapis.com/maven2/` fixed it.
     3. Walk legs use loaded chunks only; any live measurement of long legs needs `/forceload`.
+
+### 4.2 L2 — Phase 1: shared shaping package `core/navigation/shape` (#704)
+
+1. **Scope done.**
+    1. knk-plugin knk-core: `Corridor`, `CorridorShaper`, `FreeWidth`, `PlazaLine` (from `core/npc/nav/corridor/`) and
+       `NavWorld`, `NavPoint`, `NavGeometry` (from `core/npc/nav/`) moved with `git mv` to `core/navigation/shape/`;
+       `RoadPlanner.PlazaCrossing` became the top-level record `shape/PlazaCrossing`; imports rewritten everywhere
+       (121 files: 107 modified, 12 renames, 2 new, `PlazaCrossing` and the package description).
+    2. § 3.4 leftovers: `HopPlanner.floor`, `feet`, `floorNear` and `CONTINUITY_RANGE` live in `NavGeometry`;
+       `HopPlanner` delegates, so every NPC call site is unchanged and `NavGeometry` no longer imports `HopPlanner`.
+       `GridWorld` is a public test fixture in the shape test package, used by the four moved tests and by
+       `LocalLegSearchTest`.
+    3. `ArchitectureGuardTest.sharedShapingPackageDoesNotUseNpcPackages`: `core/navigation/shape` references nothing
+       from `core/npc` (A26). The shape package is also inside the existing Bukkit-free guard (`navigation`).
+    4. knk-workspace: `docs/architecture/npc-navigation.md` § 1 (a "Shape" layer row, the port table) and § 12 (package
+       note, `shape/…` paths); smoke test § 2 (what was built, 4 of 4 steps tagged automated, a new step 4 for the
+       package rule); DESIGN § 3.4.4 (the re-run import check); CHANGELOG (Unreleased).
+2. **Import check re-run on `next` `04506d8c` (prompt § 2.3), differences from `e69dba6`.**
+    1. The same 84 files import the moving classes (explicit or fully qualified imports) at both commits; no file was
+       added or dropped.
+    2. B1 to B4's `Trail`, `JumpDetector`, `crowd/CrowdControl`, `NpcSnapshotReplayScenario`,
+       `NpcStairhouseClimbScenario` and `ClimbWatch` already existed at `e69dba6`, so the design session's throwaway
+       check covered them. Of these the move changed `Trail` (same package as the primitives, now imports them),
+       `CrowdControl`, `ClimbWatch` and `NpcSnapshotReplayScenario`; `JumpDetector` and `NpcStairhouseClimbScenario`
+       name no moving class (they reach it through other NPC classes) and are unchanged.
+    3. Since `e69dba6` only B5 (`55ea7df3`) and L1 changed code; B5's `GroupPath.addShaped` added calls to
+       `NavGeometry.straightWalkable` (moved), `HopPlanner.surfaceNear` (stays in `HopPlanner`) and `HopPlanner.feet`
+       (now delegating). L1 touched no moving class.
+    4. The design session counted 120 files and 11 renames; this move has 121 files and 12 renames (the package
+       description of the new package is new; `GridWorld` and the four tests move as renames).
+3. **Commits and heads.** knk-plugin `claude/offroad-shape-package` at `0d0cff84` (1 commit, base `next` `04506d8c`);
+   knk-workspace `claude/offroad-shape-package` at `ef17bcc3` (1 commit, base `next` `a6240f5d`).
+4. **PRs.** [PandiO/knk-plugin#69](https://github.com/PandiO/knk-plugin/pull/69) (`Closes PandiO/knk-workspace#704`),
+   [PandiO/knk-workspace#718](https://github.com/PandiO/knk-workspace/pull/718) (`Part of`), base `next`. Not merged.
+5. **Tests, baseline → result.**
+    1. knk-plugin (`./gradlew build -x deployToDevServer`): baseline on `next` `04506d8c` knk-core 3 032, knk-paper
+       2 904 (18 skipped), knk-api-client 344 (2 skipped); result knk-core 3 033 (+1: the new guard test), knk-paper
+       2 904 (18 skipped), knk-api-client 344 (2 skipped); no failures. Per class the lists are the same apart from
+       the four moved test classes (`CorridorTest`, `CorridorShaperTest`, `FreeWidthTest`, `PlazaLineTest`), which
+       changed package only.
+    2. Paper-boot NPC scenarios: not run locally; relied on the PR's CI: `build` and `paper-boot` green on `0d0cff84` (both the push and the pull-request runs; `paper-boot` runs every `npc-*` scenario, 2026-11-17 22:41).
+    3. knk-workspace: docs only; no new relative links, anchors unchanged.
+    4. Known reds: none.
+    5. Codex: at its code-review usage limit on both PRs (its comments of 2026-11-17 22:22); finished without its
+       review (developer decision 2026-11-14), said so on both PRs. No findings to handle.
+6. **Decisions (DESIGN § 4.3).**
+    1. *`LocalLegSearch`.* Chosen: stays in `core/npc/nav/corridor/`, as O11 and § 3.4 say (NPC legs on the main
+       thread, uses `HopPlanner` and `LocalLeg`; moving it would pull NPC classes into the shared package or need a
+       new port). Alternatives: (a) move it and its `HopPlanner`/`LocalLeg` uses behind an interface; new code in a
+       no-behaviour-change link, and the player side has its own walk search; (b) move it with an import of
+       `core/npc`; breaks A26.
+    2. *Where the floor helpers go.* Chosen: into `NavGeometry` as O11 names them (`floor`, `feet`, `floorNear`,
+       `CONTINUITY_RANGE`), `HopPlanner` keeps delegating methods and its constant, so no call site changes and the
+       merge stays mechanical for the NPC chain. Alternatives: (a) move only `floorNear` and `CONTINUITY_RANGE` (the two
+       `NavGeometry` uses); `feet`/`floor` would then live where the player side cannot use them; (b) rewrite every
+       `HopPlanner.feet`/`floor` call site to `NavGeometry`; 43 more changed call sites in NPC files for no gain.
+    3. *Tests of the moved classes.* Chosen: `CorridorTest`, `CorridorShaperTest`, `FreeWidthTest`, `PlazaLineTest` and
+       `GridWorld` move to the shape test package (they test package-private parts of their classes);
+       `NavGeometrySurfaceTest` stays in the NPC test package because it is built on the NPC fixture `FakeNavWorld`.
+       Alternatives: (a) leave all tests in place; they would need the moved classes' package-private members made
+       public; (b) also move `NavGeometrySurfaceTest` and `FakeNavWorld`; `FakeNavWorld` serves 18 other NPC test files.
+    4. *The A26 check.* Chosen: a test method in the existing `ArchitectureGuardTest` (a plain source scan; the prompt
+       allows one where a package-rule test exists). Alternative: none; ArchUnit is not on the classpath and the
+       prompt rules out new infrastructure.
+    5. *Older docs naming the old paths.* Chosen: updated the living docs (architecture § 1 and § 12) and added
+       DESIGN § 3.4.4; left `docs/specs/npc-platform/IMPLEMENTATION_PLAN.md` (Phase 4c) as it is, because it is the
+       dated plan of what was built then, and DESIGN § 3.4.1 to 3.4.3 (the code check at `e69dba6`). Alternative:
+       rewrite the paths there too; it would falsify what those sections record.
+7. **Out of scope, noted.** None filed.
+8. **Blockers.** None.
+9. **At merge / what the developer must do.**
+    1. Merge knk-plugin#69 and #718 into `next` (the coordinator). No `config.yml` key, no migration, no admin step.
+    2. Smoke test § 2 is fully automated; on the next dev deploy, a glance at the startup log is enough.
+    3. Optionally comment `@codex review` on both PRs once the Codex limit resets.
+10. **Notes for later links.**
+    1. L3 (6.1) and the NPC chain's C1: the shared types are in `net.knightsandkings.knk.core.navigation.shape`;
+       `HopPlanner.feet`/`floor`/`floorNear` still work but `NavGeometry` holds them, so new code in the shape package
+       uses `NavGeometry`. `GridWorld` (shape test package, public) is the test world for corridor and shaping tests.
+    2. `ArchitectureGuardTest` fails as soon as a file in `core/navigation/shape` names `core.npc`; a `WalkTerrainNavWorld`
+       for the player side belongs in core outside `core/npc`.
+    3. The Google Maven Central mirror init script of L1's note 9.2 was used again here; the build ran without 429s.
