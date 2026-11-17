@@ -57,6 +57,7 @@ the configuration reference § 4.27), then restart. In test order:
 | B1 Evidence: snapshot command (B1a), whole stair house and replay (B1b) | #670 | B1a merged into next (2026-11-16, `0f039203`); B1b in review (PRs open, not merged) | B1a: knk-plugin `1d9e3209`, knk-workspace `383cd24d`; B1b: knk-plugin `6d81d59a`, knk-workspace `6684a815` (both merged `next` after B1a) | PandiO/knk-plugin#62, PandiO/knk-workspace#691 (B1a); PandiO/knk-plugin#63, PandiO/knk-workspace#692 (B1b) | #62: build and paper-boot green (both runs); #63: green on `99c27a40` (19 min), head `6d81d59a` pending; 50/50 scenarios locally in 15 min 23 s; Codex at its usage limit | create_session session_01R1w2Uvzb6xQBt2SwiokGoe (2026-11-16) |
 | B2 Stretch handover in 3D, appended, bridged from the feet | #671 | In review (PRs open, not merged) | knk-plugin `a30ac085`; knk-workspace `cbff95cc` | PandiO/knk-plugin#64, PandiO/knk-workspace#693 | `build` and `paper-boot` (50) green on `a30ac085` (runs 43988727914, 43988727937); 50/50 locally; Codex at its usage limit | create_session (2026-11-16) |
 | B4 Waypoints and group slots at the real stair heights; jumps by upward speed | #673 | In review (PRs open, not merged) | knk-plugin `2a261289`; knk-workspace `73160c65` | PandiO/knk-plugin#65, PandiO/knk-workspace#694 | `build` and `paper-boot` (50) green on `2a261289` (push run 44008785404, PR run 44008842004); 50/50; Codex at its usage limit | create_session (2026-11-17) |
+| B3 Crowd turns judged in 3D; the guard counts from the last entry | #672 | In review (PRs open, not merged) | knk-plugin `89eeb3eb`; knk-workspace `bcf7a3d9` | PandiO/knk-plugin#66, PandiO/knk-workspace#696 | `build` and `paper-boot` (50) green on `89eeb3eb` (push run 44017052199, PR run 44019311124); climb let go 0 in CI and three local runs; 27/27 `npc-*` locally; Codex at its usage limit | create_session session_01R1w2UwCdu4jcMQD9mXoQv8 (2026-11-17) |
 
 ## 3. Coordinator decisions
 
@@ -1621,3 +1622,80 @@ _(Each link appends its block here when it finishes.)_
     1. B3: the climb shows crowd guard releases without a fall (item 6.2), varying per run. `ClimbWatch.staleTurns` stays empty (no turn is dropped), so the release is the crowd's own `let go` counter (`crowd().overdue()`). Look at whether the holder of the turn stands on another flight in 3D when the guard fires. Make it a check once fixed.
     2. The replay's spell line (`... stuck at x y z, n blocks behind its slot at ... (d away)`) and the report's `stuck spells opened` show where a group stalls; real coordinates = scene coordinates − (scene origin) + (1391, 36, −559).
     3. The 4 spells at the start (1436 42 −512) happen while the group forms up from its spawn bunch; not looked into.
+
+### 4.20 B3 — Crowd turns judged in 3D; the 30 s guard counts from the last entry (#672)
+
+1. **Scope done** (prompt § 2, plan § 4c.8 item 3). Behind `npc.navigation.enabled` and `crowd-awareness` (both off by default); no new key.
+    1. **Diagnostic first** (knk-core `CrowdControl.releases()`, `longWaits()`; `ClimbWatch.releases`, `longWaits`). Each release by the guard records where the NPC let go stood, the place (its middle and its cells' feet levels) and every holder of a turn there in 3D. That covers height above the place, progress, distance across, whether it blocks, whether it counts as passed and which followers keep its turn. Each waiting ticket counts what held it (an oncoming holder, an earlier waiter or the spacing rule) with that NPC's position and level. The climb and the replay report both lines.
+    2. **Cause 1, 3D** (CI `paper-boot` 44012059768 on the unchanged rules, climb let go 6). All 6 releases were at flight 1's top (real 1410 54 −500, a one-cell place). The only holder was the group's leader `knk-sc-32000` on the landing above flight 2 (1409 59 −491 and 1409 60 −492), 5.5 to 6 blocks above the place. Horizontally its progress was −8.2, so the spacing rule ("the one ahead is a block into the place") read it as just inside the entry. Its followers in the place (1409 54 −499, 1410 55 −501) kept its turn. The singles going the same way waited behind a leader a flight up. No fall and no oncoming NPC was involved.
+    3. **Fix 1: a place has a floor** (`CrowdControl.Place.levelGap`, `LEVEL_GAP` 1.5). The floor is flat, or a flight's slope fitted to the cells' feet levels along the axis (at most 1 per block). Before and after the cells the band spans the end's level and the slope carried on for up to 4 blocks, so landings and the flight's own steps count. Feet 1.5 or more off the band are on another level: a step (1) or a jump (1.25) still counts, a floor stacked 3 or more blocks away does not.
+        1. A holder on another level has passed: its turn ends unless a follower on the place's floor still keeps it.
+        2. A holder on another level never stops a waiter of its own direction (spacing). It stops one of the other direction only while a follower of its turn is still in the place.
+        3. A follower on another level keeps no turn.
+    4. **Cause 2, not 3D** (CI 44014280706 on `a775efc4` and locally: let go 3, the same three). Every NPC that held them stood on the place's floor (levels −0.5 to +1.0): the 18 singles queued in single file at the same one-wide top, each going once the one ahead was a block into the place. The queue drained at about 2 s per NPC, within M4's own bound of 3 s per NPC that went first. The last three passed 30 s since their arrival while it kept moving.
+    5. **Fix 2: the guard counts from the last entry.** A queue lets an NPC go after 30 s in which nobody entered the place (from its arrival or the last entry, whichever is later). A place nobody enters still lets the queue go after 30 s. `longest wait` stays counted from arrival. Log line: "… waited 30 s at a narrow place without the queue moving: goes".
+    6. **Check.** `npc-stairhouse-climb` fails on any NPC let go by the guard, with why.
+2. **Commits and heads.**
+    1. knk-plugin `claude/npc-movement-b3`: 3 commits, `3e7d70bb` (diagnostic), `a775efc4` (3D), head **`89eeb3eb`** (guard; base `next` `a3f0ebae`).
+    2. knk-workspace `claude/npc-movement-b3`: head **`bcf7a3d9`** (base `next` `0664b1ee`).
+3. **PRs** (base `next`, not merged).
+    1. PandiO/knk-plugin#66 (`Part of #672`).
+    2. PandiO/knk-workspace#696 (`Closes #672`).
+4. **Tests, baseline → result.**
+    1. `./gradlew build -x deployToDevServer`.
+        1. Baseline on `next` `a3f0ebae`: core 3004, api-client 344 (2 skipped), paper 2891 (18 skipped).
+        2. Result on `89eeb3eb`: core 3011 (+7), api-client 344, paper 2891. 0 failures.
+        3. New knk-core `CrowdControlTest` cases (+7):
+            1. A queue that moves is no deadlock (and the guard still fires once nothing moves for 30 s).
+            2. A holder a floor above or under the place has left its turn.
+            3. One that fell under it too.
+            4. A step or a jump keeps the turn.
+            5. No queue behind a leader on the floor above (the oncoming one still waits while its follower is inside).
+            6. A follower a floor up keeps no turn.
+            7. A flight's place rises with its steps; flights 3 and 8 blocks above are another level.
+
+            The guard test also checks the release record.
+    2. Scenarios.
+        1. CI `paper-boot` on `89eeb3eb`: push run 44017052199 50/50, and the PR run 44019311124 50/50 (climb let go 0, 76.2 s).
+        2. Local: Paper 26.3 b205 with Citizens b4269 (Citizens loaded its libraries this time). The climb alone three times, and all 27 `npc-*` scenarios once (27/27).
+    3. **Climb, queue let go by the 30 s guard.**
+        1. B4's six runs: 0, 3, 3, 3, 0 and 6.
+        2. Diagnostic on the unchanged rules: 6 (cause 1).
+        3. Fix 1 only: 3 (cause 2), in CI and locally.
+        4. **Final head: 0** (CI push run and three local runs).
+        5. Longest queue 18, longest wait 30.0 → 36.0 s at 2.1 s per NPC ahead.
+        6. Falls, handovers onto another level, jumps toward a waypoint, stuck spells and lost followers stay 0. The leader arrives in 76.2 s; 173 engine stair hops (report only, B4 decision 5.5).
+        7. The local runs give the same numbers each time (76.2 s, 18, 36.0 s).
+    4. **Replay `npc-replay-quarry-to-keep`: unchanged.** The diagnostic run on the old rules and the local run on the final code give the same numbers: nothing let go, longest queue 1, 0 lost, 0 falls. The group's 6 stuck spells on the stored settings (street start and flight 5, as B4) are unchanged. So are its jumps toward a waypoint (report only): 3 on flight 2 with the stored settings, 56 at the hall entry with the smoke test's (#695).
+    5. M4's crowd scenarios pass (`npc-doorway-crowd` and its collision-on twin 1.5 s per NPC ahead, `npc-door-column` 2.0 s, nothing let go).
+    6. Known reds: none. Codex: at its usage limit on both PRs (said on each).
+5. **Decisions (DESIGN § 4.3).**
+    1. *How "the place's own level" is judged.* Chosen: a floor fitted to the place's cells along its axis (flat or a flight's slope), with a band from the ends' level to the slope carried on 4 blocks, and 1.5 blocks off it as another level. Alternatives:
+        1. (a) A fixed band around the place's first cell (`cy`). Wrong on a flight: the far end of a 4-step place is 3 blocks up.
+        2. (b) 3D distance to the nearest cell. A holder on the flight beside a hairpin landing is close in 3D but on its own level; a queue spot below the flight is far.
+        3. (c) Interpolating the route's own waypoint heights. The crowd code has no route, only the NPC's way ahead.
+    2. *`LEVEL_GAP` 1.5.* Chosen: a step (1) and a jump (1.25) count, a floor stacked 3 or more blocks away does not. Alternatives:
+        1. (a) 1.0 (a jump on a stair would read as off the floor and end the turn).
+        2. (b) 2.5 (the climb's level measure). A flight 3 blocks over a narrow passage would still count.
+    3. *A holder off the floor whose followers are in the place.* Chosen: its turn is kept for them (they are the column), but it stops nobody of its own direction. Alternatives:
+        1. (a) Release it at once. Oncoming NPCs would meet its followers in the place.
+        2. (b) Keep the old behaviour. That is cause 1.
+    4. *Cause 2: the guard measured from the last entry.* Chosen: the 30 s (developer decision, 4c.4 decision 3) is kept and counted while the queue does not move, which is what a deadlock guard is for. The M4 decision text is annotated, not rewritten. Alternatives:
+        1. (a) A longer `MAX_WAIT_TICKS` (60 s). It only moves the limit: a longer queue fails again, and a real deadlock waits longer.
+        2. (b) Single-file entry: go once the one ahead is a block ahead of you, not a block into the place. It changes the developer's turn rule, and throughput is not the fault: 2.1 s per NPC is within M4's 3 s bound.
+        3. (c) Propose a follow-up instead. The prompt says to fix it here when it is in the crowd code.
+    5. *Waiters off the floor.* Chosen: not judged by level (unchanged). Alternative:
+        1. (a) Drop a waiter's ticket when it leaves the floor. A long queue's spots lie on the steps below the place, so that would drop real waiters (known limit, plan 4c.8 item 3.7.2).
+    6. *Diagnostics kept in production code.* Chosen: the release and long-wait records stay (20 each, cleared with the counts, read by the scenarios). Alternative:
+        1. (a) Remove them after the fix. The next guard release would again come without a cause.
+6. **Out of scope, noted.**
+    1. The replay's 3 jumps toward a waypoint on flight 2 (1415 57 −494, 1414 56 −498) with the stored settings are there before and after this link. Report only; noted on #695, which covers the hall entry's 56 with the smoke test's settings.
+    2. Docs follow-ups for the docs session: `docs/architecture/npc-navigation.md` (a place's floor, the guard from the last entry).
+7. **Blockers.** None.
+8. **At merge / what the developer must do.**
+    1. Nothing in `config.yml`, no migration.
+    2. The smoke test on `quarry-to-keep` (plan § 4c.4) after B3, with `crowd-awareness` on. Watch the crowd at flight 1's top (1410 54 −500): a long single file drains without "… without the queue moving: goes" lines.
+    3. Review decision 5.4 (the guard counted from the last entry changes how a developer-decided rule is read) and 5.2.
+9. **Notes for later links.**
+    1. `why the guard let them go (B3)` and `waits of 10 s or more (B3)` in the climb and replay reports name every holder and blocker in 3D. Use them before guessing at a crowd fault.
+    2. Local scenario runs worked in this container (Citizens' libraries loaded). `tools/paper-boot/boot-test.sh` with `knk scenario run <name>` (a local copy that replaces `run all`) runs one scenario in about 4 minutes; `npc-*` runs 27 in about 12.
