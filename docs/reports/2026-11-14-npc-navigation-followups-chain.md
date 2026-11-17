@@ -58,6 +58,7 @@ the configuration reference § 4.27), then restart. In test order:
 | B2 Stretch handover in 3D, appended, bridged from the feet | #671 | In review (PRs open, not merged) | knk-plugin `a30ac085`; knk-workspace `cbff95cc` | PandiO/knk-plugin#64, PandiO/knk-workspace#693 | `build` and `paper-boot` (50) green on `a30ac085` (runs 43988727914, 43988727937); 50/50 locally; Codex at its usage limit | create_session (2026-11-16) |
 | B4 Waypoints and group slots at the real stair heights; jumps by upward speed | #673 | In review (PRs open, not merged) | knk-plugin `2a261289`; knk-workspace `73160c65` | PandiO/knk-plugin#65, PandiO/knk-workspace#694 | `build` and `paper-boot` (50) green on `2a261289` (push run 44008785404, PR run 44008842004); 50/50; Codex at its usage limit | create_session (2026-11-17) |
 | B3 Crowd turns judged in 3D; the guard counts from the last entry | #672 | In review (PRs open, not merged) | knk-plugin `89eeb3eb`; knk-workspace `bcf7a3d9` | PandiO/knk-plugin#66, PandiO/knk-workspace#696 | `build` and `paper-boot` (50) green on `89eeb3eb` (push run 44017052199, PR run 44019311124); climb let go 0 in CI and three local runs; 27/27 `npc-*` locally; Codex at its usage limit | create_session session_01R1w2UwCdu4jcMQD9mXoQv8 (2026-11-17) |
+| B5 Group followers under a leader a flight above: shaped path kept on the walk | #699 | In review (PRs open, not merged) | knk-plugin `6b186840`; knk-workspace `33add9f8` | PandiO/knk-plugin#67, PandiO/knk-workspace#716 | `build` and `paper-boot` (50) green on `6b186840` (push and PR runs); docs no CI; Codex at its usage limit | create_session session_01R1w2UvW8pwfjEAwo5hVKp1 (2026-11-17) |
 
 ## 3. Coordinator decisions
 
@@ -1739,3 +1740,52 @@ _(Each link appends its block here when it finishes.)_
 9. **Notes for later links.**
     1. `why the guard let them go (B3)` and `waits of 10 s or more (B3)` in the climb and replay reports name every holder and blocker in 3D. Use them before guessing at a crowd fault.
     2. Local scenario runs worked in this container (Citizens' libraries loaded). `tools/paper-boot/boot-test.sh` with `knk scenario run <name>` (a local copy that replaces `run all`) runs one scenario in about 4 minutes; `npc-*` runs 27 in about 12.
+
+### 4.21 B5 — A group's shaped path kept on the walk on stacked flights (#699)
+
+1. **Scope done** (prompt § 1, sub-issue #699). Behind `npc.navigation.enabled` (off by default), and only with `group-formation-keeping: elastic` or `plaza-lines`; no new key.
+    1. **Reproduced on the real blocks.** `npc-replay-quarry-to-keep` now replays the snapshot of 2026-11-17 19:34 (with the gate doors). With the stored settings (the developer's: `elastic`, `crowd-awareness` on, `collidable` off) its group of 20 walks on to the route's end in the keep (1421 85 −516), as the developer's did, so the leader goes on past the flights while the rear ranks still climb them. On `next` every one of the 19 followers left its lane at flight 5's top (1410 74 −537) and took an own leg back: 21 in all. The scenario passed before only because it did not look.
+    2. **Cause.** An `elastic` group (or one with `plaza-lines`) builds its path from corridor-shaped line points (`NavGroup.shapedLinePoint`, the route line pulled straight in 2D). A dump of the group path: from mid flight 5 (1410.5 72 −541.5) its next point was the far end of the landing above (1415 74 −536.4); the flight's top and the landing were missing. A log of each shaped point against the line's own point showed why: two shaped points lay over the stairwell (no floor near the path's last floor, so `GroupPath.addSnapped` repeated the point before), and the next eight all projected onto the landing's far end. A follower at the flight's top was judged against a path point 5 blocks across the stairwell (more than its lane allows), so it was off its lane. Where the shaped line lands on the hall floor beside a flight (the hall at feet 66 under flight 4's first steps), the path and the lanes run a level below the flight: the developer's step 3 log has slots at 1417 66 −538 there.
+    3. **How the leader got a flight above.** It did not walk wrong: the leader went on along its line while its followers, judged against the broken path, stood or walked back down. With `group-regroup-blocks` 24 it waited on the passage right above flight 4 for a follower 24 or more blocks behind (along the path), timed out after 30 s, walked a tick and waited again, for 4 minutes.
+    4. **Fix** (knk-core `GroupPath.addShaped`, used by `NavGroup.trackLeader`). A shaped point goes into the group path only where it has a floor near the path's last point, at most a block above or below the floor of the line's own point, and a straight walk (`NavGeometry.straightWalkable`, the body's width) leads to it from the path's last point. Otherwise the line's own point goes in (`addSnapped`, as without shaping). Generic: no coordinates, any stacked stair, landing or ramp.
+    5. **Checks.** The replay's group fails on an own leg back from off the lane on the flights and landings (`NpcMovementScene.climbPlaceAt` > 0) and on a looping follower (three or more own legs back from one block), and reports both (`followers off their lane on the stair house (B5)`, `looping followers (B5)`).
+    6. **Snapshot.** `trim_snapshot.py IN OUT 1391 36 -559 1454 96 -480`, as B1 (30 chunks, 370,602 bytes); nothing else changed. `SnapshotReplayTest` updated (plugin `e69dba6a`, 101 line points, gate doors recorded).
+2. **Commits and heads.**
+    1. knk-plugin `claude/npc-movement-b5` (base `next` `e69dba6a`): `938b775e` (fix and unit tests), `d402d865` (replay), `6b186840` (test update), head **`6b186840`**.
+    2. knk-workspace `claude/npc-movement-b5` (base `next` `35005d6b`): head **`33add9f8`**.
+3. **PRs** (base `next`, not merged).
+    1. PandiO/knk-plugin#67 (`Part of #699`).
+    2. PandiO/knk-workspace#716 (`Closes #699`).
+4. **Tests, baseline → result.**
+    1. `./gradlew build -x deployToDevServer`: baseline on `next` `e69dba6a` core 3011, api-client 344 (2 skipped), paper 2891 (18 skipped); result core 3015 (+4), api-client 344, paper 2891; 0 failures.
+    2. New: `GroupPathTest` +4 (a shaped point over the stairwell gives way to the line's own point; one on the hall floor two blocks under the step gives way; one across a void on the same floor gives way; one on one floor with a straight walk is kept). Three fail on the old code.
+    3. Scenarios, locally (Paper 26.3 b205, Citizens b4269, `--npc-navigation`).
+        1. Old core with the new checks: `npc-replay-quarry-to-keep` **fails** (21 own legs back from off the lane, all at flight 5's top).
+        2. This branch: **50/50** in 17 min 16 s.
+        3. Replay group to the route's end, stored settings: off the lane 21 → 0, looping 0, lost 0, leader 123.8 → 105.5 s, stuck spells 4 → 4 (on the street while it forms up, as since B4), jumps toward a waypoint 4 → 4, falls 0.
+        4. Replay group, the 2026-11-16 smoke settings (`levels`): 0 off the lane, 0 lost, 0 stuck, 70.5 s; 63 jumps at the hall entry (#695, report only; 56 in B4's run).
+        5. `npc-stairhouse-climb` unchanged (76.2 s, 0 falls, 0 let go, 0 stuck, 0 lost).
+    4. CI: knk-plugin#67 on `6b186840`: `build` and `paper-boot` (50 scenarios) green on the push run (44178102216, 44178102371) and the PR run (44178163338, 44178163361). knk-workspace has no docs CI.
+    5. Codex: at its code-review usage limit on both PRs (said on each); finished without its review.
+5. **Decisions (DESIGN § 4.3).**
+    1. *Where to fix.* Chosen: where shaped points enter the group path (`GroupPath.addShaped`), so lanes, slots, rejoin targets and the off-lane judgement all see a path on the walk. Alternatives: (a) make the off-lane check and the follower's place on the path 3D-aware (they were right: the path was wrong); (b) turn shaping off for groups on stairs (loses corridor steering's wall clearance for groups everywhere a flight is near); (c) fix `CorridorShaper` to shape in 3D (the shaper serves the leader alone too, which passes; larger and riskier).
+    2. *Which shaped points stay.* Chosen: a floor near the path's last point, within a block of the line's own point's floor, and a straight walk from the path's last point. Alternatives: (a) the very same floor block as the line's own point (tried: refused shaped points on the hall-entry stair, jumps toward a waypoint 4 → 35, stuck spells 4 → 15); (b) only "has a floor" (keeps the jump across the stairwell to the landing's far end, which has a floor).
+    3. *A refused shaped point.* Chosen: the line's own point, snapped as without shaping. Alternative: (a) repeat the point before (today's fallback; that is what skipped the flight).
+    4. *Reproduction.* Chosen: the replay's group to the route's end with the stored settings, from the same street start. Alternatives: (a) start further back, past the south gate's plaza, like the developer's group (tried: the fake road's there-and-back loop is walked the wrong way round from there, a harness quirk, known limit 4c.8 item 4.7.4); (b) `npc-stairhouse-climb` (its schematic has no hall floor under flights 4 and 5).
+    5. *The check.* Chosen: fail on any own leg back from off the lane on the flights and landings, and on three or more own legs back from one block anywhere (looping). Alternatives: (a) only looping (on `next` the replay has 21 off-lane legs but no loop, so it would pass); (b) any own leg back anywhere (the street's forming-up spells would fail it).
+    6. *Group walk length.* Chosen: `GROUP_TICKS` 240 s for both configurations (the walk to the keep takes 105–124 s). Alternative: (a) a separate walk (3 more minutes of CI).
+    7. *Evidence files.* Chosen: not copied into test resources (no test reads them; they stay on `evidence/smoke-2026-11-16`). Alternative: (a) copy the 2026-11-17 traces with `git add -f`, as B1 did for its traces (B1's were the climb's line).
+6. **Out of scope, noted.**
+    1. Lanes beside a flight's first step can still lie on a floor a block lower (the rule allows a block); plan 4c.8 item 4.7.2. No run showed it after the fix.
+    2. A follower's place on the path is searched forward only (`NavGroup.WINDOW`); one that ends up a flight below its place is still sent an own leg back (item 4.7.3).
+    3. The replay's fake road walks the there-and-back loop the wrong way from a start past the south gate's plaza (item 4.7.4); test harness only.
+    4. #695 (jumps at the hall entry with `levels`): 63 in this run, unchanged by B5.
+    5. Docs follow-up for the docs session: `docs/architecture/npc-navigation.md`, the shaped group path rule.
+7. **Blockers.** None.
+8. **At merge / what the developer must do.**
+    1. Nothing in `config.yml`, no migration.
+    2. The retest: `docs/guides/npc-movement-smoke-test.md`, section "Link B5" (smoke test of 2026-11-17 steps 2 and 3 again, with the same keys).
+    3. Review decisions 5.1 and 5.2.
+9. **Notes for later links.**
+    1. The replay's group now walks to the route's end; its report lines `followers off their lane on the stair house (B5)` and `looping followers (B5)` show where a group's followers leave the path.
+    2. C1 (off-road legs): the snapshot box reaches y 96; the replay window ends at z −480 and x 1454 (a scene is at most 64 wide along x). A start north of the house needs the harness's loop fixed first (item 6.3).
