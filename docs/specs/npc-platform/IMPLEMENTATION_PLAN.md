@@ -877,12 +877,16 @@ B4 ([#673](https://github.com/PandiO/knk-workspace/issues/673)) puts waypoints a
        stair under a low flight), `NavGroupTest` +1 (slots on a half-block stair sent at the slab's top). knk-paper:
        `BukkitNavWorldSurfaceTest` (6). Scenarios: `npc-replay-quarry-to-keep` fails on a lost follower;
        `npc-stairhouse-climb` fails on a jump toward a waypoint on the flights and their entries.
-    8. **Before (B2, `next` `36ea2da0`) → after** (CI `paper-boot`, Paper 26.3 b205 with Citizens b4269):
-       `npc-replay-quarry-to-keep`, group of 20, stored settings: lost 3 → 0, stuck spells 26 → 4, the leader arrives in 70.8 s;
-       smoke test's settings: 0 lost and 0 stuck spells both times. `npc-stairhouse-climb`: jumps toward a waypoint on
-       the flights and their entries 0 (B4's first run, slabs at their surface only: 328 jumps there, all kinds;
-       with stairs at their step: 84, every one of them the engine's own stair hop); falls,
-       handovers onto another level, stuck spells and lost followers stay 0; the leader arrives in 100.7 → 78.0 s.
+    8. **Before (B2, `next` `36ea2da0`) → after** (CI `paper-boot` on the final head `2a261289` and the run before it,
+       Paper 26.3 b205 with Citizens b4269; 50/50 both times):
+        1. `npc-replay-quarry-to-keep`, group of 20, stored settings: lost 3 → 0, stuck spells 26 → 4 and 6. They
+           opened at the start on the street (1436 42 −512, while the group forms up) and on flight 5's loop, 0.96
+           blocks from the slot's point. None is a crowd turn (longest queue 1, nothing let go). With the smoke test's
+           settings: 0 lost and 0 stuck spells.
+        2. `npc-stairhouse-climb`: jumps toward a waypoint on the flights and their entries 0. B4's first run, with slabs
+           at their surface only, counted 328 jumps there of all kinds; with stairs at their step, 84, every one of
+           them the engine's own stair hop. Falls, handovers onto another level, stuck spells and lost followers stay
+           0. The leader arrives in 100.7 → 67.0 to 78.0 s.
     9. **Known limits:**
         1. **The engine's stair hops stay.** Minecraft's move control also jumps whenever the block at the feet has a
            collision top above them, which is the case on a stair's step under its upper half. No waypoint height
@@ -890,6 +894,12 @@ B4 ([#673](https://github.com/PandiO/knk-workspace/issues/673)) puts waypoints a
         2. Engine local legs (`walkTo`, Citizens' own path search) keep Citizens' block-height nodes.
         3. The settled rule applies once the leader's trip has ended. While the leader walks, a follower beside its
            slot on a looping path is still judged along the path.
+        4. With the smoke test's settings (`levels`, spacing 2.0), the replay's group still jumps toward a waypoint
+           at the hall entry's stair (1412 50 −495): 56 in the last run, report only. The cause is not established
+           (a trace there is needed); followed up separately.
+        5. The climb's crowd: the 30 s guard let 0 to 6 queues go per run, without a fall and with no turn dropped
+           (longest queue 18, longest wait 30 s). That is B3's case (crowd turns judged in 3D,
+           [#672](https://github.com/PandiO/knk-workspace/issues/672)).
 
 ## Phase 5 — NPC access identity (web-api, plugin, web-app)
 

@@ -18,7 +18,7 @@ This is a human-readable record of capabilities merged into the V3 default branc
   5. `/knk npc nav trace` marks `JUMP` by a jump's upward speed, not by any rise over 0.2 blocks: a step up a slab or
      a stair is no longer a jump.
   6. Tests: `npc-replay-quarry-to-keep` now fails on a lost follower: the group of 20 with the stored settings arrives
-     with 0 lost (B2: 3) and 4 stuck spells (B2: 26). `npc-stairhouse-climb` fails on a jump toward a waypoint on the
+     with 0 lost (B2: 3) and 4 to 6 stuck spells (B2: 26). `npc-stairhouse-climb` fails on a jump toward a waypoint on the
      flights and their entries: 0. Both report the engine's own hops off a stair's step separately (Minecraft's move
      control hops whenever the block at the feet reaches above them; no waypoint height removes those).
 
