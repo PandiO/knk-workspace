@@ -896,7 +896,7 @@ B4 ([#673](https://github.com/PandiO/knk-workspace/issues/673)) puts waypoints a
            slot on a looping path is still judged along the path.
         4. With the smoke test's settings (`levels`, spacing 2.0), the replay's group still jumps toward a waypoint
            at the hall entry's stair (1412 50 −495): 56 in the last run, report only. The cause is not established
-           (a trace there is needed); followed up separately.
+           (a trace there is needed); followed up on [#695](https://github.com/PandiO/knk-workspace/issues/695).
         5. The climb's crowd: the 30 s guard let 0 to 6 queues go per run, without a fall and with no turn dropped
            (longest queue 18, longest wait 30 s). That is B3's case (crowd turns judged in 3D,
            [#672](https://github.com/PandiO/knk-workspace/issues/672)).
