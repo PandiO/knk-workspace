@@ -29,7 +29,7 @@ on `next` (Decided 2026-11-17).
 |---|---|---|---|---|---|---|
 | L1 Phase 0 measurements | #703 | Merged into next (2026-11-17); waits for the developer's live measurements and the filled report | knk-plugin `claude/offroad-measurements` `71a43bc1`; knk-workspace `claude/offroad-measurements` `2337d3a4` | [knk-plugin#68](https://github.com/PandiO/knk-plugin/pull/68) → `next` `04506d8c`, [#717](https://github.com/PandiO/knk-workspace/pull/717) → `next` `a6240f5d` | green (build, paper-boot on `71a43bc1`) | create_session `session_01R1w2Uub8CZ7NuvatVUifP7` (2026-11-17) |
 | L2 Phase 1 shared shaping package | #704 | Merged into next (2026-11-17) | knk-plugin `claude/offroad-shape-package` `0d0cff84`; knk-workspace `claude/offroad-shape-package` `ef17bcc3` | [knk-plugin#69](https://github.com/PandiO/knk-plugin/pull/69) → `next` `c45c16bb`, [#718](https://github.com/PandiO/knk-workspace/pull/718) → `next` `d8ebd9f4` | green (build, paper-boot) | create_session `session_01R1w2UwTnENVNKzfaXudBUh` (2026-11-17) |
-| L3 Phase 6.1 trail corners | #710 | Running (started 2026-11-17 23:05 from plugin `next` `c45c16bb`) | `claude/offroad-trail-corners` | — | — | create_session `session_01R1w2Uv9tRTPyjZsFJNWGec` (2026-11-17) |
+| L3 Phase 6.1 trail corners | #710 | In review (2026-11-17): PRs open, not merged; waits for the developer's live test (tier:3) | knk-plugin `claude/offroad-trail-corners` `9dd3ee5f`; knk-workspace `claude/offroad-trail-corners` `daffbc1d` | [knk-plugin#70](https://github.com/PandiO/knk-plugin/pull/70), [#719](https://github.com/PandiO/knk-workspace/pull/719) | running at report time (build, paper-boot on `9dd3ee5f`); local build and a local paper-boot run of the new scenario green | create_session `session_01R1w2Uv9tRTPyjZsFJNWGec` (2026-11-17) |
 | L4 Phase 6.2 anchored particles, winding back | #711 | Not started (gate: L3 in `next`) | `claude/offroad-trail-cursor` | — | — | — |
 | L5 Phase 2 walk links | #705 | Not started (gate: L1 done, L4 in `next`) | `claude/offroad-walk-links` | — | — | — |
 | L6 Phase 3 hierarchical walk search | #706 | Not started (gate: L5 in `next`; O32 question first if L1 says option A fits) | `claude/offroad-hierarchical` | — | — | — |
@@ -257,3 +257,125 @@ _(Each link appends its block here when it finishes.)_
     2. `ArchitectureGuardTest` fails as soon as a file in `core/navigation/shape` names `core.npc`; a `WalkTerrainNavWorld`
        for the player side belongs in core outside `core/npc`.
     3. The Google Maven Central mirror init script of L1's note 9.2 was used again here; the build ran without 429s.
+
+### 4.3 L3 — Phase 6.1: walk-trail corners, clearance cost, shaping and curve (#710)
+
+1. **Scope done.** Everything is behind `navigation.guidance-v2`, off by default.
+    1. knk-core `core/roads/walk/`:
+        1. `MovementProfile` gets `clearanceCost` (default 0) and `wallClearance` (default 0.8); the old constructors keep them.
+        2. `WalkClearance`: the clearance of a standing cell, judged by the clearance map's rule: a column is an obstacle when it has no standing cell within a step of the cell's floor.
+        3. `WalkSearch`: when the clearance cost is above 0 it replaces the wall cost; at 0 the search is unchanged.
+        4. `WalkTerrainNavWorld`: a Bukkit-free `NavWorld` over the captured terrain, with standing cells as the search sees them and access respected.
+        5. `WalkPathShaper`:
+            1. Runs are cut at ladders and drops.
+            2. Each run is shaped by `CorridorShaper` (strip 8, wall-clearance, hard minimum 0.35).
+            3. Parts are cut where a stair turns over itself and chained from the end of the previous part.
+            4. Corners are drawn as checked curves.
+    2. knk-paper:
+        1. config: `navigation.guidance-v2` (false), `walk.clearance-cost` (5), `walk.wall-clearance` (0.8) and `walk.curve` (true). `WalkConfig.profile(boolean)` returns today's profile exactly when the flag is off.
+        2. `WalkLegPreparer` builds requests with that profile; `KnKPlugin` passes the flag.
+        3. `NavigationService`:
+            1. The walk thread shapes the found or partial path from the request's own terrain, and the leg draws the trail.
+            2. If shaping fails, or nothing comes out of it, the leg draws the cells.
+            3. `/knk road status` ends the `walk paths:` line with `shaped N (mean X ms)`.
+        4. `TrailRenderer`: doc only. The spacing stays 3.0 and the leg colour stays (O20). The road trail is unchanged.
+        5. A new paper-boot scenario `walk-trail-stairhouse`; `MIN_SCENARIOS` is now 51.
+    3. The shape package is not changed (A26).
+    4. knk-workspace:
+        1. Smoke test § 8: eight steps, six automated (three in part).
+        2. Plugin configuration reference § 4.15 and § 2.1.
+        3. CHANGELOG (Unreleased).
+        4. DESIGN § 7.1.6 "as built".
+2. **Commits and heads.**
+    1. knk-plugin `claude/offroad-trail-corners` at `9dd3ee5f`: three commits (core, paper, scenario) on `next` `c45c16bb`.
+    2. knk-workspace `claude/offroad-trail-corners` at `daffbc1d`: one commit on `next` `d8ebd9f4`.
+3. **PRs.** Both target `next`. Not merged.
+    1. [PandiO/knk-plugin#70](https://github.com/PandiO/knk-plugin/pull/70): `Closes PandiO/knk-workspace#710`.
+    2. [PandiO/knk-workspace#719](https://github.com/PandiO/knk-workspace/pull/719): `Part of`.
+4. **Tests, baseline → result.**
+    1. knk-plugin (`./gradlew build -x deployToDevServer`):
+        1. knk-core 3 033 → 3 050 (+17: `WalkClearanceTest` 8, `WalkPathShaperTest` 9).
+        2. knk-paper 2 904 → 2 911 (+7, 18 skipped).
+        3. knk-api-client 344 → 344 (2 skipped).
+        4. No failures.
+    2. A16 (flag off is today's behaviour):
+        1. A clearance cost of 0 gives the same search result, expansions and stats over five scenes: open field, corner, wall with a gap, spiral stair, ladder.
+        2. With the flag off, the leg draws exactly the cell points.
+        3. The preparer's profile and `WalkConfig.profile(false)` equal today's profile.
+    3. A15:
+        1. On a 3-wide spiral stair, the trail stays at least 0.7 from the newel (0.8 less the shaper's tolerance) and never comes under 0.35.
+        2. On the stair house (scenario), see 4.4.
+    4. A27:
+        1. The NPC shaper and the player shaper give the same line on one scene: `CorridorShaper` over `GridWorld` vs `WalkTerrainNavWorld`, and `WalkPathShaper`.
+        2. The scenario shapes on another thread from the capture only.
+    5. `walk-trail-stairhouse` in a local paper-boot run (Paper 26.3 build 205, without Citizens, the new scenario only): PASS.
+        1. 0 % of the trail's points were under 0.7 from a wall, post or drop on the live blocks, against 44.7 % of today's path.
+        2. 33 corners, 29 of them rounded.
+        3. Shaping took 39 to 81 ms (cold JVM).
+        4. CI's `paper-boot` (all scenarios, A26 included) and `build` were running when this block was written; the coordinator checks them.
+    6. Known reds: none.
+    7. Codex: at its code-review usage limit on both PRs (2026-11-17 23:52), so neither has a Codex review (developer decision 2026-11-14). This is said on both PRs; no findings to handle.
+5. **Decisions (DESIGN § 4.3).**
+    1. *The search's clearance.* Chosen: per cell centre, from the clearance map's obstacle rule (a column without a standing cell within a step, access included), memoised per search. A cell beside a wall lacks 0.3 (cost 1.5); a cell diagonal to a corner lacks 0.09.
+        1. Consequence: on a 3-wide spiral the inner ring stays cheaper than the middle ring at cost 5, so the guarantee comes from the shaper, as DESIGN § 7.1.2 has it.
+        2. Alternatives:
+            1. Clearance of the cell's whole square instead of its centre. Rejected: it does not match the NPC search the design names (`LocalLegSearch`).
+            2. A higher default cost. Rejected: the design sets 5. The developer may raise `walk.clearance-cost` after the live test.
+    2. *Stairs that turn over themselves.* Chosen:
+        1. A run is cut where a cell comes within 3 columns of an earlier one whose floor differs by more than their distance.
+        2. Each part is shaped from where the previous part's shaped line ended.
+        3. Without this, the shaper's own split left an unchecked jump over the newel. A straight stair never cuts.
+        4. Alternatives:
+            1. Cut only where the same column repeats. Rejected: a full turn's corridor saw the start column four floors below as a wall.
+            2. Change the shaper. Rejected: NPC code, A26.
+    3. *The curve.* Chosen: a quadratic Bézier per corner, reaching up to 2 blocks before and after the corner (at most half of each side).
+        1. Every point of the drawn chords is checked every 0.05 blocks and must keep the clearance the shaped line has there, never under 0.35.
+        2. A failing corner is tried at half the width, then kept sharp.
+        3. Alternatives:
+            1. Chaikin over the whole line. Rejected: it cuts long segments' corners blocks early, then fails the check often.
+            2. Catmull-Rom. Rejected: it overshoots outwards at sharp turns.
+            3. Moving a failing sample back to the line. Rejected: it leaves kinks.
+    4. *A15's tolerance.* Chosen: test against `wall-clearance` less 0.1 and the hard minimum strictly. The shared shaper's string pulling keeps its points' clearance less 0.05 and checks every 0.25 blocks, so at a convex corner a line can pass about 0.09 under 0.8.
+        1. Alternative: repair the line in `WalkPathShaper`. Rejected: more code for a few hundredths, and the NPC line has the same tolerance.
+    5. *Strip half width.* Chosen: 8, as DESIGN § 7.1.5 says.
+        1. Alternative: 4, the NPC default. Rejected: the design names 8.
+    6. *Extra keys `walk.wall-clearance` and `walk.curve`.* Chosen: added, because DESIGN § 7.6 lists them. The prompt named only `walk.clearance-cost`.
+        1. Alternative: constants. Rejected: the design makes them keys.
+    7. *Where shaping is hooked in.* Chosen: in `NavigationService.requestWalk` on the walk thread, after `measureWalk`. Legs near the road (KNG-124), which draw nothing, are not shaped. The trail goes to the main thread with the result. The additive pieces for L4 are a `walkDelivered` overload, an extra `adoptWalkResult` parameter and a separate section, "shaped walk trails".
+        1. Alternative: a decorating `WalkPathfinder`. Rejected: the leg then could not keep the cells as a fallback.
+    8. *Shaping counter.* Chosen: two `AtomicLong`s in `NavigationService`, shown in `walkStatus()`.
+        1. Alternative: inside `WalkMeasurements`. Rejected: that changes L1's sample record for a field only phase 6 fills.
+    9. *Build aid.* Chosen: a scratchpad Gradle init script passed with `-I`. It adds Google's Maven Central mirror as an extra repository, because Maven Central answered random 404s through the proxy (as L1's note 9.2 says). Not committed.
+6. **Out of scope, noted.**
+    1. DESIGN § 7.6 lists `trail-leg-spacing` as 1.5, while O20 and § 7.2 say 3.0. That is for L4.
+    2. Follow-ups for the docs issue at merge: npc-navigation § 12 (the player side uses the shape package), the player guide, the register.
+    3. None filed.
+7. **Blockers.** None. The live test is the developer's.
+8. **At merge / what the developer must do.**
+    1. The coordinator merges knk-plugin#70 and #719 into `next` after CI is green.
+    2. Deploy: add the keys below and restart. The flag stays off until the live test.
+
+       ```yaml
+       navigation:
+         guidance-v2: false
+         walk:
+           clearance-cost: 5
+           wall-clearance: 0.8
+           curve: true
+       ```
+
+    3. Live test, [smoke test § 8](https://github.com/PandiO/knk-workspace/blob/next/docs/guides/navigation-offroad-smoke-test.md#8-phase-61-walk-trail-corners-710-tier3):
+        1. Set `guidance-v2: true` and restart.
+        2. On the stair house and in the keep: watch the trail on the stair, at a corridor corner and through a 1-wide door (steps 1 to 4).
+        3. Run `/knk road status` while watching the tick time (step 6).
+        4. Set the flag off again to confirm today's trail (step 7).
+    4. Optionally comment `@codex review` on both PRs once the Codex limit resets.
+9. **Notes for later links.**
+    1. L4 (#711):
+        1. With the flag on, `DirectLeg.path` holds the shaped trail: floor points, not block centres. `TrailRenderer.drawPath`, `project` and `remainingOf` work on it unchanged.
+        2. The anchors of § 7.2 can be laid on it.
+        3. The hook in `NavigationService` is in its own section ("shaped walk trails"), so L4's cursor work stays separate.
+    2. L10 (plaza lines): `WalkPathShaper` calls `CorridorShaper` without plazas (`Options(halfWidth, wallClearance)`). Plaza lines would pass `withPlazas` and the junctions.
+    3. Local paper-boot runs work in the cloud session:
+        1. Fetch the pinned Paper, WorldEdit and WorldGuard jars from `paper-boot.yml`.
+        2. Run `tools/paper-boot/boot-test.sh` with `--scenarios`. A copy whose `run all` names one scenario takes about a minute.
