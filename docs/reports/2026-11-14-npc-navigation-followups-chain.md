@@ -56,6 +56,7 @@ the configuration reference § 4.27), then restart. In test order:
 | L9 Fix: running groups ignore a realtime district deny | #668 | In review (PRs open, not merged) | knk-plugin `76259d86`; knk-workspace `1dffa06d` | PandiO/knk-plugin#61, PandiO/knk-workspace#669 | push and PR runs on `76259d86` green (build, paper-boot with 48 scenarios; runs 43941362118, 43944997333); #586 did not hit; 48/48 locally; Codex at its usage limit | create_session session_01R1w2UvV75PszFp2o3mNoHB (2026-11-16) |
 | B1 Evidence: snapshot command (B1a), whole stair house and replay (B1b) | #670 | B1a merged into next (2026-11-16, `0f039203`); B1b in review (PRs open, not merged) | B1a: knk-plugin `1d9e3209`, knk-workspace `383cd24d`; B1b: knk-plugin `6d81d59a`, knk-workspace `6684a815` (both merged `next` after B1a) | PandiO/knk-plugin#62, PandiO/knk-workspace#691 (B1a); PandiO/knk-plugin#63, PandiO/knk-workspace#692 (B1b) | #62: build and paper-boot green (both runs); #63: green on `99c27a40` (19 min), head `6d81d59a` pending; 50/50 scenarios locally in 15 min 23 s; Codex at its usage limit | create_session session_01R1w2Uvzb6xQBt2SwiokGoe (2026-11-16) |
 | B2 Stretch handover in 3D, appended, bridged from the feet | #671 | In review (PRs open, not merged) | knk-plugin `a30ac085`; knk-workspace `cbff95cc` | PandiO/knk-plugin#64, PandiO/knk-workspace#693 | `build` and `paper-boot` (50) green on `a30ac085` (runs 43988727914, 43988727937); 50/50 locally; Codex at its usage limit | create_session (2026-11-16) |
+| B4 Waypoints and group slots at the real stair heights; jumps by upward speed | #673 | In review (PRs open, not merged) | knk-plugin `2a261289`; knk-workspace `73160c65` | PandiO/knk-plugin#65, PandiO/knk-workspace#694 | `build` and `paper-boot` (50) green on `2a261289` (push run 44008785404, PR run 44008842004); 50/50; Codex at its usage limit | create_session (2026-11-17) |
 
 ## 3. Coordinator decisions
 
@@ -1512,3 +1513,103 @@ _(Each link appends its block here when it finishes.)_
     1. B3: the climb still runs the crowd. A turn dropped by the guard without a fall stays report-only (`ClimbWatch.staleTurns`). B3 can make it a check.
     2. B4: start from the #673 comment. The replay's lost followers are the check to turn on (`NpcSnapshotReplayScenario`, the comment at the lost check).
     3. `npc-jagged-straight` (collision off) is sensitive to the leader's final approach because of #636: a group can wait 20 s for a follower 0.6 short of its slot, against the scenario's 30 s.
+
+### 4.19 B4 — Waypoints and group slots at the real stair heights; jumps by upward speed (#673)
+
+1. **Scope done** (prompt § 2, plan § 4c.8 item 2). Behind `npc.navigation.enabled` (off by default); no new key.
+    1. **Waypoints at the walking surface** (knk-core `NavGeometry.onSurface`, `NavWorld.surfaceY`; knk-paper `BukkitNavWorld.surfaceY`). Every list handed to `NpcMover.follow` goes at the top of the floor block's step: the box that spans the whole cell.
+        1. A bottom slab or an upright stair goes at half a block.
+        2. An upside-down stair or a full block goes at a whole block.
+        3. A path block goes at 0.9375.
+        4. Where two waypoints, or the feet and the first waypoint, rise more than a step (`STEP_UP` 0.6), the cell on the line whose surface lies between them goes in.
+        5. Planning, `Trail` and the handover keep `floor + 1`, as B2 measured them.
+    2. **Group slots at the surface.** The follower lists go through the same rule, so a slot on flight 5 is at feet 72.5, not 73.
+    3. **Recovery's point ahead on a half-block stair.** `NavGeometry.jumpFits` counts a rise of at most a step at the surface as no jump, so the low-headroom rule no longer refuses half-block steps under the flight above (`PathTargets.ahead`). Recovery and rejoin take the floor from the feet with `NavGeometry.floorYOf`: feet 72.5 stand on the block at 72, not 71.
+    4. **A follower at its slot's point is settled** (`NavGroup.atSlotPoint`, `SLOT_REACHED` 1.0). Once the leader's trip has ended, a follower within a block across of its slot's point and less than a block above or below it at the surface is settled: an open spell ends as freed, and it is not lost.
+        1. The cause, from a diagnostic added to the spell line: all lost followers stood 0.46–0.95 blocks from the same slot point on flight 5 (real 1409 72 −542), half a block under it, but 2–6 blocks behind it along the group path.
+        2. The group path passes there more than once, so their place on the path was the earlier pass.
+        3. They were sent round the loop and stalled. Their spells ran to `no point ahead on its floor`, because the point ahead must lie 3 blocks along the path before the slot. They ended lost.
+        4. This is the "settled" part of B2's proposal on #673.
+    5. **Jumps by upward speed** (knk-core `JumpDetector`: 0.3 blocks per tick upward, a jump takes off at 0.42; without the engine's speed, the rise per tick off the ground). It is used in `/knk npc nav trace` (`JUMP`) and in `ClimbWatch`.
+    6. **The engine's stair hops told apart** (`ClimbWatch.stairHopsIn`). Citizens uses Minecraft's move control. It jumps in two cases:
+        1. A target more than 0.6 above the feet within a block. Waypoint heights are about this case.
+        2. Whenever the block at the feet has a collision top above them: on a stair's step, under its upper half. No waypoint height removes this one.
+
+        A jump whose take-off position stands inside a stair block below its top counts as a stair hop and is reported apart.
+    7. **Checks.**
+        1. `npc-replay-quarry-to-keep` fails on a lost follower, with their run-log lines in the reason, and reports where each stuck spell opened.
+        2. `npc-stairhouse-climb` fails on a jump toward a waypoint on the flights and their entries.
+2. **Commits and heads.**
+    1. knk-plugin `claude/npc-movement-b4`: 8 commits, from `4f91ce8f` to head **`2a261289`** (base `next` `36ea2da0`).
+    2. knk-workspace `claude/npc-movement-b4`: head **`73160c65`** (base `next` `a8e77d7d`).
+3. **PRs** (base `next`, not merged).
+    1. PandiO/knk-plugin#65 (`Part of #673`).
+    2. PandiO/knk-workspace#694 (`Closes #673`).
+4. **Tests, baseline → result.**
+    1. `./gradlew build -x deployToDevServer`.
+        1. Baseline on `next` `36ea2da0`: core 2987, api-client 344 (2 skipped), paper 2885 (18 skipped).
+        2. Result on `2a261289`: core 3004 (+17), api-client 344, paper 2891 (+6). 0 failures.
+        3. New tests:
+            1. `NavGeometrySurfaceTest` 10: floor under feet, slab top, full block unchanged, idempotent, no floor, list unchanged, half-block stair rises half a block a step, half step under low headroom, the step between two waypoints, the step from the feet.
+            2. `JumpDetectorTest` 5.
+            3. `PathTargetsTest` +1: the point ahead up a half-block stair under a low flight.
+            4. `NavGroupTest` +1: slots on a half-block stair are sent at the slab's top.
+            5. `BukkitNavWorldSurfaceTest` 6.
+    2. Scenarios: CI only. Locally Citizens could not load its Adventure libraries (Maven Central answered 429 in this container). Pre-seeding them from a mirror was refused by the session's permission classifier, so it was not done. The CI log artifacts were read instead.
+    3. CI on `2a261289`: `build` green; `paper-boot` green on the push run 44008785404 and the PR run 44008842004 (50/50). Six `paper-boot` runs in all, while iterating. Run 3 failed on purpose with the new checks before the slot-point fix.
+    4. **Before (B2's numbers on `next`) → after (final head; the run before in brackets).**
+        1. Replay, group of 20, stored settings:
+            1. Lost: 3 → **0** (0).
+            2. Stuck spells: 26 → 6 (4).
+            3. Where they opened: 4 on the street at the start (1436 42..43 −512) while the group forms up, 3–7.75 behind their slots; 2 on flight 5's loop, 0.96 from the slot's point.
+            4. Crowd: longest queue 1, nothing let go.
+            5. 0 falls, 0 handovers onto another level. The leader arrives in 71.1 s.
+        2. Replay, group, smoke test's settings: 0 lost, 0 stuck, 0 falls (as with B2).
+        3. Replay, leader alone (both configurations): 0 jumps toward a waypoint, 1–2 engine stair hops, 57.6 s.
+        4. Climb (group of 20 with 20 singles):
+            1. Jumps toward a waypoint on the flights and their entries: **0**. All 160 jumps are engine stair hops.
+            2. Falls, handovers onto another level, stuck spells and lost followers: 0.
+            3. The leader arrives in 76.2 s (B2: 100.7).
+        5. The steps on the way, for the record:
+            1. Slabs at their surface only: climb 328 jumps at climb places, all kinds; replay lost 3, stuck 16.
+            2. Stairs at their step: climb 84 jumps, every one an engine stair hop.
+            3. The slot-point rule: replay lost 4 → 0.
+    5. Known reds: none. Codex: at its usage limit on both PRs (said on each).
+5. **Decisions (DESIGN § 4.3).**
+    1. *Where the surface height is applied.* Chosen: only on the lists handed to the mover (`NpcMover.follow`). Planning, `Trail`, the handover and the group path keep `floor + 1`. Alternatives:
+        1. (a) Surface heights everywhere in planning. Every `blockY() - 1` floor rule would read a slab's block as the one below: a large, risky change.
+        2. (b) In the Paper mover only (`CitizensNpcMover.follow`). Not testable in knk-core, and the engine-free logic would sit in the adapter.
+    2. *A stair's height.* Chosen: its step (the box that spans the cell, 0.5). Alternatives:
+        1. (a) The highest box under the body's footprint (1.0 at a stair's middle). Tried in the first runs: the move control jumps for a target a whole block up within a block.
+        2. (b) The lowest box (wrong for upside-down stairs).
+    3. *Steps between waypoints.* Chosen: insert the in-between surface cells on the line where two waypoints, or the feet and the first, rise more than 0.6. Alternatives:
+        1. (a) Leave sparse waypoints (the jumps stay).
+        2. (b) Resample every list to one point per block (many more waypoints for every NPC).
+    4. *Followers lost on flight 5.* Chosen: once the leader's trip has ended, a follower at its slot's point (within 1 block across, less than 1 up or down: Citizens' own default arrival margin) is settled. Alternatives:
+        1. (a) Fix the group path's loop on flight 5. Its cause is upstream (the leader's path), and the stall comes from judging along the path.
+        2. (b) Let `PathTargets.ahead` aim at the slot itself when it is closer than 3 blocks. That is a leg into a place it already stands at.
+        3. (c) The same rule while the leader walks too. It would stop followers that should keep walking past their slots.
+    5. *What counts as a "real jump".* Chosen: a jump by upward speed that does not take off from a stair's step. The engine's stair hops are reported, not failed. Alternative:
+        1. (a) Fail on every jump. The climb could never pass: the hop is vanilla move control behaviour that no waypoint changes.
+    6. *Jump threshold.* Chosen: 0.3 blocks per tick upward (a jump takes off at 0.42, then 0.33). Alternatives:
+        1. (a) 0.4 (the second tick of a jump could be missed when the first is skipped).
+        2. (b) The old rise > 0.2 (counts half-block steps).
+    7. *Where the replay checks jumps.* Chosen: the climb fails on jumps toward a waypoint; the replay reports them. Alternative:
+        1. (a) Fail the replay too. 56 remain with the smoke test's settings; cause not established, #695.
+    8. *Lost followers' reason.* Chosen: their run-log lines go into the failure text, and the spell line logs where the follower stands against its slot. Alternative:
+        1. (a) Rely on the NPC log files (not uploaded by CI).
+6. **Out of scope, noted.**
+    1. **#695** (filed): with the smoke test's settings, the replay's group jumps toward a waypoint at the hall entry's stair (1412 50 −495), 56 in the last run, report only. Guess: Citizens moves on to the next waypoint within its 1-block margin and passes the step's waypoint.
+    2. **The climb's crowd releases** (B3, #672): the 30 s guard let 0, 3, 3, 3, 0 and 6 queues go over the six runs. No fall, no dropped turn; longest queue 18, longest wait 30 s.
+    3. Docs follow-ups for the docs session:
+        1. `docs/architecture/npc-navigation.md`: the surface rule and the slot-point settle.
+        2. The admin guide: the trace's `JUMP` column.
+7. **Blockers.** None.
+8. **At merge / what the developer must do.**
+    1. Nothing in `config.yml`, no migration.
+    2. The smoke test on `quarry-to-keep` (plan § 4c.4) after B4, and B3 if it runs. Watch the rear rows on flight 5 settle in place, and no hop at the flight entries apart from the stair steps' own.
+    3. Review decisions 5.1, 5.4 and 5.5 above.
+9. **Notes for later links.**
+    1. B3: the climb shows crowd guard releases without a fall (item 6.2), varying per run. `ClimbWatch.staleTurns` stays empty (no turn is dropped), so the release is the crowd's own `let go` counter (`crowd().overdue()`). Look at whether the holder of the turn stands on another flight in 3D when the guard fires. Make it a check once fixed.
+    2. The replay's spell line (`... stuck at x y z, n blocks behind its slot at ... (d away)`) and the report's `stuck spells opened` show where a group stalls; real coordinates = scene coordinates − (scene origin) + (1391, 36, −559).
+    3. The 4 spells at the start (1436 42 −512) happen while the group forms up from its spawn bunch; not looked into.
