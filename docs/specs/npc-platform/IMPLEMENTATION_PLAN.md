@@ -1010,7 +1010,11 @@ B4 ([#673](https://github.com/PandiO/knk-workspace/issues/673)) puts waypoints a
            on the stair house **21 → 0** (all at flight 5's top before; now a check), looping followers 0 → 0, lost
            0 → 0, the leader arrives in 123.8 → 105.5 s, stuck spells 4 → 4 (on the street while it forms up, as since
            B4), jumps toward a waypoint 4 → 4, falls 0.
-        2. The whole suite on the final head: see the PR (run pending when this was written).
+        2. The same walk with the smoke test of 2026-11-16's settings (`levels`): 0 off the lane, 0 looping, 0 lost, 0
+           stuck spells, the leader in 70.5 s; its 63 jumps toward a waypoint at the hall entry are #695's (report
+           only, 56 in B4's run). The leader alone (both settings): 57.5 s, no jump toward a waypoint.
+        3. `npc-stairhouse-climb` unchanged (the leader in 76.2 s, 0 falls, 0 let go, 0 stuck, 0 lost). The whole suite
+           50/50 in 17 min 16 s.
     7. **Known limits:**
         1. The developer's own loop at flight 4's bottom was not replayed as such: the replay's group starts on the
            street east of the house, the developer's came from 1498 52 −399 in a long column. The replay shows the same
