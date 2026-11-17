@@ -88,6 +88,12 @@ on `next` (Decided 2026-11-17).
    requires the flag-off identity of the walk search's costs (a test) and keeps `TrailRenderer`/`NavigationService`
    changes additive for L4. Overlap: the NPC chain's C1 (#700) may run beside L3 in `core/npc/nav`; L3 touches no
    `core/npc/nav` file and changes to shape-package classes stay additive and are reported.
+10. **Overlap with NPC C1 (#700), 2026-11-17 23:06.** C1 started from `next` `c45c16bb` on `claude/npc-movement-c1`;
+    its coordinator says C1 calls `WalkLegPreparer` and the walk search but edits no file in `core/roads/walk`,
+    `paper/navigation` or `core/navigation/shape`, and asks first if it must. Chosen: L3 continues and keeps the
+    public signatures of `WalkLegPreparer`, `WalkSearch`/`WalkPathfinder` and the shape classes stable (additions
+    only), so both merges stay mechanical; told to L3. Alternatives: (a) pause L3 until C1 merges; rejected, the files
+    are disjoint; (b) let L3 change signatures and fix C1 afterwards; rejected, it would break C1's compile.
 
 ## 4. Link blocks
 
