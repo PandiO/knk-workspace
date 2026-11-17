@@ -22,7 +22,8 @@ an acceptance checklist.
 1. **The issue.** You design one issue in `PandiO/knk-workspace`: an `idea` the intake session (`knk-intake`) sent to
    design, or one the developer named. Read it with its comments. No issue: search open and closed issues, file one if
    none covers it (global instructions, "GitHub Issues is the work list"), and use it. Set `status:in-progress`.
-2. **Board.** Read the "In progress" table of `docs/ACTIVE_SESSIONS.md` on `origin/main`. Another row designing the
+2. **Board.** `git fetch origin`, then read the "In progress" table of
+   `git show origin/main:docs/ACTIVE_SESSIONS.md` (never a local copy). Another row designing the
    same area: stop and ask the developer. Claim a row (feature, issue, branch, files) on top of `origin/main` and push
    `HEAD:main`; on a conflict fetch, rebase that one commit and keep both rows.
 3. **Branch.** The spec and the smoke-test guide are feature docs, so they go through `next` (global "Branches" rule

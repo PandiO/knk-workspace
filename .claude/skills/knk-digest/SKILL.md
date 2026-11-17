@@ -48,7 +48,7 @@ repository).
    knk-workspace `main`), the "Waiting for the developer" section and agent decisions in new link blocks; open issues
    with a decision or design question waiting on the developer (search `is:open` for "decision" in titles, and
    `status:in-review` issues whose last comment asks the developer something).
-3. **Blocked:** the sessions board (`docs/ACTIVE_SESSIONS.md` on `main`, "In progress" and "Paused / blocked") and
+3. **Blocked:** the sessions board (`docs/ACTIVE_SESSIONS.md` on `origin/main` after `git fetch origin`, "In progress" and "Paused / blocked") and
    chain reports for rows or links marked blocked; open PRs into `next` with red CI or unresolved review threads older
    than a day.
 4. **Progress:** links and PRs merged into `next` since the last digest, grouped by chain or issue; chains started or
