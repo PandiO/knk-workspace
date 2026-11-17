@@ -26,7 +26,7 @@ on `next` (Decided 2026-11-17).
 
 | Link | Issue | Status | Branch heads | PR | CI | How started |
 |---|---|---|---|---|---|---|
-| L1 Phase 0 measurements | #703 | Running | `claude/offroad-measurements` | — | — | create_session (see § 3.4) |
+| L1 Phase 0 measurements | #703 | Running | `claude/offroad-measurements` | — | — | create_session `session_01R1w2Uub8CZ7NuvatVUifP7` (2026-11-17) |
 | L2 Phase 1 shared shaping package | #704 | Not started (waits for NPC B5 #699 in `next`, § 3.3) | `claude/offroad-shape-package` | — | — | — |
 | L3 Phase 6.1 trail corners | #710 | Not started (gate: L2 in `next`) | `claude/offroad-trail-corners` | — | — | — |
 | L4 Phase 6.2 anchored particles, winding back | #711 | Not started (gate: L3 in `next`) | `claude/offroad-trail-cursor` | — | — | — |
