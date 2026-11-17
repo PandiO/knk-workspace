@@ -1,6 +1,6 @@
 # Off-road navigation and landmarks (points of interest) — mixed routes, indoor and wilderness walking, better trails
 
-**Status:** **Proposed** (2026-11-17) — open questions in § 15. (On approval: **Decided <date>** (developer).)
+**Status:** **Proposed** (2026-11-17) — all questions of § 15 answered by the developer on 2026-11-17; waiting for approval. (On approval: **Decided <date>** (developer).)
 **Last updated:** 2026-11-17 (design session: the draft's code claims checked against knk-plugin `next` `e69dba6` and corrected (§ 3.1, § 3.4); a compile-and-test check of the shared shaping package (§ 3.4); the sources re-read and the draft corrected (§ 3.5); question 15.9 answered (O16)); 2026-11-17 (first draft from the developer's voice session of 2026-11-17, checked against knk-plugin `next` `e69dba6` and the docs on knk-workspace `next` `6be8222`)
 **Issue:** [PandiO/knk-workspace#698](https://github.com/PandiO/knk-workspace/issues/698); phases as sub-issues in § 14.
 **Dependencies:** [navigation](../navigation/DESIGN.md) (road graph, `/navigate`, walk paths, all merged), [navigation destination engine](../navigation-destination-engine/DESIGN.md) (proposed; the landmark provider of § 6 plugs into it), the NPC movement quality work on `next` ([architecture § 12](../../architecture/npc-navigation.md#12-movement-quality-phase-4c-links-m1m7), merged 2026-11-16, not yet live tested (#621 to #627 open): `corridor/Corridor`, `CorridorShaper`, `FreeWidth`, `PlazaLine`, `LocalLegSearch`). Related issues: #603 (NPC movement quality), #625 (NPC plaza lines), #110 (KNG-93, entrances), #25 (KNG-235, destination engine).
@@ -44,7 +44,7 @@ Related: [LAST_MILE_PATHFINDING](../navigation/LAST_MILE_PATHFINDING.md), [REV6_
 | O10 | 2026-11-17 | developer | Planned, not for this run: a plaza as a child entity of the POI. The builder keeps recognising plazas and offers the admin a suggestion ("create a plaza POI for this spot"); the admin customises it (WorldGuard region for the exact shape) and the road nodes are connected to it. Area effects and special features attach to the plaza entity later. |
 | O11 | 2026-11-17 | agent | Reuse the NPC movement corridor modules for the players' trail: move `Corridor`, `CorridorShaper`, `FreeWidth`, `PlazaLine` with the world primitives they need (`NavWorld`, `NavPoint`, `NavGeometry`, and `PlazaCrossing` taken out of `RoadPlanner`) to a shared package `core/navigation/shape/`; `LocalLegSearch` stays NPC-side. The player side reads terrain through a `NavWorld` adapter over the captured walk terrain, off the main thread (§ 3.4; alternatives in 2.1). |
 | O12 | 2026-11-17 | agent | One planner with road legs and walk legs: dynamic "walk links" between road nodes in the routing view, plus the existing off-road ends (alternatives in 2.1). |
-| O13 | 2026-11-17 | agent | Long off-road legs by a lazy hierarchical search over loaded chunks first; persisted walk tiles for wilderness beyond loaded chunks later (matrix in § 5.6, alternatives in 2.1). |
+| O13 | 2026-11-17 | agent | ~~Long off-road legs by a lazy hierarchical search over loaded chunks first; persisted walk tiles for wilderness beyond loaded chunks later (matrix in § 5.6, alternatives in 2.1).~~ Proposal; decided by the developer as O32. |
 | O14 | 2026-11-17 | agent | Three route modes, default preferred: `shortest` (length only), `efficient` (walking time, with the walk profile's costs for stairs, ladders, doors and water), `preferred` (efficient with the weights). Without weights preferred equals efficient (alternatives in 2.1). |
 | O15 | 2026-11-17 | agent | Rewind by splitting the route's progress (never decreases, for ETA and maneuvers) from the player's cursor (follows the player forwards and backwards) (alternatives in 2.1). |
 | O16 | 2026-11-17 | developer | Question 15.9: the developer cannot recall the details of the earlier plaza rounding attempt. Record it as a risk (§ 12.5) and design § 8 on the evidence of the NPC plaza line (M5); phase 7 starts with a short check on two real plazas before the full build. |
@@ -62,6 +62,8 @@ Related: [LAST_MILE_PATHFINDING](../navigation/LAST_MILE_PATHFINDING.md), [REV6_
 | O28 | 2026-11-17 | developer | Question 15.3, walk link limits: `walk-link-range` 40 blocks and `walk-link-ratio` 2.0 as defaults (config keys), tuned in the live test after phase 2. |
 | O29 | 2026-11-17 | developer | Question 15.10: go with § 8's rounded, node-pulled, obstacle-checked plaza line at runtime. The road-graph builder stays unchanged. If the same line also improves NPC behaviour well enough, the plaza through-edges of the NPC plan (decision 6 of 2026-11-15, "later, so the players' trail improves too") are not needed; they are dropped unless the live test of phase 7 shows the line falls short. |
 | O30 | 2026-11-17 | developer | Question 15.8: `plaza-pull` default 0.35, tuned live on the real plazas (Cinix, Brink) in phase 7's first check (§ 8.9). |
+| O31 | 2026-11-17 | developer | Question 15.7: clusters in memory only in v1 (built on demand, least recently used eviction within the cache budget, rebuilt after a restart); persistence comes with phase 8 if the measurements ask for it. |
+| O32 | 2026-11-17 | developer | Question 15.1, long off-road legs (matrix § 5.6): option B, a lazy hierarchical search over loaded chunks in phase 3, with clusters designed so phase 8 can persist the same structure as walk tiles (C). The phase 0 measurements can still show that A (raised caps) fits; then the developer is asked again. |
 
 ### 2.1 Agent decisions: alternatives
 
@@ -180,7 +182,7 @@ Related: [LAST_MILE_PATHFINDING](../navigation/LAST_MILE_PATHFINDING.md), [REV6_
 
 ### 5.6 Decision matrix: how long off-road legs are planned (O13)
 
-**Status:** Proposed 2026-11-17 — the developer decides (question 15.1).
+**Status:** Decided 2026-11-17 by the developer: B now, C later (O32; question 15.1).
 **Question:** how to plan walk legs of several hundred blocks, indoors and in the open, within a tick budget that has no room for a 20 000 cell search per player.
 
 1. **Options:**
@@ -205,14 +207,14 @@ Related: [LAST_MILE_PATHFINDING](../navigation/LAST_MILE_PATHFINDING.md), [REV6_
 | Platform independence | 15 | 4 | 4 | 4 | 3 |
 | Effort | 15 | 5 | 3 | 1 | 4 |
 | Fit with what exists | 15 | 5 | 4 | 2 | 3 |
-| **Weighted total** | 100 | **68** | **73** | **70** | **57** |
+| **Weighted total** | 100 | **65** | **71** | **72** | **57** |
 
 4. **Pros and cons:**
     1. **A.** Pros: nothing to build. Cons: worst case grows with the area (a 96 by 96 field fully expanded cost 80 to 90 ms; a castle with many levels and 400 blocks is several times more), the captured box grows quadratically (64 chunks about 0.8 MB per request), two concurrent searches would block each other.
     2. **B.** Pros: cost grows with the corridor, not the area; clusters are shared between players and with NPCs; invalidation reuses the dirty tracker. Cons: new structures (clusters, entrances), a cache to bound and invalidate, and the first request of an area pays for the clusters it needs.
     3. **C.** Pros: best latency, works beyond loaded chunks, reproducible. Cons: a schema, a build tool, curation questions (when stale), and it is the most work; the road graph's history (rev. 6 churn) is a warning.
     4. **D.** Pros: tiny. Cons: only as good as the landmarks placed; no route without landmarks, which contradicts decision O05's "landmarks are optional".
-5. **Recommendation:** B now, with the cluster structure designed so C can later persist the same clusters (same cluster ids, same entrance rule). The totals are close (B 73, C 70, A 68); the weights are judgement, and the real deciding fact is that C is the only option that reaches beyond loaded chunks. What would change the recommendation: the measurements of § 9.2 showing that A already fits the real castle (then A, and B later), or a requirement for 1000 block wilderness routes (then C earlier). Reversible: B and C share the structure; A stays as the fallback path.
+5. **Recommendation:** B now, with the cluster structure designed so C can later persist the same clusters (same cluster ids, same entrance rule). The totals are close (C 72, B 71, A 65; the first draft printed 73, 70 and 68, an arithmetic error corrected 2026-11-17): the matrix does not decide this, and the weights are judgement. The deciding facts are that C is the only option that reaches beyond loaded chunks, and that B builds on what exists and needs no schema before the phase 0 measurements show the need; the same clusters later persist as C. What would change the recommendation: the measurements of § 9.2 showing that A already fits the real castle (then A, and B later), or a requirement for 1000 block wilderness routes (then C earlier). Reversible: B and C share the structure; A stays as the fallback path.
 
 ## 6. Points of interest (O04, O05)
 
@@ -404,17 +406,19 @@ Everything that decides a route, a cost or a curve stays in Bukkit-free `knk-cor
 | A12 | A landmark is created, linked to a domain, listed, renamed and deleted from the web app and in game; its reads are anonymous, its writes pinned by the access tests | 5 |
 | A13 | Navigating to a landmark with a region ends the navigation inside the region; with a radius inside the radius; with neither within `arrive-distance` | 5 |
 | A14 | Tab completion lists only landmarks the player may navigate to | 5 |
-| A15 | On a spiral stair of width 3 the trail keeps at least `wall-clearance` from the inner wall wherever the stair allows it, and never under the hard minimum | 6 |
-| A16 | With `guidance-v2: false` the trail is identical to today's (transcript test) | 6 |
-| A17 | Walk trail particles sit on fixed anchors: two redraws with the player standing still draw the same positions; a step of the player moves no particle that is ahead | 6 |
-| A18 | A player who walks 20 blocks back along a road sees the road trail from their position, with no walk leg | 6 |
-| A19 | A player who leaves the road is guided to the join point with the smallest remaining cost, forwards or backwards | 6 |
-| A20 | A looped route keeps the cursor on the right branch; a switchback does not jump | 6 |
-| A21 | A walk leg is not recomputed while the player is within `recompute-distance` of it, also when walking back | 6 |
+| A15 | On a spiral stair of width 3 the trail keeps at least `wall-clearance` from the inner wall wherever the stair allows it, and never under the hard minimum | 6.1 |
+| A16 | With `guidance-v2: false` the trail is identical to today's (transcript test) | 6.1, 6.2 |
+| A17 | Walk trail particles sit on fixed anchors: two redraws with the player standing still draw the same positions; a step of the player moves no particle that is ahead | 6.2 |
+| A18 | A player who walks 20 blocks back along a road sees the road trail from their position, with no walk leg | 6.2 |
+| A19 | A player who leaves the road is guided to the join point with the smallest remaining cost, forwards or backwards | 6.2 |
+| A20 | A looped route keeps the cursor on the right branch; a switchback does not jump | 6.2 |
+| A21 | A walk leg is not recomputed while the player is within `recompute-distance` of it, also when walking back | 6.2 |
 | A22 | On a plaza with three roads (T shape) the line from the stem to the right arm is rounded, passes within `plaza-pull` of the node as configured, keeps `wall-clearance` from obstacles and stays inside the footprint; a street T junction gets no plaza line (O19) | 7 |
 | A23 | A plaza with an obstacle on the curve gets the A* line, not a line through the obstacle | 7 |
 | A24 | `plaza-lines: false` gives today's route polyline | 7 |
 | A25 | The route length, ETA and maneuvers are unchanged by plaza lines | 7 |
+| A26 | After the move to `core/navigation/shape/` the NPC unit tests, the knk-paper tests and the paper-boot NPC movement scenarios pass unchanged, and `core/navigation/shape/` imports nothing from `core/npc/` | 1 |
+| A27 | A shaped walk path is computed off the main thread from captured terrain only (`WalkTerrainNavWorld`); one regression scene run through the NPC shaper and the player shaper gives the same line | 6.1 |
 
 ## 14. Phases
 
@@ -423,27 +427,28 @@ Everything that decides a route, a cost or a curve stays in Bukkit-free `knk-cor
 | Phase | Scope | Acceptance | Repos | Tier | Flag | Sub-issue | Depends on |
 |---|---|---|---|---|---|---|---|
 | 0 | Measurements: timing counters, scenes, report (§ 9.2) | A01 | knk-plugin, knk-workspace | tier:1 | none | to file | none |
-| 1 | Shared shaping module: move `core/npc/nav/corridor` to `core/navigation/shape`, no behaviour change (O11) | NPC tests unchanged | knk-plugin | tier:2 | none | to file | none |
-| 2 | Walk links in the routing view, mixed routes (§ 5.1, § 5.2) | A02–A05 | knk-plugin | tier:3 | `navigation.walk-links` (off) | to file | 0 |
+| 1 | Shared shaping module: move the shaping classes and their world primitives to `core/navigation/shape` (O11, § 3.4), no behaviour change | A26 | knk-plugin | tier:2 | none | to file | none |
+| 2 | Walk links in the routing view, mixed routes, the block-change hook (§ 5.1, § 5.2, O17, O18) | A02–A05 | knk-plugin | tier:3 | `navigation.walk-links` (off) | to file | 0 |
 | 3 | Hierarchical walk search, indoor routes, wilderness W1 (§ 5.3, § 5.5) | A06–A08 | knk-plugin | tier:3 | `navigation.walk.hierarchical` (off) | to file | 0, 1 |
 | 4 | Route modes and road weights (§ 5.4), plugin side | A09, A11 | knk-plugin | tier:2 | none | to file | 2 |
 | 5.1 | Landmark entity: API, web app, plugin, destination provider (§ 6), separate issue | A12–A14 | knk-web-api, knk-web-app, knk-plugin | tier:3 (schema) | `navigation.landmarks` (off) | to file | #96, #103 (destination engine P1, P2; O27); #69 (P3) for `/navigate` to reach the provider |
 | 5.2 | Landmark preference weights in the walk search (§ 5.4.3), landmarks as walk-planner nodes (§ 6.2.2) | A10 | knk-plugin | tier:2 | `navigation.landmarks` (off) | to file | 4, 5.1 (and 3 for landmark nodes in clusters) |
-| 6 | Guidance quality: shaping and curve on walk paths, anchored particles, cursor and winding back (§ 7) | A15–A21 | knk-plugin | tier:3 (game feel) | `navigation.guidance-v2` (off) | to file | 1 |
-| 7 | Plaza lines for the players' trail (§ 8), separate issue | A22–A25 | knk-plugin | tier:2 | `navigation.plaza-lines` (off) | to file | 6 |
+| 6.1 | Trail quality, corners: clearance cost in the walk search, shaping and curve of walk paths off the main thread (§ 7.1) | A15, A16, A27 | knk-plugin | tier:3 (game feel) | `navigation.guidance-v2` (off) | to file | 1 |
+| 6.2 | Trail quality, guidance: anchored walk-trail particles, progress and cursor, winding back (§ 7.2, § 7.5) | A16–A21 | knk-plugin | tier:3 (game feel) | `navigation.guidance-v2` (off) | to file | none (6.1 for the shaped line's anchors when both are in) |
+| 7 | Plaza lines for the players' trail (§ 8), separate issue | A22–A25 | knk-plugin | tier:2 | `navigation.plaza-lines` (off) | to file | 6.1 and 6.2 (trail quality) |
 | 8 | Persisted walk tiles (§ 5.5 W2) | to be written | knk-web-api, knk-plugin | tier:3 | to be set | to file later | 0, 3 |
 
-Order (O23): 0 and 1 first (independent), then 6 and 2 side by side (6 first when only one chain runs), then 3; the landmark entity (5.1) after destination engine P1 and P2 (#96, #103), landmark weights (5.2) after 4 and 5.1; plaza lines (7) after 6. Smoke test: [guides/navigation-offroad-smoke-test.md](../../guides/navigation-offroad-smoke-test.md) (written on approval).
+Order (O23): 0 and 1 first (independent), then 6 (6.1, 6.2) and 2 side by side (6 first when only one chain runs), then 3; the landmark entity (5.1) after destination engine P1 and P2 (#96, #103), landmark weights (5.2) after 4 and 5.1; plaza lines (7) after 6.1 and 6.2. Phase 6 is split in two links because shaping (6.1) and the cursor (6.2) are each a day's work with their own tests (agent, skill § 6.2). Smoke test: [guides/navigation-offroad-smoke-test.md](../../guides/navigation-offroad-smoke-test.md) (written on approval).
 
 ## 15. Open questions
 
-1. **Long walks (matrix § 5.6).** Which approach for long off-road legs? Options: (a) B, lazy HPA* over loaded chunks now, persisted tiles later; (b) A, only raise the caps, decide again after phase 0; (c) C, persisted walk tiles from the start. Recommendation: (a), because it bounds the cost by the route and shares clusters with NPCs; it is reversible toward (c).
+1. ~~**Long walks (matrix § 5.6).** Which approach for long off-road legs? Options: (a) B, lazy HPA* over loaded chunks now, persisted tiles later; (b) A, only raise the caps, decide again after phase 0; (c) C, persisted walk tiles from the start. Recommendation: (a), because it bounds the cost by the route and shares clusters with NPCs; it is reversible toward (c).~~ Answered 2026-11-17 (O32): (a), B now, C later.
 2. ~~**Order of the work.** The short-term wishes are indoor and mixed routes (phases 2 and 3) and the trail quality (phase 6). Options: (a) phase 0 and 1, then 6 and 2 in parallel, then 3; (b) 6 first alone because it is the smallest and most visible; (c) 3 first. Recommendation: (a) with phase 6 first of the two if only one chain runs.~~ Answered 2026-11-17 (O23): (a), phases 0 and 1, then 6 and 2 side by side (6 first with one chain), then 3.
 3. ~~**Walk link limits.** `walk-link-range` 40 blocks and `walk-link-ratio` 2.0. Options: (a) as proposed; (b) shorter range 24, ratio 3.0 (fewer shortcuts, safer); (c) per domain type. Recommendation: (a), tuned in the live test.~~ Answered 2026-11-17 (O28): (a), 40 blocks and ratio 2.0, tuned live.
 4. ~~**Route mode words.** `/navigate <dest> shortest|efficient|preferred`. Options: (a) the three words; (b) two words (`shortest`, default); (c) a setting per player instead of a word. Recommendation: (a), default `preferred`.~~ Answered 2026-11-17 (O24, O25): (a) with a permission node per word; default `preferred`, which is today's behaviour.
 5. ~~**Landmark permission and ownership.** Who creates landmarks? Options: (a) staff only (`knk.admin.world.landmark`), as roads; (b) staff and domain owners for landmarks inside their domain; (c) players. Recommendation: (a) now.~~ Answered 2026-11-17 (O26): (a), staff only with `knk.admin.world.landmark`; the entity is named landmark so "POI" stays free for a later player feature.
 6. ~~**Landmark and the destination engine.** Options: (a) landmarks in the old catalogue until KNG-235 is built; (b) build the engine's phase 1 and 2 first. Recommendation: (a), because the engine is proposed and unstarted.~~ Answered 2026-11-17 (O27): (b), destination engine P1 (#96) and P2 (#103) first; landmarks are a provider from the start.
-7. **Cluster persistence.** Options: (a) memory only in v1 (rebuilt after restart, within budget); (b) persist the clusters at once with the offline snapshot. Recommendation: (a), since persisted tiles are phase 8.
+7. ~~**Cluster persistence.** Options: (a) memory only in v1 (rebuilt after restart, within budget); (b) persist the clusters at once with the offline snapshot. Recommendation: (a), since persisted tiles are phase 8.~~ Answered 2026-11-17 (O31): (a), memory only in v1.
 8. ~~**Plaza pull default.** `plaza-pull` 0.35. Options: (a) 0.35; (b) 0.5 (stronger bend to the node); (c) tune live with a command that sets it per plaza. Recommendation: (a), tuned on the real plazas of Cinix and Brink.~~ Answered 2026-11-17 (O30): (a), 0.35, tuned live.
 9. ~~**Earlier plaza attempt.** What was tried and what failed (§ 12.5)?~~ Answered 2026-11-17: the developer cannot recall the details; recorded as risk 12.5 with guards (O16).
 10. ~~**Plaza through-edges in the builder (NPC plan decision 6, 2026-11-15).** That decision puts plaza through-edges in the road-graph builder "later, so the players' trail improves too". § 8 instead shapes the drawn line at runtime and leaves the graph alone. Options: (a) § 8's runtime line now, the builder through-edges stay a later option for route length and ETA; (b) build the through-edges instead and drop § 8; (c) both in phase 7. Recommendation: (a).~~ Answered 2026-11-17 (O29): the runtime line; the builder through-edges are dropped unless phase 7's live test shows the line is not enough.
