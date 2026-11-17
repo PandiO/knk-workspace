@@ -53,6 +53,11 @@ the configuration reference § 4.27), then restart. In test order:
 | M5 Plaza lines | #625 | Merged into next (2026-11-16) | knk-plugin `727f020b` → `next` `3f116188`; knk-workspace `f5aa56e6` → `next` `f9be4963` | PandiO/knk-plugin#51, PandiO/knk-workspace#637 | PR head green (build, paper-boot with 45 scenarios, push and PR runs 43792722751, 43793671690); #586 did not hit; Codex at its usage limit | create_session session_01R1w2UwSt9YZCZUtsk5fQjU (2026-11-16) |
 | M4 Crowd awareness | #626 | Merged into next (2026-11-16); option-B checkpoint with the developer | knk-plugin `8c864f7a` → `next` `a35fed5a`; knk-workspace `9f09cf23` → `next` `5b8125e5` | PandiO/knk-plugin#52, PandiO/knk-workspace#638 | push and PR runs on `8c864f7a` green (build, paper-boot with 45 scenarios; runs 43799206281, 43800089307); #586 did not hit; 45/45 locally; Codex at its usage limit | create_session session_01R1w2UsvLHZouJWudj4FxjT (2026-11-16) |
 | M7 Collision with push resistance | #627 | Merged into next (2026-11-16); `collidable` stays false | knk-plugin `6393aa37` → `next` `cc5262ff`; knk-workspace `dc8a91c5` → `next` `8e3d7d06` | PandiO/knk-plugin#57, PandiO/knk-workspace#656 | push and PR runs on `6393aa37` green (build, paper-boot with 48 scenarios); Codex at its usage limit | create_session session_01R1w2UtyxLznso8wdydHmQf (2026-11-16) |
+| L9 Fix: running groups ignore a realtime district deny | #668 | In review (PRs open, not merged) | knk-plugin `76259d86`; knk-workspace `1dffa06d` | PandiO/knk-plugin#61, PandiO/knk-workspace#669 | push and PR runs on `76259d86` green (build, paper-boot with 48 scenarios; runs 43941362118, 43944997333); #586 did not hit; 48/48 locally; Codex at its usage limit | create_session session_01R1w2UvV75PszFp2o3mNoHB (2026-11-16) |
+| B1 Evidence: snapshot command (B1a), whole stair house and replay (B1b) | #670 | B1a merged into next (2026-11-16, `0f039203`); B1b in review (PRs open, not merged) | B1a: knk-plugin `1d9e3209`, knk-workspace `383cd24d`; B1b: knk-plugin `6d81d59a`, knk-workspace `6684a815` (both merged `next` after B1a) | PandiO/knk-plugin#62, PandiO/knk-workspace#691 (B1a); PandiO/knk-plugin#63, PandiO/knk-workspace#692 (B1b) | #62: build and paper-boot green (both runs); #63: green on `99c27a40` (19 min), head `6d81d59a` pending; 50/50 scenarios locally in 15 min 23 s; Codex at its usage limit | create_session session_01R1w2Uvzb6xQBt2SwiokGoe (2026-11-16) |
+| B2 Stretch handover in 3D, appended, bridged from the feet | #671 | In review (PRs open, not merged) | knk-plugin `a30ac085`; knk-workspace `cbff95cc` | PandiO/knk-plugin#64, PandiO/knk-workspace#693 | `build` and `paper-boot` (50) green on `a30ac085` (runs 43988727914, 43988727937); 50/50 locally; Codex at its usage limit | create_session (2026-11-16) |
+| B4 Waypoints and group slots at the real stair heights; jumps by upward speed | #673 | In review (PRs open, not merged) | knk-plugin `2a261289`; knk-workspace `73160c65` | PandiO/knk-plugin#65, PandiO/knk-workspace#694 | `build` and `paper-boot` (50) green on `2a261289` (push run 44008785404, PR run 44008842004); 50/50; Codex at its usage limit | create_session (2026-11-17) |
+| B3 Crowd turns judged in 3D; the guard counts from the last entry | #672 | In review (PRs open, not merged) | knk-plugin `89eeb3eb`; knk-workspace `bcf7a3d9` | PandiO/knk-plugin#66, PandiO/knk-workspace#696 | `build` and `paper-boot` (50) green on `89eeb3eb` (push run 44017052199, PR run 44019311124); climb let go 0 in CI and three local runs; 27/27 `npc-*` locally; Codex at its usage limit | create_session session_01R1w2UwCdu4jcMQD9mXoQv8 (2026-11-17) |
 
 ## 3. Coordinator decisions
 
@@ -239,6 +244,109 @@ the configuration reference § 4.27), then restart. In test order:
     `cc5262ff` and PandiO/knk-workspace#656 → `8e3d7d06`. #589 had already been closed for L1–L4 (its leftover is
     #590), so a new documentation issue #658 covers M1–M7, with its docs session started. Tracker row set to In
     review.
+
+32. **Smoke test 2026-11-16 failed** (jar `0.1.0+0d9c55d6`, logs uploaded to the coordinator session). Problem A: L6's
+    fix doesn't reach a running group on the real path. The deny arrives as the access-rules sync, there are 0 event
+    replans and 19 of the 20 group NPCs are IDLE. L6's scenario faked a different message. **L9 #668 started**
+    (session_01R1w2UvV75PszFp2o3mNoHB). Problem B: no visible improvement:
+    1. falls at 1412 66 -537 and 1412 49 -501;
+    2. jumps on stairs;
+    3. a 39-NPC queue at 1412 74 -536;
+    4. stuck at 1410 49 -503.
+
+    A read-only root-cause pass runs in the coordinator session on the logs and the exact code. No B fix starts before
+    the plan goes to the developer and the manager.
+33. **Test material from the real world** (developer decision 2026-11-16, coordinator session). The scenes differ from
+    the real world in the hand-drawn road line, the fake API data and partial geometry. Chosen: replay the real route
+    on a snapshot of the dev world in CI. The **first B link adds `/knk npc nav snapshot <route>`**, which writes a zip
+    with the route's region files (here `r.2.-1.mca`, `r.2.-2.mca`), the stored route line, the road network in the
+    box, and the domain rules and WorldGuard regions from the plugin's caches. The developer uploads it to the
+    coordinator session; scenarios replay the real runs on it. It starts after L9, one knk-plugin link at a time.
+    Alternatives: (a) a full dev server with API and seeded database in CI (most faithful, heavy, a later nightly job);
+    (b) `/knk scenario run` on the dev server (real but manual, a complementary self-check); (c) the developer copies
+    region files by hand (no road export exists, so the line would still be missing).
+
+34. **Root cause of the movement failures** (2026-11-16, a read-only pass in the coordinator session on the developer's
+    logs and `next` `0d9c55d6`).
+    1. **Main cause: the stretch handover.** `NpcNavigationService` hands out the next stretch when the NPC is within 4
+       blocks of the stretch end, measured horizontally only. `follow()` replaces the waypoints not yet walked.
+       `WaypointChain` bridges the join from the last waypoint, not from the NPC's feet. On the Keep stair's stacked
+       hairpins this skips flights and heads across the stairwell, as traces 69 and 81 show. It explains the falls
+       at 1412 66 -537 and 1412 49 -500 (followers copy the leader's fall into the group path), the stuck spot at
+       1410 49 -503 and the entrance trouble.
+    2. **Separate causes:**
+       1. `CrowdControl` turns are judged horizontally only. A holder that fell under the landing never passes, so
+          the 30 s guard releases the 39-NPC queue at 1412 74 -536.
+       2. The stair "jumps" are mostly half-block step-ups that the trace flags as jumps. The 12 real ones come from
+          whole-block waypoint heights at the flight entries.
+    3. **Why no scenario caught it:** M1's hand-drawn line stops at y 51; the scene route is a single stretch, so no
+       handover ever runs; it enters from the north instead of the east; and the upper landings lie outside the box.
+    4. **Plan, after L9, one knk-plugin link at a time:**
+       1. B1: evidence, the snapshot command (decision 33) plus the stair-house line extended along the real route with
+          short stretches, failing on today's `next`.
+       2. B2: the stretch handover (3D progress, append instead of replace, bridge from the feet, an unbridgeable step
+          becomes a local leg, no falls copied into the group path).
+       3. B3: 3D crowd turns.
+       4. B4: waypoints at the real stair surface heights, and jump detection by upward speed.
+    5. Sent to the developer and the manager before any B link starts. Asked the developer for a second schematic
+       (x 1397–1423, y 48–87, z -553..-486) and whether `group-formation-keeping` was `elastic`; the logs suggest
+       `levels`.
+35. **Developer answers, B1 scope and the test configuration** (2026-11-16, coordinator session).
+    1. The schematic of 2026-11-15 already holds both flights of the stair house (x 1407–1418, y 49–79,
+       z -549..-487), so no second schematic is needed. B1 places the scene box around that whole schematic, upper
+       landings included, instead of M1's box (y 46–69).
+    2. The snapshot also takes the **domains along the route** (developer request): every Town, District, Structure
+       and gate whose WorldGuard region touches the route's box, with its id, name and type, its region id and shape
+       (cuboid corners or polygon points with min and max y, whole, not clipped to the box), parent, priority, entry
+       and exit rules (`knk-allow-entry`, `knk-allow-exit`) and the gate's open or closed state. The replay builds
+       these regions and the matching fake API data, so access rules (#506, L9) can be tested on the real layout.
+    3. The developer's dev-server `config.yml` was missing every key added since 2026-11-14. During the failed smoke
+       test the server ran `stationary-ticks` and `no-progress-ticks` 60 (default 40 since L3), `group-spacing` 2.0
+       (default 1.5) and no `group-formation-keeping`, so `levels`, not `elastic`; the M3 squeeze and look-ahead
+       keys were not set either. The coordinator merged the file for the developer (`next` defaults, the dev
+       server's own values kept, the old defaults replaced). The next smoke test runs on the merged file.
+36. **L9 checked and merged; B links created** (2026-11-16). § 6 held: CI `build` and `paper-boot` (48) green on
+    head `76259d86`, diff reviewed (a region-query supplier asked for on use; scenarios read regions through the live
+    module), Codex at its usage limit. Merged knk-plugin#61 → `a78fcce8`, knk-workspace#669 → `6e92b112`; retest
+    steps on #668. Side effect noted for B: per-region `npc.navigation` overrides never applied to NPCs before L9.
+    Created B1 #670, B2 #671, B3 #672, B4 #673 (sub-issues of #358) and started B1. B2–B4 are fixes; the manager has
+    the plan (decision 34).
+37. **B1 checked and merged; B2 started** (2026-11-16). B1a (snapshot command) merged early at the developer's request
+    (knk-plugin#62 → `0f039203`, knk-workspace#691 → `21e3e103`); the developer took the snapshot at 21:25 UTC
+    (evidence branch `evidence/smoke-2026-11-16`). B1b (replay and scenes) § 6 held: CI `build` and `paper-boot` (50)
+    green on `6d81d59a`, production change only the gate-type fix of the snapshot taker; merged knk-plugin#63 →
+    `80902942`, knk-workspace#692 → `2da5d798`. On `next` the replay shows a group of 20 with 32 stuck spells and 6
+    followers lost while a leader alone arrives; the schematic climb with short stretches shows the falls, the
+    handovers onto another level and the guard-released turn. These are B2's pass/fail proof.
+38. **B2 checked and merged; B4 before B3** (2026-11-17). § 6 held: CI `build` and `paper-boot` (50) green on
+    `a30ac085`, no debug code in the diff, core changes reviewed (`Trail`, `WaypointChain.split`, the gap leg,
+    `NavGroup.leaderFell`). Merged knk-plugin#64 → `36ea2da0`, knk-workspace#693 → `a8e77d7d`.
+    Climb: falls 42 → 0, handovers onto another level 446 → 0. Replay: 0 falls everywhere; the group of 20 on the
+    stored settings still has 26 stuck spells and 3 lost, caused by slots at whole-block heights on flight 5 (half-block
+    steps; evidence on #673). No guard release without a fall occurred, so B3's case was not seen. Order changed: B4
+    (#673, stair heights, now also slot heights) runs next, then B3 (#672) only if the replay or the climb still shows
+    a crowd-turn fault. Alternative: B3 first as planned (rejected: it would fix nothing the tests show).
+39. **B4 checked and merged; B3 started** (2026-11-17). § 6 held: CI `build` and `paper-boot` (50) green on
+    `2a261289`, no debug code, core diff reviewed (`NavGeometry.onSurface` on every waypoint list the mover gets, slot
+    heights at the surface, the slot-point settle once the leader arrived). Merged knk-plugin#65 → `a3f0ebae`,
+    knk-workspace#694 → `0664b1ee`. Replay group on the stored settings: 0 lost (now a check), stuck spells 26 → 6,
+    none a crowd turn. Climb: 0 jumps toward a waypoint (the 160 left are Minecraft's own stair hops, reported apart,
+    B4 decision 5.5). B3 is needed: on the crowded climb the 30 s guard let queues go in 4 of 6 runs without a fall
+    (longest queue 18). B3 (#672) started with that as its proof. Filed by B4: #695 (jumps at the hall entry stair with
+    the smoke test's settings, report only).
+40. **B3 checked and merged; fix links done** (2026-11-17). § 6 held: CI `build` and `paper-boot` (50) green on
+    `89eeb3eb` (push and PR runs), no debug code, `CrowdControl` diff reviewed (a place's fitted floor, `LEVEL_GAP`
+    1.5, off-level holders and followers, the guard counted from the last entry). Merged knk-plugin#66 → `e69dba6a`,
+    knk-workspace#696 → `6be8222c`. Climb: 0 let go by the guard (was 3–6), 0 falls, 0 handovers onto another level,
+    0 jumps toward a waypoint, 0 stuck, 0 lost. For the developer's review: B3 decision 5.4 (the 30 s guard now counts
+    30 s in which nobody entered the place, not 30 s since arrival; a place nobody enters still releases after 30 s).
+    Open: the developer's smoke test of `quarry-to-keep` on `next` `e69dba6a` (#358 comment), #695 (report only), the
+    option-B decision, the `collidable` default, promotion.
+41. **Developer decision on B3 5.4: accepted** (2026-11-17, coordinator session; recorded on #672). Also checked
+    for the developer: the NPC walking checks (recheck, trespass guard, follower lanes; L9) apply the entry rule of
+    every region mapped to a domain, whatever its type (town, district, structure, gate). Exit rules hold where a
+    route is planned, from the NPC's position, but the walking checks do not re-check them (`DomainEntryRule` is
+    entry only; the module's own warning says "exit rules hold only where a route is planned").
 
 ## 4. Link blocks
 
@@ -1211,3 +1319,396 @@ _(Each link appends its block here when it finishes.)_
         4. BEHAVIOR_MODEL NAV-24–NAV-28 status rows, NAV-26 with M7's push resistance.
         5. The feature register and site/wiki rows for Phase 4c.
         6. A smoke-test guide in `docs/guides/` assembled from the plan's 4c.4 developer tests M1–M7, every step in full.
+
+### 4.16 L9 — Running groups ignore a realtime district deny: the NPC checks had no WorldGuard regions (#668)
+
+1. **Scope done** (behind `npc.navigation.enabled`, no new config key).
+    1. **The gap between L6's scenario and the real path.** `KnKPlugin.registerCommands()` starts `NpcNavigationModule` (about line 1086 of `onEnable`) before `regionTracker` is built (about line 1125). The module took `regionTracker.regionIds()` at start: `null` on every server. So `BukkitNavWorld.regionsAt` always returned an empty set, and every NPC rule check saw no region: the leader's way-ahead recheck, the trespass guard, and the followers' lanes and guard. The scenarios built their own `new RegionIds()` (`ScenarioNpcs`), and the core sim has its own region function, so no test read regions as the server does.
+    2. **The five questions.**
+        1. `npcNavigation.navigating()` is true once `/knk npc nav group 20` has run (route following is built on first use).
+        2. The realtime wiring runs on the hub's real events (`registerConfigSync` runs after `initializeNavigation`).
+        3. The rewarm's region set comes from the road edges. The router's own `you may not enter Residential District` comes from those edges' tags, so `district_1000004` and `gate_2000131` are in it.
+        4. `onAvailabilityChanged` reaches `NavGroup.rulesChanged`, and the follower recheck runs, but it found nothing denied with no regions.
+        5. `/knk cache refresh` triggers the same recheck, through the same empty-region world.
+    3. **This explains every symptom.** `replans: recheck 0, event 0` and `trespasses 0` (no entry was ever seen). Only the router's next plan blocked the group. Blocking at spawn and the release on re-allow worked, because the router uses the edges' tags. The per-region `npc.navigation` override scopes (`regionsOuterToInner`) never applied to NPCs either.
+    4. **The developer's question (the op's entry bypass): no.** `navGroup` takes the profile from the command's argument, else `default`, never from the sender. Every NPC check judges an `NpcAccessSubject` with `bypassesDomainRules() = profile.bypassDomainRules()`, which is false in the shipped `default`. Tested (`NavGroupDomainRulesTest`, `NpcNavigationModuleRegionsTest`).
+    5. **knk-plugin.**
+        1. `NpcNavigationModule` takes a `Supplier<RegionIds>`. `rulesWorld()` builds the rule checks' world when route following is built, and `regionsOuterToInner` asks too. It logs `[NPC] no WorldGuard region query …` when there is none.
+        2. `BukkitNavWorld.knowsRegions()`.
+        3. `KnKPlugin` passes `() -> regionTracker.regionIds()`.
+        4. `ScenarioServices.npcRules()`: `ScenarioNpcs` with domain rules reads regions through the live module.
+    6. **knk-workspace.** The changelog entry, and plan Phase 4 known limit 4 and step 10 (automated parts, startup-log check). Retest steps and the answer are posted on #668 (comment 6927589358).
+2. **Commits and heads.**
+    1. knk-plugin `claude/npc-followups-l9` at `76259d86`: 1 commit on `next` `0d9c55d6`.
+    2. knk-workspace `claude/npc-followups-l9` at `1dffa06d`: 1 docs commit on `next`.
+3. **PRs.** PandiO/knk-plugin#61 (`Closes` #668, `Part of` #506 and #593) and PandiO/knk-workspace#669 (`Part of`), base `next`. Not merged.
+4. **Tests, baseline → result.**
+    1. knk-plugin `./gradlew build -x deployToDevServer`: baseline on `next` `0d9c55d6` core 2955, api-client 344 (2 skipped), paper 2866 (18 skipped). Result on `76259d86`: core 2956 (+1), api-client 344, paper 2869 (+3). 0 failures.
+    2. New tests:
+        1. `NpcNavigationModuleRegionsTest` (3).
+        2. `NavGroupDomainRulesTest` +1 (the NPCs' subjects).
+    3. Scenarios, locally (Paper 26.3, pinned WorldEdit, WorldGuard, Citizens b4269, `--min-scenarios 48 --npc-navigation`):
+        1. This branch with `next`'s start-time wiring: 46/48. `npc-group-realtime-entry` fails (`knk-sc-22002 entered the district`), and so does `npc-group-access-change` (`entered the region`).
+        2. With the fix: 48/48, log check passed.
+    4. CI: the push run on `76259d86` is green (`build`, `paper-boot`). The PR run is green too (`paper-boot` 43944997333). #586 did not hit. Codex: at its usage limit (said on both PRs).
+    5. A probe, not committed: L6's core test with all five movement keys on and `ranks` passes. So the core logic was never the problem.
+    6. Known reds: none.
+5. **Decisions (DESIGN § 4.3).**
+    1. *Fix.* Chosen: a supplier asked for on use, because it is the smallest change and it keeps `KnKPlugin`'s start order. Alternatives:
+        1. (a) Move the NPC module's start after the region tracker. That reorders `registerCommands` and its takeovers, which is riskier.
+        2. (b) Let the module build its own `new RegionIds()`. That is a second query, which R8 wants shared.
+    2. *Test on the real path.* Chosen: scenarios read regions through the live module's `rulesWorld()`, so they fail on `next`'s wiring. Alternatives:
+        1. (a) A scenario that drives the whole hub, API and road network. There is no road network or API in CI, so the plugin's rewarm sends no event.
+        2. (b) A MockBukkit test of `KnKPlugin.onEnable` order. That is not feasible without the whole plugin.
+    3. *Warning.* Chosen: one warning when route following is built without regions. Alternative:
+        1. (a) Refuse to run. That is too strict for servers without WorldGuard.
+6. **Out of scope, noted.**
+    1. The coordinator's note 32 says 19 of the 20 group NPCs were IDLE. Followers are registered with the navigation service without an order of their own, so IDLE is their normal service state. Not filed.
+    2. The movement problems (B) are untouched.
+7. **Blockers.** None.
+8. **At merge / what the developer must do.**
+    1. Nothing in `config.yml`, no migration. Per-region `npc.navigation` overrides now take effect for NPCs.
+    2. The retest steps on #668 (plan Phase 4 step 10): no `[NPC] no WorldGuard region query` line, outside followers stop, `trespasses 0`.
+9. **Notes for later links.**
+    1. Anything the NPC module needs from `onEnable` after `registerCommands` must be a supplier.
+    2. The B links' snapshot replay should read regions through `ScenarioServices.npcRules()`.
+
+### 4.17 B1 — Evidence: the snapshot command (B1a), the whole stair house on the real line, the developer's snapshot replayed (B1b) (#670)
+
+1. **Scope done.** The coordinator split the link at 20:40: B1a (the command, merged) and B1b (scene and replay, on `claude/npc-movement-b1-scene`). The coordinator's messages of 20:18 and 20:22 reached this session only at 21:08.
+    1. **B1a, `/knk npc nav snapshot <route>`** (knk-plugin #62, merged into `next` `0f039203`).
+        1. Node `knk.admin.npc`. It is refused while `npc.navigation.enabled` is off. It needs road navigation, not Citizens.
+        2. It writes `plugins/KnightsAndKings/npc-snapshots/<route>-<UTC>.zip` with:
+            1. the road line for the default NPC profile;
+            2. the stretches handed out from the start;
+            3. gate crossings and plazas;
+            4. the roads in the box;
+            5. the WorldGuard regions touching the box, whole, with parent, priority, flags, the cached domain data and gate doors;
+            6. the settings with their layers;
+            7. a manifest;
+            8. the region files the box touches, copied off the main thread after a save.
+        3. Model and zip format live in knk-core `core/npc/nav/snapshot/`; the Paper side is `NavSnapshotTaker`. Docs: the commands guide and the changelog (#691, merged).
+        4. The developer took the first snapshot at 21:25.
+    2. **B1b, the scene.**
+        1. `SizedScene` and `ScenarioScene.Box` let a scenario ask for a bigger box.
+        2. The whole stair house sits in `STAIRHOUSE_BOX` (32 × 40 × 72, frame real − (1400, 46, −553)).
+        3. `NpcMovementScene.CLIMB` is the **real road line**: the `# waypoints:` lines of the developer's traces 69 (reversed), 87 and 63. The traces arrived at 21:08 on `evidence/smoke-2026-11-16` `2e46cb90`; the first version used a line found on the schematic. The eight traces are test resources (`.log`, `git add -f`).
+        4. `npc-stairhouse-climb` is the light scene, in report mode: a group of 20 with 20 singles, `stretch-blocks` 8, and the smoke test's settings (decision 35.3).
+        5. `ClimbWatch` reports falls, places skipped, handovers onto another level, the 30 s guards (including a turn dropped by `STALE_TICKS`, which the crowd does not count), and where each NPC got to.
+    3. **B1b, the replay.**
+        1. `AnvilRegion` reads `.mca` files without the server, including Minecraft 26.x palettes (block state strings, each wrapped in `{"": ...}` in mixed lists).
+        2. `SnapshotReplay` (with `SnapshotRegions`) places the blocks, builds the regions, and gives fake access rules, the line, gates, plazas and settings.
+        3. **The developer's snapshot of `quarry-to-keep`** (21:25, plugin `0f039203`, 17.5 MB, `evidence/smoke-2026-11-16` `4a7bcca9`) is committed **trimmed**: `tools/scenario-scenes/trim_snapshot.py` keeps the 30 chunks round the stair house, in 371 KB.
+        4. **`npc-replay-quarry-to-keep`** is the main replay. It checks the replay: 111,286 blocks placed, 13 regions seen by the NPC checks, settings known. It then reports a leader alone and a group of 20, once with the stored settings and once with the smoke test's.
+        5. `make_snapshot_sample.py` writes a sample made from the schematic; it is kept for the unit tests.
+    4. **B1a fix in B1b.** The dev server's gate domains have type `GateStructure`, so the taker recorded no gate door states. The taker and `isGate` now treat that type as a gate.
+    5. **CI.** `MIN_SCENARIOS` 50, `--expect-timeout 1800`, job timeout 40 minutes. Docs: plugin-scenarios § 1 and § 3 items 7.5 and 8, ci.md § 7, the changelog (#692).
+2. **Commits and heads.**
+    1. knk-plugin `claude/npc-movement-b1`: `1d9e3209` (merged).
+    2. knk-plugin `claude/npc-movement-b1-scene`: `6d81d59a`.
+    3. knk-workspace `claude/npc-movement-b1`: `383cd24d` (merged).
+    4. knk-workspace `claude/npc-movement-b1-scene`: `6684a815`.
+3. **PRs.**
+    1. B1a: PandiO/knk-plugin#62 and PandiO/knk-workspace#691 (`Part of`), merged.
+    2. B1b: PandiO/knk-plugin#63 (`Part of`) and PandiO/knk-workspace#692 (`Closes #670`), base `next`, not merged.
+4. **Tests, baseline → result.**
+    1. knk-plugin `./gradlew build -x deployToDevServer`.
+        1. Baseline on `next` `a78fcce8`: core 2956, api-client 344 (2 skipped), paper 2869 (18 skipped).
+        2. B1a: core 2968 (+12), paper 2874 (+5).
+        3. B1b: paper 2885 (+11). 0 failures.
+        4. New tests:
+            1. `NavSnapshotZipTest` 4, `SnapshotBoxTest` 4, `SnapshotPartsTest` 4, `NavSnapshotTakerTest` 5.
+            2. `AnvilRegionTest` 5: the sample block for block; the developer's 26.x files, where 85% of the schematic's blocks are the same with their state.
+            3. `SnapshotReplayTest` 4.
+            4. `NpcMovementSceneTest` +2: the climb on the stairs and in order; every point is in a trace.
+    2. CI.
+        1. #62: `build` and `paper-boot` green on both runs.
+        2. #63: run 43958612478 green on `99c27a40`, with the earlier set of 50 (`paper-boot` 19 min).
+        3. The head `6d81d59a` was pending at the time of this block.
+    3. Scenarios, locally: 50/50 on the earlier set (15 min 23 s). `npc-replay-quarry-to-keep` passes in 354 s.
+    4. **What shows on `next`.**
+        1. **The schematic climb** (real line, short stretches, the smoke test's settings):
+            1. Falls from 1411 51 −496 to 1411 49 −500, the smoke test's fall spot: 30 with a group of 20, 78 with the crowd.
+            2. Handovers onto another level: 37 for a leader alone, 434 with the crowd.
+            3. **A turn dropped by the 30 s guard** (the group's leader, 30.3 s at 1409 54 −499).
+            4. Stuck spells near 1411 50 −499, the smoke test's stuck spot.
+            5. These numbers come from the three-phase run; CI now runs only the crowd phase.
+        2. **The real replay** (real blocks, 32-block stretches, no crowd):
+            1. Stored settings: the leader alone arrives in 54.7 s with no falls and 1 handover onto another level (on the street slope). In the group of 20, the leader arrives in 87.0 s, followed by **32 stuck spells and 6 followers lost**; 9 followers end on flight 5 and the −536 landing.
+            2. Smoke-test settings: the leader alone is the same. The group's leader arrives in 67.3 s with 0 stuck spells; 5 members reach the top hall and the rest are spread over flights 4 and 5.
+            3. So the handover and fall faults need the crowd and short stretches. A single leader or group on 32-block stretches does not trigger them on the real blocks.
+    5. Known reds: none. Codex was at its usage limit (said on #62).
+5. **Decisions (DESIGN § 4.3).**
+    1. *The scene's route line.* Chosen: the traces' `# waypoints:` lines going up, with duplicates at stretch joins dropped. East of x 1418 the scene keeps its own flat street, because the real street falls to 1433 44 −516 beyond the schematic. Alternatives: (a) the line found on the schematic (used until the traces arrived; it showed the faults more weakly); (b) the snapshot's road polyline on the schematic (the replay already runs it on the real blocks).
+    2. *The real snapshot in the repository.* Chosen: trimmed to the stair house (371 KB) with a deterministic tool, committed in main resources so it ships in the jar the scenarios run from; the full 17.5 MB zip stays on the evidence branch. Alternatives: (a) the whole zip in the jar (17.5 MB in every jar); (b) fetch it from the evidence branch in CI (network and a second source of truth; local runs need it too).
+    3. *Which scene runs where.* Chosen: both in `paper-boot`. The real replay (leader and group, two configurations, about 6 minutes) is the main evidence. The schematic climb keeps only its crowd phase (about 2.5 minutes), because only the crowd with short stretches shows the falls, the handovers onto another level and the guard. The sample replay left CI. Alternatives: (a) only the replay (the faults would not show); (b) every phase of both (about 4 minutes more).
+    4. *Two configurations in the replay.* Chosen: the stored settings (the merged dev config) and the smoke test's (decision 35.3), so B2 sees whether a fix holds in both. Alternative: (a) the stored settings only.
+    5. *Short stretches in the climb.* Chosen: `stretch-blocks` 8, so handovers fall on the hairpins. Alternatives: (a) 32, which the real replay already runs.
+    6. *Box for the whole house.* Chosen: a scenario-sized box (`SizedScene`). Alternatives: (a) two stacked 32 × 24 × 32 boxes; (b) a bigger default for every scenario.
+    7. *Snapshot refused while the flag is off.* Chosen: refuse, like every `nav` action, which keeps `NpcNavigationModuleDisabledTest`'s invariant. Alternative: (a) allow it without the flag.
+    8. *Stretches in the snapshot.* Chosen: as handed out from the start (`stretchesNote` says so). Alternatives: (a) the line only; (b) a recorded NPC's own (that is the trace's job).
+    9. *Region files.* Chosen: search the world folder for `region/r.x.z.mca` and keep each path. Alternative: (a) a fixed `region/` path (it breaks with 26.x dimension folders).
+    10. *Gate type.* Chosen: any domain type containing "gate" (`gate`, `GateStructure`). Alternative: (a) an exact list of type names.
+6. **Out of scope, noted.**
+    1. The crowd's own `let go` counter stays 0. The guard that fired drops a turn (`STALE_TICKS`), and the crowd does not count that; `ClimbWatch` does. For B3. Not filed.
+    2. The traces were missing from `evidence/smoke-2026-11-16` at the start (`*.log` is git-ignored). The coordinator added them at `2e46cb90`.
+7. **Blockers.** None.
+8. **At merge / what the developer must do.**
+    1. Nothing in `config.yml`, no migration.
+    2. After B1b is merged into `next`, take a new `/knk npc nav snapshot quarry-to-keep`. The first one has no gate door states (the `GateStructure` fix). Then trim it with `trim_snapshot.py` and replace the committed zip.
+9. **Notes for later links.**
+    1. B2 to B4 turn the `ClimbWatch` numbers into checks:
+        1. in `npc-stairhouse-climb`: handovers onto another level 0, falls 0, no turn dropped by the guard;
+        2. in `npc-replay-quarry-to-keep`: the group arrives, no stuck spells, nobody lost.
+    2. A new snapshot: run `trim_snapshot.py IN OUT 1391 36 -559 1454 96 -480` and commit OUT as `scenario-snapshots/quarry-to-keep-stairhouse.zip`. A scene is at most 64 wide along x.
+    3. `NpcMovementScene.CLIMB` and `make_snapshot_sample.py`'s `CLIMB` hold the same line; change both together. A new trace file needs `git add -f`.
+
+### 4.18 B2 — Stretch handover in 3D, appended, bridged from the feet; gaps as local legs; no leader fall in the group path (#671)
+
+1. **Scope done** (decision 34.1, plan § 4c.8). Behind `npc.navigation.enabled` (off by default); no new key.
+    1. **Handover by 3D progress.** knk-core `Trail` keeps the waypoint list the mover was given and the index of the one the NPC walks to: the nearest in 3D from the current one on, or the next once reached (0.6) or passed, never back. `NpcNavigationService.watch` hands out the next stretch once fewer than `HANDOVER_DISTANCE` (4) blocks are left along those waypoints in 3D. Without a list (after a crowd hold, a push or a recovery move), it uses the 3D distance to the stretch end.
+    2. **Appended, not replaced.** `Trail.appended` puts the new stretch after the waypoints not yet walked. `Trail.fromFeet` drops only those the NPC is already past: its feet beyond the waypoint along the next step, no further from the next waypoint than the waypoint is, on its level, and the next one a straight walk.
+    3. **Bridged from the feet.** `WaypointChain.split` starts at the NPC's feet when it is on the ground.
+    4. **An unbridgeable step becomes a local leg.** `split` returns the gap. The list is cut before it. When the cut list is walked, `startGapLeg` sends a local leg to the waypoint after the step, then the follower restarts where the NPC stands. Logged (`no walk from … to … on the line, a local leg takes that step`) and counted (`gapLegs()`, in the scenario report lines).
+    5. **No leader fall in the group path.** `NavGroup.leaderFell`: a leader with a route line that is more than 1.75 blocks below the lower of its path point and the one before has fallen. Its points stay out of the path. After 30 s below, the path follows it as before. Counted as `leaderFalls()`.
+    6. **Proof turned into checks** (`ClimbWatch.failures`).
+        1. `npc-stairhouse-climb` fails on a fall from a climb place, a handover onto another level, a turn dropped by the 30 s guard after its holder fell, a group leader that does not arrive, and a lost follower.
+        2. `npc-replay-quarry-to-keep` fails on the same for the leader alone and the group in both configurations, except lost followers (item 6.1).
+        3. "Onto another level" is now judged on the list the NPC walks: the waypoint it walks to next after a handover is 2.5 blocks or more above or below its feet. B1's measure (the new stretch's waypoint nearest the feet horizontally) is still reported as `new stretches starting off the feet level (B1's measure)`. Decision 5.3 explains why.
+    7. **The group failure in the real replay (prompt § 2.6): a separate cause, not fixed here.**
+        1. With B2, the replay group has 0 falls and 0 handovers onto another level, but followers are still lost (stored settings: 26 stuck spells, 3 lost).
+        2. The cause is on flight 5 (x 1408–1410, z −544…−534), which is built of alternating bottom slabs and full blocks: each step is half a block. When the leader stops in the top hall, the rear rows' slots lie on that flight, by design. The slots stand at whole-block heights, for example feet 73 over a slab whose surface is 72.5.
+        3. Followers 0.5–1 block short of their slots get the same two waypoints every 5 ticks and do not progress. Their no-progress spell backs them off down the flight, and the ladder's local leg finds `no point ahead on its floor to aim at` (every point ahead on a half-block stair is on a higher floor). They are then lost.
+        4. Evidence: run log with traces at real 1409.6 72.5 −541.6 (knk-sc-14, -16, -19). Proposal on [#673](https://github.com/PandiO/knk-workspace/issues/673#issuecomment-6931558660): slots at real surface heights, a follower within a block of its slot on the same flight counts as settled, and `PathTargets.ahead` accepts a point a step above.
+        5. Not small and not in the handover code, so lost followers stay report-only in the replay (the climb checks them).
+2. **Commits and heads.**
+    1. knk-plugin `claude/npc-movement-b2`: `ce1def6b`, `fd88545f`, `36822ec4`, `b3cf6a91`, head **`a30ac085`**.
+    2. knk-workspace `claude/npc-movement-b2`: head **`cbff95cc`**.
+3. **PRs** (base `next`, not merged).
+    1. PandiO/knk-plugin#64 (`Part of #671`).
+    2. PandiO/knk-workspace#693 (`Closes #671`).
+4. **Tests, baseline → result.**
+    1. `./gradlew build -x deployToDevServer`.
+        1. Baseline on `next` `80902942`: core 2968, api-client 344 (2 skipped), paper 2885 (18 skipped).
+        2. Result: core 2987 (+19), api-client 344, paper 2885; 0 failures.
+        3. New tests: `TrailTest` 10 (index, never back, the flight above not taken for the NPC's place, rest in 3D, a stretch end right above is still a flight away, appended, duplicate join, waypoints already passed dropped, one not reached kept, nothing ahead skipped).
+        4. `WaypointChainTest` +5 (split, the join from the feet, a gap handed back, a gap at the feet, the level above as a gap).
+        5. `NpcNavigationServiceTest` +3 (appended, no handover from a flight below the stretch end, a gap walked as a local leg).
+    2. Scenarios, locally (Paper 26.3 b205, Citizens b4269, `--npc-navigation`): **50/50 on the final head.**
+    3. **Before (`next`) → after.**
+        1. `npc-stairhouse-climb`:
+            1. falls 42 → 0;
+            2. handovers onto another level 446 → 0 (B1's measure → 0);
+            3. stuck spells 117 → 2;
+            4. lost 0 → 0;
+            5. no turn dropped by the guard;
+            6. top hall reached 11 → 25 of 40;
+            7. leader 86.0 → 100.7 s.
+        2. `npc-replay-quarry-to-keep`:
+            1. The leader alone: 1 → 0 handovers onto another level, 54.7 → 56.7 s.
+            2. The group with the stored settings: stuck spells 32 → 26, lost 6 → 3, 0 falls.
+            3. The group with the smoke test's settings: 0 stuck spells, 0 lost.
+    4. **Three regressions found and fixed on the way** (each deterministic, checked against `next` twice):
+        1. With plain appending, `npc-jagged-straight-collision-on` failed: the leader walked back to a corner zig it was past, into its followers.
+        2. With the join cut ahead to any straight-walkable waypoint within 3 blocks, `npc-stairhouse-group` (off and on) failed: L5's corner clearance was skipped.
+        3. With "passed" judged by projection only, `npc-jagged-straight` failed: a row stayed 0.6 short of its slots and the group waited out its 20 s settle (#636).
+    5. CI: `build` and `paper-boot` (50 scenarios) green on `a30ac085` (runs 43988727914, 43988727937).
+    6. Known reds: none. Codex: at its usage limit (said on #64).
+5. **Decisions (DESIGN § 4.3).**
+    1. *Where the NPC is on its list.* Chosen: the service keeps the list and estimates the index itself, nearest in 3D, never back (`Trail`). Alternatives: (a) a `waypointIndex()` on `NpcMover` read from Citizens (a port change, and Citizens' navigator does not expose it cleanly); (b) the follower's line index (it knows the line, not the bridged waypoints).
+    2. *Handover distance.* Chosen: keep 4 blocks, now in 3D along the waypoints left. Alternatives: (a) hand out only at the list's end (a stop at every join); (b) a new key (not needed, prompt: no new key unless needed).
+    3. *What "onto another level" measures.* Chosen: the next waypoint the NPC walks to after a handover, on the list it was given. B1's measure stays in the report. With 3D handovers, a correct stretch going up the next flight is a flight above the NPC before it gets there, so B1's measure would count correct handovers. Alternatives: (a) B1's measure as the check (it would fail correct behaviour); (b) hand out only within 2.5 blocks of rise of the end to satisfy it (the stop at every join again).
+    4. *Joining at the feet.* Chosen: drop only waypoints already passed (beyond along the next step and no further from the next waypoint). Alternatives, both tried: (a) keep everything (failed `npc-jagged-straight-collision-on`); (b) cut ahead to the furthest straight walk within 3 blocks (skipped corner clearance, failed `npc-stairhouse-group`).
+    5. *Unbridgeable step.* Chosen: cut the list before it, walk to the cut, then a local leg to the waypoint after the step, then restart the line where the NPC stands. Only steps from the feet are checked when the NPC is on the ground (a jump or fall mid-air is not a gap). Alternatives: (a) a local leg at once from wherever the NPC is (it would skip the walkable part); (b) a replan (heavier, same result).
+    6. *A leader's fall.* Chosen: 1.75 blocks below the lower of its path point and the one before, path frozen up to 30 s, then as before. Alternatives: (a) the nearest line point instead of the path (on stacked flights the flight below is on the line); (b) no time limit (a leader that never comes back would freeze its group); (c) the engine's vertical speed (NaN on some engines).
+    7. *Lost followers in the replay.* Chosen: report-only with the cause and proposal on #673. Alternatives: (a) fail on them (the replay would stay red for a cause outside B2); (b) fix slot heights here (B4's scope, not small).
+6. **Out of scope, noted.**
+    1. The half-block stair follower failure (item 1.7): proposed for B4 on #673.
+    2. The line's own zigs on the jagged straight (corner clearance on a 3-wide road) are walked now. Before, a handover cut them. Not filed; noted for B4's look at waypoint heights and shapes.
+    3. #636 (a follower just short of its slot never settles) showed up again in the third regression; not changed here.
+7. **Blockers.** None.
+8. **At merge / what the developer must do.**
+    1. Nothing in `config.yml`, no migration.
+    2. The smoke test on `quarry-to-keep` with the group of 20 and the singles (plan § 4c.4 developer test) after B2 is merged, preferably after B3 and B4.
+    3. Review the decisions above, mainly 5.3 (what "onto another level" means now) and 5.7.
+9. **Notes for later links.**
+    1. B3: the climb still runs the crowd. A turn dropped by the guard without a fall stays report-only (`ClimbWatch.staleTurns`). B3 can make it a check.
+    2. B4: start from the #673 comment. The replay's lost followers are the check to turn on (`NpcSnapshotReplayScenario`, the comment at the lost check).
+    3. `npc-jagged-straight` (collision off) is sensitive to the leader's final approach because of #636: a group can wait 20 s for a follower 0.6 short of its slot, against the scenario's 30 s.
+
+### 4.19 B4 — Waypoints and group slots at the real stair heights; jumps by upward speed (#673)
+
+1. **Scope done** (prompt § 2, plan § 4c.8 item 2). Behind `npc.navigation.enabled` (off by default); no new key.
+    1. **Waypoints at the walking surface** (knk-core `NavGeometry.onSurface`, `NavWorld.surfaceY`; knk-paper `BukkitNavWorld.surfaceY`). Every list handed to `NpcMover.follow` goes at the top of the floor block's step: the box that spans the whole cell.
+        1. A bottom slab or an upright stair goes at half a block.
+        2. An upside-down stair or a full block goes at a whole block.
+        3. A path block goes at 0.9375.
+        4. Where two waypoints, or the feet and the first waypoint, rise more than a step (`STEP_UP` 0.6), the cell on the line whose surface lies between them goes in.
+        5. Planning, `Trail` and the handover keep `floor + 1`, as B2 measured them.
+    2. **Group slots at the surface.** The follower lists go through the same rule, so a slot on flight 5 is at feet 72.5, not 73.
+    3. **Recovery's point ahead on a half-block stair.** `NavGeometry.jumpFits` counts a rise of at most a step at the surface as no jump, so the low-headroom rule no longer refuses half-block steps under the flight above (`PathTargets.ahead`). Recovery and rejoin take the floor from the feet with `NavGeometry.floorYOf`: feet 72.5 stand on the block at 72, not 71.
+    4. **A follower at its slot's point is settled** (`NavGroup.atSlotPoint`, `SLOT_REACHED` 1.0). Once the leader's trip has ended, a follower within a block across of its slot's point and less than a block above or below it at the surface is settled: an open spell ends as freed, and it is not lost.
+        1. The cause, from a diagnostic added to the spell line: all lost followers stood 0.46–0.95 blocks from the same slot point on flight 5 (real 1409 72 −542), half a block under it, but 2–6 blocks behind it along the group path.
+        2. The group path passes there more than once, so their place on the path was the earlier pass.
+        3. They were sent round the loop and stalled. Their spells ran to `no point ahead on its floor`, because the point ahead must lie 3 blocks along the path before the slot. They ended lost.
+        4. This is the "settled" part of B2's proposal on #673.
+    5. **Jumps by upward speed** (knk-core `JumpDetector`: 0.3 blocks per tick upward, a jump takes off at 0.42; without the engine's speed, the rise per tick off the ground). It is used in `/knk npc nav trace` (`JUMP`) and in `ClimbWatch`.
+    6. **The engine's stair hops told apart** (`ClimbWatch.stairHopsIn`). Citizens uses Minecraft's move control. It jumps in two cases:
+        1. A target more than 0.6 above the feet within a block. Waypoint heights are about this case.
+        2. Whenever the block at the feet has a collision top above them: on a stair's step, under its upper half. No waypoint height removes this one.
+
+        A jump whose take-off position stands inside a stair block below its top counts as a stair hop and is reported apart.
+    7. **Checks.**
+        1. `npc-replay-quarry-to-keep` fails on a lost follower, with their run-log lines in the reason, and reports where each stuck spell opened.
+        2. `npc-stairhouse-climb` fails on a jump toward a waypoint on the flights and their entries.
+2. **Commits and heads.**
+    1. knk-plugin `claude/npc-movement-b4`: 8 commits, from `4f91ce87` to head **`2a261289`** (base `next` `36ea2da0`).
+    2. knk-workspace `claude/npc-movement-b4`: head **`73160c65`** (base `next` `a8e77d7d`).
+3. **PRs** (base `next`, not merged).
+    1. PandiO/knk-plugin#65 (`Part of #673`).
+    2. PandiO/knk-workspace#694 (`Closes #673`).
+4. **Tests, baseline → result.**
+    1. `./gradlew build -x deployToDevServer`.
+        1. Baseline on `next` `36ea2da0`: core 2987, api-client 344 (2 skipped), paper 2885 (18 skipped).
+        2. Result on `2a261289`: core 3004 (+17), api-client 344, paper 2891 (+6). 0 failures.
+        3. New tests:
+            1. `NavGeometrySurfaceTest` 10: floor under feet, slab top, full block unchanged, idempotent, no floor, list unchanged, half-block stair rises half a block a step, half step under low headroom, the step between two waypoints, the step from the feet.
+            2. `JumpDetectorTest` 5.
+            3. `PathTargetsTest` +1: the point ahead up a half-block stair under a low flight.
+            4. `NavGroupTest` +1: slots on a half-block stair are sent at the slab's top.
+            5. `BukkitNavWorldSurfaceTest` 6.
+    2. Scenarios: CI only. Locally Citizens could not load its Adventure libraries (Maven Central answered 429 in this container). Pre-seeding them from a mirror was refused by the session's permission classifier, so it was not done. The CI log artifacts were read instead.
+    3. CI on `2a261289`: `build` green; `paper-boot` green on the push run 44008785404 and the PR run 44008842004 (50/50). Six `paper-boot` runs in all, while iterating. Run 3 failed on purpose with the new checks before the slot-point fix.
+    4. **Before (B2's numbers on `next`) → after (final head; the run before in brackets).**
+        1. Replay, group of 20, stored settings:
+            1. Lost: 3 → **0** (0).
+            2. Stuck spells: 26 → 6 (4).
+            3. Where they opened: 4 on the street at the start (1436 42..43 −512) while the group forms up, 3–7.75 behind their slots; 2 on flight 5's loop, 0.96 from the slot's point.
+            4. Crowd: longest queue 1, nothing let go.
+            5. 0 falls, 0 handovers onto another level. The leader arrives in 71.1 s.
+        2. Replay, group, smoke test's settings: 0 lost, 0 stuck, 0 falls (as with B2).
+        3. Replay, leader alone (both configurations): 0 jumps toward a waypoint, 1–2 engine stair hops, 57.6 s.
+        4. Climb (group of 20 with 20 singles):
+            1. Jumps toward a waypoint on the flights and their entries: **0**. All 160 jumps are engine stair hops.
+            2. Falls, handovers onto another level, stuck spells and lost followers: 0.
+            3. The leader arrives in 76.2 s (B2: 100.7).
+        5. The steps on the way, for the record:
+            1. Slabs at their surface only: climb 328 jumps at climb places, all kinds; replay lost 3, stuck 16.
+            2. Stairs at their step: climb 84 jumps, every one an engine stair hop.
+            3. The slot-point rule: replay lost 4 → 0.
+    5. Known reds: none. Codex: at its usage limit on both PRs (said on each).
+5. **Decisions (DESIGN § 4.3).**
+    1. *Where the surface height is applied.* Chosen: only on the lists handed to the mover (`NpcMover.follow`). Planning, `Trail`, the handover and the group path keep `floor + 1`. Alternatives:
+        1. (a) Surface heights everywhere in planning. Every `blockY() - 1` floor rule would read a slab's block as the one below: a large, risky change.
+        2. (b) In the Paper mover only (`CitizensNpcMover.follow`). Not testable in knk-core, and the engine-free logic would sit in the adapter.
+    2. *A stair's height.* Chosen: its step (the box that spans the cell, 0.5). Alternatives:
+        1. (a) The highest box under the body's footprint (1.0 at a stair's middle). Tried in the first runs: the move control jumps for a target a whole block up within a block.
+        2. (b) The lowest box (wrong for upside-down stairs).
+    3. *Steps between waypoints.* Chosen: insert the in-between surface cells on the line where two waypoints, or the feet and the first, rise more than 0.6. Alternatives:
+        1. (a) Leave sparse waypoints (the jumps stay).
+        2. (b) Resample every list to one point per block (many more waypoints for every NPC).
+    4. *Followers lost on flight 5.* Chosen: once the leader's trip has ended, a follower at its slot's point (within 1 block across, less than 1 up or down: Citizens' own default arrival margin) is settled. Alternatives:
+        1. (a) Fix the group path's loop on flight 5. Its cause is upstream (the leader's path), and the stall comes from judging along the path.
+        2. (b) Let `PathTargets.ahead` aim at the slot itself when it is closer than 3 blocks. That is a leg into a place it already stands at.
+        3. (c) The same rule while the leader walks too. It would stop followers that should keep walking past their slots.
+    5. *What counts as a "real jump".* Chosen: a jump by upward speed that does not take off from a stair's step. The engine's stair hops are reported, not failed. Alternative:
+        1. (a) Fail on every jump. The climb could never pass: the hop is vanilla move control behaviour that no waypoint changes.
+    6. *Jump threshold.* Chosen: 0.3 blocks per tick upward (a jump takes off at 0.42, then 0.33). Alternatives:
+        1. (a) 0.4 (the second tick of a jump could be missed when the first is skipped).
+        2. (b) The old rise > 0.2 (counts half-block steps).
+    7. *Where the replay checks jumps.* Chosen: the climb fails on jumps toward a waypoint; the replay reports them. Alternative:
+        1. (a) Fail the replay too. 56 remain with the smoke test's settings; cause not established, #695.
+    8. *Lost followers' reason.* Chosen: their run-log lines go into the failure text, and the spell line logs where the follower stands against its slot. Alternative:
+        1. (a) Rely on the NPC log files (not uploaded by CI).
+6. **Out of scope, noted.**
+    1. **#695** (filed): with the smoke test's settings, the replay's group jumps toward a waypoint at the hall entry's stair (1412 50 −495), 56 in the last run, report only. Guess: Citizens moves on to the next waypoint within its 1-block margin and passes the step's waypoint.
+    2. **The climb's crowd releases** (B3, #672): the 30 s guard let 0, 3, 3, 3, 0 and 6 queues go over the six runs. No fall, no dropped turn; longest queue 18, longest wait 30 s.
+    3. Docs follow-ups for the docs session:
+        1. `docs/architecture/npc-navigation.md`: the surface rule and the slot-point settle.
+        2. The admin guide: the trace's `JUMP` column.
+7. **Blockers.** None.
+8. **At merge / what the developer must do.**
+    1. Nothing in `config.yml`, no migration.
+    2. The smoke test on `quarry-to-keep` (plan § 4c.4) after B4, and B3 if it runs. Watch the rear rows on flight 5 settle in place, and no hop at the flight entries apart from the stair steps' own.
+    3. Review decisions 5.1, 5.4 and 5.5 above.
+9. **Notes for later links.**
+    1. B3: the climb shows crowd guard releases without a fall (item 6.2), varying per run. `ClimbWatch.staleTurns` stays empty (no turn is dropped), so the release is the crowd's own `let go` counter (`crowd().overdue()`). Look at whether the holder of the turn stands on another flight in 3D when the guard fires. Make it a check once fixed.
+    2. The replay's spell line (`... stuck at x y z, n blocks behind its slot at ... (d away)`) and the report's `stuck spells opened` show where a group stalls; real coordinates = scene coordinates − (scene origin) + (1391, 36, −559).
+    3. The 4 spells at the start (1436 42 −512) happen while the group forms up from its spawn bunch; not looked into.
+
+### 4.20 B3 — Crowd turns judged in 3D; the 30 s guard counts from the last entry (#672)
+
+1. **Scope done** (prompt § 2, plan § 4c.8 item 3). Behind `npc.navigation.enabled` and `crowd-awareness` (both off by default); no new key.
+    1. **Diagnostic first** (knk-core `CrowdControl.releases()`, `longWaits()`; `ClimbWatch.releases`, `longWaits`). Each release by the guard records where the NPC let go stood, the place (its middle and its cells' feet levels) and every holder of a turn there in 3D. That covers height above the place, progress, distance across, whether it blocks, whether it counts as passed and which followers keep its turn. Each waiting ticket counts what held it (an oncoming holder, an earlier waiter or the spacing rule) with that NPC's position and level. The climb and the replay report both lines.
+    2. **Cause 1, 3D** (CI `paper-boot` 44012059768 on the unchanged rules, climb let go 6). All 6 releases were at flight 1's top (real 1410 54 −500, a one-cell place). The only holder was the group's leader `knk-sc-32000` on the landing above flight 2 (1409 59 −491 and 1409 60 −492), 5.5 to 6 blocks above the place. Horizontally its progress was −8.2, so the spacing rule ("the one ahead is a block into the place") read it as just inside the entry. Its followers in the place (1409 54 −499, 1410 55 −501) kept its turn. The singles going the same way waited behind a leader a flight up. No fall and no oncoming NPC was involved.
+    3. **Fix 1: a place has a floor** (`CrowdControl.Place.levelGap`, `LEVEL_GAP` 1.5). The floor is flat, or a flight's slope fitted to the cells' feet levels along the axis (at most 1 per block). Before and after the cells the band spans the end's level and the slope carried on for up to 4 blocks, so landings and the flight's own steps count. Feet 1.5 or more off the band are on another level: a step (1) or a jump (1.25) still counts, a floor stacked 3 or more blocks away does not.
+        1. A holder on another level has passed: its turn ends unless a follower on the place's floor still keeps it.
+        2. A holder on another level never stops a waiter of its own direction (spacing). It stops one of the other direction only while a follower of its turn is still in the place.
+        3. A follower on another level keeps no turn.
+    4. **Cause 2, not 3D** (CI 44014280706 on `a775efc4` and locally: let go 3, the same three). Every NPC that held them stood on the place's floor (levels −0.5 to +1.0): the 18 singles queued in single file at the same one-wide top, each going once the one ahead was a block into the place. The queue drained at about 2 s per NPC, within M4's own bound of 3 s per NPC that went first. The last three passed 30 s since their arrival while it kept moving.
+    5. **Fix 2: the guard counts from the last entry.** A queue lets an NPC go after 30 s in which nobody entered the place (from its arrival or the last entry, whichever is later). A place nobody enters still lets the queue go after 30 s. `longest wait` stays counted from arrival. Log line: "… waited 30 s at a narrow place without the queue moving: goes".
+    6. **Check.** `npc-stairhouse-climb` fails on any NPC let go by the guard, with why.
+2. **Commits and heads.**
+    1. knk-plugin `claude/npc-movement-b3`: 3 commits, `3e7d70bb` (diagnostic), `a775efc4` (3D), head **`89eeb3eb`** (guard; base `next` `a3f0ebae`).
+    2. knk-workspace `claude/npc-movement-b3`: head **`bcf7a3d9`** (base `next` `0664b1ee`).
+3. **PRs** (base `next`, not merged).
+    1. PandiO/knk-plugin#66 (`Part of #672`).
+    2. PandiO/knk-workspace#696 (`Closes #672`).
+4. **Tests, baseline → result.**
+    1. `./gradlew build -x deployToDevServer`.
+        1. Baseline on `next` `a3f0ebae`: core 3004, api-client 344 (2 skipped), paper 2891 (18 skipped).
+        2. Result on `89eeb3eb`: core 3011 (+7), api-client 344, paper 2891. 0 failures.
+        3. New knk-core `CrowdControlTest` cases (+7):
+            1. A queue that moves is no deadlock (and the guard still fires once nothing moves for 30 s).
+            2. A holder a floor above or under the place has left its turn.
+            3. One that fell under it too.
+            4. A step or a jump keeps the turn.
+            5. No queue behind a leader on the floor above (the oncoming one still waits while its follower is inside).
+            6. A follower a floor up keeps no turn.
+            7. A flight's place rises with its steps; flights 3 and 8 blocks above are another level.
+
+            The guard test also checks the release record.
+    2. Scenarios.
+        1. CI `paper-boot` on `89eeb3eb`: push run 44017052199 50/50, and the PR run 44019311124 50/50 (climb let go 0, 76.2 s).
+        2. Local: Paper 26.3 b205 with Citizens b4269 (Citizens loaded its libraries this time). The climb alone three times, and all 27 `npc-*` scenarios once (27/27).
+    3. **Climb, queue let go by the 30 s guard.**
+        1. B4's six runs: 0, 3, 3, 3, 0 and 6.
+        2. Diagnostic on the unchanged rules: 6 (cause 1).
+        3. Fix 1 only: 3 (cause 2), in CI and locally.
+        4. **Final head: 0** (CI push run and three local runs).
+        5. Longest queue 18, longest wait 30.0 → 36.0 s at 2.1 s per NPC ahead.
+        6. Falls, handovers onto another level, jumps toward a waypoint, stuck spells and lost followers stay 0. The leader arrives in 76.2 s; 173 engine stair hops (report only, B4 decision 5.5).
+        7. The local runs give the same numbers each time (76.2 s, 18, 36.0 s).
+    4. **Replay `npc-replay-quarry-to-keep`: unchanged.** The diagnostic run on the old rules and the local run on the final code give the same numbers: nothing let go, longest queue 1, 0 lost, 0 falls. The group's 6 stuck spells on the stored settings (street start and flight 5, as B4) are unchanged. So are its jumps toward a waypoint (report only): 3 on flight 2 with the stored settings, 56 at the hall entry with the smoke test's (#695).
+    5. M4's crowd scenarios pass (`npc-doorway-crowd` and its collision-on twin 1.5 s per NPC ahead, `npc-door-column` 2.0 s, nothing let go).
+    6. Known reds: none. Codex: at its usage limit on both PRs (said on each).
+5. **Decisions (DESIGN § 4.3).**
+    1. *How "the place's own level" is judged.* Chosen: a floor fitted to the place's cells along its axis (flat or a flight's slope), with a band from the ends' level to the slope carried on 4 blocks, and 1.5 blocks off it as another level. Alternatives:
+        1. (a) A fixed band around the place's first cell (`cy`). Wrong on a flight: the far end of a 4-step place is 3 blocks up.
+        2. (b) 3D distance to the nearest cell. A holder on the flight beside a hairpin landing is close in 3D but on its own level; a queue spot below the flight is far.
+        3. (c) Interpolating the route's own waypoint heights. The crowd code has no route, only the NPC's way ahead.
+    2. *`LEVEL_GAP` 1.5.* Chosen: a step (1) and a jump (1.25) count, a floor stacked 3 or more blocks away does not. Alternatives:
+        1. (a) 1.0 (a jump on a stair would read as off the floor and end the turn).
+        2. (b) 2.5 (the climb's level measure). A flight 3 blocks over a narrow passage would still count.
+    3. *A holder off the floor whose followers are in the place.* Chosen: its turn is kept for them (they are the column), but it stops nobody of its own direction. Alternatives:
+        1. (a) Release it at once. Oncoming NPCs would meet its followers in the place.
+        2. (b) Keep the old behaviour. That is cause 1.
+    4. *Cause 2: the guard measured from the last entry.* Chosen: the 30 s (developer decision, 4c.4 decision 3) is kept and counted while the queue does not move, which is what a deadlock guard is for. The M4 decision text is annotated, not rewritten. Alternatives:
+        1. (a) A longer `MAX_WAIT_TICKS` (60 s). It only moves the limit: a longer queue fails again, and a real deadlock waits longer.
+        2. (b) Single-file entry: go once the one ahead is a block ahead of you, not a block into the place. It changes the developer's turn rule, and throughput is not the fault: 2.1 s per NPC is within M4's 3 s bound.
+        3. (c) Propose a follow-up instead. The prompt says to fix it here when it is in the crowd code.
+    5. *Waiters off the floor.* Chosen: not judged by level (unchanged). Alternative:
+        1. (a) Drop a waiter's ticket when it leaves the floor. A long queue's spots lie on the steps below the place, so that would drop real waiters (known limit, plan 4c.8 item 3.7.2).
+    6. *Diagnostics kept in production code.* Chosen: the release and long-wait records stay (20 each, cleared with the counts, read by the scenarios). Alternative:
+        1. (a) Remove them after the fix. The next guard release would again come without a cause.
+6. **Out of scope, noted.**
+    1. The replay's 3 jumps toward a waypoint on flight 2 (1415 57 −494, 1414 56 −498) with the stored settings are there before and after this link. Report only; noted on #695, which covers the hall entry's 56 with the smoke test's settings.
+    2. Docs follow-ups for the docs session: `docs/architecture/npc-navigation.md` (a place's floor, the guard from the last entry).
+7. **Blockers.** None.
+8. **At merge / what the developer must do.**
+    1. Nothing in `config.yml`, no migration.
+    2. The smoke test on `quarry-to-keep` (plan § 4c.4) after B3, with `crowd-awareness` on. Watch the crowd at flight 1's top (1410 54 −500): a long single file drains without "… without the queue moving: goes" lines.
+    3. Review decision 5.4 (the guard counted from the last entry changes how a developer-decided rule is read) and 5.2.
+9. **Notes for later links.**
+    1. `why the guard let them go (B3)` and `waits of 10 s or more (B3)` in the climb and replay reports name every holder and blocker in 3D. Use them before guessing at a crowd fault.
+    2. Local scenario runs worked in this container (Citizens' libraries loaded). `tools/paper-boot/boot-test.sh` with `knk scenario run <name>` (a local copy that replaces `run all`) runs one scenario in about 4 minutes; `npc-*` runs 27 in about 12.

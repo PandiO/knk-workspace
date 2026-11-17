@@ -1,7 +1,7 @@
 # NPC navigation follow-ups chain — charter
 
-**Status:** Done (2026-11-16): every link merged into `next`; developer smoke tests, the option-B decision and promotion open
-**Last updated:** 2026-11-16
+**Status:** Done (2026-11-17): fix links L9 and B1–B4 merged into `next`; the developer's smoke test, the option-B decision and promotion open
+**Last updated:** 2026-11-17
 **Issues:** parent [PandiO/knk-workspace#358](https://github.com/PandiO/knk-workspace/issues/358); link sub-issues
 [#519](https://github.com/PandiO/knk-workspace/issues/519) (L1),
 [#520](https://github.com/PandiO/knk-workspace/issues/520) (L2),
@@ -10,7 +10,7 @@
 [#592](https://github.com/PandiO/knk-workspace/issues/592) (L5),
 [#593](https://github.com/PandiO/knk-workspace/issues/593) (L6),
 [#594](https://github.com/PandiO/knk-workspace/issues/594) (L7, dropped); design link
-[#603](https://github.com/PandiO/knk-workspace/issues/603) (L8); movement links #621 (M1), #622 (M2), #623 (M6), #624 (M3), #625 (M5), #626 (M4), #627 (M7). Reference issues as `PandiO/knk-workspace#n` in
+[#603](https://github.com/PandiO/knk-workspace/issues/603) (L8); movement links #621 (M1), #622 (M2), #623 (M6), #624 (M3), #625 (M5), #626 (M4), #627 (M7); fix links after the smoke test of 2026-11-16: #668 (L9), #670 (B1), #671 (B2), #672 (B3), #673 (B4). Reference issues as `PandiO/knk-workspace#n` in
 component repos.
 **Progress report:** [reports/2026-11-14-npc-navigation-followups-chain.md](../../reports/2026-11-14-npc-navigation-followups-chain.md)
 **History:** the first NPC navigation chain (Phases 1–4 and #490, all merged into `next`):
@@ -60,6 +60,11 @@ component repos.
 | M5 | #625 | tier:2 | Plaza lines (4c.4 item 5) | knk-plugin, knk-workspace | `claude/npc-movement-m5` | `next` | `plaza-lines` (off) | M3 merged |
 | M4 | #626 | tier:3 | Crowd awareness (4c.4 item 4); then the option-B checkpoint (item 8) | knk-plugin, knk-workspace | `claude/npc-movement-m4` | `next` | `crowd-awareness` (off) | M5 merged |
 | M7 | #627 | tier:3 | Collision on with push resistance and recovery (4c.4 item 7) | knk-plugin, knk-workspace | `claude/npc-movement-m7` | `next` | `npc.navigation.collidable` (default on only at its end) | B checkpoint done |
+| L9 | #668 | tier:3 | Realtime deny for running groups: NPC rule checks saw no WorldGuard region (module started before the region tracker) | knk-plugin, knk-workspace | `claude/npc-followups-l9` | `next` | `npc.navigation.enabled` (off) | smoke test 2026-11-16 (merged `a78fcce8`) |
+| B1 | #670 | tier:2 | Evidence: `/knk npc nav snapshot <route>` (region files, route line, roads, domains along the route, settings) with replay support; the stair-house scene over the whole schematic on the real route with short stretches, failing on `next` (report decisions 33–35) | knk-plugin, knk-workspace | `claude/npc-movement-b1` | `next` | none (admin command, scenarios) | L9 merged |
+| B2 | #671 | tier:3 | Stretch handover: 3D progress, append instead of replace, bridge from the feet, unbridgeable step as a local leg, no falls copied into the group path | knk-plugin, knk-workspace | `claude/npc-movement-b2` | `next` | `npc.navigation.enabled` (off) | B1 merged |
+| B3 | #672 | tier:2 | Crowd turns judged in 3D | knk-plugin, knk-workspace | `claude/npc-movement-b3` | `next` | `crowd-awareness` (off) | B4 merged; needed (report decision 39) |
+| B4 | #673 | tier:2 | Waypoints and group slots at real stair heights; jump detection by upward speed | knk-plugin, knk-workspace | `claude/npc-movement-b4` | `next` | `npc.navigation.enabled` (off) | B2 merged (report decision 38) |
 
 ## 2. Gates
 
