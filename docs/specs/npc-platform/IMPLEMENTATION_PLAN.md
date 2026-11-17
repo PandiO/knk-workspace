@@ -802,11 +802,12 @@ B4 ([#673](https://github.com/PandiO/knk-workspace/issues/673)) puts waypoints a
        counted the flight above as near.
     3. **Appended, not replaced.** The new stretch goes after the waypoints not yet walked (`Trail.appended`), so the
        landing between two flights is always walked. The joined list drops only its first waypoints the NPC is already
-       past (`Trail.fromFeet`): the feet beyond the waypoint along the step to the next one, on its level, and the next
-       one a straight walk. Without that, a leader on `npc-jagged-straight-collision-on` walked back to a corner
+       past (`Trail.fromFeet`): the feet beyond the waypoint along the step to the next one and no further from the next
+       one than the waypoint is, on its level, and the next one a straight walk. Without that, a leader on `npc-jagged-straight-collision-on` walked back to a corner
        waypoint into its followers, and a follower was not freed. Nothing ahead of the NPC is skipped. A first version
        that cut ahead to any straight-walkable waypoint within 3 blocks skipped L5's corner clearance, and
-       `npc-stairhouse-group` failed.
+       `npc-stairhouse-group` failed; one that took a waypoint ahead on a diagonal back-step for passed left a row of
+       `npc-jagged-straight` 0.6 short of its slots (#636).
     4. **Bridged from the feet** (`WaypointChain.split`): the first step starts at the NPC's feet (when it is on the
        ground), every step a straight walk with the bridge's cells where needed.
     5. **A step the bridge cannot make is a local leg.** The list is cut before it. Once the waypoints up to it are
@@ -817,7 +818,7 @@ B4 ([#673](https://github.com/PandiO/knk-workspace/issues/673)) puts waypoints a
        blocks below the group path where it last was (the lower of its path point and the one before) has fallen.
        Its points stay out of the path, so no follower walks off the same edge. After 30 s below, the path follows
        it again as before.
-    7. **Tests.** knk-core: `TrailTest` (9), `WaypointChainTest` (+5), `NpcNavigationServiceTest` (+3: appended,
+    7. **Tests.** knk-core: `TrailTest` (10), `WaypointChainTest` (+5), `NpcNavigationServiceTest` (+3: appended,
        no handover from the flight below, a gap walked as a local leg). Scenarios, pass/fail since B2
        (`ClimbWatch.failures`): `npc-stairhouse-climb` (no fall from the climb, no handover onto another level, no turn
        dropped by the guard after a fall, the leader arrives, no follower lost) and `npc-replay-quarry-to-keep` (the
