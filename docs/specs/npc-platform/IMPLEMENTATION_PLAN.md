@@ -948,7 +948,7 @@ B4 ([#673](https://github.com/PandiO/knk-workspace/issues/673)) puts waypoints a
        server):
         1. `npc-stairhouse-climb`, queue let go by the 30 s guard: B4's six runs 0, 3, 3, 3, 0 and 6; B3's diagnostic
            run on the unchanged rules 6 (the leader a flight up) → 3 with turns in 3D only (the single file, CI and
-           local) → **0** with the guard counted from the last entry (CI run 44017052199 and two local runs; now a
+           local) → **0** with the guard counted from the last entry (CI run 44017052199 and three local runs; now a
            check). Longest queue 18 (the singles and the group's rear at flight 1's one-wide top), longest wait 30.0 →
            36.0 s at 2.1 s per NPC ahead. Falls, handovers onto another level, jumps toward a waypoint, stuck spells
            and lost followers stay 0; the leader arrives in 76.2 s.
