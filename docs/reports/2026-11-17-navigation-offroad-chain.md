@@ -14,9 +14,10 @@ on `next` (Decided 2026-11-17).
 
 ## 1. Waiting for the developer
 
-1. **L1 (#703) live measurements:** once L1's counters are in `next`, run the five scenes (keep, stair house,
-   courtyard, 200 and 400 block open-country legs) with `/knk road status`; L1 writes the steps on #703. L5 waits for
-   the report's budgets.
+1. **L1 (#703) live measurements:** L1 is in `next` (plugin `04506d8c`). Deploy from `next`, add
+   `max-chunks-per-request: 64` under `navigation.walk:`, run smoke guide § 1 (also on #703; long legs need
+   `/forceload`) and fill `docs/reports/2026-11-17-offroad-navigation-measurements.md`. L5 waits for its budgets; if
+   option A fits the keep, the coordinator asks you before L6 (O32).
 2. **Decision to confirm (from the NPC chain's comment on #698, 2026-11-17):** NPC use of the long walks (walk links
    and clusters, O32) moves from "after v1" into v1, as the phase after phase 3. It has no sub-issue or link in this
    chain yet; the spec's § 14 and § 15 need the change in a docs PR. Proposal: a design follow-up (sub-issue of #698)
@@ -26,8 +27,8 @@ on `next` (Decided 2026-11-17).
 
 | Link | Issue | Status | Branch heads | PR | CI | How started |
 |---|---|---|---|---|---|---|
-| L1 Phase 0 measurements | #703 | In review (counters and steps done; the live run and the filled report are the developer's) | knk-plugin `claude/offroad-measurements` `71a43bc1`; knk-workspace `claude/offroad-measurements` `c275c84d` | [knk-plugin#68](https://github.com/PandiO/knk-plugin/pull/68), [#717](https://github.com/PandiO/knk-workspace/pull/717) | local build green; PR CI see § 4.1 | create_session `session_01R1w2Uub8CZ7NuvatVUifP7` (2026-11-17) |
-| L2 Phase 1 shared shaping package | #704 | Not started (waits for NPC B5 #699 in `next`, § 3.3) | `claude/offroad-shape-package` | — | — | — |
+| L1 Phase 0 measurements | #703 | Merged into next (2026-11-17); waits for the developer's live measurements and the filled report | knk-plugin `claude/offroad-measurements` `71a43bc1`; knk-workspace `claude/offroad-measurements` `2337d3a4` | [knk-plugin#68](https://github.com/PandiO/knk-plugin/pull/68) → `next` `04506d8c`, [#717](https://github.com/PandiO/knk-workspace/pull/717) → `next` `a6240f5d` | green (build, paper-boot on `71a43bc1`) | create_session `session_01R1w2Uub8CZ7NuvatVUifP7` (2026-11-17) |
+| L2 Phase 1 shared shaping package | #704 | Running (started 2026-11-17 22:12 from plugin `next` `04506d8c`) | `claude/offroad-shape-package` | — | — | create_session `session_01R1w2UwTnENVNKzfaXudBUh` (2026-11-17) |
 | L3 Phase 6.1 trail corners | #710 | Not started (gate: L2 in `next`) | `claude/offroad-trail-corners` | — | — | — |
 | L4 Phase 6.2 anchored particles, winding back | #711 | Not started (gate: L3 in `next`) | `claude/offroad-trail-cursor` | — | — | — |
 | L5 Phase 2 walk links | #705 | Not started (gate: L1 done, L4 in `next`) | `claude/offroad-walk-links` | — | — | — |
@@ -67,6 +68,17 @@ on `next` (Decided 2026-11-17).
    measurement time without two sessions in knk-plugin. Alternatives: (a) L2 beside a running L1 when their files are
    disjoint; rejected, the prompt's "one plugin navigation link at a time" and the skill's one link per repo; (b) L2
    only after L1 is done (report written); rejected, it would wait on the live work for nothing.
+
+6. **L1 merged into `next` (2026-11-17).** § 6 checks held: heads matched, `build` and `paper-boot` green on
+   `71a43bc1`, scope inside #703 (plus `NavigationService`, logged by the link as decision 3, additive), no Codex
+   findings (usage limit). The plugin branch was 4 commits behind `next` (B5) with a clean merge, so the PR was merged
+   as is. The workspace PR conflicted in `docs/CHANGELOG.md` (B5's entry beside L1's): mechanical, resolved on the
+   feature branch by merging `origin/next` and keeping both entries (`2337d3a4`), then merged. Alternatives: (a) send
+   it back to the link; rejected, a two-entry changelog conflict is mechanical (skill § 7.3).
+7. **L2 started (2026-11-17 22:12).** B5 is in `next` (`55ea7df3`, rev-list count 0) and L1's plugin PR is merged, so
+   the hold of decision 3 is lifted. The NPC chain's coordinator confirmed it starts no `core/npc/nav` link until L2
+   is merged. L2 re-runs the § 3.4 import check on the current `next` (B5's `GroupPath.addShaped` added uses of
+   `NavGeometry.straightWalkable` and `HopPlanner.surfaceNear`).
 
 ## 4. Link blocks
 
