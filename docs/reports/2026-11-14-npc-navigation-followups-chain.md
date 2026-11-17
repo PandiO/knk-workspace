@@ -361,6 +361,11 @@ the configuration reference § 4.27), then restart. In test order:
        session; the exit-rule gap (decision 41) waits for the developer's answer.
     4. The developer noted that there are no places on the test routes narrow enough to make groups queue; a route for
        that comes later. Collision stayed off.
+43. **Developer answers, 2026-11-17.** (1) The exit-rule gap runs as its own link E1 (#701) after C1. (2) Idea filed:
+    NPCs avoid drops that would hurt them, the cost scaling with the drop, read from cells already captured (#702,
+    future, `idea`). (3) The developer is designing road graph and knk navigator improvements (walk legs, plaza
+    navigation) in a separate session, implementation from 2026-11-18. C1 therefore uses the walk navigator through its
+    entry points without changing its code, and the coordinator reads that design before C1 starts (comment on #700).
 
 ## 4. Link blocks
 
