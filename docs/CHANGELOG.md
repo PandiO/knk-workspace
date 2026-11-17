@@ -22,6 +22,22 @@ This is a human-readable record of capabilities merged into the V3 default branc
          max-chunks-per-request: 64
      ```
 
+- **NPC navigation: a group's path stays on the walk on stacked flights** ([PandiO/knk-workspace#699](https://github.com/PandiO/knk-workspace/issues/699),
+  link B5 of the NPC navigation follow-ups chain). knk-plugin and knk-workspace branches `claude/npc-movement-b5` (PRs
+  into `next`). Only with `npc.navigation.enabled` on and `group-formation-keeping: elastic` or `plaza-lines` on (all
+  off by default); no new `config.yml` key, no migration.
+  1. A group that keeps its formation elastic, or takes plaza lines, walks a path shaped in its corridor. On the stair
+     house's stacked flights that shaped line cut the hairpin across the stairwell, so the group's path skipped a
+     flight's top and its landing (or ran on the hall floor beside a flight). Followers there were judged against a
+     point a flight away: they left their lanes, walked their own legs back, and in the smoke test of 2026-11-17 walked
+     up and down flight 4 for minutes while their leader waited on the passage right above them.
+  2. A shaped point is now used only where it has a floor within a block of the route line's own point and a straight
+     walk leads to it; otherwise the group path takes the route line's own point. Shaping on one level is unchanged.
+  3. Tests: `npc-replay-quarry-to-keep` replays the developer's snapshot of 2026-11-17 and sends the group on to the
+     route's end in the keep with the developer's settings; it fails when a follower leaves its lane on the flights
+     and landings, or loops (three own legs back from one place). Followers off their lane on the stair house: 21
+     before (every follower, at flight 5's top), 0 now; the leader arrives in 105.5 s instead of 123.8 s.
+
 - **NPC navigation: crowd turns judged in 3D** ([PandiO/knk-workspace#672](https://github.com/PandiO/knk-workspace/issues/672),
   link B3 of the NPC navigation follow-ups chain). knk-plugin and knk-workspace branches `claude/npc-movement-b3` (PRs
   into `next`). Only with `npc.navigation.enabled` and `crowd-awareness` on (both off by default); no new `config.yml`
