@@ -20,7 +20,8 @@ If your prompt says something different from this skill, the prompt wins.
    `main` before the branch model applies or for a release); check out the named commit when you need the exact state.
    Attach a private repo (knk-dev-db-seed) with `add_repo` (access read) only when your prompt asks for it.
 2. **Read first.** `AGENTS.md`, the global instructions, the maintenance guide, the "In progress" table of
-   `docs/ACTIVE_SESSIONS.md` on `origin/main`, the docs issue **with its comments**, the feature issue, the merged PRs
+   `docs/ACTIVE_SESSIONS.md` read fresh (`git fetch origin`, then `git show origin/main:docs/ACTIVE_SESSIONS.md`),
+   the docs issue **with its comments**, the feature issue, the merged PRs
    (their "Docs impact" and "Testing" sections) and the smoke-test guide with its results.
 3. **Debt cap.** List the open `documentation` issues. More than five, or one older than two weeks: say so in your
    final message, so the developer can plan the next docs session.

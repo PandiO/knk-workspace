@@ -33,7 +33,8 @@ branch model applies, merges into `next`. Links follow the `knk-link` skill.
 ## 2. First run of a chain
 
 1. Read the charter (or draft it from the template if the design session did not), the binding documents' status
-   headers, and the "In progress" table of `docs/ACTIVE_SESSIONS.md` on `origin/main`.
+   headers, and the "In progress" table of `docs/ACTIVE_SESSIONS.md`, read fresh: `git fetch origin`, then
+   `git show origin/main:docs/ACTIVE_SESSIONS.md` (never a local or worktree copy).
 2. Issues: a parent issue for the chain and one sub-issue per link in `PandiO/knk-workspace`, each with its `tier:<n>`
    label (from design or intake; the developer may override). Scope every link by its sub-issue.
 3. Create the progress report from the template and add a tracker row ("In progress": feature, parent issue, branches,
@@ -47,8 +48,11 @@ branch model applies, merges into `next`. Links follow the `knk-link` skill.
 
 ## 3. The loop (DESIGN § 5.1)
 
-1. **Read the state.** Charter, progress report, sessions board. Verify every head the report lists:
-   `git ls-remote origin <branch>` in each repo. A mismatch is investigated before anything starts.
+1. **Read the state.** Charter, progress report, sessions board (fetched fresh every loop, as in § 2 step 1). Verify
+   every head the report lists: `git ls-remote origin <branch>` in each repo. A mismatch is investigated before
+   anything starts. When the developer mentions another session, fetch and re-read the board before answering, and
+   find its row by issue, area and files claimed, not by the developer's wording (global "Parallel sessions" rule 1).
+   No match: say which rows you checked and when you fetched, then ask; check its overlap with your links (§ 2 step 4).
 2. **Pick the next link:** the first one in charter order whose gate is open, checked against the actual branches,
    never the tracker. For "L<n> merged into `<base>`" run `git fetch origin` and
    `git rev-list --count origin/<base>..origin/<branch>` in each repo L<n> changed; every count must be 0. At most one

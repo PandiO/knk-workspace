@@ -114,7 +114,15 @@ row or handoff and tell the developer.
 Claude Code and Codex alike, regardless of where repos are cloned.
 
 1. Before edits, refresh it from the current workspace default branch and
-   inspect overlapping feature and file claims. A claim blocks your work only
+   inspect overlapping feature and file claims. Refresh means `git fetch
+   origin`, then read `git show origin/main:docs/ACTIVE_SESSIONS.md`; a local
+   checkout, a worktree or an unfetched `origin/main` can be hours old. Read it
+   fresh the same way every time you act on it later (each coordinator loop,
+   each check before starting work) and whenever the developer mentions
+   another session: find that session's row by issue, area and files claimed,
+   not by the words the developer used for it, before saying whether it is on
+   the board. If no row matches, say which rows you checked and when you
+   fetched. A claim blocks your work only
    when the other branch changes the same lines or the claim is active on the
    same area; then stop and coordinate. Additive edits elsewhere in a shared
    file may go ahead and are logged as a decision with its alternatives
