@@ -316,6 +316,14 @@ the configuration reference § 4.27), then restart. In test order:
     `80902942`, knk-workspace#692 → `2da5d798`. On `next` the replay shows a group of 20 with 32 stuck spells and 6
     followers lost while a leader alone arrives; the schematic climb with short stretches shows the falls, the
     handovers onto another level and the guard-released turn. These are B2's pass/fail proof.
+38. **B2 checked and merged; B4 before B3** (2026-11-17). § 6 held: CI `build` and `paper-boot` (50) green on
+    `a30ac085`, no debug code in the diff, core changes reviewed (`Trail`, `WaypointChain.split`, the gap leg,
+    `NavGroup.leaderFell`). Merged knk-plugin#64 → `36ea2da0`, knk-workspace#693 → `a8e77d7d`.
+    Climb: falls 42 → 0, handovers onto another level 446 → 0. Replay: 0 falls everywhere; the group of 20 on the
+    stored settings still has 26 stuck spells and 3 lost, caused by slots at whole-block heights on flight 5 (half-block
+    steps; evidence on #673). No guard release without a fall occurred, so B3's case was not seen. Order changed: B4
+    (#673, stair heights, now also slot heights) runs next, then B3 (#672) only if the replay or the climb still shows
+    a crowd-turn fault. Alternative: B3 first as planned (rejected: it would fix nothing the tests show).
 
 ## 4. Link blocks
 
