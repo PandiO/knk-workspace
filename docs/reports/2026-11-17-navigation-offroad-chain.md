@@ -26,7 +26,7 @@ on `next` (Decided 2026-11-17).
 
 | Link | Issue | Status | Branch heads | PR | CI | How started |
 |---|---|---|---|---|---|---|
-| L1 Phase 0 measurements | #703 | Running | `claude/offroad-measurements` | — | — | create_session `session_01R1w2Uub8CZ7NuvatVUifP7` (2026-11-17) |
+| L1 Phase 0 measurements | #703 | In review (counters and steps done; the live run and the filled report are the developer's) | knk-plugin `claude/offroad-measurements` `71a43bc1`; knk-workspace `claude/offroad-measurements` `c275c84d` | [knk-plugin#68](https://github.com/PandiO/knk-plugin/pull/68), [#717](https://github.com/PandiO/knk-workspace/pull/717) | local build green; PR CI see § 4.1 | create_session `session_01R1w2Uub8CZ7NuvatVUifP7` (2026-11-17) |
 | L2 Phase 1 shared shaping package | #704 | Not started (waits for NPC B5 #699 in `next`, § 3.3) | `claude/offroad-shape-package` | — | — | — |
 | L3 Phase 6.1 trail corners | #710 | Not started (gate: L2 in `next`) | `claude/offroad-trail-corners` | — | — | — |
 | L4 Phase 6.2 anchored particles, winding back | #711 | Not started (gate: L3 in `next`) | `claude/offroad-trail-cursor` | — | — | — |
@@ -71,3 +71,81 @@ on `next` (Decided 2026-11-17).
 ## 4. Link blocks
 
 _(Each link appends its block here when it finishes.)_
+
+### 4.1 L1 — Phase 0: walk search and capture counters, measurement steps (#703)
+
+1. **Scope done.**
+    1. knk-plugin knk-core `core/roads/walk/`: `WalkSearchStats` on every `WalkSearch` result (expansions, cells
+       touched, search ns from an injectable clock, the cap that ended the search, `lengthPruned`); `WalkResult.stats()`
+       and `withStats`; `WalkMeasurements` (last 512 searched requests, max/p95/p50, recent list, reset, status lines).
+       Two clock reads per search, nothing added inside the expansion loop; `toString()` unchanged.
+    2. knk-plugin knk-paper: `WalkSnapshotService` reports per capture chunks, cache hits, main-thread µs and wait
+       (`WalkCapture.stats()`); `WalkLegPreparer` completes with `NavigationService.PreparedWalk`; `NavigationService`
+       records search, capture and queue time per searched request on the walk thread; `/knk road status` shows
+       `walk search:`, `walk cost:` (3 lines) and `walk recent:` (5 lines) under `walk paths:`; `/knk road status
+       reset`; new key `navigation.walk.max-chunks-per-request` (default 64, the former constant; 1 to 1024).
+    3. knk-workspace: smoke-test guide § 1 (nine steps, the developer's measurement run), report skeleton
+       `docs/reports/2026-11-17-offroad-navigation-measurements.md` (DESIGN § 9.1 to § 9.3 as tables, the three
+       questions with proposed decision rules), plugin configuration reference, changelog (Unreleased), DESIGN § 9.2
+       note; the steps also as a comment on #703.
+2. **Commits and heads.** knk-plugin `claude/offroad-measurements` at `71a43bc1` (2 commits, base `next` at
+   `187f97ec`); knk-workspace `claude/offroad-measurements` at `c275c84d` (1 commit, base `next` at `b9c0a7fc`).
+3. **PRs.** [PandiO/knk-plugin#68](https://github.com/PandiO/knk-plugin/pull/68),
+   [PandiO/knk-workspace#717](https://github.com/PandiO/knk-workspace/pull/717), base `next`, both
+   `Part of PandiO/knk-workspace#703` (the issue stays open until the report is filled). Not merged.
+4. **Tests, baseline → result.**
+    1. knk-plugin (`./gradlew build -x deployToDevServer`): baseline on `next` `187f97ec` knk-core 3 011, knk-paper
+       2 891 (18 skipped), knk-api-client 344 (2 skipped); result knk-core 3 028 (+17), knk-paper 2 904 (+13, 18
+       skipped), knk-api-client 344 (2 skipped); no failures. PR CI: `build` green on the first push; the runs for
+       the head were still running when this block was written (the coordinator checks them).
+    2. knk-workspace: docs only; every relative link added resolves on the branch.
+    3. Known reds: none.
+    4. Codex: at its code-review usage limit on both PRs (its comments of 2026-11-17); finished without its review
+       (developer decision 2026-11-14), said so on both PRs. No findings to handle.
+5. **Decisions (DESIGN § 4.3).**
+    1. *Output home.* Chosen: `/knk road status` (the sub-issue says so), with `/knk road status reset` so one scene
+       is read at a time. Alternatives: (a) a separate `/knk road walkstats` subcommand; not needed; (b) a log file
+       per request; harder to read in game, and logs grow.
+    2. *How option A's long legs are measured.* Chosen: config only: `navigation.max-snap-distance` raised to 450 on
+       the dev server (direct mode walks to any point destination within it) plus the new key
+       `navigation.walk.max-chunks-per-request` (a 400 block diagonal leg needs about 441 chunks; the old limit was a
+       constant 64). Default 64, so nothing changes until a test server raises it. Alternatives: (a) a staff probe
+       command `/knk road walkprobe <x y z>` running one search with given caps; new behaviour outside the link's
+       scope; (b) raising the constant; it would change production; (c) measure only up to 64 chunks; question 1
+       would stay unanswered for the long legs.
+    3. *Where requests are recorded.* Chosen: in `NavigationService` on the walk thread (where the search runs and
+       the queue wait is known), a file beyond the prompt's list (counters, capture service, status command). The
+       change is additive (a record, one method, three lines in `requestWalk`). Alternatives: (a) record inside
+       `WalkSearch`; it does not know the capture or the queue; (b) a decorating `WalkPathfinder`; it cannot see the
+       capture counters either.
+    4. *Capture time of a shared chunk.* Chosen: a chunk two requests wait for counts for both, so each request shows
+       its own cold cost. Alternative: count it once for the first request; a request's cost would depend on timing.
+    5. *Percentiles.* Chosen: nearest rank over the last 512 searched requests. Alternatives: (a) all-time
+       aggregates; one scene could not be read alone (reset covers that); (b) a histogram; more code for no gain at
+       these counts.
+    6. *Decision rules in the report* (proposals for the developer, § 4 and § 5 of the report): option A fits the
+       keep when run 2 finds the longest route without a cap within 400 ms, the capture keeps the tick under 50 ms
+       and the wait is at most 2 s; cluster size from the µs per expansion and the edges a first request computes.
+       Alternative: leave the questions open without rules; the developer would have to derive them after the run.
+6. **Out of scope, noted.** None filed. Follow-ups for the docs issue at merge: the navigation admin guide could
+   mention `/knk road status reset`; the feature register has no off-road row yet.
+7. **Blockers.** None. The live run is the developer's (not a blocker).
+8. **At merge / what the developer must do.**
+    1. Merge knk-plugin#68 and #717 into `next` (the coordinator).
+    2. Deploy: add under `navigation.walk:` and restart:
+
+       ```yaml
+           max-chunks-per-request: 64
+       ```
+
+    3. Run the measurement steps of the
+       [smoke test § 1](https://github.com/PandiO/knk-workspace/blob/next/docs/guides/navigation-offroad-smoke-test.md#1-phase-0-measurements-703-tier1)
+       (also on #703) and fill the report; then answer its three questions (charter § 2.3; O32 if option A fits).
+    4. Optionally comment `@codex review` on both PRs once the Codex limit resets.
+9. **Notes for later links.**
+    1. L5 and L6: the budgets come from the filled report § 3.3; `WalkMeasurements` and `/knk road status` are the
+       place to add link and cluster counters (DESIGN § 9.3.5).
+    2. Cloud builds: Maven Central rate-limited this session (random 404 and 429 on jars). A local Gradle init script
+       (`~/.gradle/init.d/`, not committed) that points Maven Central at Google's mirror
+       `https://maven-central.storage-download.googleapis.com/maven2/` fixed it.
+    3. Walk legs use loaded chunks only; any live measurement of long legs needs `/forceload`.
