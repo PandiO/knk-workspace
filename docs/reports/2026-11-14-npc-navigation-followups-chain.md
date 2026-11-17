@@ -325,6 +325,14 @@ the configuration reference § 4.27), then restart. In test order:
     steps; evidence on #673). No guard release without a fall occurred, so B3's case was not seen. Order changed: B4
     (#673, stair heights, now also slot heights) runs next, then B3 (#672) only if the replay or the climb still shows
     a crowd-turn fault. Alternative: B3 first as planned (rejected: it would fix nothing the tests show).
+39. **B4 checked and merged; B3 started** (2026-11-17). § 6 held: CI `build` and `paper-boot` (50) green on
+    `2a261289`, no debug code, core diff reviewed (`NavGeometry.onSurface` on every waypoint list the mover gets, slot
+    heights at the surface, the slot-point settle once the leader arrived). Merged knk-plugin#65 → `a3f0ebae`,
+    knk-workspace#694 → `0664b1ee`. Replay group on the stored settings: 0 lost (now a check), stuck spells 26 → 6,
+    none a crowd turn. Climb: 0 jumps toward a waypoint (the 160 left are Minecraft's own stair hops, reported apart,
+    B4 decision 5.5). B3 is needed: on the crowded climb the 30 s guard let queues go in 4 of 6 runs without a fall
+    (longest queue 18). B3 (#672) started with that as its proof. Filed by B4: #695 (jumps at the hall entry stair with
+    the smoke test's settings, report only).
 
 ## 4. Link blocks
 

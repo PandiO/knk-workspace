@@ -63,7 +63,7 @@ component repos.
 | L9 | #668 | tier:3 | Realtime deny for running groups: NPC rule checks saw no WorldGuard region (module started before the region tracker) | knk-plugin, knk-workspace | `claude/npc-followups-l9` | `next` | `npc.navigation.enabled` (off) | smoke test 2026-11-16 (merged `a78fcce8`) |
 | B1 | #670 | tier:2 | Evidence: `/knk npc nav snapshot <route>` (region files, route line, roads, domains along the route, settings) with replay support; the stair-house scene over the whole schematic on the real route with short stretches, failing on `next` (report decisions 33–35) | knk-plugin, knk-workspace | `claude/npc-movement-b1` | `next` | none (admin command, scenarios) | L9 merged |
 | B2 | #671 | tier:3 | Stretch handover: 3D progress, append instead of replace, bridge from the feet, unbridgeable step as a local leg, no falls copied into the group path | knk-plugin, knk-workspace | `claude/npc-movement-b2` | `next` | `npc.navigation.enabled` (off) | B1 merged |
-| B3 | #672 | tier:2 | Crowd turns judged in 3D | knk-plugin, knk-workspace | `claude/npc-movement-b3` | `next` | `crowd-awareness` (off) | B4 merged, and only if a test still shows a crowd-turn fault (report decision 38) |
+| B3 | #672 | tier:2 | Crowd turns judged in 3D | knk-plugin, knk-workspace | `claude/npc-movement-b3` | `next` | `crowd-awareness` (off) | B4 merged; needed (report decision 39) |
 | B4 | #673 | tier:2 | Waypoints and group slots at real stair heights; jump detection by upward speed | knk-plugin, knk-workspace | `claude/npc-movement-b4` | `next` | `npc.navigation.enabled` (off) | B2 merged (report decision 38) |
 
 ## 2. Gates
