@@ -334,6 +334,14 @@ the configuration reference § 4.27), then restart. In test order:
     B4 decision 5.5). B3 is needed: on the crowded climb the 30 s guard let queues go in 4 of 6 runs without a fall
     (longest queue 18). B3 (#672) started with that as its proof. Filed by B4: #695 (jumps at the hall entry stair with
     the smoke test's settings, report only).
+40. **B3 checked and merged; fix links done** (2026-11-17). § 6 held: CI `build` and `paper-boot` (50) green on
+    `89eeb3eb` (push and PR runs), no debug code, `CrowdControl` diff reviewed (a place's fitted floor, `LEVEL_GAP`
+    1.5, off-level holders and followers, the guard counted from the last entry). Merged knk-plugin#66 → `e69dba6a`,
+    knk-workspace#696 → `6be8222c`. Climb: 0 let go by the guard (was 3–6), 0 falls, 0 handovers onto another level,
+    0 jumps toward a waypoint, 0 stuck, 0 lost. For the developer's review: B3 decision 5.4 (the 30 s guard now counts
+    30 s in which nobody entered the place, not 30 s since arrival; a place nobody enters still releases after 30 s).
+    Open: the developer's smoke test of `quarry-to-keep` on `next` `e69dba6a` (#358 comment), #695 (report only), the
+    option-B decision, the `collidable` default, promotion.
 
 ## 4. Link blocks
 

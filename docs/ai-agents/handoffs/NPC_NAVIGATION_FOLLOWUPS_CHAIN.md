@@ -1,7 +1,7 @@
 # NPC navigation follow-ups chain — charter
 
-**Status:** Running (2026-11-16): the smoke test of 2026-11-16 failed; fix link L9 merged, fix links B1–B4 run one at a time
-**Last updated:** 2026-11-16
+**Status:** Done (2026-11-17): fix links L9 and B1–B4 merged into `next`; the developer's smoke test, the option-B decision and promotion open
+**Last updated:** 2026-11-17
 **Issues:** parent [PandiO/knk-workspace#358](https://github.com/PandiO/knk-workspace/issues/358); link sub-issues
 [#519](https://github.com/PandiO/knk-workspace/issues/519) (L1),
 [#520](https://github.com/PandiO/knk-workspace/issues/520) (L2),
