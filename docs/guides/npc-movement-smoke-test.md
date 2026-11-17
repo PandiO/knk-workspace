@@ -3,7 +3,7 @@
 **Status:** Written 2026-11-16 for knk-plugin `next` `cc5262ff` (links M1–M7 merged into `next`, behind
 `npc.navigation.enabled` and each link's own key, all off by default); only the steps no plugin scenario checks; not
 run yet (the developer's run with every key on is planned for 2026-11-16)
-**Last updated:** 2026-11-16 (assembled from the developer tests of implementation plan 4c.4, PandiO/knk-workspace#658)
+**Last updated:** 2026-11-17 (link B5 section, [#699](https://github.com/PandiO/knk-workspace/issues/699)); 2026-11-16 (assembled from the developer tests of implementation plan 4c.4, PandiO/knk-workspace#658)
 **Issue:** [PandiO/knk-workspace#358](https://github.com/PandiO/knk-workspace/issues/358) (links
 [#621](https://github.com/PandiO/knk-workspace/issues/621)–[#627](https://github.com/PandiO/knk-workspace/issues/627));
 post results on the link's sub-issue or [#603](https://github.com/PandiO/knk-workspace/issues/603)
@@ -95,6 +95,29 @@ CI's `paper-boot` job runs these on a real Paper server with Citizens, collision
 15. **The default for bodies (M7).** Report whether NPCs jostling each other on the dev world's stairs and gates look
     natural, and whether any falls. This and plan 4c.4 item 7.4.10 decide whether `collidable` turns on by default;
     together with steps 1–8 they also decide whether option B (plan 4c.4 item 8) is needed.
+
+## Link B5: a group of 20 up the stair house to the keep (retest of 2026-11-17 steps 2 and 3)
+
+Added 2026-11-17 for knk-plugin `claude/npc-movement-b5` ([#699](https://github.com/PandiO/knk-workspace/issues/699));
+run it on `next` once B5 is merged. Same setup as above (steps 1–9 keys on, `collidable: false`). 2 of 3 steps partly
+automated (tagged); every step can still be run by hand; not run yet. About 15 minutes; 10 minutes for the untagged
+step only.
+
+1. [partly automated: `npc-replay-quarry-to-keep`, the group of 20 to the route's end with the stored settings; by
+   hand: the whole route from the quarry, how it looks] **A `ranks` group of 20.** `/knk npc nav route load
+   quarry-to-keep`, `/knk npc nav clear`, `/knk npc nav stats reset`, `/knk npc nav group 20 ranks`. Follow the group
+   up the stair house and stand by flights 4 and 5 (the flights under the top passage, 1408–1416 67–76 −548…−534).
+   Look: the followers climb flight 4, cross the landing at −546, climb flight 5 and cross the landing at −536 behind
+   their leader; none walks back down a flight it climbed; the leader never stands on the passage over flight 4 while
+   its followers mill about below it. The group reaches the keep (1421 85 −516). In the `npc-logs/` run log: no
+   "is off its lane" line at the stair house, no follower with the same "its own leg back" line again and again, no
+   "group … walks on: a follower did not close up". `stats` groups line: `own legs back` near 0, `left behind 0`.
+2. [partly automated: the same scenario's checks (followers off their lane on the flights and landings, looping
+   followers); by hand: the crowd of 40] **The group with 20 singles.** `/knk npc nav clear`, `/knk npc nav spawn 20`,
+   then `/knk npc nav group 20 ranks`. The singles and the group both arrive; the group as in step 1.
+3. **How it looks** (manual: game feel). Whether the group still looks like a formation on the flights (a column on the
+   stairs, pairs on the landings), and anything odd at the first steps of flight 4, where the hall floor lies a block
+   below the step (plan 4c.8 item 4.7.2).
 
 ## After the run
 
