@@ -4,6 +4,24 @@ This is a human-readable record of capabilities merged into the V3 default branc
 
 ## Unreleased — on feature branches, not merged
 
+- **NPC navigation: waypoints and group slots at the real stair heights; jumps told by upward speed** ([PandiO/knk-workspace#673](https://github.com/PandiO/knk-workspace/issues/673),
+  link B4 of the NPC navigation follow-ups chain). knk-plugin and knk-workspace branches `claude/npc-movement-b4` (PRs
+  into `next`). Only with `npc.navigation.enabled` on; no new `config.yml` key, no migration.
+  1. Waypoints go to the engine at the real walking surface: a bottom slab and an upright stair's step at half a block,
+     not at the whole-block height navigation plans with. Where two waypoints rise more than a step, the step between
+     them goes in, so the NPC walks a half-block stair up step by step instead of jumping.
+  2. Group slots too: a follower's slot on a half-block stair lies on the step's surface.
+  3. Once the leader has arrived, a follower standing at its slot's point (within a block across, less than a block
+     up or down) counts as settled, also where the group path passes the same place twice. Before, it was sent round
+     the loop, stalled next to its slot, and its recovery ended `no point ahead on its floor` and lost.
+  4. A half-block step up is no jump for the low-headroom rule, so recovery finds its point ahead on a half-block stair.
+  5. `/knk npc nav trace` marks `JUMP` by a jump's upward speed, not by any rise over 0.2 blocks: a step up a slab or
+     a stair is no longer a jump.
+  6. Tests: `npc-replay-quarry-to-keep` now fails on a lost follower: the group of 20 with the stored settings arrives
+     with 0 lost (B2: 3) and 4 stuck spells (B2: 26). `npc-stairhouse-climb` fails on a jump toward a waypoint on the
+     flights and their entries: 0. Both report the engine's own hops off a stair's step separately (Minecraft's move
+     control hops whenever the block at the feet reaches above them; no waypoint height removes those).
+
 - **NPC navigation: stretch handover in 3D, appended, bridged from the feet** ([PandiO/knk-workspace#671](https://github.com/PandiO/knk-workspace/issues/671),
   link B2 of the NPC navigation follow-ups chain). knk-plugin and knk-workspace branches `claude/npc-movement-b2` (PRs
   into `next`). The main cause of the failed smoke test of 2026-11-16 (chain report decision 34). Only with
