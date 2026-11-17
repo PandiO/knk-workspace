@@ -28,8 +28,8 @@ on `next` (Decided 2026-11-17).
 | Link | Issue | Status | Branch heads | PR | CI | How started |
 |---|---|---|---|---|---|---|
 | L1 Phase 0 measurements | #703 | Merged into next (2026-11-17); waits for the developer's live measurements and the filled report | knk-plugin `claude/offroad-measurements` `71a43bc1`; knk-workspace `claude/offroad-measurements` `2337d3a4` | [knk-plugin#68](https://github.com/PandiO/knk-plugin/pull/68) → `next` `04506d8c`, [#717](https://github.com/PandiO/knk-workspace/pull/717) → `next` `a6240f5d` | green (build, paper-boot on `71a43bc1`) | create_session `session_01R1w2Uub8CZ7NuvatVUifP7` (2026-11-17) |
-| L2 Phase 1 shared shaping package | #704 | In review (2026-11-17): PRs open, not merged | knk-plugin `claude/offroad-shape-package` `0d0cff84`; knk-workspace `claude/offroad-shape-package` `ef17bcc3` | [knk-plugin#69](https://github.com/PandiO/knk-plugin/pull/69), [#718](https://github.com/PandiO/knk-workspace/pull/718) | green (build, paper-boot on `0d0cff84`) | create_session `session_01R1w2UwTnENVNKzfaXudBUh` (2026-11-17) |
-| L3 Phase 6.1 trail corners | #710 | Not started (gate: L2 in `next`) | `claude/offroad-trail-corners` | — | — | — |
+| L2 Phase 1 shared shaping package | #704 | Merged into next (2026-11-17) | knk-plugin `claude/offroad-shape-package` `0d0cff84`; knk-workspace `claude/offroad-shape-package` `ef17bcc3` | [knk-plugin#69](https://github.com/PandiO/knk-plugin/pull/69) → `next` `c45c16bb`, [#718](https://github.com/PandiO/knk-workspace/pull/718) → `next` `d8ebd9f4` | green (build, paper-boot) | create_session `session_01R1w2UwTnENVNKzfaXudBUh` (2026-11-17) |
+| L3 Phase 6.1 trail corners | #710 | Running (started 2026-11-17 23:05 from plugin `next` `c45c16bb`) | `claude/offroad-trail-corners` | — | — | create_session `session_01R1w2Uv9tRTPyjZsFJNWGec` (2026-11-17) |
 | L4 Phase 6.2 anchored particles, winding back | #711 | Not started (gate: L3 in `next`) | `claude/offroad-trail-cursor` | — | — | — |
 | L5 Phase 2 walk links | #705 | Not started (gate: L1 done, L4 in `next`) | `claude/offroad-walk-links` | — | — | — |
 | L6 Phase 3 hierarchical walk search | #706 | Not started (gate: L5 in `next`; O32 question first if L1 says option A fits) | `claude/offroad-hierarchical` | — | — | — |
@@ -79,6 +79,15 @@ on `next` (Decided 2026-11-17).
    the hold of decision 3 is lifted. The NPC chain's coordinator confirmed it starts no `core/npc/nav` link until L2
    is merged. L2 re-runs the § 3.4 import check on the current `next` (B5's `GroupPath.addShaped` added uses of
    `NavGeometry.straightWalkable` and `HopPlanner.surfaceNear`).
+8. **L2 merged into `next` (2026-11-17 23:05).** § 6 checks held: heads matched, branch contained `next`, `build` and
+   `paper-boot` (every `npc-*` scenario) green on `0d0cff84`, `next` CI green after L1, the diff checked as a pure move
+   (12 renames, import rewrites, `HopPlanner` helpers delegating to `NavGeometry`, `PlazaCrossing` extracted), tests
+   +1 (the package guard), no Codex findings (usage limit). The NPC chain's coordinator is told (C1 may start from
+   `next` `c45c16bb`). Alternative: wait for a Codex review; rejected, the developer's usage-limit rule applies.
+9. **L3 started (2026-11-17 23:05).** Gate "L2 merged into `next`" checked (merge commit `c45c16bb`). The prompt
+   requires the flag-off identity of the walk search's costs (a test) and keeps `TrailRenderer`/`NavigationService`
+   changes additive for L4. Overlap: the NPC chain's C1 (#700) may run beside L3 in `core/npc/nav`; L3 touches no
+   `core/npc/nav` file and changes to shape-package classes stay additive and are reported.
 
 ## 4. Link blocks
 
