@@ -4,6 +4,22 @@ This is a human-readable record of capabilities merged into the V3 default branc
 
 ## Unreleased — on feature branches, not merged
 
+- **NPC navigation: stretch handover in 3D, appended, bridged from the feet** ([PandiO/knk-workspace#671](https://github.com/PandiO/knk-workspace/issues/671),
+  link B2 of the NPC navigation follow-ups chain). knk-plugin and knk-workspace branches `claude/npc-movement-b2` (PRs
+  into `next`). The main cause of the failed smoke test of 2026-11-16 (chain report decision 34). Only with
+  `npc.navigation.enabled` on; no new `config.yml` key, no migration.
+  1. The next stretch is handed out by progress along the waypoints in 3D, not by horizontal distance to the stretch
+     end, so a stretch end on the flight above no longer counts as near.
+  2. The new stretch is appended to the waypoints not yet walked (those the NPC is already past are dropped), and the
+     join is bridged from the NPC's feet.
+  3. A step of the line the bridge cannot make is walked as a local leg, never as a straight walk across air.
+  4. A group leader that falls below the group path no longer takes the path with it: followers don't walk off the same
+     edge.
+  5. `npc-stairhouse-climb` and `npc-replay-quarry-to-keep` now fail on falls, handovers onto another level and turns
+     dropped by the crowd's guard after a fall. On the climb: falls 42 → 0, handovers onto another level 446 → 0,
+     stuck spells 117 → 2. Known limit: followers on the stair house's half-block flight still get lost in the replay
+     (a separate cause, proposed for B4, #673).
+
 - **NPC navigation tests: the whole stair house and snapshot replay** ([PandiO/knk-workspace#670](https://github.com/PandiO/knk-workspace/issues/670),
   link B1b). knk-plugin and knk-workspace branches `claude/npc-movement-b1-scene` (PRs into `next`). Tests only, nothing
   changes on a server.
