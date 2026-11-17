@@ -4,6 +4,16 @@ This is a human-readable record of capabilities merged into the V3 default branc
 
 ## Unreleased — on feature branches, not merged
 
+- **Off-road navigation: the shaping code is shared** ([PandiO/knk-workspace#704](https://github.com/PandiO/knk-workspace/issues/704),
+  link L2 of the off-road navigation chain, phase 1). knk-plugin and knk-workspace branches
+  `claude/offroad-shape-package` (PRs into `next`). Players and NPCs see no change; no `config.yml` key, no migration.
+  1. The NPC path shaping (`Corridor`, `CorridorShaper`, `FreeWidth`, `PlazaLine`) and the world primitives it reads
+     (`NavWorld`, `NavPoint`, `NavGeometry`, and `PlazaCrossing`, formerly `RoadPlanner.PlazaCrossing`) moved to
+     `knk-core` `core/navigation/shape/`, so the players' walk trail can use them in phase 6.1 (design O11).
+  2. `HopPlanner`'s floor helpers live in `NavGeometry` (`HopPlanner` delegates); `LocalLegSearch` stays NPC-side.
+  3. Tests: the same counts as before apart from one new guard test (`core/navigation/shape` uses nothing from
+     `core/npc`); the NPC scenarios run in CI's `paper-boot` job.
+
 - **Off-road navigation: walk-search measurements in `/knk road status`** ([PandiO/knk-workspace#703](https://github.com/PandiO/knk-workspace/issues/703),
   link L1 of the off-road navigation chain, phase 0). knk-plugin and knk-workspace branches `claude/offroad-measurements`
   (PRs into `next`). Players see no change: routes and trails are the same; staff get numbers to set the off-road
