@@ -4,6 +4,24 @@ This is a human-readable record of capabilities merged into the V3 default branc
 
 ## Unreleased — on feature branches, not merged
 
+- **NPC navigation: crowd turns judged in 3D** ([PandiO/knk-workspace#672](https://github.com/PandiO/knk-workspace/issues/672),
+  link B3 of the NPC navigation follow-ups chain). knk-plugin and knk-workspace branches `claude/npc-movement-b3` (PRs
+  into `next`). Only with `npc.navigation.enabled` and `crowd-awareness` on (both off by default); no new `config.yml`
+  key, no migration.
+  1. A narrow place taken in turns now has a floor: flat, or a flight's slope. An NPC whose feet are 1.5 blocks or more
+     above or below it stands on another level.
+  2. An NPC holding a turn that climbed on to the flight above, or fell under the place, has left it: its turn ends,
+     unless one of its followers is still in the place.
+  3. Nobody waits for an NPC on another level. Before, on the stair house's stacked flights, singles going the same
+     way as a group waited behind its leader a flight up (seen from above it looked as if it stood at the place's
+     entry) until the 30 s guard let them go, up to 18 at a time.
+  4. The 30 s guard of a queue counts from the last time anyone entered the narrow place, not from the NPC's arrival:
+     a long single file that keeps moving (18 NPCs up a one-wide stair, about 2 s each) is no longer let go at its
+     end. A place nobody enters still lets its queue go after 30 s.
+  5. Tests: `npc-stairhouse-climb` now fails when the 30 s guard lets anyone go, and reports why (where the NPC and
+     every turn holder stood in 3D). The climb's queue let go by the guard: 0 to 6 per run before, 0 now (longest
+     queue 18, 2.1 s per NPC ahead); falls, jumps toward a waypoint, stuck spells and lost followers stay 0.
+
 - **NPC navigation: waypoints and group slots at the real stair heights; jumps told by upward speed** ([PandiO/knk-workspace#673](https://github.com/PandiO/knk-workspace/issues/673),
   link B4 of the NPC navigation follow-ups chain). knk-plugin and knk-workspace branches `claude/npc-movement-b4` (PRs
   into `next`). Only with `npc.navigation.enabled` on; no new `config.yml` key, no migration.
