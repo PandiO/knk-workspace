@@ -2,7 +2,7 @@
 
 **Status:** **Proposed** (2026-11-17) — all questions of § 15 answered by the developer on 2026-11-17; waiting for approval. (On approval: **Decided <date>** (developer).)
 **Last updated:** 2026-11-17 (design session: the draft's code claims checked against knk-plugin `next` `e69dba6` and corrected (§ 3.1, § 3.4); a compile-and-test check of the shared shaping package (§ 3.4); the sources re-read and the draft corrected (§ 3.5); question 15.9 answered (O16)); 2026-11-17 (first draft from the developer's voice session of 2026-11-17, checked against knk-plugin `next` `e69dba6` and the docs on knk-workspace `next` `6be8222`)
-**Issue:** [PandiO/knk-workspace#698](https://github.com/PandiO/knk-workspace/issues/698); phases as sub-issues in § 14.
+**Issue:** [PandiO/knk-workspace#698](https://github.com/PandiO/knk-workspace/issues/698); phases as sub-issues in § 14: #703 (0), #704 (1), #705 (2), #706 (3), #707 (4), #708 (5.1 landmark entity), #709 (5.2 landmark weights), #710 (6.1), #711 (6.2), #712 (7 plaza lines), #713 (8). Later: #714 (plaza landmark, § 10.1). Related: #603, #625, #110 (KNG-93), #25 (KNG-235).
 **Dependencies:** [navigation](../navigation/DESIGN.md) (road graph, `/navigate`, walk paths, all merged), [navigation destination engine](../navigation-destination-engine/DESIGN.md) (proposed; the landmark provider of § 6 plugs into it), the NPC movement quality work on `next` ([architecture § 12](../../architecture/npc-navigation.md#12-movement-quality-phase-4c-links-m1m7), merged 2026-11-16, not yet live tested (#621 to #627 open): `corridor/Corridor`, `CorridorShaper`, `FreeWidth`, `PlazaLine`, `LocalLegSearch`). Related issues: #603 (NPC movement quality), #625 (NPC plaza lines), #110 (KNG-93, entrances), #25 (KNG-235, destination engine).
 **Authority:** the developer's answers of 2026-11-17 (decision log O01–O10 and the answers of the design session, O16 onward). Supersedes, conditionally, the builder through-edges of the NPC plan (decision 6 of 2026-11-15, 4c.7; O29). Otherwise the road-navigation design stays binding for the road graph; this document extends its § 6.2 "off-road legs" and "Phase 6" rows. This document is the canonical specification, not a claim that the proposed entities, endpoints or behaviour exist.
 
@@ -422,21 +422,21 @@ Everything that decides a route, a cost or a curve stays in Bukkit-free `knk-cor
 
 ## 14. Phases
 
-(Filled on approval; the sub-issues are filed with the parent issue. Each phase merges into `next` on its own, behind its flag.)
+(Sub-issues filed 2026-11-17 at the developer's request, before approval; their scope is final on approval. Each phase merges into `next` on its own, behind its flag.)
 
 | Phase | Scope | Acceptance | Repos | Tier | Flag | Sub-issue | Depends on |
 |---|---|---|---|---|---|---|---|
-| 0 | Measurements: timing counters, scenes, report (§ 9.2) | A01 | knk-plugin, knk-workspace | tier:1 | none | to file | none |
-| 1 | Shared shaping module: move the shaping classes and their world primitives to `core/navigation/shape` (O11, § 3.4), no behaviour change | A26 | knk-plugin | tier:2 | none | to file | none |
-| 2 | Walk links in the routing view, mixed routes, the block-change hook (§ 5.1, § 5.2, O17, O18) | A02–A05 | knk-plugin | tier:3 | `navigation.walk-links` (off) | to file | 0 |
-| 3 | Hierarchical walk search, indoor routes, wilderness W1 (§ 5.3, § 5.5) | A06–A08 | knk-plugin | tier:3 | `navigation.walk.hierarchical` (off) | to file | 0, 1 |
-| 4 | Route modes and road weights (§ 5.4), plugin side | A09, A11 | knk-plugin | tier:2 | none | to file | 2 |
-| 5.1 | Landmark entity: API, web app, plugin, destination provider (§ 6), separate issue | A12–A14 | knk-web-api, knk-web-app, knk-plugin | tier:3 (schema) | `navigation.landmarks` (off) | to file | #96, #103 (destination engine P1, P2; O27); #69 (P3) for `/navigate` to reach the provider |
-| 5.2 | Landmark preference weights in the walk search (§ 5.4.3), landmarks as walk-planner nodes (§ 6.2.2) | A10 | knk-plugin | tier:2 | `navigation.landmarks` (off) | to file | 4, 5.1 (and 3 for landmark nodes in clusters) |
-| 6.1 | Trail quality, corners: clearance cost in the walk search, shaping and curve of walk paths off the main thread (§ 7.1) | A15, A16, A27 | knk-plugin | tier:3 (game feel) | `navigation.guidance-v2` (off) | to file | 1 |
-| 6.2 | Trail quality, guidance: anchored walk-trail particles, progress and cursor, winding back (§ 7.2, § 7.5) | A16–A21 | knk-plugin | tier:3 (game feel) | `navigation.guidance-v2` (off) | to file | none (6.1 for the shaped line's anchors when both are in) |
-| 7 | Plaza lines for the players' trail (§ 8), separate issue | A22–A25 | knk-plugin | tier:2 | `navigation.plaza-lines` (off) | to file | 6.1 and 6.2 (trail quality) |
-| 8 | Persisted walk tiles (§ 5.5 W2) | to be written | knk-web-api, knk-plugin | tier:3 | to be set | to file later | 0, 3 |
+| 0 | Measurements: timing counters, scenes, report (§ 9.2) | A01 | knk-plugin, knk-workspace | tier:1 | none | [#703](https://github.com/PandiO/knk-workspace/issues/703) | none |
+| 1 | Shared shaping module: move the shaping classes and their world primitives to `core/navigation/shape` (O11, § 3.4), no behaviour change | A26 | knk-plugin | tier:2 | none | [#704](https://github.com/PandiO/knk-workspace/issues/704) | none |
+| 2 | Walk links in the routing view, mixed routes, the block-change hook (§ 5.1, § 5.2, O17, O18) | A02–A05 | knk-plugin | tier:3 | `navigation.walk-links` (off) | [#705](https://github.com/PandiO/knk-workspace/issues/705) | 0 |
+| 3 | Hierarchical walk search, indoor routes, wilderness W1 (§ 5.3, § 5.5) | A06–A08 | knk-plugin | tier:3 | `navigation.walk.hierarchical` (off) | [#706](https://github.com/PandiO/knk-workspace/issues/706) | 0, 1 |
+| 4 | Route modes and road weights (§ 5.4), plugin side | A09, A11 | knk-plugin | tier:2 | none | [#707](https://github.com/PandiO/knk-workspace/issues/707) | 2 |
+| 5.1 | Landmark entity: API, web app, plugin, destination provider (§ 6), separate issue | A12–A14 | knk-web-api, knk-web-app, knk-plugin | tier:3 (schema) | `navigation.landmarks` (off) | [#708](https://github.com/PandiO/knk-workspace/issues/708) | #96, #103 (destination engine P1, P2; O27); #69 (P3) for `/navigate` to reach the provider |
+| 5.2 | Landmark preference weights in the walk search (§ 5.4.3), landmarks as walk-planner nodes (§ 6.2.2) | A10 | knk-plugin | tier:2 | `navigation.landmarks` (off) | [#709](https://github.com/PandiO/knk-workspace/issues/709) | 4, 5.1 (and 3 for landmark nodes in clusters) |
+| 6.1 | Trail quality, corners: clearance cost in the walk search, shaping and curve of walk paths off the main thread (§ 7.1) | A15, A16, A27 | knk-plugin | tier:3 (game feel) | `navigation.guidance-v2` (off) | [#710](https://github.com/PandiO/knk-workspace/issues/710) | 1 |
+| 6.2 | Trail quality, guidance: anchored walk-trail particles, progress and cursor, winding back (§ 7.2, § 7.5) | A16–A21 | knk-plugin | tier:3 (game feel) | `navigation.guidance-v2` (off) | [#711](https://github.com/PandiO/knk-workspace/issues/711) | none (6.1 for the shaped line's anchors when both are in) |
+| 7 | Plaza lines for the players' trail (§ 8), separate issue | A22–A25 | knk-plugin | tier:2 | `navigation.plaza-lines` (off) | [#712](https://github.com/PandiO/knk-workspace/issues/712) | 6.1 and 6.2 (trail quality) |
+| 8 | Persisted walk tiles (§ 5.5 W2) | to be written | knk-web-api, knk-plugin | tier:3 | to be set | [#713](https://github.com/PandiO/knk-workspace/issues/713) | 0, 3 |
 
 Order (O23): 0 and 1 first (independent), then 6 (6.1, 6.2) and 2 side by side (6 first when only one chain runs), then 3; the landmark entity (5.1) after destination engine P1 and P2 (#96, #103), landmark weights (5.2) after 4 and 5.1; plaza lines (7) after 6.1 and 6.2. Phase 6 is split in two links because shaping (6.1) and the cursor (6.2) are each a day's work with their own tests (agent, skill § 6.2). Smoke test: [guides/navigation-offroad-smoke-test.md](../../guides/navigation-offroad-smoke-test.md) (written on approval).
 
@@ -455,4 +455,4 @@ Order (O23): 0 and 1 first (independent), then 6 (6.1, 6.2) and 2 side by side (
 
 ### After v1
 
-1. Explicit landmark links (§ 10.2), the plaza landmark subtype (§ 10.1), persisted walk tiles (phase 8), NPC use of walk links and clusters, route risk weighting (ambush), a 2D web map of landmarks, discovery rewards for landmarks. Issues are filed when the parent issue exists.
+1. Explicit landmark links (§ 10.2), the plaza landmark subtype (§ 10.1, #714), persisted walk tiles (phase 8, #713), NPC use of walk links and clusters, route risk weighting (ambush), a 2D web map of landmarks, discovery rewards for landmarks. The rest get issues when they are scheduled.
