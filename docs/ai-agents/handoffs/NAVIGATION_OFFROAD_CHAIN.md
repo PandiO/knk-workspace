@@ -1,10 +1,10 @@
 # Off-road navigation and landmarks chain — charter
 
-**Status:** Ready to start (2026-11-17)
-**Last updated:** 2026-11-17 (drafted by the design session; the coordinator completes it at its first run)
+**Status:** Running (2026-11-17)
+**Last updated:** 2026-11-17 (completed by the coordinator at its first run: progress report, model, gates checked against the branches, status Running); 2026-11-17 (drafted by the design session)
 **Issues:** parent [PandiO/knk-workspace#698](https://github.com/PandiO/knk-workspace/issues/698); sub-issues per
 link below. Reference issues as `PandiO/knk-workspace#n` in component repos.
-**Progress report:** reports/<date>-navigation-offroad-chain.md (created by the coordinator at its first run)
+**Progress report:** [reports/2026-11-17-navigation-offroad-chain.md](../../reports/2026-11-17-navigation-offroad-chain.md)
 **Skills:** coordinator `.claude/skills/knk-coordinator/`, links `.claude/skills/knk-link/` (knk-workspace).
 
 ## 0. Binding documents
@@ -62,4 +62,13 @@ when it touches no `navigation/` file in that link's change set.
 2. Unchanged behaviour: with every flag above off, navigation, trails and NPC movement behave exactly as before
    (A16, A24, A26; transcript tests).
 3. Migrations: only L8 (an additive `landmarks` table).
-4. Model for link sessions: set by the coordinator.
+4. Model for link sessions: `claude-opus-5-5` for every link (coordinator decision 2, progress report § 3).
+5. Rule set: the `next` branch model applies (CI on knk-web-api and knk-web-app `main`, checked 2026-11-17); links
+   branch from `next`, the coordinator merges into `next`.
+6. Gates checked against git, 2026-11-17 (knk-plugin `next` `e69dba6a`, knk-workspace `next` `b9c0a7fc`):
+    1. L1: open.
+    2. L2: open by the charter, held by the coordinator until NPC B5 `claude/npc-movement-b5` (#699, `d402d865`, not in
+       `next`) is merged into `next` (same import lines in `core/npc/nav/group/`; the order the developer agreed with
+       the NPC chain) and L1's plugin PR is merged (one plugin link at a time).
+    3. L3 to L7, L9, L10: closed (their predecessor links are not in `next`).
+    4. L8: closed; no destination-engine branch for #96, #103 or #69 is merged into `next`.
