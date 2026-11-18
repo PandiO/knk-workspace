@@ -1,7 +1,7 @@
 # Overview map — BlueMap in the web app for players, staff and moderation
 
 **Status:** **Decided 2026-11-18** (developer). Proposed the same day; no open questions.
-**Last updated:** 2026-11-18 (§ 3.1.10: existing NAS render container, migration to the alpha stack; Decided; phases filed as #735–#743; first version from the working draft of 2026-11-17 and the design session of 2026-11-18)
+**Last updated:** 2026-11-18 (phase 1, #735, built on `claude/overview-map-outlines` in knk-plugin and knk-web-api, in review, not in `next` yet; stored shape in § 6.1.1); 2026-11-18 (§ 3.1.10: existing NAS render container, migration to the alpha stack; Decided; phases filed as #735–#743; first version from the working draft of 2026-11-17 and the design session of 2026-11-18)
 **Issue:** [PandiO/knk-workspace#732](https://github.com/PandiO/knk-workspace/issues/732); phases as sub-issues in § 11.
 **Dependencies:** the offline BlueMap tile pipeline ([BLUEMAP_EVALUATION.md](BLUEMAP_EVALUATION.md) § 5–7); the SignalR
 game hub (#66, built); managed WorldGuard regions (`docs/architecture/managed-worldguard-regions.md`, built); gate
@@ -221,7 +221,11 @@ Related: [DESIGN.md](DESIGN.md) (in-game maps, M2–M5), [DECISION-map-data-sour
 
 1. **Entities and fields:**
     1. New `MapRegionOutline`: Id, WgRegionId (unique per world), WorldName, PointsJson (2D polygon), MinY, MaxY,
-       UpdatedAt. Additive migration (O28).
+       UpdatedAt. Additive migration (O28). As built (#735): table `map_region_outlines`, unique (WorldName,
+       WgRegionId), region ids lower case; `PointsJson` is `[[x,z],...]` in block coordinates (a cuboid's four corners,
+       a polygon's points), read with `MapOutlinePoints.Parse`; plus a nullable `DomainId` (the domain naming the
+       region as main region or sub-region when it was stored, SET NULL on delete), a hint next to the domain's own
+       `WgRegionId`.
     2. No change to Domain, GateStructure or GateDoor.
     3. In memory: `MapPlayerRegistry` (latest report per player) beside `PresenceRegistry`, and the per-audience
        snapshots (O21).
