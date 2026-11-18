@@ -3,7 +3,7 @@
 **Status:** **Decided 2026-11-18** (developer). Approved in the design refresh session: § 14.1–14.6 "yes"
 (E14–E21 accepted as written). Decisions of 2026-10-22 are recorded in §1; the refresh of 2026-11-18 in § 1.1, § 2.1,
 § 3.2, § 5.1, § 10, § 13, § 14; E1–E13 unchanged.
-**Last updated:** 2026-11-18 (P1 link: § 10.2 item 7, what was applied); 2026-11-18 (approved by the developer: status Decided, phase 4b filed as #747, tier labels applied,
+**Last updated:** 2026-11-18 (P3 link: § 10.4, what was applied); 2026-11-18 (P2 link: § 10.3 item 5, what was applied); 2026-11-18 (P1 link: § 10.2 item 7, what was applied); 2026-11-18 (approved by the developer: status Decided, phase 4b filed as #747, tier labels applied,
 § 14 answered); refreshed 2026-11-18 (§ 2, § 5 and § 10 re-checked against knk-plugin `next` `1f414d08`; landmark
 provider hook § 3.2; the October P1 code checked on `next` § 10.2; tiers, flag and links § 10; acceptance items § 13;
 points for approval § 14; agent decisions E14–E21 in § 1.1); 2026-10-23 (E9–E13 recorded; KNG-234 merged to main
@@ -419,6 +419,45 @@ behind `next` `1f414d08`; 15 new files, 1 932 lines, additions only (8 classes i
    `DomainMappingProfile`, and `.Include(d => d.Location)` in `SearchAsync`. Additive, no migration, older clients
    ignore the field; tests for a domain with and without a Location. The plugin pages through the search with a large
    page size (`SearchAsync` takes the page size as given; the link checks the service layer and sets a cap if needed).
+5. **Applied by the P2 link (#103, 2026-11-18)**, for P3 and the landmark link: the API sends `location` on every
+   item (`null` when the domain has none; the key is always written, so the plugin tells "none" from an older API) and
+   no page-size cap was added (the plugin asks for 200, as `NavigationDestinations` does). In knk-plugin the model is
+   `core/navigation/model`: `NavigationModel` (domains as `DomainPlace` with `spawn` and `placeKnown`, Locations as
+   `ModelPoint`, `CompassSettings`, `Landmark` list, `roadAccessIgnored`/`roadsIgnoreRegion`), `NavigationModelHolder`
+   (volatile swap; `version()` moves only with the content: the `modelVersion` of § 3), `NavigationModelRefresher`
+   (60 s refresh, all three API parts or nothing; paced fallback two lookups a second for Towns, Districts and
+   Structures; snapshot written when complete and changed, or once a day to keep `asOf` current), `ModelFreshness`
+   (`LIMITED`/`STALE`/`FRESH`, `applyTo(DestinationList)`). The file is `<plugin folder>/offline/navigation-model.json`
+   (`plugins/KnightsAndKings/…`; "KnK" in § 7.2 is shorthand). knk-paper starts it in
+   `paper/navigation/model/NavigationModelRuntime` (`KnKPlugin.startNavigationModel`); nothing reads it yet
+   (`NavigationModelUnreadTest`, which P3 widens).
+
+### 10.4 What the P3 link applied (#69, knk-plugin `claude/navigation-destination-engine`, 2026-11-18)
+
+For P4, 4b and the landmark link; the choices and their alternatives are in the chain report's L3 block.
+
+1. **Flag** `navigation.destination-engine` (default `false`), read at start-up (`DestinationEngineConfig`). Off:
+   every old path runs unchanged; the clients hold a supplier that answers null.
+2. **Providers** in `core/navigation/engine`: `CatalogueProvider` (the model's domains and Locations, the network's
+   streets and named nodes; keys `domain:<Town|District|Structure>:<id>`, `location:<id>`, `street:<id>`,
+   `node:<id>`; priorities 0 to 3 keep today's order; the model part built once per model, E18),
+   `SiegeMatchProvider` (`SiegeCompassTargets` in its order, priority = position, the #176 gate approach when the
+   list is built, rebuilt per call) and `CompassTargets` (the design's `CompassTargetsProvider`: the configured lines
+   as a filter of the World list, not a `Provider`, since a provider would duplicate catalogue keys).
+3. **Engine:** one addition, `DestinationEngine.resolveKey(ctx, key, mode)`, the second place that mints a handle
+   (the compass cycle, a resume of the stored key, the command's "start of one name" in a match).
+4. **Adapters** in `paper/navigation/engine`: `PlayerNavigationEngine` builds the full context (mode, loading,
+   frozen, `knk.navigate` and `knk.navigate.any`, the siege facts with `compassEnabled = item().enabled() &&
+   siegeEnabled()`, the model version) and applies the model's freshness note; it retries a domain's `NO_LOCATION`
+   with the other mode word, as `locateDomain` falls back today. `RoadAccessAnswers` serves E19 from the catalogue
+   (flag off) or the model (flag on). `HandleDestinations` turns a handle into today's `Destination`;
+   `EngineReasons` holds each client's words per code (E15).
+5. **Service:** `navigate(Player, AllowedDestination)` added; the raw `navigate(Player, Destination)` refuses when
+   the flag is on (`setHandleOnly`, A20). `NavigationEligibility` still applies on both entries: P4 removes it from
+   the handle path and adds re-validation. The arrival radius of `Place.Point` is not used yet (no landmark
+   provider; `Destination` has no radius): the landmark link adds it.
+6. **Not done here (later links):** the deletions of § 10 row 4b; `/knk road` showing the model's age (§ 7.3);
+   a rank seed for `knk.navigate.any` in knk-web-api (proposed, not added).
 
 ## 11. Risks and details to settle in implementation
 

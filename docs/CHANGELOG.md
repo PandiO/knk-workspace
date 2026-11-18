@@ -19,6 +19,45 @@ This is a human-readable record of capabilities merged into the V3 default branc
      step 3); without it everyone has BlueMap's default head. Steps:
      [overview map smoke test § 5](guides/overview-map-smoke-test.md#5-phase-4b-live-players-layer-739-tier2).
 
+- **Navigation destination engine, phase 3: `/navigate`, tab completion, the compass and the route start on the engine, behind a flag** ([PandiO/knk-workspace#69](https://github.com/PandiO/knk-workspace/issues/69),
+  link L3 of the destination engine chain, [#25](https://github.com/PandiO/knk-workspace/issues/25)). knk-plugin and
+  knk-workspace branches `claude/navigation-destination-engine` (PRs into `next`). Behind the new `config.yml` key
+  `navigation.destination-engine` (off by default: nothing changes for players).
+  1. With the key on, `/navigate`, its tab completion and the navigation compass use one list of places per player,
+     built from the navigation model of phase 2 and the road network: the same names, forms and messages as today
+     outside a siege, and in a siege match only the match's objectives and team spawn, now also as
+     `objective:<name>` and `objective:#<id>`. Places of another world are not suggested but still get "… is in
+     another world". Nothing is looked up when a destination is chosen, so it works with the API down after a
+     restart; without any saved model only streets and road points are offered, with "Some places aren't available
+     while the web API is down.".
+  2. The compass cycles the same list (the match's in a match, the configured general targets outside a siege) and
+     keeps its own wording; a resume picks the stored destination again only while it is still listed. Routes start
+     only from the list. Owner mode, staff mode and the new node `knk.navigate.any` (not granted by default) list
+     every place, also in a match.
+  3. The road-access answers ("Ignored" domains whose roads stay usable) and the compass settings come from the
+     navigation model with the key on.
+  4. Admin steps: add `destination-engine: false` under `navigation:` in `config.yml` (a missing key means `false`;
+     see [plugin configuration § 4.15](guides/admin/plugin-configuration.md#415-navigation)); restart after changing
+     it. No migration, no API change. Grant `knk.navigate.any` only to accounts that should navigate anywhere. Steps:
+     [destination engine smoke test § 3](guides/navigation-destination-engine-smoke-test.md#3-phase-3-switch-over-behind-the-flag-69-tier3).
+
+- **Navigation destination engine, phase 2: the navigation model and its offline snapshot** ([PandiO/knk-workspace#103](https://github.com/PandiO/knk-workspace/issues/103),
+  link L2 of the destination engine chain, [#25](https://github.com/PandiO/knk-workspace/issues/25)). knk-web-api,
+  knk-plugin and knk-workspace branches `claude/navigation-destination-engine` (PRs into `next`). Nothing changes for
+  players: nothing in the plugin reads the model before phase 3, which switches to it behind a flag.
+  1. The domain search (`POST api/Domains/search`) returns each domain's Location (`location`: id, name, x, y, z, yaw,
+     pitch, world; `null` when the domain has none). The other fields are unchanged; no migration.
+  2. The game server keeps a navigation model: every domain with its spawn Location, region, world, `/navigate`
+     default and road-access flag, the Location targets, the navigation compass settings and an empty landmarks
+     section for off-road landmarks (#708). It is refreshed from the API every minute, saved to
+     `plugins/KnightsAndKings/offline/navigation-model.json` when it changed, and loaded at start-up, so it survives a
+     restart with the API down. With an API from before this change it looks the Locations up one domain at a time,
+     two a second.
+  3. Admin steps: deploy knk-web-api and the plugin together (either order works). New `config.yml` key
+     `navigation.destinations.stale-after-days: 14` under `navigation:` (a missing key means 14; see
+     [plugin configuration § 4.15](guides/admin/plugin-configuration.md#415-navigation)). No migration. Steps:
+     [destination engine smoke test § 2](guides/navigation-destination-engine-smoke-test.md#2-phase-2-navigation-model-and-offline-snapshot-103-tier2).
+
 - **Overview map: gate command buttons in the map panel** ([PandiO/knk-workspace#742](https://github.com/PandiO/knk-workspace/issues/742),
   link L8 of the overview map chain, [#732](https://github.com/PandiO/knk-workspace/issues/732)). knk-web-app and
   knk-workspace branches `claude/overview-map-gate-buttons` (PRs into `next`). Behind the API setting
