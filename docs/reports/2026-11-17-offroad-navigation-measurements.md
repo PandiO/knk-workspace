@@ -50,6 +50,8 @@ coordinates) and go to another, as indoor routes with bits of road between them.
 | 8 | Indoor pair: watchtower to tower roof (extra) | Garrison Watchtower Roof 1401 107 -542 | `Keep Tower Roof` | 39 | +6 | down one building, across, up the other |
 | 9 | Indoor pair: storage hall to watchtower (extra) | Keep storage hall 1421 73 -488 | `Garrison Watchtower Roof` | 58 | +34 | over 48: run 1 road plus walk legs, run 2 one walk search |
 
+Finding from run 1 (scenes 8 and 9): every search from or to the Garrison Watchtower Roof stopped after 44 cells. The roof is reached through an open trapdoor hatch with a ladder below it (both usable by a player; the trapdoor was open), so the walk search does not pass an open trapdoor onto a ladder. This is a walk-search gap, not a budget question.
+
 No scene is about 200 blocks away; scene 4 stands in for the 400-block row, scene 5 goes beyond it. Rows of § 3.2 are
 read with these numbers: "keep" = scene 1, "stair house" = scene 2, "courtyard" = scene 3, "400" = scene 4, "200"
 unused; add rows for scenes 5 to 9.
