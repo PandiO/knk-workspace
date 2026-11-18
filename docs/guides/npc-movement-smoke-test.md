@@ -182,7 +182,7 @@ run it on `next` once R1 is merged. Same setup as above; the movement keys don't
 by hand; not run yet. About 15 minutes; 5 minutes for the untagged step only.
 
 1. [partly automated: `npc-group-cache-refresh-held` (followers held inside a district they may not leave, a cache
-   refresh with the rules unchanged, the fake API answering half a second later), knk-core `NavGroupCacheRefreshTest`
+   refresh with the rules unchanged, the fake API answering 2 s later), knk-core `NavGroupCacheRefreshTest`
    (entry and exit, followers and a single NPC); by hand: the real web app, hub and API, a real district, the log]
    **Followers held at the edge, then a refresh.** `/knk npc nav route load quarry-to-keep` (or your `exit-short`),
    `/knk npc nav clear`, `/knk npc nav stats reset`, `/knk npc nav group 20`. When about half the column is inside the

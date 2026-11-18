@@ -17,7 +17,7 @@ This is a human-readable record of capabilities merged into the V3 default branc
      hold ends and the availability event follows, so the NPCs switch to the new answers at that event. A crossing in
      the gap (an NPC carried over the edge) is counted. Players' lookups are unchanged. A hold that no re-warm ends
      (NPC navigation off, no roads) ends by itself after a minute.
-  3. Scenario `npc-group-cache-refresh-held` (followers held inside a district they may not leave, then a cache refresh)
+  3. Scenario `npc-group-cache-refresh-held` (followers held inside a district they may not leave, then a cache refresh with a slow API; it fails on `next` before the fix)
      runs in CI's `paper-boot` job (62 scenarios). Steps: [NPC movement smoke test, link R1](guides/npc-movement-smoke-test.md#link-r1-a-cache-refresh-while-npcs-are-held-at-an-edge),
      [plan Phase 4 known limit 4](specs/npc-platform/IMPLEMENTATION_PLAN.md#phase-4--groups-plugin).
 
