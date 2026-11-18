@@ -1,15 +1,17 @@
 # Navigation destination engine — which places a player may navigate to
 
-**Status:** Proposed — design for the developer's review. **No code.** Decisions of 2026-10-22 are recorded in §1.
-Refreshed 2026-11-18 for approval (§ 1.1, § 2.1, § 3.2, § 5.1, § 10, § 13, § 14); E1–E13 unchanged.
-**Last updated:** refreshed 2026-11-18 (§ 2, § 5 and § 10 re-checked against knk-plugin `next` `1f414d08`; landmark
+**Status:** **Decided 2026-11-18** (developer). Approved in the design refresh session: § 14.1–14.6 "yes"
+(E14–E21 accepted as written). Decisions of 2026-10-22 are recorded in §1; the refresh of 2026-11-18 in § 1.1, § 2.1,
+§ 3.2, § 5.1, § 10, § 13, § 14; E1–E13 unchanged.
+**Last updated:** 2026-11-18 (approved by the developer: status Decided, phase 4b filed as #747, tier labels applied,
+§ 14 answered); refreshed 2026-11-18 (§ 2, § 5 and § 10 re-checked against knk-plugin `next` `1f414d08`; landmark
 provider hook § 3.2; the October P1 code checked on `next` § 10.2; tiers, flag and links § 10; acceptance items § 13;
 points for approval § 14; agent decisions E14–E21 in § 1.1); 2026-10-23 (E9–E13 recorded; KNG-234 merged to main
 2026-10-23, so the engine's base is `main`)
 **Issue:** [PandiO/knk-workspace#25](https://github.com/PandiO/knk-workspace/issues/25), phases
 [#96](https://github.com/PandiO/knk-workspace/issues/96) (P1), [#103](https://github.com/PandiO/knk-workspace/issues/103) (P2),
 [#69](https://github.com/PandiO/knk-workspace/issues/69) (P3), [#62](https://github.com/PandiO/knk-workspace/issues/62) (P4),
-[#55](https://github.com/PandiO/knk-workspace/issues/55) (P5). Smoke test:
+[#747](https://github.com/PandiO/knk-workspace/issues/747) (4b), [#55](https://github.com/PandiO/knk-workspace/issues/55) (P5). Smoke test:
 [guides/navigation-destination-engine-smoke-test.md](../../guides/navigation-destination-engine-smoke-test.md) (draft).
 Waiting on it: off-road navigation phase 5.1 landmarks ([#708](https://github.com/PandiO/knk-workspace/issues/708),
 off-road decision O27).
@@ -47,10 +49,10 @@ in-memory model that is **persisted to disk**, so it behaves the same with the w
 | E12 | **Defaults:** the bypass node is `knk.navigate.any` (not granted by default); a snapshot older than 14 days adds a "may be out of date" note (`navigation.destinations.stale-after-days`); **the domain search API is extended** with each domain's Location (§7.2). |
 | E13 | **Implementation starts after the developer's review of this document**, on a new branch with its own Linear issue. |
 
-### 1.1 Agent decisions of the refresh (2026-11-18, for the developer's review)
+### 1.1 Agent decisions of the refresh (2026-11-18, accepted by the developer the same day)
 
 Taken by the design refresh session as reversible defaults; each lists its alternatives. None changes E1–E13. The
-developer approves them with the design (§ 14) or overrides one by its id.
+developer accepted all of them with the design on 2026-11-18 (§ 14.1–14.6: yes).
 
 | # | Date | Who | Decision | Alternatives considered |
 |---|---|---|---|---|
@@ -343,8 +345,8 @@ later by letting a `Scope` read admin-defined rows.
 
 Behaviour is unchanged until P3, and from P3 on only with `navigation.destination-engine: true` (E17). Each phase merges
 into `next` on its own. One knk-plugin link touching navigation code at a time (§ 2.1 item 8; charter
-[DESTINATION_ENGINE_CHAIN.md](../../ai-agents/handoffs/DESTINATION_ENGINE_CHAIN.md)). Tiers are proposals (E20); the
-developer may override them.
+[DESTINATION_ENGINE_CHAIN.md](../../ai-agents/handoffs/DESTINATION_ENGINE_CHAIN.md)). Tiers as approved 2026-11-18
+(E20) and set as labels on the sub-issues.
 
 | Phase | Content | Acceptance (§ 13) | Repos | Tier | Flag | Sub-issue | Depends on |
 |---|---|---|---|---|---|---|---|
@@ -352,7 +354,7 @@ developer may override them.
 | 2 | Model + snapshot: `NavigationModel` (domain places, Locations, compass settings, road-access answers E19, empty `landmarks` section E16), snapshot reader/writer, background refresh, bulk domain places (API DTO extension § 10.3 + paced fallback), `degraded`, staleness note | A10–A15 | knk-web-api, knk-plugin | tier:2 | none (nothing reads the model before P3; the snapshot file is written) | [#103](https://github.com/PandiO/knk-workspace/issues/103) | P1 for the engine types; the model itself can start in parallel |
 | 3 | Adapters and switch-over behind the flag: `NavigateCommand`, tab completion, compass and `NavigationService` on the handle; `CatalogueProvider`, `SiegeMatchProvider`, `CompassTargetsProvider`; architecture test on the new entry; road access from the model | A16–A21 | knk-plugin | tier:3 | `navigation.destination-engine` (off) | [#69](https://github.com/PandiO/knk-workspace/issues/69) | P1, P2 |
 | 4 | Hard blocks into scopes; live re-validation (`EndReason.DESTINATION_NOT_ALLOWED`, immediate triggers), all behind the flag | A22–A26 | knk-plugin | tier:3 | `navigation.destination-engine` (off) | [#62](https://github.com/PandiO/knk-workspace/issues/62) | P3 |
-| 4b | Removal: delete `MatchNavigationScope`, `navigateInMatch`, `completeInMatch`, `Destination.sameAs`, the compass list building, `NavigationEligibility`, `EndReason.SIEGE`, `NavigationDestinations`; the handle becomes the only `navigate` entry (E3); the flag is removed | A27–A28 | knk-plugin | tier:2 | removes the flag | to be filed on approval (§ 14) | P4, and the developer's live test of P3 and P4 in `next` with the flag on |
+| 4b | Removal: delete `MatchNavigationScope`, `navigateInMatch`, `completeInMatch`, `Destination.sameAs`, the compass list building, `NavigationEligibility`, `EndReason.SIEGE`, `NavigationDestinations`; the handle becomes the only `navigate` entry (E3); the flag is removed | A27–A28 | knk-plugin | tier:2 | removes the flag | [#747](https://github.com/PandiO/knk-workspace/issues/747) | P4, and the developer's live test of P3 and P4 in `next` with the flag on |
 | 5 | Arena duels provider+scope (when that branch lands; timing not confirmed by the developer); optional hub list (E10) | A29 | knk-plugin | tier:2 | none (on the engine) | [#55](https://github.com/PandiO/knk-workspace/issues/55) | 4b and the arena duels work (KNG-197) |
 
 Order: P1, then P2, then P3, P4, 4b; P5 when arena duels lands. The off-road landmark link (#708) may start once P1,
@@ -478,10 +480,10 @@ Each item is checked by a test or a smoke step (guide: [navigation-destination-e
 28. A28: after 4b every A16–A26 behaviour holds without a flag.
 29. A29: an arena duel restricts navigation through its own provider and scope without changes to the command, the compass or the service.
 
-## 14. Points for approval (2026-11-18)
+## 14. Points for approval (2026-11-18) — all approved
 
-The design had no open questions after E13; the refresh adds these, each with the default the documents now use.
-Answer "14.n: yes" or give another choice; silence is not approval.
+The design had no open questions after E13; the refresh added these, each with the default the documents use.
+**Answered 2026-11-18 by the developer: "14.1–14.6: yes, approved".** Open questions left: none.
 
 1. Approve the design as refreshed (status becomes **Decided**). Recommendation: approve.
 2. Reuse the October P1 code (E14) rather than restart. Recommendation: reuse.
@@ -492,6 +494,9 @@ Answer "14.n: yes" or give another choice; silence is not approval.
 5. Reason codes with per-client wording (E15), landmark readiness in P1/P2 (E16), match lists uncached (E18), road
    access from the model (E19). Recommendation: accept.
 6. Remove `status:in-review` from #96 (E21). Recommendation: yes.
+
+Done on approval: status Decided; phase 4b filed as #747 (`tier:2`); labels #96 `tier:2` (status label removed),
+#103 `tier:2`, #69 `tier:3`, #62 `tier:3`, #55 `tier:2`.
 
 ## Linear
 

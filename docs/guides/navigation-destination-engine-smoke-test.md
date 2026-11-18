@@ -1,14 +1,14 @@
 # Navigation destination engine — smoke test
 
 **Status:** Draft from the design (2026-11-18); no steps run. Steps not yet automated (the links tag them).
-**Last updated:** 2026-11-18 (draft from the design refresh, phases 1, 2, 3, 4, 4b and 5)
+**Last updated:** 2026-11-18 (design approved: tiers confirmed, phase 4b is #747); 2026-11-18 (draft from the design refresh, phases 1, 2, 3, 4, 4b and 5)
 **Design:** [specs/navigation-destination-engine/DESIGN.md](../specs/navigation-destination-engine/DESIGN.md) · **Issue:**
 [PandiO/knk-workspace#25](https://github.com/PandiO/knk-workspace/issues/25)
 
 The engine decides which places a player may navigate to. Phases 1 and 2 change nothing a player sees; phases 3 and 4
 are behind `navigation.destination-engine` (default `false`), and with it off navigation must behave exactly as
 before. Phase 4b removes the flag. Acceptance ids (A01…) are in DESIGN § 13; sections are sized by the phase's tier
-(proposed, DESIGN § 10).
+(approved 2026-11-18, DESIGN § 10).
 
 Accounts and data used throughout:
 
@@ -158,7 +158,7 @@ Nothing is wired in this phase: the engine is code and tests only. The manual ch
 10. As Player navigating to a town, have Staff freeze you. **Expected:** the route ends at once with "You can't
     navigate while frozen.". (A23, A24)
 
-## 5. Phase 4b: removal of the old paths and the flag (sub-issue to be filed on approval, tier:2)
+## 5. Phase 4b: removal of the old paths and the flag (#747, tier:2)
 
 *Draft from the design (2026-11-18); the link updates it to what was built and tags the automated steps.*
 
