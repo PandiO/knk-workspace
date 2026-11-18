@@ -4,6 +4,26 @@ This is a human-readable record of capabilities merged into the V3 default branc
 
 ## Unreleased — on feature branches, not merged
 
+- **Off-road navigation, phase 5.1 step A: landmarks in the API and the web app** ([PandiO/knk-workspace#708](https://github.com/PandiO/knk-workspace/issues/708),
+  link L8 of the off-road navigation chain, [#698](https://github.com/PandiO/knk-workspace/issues/698)). knk-web-api,
+  knk-web-app and knk-workspace branches `claude/offroad-landmarks` (PRs into `next`). Nothing changes for players
+  yet: the game server reads landmarks from step B (knk-plugin, `navigation.landmarks`, off by default).
+  1. A landmark is a named place made by staff: a Location pin with a name (unique per world), optionally linked to a
+     domain (the link is dropped when the domain is deleted), optionally with an area (a WorldGuard region or a radius
+     up to 512 blocks), a route preference (0.25 to 4.0, used from phase 5.2) and "Offer in /navigate".
+  2. API `api/landmarks`: `GET ?world=` and `GET {id}` for anyone, also without login (the `map` rate limit);
+     `POST search` for the dashboard; `POST`, `PUT {id}`, `DELETE {id}` for staff with the new node
+     `knk.admin.world.landmark` (plus `knk.admin.content` for create and edit, `knk.admin.delete` for delete) or the
+     game server's key.
+  3. Web app: Landmark on the dashboard (World area) with World, Point, Domain, Area and In /navigate columns, the
+     default form "Landmark - Default (seed v1)", and a Landmarks box on every domain's detail page listing the
+     landmarks linked to it, with **Add landmark**.
+  4. Admin steps: apply the migration `AddLandmarks` (one new table `landmarks`, no change to existing tables); import
+     the form seed `Landmark` (form configurations → Import / seeds); grant `knk.admin.world.landmark` to the ranks
+     that make landmarks (`knk.admin.*` and `knk.admin.world.*` include it, a bare `knk.admin.world` does not; see the
+     [dashboard access admin guide § 2](guides/admin/dashboard-access-admin-guide.md#2-area-nodes-one-per-part-of-the-dashboard)).
+     No new settings. Steps: [off-road smoke test § 6](guides/navigation-offroad-smoke-test.md#6-phase-51-landmark-entity-708-tier3).
+
 - **Navigation destination engine, phase 3: `/navigate`, tab completion, the compass and the route start on the engine, behind a flag** ([PandiO/knk-workspace#69](https://github.com/PandiO/knk-workspace/issues/69),
   link L3 of the destination engine chain, [#25](https://github.com/PandiO/knk-workspace/issues/25)). knk-plugin and
   knk-workspace branches `claude/navigation-destination-engine` (PRs into `next`). Behind the new `config.yml` key
