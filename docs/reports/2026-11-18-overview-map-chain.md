@@ -27,7 +27,7 @@ on `next` (Decided 2026-11-18, O01–O33, O08 superseded by O31); smoke guide
 
 | Link | Issue | Status | Branch heads | PR | CI | How started |
 |---|---|---|---|---|---|---|
-| L1 Region outlines | #735 | Running | `claude/overview-map-outlines`: knk-plugin, knk-web-api (from `next`) | – | – | create_session (see decision 3) |
+| L1 Region outlines | #735 | Running | `claude/overview-map-outlines`: knk-plugin, knk-web-api (from `next`) | – | – | create_session session_01R1w2UuqJyStWv2zia5FTQg (2026-11-18, decision 3) |
 | L2 Public map API | #736 | Not started (gate: L1 merged into `next`) | – | – | – | – |
 | L3 `/map` page | #737 | Not started (gate: L2 merged into `next`) | – | – | – | – |
 | L4 Live players backend | #738 | Not started (gate: L2 merged into `next`) | – | – | – | – |
