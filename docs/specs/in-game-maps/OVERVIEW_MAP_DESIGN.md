@@ -1,7 +1,7 @@
 # Overview map — BlueMap in the web app for players, staff and moderation
 
 **Status:** **Decided 2026-11-18** (developer). Proposed the same day; no open questions.
-**Last updated:** 2026-11-18 (phase 4a, #738, built on `claude/overview-map-players-api` in knk-plugin and knk-web-api, in review; as built in § 6.2.9 and § 7.4); 2026-11-18 (phase 2, #736, built on `claude/overview-map-public-api` in knk-web-api, in review; as built in § 6.2.8); 2026-11-18 (phase 1, #735, built on `claude/overview-map-outlines` in knk-plugin and knk-web-api, in review, not in `next` yet; stored shape in § 6.1.1); 2026-11-18 (§ 3.1.10: existing NAS render container, migration to the alpha stack; Decided; phases filed as #735–#743; first version from the working draft of 2026-11-17 and the design session of 2026-11-18)
+**Last updated:** 2026-11-18 (phase 4a, #738, built on `claude/overview-map-players-api` in knk-plugin and knk-web-api, in review; as built in § 6.2.9 and § 7.4); 2026-11-18 (phase 3, #737, built on `claude/overview-map-page` in knk-web-app and knk-workspace, in review; as built in § 6.3.5, deploy notes in the closed-alpha runbook Phase 10); 2026-11-18 (phase 2, #736, built on `claude/overview-map-public-api` in knk-web-api, in review; as built in § 6.2.8); 2026-11-18 (phase 1, #735, built on `claude/overview-map-outlines` in knk-plugin and knk-web-api, in review, not in `next` yet; stored shape in § 6.1.1); 2026-11-18 (§ 3.1.10: existing NAS render container, migration to the alpha stack; Decided; phases filed as #735–#743; first version from the working draft of 2026-11-17 and the design session of 2026-11-18)
 **Issue:** [PandiO/knk-workspace#732](https://github.com/PandiO/knk-workspace/issues/732); phases as sub-issues in § 11.
 **Dependencies:** the offline BlueMap tile pipeline ([BLUEMAP_EVALUATION.md](BLUEMAP_EVALUATION.md) § 5–7); the SignalR
 game hub (#66, built); managed WorldGuard regions (`docs/architecture/managed-worldguard-regions.md`, built); gate
@@ -277,6 +277,22 @@ Related: [DESIGN.md](DESIGN.md) (in-game maps, M2–M5), [DECISION-map-data-sour
        instead of actions) used by `MapPanel`.
     4. Playwright specs with the mocked API: pins, panel, toggle, anonymous player list, staff panel, gate buttons,
        moderation panel. The iframe side is mocked by a fake bridge.
+    5. **As built (#737):** `pages/map/MapPage.tsx`; `components/map/` with `BlueMapFrame`, `bridgeProtocol.ts`
+       (the v1 message types and the page-side guard), `mapMarkers.ts` (markers DTO → bridge payload, outline points
+       +0.5), `MapPanel`, `mapActionRegistry.ts` (public widgets, staff widgets and actions per kind, each with its node;
+       staff widgets and actions are hidden, not disabled, for viewers without the node), `defaultMapRegistrations.ts`
+       and `widgets/` (town, district, structure, `GateDoorsWidget`), `useMapAvailability` (one `api/Map/config` per page
+       load; 404 or failure = off). The page polls `config` every 60 s and reloads markers when `markerVersion` changes.
+       The town toggle is the bridge region group `town-toggle`; region keys are `<kind>:<id>`. Signed out there is no
+       top bar, so the "Map" entry is a link on the start page; signed in it is in the bar; both only while the map is on.
+       The bridge (`public/bluemap-bridge/bridge.js`, BlueMap v5.29, spike result on #737) uses its own marker sets
+       `knk-pins`, `knk-regions`, `knk-players`, keeps them through BlueMap's 10 s `live/markers.json` reload, draws pins
+       as HTML markers (a dot always, the label with `maxDistance`), regions as extrude markers, picks a centroid pin's
+       height with `terrainHeightAt`, and maps BlueMap map ids to game worlds with `bridge.js?worlds=<mapId>:<world>`
+       (a map id equal to the world name needs none). `setPlayers` draws name labels and reports `playerClicked`, for
+       #739. The specs run the real bridge in a fake BlueMap web app (`e2e/fixtures/map.ts`). Hosting: nginx serves
+       BlueMap's static `web/` with `X-Frame-Options: SAMEORIGIN` on `/bluemap/` only; BlueMap renders as a profile-gated
+       Compose job (closed-alpha runbook Phase 10).
 
 ## 7. Plugin
 

@@ -24,6 +24,27 @@ This is a human-readable record of capabilities merged into the V3 default branc
      [production installation § 4.3](guides/production-installation.md#43-api-configuration-file--etcknkapienv),
      [plugin configuration § 4.29](guides/admin/plugin-configuration.md#429-map).
 
+- **Overview map: the `/map` page** ([PandiO/knk-workspace#737](https://github.com/PandiO/knk-workspace/issues/737),
+  link L3 of the overview map chain, [#732](https://github.com/PandiO/knk-workspace/issues/732)). knk-web-app and
+  knk-workspace branches `claude/overview-map-page` (PRs into `next`). Behind the API setting `Map:Enabled` (off by
+  default): while it is off the web app shows no map anywhere.
+  1. A public `/map` page with BlueMap's 3D viewer in a frame (served by our own Nginx under `/bluemap/`) and a bridge
+     script inside it that draws our pins and outlines and reports clicks (versioned messages, own origin only).
+  2. Town, district and structure pins with their names: towns at every zoom, districts and structures when zoomed in;
+     structures also show their type ("Structure, Gate").
+  3. Clicking a town flashes its outline three times and opens a panel with its public fields; "Show region" keeps the
+     town and all its districts visible with their names. Districts and structures open their own panels; a gate lists
+     its doors with open/closed, destroyed and a health bar, and "Under siege" during a match.
+  4. The panel works on phones as a bottom sheet. A "Map" entry in the top bar (signed in) and a map link on the start
+     page (signed out) appear only while the map is on.
+  5. Panels come from a map action registry, so later features (staff details, gate buttons, the player panel) add
+     their widgets and actions without touching the map side.
+  6. Admin steps: none to keep it off. To use it, move the existing BlueMap test container into the `knk-alpha` stack
+     and serve `/bluemap/` ([closed-alpha runbook Phase 10](guides/closed-alpha-deployment-runbook.md#phase-10--overview-map-bluemap-in-the-stack-737):
+     BlueMap v5.29, `webapp.conf` `client-decompression: true` and the bridge script, the `web` image with the new
+     `nginx.conf`), then set `Map__Enabled=true`. Steps:
+     [overview map smoke test § 3](guides/overview-map-smoke-test.md#3-phase-3-map-page-737-tier2).
+
 - **Overview map: public map API** ([PandiO/knk-workspace#736](https://github.com/PandiO/knk-workspace/issues/736),
   link L2 of the overview map chain, [#732](https://github.com/PandiO/knk-workspace/issues/732)). knk-web-api and
   knk-workspace branches `claude/overview-map-public-api` (PRs into `next`). Behind the new API setting `Map:Enabled`
