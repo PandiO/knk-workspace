@@ -23,7 +23,7 @@
 |---|---|---|---|---|---|---|
 | L1 P1 pure engine in knk-core | #96 | Merged into next (2026-11-18) | `claude/navigation-destination-engine`: knk-plugin `64ca8815`, knk-workspace `7eb86cc3` | [knk-plugin#78](https://github.com/PandiO/knk-plugin/pull/78) (merge `1105ec15`), [knk-workspace#754](https://github.com/PandiO/knk-workspace/pull/754) (merge `732ba191`) | build + paper-boot green on the PR; Codex skipped (usage limit) | create_session session_01R1w2Uw3gPf2REJMYZEGE6a |
 | L2 P2 model, snapshot, domain search Location | #103 | Merged into next (2026-11-18) | `claude/navigation-destination-engine`: knk-web-api `a49fba23`, knk-plugin `61fe656a`, knk-workspace `30894797` | [knk-web-api#49](https://github.com/PandiO/knk-web-api/pull/49) (merge `6094276d`), [knk-plugin#80](https://github.com/PandiO/knk-plugin/pull/80) (merge `2f1c783e`), [knk-workspace#760](https://github.com/PandiO/knk-workspace/pull/760) (merge `560dd839`) | API build-and-test, mysql-tests, fresh-database green; plugin build + paper-boot green; Codex skipped (usage limit) | subagent of the coordinator (two repos besides knk-workspace, SKILL § 4.1.4 item 2) |
-| L3 P3 switch-over behind the flag | #69 | Running | `claude/navigation-destination-engine`: knk-plugin from `next` `2f1c783e` | — | — | create_session session_01R1w2UvmCT8TsW9NNue38Vg |
+| L3 P3 switch-over behind the flag | #69 | Done, in review (2026-11-18) | `claude/navigation-destination-engine`: knk-plugin `03ec14ce`, knk-workspace `9dda7c92` | [knk-plugin#81](https://github.com/PandiO/knk-plugin/pull/81), [knk-workspace#761](https://github.com/PandiO/knk-workspace/pull/761) | build + paper-boot green on the PR; Codex skipped (usage limit) | create_session session_01R1w2UvmCT8TsW9NNue38Vg |
 | L4 P4 hard blocks as scopes, live re-validation | #62 | Not started | — | — | — | — |
 | L5 phase 4b removal of old paths and the flag | #747 | Not started | — | — | — | — |
 | L6 P5 arena duels provider and scope | #55 | Not started | — | — | — | — |
@@ -237,3 +237,108 @@ _(Each link appends its block here when it finishes.)_
     2. Off-road L8 (#708): fill `NavigationModel.landmarks` (`Landmark` has the § 6.3 fields) from the refresher's
        `Source` (add a part), no schema bump: `NavigationModelSnapshotTest.unknownPlacesAndLandmarksSurviveTheRoundTrip`.
     3. Gradle: the init script trick of L1 note 4 worked again.
+
+### 4.3 L3 — P3 switch-over behind the flag (#69)
+
+1. **Scope done.**
+    1. knk-plugin `core/navigation/engine` (commit `bcef34e5`): `CatalogueProvider` (model domains and Locations,
+       network streets and named nodes; keys `domain:<Type>:<id>`, `location:<id>`, `street:<id>`, `node:<id>`;
+       today's order through priorities 0 to 3; model part built once per model, E18), `SiegeMatchProvider`
+       (`SiegeCompassTargets` order as priority, #176 gate approach, rebuilt per call), `CompassTargets` (general
+       targets as a filter of the World list); `DestinationEngine.resolveKey` (additive, the second place that mints a
+       handle).
+    2. knk-plugin `paper/navigation/engine` and `paper/navigation` (commit `03ec14ce`): `PlayerNavigationEngine`,
+       `RoadAccessAnswers` (E19), `DestinationEngineConfig` (`navigation.destination-engine`, default `false`, read at
+       start-up), `HandleDestinations`, `EngineReasons` (E15); the engine branches in the command, its completion, the
+       compass and the service; `knk.navigate.any` in `plugin.yml` (`default: false`); the key in `config.yml`.
+    3. Existing lines changed (coordinator note 4.1): `NavigationService.navigate(Player, Destination)`: handle-only
+       guard first, the eligibility block moved into `refusedByEligibility` (same code), the tail from
+       `String world = …` moved into `begin(Player, Destination)` (lines unchanged), new field `handleOnly`; no
+       guidance-v2 section (shaped walk trails, cursor, anchored trails, plaza-line preview) touched. `NavigateCommand`:
+       one `if (engine != null)` branch before the match check in `onCommand` and in `onTabComplete`.
+       `NavigationCompassService`: one branch after the click cooldown in `use`, `forget` clears the key cursor too.
+       `KnKPlugin`: the two road-access lambdas and the `onRoadAccessChanged` registration read `RoadAccessAnswers`
+       (flag off: the same catalogue calls), the compass settings supplier, `startDestinationEngine` (flag on only).
+       Tests: 13 `navigate(any(), any())` verifications in `NavigateCommandTest`/`NavigationCompassServiceTest` name
+       `Destination.class` (the overload made them ambiguous; assertions unchanged); `NavigationModelUnreadTest`
+       allows the engine packages. `TrailRenderer`, `core/roads/`, `core/navigation/shape/` untouched.
+    4. knk-workspace (`9dda7c92`): smoke § 3 rewritten (20 of 22 steps tagged), plugin configuration § 2.1 and § 4.15,
+       changelog entry, `plugin-permission-checks.md` § 4 and `commands.md` (`knk.navigate.any`), DESIGN § 10.4.
+    5. Acceptance (DESIGN § 13), with the flag: A16 (flag off unchanged: config test, unchanged old suites, flag-off
+       tests of the new classes), A17, A18, A19, A20, A21 ticked by tests; their live form is smoke § 3. A08 and A07
+       now also through the plugin.
+2. **Commits and heads.** knk-plugin `claude/navigation-destination-engine` at `03ec14ce` (2 commits over `next`
+   `2f1c783e`, 0 behind). knk-workspace `claude/navigation-destination-engine` at `9dda7c92` (1 commit over `next`
+   `560dd839`, 0 behind).
+3. **PRs.** [PandiO/knk-plugin#81](https://github.com/PandiO/knk-plugin/pull/81) (`Closes PandiO/knk-workspace#69`),
+   [PandiO/knk-workspace#761](https://github.com/PandiO/knk-workspace/pull/761) (`Part of`), both base `next`. Not
+   merged.
+4. **Tests, baseline → result.**
+    1. knk-plugin `./gradlew build -x deployToDevServer` (JDK 21 Gradle, JDK 25 toolchain): baseline `next` `2f1c783e`
+       knk-core 3 290, knk-api-client 351 (2 skipped), knk-paper 2 981 (18 skipped), 0 failures; branch knk-core 3 316
+       (+26), knk-api-client 351 (2 skipped), knk-paper 3 036 (+55, 18 skipped), 0 failures. New tests seen red once
+       (engine branch and handle-only guard disabled: 18 of 28 failed). CI on `03ec14ce`: `build` and `paper-boot` green (runs 44317959844, 44317961322).
+    2. Known reds: none.
+    3. Codex: at its code-review usage limit on both PRs; skipped under global "Branches" rule 4's usage-limit
+       exception, said on both PRs. No findings to handle.
+5. **Decisions (DESIGN § 4.3).**
+    1. *Deletions.* Chosen: none (prompt item 3, DESIGN § 10 over the October text of #69); the old paths stay for
+       phase 4b (#747). Alternatives: (a) delete as the issue text said: the flag-off path would be gone.
+    2. *Context in P3.* Chosen: the context carries loading, frozen and lobby too, and the service's
+       `NavigationEligibility` check also stays on the handle path (same texts), so P4 only removes the duplicate and
+       adds re-validation. Alternatives: (a) leave loading/frozen out of the context until P4: a frozen staff member
+       would get the bypass list and only the service would refuse; (b) drop the eligibility check now: that is P4.
+    3. *Handle for a listed key.* Chosen: `DestinationEngine.resolveKey`, additive in the engine package.
+       Alternatives: (a) re-resolve `type:#id` or the qualified name: breaks for candidates without an id or with
+       shared names.
+    4. *Compass targets.* Chosen: `CompassTargets`, a filter of the World list, not a `Provider` (DESIGN § 4.1
+       notes). Alternatives: (a) a provider in the World scope: duplicates catalogue keys (first provider wins) and
+       still needs the configured order.
+    5. *Mode fallback.* Chosen: the adapter retries a domain's `NO_LOCATION` with the other mode word, as
+       `locateDomain` falls back today. Alternatives: (a) answer "no Location": a change for `spawn` on region-only
+       districts.
+    6. *Match words.* Chosen: in a match an unknown name tries "the start of exactly one name" (today's match path),
+       and a name ending in `spawn`/`region` is tried whole too (team spawns). Alternatives: (a) only the engine's
+       exact names: today's prefix behaviour in a match would be lost.
+    7. *Flag read.* Chosen: at start-up, restart to switch (deploy notes say so). Alternatives: (a) live with
+       `/knk reload`: running sessions and the road tags would switch sources mid-run.
+    8. *Raw entry with the flag on.* Chosen: refuses with a warning in the log (A20). Alternatives: (a) keep it open:
+       E3 would not hold with the flag on.
+    9. *Compass settings with the flag on.* Chosen: the model's, the live store's when no model exists yet.
+       Alternatives: (a) always the store: smoke § 3.3 step 1 (saved settings after a restart) would fail.
+    10. *Bypass in the compass.* Chosen: in a match the bypass compass cycles the match's destinations, in the lobby
+        it waits for the match (today's compass), elsewhere the general targets. Alternatives: (a) cycle the whole
+        bypass list: hundreds of entries on a right-click.
+    11. *Degraded note.* Chosen: shown after a name not found and after the compass's "no destinations here".
+        Alternatives: (a) on every answer: noise on every route start while the model is stale.
+    12. *`knk.navigate.any` in `plugin.yml`.* Chosen: `default: false` (E12: not granted by default, not even to ops).
+        Alternatives: (a) `default: op` as the command skill suggests: ops would bypass every scope.
+    13. *Config record.* Chosen: `DestinationEngineConfig` read from `getConfig()`, as L2's `NavigationModelConfig`.
+        Alternatives: (a) `KnkConfig`/`ConfigLoader`: touches the shared loader for a key that phase 4b removes.
+    14. *Overload vs. tests.* Chosen: `navigate(Player, AllowedDestination)` as DESIGN § 6 names it, with
+        `any(Destination.class)` in 13 existing verifications. Alternatives: (a) another method name: against § 6.
+    15. *Scenario.* Chosen: no plugin scenario; MockBukkit/Mockito tests against the real engine. Alternatives: (a) a
+        flag-on scenario: the flag is read at start-up and CI's server runs with it off.
+6. **Out of scope, noted.** `/knk road` status showing the model's age (§ 7.3, left from L2) and a knk-web-api rank seed
+   for `knk.navigate.any` (proposed on the PR, not added): for the coordinator to file or hand to L4/L5. The arrival
+   radius of `Place.Point` is not used by `Destination` yet (the landmark link #708 adds it, DESIGN § 10.4 item 5).
+7. **Blockers.** None.
+8. **At merge / what the developer must do.**
+    1. Add under `navigation:` in the dev and alpha `config.yml` (missing = false):
+       ```yaml
+       navigation:
+         destination-engine: false
+       ```
+    2. For the live test before L5: set it to `true`, restart, run smoke § 3 (and § 4 after L4); grant
+       `knk.navigate.any` to the Bypass test account through the in-house permission system.
+9. **Notes for later links.**
+    1. L4 (#62): the context already has loading, frozen, permissions and the siege facts; remove
+       `refusedByEligibility` from `navigate(Player, AllowedDestination)`, keep the handle on `Active` for
+       `revalidate`; `holder().onChange` and the siege observer are the triggers; the command's `hasNode` check is the
+       other duplicate.
+    2. L5 (#747): delete the flag-off branches (the `engine == null` paths), `MatchNavigationScope`, the raw entry and
+       `setHandleOnly`, `RoadAccessAnswers`' catalogue side; `EngineFixture` and the `*EngineTest` classes become the
+       command and compass tests.
+    3. Off-road L8 (#708): register the landmark provider in `KnKPlugin.startDestinationEngine` (the World list);
+       `HandleDestinations` needs the arrival radius.
+    4. Gradle: the init script of L1 note 4 worked again.
