@@ -20,7 +20,10 @@ on `next` (Decided 2026-11-18, O01–O33, O08 superseded by O31); smoke guide
    `map:` / `reporting:` / `enabled: true` into `config.yml` (needs `realtime.enabled: true`) and follow smoke guide § 1
    (manual parts of steps 1–7). Optional: `@codex review` on knk-web-api#45, knk-plugin#76, knk-workspace#749 (Codex
    was at its usage limit).
-2. Known gates ahead (not blockers now):
+2. **L2 (#736) smoke test (tier:3):** L2 is in `next` (knk-web-api `612ad62`). With the API from `next`, set
+   `Map__Enabled=true` and follow smoke guide § 2 (new settings with defaults in production-installation § 4.3; no
+   migration). Optional: `@codex review` on knk-web-api#46 and knk-workspace#751 (Codex at its limit / failed).
+3. Known gates ahead (not blockers now):
    1. L3 (#737): the BlueMap scripting spike (spec § 9.6); if BlueMap's web app does not accept runtime marker sets
       and click listeners from a script, L3 stops and you decide the fallback.
    2. L3: the deploy notes (move the `bluemap-test` container into the `knk-alpha` Compose stack, Nginx `/bluemap/`)
@@ -33,9 +36,9 @@ on `next` (Decided 2026-11-18, O01–O33, O08 superseded by O31); smoke guide
 | Link | Issue | Status | Branch heads | PR | CI | How started |
 |---|---|---|---|---|---|---|
 | L1 Region outlines | #735 | Merged into `next` 2026-11-18 (knk-web-api `562f504`, knk-plugin `7f4bdd3a`, knk-workspace `ac4b620f`); waiting for the developer's smoke test § 1 | `claude/overview-map-outlines`: knk-web-api `253a6ee`, knk-plugin `cf3a975a`, knk-workspace `e6e815dd` (from `next`) | [knk-web-api#45](https://github.com/PandiO/knk-web-api/pull/45), [knk-plugin#76](https://github.com/PandiO/knk-plugin/pull/76), [knk-workspace#749](https://github.com/PandiO/knk-workspace/pull/749) | API green; plugin build and paper-boot green | create_session session_01R1w2UuqJyStWv2zia5FTQg (2026-11-18, decision 3) |
-| L2 Public map API | #736 | In review (PRs open, not merged) | `claude/overview-map-public-api`: knk-web-api `3a014f8`, knk-workspace `fcde4be8` (from `next`) | [knk-web-api#46](https://github.com/PandiO/knk-web-api/pull/46), [knk-workspace#751](https://github.com/PandiO/knk-workspace/pull/751) | API green on `3a014f8` (build-and-test, mysql-tests, fresh-database); knk-workspace no CI | create_session session_01R1w2UvvpPXaMVExy9eZZpL (2026-11-18) |
-| L3 `/map` page | #737 | Not started (gate: L2 merged into `next`) | – | – | – | – |
-| L4 Live players backend | #738 | Not started (gate: L2 merged into `next`) | – | – | – | – |
+| L2 Public map API | #736 | Merged into `next` 2026-11-18 (knk-web-api `612ad62`, knk-workspace `55d01897`); waiting for the developer's smoke test § 2 | `claude/overview-map-public-api`: knk-web-api `3a014f8`, knk-workspace `fcde4be8` (from `next`) | [knk-web-api#46](https://github.com/PandiO/knk-web-api/pull/46), [knk-workspace#751](https://github.com/PandiO/knk-workspace/pull/751) | API green on `3a014f8` (build-and-test, mysql-tests, fresh-database); knk-workspace no CI | create_session session_01R1w2UvvpPXaMVExy9eZZpL (2026-11-18) |
+| L3 `/map` page | #737 | Running (spike first, spec § 9.6) | `claude/overview-map-page`: knk-web-app, knk-workspace (from `next`) | – | – | create_session session_01R1w2UtuNmGWaJ6a65D2YeS (2026-11-18) |
+| L4 Live players backend | #738 | Running | `claude/overview-map-players-api`: knk-plugin, knk-web-api, knk-workspace (from `next`) | – | – | create_session session_01R1w2UwcYKiPMueCHWqsys4 (2026-11-18) |
 | L5 Live players layer | #739 | Not started (gate: L3 and L4 merged, developer's L4 check) | – | – | – | – |
 | L6 Staff details | #740 | Not started (gate: L3 merged into `next`) | – | – | – | – |
 | L7 Gate commands backend | #741 | Not started (gate: L2 merged into `next`) | – | – | – | – |
@@ -77,6 +80,21 @@ on `next` (Decided 2026-11-18, O01–O33, O08 superseded by O31); smoke guide
    the rule says merge without it; (b) merge the API PR alone first: no benefit, the plugin side is off by default.
 5. **Route for L2.** Chosen: `create_session` (one repository besides knk-workspace), as for L1, whose attach
    worked. Alternatives: (a) a subagent: only the fallback.
+
+6. **L2 check and merge (2026-11-18).** Chosen: merge knk-web-api#46 and knk-workspace#751 into `next` with merge
+   commits: every skill § 6 check held (heads matched, branch contained `next`, scope API-only plus docs, CI green
+   build-and-test / mysql-tests / fresh-database, tests 4294 → 4333 with 0 failed, O32 field sets pinned by tests,
+   `Map:Enabled` off by default, decisions logged, smoke § 2 tagged, #736 in review). Codex at its limit on #46 and
+   failed on #751, noted on both. CI on `next` after L1: knk-web-api green; knk-plugin build green, paper-boot still
+   running at merge time (L2 does not touch the plugin). Alternatives: (a) wait for the plugin's paper-boot on `next`
+   before merging an API-only PR: no dependency between them.
+7. **L3 and L4 in parallel.** Chosen: start both now, as the charter allows (L3 knk-web-app, L4 knk-plugin +
+   knk-web-api; one link per component repo). Shared only knk-workspace (`CHANGELOG.md`, smoke guide § 3 / § 4, this
+   report): each link keeps to its own entry, section, row and block. Route for both: `create_session`; L4 needs two
+   repositories besides knk-workspace, where skill § 4.1.4.2 suggests a subagent, but L1's identical two-repo attach
+   worked in this chain, and a subagent would block this coordinator's session for hours. Fallback: rerun as a
+   subagent on a refused attach. Alternatives: (a) L4 as a subagent from the start; (b) run L3 and L4 one after the
+   other: slower with no file overlap to justify it.
 
 ## 4. Link blocks
 
