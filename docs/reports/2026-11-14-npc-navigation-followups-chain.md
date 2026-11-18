@@ -60,6 +60,7 @@ the configuration reference § 4.27), then restart. In test order:
 | B3 Crowd turns judged in 3D; the guard counts from the last entry | #672 | In review (PRs open, not merged) | knk-plugin `89eeb3eb`; knk-workspace `bcf7a3d9` | PandiO/knk-plugin#66, PandiO/knk-workspace#696 | `build` and `paper-boot` (50) green on `89eeb3eb` (push run 44017052199, PR run 44019311124); climb let go 0 in CI and three local runs; 27/27 `npc-*` locally; Codex at its usage limit | create_session session_01R1w2UwCdu4jcMQD9mXoQv8 (2026-11-17) |
 | B5 Group followers under a leader a flight above: shaped path kept on the walk | #699 | In review (PRs open, not merged) | knk-plugin `6b186840`; knk-workspace `33add9f8` | PandiO/knk-plugin#67, PandiO/knk-workspace#716 | `build` and `paper-boot` (50) green on `6b186840` (push and PR runs); docs no CI; Codex at its usage limit | create_session session_01R1w2UvW8pwfjEAwo5hVKp1 (2026-11-17) |
 | C1 Off-road starts and ends with the walk search, walked like the road line | #700 | In review (PRs open, not merged) | knk-plugin `b7608662`; knk-workspace `bafe631f` (`next` `ce0f65ec` merged in) | PandiO/knk-plugin#71, PandiO/knk-workspace#721 | `build` and `paper-boot` (59) green on `b7608662` (runs 44225040650, 44225046762, 44225040520, 44225046831); one red `paper-boot` on `ced61331` fixed (doorway jam); docs no CI; Codex at its usage limit | create_session (2026-11-17) |
+| E1 Exit rules checked while NPCs walk | #701 | In review (PRs open, not merged) | knk-plugin `de1c8a6a`; knk-workspace `a827abc6` | PandiO/knk-plugin#74, PandiO/knk-workspace#725 | `build` and `paper-boot` (61) green on `de1c8a6a` (push and PR runs); both new scenarios fail on `next`'s walking checks, pass with E1; docs no CI; Codex at its usage limit | create_session (2026-11-18) |
 
 ## 3. Coordinator decisions
 
@@ -1867,3 +1868,61 @@ _(Each link appends its block here when it finishes.)_
     1. E1: an off-road walk's cells are in the route line, so the recheck and the trespass guard look at them like road points.
     2. #698's NPC phase: hook long walks in at `OffRoadWalks` (the service needs no change); `NpcWalkPlanner` is the only caller of the walk search for NPCs.
     3. Replays made before this link lacked every `{id, properties}` block; numbers from B1–B5's replays were taken on that world.
+
+### 4.23 E1 — Exit rules checked while NPCs walk, not only where a route is planned (#701)
+
+1. **Scope done** (#701, decision 41; plan Phase 4 known limit 4). Behind `npc.navigation.enabled` (off by default); no new key. No file in `core/roads/walk`, `paper/navigation`, `core/navigation/shape`, `core/roads/route` or `core/regions` changed.
+    1. **One rule, the router's.** `DomainEntryRule.of` returns a new `RegionRule`: the entry predicate as before, plus `mayLeave` and `exitDenied` for the regions the NPC stands in. They come from `DomainAvailability.exitDeniedRegions` over the shared `DomainAccessEvaluator`, for every domain type. The new default `AccessRules.regionRule(subject)` reads them. `StepCheck` judges one step: an entry before an exit, and the rule is asked for only when a step crosses a region border.
+    2. **`NpcNavigationService`** (a leader or a single NPC):
+        1. the recheck of the way ahead (`way ahead is closed by exit <region>`);
+        2. `allowedPart` (the walk to the blocking element is cut at the edge, inside);
+        3. `mayStand`;
+        4. the trespass guard (`TRESPASS <npc> left <region> at x y z (…)`).
+    3. **`NavGroup`**: follower lanes (`laneAllowed`), waypoints (`mayEnterAll`, `sendTrip`), `mayStand` and the follower guard. Exit verdicts are cached per set of regions stood in and cleared with the entry verdicts. Waypoints that leave a region mark the follower for the periodic recheck, as entering ones do.
+    4. **Paper**: no code change. `NavigationAccess.mayEnter` already returns `DomainEntryRule.of(...)`, and road navigation's `accessRules()` passes the object on, so the exits arrive on a server. `NpcExitRuleAccessTest` pins this and the agreement with the router per profile.
+    5. **Profile**: `bypass-domain-rules`, an allow list naming the region, and a domain whose rule does not apply to roads let the NPC leave (tested). The realtime and refresh paths wake NPCs as for entry: they are type-agnostic, and the scenarios drive both.
+    6. **Scenarios** (`MIN_SCENARIOS` 59 → 61):
+        1. `npc-exit-denied-leader`: an NPC alone, exit denied through realtime `EntityChanged`, allowed again through the cache-refresh path.
+        2. `npc-group-exit-denied`: a group of 8 half inside, both ways through realtime.
+        3. Helper `ScenarioDomainRules` (fake API, the plugin's map, `NavigationDomainChanges`, `DomainCacheRewarm`).
+        4. `ScenarioNpcs.plan` answers BLOCKED from inside a region the NPC may not leave, as the router does (no other scenario denies an exit).
+    7. **knk-workspace**:
+        1. The changelog entry.
+        2. Plan Phase 4 known limit 4 and the new developer test step 15 (exit denied mid-trip, a leader and a group half inside; automated parts tagged).
+        3. The smoke test's "Link E1" section.
+2. **Commits and heads.**
+    1. knk-plugin `claude/npc-movement-e1` at **`de1c8a6a`** (1 commit, base `next` `65c7d6d3`; `origin/next` unchanged at the PR).
+    2. knk-workspace `claude/npc-movement-e1` at **`a827abc6`** (1 docs commit, base `next` `b0bd7f4a`).
+3. **PRs** (base `next`, not merged).
+    1. PandiO/knk-plugin#74 (`Closes #701`).
+    2. PandiO/knk-workspace#725 (`Part of #701`).
+4. **Tests, baseline → result.**
+    1. knk-plugin `./gradlew build -x deployToDevServer`.
+        1. Baseline on `next` `65c7d6d3`: core 3111, api-client 344 (2 skipped), paper 2946 (18 skipped).
+        2. Result on `de1c8a6a`: core 3126 (+15), api-client 344 (2 skipped), paper 2948 (+2); 0 failures.
+        3. New tests: `DomainEntryRuleTest` 11, `NavGroupExitRulesTest` 4 (an NPC alone, a group of 16 half inside, the guard counting a follower carried out, the bypass), `NpcExitRuleAccessTest` 2; `PaperScenariosTest` updated for 61.
+    2. **Before → after.**
+        1. `NavGroupExitRulesTest` against `next`'s `NavGroup` and `NpcNavigationService`: 3 of 4 fail (the NPC "left Old Town at x=50.17"; follower npc-7 "left Old Town at x=50.01") → 4/4 pass.
+        2. Scenarios, local (Paper 26.3 b205, the pinned WorldEdit, WorldGuard, Citizens b4269, `--npc-navigation`), with `next`'s walking checks in the jar: `npc-exit-denied-leader` FAIL ("left the district … furthest x …026.5") and `npc-group-exit-denied` FAIL ("knk-sc-4 left the district") → with E1: PASS (373 and 239 ticks), log check passed.
+    3. CI on `de1c8a6a`: `build` green (134555657727); `paper-boot` (61) green (push run 134555658454, PR run 134561833704; `build` PR run 134561833367).
+    4. Known reds: none. Codex: at its usage limit on both PRs (said on both).
+    5. Local toolchain note: Maven Central answered an intermittent 404 through the proxy, which Gradle does not retry. A local retrying mirror in the scratchpad (`~/.gradle/init.d`) fixed it; nothing in the repos.
+5. **Decisions (DESIGN § 4.3).**
+    1. *How the exits reach the walking checks.* Chosen: `DomainEntryRule.of` returns a `RegionRule` and `AccessRules.regionRule` reads it, because the exits are the router's own and `paper/navigation` (the off-road chain's area) stays untouched. Alternatives: (a) a new `AccessRules.mayLeave` port answered in `NavigationAccess`, `PolicyFactory` and `accessRules()` (three edits in `paper/navigation`, which needs the coordinator's OK); (b) a second exit check in core over the map (ruled out by the brief).
+    2. *A step's verdict.* Chosen: an entry is checked before an exit, and the rule is asked for only when the step crosses a region border, so a recheck that crosses nothing costs what it did. Alternative: (a) always build the rule (one more map lookup per region stood in, every check).
+    3. *Trespass on exit.* Chosen: the same `TRESPASS` event and counter with the verb `left`, so `trespasses 0` covers both. Alternative: (a) a separate event and stats line (a metrics name and docs change for the same rule).
+    4. *Periodic follower recheck.* Chosen: waypoints that leave a region mark the follower like entering ones, so a rule change without an event is seen for exits too (the lane is re-handed every `max(20, recheck-ticks)` while they do). Alternative: (a) entry only (exits would hold only through events).
+    5. *Scenario road.* Chosen: the fake road answers BLOCKED from inside a region the NPC may not leave, as `DomainAvailability` does, or the leader's replan would find a route and walk out (the tolerated path). Alternatives: (a) the real router on a fake network (no network or API in a scenario); (b) followers only (the brief asks for a leader).
+    6. *Paths in the scenarios.* Chosen: the leader's deny through realtime and its restore through the cache refresh, and the group both ways through realtime, so both paths are driven. Alternative: (a) `ScenarioNpcRules`-style fake data (does not exercise the plugin's realtime and refresh classes).
+6. **Out of scope, noted.**
+    1. Filed #724: `/knk cache refresh` sends its first event with the map empty, so held NPCs can cross a denied edge before the re-warm's answers arrive, and the guard does not count it. It is on `next` for entry today, and exit has the same parity. Probe: 7 held → 5 held after the refresh, 0 trespasses. It needs `paper/navigation` or a core change.
+    2. `docs/guides/developer/ci.md` § 7.1 still says 50 scenarios (61 now); the admin guide's trespass line should name `left`. Both are for the docs sub-issue.
+7. **Blockers.** None.
+8. **At merge / what the developer must do.**
+    1. Nothing in `config.yml`, no migration. Deploy and check the startup line `0.1.0+<sha>`.
+    2. Plan Phase 4 developer test step 15 (or the smoke test's "Link E1" section): exit denied mid-trip on a real district through the web app, for a leader alone and a group half inside, then allowed again; once with `/knk cache refresh`. Post the stats and the log on #701.
+    3. For review: decisions 5.1, 5.4 and 5.5.
+9. **Notes for later links.**
+    1. Ask `ports.rules().regionRule(subject)` (or `StepCheck`) for a step, not `mayEnter` alone, so exits hold.
+    2. A fake `AccessRules` whose `mayEnter` is not a `RegionRule` allows every exit; use `DomainEntryRule.of` or `RegionRule.of(enter, exitDenied)` in tests that need exits.
+    3. `ScenarioDomainRules` gives any scenario the realtime and refresh paths over a fake API.
