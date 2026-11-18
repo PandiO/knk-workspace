@@ -147,6 +147,13 @@ on `next` (Decided 2026-11-17).
     to the NPC chain, which offered to schedule it; told its coordinator to keep it to the refresh path and to say
     which files it touches before it starts. Alternatives: (a) add it to this chain as a link; rejected, scope by
     sub-issue (skill § 2.2) and it is NPC behaviour; (b) leave it unowned; rejected, the NPC chain offered.
+20. **Destination engine design refresh started (2026-11-18 08:59, developer's request).** L8's gate (#96, #103,
+    #69 in `next`) cannot open while the engine design (#25) is still "Proposed" with a stale § 2/§ 5 and no tiers or
+    charter. The developer asked for the refresh; session `session_01R1w2UwPYjWLi9pVBpZtwUC` (docs only, `knk-design`
+    skill) re-checks the design against `next`, adds the `LandmarkProvider` hook, judges the October P1 branch,
+    prepares tiers, smoke guide and charter, and asks the developer to approve. The implementation chain is the
+    manager's to schedule after approval. Alternative: a note on #25 for the manager to schedule; the developer chose
+    to start it now.
 
 ## 4. Link blocks
 
