@@ -14,22 +14,7 @@ on `next` (Decided 2026-11-17).
 
 ## 1. Waiting for the developer
 
-1. **L1 (#703) live measurements:** L1 is in `next` (plugin `04506d8c`). Deploy from `next`, add
-   `max-chunks-per-request: 64` under `navigation.walk:`, run smoke guide § 1 (also on #703; long legs need
-   `/forceload`) and fill `docs/reports/2026-11-17-offroad-navigation-measurements.md`. L5 waits for its budgets; if
-   option A fits the keep, the coordinator asks you before L6 (O32).
-3. **L3 (#710) live test (tier:3):** L3 is in `next` (plugin `54dfe8d7`). Deploy with `navigation.guidance-v2: false`
-   and under `navigation.walk:` `clearance-cost: 5`, `wall-clearance: 0.8`, `curve: true`; then set
-   `guidance-v2: true`, restart and follow smoke test § 8 (manual steps 1, 3 and 6: the stair house, a keep corner and
-   a 1-wide door, `/knk road status` with the tick time).
-4. **L4 (#711) live test (tier:3):** L4 is in `next` (plugin `580aafa1`). Add under `navigation:` `trail-leg-spacing: 3.0`
-   and `cursor-jump: 12`; with `guidance-v2: true` follow smoke test § 9 (particles stay put on the stair house and
-   in the keep; on a road walk 40 forward and 20 back; walk back before a passed turn; step 15 blocks off the road;
-   walk back along a walk leg, then 6+ blocks off it; flag off again). Combine with L3's § 8 in one session.
-6. **L8 (#708) live test (tier:3):** apply `AddLandmarks`, import the "Landmark - Default (seed v1)" form seed, grant
-   `knk.admin.world.landmark`, set `navigation.landmarks: true` and `navigation.destination-engine: true`, restart,
-   smoke test § 6.1–6.4 (about 45 min). Confirm the node rule (plain `knk.admin.world` does not include it).
-5. **L10 (#712) step 2 smoke test:** add `plaza-curve-clearance: 0.65` under `navigation:`, set `plaza-lines: true`, restart, smoke test § 10.2 (9 steps).
+1. **L1 (#703):** report done (#770). Still open there: the tick time during a large capture (spark during scene 4) and step 8 (concurrency); they do not block L5.
 2. **Decision to confirm (from the NPC chain's comment on #698, 2026-11-17):** NPC use of the long walks (walk links
    and clusters, O32) moves from "after v1" into v1, as the phase after phase 3. It has no sub-issue or link in this
    chain yet; the spec's § 14 and § 15 need the change in a docs PR. Proposal: a design follow-up (sub-issue of #698)
@@ -39,11 +24,11 @@ on `next` (Decided 2026-11-17).
 
 | Link | Issue | Status | Branch heads | PR | CI | How started |
 |---|---|---|---|---|---|---|
-| L1 Phase 0 measurements | #703 | Merged into next (2026-11-17); waits for the developer's live measurements and the filled report | knk-plugin `claude/offroad-measurements` `71a43bc1`; knk-workspace `claude/offroad-measurements` `2337d3a4` | [knk-plugin#68](https://github.com/PandiO/knk-plugin/pull/68) → `next` `04506d8c`, [#717](https://github.com/PandiO/knk-workspace/pull/717) → `next` `a6240f5d` | green (build, paper-boot on `71a43bc1`) | create_session `session_01R1w2Uub8CZ7NuvatVUifP7` (2026-11-17) |
+| L1 Phase 0 measurements | #703 | Done (2026-11-18): report filled by the developer's runs, #770 in `next`; tick time and step 8 still open on #703 | knk-plugin `claude/offroad-measurements` `71a43bc1`; knk-workspace `claude/offroad-measurements` `2337d3a4` | [knk-plugin#68](https://github.com/PandiO/knk-plugin/pull/68) → `next` `04506d8c`, [#717](https://github.com/PandiO/knk-workspace/pull/717) → `next` `a6240f5d` | green (build, paper-boot on `71a43bc1`) | create_session `session_01R1w2Uub8CZ7NuvatVUifP7` (2026-11-17) |
 | L2 Phase 1 shared shaping package | #704 | Merged into next (2026-11-17) | knk-plugin `claude/offroad-shape-package` `0d0cff84`; knk-workspace `claude/offroad-shape-package` `ef17bcc3` | [knk-plugin#69](https://github.com/PandiO/knk-plugin/pull/69) → `next` `c45c16bb`, [#718](https://github.com/PandiO/knk-workspace/pull/718) → `next` `d8ebd9f4` | green (build, paper-boot) | create_session `session_01R1w2UwTnENVNKzfaXudBUh` (2026-11-17) |
 | L3 Phase 6.1 trail corners | #710 | Merged into next (2026-11-18); waits for the developer's live test (tier:3, smoke § 8) | knk-plugin `claude/offroad-trail-corners` `9dd3ee5f`; knk-workspace `claude/offroad-trail-corners` `daffbc1d` | [knk-plugin#70](https://github.com/PandiO/knk-plugin/pull/70) → `next` `54dfe8d7`, [#719](https://github.com/PandiO/knk-workspace/pull/719) → `next` `d07deabf` | green (build; paper-boot on re-run, #720) | create_session `session_01R1w2Uv9tRTPyjZsFJNWGec` (2026-11-17) |
 | L4 Phase 6.2 anchored particles, winding back | #711 | Merged into next (2026-11-18); waits for the developer's live test (tier:3, smoke § 9) | knk-plugin `claude/offroad-trail-cursor` `1925cf73`; knk-workspace `claude/offroad-trail-cursor` `cb7b55f8` | [knk-plugin#72](https://github.com/PandiO/knk-plugin/pull/72) → `next` `580aafa1`, [#722](https://github.com/PandiO/knk-workspace/pull/722) → `next` `ff8cf291` | green (build, paper-boot) | create_session `session_01R1w2UwkAiptAq4cPVFVBTS` (2026-11-18) |
-| L5 Phase 2 walk links | #705 | Not started (L4 in `next`; waits for L1 done: the developer's filled measurements report) | `claude/offroad-walk-links` | — | — | — |
+| L5 Phase 2 walk links | #705 | Running (started 2026-11-18 20:13 from plugin `next` `4daa0c84`) | `claude/offroad-walk-links` | — | — | create_session `session_01R1w2UsbXwf6jzEc33aVwLL` (2026-11-18) |
 | L6 Phase 3 hierarchical walk search | #706 | Not started (gate: L5 in `next`; O32 question first if L1 says option A fits) | `claude/offroad-hierarchical` | — | — | — |
 | L7 Phase 4 route modes | #707 | Not started (gate: L5 in `next`) | `claude/offroad-route-modes` | — | — | — |
 | L8 Phase 5.1 landmark entity | #708 | Merged into next (2026-11-18); waits for the developer's live test (tier:3, smoke § 6) | knk-web-api `d331bdf4`, knk-web-app `b50c4134`, knk-plugin `be9e3a74`, knk-workspace `eb3321a9` (`claude/offroad-landmarks`) | [knk-web-api#50](https://github.com/PandiO/knk-web-api/pull/50) → `935fe8cc`, [knk-web-app#54](https://github.com/PandiO/knk-web-app/pull/54) → `3432e6ef`, [knk-plugin#83](https://github.com/PandiO/knk-plugin/pull/83) → `5fd81466`, [#763](https://github.com/PandiO/knk-workspace/pull/763) → `7722cc76` | green (all jobs) | subagent of the coordinator (three component repos; resumed once after the usage limit) |
@@ -198,6 +183,15 @@ on `next` (Decided 2026-11-17).
     with the flag off, the old draw calls follow), A25 transcript test, shape change additive (`Options` 6th
     component, old constructor kept), O33 recorded, no Codex findings (usage limit). Engine and NPC coordinators told
     the plugin slot is free. No link of this chain runs now; L5 waits for the developer's measurements (#703).
+28. **L1 done and L5 started (2026-11-18 20:13).** The developer's runs filled the measurements report (PR #770, merged
+    into `next` by the smoke test session): option A fits the keep with conditions (walk caps on walk legs only, never
+    `max-snap-distance`; tick time still to measure), cluster 1×1 chunk, DESIGN § 9.3 budgets hold except 22–30 KB
+    per chunk. Gate "L1 done" counted as met for L5 (the budgets are set; tick time and step 8 are open on #703).
+    Alternative: wait for the tick time; rejected, L5's budgets do not depend on it and L5 is behind its flag. The
+    developer's road-first wish (#698, 19:57) is in L5's scope as a flag-gated planner rule with config defaults for the
+    developer to confirm (it belongs to the mixed routes of § 5.1/§ 5.2, O12). Before L6 the coordinator asks the
+    developer the O32 question (option A fits the keep). Out-of-scope findings of the runs filed as #771. The engine
+    and NPC coordinators are told; L5 holds the plugin slot.
 
 ## 4. Link blocks
 
