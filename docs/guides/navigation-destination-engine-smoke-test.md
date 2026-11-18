@@ -1,8 +1,8 @@
 # Navigation destination engine — smoke test
 
-**Status:** Draft from the design (2026-11-18); § 1 updated by the P1 link (9 of 11 steps automated, tagged); no
-manual steps run. Later sections are not yet automated (their links tag them).
-**Last updated:** 2026-11-18 (§ 1 updated to the P1 code, steps tagged, #96); 2026-11-18 (design approved: tiers confirmed, phase 4b is #747); 2026-11-18 (draft from the design refresh, phases 1, 2, 3, 4, 4b and 5)
+**Status:** Draft from the design (2026-11-18); § 1 updated by the P1 link (9 of 11 steps automated, tagged), § 2 by
+the P2 link (12 of 13 steps automated, tagged); no manual steps run. Later sections are not yet automated (their links tag them).
+**Last updated:** 2026-11-18 (§ 2 updated to the P2 code, steps tagged, #103); 2026-11-18 (§ 1 updated to the P1 code, steps tagged, #96); 2026-11-18 (design approved: tiers confirmed, phase 4b is #747); 2026-11-18 (draft from the design refresh, phases 1, 2, 3, 4, 4b and 5)
 **Design:** [specs/navigation-destination-engine/DESIGN.md](../specs/navigation-destination-engine/DESIGN.md) · **Issue:**
 [PandiO/knk-workspace#25](https://github.com/PandiO/knk-workspace/issues/25)
 
@@ -88,29 +88,90 @@ build); to run one by hand, read the test named in its tag and check the stated 
 
 ## 2. Phase 2: navigation model and offline snapshot (#103, tier:2)
 
-*Draft from the design (2026-11-18); the link updates it to what was built and tags the automated steps.*
+*Updated by the P2 link (2026-11-18) to what was built: knk-web-api `claude/navigation-destination-engine` (the
+domain search's `location`), knk-plugin `claude/navigation-destination-engine` (package
+`net.knightsandkings.knk.core.navigation.model`, runtime `net.knightsandkings.knk.paper.navigation.model`). 12 of 13
+steps automated in CI (tagged); every step can still be run by hand; manual steps not run. Full manual run about
+35 minutes; the untagged step 13 about 5 minutes.*
+
+Nothing a player sees changes in this phase: the plugin builds, refreshes and saves the model, but nothing reads it
+before phase 3. The tagged steps are API xUnit tests (`dotnet test Tests/knkwebapi_v2.Tests/knkwebapi_v2.Tests.csproj`)
+and plugin JUnit tests (`./gradlew test`), both part of CI; to run one by hand, read the test named in its tag and
+check the stated result in its assertions, or do the manual form written in the step.
 
 ### 2.0 Preconditions
 
-1. Deployed: knk-web-api from `next` with the domain search Location field; plugin build from `next` with phase 2.
-2. Settings: `navigation.destinations.stale-after-days: 14` (default).
-3. Accounts and data: Staff; the dev world with a town that has a spawn Location and a district without one.
+1. Deployed: knk-web-api from `next` with phase 2 (the domain search's `location`); plugin build from `next` with
+   phase 2. Either can be deployed first: an older API makes the plugin look Locations up one by one (step 11).
+2. Settings: `navigation.destinations.stale-after-days: 14` under `navigation:` in `config.yml` (the default; a
+   missing key means 14).
+3. Accounts and data: Staff; the dev world with a town that has a spawn Location, a district without one, a domain
+   whose road access is "Ignored", and a Location target.
+4. The snapshot file is `plugins/KnightsAndKings/offline/navigation-model.json` (the plugin's data folder).
 
 ### 2.1 Steps
 
-1. As Staff in the web app or with an API client, run the domain search (`POST api/Domains/search`). **Expected:** each
-   domain carries `location` (x, y, z, yaw, pitch, world) when it has one and `null` when it has none; the other
-   fields are unchanged. (A10)
-2. Start the server with the API up and wait a minute. **Expected:**
-   `plugins/KnK/offline/navigation-model.json` exists, holds domains, Locations and compass settings, and no player
-   names or UUIDs. (A11)
-3. Stop the web API, restart the game server, then as Player `/navigate` the town by name. **Expected:** before the
-   engine is switched on (phase 3) this still behaves as today; the server log shows the snapshot was loaded at
-   start-up, with its age. (A12, the player-facing part is phase 3's step 3.3)
-4. Stop the server, replace the snapshot file's content with `{ broken`, start again. **Expected:** a log line that
-   the snapshot was ignored, no error that stops the plugin; the next good refresh writes a new file. (A13)
-5. With the API up, rename the town in the web app and wait for the next refresh (about a minute). **Expected:** the
-   snapshot holds the new name and not the old one. (A14)
+1. [automated: `DomainSearchLocationTests.TheSearchCarriesTheLocationOrNull`,
+   `TheRepositoryLoadsEachDomainsLocation`, `TheJsonAlwaysHasTheLocationKeyAndKeepsTheOtherFields`] As Staff with an
+   API client, run the domain search (`POST api/Domains/search` with `{"pageNumber":1,"pageSize":50}`).
+   **Expected:** each domain carries `location` (id, name, x, y, z, yaw, pitch, world) when it has one and
+   `"location": null` when it has none; `id`, `name`, `description`, `wgRegionId`, `worldName`, `parentDomainId`,
+   `parentDomain`, `domainType`, `navigationDefault` and `roadAccess` are unchanged. (A10, E12)
+2. [automated: `DomainCatalogMapperTest.theLocationAndWorldAreCarriedThrough`,
+   `anExplicitNullMeansTheDomainHasNoLocation`, `anOlderApiWithoutTheFieldLeavesTheLocationUnknown`] Check how the
+   plugin reads the search. **Expected:** a `location` object becomes the domain's place; `"location": null` means
+   "no Location"; a search without the key (an older API) leaves the place unknown for the fallback of step 11. (A10)
+3. [automated: `NavigationModelRuntimeTest.theFirstStartWritesTheSnapshotAfterTheBackgroundRefresh`,
+   `NavigationModelSnapshotTest.schemaOneHasEverySectionAndAnEmptyLandmarksList`, `theFileHoldsNoPlayerData`] Delete
+   the snapshot file if there is one, start the server with the API up and wait a minute. **Expected:** the log has
+   "No navigation model snapshot yet" and then "Navigation model loaded: N domain(s), M Location(s)"; the file exists
+   with `"schema" : 1`, `asOf`, `domains` (each with its spawn, region, world, `navigationDefault` and `roadAccess`),
+   `locations`, `compass` and an empty `landmarks` list, and no player names or UUIDs. (A11, E16, E19)
+4. [automated: `NavigationModelSnapshotTest.theWriteIsAtomicAndReplacesTheOldFile`,
+   `NavigationModelRefresherTest.theSnapshotIsWrittenOffTheCallingThreadAfterAChange`,
+   `anUnchangedModelIsNotWrittenAgainUntilItsFileIsADayBehind`] Watch the file's modification time for a few minutes
+   without changing anything in the web app. **Expected:** it is not rewritten every minute (only after a change, or
+   once a day to keep its `asOf` current); no `navigation-model.json.tmp` is left in the folder. (A11)
+5. [automated: `NavigationModelRefresherTest.afterARestartWithTheApiDownTheSameModelIsServed`,
+   `NavigationModelRuntimeTest.theSnapshotIsLoadedAtStartUpBeforeTheApiAnswers`] Stop the web API, restart the game
+   server, then as Player `/navigate` the town by name. **Expected:** the log has "Navigation model snapshot loaded
+   from …: N domain(s), M Location(s), as of <time>, fresh (<age> old)" and then "Navigation model refresh failed,
+   keeping the last model"; `/navigate` still behaves as today (the engine reads the model from phase 3 on, § 3.3
+   step 1). (A12, E1)
+6. [automated: `NavigationModelSnapshotTest.aCorruptFileIsIgnoredNeverThrown`, `aNewerSchemaIsIgnored`,
+   `NavigationModelRefresherTest.aCorruptSnapshotIsIgnoredAndTheNextGoodRefreshWritesANewOne`,
+   `NavigationModelRuntimeTest.aBrokenSnapshotDoesNotStopTheStart`] Stop the server, replace the file's content with
+   `{ broken`, start again with the API up. **Expected:** a warning "Ignoring the navigation model snapshot …
+   (CORRUPT: …); the next good refresh writes a new one", the plugin starts normally, and within a minute the file is
+   valid again. The same with `"schema": 2` gives "(NEWER_SCHEMA: schema 2 …)". (A13)
+7. [automated: `ModelFreshnessTest.withoutAnyModelTheListIsLimitedWithTheDesignsText`] With no snapshot and the API
+   down, the model's freshness is "limited (no snapshot)" with the text "Some places aren't available while the web
+   API is down.". **Expected:** as stated; players see it from phase 3 on (§ 3.3 step 2). (A13)
+8. [automated: `NavigationModelRefresherTest.aRefreshReplacesTheModelSoRenamesAndDeletionsPropagate`] With the API
+   up, rename the town in the web app and delete a test structure, then wait for the next refresh (about a minute).
+   **Expected:** the snapshot holds the new name and not the old one, and the deleted structure is gone. (A14)
+9. [automated: `ModelFreshnessTest.aModelOlderThanTheLimitGetsTheMayBeOutOfDateNote`,
+   `theLimitIsConfigurableButAtLeastADay`, `NavigationModelConfigTest`] Stop the API, set the file's `asOf` to 15
+   days ago, restart. **Expected:** the start-up log line says "stale (15 days old)"; the lists get "The list of
+   places may be out of date (last updated 15 days ago)." from phase 3 on; `stale-after-days: 30` makes it "fresh";
+   0 counts as 1. (A15, E12)
+10. [automated: `NavigationModelRuntimeTest.theRoadAccessAnswersAreTheCataloguesAnswers`,
+    `NavigationModelTest.onlyAnExplicitIgnoredLiftsTheRuleOffTheRoads`,
+    `regionsOfIgnoredDomainsAreAnsweredInAnyCase`] Compare the model's road-access answers with today's catalogue
+    for the same API data. **Expected:** the same answer for every domain id and region (the "Ignored" domain and its
+    region in any case: yes; others and unknown ones: no). Routes use them from phase 3 on (A21). (E19)
+11. [automated: `NavigationModelRefresherTest.withAnOlderApiPlacesAreLookedUpAFewPerTickAndTheSnapshotWaitsForThem`,
+    `placesFoundByTheFallbackAreKeptByTheNextRefresh`, `aFailedLookupIsTriedAgainAfterTheNextRefreshAndDoesNotHoldUpTheSnapshot`,
+    `withTheNewApiNothingIsLookedUp`, `NavigationModelRuntimeTest.theFallbackLooksUpTownsDistrictsAndStructuresThroughTheResolver`]
+    Run the phase 2 plugin against an API without the change. **Expected:** the log says "… N domain place(s) to look
+    up one by one (the API's search sends no Locations)"; two places a second are looked up; the snapshot is written
+    once they are done; a later refresh keeps them; `/knk cache refresh` looks them up again. Against the new API
+    nothing is looked up. (§ 7.2)
+12. [automated: `NavigationModelUnreadTest.onlyTheModelPackagesAndTheStartUpWiringUseTheModel`] Check that nothing
+    reads the model. **Expected:** only `KnKPlugin` (start and stop) names the model's packages. (A16 groundwork)
+13. As Player, `/navigate` a town, a street and a Location target, press Tab after `/navigate `, and right-click the
+    navigation compass outside a siege. **Expected:** the same routes, messages, suggestions and compass behaviour as
+    before the update. (Manual: checks that nothing is wired; needs a server and a player.)
 
 ## 3. Phase 3: switch-over behind the flag (#69, tier:3)
 

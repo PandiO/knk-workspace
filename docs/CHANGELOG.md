@@ -4,6 +4,23 @@ This is a human-readable record of capabilities merged into the V3 default branc
 
 ## Unreleased — on feature branches, not merged
 
+- **Navigation destination engine, phase 2: the navigation model and its offline snapshot** ([PandiO/knk-workspace#103](https://github.com/PandiO/knk-workspace/issues/103),
+  link L2 of the destination engine chain, [#25](https://github.com/PandiO/knk-workspace/issues/25)). knk-web-api,
+  knk-plugin and knk-workspace branches `claude/navigation-destination-engine` (PRs into `next`). Nothing changes for
+  players: nothing in the plugin reads the model before phase 3, which switches to it behind a flag.
+  1. The domain search (`POST api/Domains/search`) returns each domain's Location (`location`: id, name, x, y, z, yaw,
+     pitch, world; `null` when the domain has none). The other fields are unchanged; no migration.
+  2. The game server keeps a navigation model: every domain with its spawn Location, region, world, `/navigate`
+     default and road-access flag, the Location targets, the navigation compass settings and an empty landmarks
+     section for off-road landmarks (#708). It is refreshed from the API every minute, saved to
+     `plugins/KnightsAndKings/offline/navigation-model.json` when it changed, and loaded at start-up, so it survives a
+     restart with the API down. With an API from before this change it looks the Locations up one domain at a time,
+     two a second.
+  3. Admin steps: deploy knk-web-api and the plugin together (either order works). New `config.yml` key
+     `navigation.destinations.stale-after-days: 14` under `navigation:` (a missing key means 14; see
+     [plugin configuration § 4.15](guides/admin/plugin-configuration.md#415-navigation)). No migration. Steps:
+     [destination engine smoke test § 2](guides/navigation-destination-engine-smoke-test.md#2-phase-2-navigation-model-and-offline-snapshot-103-tier2).
+
 - **Navigation destination engine, phase 1: the pure engine in knk-core** ([PandiO/knk-workspace#96](https://github.com/PandiO/knk-workspace/issues/96),
   link L1 of the destination engine chain, [#25](https://github.com/PandiO/knk-workspace/issues/25)). knk-plugin and
   knk-workspace branches `claude/navigation-destination-engine` (PRs into `next`). Nothing changes for players: the
