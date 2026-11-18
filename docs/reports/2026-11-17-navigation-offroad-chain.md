@@ -29,11 +29,7 @@ on `next` (Decided 2026-11-17).
 6. **L8 (#708) live test (tier:3):** apply `AddLandmarks`, import the "Landmark - Default (seed v1)" form seed, grant
    `knk.admin.world.landmark`, set `navigation.landmarks: true` and `navigation.destination-engine: true`, restart,
    smoke test § 6.1–6.4 (about 45 min). Confirm the node rule (plain `knk.admin.world` does not include it).
-5. **L10 (#712) plaza-line viewing (O16):** step 1 is in `next` (plugin `ce0f65ec`). Run smoke test § 10.1
-   (`/knk road plazaline Brink`, `"Northern Gate Square"`, `"Merchant's Square"`, the quarry-to-keep square) and answer
-   on #712: which plaza "Cinix" means; the curve's clearance (keep 0.8, accept 0.7, or the hard minimum 0.35; most
-   rejected curves missed 0.8 by 0.06 to 0.16, so A* lines were used); the pull; OK for step 2. The O29 fallback
-   (builder through-edges) is yours to decide if the lines fall short.
+5. **L10 (#712) plaza-line viewing:** done by the developer 2026-11-18 16:31 (step 2 OK, clearance 0.65, pull 0.35).
 2. **Decision to confirm (from the NPC chain's comment on #698, 2026-11-17):** NPC use of the long walks (walk links
    and clusters, O32) moves from "after v1" into v1, as the phase after phase 3. It has no sub-issue or link in this
    chain yet; the spec's § 14 and § 15 need the change in a docs PR. Proposal: a design follow-up (sub-issue of #698)
@@ -52,7 +48,7 @@ on `next` (Decided 2026-11-17).
 | L7 Phase 4 route modes | #707 | Not started (gate: L5 in `next`) | `claude/offroad-route-modes` | — | — | — |
 | L8 Phase 5.1 landmark entity | #708 | Merged into next (2026-11-18); waits for the developer's live test (tier:3, smoke § 6) | knk-web-api `d331bdf4`, knk-web-app `b50c4134`, knk-plugin `be9e3a74`, knk-workspace `eb3321a9` (`claude/offroad-landmarks`) | [knk-web-api#50](https://github.com/PandiO/knk-web-api/pull/50) → `935fe8cc`, [knk-web-app#54](https://github.com/PandiO/knk-web-app/pull/54) → `3432e6ef`, [knk-plugin#83](https://github.com/PandiO/knk-plugin/pull/83) → `5fd81466`, [#763](https://github.com/PandiO/knk-workspace/pull/763) → `7722cc76` | green (all jobs) | subagent of the coordinator (three component repos; resumed once after the usage limit) |
 | L9 Phase 5.2 landmark weights | #709 | Not started (gate: L7 and L8 in `next`) | `claude/offroad-landmark-weights` | — | — | — |
-| L10 Phase 7 plaza lines | #712 | Step 1 merged into next (2026-11-18); step 2 waits for the developer's viewing and answers on #712 (O16) | knk-plugin `claude/offroad-plaza-lines` `97d1bafc`; knk-workspace `claude/offroad-plaza-lines` `d794c716` | step 1: [knk-plugin#73](https://github.com/PandiO/knk-plugin/pull/73) → `next` `ce0f65ec`, [#723](https://github.com/PandiO/knk-workspace/pull/723) → `next` `c7f61e9e` | green (build, paper-boot 55) | create_session `session_01R1w2Ussca79jpGCPqzcTf8` (2026-11-18) |
+| L10 Phase 7 plaza lines | #712 | Step 1 merged into next (2026-11-18); step 2 running (started 17:50 after the developer's OK on #712, curve clearance 0.65) | knk-plugin `claude/offroad-plaza-lines` `97d1bafc`; knk-workspace `claude/offroad-plaza-lines` `d794c716` | step 1: [knk-plugin#73](https://github.com/PandiO/knk-plugin/pull/73) → `next` `ce0f65ec`, [#723](https://github.com/PandiO/knk-workspace/pull/723) → `next` `c7f61e9e` | green (build, paper-boot 55) | create_session `session_01R1w2Ussca79jpGCPqzcTf8` (2026-11-18) |
 
 ## 3. Coordinator decisions
 
@@ -191,6 +187,12 @@ on `next` (Decided 2026-11-17).
     Merged in dependency order API → web app → plugin → docs. The subagent stopped once at the usage limit and was
     resumed. Decision for the developer (L8 block § 4.6): a plain `knk.admin.world` grant does not match
     `knk.admin.world.landmark`. The engine coordinator is told the plugin slot is free.
+26. **L10 step 2 started (2026-11-18 17:50).** The developer's viewing on #712 (16:31): "Cinix" = Brink and South
+    Gate (#39); Brink node moved onto Keepstreet #71 (data fix by the developer); developer decision: a curve is
+    accepted down to clearance 0.65 (a player is 0.6 wide), the A* hard minimum 0.35 stays; pull 0.35; step 2 OK.
+    The plugin slot was free (engine L5 waits for the developer's engine test; told the engine and NPC coordinators).
+    Same session as step 1 (`session_01R1w2Ussca79jpGCPqzcTf8`); the 0.65 threshold becomes a config key. Gate check:
+    the stair-house door (edge #57) is a road edit, out of scope.
 
 ## 4. Link blocks
 
