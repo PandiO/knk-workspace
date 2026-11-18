@@ -24,10 +24,15 @@ on `next` (Decided 2026-11-18, O01–O33, O08 superseded by O31); smoke guide
    `Map__Enabled=true` and follow smoke guide § 2 (new settings with defaults in production-installation § 4.3; no
    migration). Optional: `@codex review` on knk-web-api#46 and knk-workspace#751 (Codex at its limit / failed).
 3. **L3 (#737) NAS steps and smoke test (tier:2):** L3 is in `next` (knk-web-app `f551804d`). The BlueMap spike
-   passed (v5.29, evidence on #737). On the NAS, apply closed-alpha runbook Phase 10 (move `bluemap-test` into the
-   `knk-alpha` Compose stack, Nginx `/bluemap/`; knk-deploy, ask before each change), run the full-world render
-   (about 20 hours), then set `Map__Enabled=true` and follow smoke guide § 3. Optional: `@codex review` on
-   knk-web-app#50 (Codex at its limit).
+   passed (v5.29, evidence on #737). **Runbook Phase 10 applied on the NAS 2026-11-18** by the developer (steps 1–3, 5–8):
+   `bluemap` service in the `knk-alpha` stack (profile-gated), `webapp.conf` bridge script and `client-decompression`,
+   web image `knk-web-app:alpha-909e7089-bluemap` (the running alpha revision plus only the `location /bluemap/`
+   block, so no unpromoted code reached the alpha), web files written with `bluemap -g`; `/bluemap/` loads through
+   Cloudflare Access. The **full-world render (steps 4 and 9) is skipped by the developer's decision**: only the
+   already rendered area is used now and in the near future, and the render mask stays. `/bluemap` without the
+   trailing slash falls through to the web app's 404 (redirect not added yet). The `bridge.js` 404 in the viewer's
+   console is expected until `next` is promoted. Remaining: after the promotion, set `Map__Enabled=true` and follow
+   smoke guide § 3. Optional: `@codex review` on knk-web-app#50 (Codex at its limit).
 4. **L4 (#738) live check: done 2026-11-18** (comment on #738: steps 2, 3 and 5 pass; step 3's `/ownermode` part not
    run, no second staff account). L5 is merged. Remaining for L4/L5: the `mode: "owner"` case when a second staff
    account is at hand, and smoke guide § 5 once the map is live (§ 3).
