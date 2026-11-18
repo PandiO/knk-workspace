@@ -22,7 +22,7 @@
 | Link | Issue | Status | Branch heads | PR | CI | How started |
 |---|---|---|---|---|---|---|
 | L1 P1 pure engine in knk-core | #96 | Merged into next (2026-11-18) | `claude/navigation-destination-engine`: knk-plugin `64ca8815`, knk-workspace `7eb86cc3` | [knk-plugin#78](https://github.com/PandiO/knk-plugin/pull/78) (merge `1105ec15`), [knk-workspace#754](https://github.com/PandiO/knk-workspace/pull/754) (merge `732ba191`) | build + paper-boot green on the PR; Codex skipped (usage limit) | create_session session_01R1w2Uw3gPf2REJMYZEGE6a |
-| L2 P2 model, snapshot, domain search Location | #103 | Running | `claude/navigation-destination-engine`: knk-web-api new, knk-plugin from `next` `1105ec15` | — | — | subagent of the coordinator (two repos besides knk-workspace, SKILL § 4.1.4 item 2) |
+| L2 P2 model, snapshot, domain search Location | #103 | In review (PRs into `next`, 2026-11-18) | `claude/navigation-destination-engine`: knk-web-api `a49fba2`, knk-plugin `61fe656a`, knk-workspace `43a01a7c` | [knk-web-api#49](https://github.com/PandiO/knk-web-api/pull/49), [knk-plugin#80](https://github.com/PandiO/knk-plugin/pull/80), [knk-workspace#760](https://github.com/PandiO/knk-workspace/pull/760) | API build-and-test, mysql-tests, fresh-database green; plugin build + paper-boot green; Codex skipped (usage limit) | subagent of the coordinator (two repos besides knk-workspace, SKILL § 4.1.4 item 2) |
 | L3 P3 switch-over behind the flag | #69 | Not started | — | — | — | — |
 | L4 P4 hard blocks as scopes, live re-validation | #62 | Not started | — | — | — | — |
 | L5 phase 4b removal of old paths and the flag | #747 | Not started | — | — | — | — |
@@ -135,3 +135,85 @@ _(Each link appends its block here when it finishes.)_
        provider in `InitialScopes.create`, use `Place.Point(..., radius)` or `Place.Region`.
     4. Maven Central through the proxy: a Gradle init script putting `repo.papermc.io/repository/maven-public/` first
        (named repo moved to index 0) plus one `--refresh-dependencies` gave a clean build.
+
+### 4.2 L2 — P2 navigation model, snapshot, domain search Location (#103)
+
+1. **Scope done.**
+    1. knk-web-api (`f74623f`): nullable `location` (`LocationDto`) on `DomainListDto`, mapped in
+       `DomainMappingProfile`; `.Include(d => d.Location)` in `DomainRepository.SearchAsync`; the key is always
+       written (`null` when none). No migration, no access rule change, no page-size cap.
+    2. knk-plugin `knk-api-client`/`knk-core` (`14d4632b`): the search's `worldName` and `location` read;
+       `KnkDomainSummary` carries `worldName`, `location`, `locationSent`.
+    3. knk-plugin `core/navigation/model` (`11779766`): `NavigationModel` (domain places, Locations, compass settings,
+       road-access answers E19, empty `landmarks` E16), `NavigationModelSnapshot` (schema 1, atomic write, corrupt or
+       newer file ignored), `NavigationModelHolder` (volatile swap, content version), `NavigationModelRefresher`
+       (refresh, paced fallback two a tick, save when complete and changed), `ModelFreshness` (limited, stale note),
+       `PagedFetch`.
+    4. knk-plugin `paper/navigation/model` (`adbe3a50`): `NavigationModelRuntime` (load at start-up with its age, 60 s
+       refresh, 1 s fallback tick, own writer thread), `NavigationModelConfig`; new key
+       `navigation.destinations.stale-after-days` (14). Shared files, additive lines only: `KnKPlugin` (field,
+       `startNavigationModel`, cache refresh hook, stop in `onDisable`), `config.yml`, `DomainSummaryDto`,
+       `DomainCatalogMapper`, `KnkDomainSummary`. Nothing reads the model (`NavigationModelUnreadTest`).
+    5. knk-workspace (`cb21d359`): smoke § 2 rewritten (12 of 13 steps tagged), plugin configuration § 4.15 and
+       § 2.1, changelog entry with admin steps, DESIGN § 10.3 item 5 (what P2 applied).
+    6. Acceptance (DESIGN § 13): A10, A11, A13, A14, A15 ticked by tests; A12 ticked for the model (the player-facing
+       part is P3's § 3.3); A21 groundwork (the answers equal today's, routes use them from P3).
+2. **Commits and heads.** knk-web-api `claude/navigation-destination-engine` at `a49fba2` (`f74623f` + merge of
+   `next` `0308377`). knk-plugin at `61fe656a` (`14d4632b`, `11779766`, `adbe3a50`, merge of `next` `02aa110e`).
+   knk-workspace at `43a01a7c` (`cb21d359` + merge of `next` `b7820e99`, changelog conflict: both entries kept).
+3. **PRs.** [PandiO/knk-web-api#49](https://github.com/PandiO/knk-web-api/pull/49) (`Part of`),
+   [PandiO/knk-plugin#80](https://github.com/PandiO/knk-plugin/pull/80) (`Closes PandiO/knk-workspace#103`),
+   [PandiO/knk-workspace#760](https://github.com/PandiO/knk-workspace/pull/760) (`Part of`), all base `next`. Not merged.
+4. **Tests, baseline → result.**
+    1. knk-web-api `dotnet test`: baseline `next` `f2f523c` 4 372 passed, 100 skipped (MySQL, `KNK_TEST_MYSQL` unset);
+       branch with `next` `0308377` merged 4 409 passed (3 new, 34 from overview map L7), 100 skipped, 0 failed.
+    2. knk-plugin `./gradlew build -x deployToDevServer`: baseline `next` `1105ec15` knk-core 3 231, knk-api-client
+       344 (2 skipped), knk-paper 2 963 (18 skipped); branch before the second merge 3 275 (+44) / 348 (+4) / 2 972
+       (+9); after merging `next` `02aa110e` 3 290 / 351 (2 skipped) / 2 981 (18 skipped); 0 failures.
+    3. CI: knk-web-api#49 `build-and-test`, `mysql-tests`, `fresh-database` green; knk-plugin#80 `build` green,
+       `paper-boot` green; knk-workspace#760 no checks.
+    4. Known reds: none. Codex: at its usage limit on all three PRs (review "Failed", no inline findings); skipped under
+       global "Branches" rule 4's usage-limit exception, said on each PR.
+5. **Decisions (DESIGN § 4.3).**
+    1. *Scope vs. the October text of #103.* Chosen: DESIGN § 10 and the charter; `CatalogueProvider` and
+       `CompassTargetsProvider` reading the model belong to L3 (#69). Alternatives: (a) build them now: something would
+       read the model before the flag exists.
+    2. *Older API detection.* Chosen: the API always writes `location` (null included) and the plugin reads it as a raw
+       JSON node, so a missing key means "older API" and only then the paced fallback runs. Alternatives: (a) fallback
+       for every null Location: N lookups forever for domains that have none; (b) an API version header: more contract
+       for a transitional case.
+    3. *Refresh atomicity.* Chosen: domains, Locations and compass settings must all answer, else the model is kept.
+       Alternatives: (a) partial updates per part: `asOf` would claim a freshness one part lacks.
+    4. *Snapshot writes.* Chosen: when no place is queued and the content changed, or the file's `asOf` is over a day
+       behind (so a restart's age is right to the day). Alternatives: (a) only on content change (§ 7.2 wording): the
+       file's age would grow while the API keeps confirming it; (b) every refresh: a write a minute for nothing.
+    5. *Fallback pace and scope.* Chosen: two lookups per one-second tick, Towns/Districts/Structures only (what
+       `DomainLocationResolver` serves today), places found are carried over by later refreshes, `/knk cache refresh`
+       looks them up again; a failed lookup waits for the next refresh. Alternatives: (a) a config key: a transitional
+       mechanism, the charter names one key only; (b) re-check every place each round: constant API load with an old API.
+    6. *Model version.* Chosen: a holder counter that moves only with the content (`asOf`-only refreshes keep it), for
+       E18 caches. Alternatives: (a) a hash: same effect, less readable in logs.
+    7. *File location.* Chosen: `<data folder>/offline/navigation-model.json` = `plugins/KnightsAndKings/...` (DESIGN
+       says `plugins/KnK/`, shorthand). Alternatives: (a) a config key for the file like `offline-cache.file`: not asked.
+    8. *Freshness.* Chosen: limited and stale both set `degraded` with their text (the L1 `DestinationList` doc).
+       Alternatives: (a) stale as a note without `degraded`: two fields for one display.
+    9. *Config key home.* Chosen: a separate `NavigationModelConfig` record, not a field on `NavigationConfig`
+       (shared with the off-road chain). Alternatives: (a) extend `NavigationConfig`: touches every constructor call.
+    10. *Realtime refresh.* Chosen: none; 60 s polling as today (§ 2.1 item 9 left it optional). Alternatives: (a)
+        listen to `EntityChanged`: more wiring in shared realtime code for a model nothing reads yet.
+    11. *Guard test.* Chosen: `NavigationModelUnreadTest` pins that only `KnKPlugin` names the model packages; P3 widens it.
+        Alternatives: (a) a rule in `ArchitectureGuardTest`: a shared file.
+6. **Out of scope, noted.** `/knk road` status showing the model's age (§ 7.3) is left to P3 with the other adapters;
+   `docs/specs/api/swagger.json` follow-up for the docs session.
+7. **Blockers.** None.
+8. **At merge / what the developer must do.** Deploy knk-web-api and the plugin (either order); add
+   `navigation.destinations.stale-after-days: 14` under `navigation:` (missing = 14). Smoke § 2 step 13 (nothing
+   changed in game) is manual.
+9. **Notes for later links.**
+    1. P3: read `NavigationModelRuntime.holder()` (`KnKPlugin.navigationModel`); `holder().version()` is the
+       `modelVersion`; `freshness().applyTo(list)` adds the limited/stale text; road access from
+       `model.roadAccessIgnored`/`roadsIgnoreRegion` (E19), compass settings from `model.compass()`; widen
+       `NavigationModelUnreadTest`; `holder().onChange` is the "model refresh" trigger of § 8.
+    2. Off-road L8 (#708): fill `NavigationModel.landmarks` (`Landmark` has the § 6.3 fields) from the refresher's
+       `Source` (add a part), no schema bump: `NavigationModelSnapshotTest.unknownPlacesAndLandmarksSurviveTheRoundTrip`.
+    3. Gradle: the init script trick of L1 note 4 worked again.
