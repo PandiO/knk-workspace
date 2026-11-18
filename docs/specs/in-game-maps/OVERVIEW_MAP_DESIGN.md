@@ -1,7 +1,7 @@
 # Overview map — BlueMap in the web app for players, staff and moderation
 
 **Status:** **Decided 2026-11-18** (developer). Proposed the same day; no open questions.
-**Last updated:** 2026-11-18 (phase 5, #740, built on `claude/overview-map-staff-details` in knk-web-app and knk-workspace, in review; as built in § 6.3.3); 2026-11-18 (phase 3, #737, built on `claude/overview-map-page` in knk-web-app and knk-workspace, in review; as built in § 6.3.5, deploy notes in the closed-alpha runbook Phase 10); 2026-11-18 (phase 2, #736, built on `claude/overview-map-public-api` in knk-web-api, in review; as built in § 6.2.8); 2026-11-18 (phase 1, #735, built on `claude/overview-map-outlines` in knk-plugin and knk-web-api, in review, not in `next` yet; stored shape in § 6.1.1); 2026-11-18 (§ 3.1.10: existing NAS render container, migration to the alpha stack; Decided; phases filed as #735–#743; first version from the working draft of 2026-11-17 and the design session of 2026-11-18)
+**Last updated:** 2026-11-18 (phase 5, #740, built on `claude/overview-map-staff-details` in knk-web-app and knk-workspace, in review; as built in § 6.3.3); 2026-11-18 (phase 4a, #738, built on `claude/overview-map-players-api` in knk-plugin and knk-web-api, in review; as built in § 6.2.9 and § 7.4); 2026-11-18 (phase 3, #737, built on `claude/overview-map-page` in knk-web-app and knk-workspace, in review; as built in § 6.3.5, deploy notes in the closed-alpha runbook Phase 10); 2026-11-18 (phase 2, #736, built on `claude/overview-map-public-api` in knk-web-api, in review; as built in § 6.2.8); 2026-11-18 (phase 1, #735, built on `claude/overview-map-outlines` in knk-plugin and knk-web-api, in review, not in `next` yet; stored shape in § 6.1.1); 2026-11-18 (§ 3.1.10: existing NAS render container, migration to the alpha stack; Decided; phases filed as #735–#743; first version from the working draft of 2026-11-17 and the design session of 2026-11-18)
 **Issue:** [PandiO/knk-workspace#732](https://github.com/PandiO/knk-workspace/issues/732); phases as sub-issues in § 11.
 **Dependencies:** the offline BlueMap tile pipeline ([BLUEMAP_EVALUATION.md](BLUEMAP_EVALUATION.md) § 5–7); the SignalR
 game hub (#66, built); managed WorldGuard regions (`docs/architecture/managed-worldguard-regions.md`, built); gate
@@ -255,6 +255,18 @@ Related: [DESIGN.md](DESIGN.md) (in-game maps, M2–M5), [DECISION-map-data-sour
        Outline points are served as stored (block coordinates, inclusive); the bridge draws them through the block
        centres (+0.5). A centroid pin has `y: null` (the bridge picks the height). `config.livePlayers` and
        `config.gateCommands` are present and always off until phases 4a and 6a wire their flags.
+    9. **As built (#738):** `GET api/Map/players` in `MapController` (anonymous, `map` rate limit, 404 while
+       `Map:Enabled` or `Map:LivePlayers:Enabled` is off, `Cache-Control: no-store`), DTOs `MapPlayersDto`
+       (`intervalMs`, `players`, `arenas`), `MapPlayerDto` (`uuid`, `world`, `x`, `y`, `z`, `yaw`, `label`, `afk`,
+       `mode`, `minigame`), `MapPlayerLabelDto` (`rankTag`, `braced`, `bracedBold`, `name`, `bracketColor`,
+       `textColor`, `&` codes) and `MapArenaDto` (`minigame`, `label`, `playerCount`, `pin`). Game hub
+       `ReportMapPlayers({intervalMs, players: [{uuid, world, x, y, z, yaw, afk, mode, minigame, matchId}]})`, kept in
+       `Services/Map/MapPlayerRegistry` only while the flag is on; `PlayerLeft` drops a player at once, three missed
+       intervals drop them too. `MapPlayerSnapshots` builds the three audience snapshots at most once per
+       `Map:LivePlayers:PollIntervalMs` (2000) on the first request after the tick; labels are cached per player for
+       `Map:LivePlayers:LabelCacheSeconds` (60). An unknown mode value counts as hidden. An arena pin sits at the
+       match's first objective gate with a map pin, else the scenario's lowest gate id with one; a running match is a
+       `SiegeMatch` created or in progress (as "under siege", § 6.2.8). `config.livePlayers` follows the flag.
 3. **Web app:**
     1. Route `/map` (public in `routeTable.ts`), page `pages/MapPage.tsx`, `components/map/` with `BlueMapFrame`
        (iframe + bridge client), `MapPanel`, `mapActionRegistry.ts`, public widgets per type, `GateDoorsWidget`,
@@ -305,6 +317,13 @@ Related: [DESIGN.md](DESIGN.md) (in-game maps, M2–M5), [DECISION-map-data-sour
    region rename path to resend outlines, the hub client registrations in `realtime/RealtimeService`.
 3. **Configuration:** `map.reporting.enabled: false`, `map.reporting.interval-ticks: 40`. Gate commands follow the
    API flag; the plugin only answers commands it receives.
+4. **As built (#738):** knk-core `map/OnlinePlayerSnapshotPort`, `OnlinePlayerPosition` and the player report in
+   `MapReportingService` (`collectPlayers` on the main thread, `sendPlayers` off it; positions to 0.1 block, yaw in
+   whole degrees, mode `none` / `staff` / `owner`, minigame `siege` with the API's match id; split below the hub limit;
+   one empty report when the server empties). knk-paper `map/PaperOnlinePlayerSnapshot` (AFK from player statistics,
+   mode from `ModeService`, match from `SiegeService.runningMatchOf` / `runningMatchApiId`) and
+   `MapReporting.startPlayerReports` (timer of `interval-ticks`, wrapped in `PluginMetrics.timed("map.player_snapshot")`,
+   send on an async task). `interval-ticks` is clamped to 10..1200.
 
 ## 8. Platform-specific parts
 
