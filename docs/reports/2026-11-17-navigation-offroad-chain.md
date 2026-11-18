@@ -1,6 +1,6 @@
 # Off-road navigation and landmarks chain — progress report
 
-**Status:** Running (2026-11-17) · **Last updated:** 2026-11-17
+**Status:** Running, waiting for the developer (2026-11-18) · **Last updated:** 2026-11-18
 
 **Issue:** [PandiO/knk-workspace#698](https://github.com/PandiO/knk-workspace/issues/698), links
 [#703](https://github.com/PandiO/knk-workspace/issues/703) (L1), [#704](https://github.com/PandiO/knk-workspace/issues/704) (L2),
@@ -26,8 +26,11 @@ on `next` (Decided 2026-11-17).
    and `cursor-jump: 12`; with `guidance-v2: true` follow smoke test § 9 (particles stay put on the stair house and
    in the keep; on a road walk 40 forward and 20 back; walk back before a passed turn; step 15 blocks off the road;
    walk back along a walk leg, then 6+ blocks off it; flag off again). Combine with L3's § 8 in one session.
-5. **L10 (#712) step 1, coming:** you view the plaza lines on Cinix and Brink with a staff preview before the trail
-   uses them (O16). L10 will post the steps on #712.
+5. **L10 (#712) plaza-line viewing (O16):** step 1 is in `next` (plugin `ce0f65ec`). Run smoke test § 10.1
+   (`/knk road plazaline Brink`, `"Northern Gate Square"`, `"Merchant's Square"`, the quarry-to-keep square) and answer
+   on #712: which plaza "Cinix" means; the curve's clearance (keep 0.8, accept 0.7, or the hard minimum 0.35; most
+   rejected curves missed 0.8 by 0.06 to 0.16, so A* lines were used); the pull; OK for step 2. The O29 fallback
+   (builder through-edges) is yours to decide if the lines fall short.
 2. **Decision to confirm (from the NPC chain's comment on #698, 2026-11-17):** NPC use of the long walks (walk links
    and clusters, O32) moves from "after v1" into v1, as the phase after phase 3. It has no sub-issue or link in this
    chain yet; the spec's § 14 and § 15 need the change in a docs PR. Proposal: a design follow-up (sub-issue of #698)
@@ -46,7 +49,7 @@ on `next` (Decided 2026-11-17).
 | L7 Phase 4 route modes | #707 | Not started (gate: L5 in `next`) | `claude/offroad-route-modes` | — | — | — |
 | L8 Phase 5.1 landmark entity | #708 | Waiting (destination engine #96, #103, #69 not in `next`, O27) | `claude/offroad-landmarks` | — | — | — |
 | L9 Phase 5.2 landmark weights | #709 | Not started (gate: L7 and L8 in `next`) | `claude/offroad-landmark-weights` | — | — | — |
-| L10 Phase 7 plaza lines | #712 | Step 1 in review (2026-11-18): the plaza line and `/knk road plazaline`; waits for the developer to view the lines on Cinix and Brink (O16) and answer on #712 before step 2 | knk-plugin `claude/offroad-plaza-lines` `97d1bafc`; knk-workspace `claude/offroad-plaza-lines` `d794c716` | [knk-plugin#73](https://github.com/PandiO/knk-plugin/pull/73), [#723](https://github.com/PandiO/knk-workspace/pull/723) (step 1, `Part of`) | green (build, paper-boot on `97d1bafc`) | create_session `session_01R1w2Ussca79jpGCPqzcTf8` (2026-11-18) |
+| L10 Phase 7 plaza lines | #712 | Step 1 merged into next (2026-11-18); step 2 waits for the developer's viewing and answers on #712 (O16) | knk-plugin `claude/offroad-plaza-lines` `97d1bafc`; knk-workspace `claude/offroad-plaza-lines` `d794c716` | step 1: [knk-plugin#73](https://github.com/PandiO/knk-plugin/pull/73) → `next` `ce0f65ec`, [#723](https://github.com/PandiO/knk-workspace/pull/723) → `next` `c7f61e9e` | green (build, paper-boot 55) | create_session `session_01R1w2Ussca79jpGCPqzcTf8` (2026-11-18) |
 
 ## 3. Coordinator decisions
 
@@ -125,6 +128,15 @@ on `next` (Decided 2026-11-17).
     wait for L1's report and start L5; rejected, it idles the chain on live work; (b) build steps 1 and 2 at once;
     rejected, O16 says the developer sees the lines before the trail uses them. L10 will hold the one plugin slot
     while it waits; if L1's report arrives first, L5 waits for L10 (one plugin navigation link at a time).
+16. **L10 step 1 merged into `next` (2026-11-18 02:40)**, so the developer can view the lines in game. § 6 checks
+    held for step 1: heads matched, branch contained `next`, `build` and `paper-boot` (55 scenarios, NPC plaza and
+    replay scenarios included) green on `97d1bafc`, `next` CI green after L4, the `NavigationService` change checked as
+    a behaviour-preserving extraction (`plazaNodesOf`) plus a read-only `routePlazas`, `navigation.plaza-lines` read by
+    nothing yet, shape changes additive, no Codex findings (usage limit). Alternative: keep step 1 unmerged until the
+    developer's OK; rejected, the developer views the lines on a server deployed from `next`. The L10 session waits
+    idle for the answers.
+17. **The chain waits for the developer (2026-11-18 02:40).** No gate is open: L5 needs L1's filled report; L6, L7,
+    L9 hang on L5; L8 on the destination engine; L10 step 2 on the viewing. No link is running.
 
 ## 4. Link blocks
 
