@@ -59,7 +59,7 @@ the configuration reference § 4.27), then restart. In test order:
 | B4 Waypoints and group slots at the real stair heights; jumps by upward speed | #673 | In review (PRs open, not merged) | knk-plugin `2a261289`; knk-workspace `73160c65` | PandiO/knk-plugin#65, PandiO/knk-workspace#694 | `build` and `paper-boot` (50) green on `2a261289` (push run 44008785404, PR run 44008842004); 50/50; Codex at its usage limit | create_session (2026-11-17) |
 | B3 Crowd turns judged in 3D; the guard counts from the last entry | #672 | In review (PRs open, not merged) | knk-plugin `89eeb3eb`; knk-workspace `bcf7a3d9` | PandiO/knk-plugin#66, PandiO/knk-workspace#696 | `build` and `paper-boot` (50) green on `89eeb3eb` (push run 44017052199, PR run 44019311124); climb let go 0 in CI and three local runs; 27/27 `npc-*` locally; Codex at its usage limit | create_session session_01R1w2UwCdu4jcMQD9mXoQv8 (2026-11-17) |
 | B5 Group followers under a leader a flight above: shaped path kept on the walk | #699 | In review (PRs open, not merged) | knk-plugin `6b186840`; knk-workspace `33add9f8` | PandiO/knk-plugin#67, PandiO/knk-workspace#716 | `build` and `paper-boot` (50) green on `6b186840` (push and PR runs); docs no CI; Codex at its usage limit | create_session session_01R1w2UvW8pwfjEAwo5hVKp1 (2026-11-17) |
-| C1 Off-road starts and ends with the walk search, walked like the road line | #700 | In review (PRs open, not merged) | knk-plugin `2a2e626f`; knk-workspace `7fcdd451` | PandiO/knk-plugin#71, PandiO/knk-workspace#721 | `build` and `paper-boot` (55) green on `2a2e626f` (runs 44218253937, 44218253973); one red `paper-boot` on `ced61331` fixed (doorway jam); docs no CI; Codex at its usage limit | create_session (2026-11-17) |
+| C1 Off-road starts and ends with the walk search, walked like the road line | #700 | In review (PRs open, not merged) | knk-plugin `b7608662`; knk-workspace `bafe631f` (`next` `ce0f65ec` merged in) | PandiO/knk-plugin#71, PandiO/knk-workspace#721 | `build` and `paper-boot` (59) green on `b7608662` (runs 44225040650, 44225046762, 44225040520, 44225046831); one red `paper-boot` on `ced61331` fixed (doorway jam); docs no CI; Codex at its usage limit | create_session (2026-11-17) |
 
 ## 3. Coordinator decisions
 
@@ -1811,20 +1811,20 @@ _(Each link appends its block here when it finishes.)_
         3. Waypoints through an open doorway (`CitizensNpcMover`, `BukkitNavWorld.openingCentre`): moved to the middle of the 13/16 opening the panel leaves; a body passes only within about 0.1 of it. CI found the jam once in two runs before the fix.
         2. The planner's body check: a found path is checked against the NPC's body rule; failing cells are closed and the search runs again, at most 4 times (an open trapdoor's panel). On an unloaded chunk the box is captured once more with a margin of 4.
     7. **Replay harness fix** (`AnvilRegion`). Minecraft 26.x writes non-default block states as `{id, properties}` palette entries. They were dropped from **every** replay since B1: stairs not facing north, top slabs, open doors. The quarry replay now places 122 011 blocks instead of 111 286, and still passes.
-    8. **Scenarios** (four new, `MIN_SCENARIOS` 55 with L3's):
+    8. **Scenarios** (four new, `MIN_SCENARIOS` 59 with the off-road chain's scenarios):
         1. `npc-replay-keep-tower`: the developer's snapshot trimmed to x 1391..1454, y 66..130, z −559..−480 (`keep-tower.zip`, 371 KB, keeps the goal and the spiral). A leader alone and a group of 20 in ranks, from the keep's road.
         2. `npc-offroad-detour`, `npc-offroad-upstairs` (two-turn spiral in a curtain wall, with a group of 5) and `npc-offroad-ravine`.
         3. `-Dknk.scenario.offRoadHops=true` leaves the walk search out (the before run).
 2. **Commits and heads.**
-    1. knk-plugin `claude/npc-movement-c1` at `2a2e626f` (base `next` `c45c16bb`, `origin/next` `54dfe8d7` with the off-road chain's L3 merged in; two mechanical conflicts: `KnKPlugin.initializeWalkPaths`, `MIN_SCENARIOS`).
-    2. knk-workspace `claude/npc-movement-c1` at `7fcdd451` (base `next`, `origin/next` merged; changelog conflict kept both entries).
+    1. knk-plugin `claude/npc-movement-c1` at **`b7608662`** (base `next` `c45c16bb`; `origin/next` merged in three times, up to `ce0f65ec` with the off-road chain's L3, L4 and L10 step 1; mechanical conflicts only: `KnKPlugin.initializeWalkPaths`, `MIN_SCENARIOS`, `PaperScenariosTest`'s count).
+    2. knk-workspace `claude/npc-movement-c1` at **`bafe631f`** (base `next`, `origin/next` merged up to the same point; the changelog and the commands guide's header kept both sides).
 3. **PRs** (base `next`, not merged).
     1. PandiO/knk-plugin#71 (`Part of #700`).
     2. PandiO/knk-workspace#721 (`Closes #700`).
 4. **Tests, baseline → result.**
     1. knk-plugin `./gradlew build -x deployToDevServer`.
         1. Baseline on `next` `c45c16bb`: core 3033, api-client 344 (2 skipped), paper 2904 (18 skipped).
-        2. Result after merging `54dfe8d7`: core 3064, api-client 344 (2 skipped), paper 2921 (18 skipped); 0 failures. C1's own tests are core +14 and paper +10; the rest are L3's.
+        2. Result on the final head `b7608662` (with `next` `ce0f65ec`): core 3111, api-client 344 (2 skipped), paper 2946 (18 skipped); 0 failures. C1's own tests are core +14 and paper +11 (one more for the doorway rule); the rest came with the off-road chain's links.
         3. New tests: `NpcNavigationOffRoadWalksTest` 10, `RouteFollowerWalkedTest` 3, `SnapshotBoxTest` +1, `NpcWalkPlannerTest` 8, `BukkitNavWorldBlocksTest` +1, `AnvilRegionTest` +1.
     2. **Scenarios, before (hops) → after** (local, Paper 26.3 b205, Citizens b4269):
         1. `npc-replay-keep-tower`: the leader **fails**, "stuck at 1406 85 −510: retries and replans used up" (the developer's 1405 85 −510) → **arrives in 53.4 s**, 0 stuck, 0 falls. The group of 20 arrives in 59.1 s: 0 lost, 0 stuck, every follower on the tower top (y 113).
@@ -1833,7 +1833,7 @@ _(Each link appends its block here when it finishes.)_
         4. `npc-offroad-upstairs`: 1 stuck spell, 50.1 s → 0 stuck, 41.5 s; the group of 5 in 42.0 s.
         5. Before = this branch with `offRoadHops`, so the harness fix and the open-door rule are in both runs.
     3. **The spiral fits the caps** (prompt § 3.2). Road end to goal: 172–180 blocks walked against a cap of 220–223 (`max-length` 144 plus `climb-allowance` 5 × 29 blocks of rise), 4 432 expansions against 20 000. It is no acceptance case for #698's NPC phase.
-    4. Whole suite: 54/54 locally on the pre-merge head `87ccc5bd` (23 min with boot). CI on knk-plugin#71: on `ced61331` `build` green twice, `paper-boot` green once (44212713839) and red once (44212627665: the tower replay's followers jammed on the open door's panel, item 1.6.3). On the head `2a2e626f`: `build` (44218253937) and `paper-boot` with 55 scenarios (44218253973) green. Not #720 (the runs started after 01:00 UTC).
+    4. Whole suite: 54/54 locally on the pre-merge head `87ccc5bd` (23 min with boot). CI on knk-plugin#71: on `ced61331` `build` green twice, `paper-boot` green once (44212713839) and red once (44212627665: the tower replay's followers jammed on the open door's panel, item 1.6.3). On `2a2e626f`: `build` (44218253937) and `paper-boot` with 55 scenarios (44218253973) green. On the final head `b7608662`: `build` (44225040650, 44225046762) and `paper-boot` with **59 scenarios** (44225040520, 44225046831) green, push and PR runs. Not #720 (the runs started after 01:00 UTC).
     5. Known reds: none. Codex: at its usage limit on both PRs (said on each); finished without its review.
 5. **Decisions (DESIGN § 4.3).**
     1. *How a walk is walked.* Chosen: splice it into the route line, so B2/B4's handover, bridge and surface heights and the group path apply unchanged. Alternatives: (a) a waypoint list handed to the mover as one local leg (no handover, no group path); (b) the walk cut into hops (the bridge gaps today's hops have).
