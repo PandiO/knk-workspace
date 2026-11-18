@@ -1,7 +1,7 @@
 # Overview map — smoke test
 
-**Status:** Draft from the design (2026-11-18); no steps run. § 1 updated to what L1 built (7 steps, all partly automated, tagged), § 2 to what L2 built (7 steps: 2 automated, 5 partly automated, tagged); the other sections are not automated yet (the links tag them).
-**Last updated:** 2026-11-18 (§ 2 to what L2 built, #736); 2026-11-18 (§ 1 to what L1 built, #735); 2026-11-18 (draft from the design, phases 1, 2, 3, 4a, 4b, 5, 6a, 6b, 7)
+**Status:** Draft from the design (2026-11-18); no steps run. § 1 updated to what L1 built (7 steps, all partly automated, tagged), § 2 to what L2 built (7 steps: 2 automated, 5 partly automated, tagged), § 4 to what L4 built (9 steps: 1 automated, 5 partly automated, 3 manual visibility steps); the other sections are not automated yet (the links tag them).
+**Last updated:** 2026-11-18 (§ 4 to what L4 built, #738); 2026-11-18 (§ 2 to what L2 built, #736); 2026-11-18 (§ 1 to what L1 built, #735); 2026-11-18 (draft from the design, phases 1, 2, 3, 4a, 4b, 5, 6a, 6b, 7)
 **Design:** [specs/in-game-maps/OVERVIEW_MAP_DESIGN.md](../specs/in-game-maps/OVERVIEW_MAP_DESIGN.md) · **Issue:**
 [PandiO/knk-workspace#732](https://github.com/PandiO/knk-workspace/issues/732)
 
@@ -176,32 +176,100 @@ Tests named below, all in knk-web-api `Tests/knkwebapi_v2.Tests`: `Api/MapContro
 
 ## 4. Phase 4a: live players backend (#738, tier:3)
 
-*Draft from the design (2026-11-18); the link updates it to what was built and tags the automated steps.*
+*Built by link L4 (knk-plugin and knk-web-api branches `claude/overview-map-players-api`, PRs into `next`). 8 steps:
+steps 2, 3 and 5 are full manual steps (the visibility checks: the developer's live run of them on
+[#738](https://github.com/PandiO/knk-workspace/issues/738) gates the merge of phase 4b, L5), the other 5 are partly
+automated (tagged); the by-hand parts need a real Paper server, real accounts and a real siege match. The suites cover
+every audience's response body, the plugin report, the drop rules and the labels. Not run yet. Full manual run about
+40 minutes.*
+
+Tests named below: knk-web-api `Tests/knkwebapi_v2.Tests` `Api/MapPlayersPipelineTests`,
+`Services/Map/MapPlayerSnapshotsTests`, `Services/Map/MapPlayerRegistryTests`, `Services/Map/MapPlayerLabelsTests`,
+`Services/Map/MapLivePlayerDataTests`, `Realtime/RealtimeHubTests`; knk-plugin
+`knk-core/.../core/map/MapReportingServicePlayersTest` and `knk-paper/.../paper/map/PaperOnlinePlayerSnapshotTest`.
 
 ### 4.0 Preconditions
 
-1. Deployed: phase 2, the API and plugin from `next`.
-2. Settings: `Map:LivePlayers:Enabled=true`. Plugin `map.reporting.enabled: true`, `map.reporting.interval-ticks: 40`.
-3. Accounts: players A (no mode), B (a staff member who can enter staff mode) and C (owner); a siege scenario ready to
-   start.
+1. Deployed: phase 2 (§ 2), the API and the plugin from `next`. The plugin is connected to the game hub
+   (`realtime.enabled: true`; the API log shows `Game server <id> connected to the realtime hub`).
+2. Settings:
+   1. API (`/etc/knk/api.env`, production installation guide § 4.3; restart the API after a change):
+      `Map__Enabled=true`, `Map__LivePlayers__Enabled=true`. Leave `Map__LivePlayers__PollIntervalMs=2000` and
+      `Map__LivePlayers__LabelCacheSeconds=60` at their defaults.
+   2. Plugin `config.yml` (plugin configuration reference § 4.29; restart the server after a change):
+      ```yaml
+      map:
+        reporting:
+          enabled: true
+          interval-ticks: 40
+      ```
+      The log shows `[KnK Map] Live player report every 40 ticks`.
+3. Accounts: player A (no mode, no staff nodes), B (a staff member who holds `knk.mode.staff` and can enter
+   `/staffmode`), C (the owner, holds `knk.mode.owner`), a premium player P and a default player D; web logins for
+   the **player** (no staff nodes) and the **staff viewer** (holds `knk.mode.staff`). A siege scenario whose objective
+   gate has a map pin (§ 2 step 3), ready to start.
+4. Calls: `curl -s https://<host>/api/Map/players | jq` without a token; with a token add
+   `-H "Authorization: Bearer <token>"` (the access token the web app sends; copy it from the browser's network tab).
 
 ### 4.1 Steps
 
-1. With player A online, call `GET api/Map/players` without a token. Move A 20 blocks and call it again after 2 s.
-   **Expected:** A is listed with world and position, and the second response shows the new position. (A11)
+1. [partly automated: `MapReportingServicePlayersTest.report_carriesEveryFieldOfSpecRule6_rounded`,
+   `movement_isSeenInTheNextReport`, `PaperOnlinePlayerSnapshotTest.snapshot_readsWorldPositionYawAndDefaults`,
+   `startPlayerReports_sendsEveryIntervalOffTheMainThread`, `RealtimeHubTests.GameHub_ReportMapPlayers_KeepsThePlayers_PlayerLeftDropsThem`,
+   `MapPlayerSnapshotsTests.PlainPlayer_ShowsWithPositionLabelAndNoAccountFields`,
+   `OneBuildPerTick_ForAllAudiences_ThenMovementAndAfkShowNextTick`; by hand: a real server] With player A online
+   (no mode), call `GET api/Map/players` without a token. Move A 20 blocks and call it again after 2 s.
+   **Expected:** 200 with `intervalMs: 2000`; A is in `players` with `uuid`, `world`, `x`, `y`, `z` (to 0.1 block),
+   `yaw`, `label` and `afk: false`, `mode: null`, `minigame: null`, and nothing else (no account id, no email). The
+   second response shows the new position. (A11)
 2. B enters `/staffmode`. Call the endpoint without a token, then with the **player** token. **Expected:** B is absent
-   from both response bodies (check the raw JSON). (A12)
-3. Call it with the **staff viewer** token. **Expected:** B is listed with the tag "Staff mode". C in `/ownermode` is
-   listed with "Owner mode". (A12)
-4. A stays idle until the plugin marks them AFK, or uses `/afk`. **Expected:** the AFK tag appears within one interval.
-   (A13)
+   from both response bodies: search the raw JSON for B's UUID and B's name, and for `"staff"`: no hit. A is still
+   listed. (A12; the suites check the same in `MapPlayersPipelineTests.Anonymous_And_PlainLogin_GetOnlyThePublicPlayers_RawBody`
+   and `MapPlayerSnapshotsTests.PublicAudiences_NeverReceiveModeOrMatchPlayers_NotEvenInTheBody`, but this live run
+   is the check that gates phase 4b.)
+3. Call it with the **staff viewer** token. **Expected:** B is listed with `mode: "staff"`. C in `/ownermode` is
+   listed with `mode: "owner"`. A is listed with `mode: null`. Then B leaves `/staffmode`: within 2 s B is in the
+   anonymous response again, with `mode: null`. (A12; in the suites: `MapPlayersPipelineTests.StaffViewer_GetsHiddenPlayersTagged_RawBody`,
+   `MapPlayerSnapshotsTests.MaySeeHidden_GetsEveryoneTagged`.)
+4. [partly automated: `MapReportingServicePlayersTest.report_carriesEveryFieldOfSpecRule6_rounded`,
+   `PaperOnlinePlayerSnapshotTest.snapshot_readsAfkModeAndRunningMatch`,
+   `MapPlayerSnapshotsTests.OneBuildPerTick_ForAllAudiences_ThenMovementAndAfkShowNextTick`; by hand: the plugin's
+   AFK detection (player statistics on)] A stays idle until the plugin marks them AFK, or uses `/afk`.
+   **Expected:** `afk: true` for A within one interval (2 s, plus up to 2 s of the API's snapshot tick). (A13)
 5. Start a siege match with A in it. Call the endpoint without a token and with the **player** token. **Expected:** A
-   is absent from both. One arena entry at the gate reads "[Siege] <count> players" for both callers. (A14)
-6. Compare the label parts for C (owner), B (staff), a premium player and a default player with their in-game chat
-   lines. **Expected:** the same bracket or title, name and colour codes. (A15)
-7. A quits. **Expected:** A is gone within three intervals (6 s). (A16)
-8. Watch the plugin's performance metrics for the reporting task during step 1 with 20 or more players online.
-   **Expected:** no noticeable tick time. Note the number. (§ 9.1)
+   is absent from both (search the raw JSON for A's UUID: no hit). `arenas` has one entry with
+   `minigame: "Siege"`, `label: "[Siege] <count> players"` (`<count>` = the match's participants online) and a `pin`
+   at the objective gate's map pin (the gate's spawn location or outline centre, as in `GET api/Map/markers`), the
+   same for both callers. With the **staff viewer** token A is listed with `minigame: "Siege"`, and the arena entry
+   is the same. After the match ends A is back in the public response and `arenas` is empty. (A14; in the suites:
+   `MapPlayerSnapshotsTests.ArenaPin_IsTheSameForEveryAudience`, `MapLivePlayerDataTests.Arena_AtTheObjectiveGate_WithTheParticipantCount`,
+   `NoArena_ForAnEndedMatch_AnUnknownMatchIdOrAGateWithoutPin`.)
+6. [partly automated: `MapPlayerLabelsTests.Owner_FixedOwnerColours_TitleBold`,
+   `Staff_AGroupsOwnChatColourReplacesTheFixedOne_FieldByField`, `PremiumMember_TierBeforeTitle_GroupColours`,
+   `DefaultMember_TitleOnly_DefaultColoursWithoutGroupColours`, `MapLivePlayerDataTests.Labels_OwnerStaffPremiumAndUnknown`;
+   by hand: real groups and colours] With the **staff viewer** token, compare the `label` of C (owner), B (staff), P
+   (premium) and D (default) with their in-game chat lines. **Expected:** the same parts: `rankTag` `OWNER` / `STAFF`
+   for holders of `knk.mode.owner` / `knk.mode.staff` (else null); `braced` = the text inside `-{ }-` (the title;
+   for P the tier name before the title), `bracedBold: true` for owner and staff; `name`; `bracketColor` and
+   `textColor` the same `&` colour codes as the chat line (owner `&6` / `&5`, staff `&3` / `&9`, members their group
+   colours, else `&2` / `&a`, unless a group of the player set its own). A label change in game shows within 60 s
+   (the label cache). (A15)
+7. [partly automated: `MapPlayerRegistryTests.Remove_OnPlayerLeft_DropsAtOnce`,
+   `Live_DropsAPlayerAfterThreeMissedIntervals`, `MapPlayerSnapshotsTests.QuitPlayer_IsGoneWithinThreeIntervals`,
+   `RealtimeHubTests.GameHub_ReportMapPlayers_KeepsThePlayers_PlayerLeftDropsThem`; by hand: a real quit] A quits.
+   **Expected:** A is gone from every response within three intervals (6 s), normally on the next snapshot tick
+   (`PlayerLeft`). (A16)
+8. [partly automated: `PaperOnlinePlayerSnapshotTest.startPlayerReports_sendsEveryIntervalOffTheMainThread` (send
+   off the main thread), `MapReportingServicePlayersTest.manyPlayers_areSplitBelowTheHubMessageLimit`; by hand: the
+   metrics] With 20 or more players online, read the plugin metrics (with `metrics.enabled: true`, `GET /metrics` on the
+   metrics port, `knk_task_duration_seconds{task="map.player_snapshot"}`) during step 1. **Expected:** the snapshot takes well under
+   1 ms per run; no noticeable tick time. Note the number. (§ 9.1)
+9. [automated: `MapPlayersPipelineTests.Off_Answers404_AndReadsNothing`,
+   `RealtimeHubTests.GameHub_ReportMapPlayers_IgnoredWhileLivePlayersOff`,
+   `MapReportingServicePlayersTest.off_readsAndSendsNothing`,
+   `PaperOnlinePlayerSnapshotTest.startPlayerReports_offDoesNotSchedule`] With `Map__LivePlayers__Enabled=false`
+   (or absent) call the endpoint. **Expected:** 404; `GET api/Map/config` shows `livePlayers.enabled: false`. With the
+   plugin's `map.reporting.enabled: false` the log has no `Live player report` line. (O27)
 
 ## 5. Phase 4b: live players layer (#739, tier:2)
 
