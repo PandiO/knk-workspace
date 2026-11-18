@@ -1,7 +1,7 @@
 # Overview map chain — charter
 
 **Status:** Ready to start (2026-11-18)
-**Last updated:** 2026-11-18 (drafted by the design session)
+**Last updated:** 2026-11-18 (existing NAS render container, chain note 3.4; drafted by the design session)
 **Issues:** parent [PandiO/knk-workspace#732](https://github.com/PandiO/knk-workspace/issues/732); sub-issues per
 link below. Reference issues as `PandiO/knk-workspace#n` in component repos.
 **Progress report:** to be created by the coordinator at its first run (`reports/<date>-overview-map-chain.md`).
@@ -22,7 +22,7 @@ link below. Reference issues as `PandiO/knk-workspace#n` in component repos.
 |---|---|---|---|---|---|---|---|---|
 | L1 | #735 | tier:3 | Region outlines: plugin reports, API table `map_region_outlines` | knk-plugin, knk-web-api | `claude/overview-map-outlines` | `next` | `map.reporting.enabled`, default off | now |
 | L2 | #736 | tier:3 | Public map API: config, markers, panel DTOs, `map` rate limit, access tests | knk-web-api | `claude/overview-map-public-api` | `next` | `Map:Enabled`, default off | L1 merged into `next` |
-| L3 | #737 | tier:2 | `/map` page, BlueMap iframe, bridge script, pins, flash and toggle, public panels, action registry, deploy notes | knk-web-app, knk-workspace | `claude/overview-map-page` | `next` | `Map:Enabled` | L2 merged into `next` |
+| L3 | #737 | tier:2 | `/map` page, BlueMap iframe, bridge script, pins, flash and toggle, public panels, action registry, deploy notes (migrate the existing NAS `bluemap-test` render container into the `knk-alpha` stack, serve `/bluemap/`; spec § 3.1.10) | knk-web-app, knk-workspace | `claude/overview-map-page` | `next` | `Map:Enabled` | L2 merged into `next` |
 | L4 | #738 | tier:3 | Live players backend: plugin reports, per-audience snapshots, arena pins | knk-plugin, knk-web-api | `claude/overview-map-players-api` | `next` | `Map:LivePlayers:Enabled`, default off | L2 merged into `next` |
 | L5 | #739 | tier:2 | Live players layer on the page | knk-web-app | `claude/overview-map-players-page` | `next` | `Map:LivePlayers:Enabled` | L3 and L4 merged into `next` |
 | L6 | #740 | tier:2 | Staff details: compact display-configuration renderer | knk-web-app | `claude/overview-map-staff-details` | `next` | none (node-gated) | L3 merged into `next` |
@@ -51,4 +51,9 @@ they run one at a time.
 2. Existing modes must stay unchanged: every part is off by default (O27). With all flags off, the API's existing
    endpoints, the game hub and the plugin's behaviour are unchanged.
 3. Migrations: only L1 adds one (`map_region_outlines`, additive).
-4. Model for link sessions: left to the coordinator.
+4. **BlueMap rendering already exists on the NAS** (developer, 2026-11-18): the `bluemap-test` container under
+   `/mnt/fast/knk-alpha/bluemap/`, started with `docker run`, holds a 2,000 × 2,000 test render. No link sets up a new
+   renderer. L3 writes the migration into the `knk-alpha` Compose stack and the Nginx `/bluemap/` block as deploy notes.
+   The developer applies them on the NAS (`knk-deploy`, ask before each change), together with the full-world render
+   (about 20 hours). The developer's live smoke steps for L3 wait for that.
+5. Model for link sessions: left to the coordinator.
