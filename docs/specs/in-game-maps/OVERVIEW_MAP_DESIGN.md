@@ -1,7 +1,7 @@
 # Overview map — BlueMap in the web app for players, staff and moderation
 
 **Status:** **Decided 2026-11-18** (developer). Proposed the same day; no open questions.
-**Last updated:** 2026-11-18 (phase 5, #740, built on `claude/overview-map-staff-details` in knk-web-app and knk-workspace, in review; as built in § 6.3.3); 2026-11-18 (phase 4a, #738, built on `claude/overview-map-players-api` in knk-plugin and knk-web-api, in review; as built in § 6.2.9 and § 7.4); 2026-11-18 (phase 3, #737, built on `claude/overview-map-page` in knk-web-app and knk-workspace, in review; as built in § 6.3.5, deploy notes in the closed-alpha runbook Phase 10); 2026-11-18 (phase 2, #736, built on `claude/overview-map-public-api` in knk-web-api, in review; as built in § 6.2.8); 2026-11-18 (phase 1, #735, built on `claude/overview-map-outlines` in knk-plugin and knk-web-api, in review, not in `next` yet; stored shape in § 6.1.1); 2026-11-18 (§ 3.1.10: existing NAS render container, migration to the alpha stack; Decided; phases filed as #735–#743; first version from the working draft of 2026-11-17 and the design session of 2026-11-18)
+**Last updated:** 2026-11-18 (phase 6a, #741, built on `claude/overview-map-gate-commands` in knk-web-api and knk-plugin, in review; as built in § 6.2.10 and § 7.5); 2026-11-18 (phase 5, #740, built on `claude/overview-map-staff-details` in knk-web-app and knk-workspace, in review; as built in § 6.3.3); 2026-11-18 (phase 4a, #738, built on `claude/overview-map-players-api` in knk-plugin and knk-web-api, in review; as built in § 6.2.9 and § 7.4); 2026-11-18 (phase 3, #737, built on `claude/overview-map-page` in knk-web-app and knk-workspace, in review; as built in § 6.3.5, deploy notes in the closed-alpha runbook Phase 10); 2026-11-18 (phase 2, #736, built on `claude/overview-map-public-api` in knk-web-api, in review; as built in § 6.2.8); 2026-11-18 (phase 1, #735, built on `claude/overview-map-outlines` in knk-plugin and knk-web-api, in review, not in `next` yet; stored shape in § 6.1.1); 2026-11-18 (§ 3.1.10: existing NAS render container, migration to the alpha stack; Decided; phases filed as #735–#743; first version from the working draft of 2026-11-17 and the design session of 2026-11-18)
 **Issue:** [PandiO/knk-workspace#732](https://github.com/PandiO/knk-workspace/issues/732); phases as sub-issues in § 11.
 **Dependencies:** the offline BlueMap tile pipeline ([BLUEMAP_EVALUATION.md](BLUEMAP_EVALUATION.md) § 5–7); the SignalR
 game hub (#66, built); managed WorldGuard regions (`docs/architecture/managed-worldguard-regions.md`, built); gate
@@ -267,6 +267,24 @@ Related: [DESIGN.md](DESIGN.md) (in-game maps, M2–M5), [DECISION-map-data-sour
        `Map:LivePlayers:LabelCacheSeconds` (60). An unknown mode value counts as hidden. An arena pin sits at the
        match's first objective gate with a map pin, else the scenario's lowest gate id with one; a running match is a
        `SiegeMatch` created or in progress (as "under siege", § 6.2.8). `config.livePlayers` follows the flag.
+    10. **As built (#741):** `Controllers/GateCommandsController.cs` (`POST api/GateStructures/{id}/commands`, own
+        controller on the `api/GateStructures` prefix, `[RequirePermission(GateAdmin)]` pinned in
+        `EndpointAccessRulesTests`), `Services/Map/GateCommandService` and the singleton `GateCommandWaiter`. Body
+        `{action, doorId?}` (action in any case); answer `GateCommandResponseDto` `{commandId, gateId, doorId, action,
+        result, message, doors[]}` with `result` `done` / `refused` (200, the game server's answer and message),
+        `siege` (409), `timeout` (504); refusals before sending: 404 `GateCommandsOff` (flag off: nothing sent, nothing
+        audited), 400 `ValidationFailed` (unknown action), 404 `GateNotFound`, 400 `DoorNotOfGate` (unknown door or a
+        door of another gate), 409 `GateInSiege` (the gate's `CurrentSiegeId` is a match created or in progress, as
+        "under siege" in § 6.2.8), 503 `NoGameServerConnected`. Hub: API → plugin `GateCommand` v1 to every connected
+        game server, payload `{commandId, gateId, doorId, action, staffUserId, staffUsername}`; plugin → API
+        `GateCommandResult({commandId, result, message, doors: [{doorId, state, healthCurrent, healthMax, destroyed,
+        outcome, reason}]})`, the first answer per id wins, late ones are ignored, ignored while the flag is off. Audit:
+        `AuditAction.GateCommandSent` (65) with subject `GateStructure` / gate id, details `commandId`, `action`,
+        `doorId`, `result` (`done`, `refused`, `siege`, `no-game-server`, `timeout`), `message`, `gameServers`; written
+        for every command past validation (400 and 404 write none). Settings `Map:GateCommands:Enabled` (false),
+        `Map:GateCommands:TimeoutSeconds` (5, 1..30); `config.gateCommands.enabled` follows the flag. The doors of a
+        gate for staff (L8): the existing `GET api/GateStructures/{id}/doors` (`GateDoorsController`, any login or the
+        plugin key) gives door ids, names and states.
 3. **Web app:**
     1. Route `/map` (public in `routeTable.ts`), page `pages/MapPage.tsx`, `components/map/` with `BlueMapFrame`
        (iframe + bridge client), `MapPanel`, `mapActionRegistry.ts`, public widgets per type, `GateDoorsWidget`,
@@ -324,6 +342,15 @@ Related: [DESIGN.md](DESIGN.md) (in-game maps, M2–M5), [DECISION-map-data-sour
    mode from `ModeService`, match from `SiegeService.runningMatchOf` / `runningMatchApiId`) and
    `MapReporting.startPlayerReports` (timer of `interval-ticks`, wrapped in `PluginMetrics.timed("map.player_snapshot")`,
    send on an async task). `interval-ticks` is clamped to 10..1200.
+5. **As built (#741):** knk-core `gates/command/GateCommandHandler` (Bukkit-free; on the main thread): refuses with
+   `siege` while the gate structure is held by a siege lockdown (`SiegeGateController.lobbyIdOf`), refuses a door that is
+   not a loaded door of the gate or a gate without loaded doors, then per door the in-game rules: inactive doors are
+   skipped, a destroyed door doesn't open, a door already in the asked state is `already`, a moving door doesn't
+   toggle; open/close/toggle through `GateManager.openGate` / `closeGate` (the normal animation, persisted when it ends),
+   repair through `GateCommandSupport.repair` (as `/gate repair`: full health, not destroyed, persisted). `done` when at
+   least one door acted or already was so, else `refused`. knk-api-client `realtime/GateCommandEvents`; knk-paper
+   `realtime/GateCommandRealtimeSync` (command id seen once, handler on the main thread, answer over the hub), wired in
+   `KnKPlugin.registerGateCommandSync`. No plugin setting.
 
 ## 8. Platform-specific parts
 

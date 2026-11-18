@@ -21,6 +21,25 @@ This is a human-readable record of capabilities merged into the V3 default branc
      [plugin configuration § 4.15](guides/admin/plugin-configuration.md#415-navigation)). No migration. Steps:
      [destination engine smoke test § 2](guides/navigation-destination-engine-smoke-test.md#2-phase-2-navigation-model-and-offline-snapshot-103-tier2).
 
+- **Overview map: gate commands backend** ([PandiO/knk-workspace#741](https://github.com/PandiO/knk-workspace/issues/741),
+  link L7 of the overview map chain, [#732](https://github.com/PandiO/knk-workspace/issues/732)). knk-web-api,
+  knk-plugin and knk-workspace branches `claude/overview-map-gate-commands` (PRs into `next`). Behind the new API
+  setting `Map:GateCommands:Enabled` (off by default: the route answers 404 and nothing is sent). Nothing changes for
+  players yet: the map panel's gate buttons (phase 6b) call this.
+  1. New staff route `POST api/GateStructures/{id}/commands` with `{action: open|close|toggle|repair, doorId?}`, for
+     web staff holding `knk.gate.admin` only. The API sends the command to the game server over the game hub and waits
+     up to 5 s for its answer; the game server runs the existing gate operations, so the door animates as with
+     `/gate`, and repair works as `/gate repair`.
+  2. Refused while a siege match runs on the gate (409; the game server checks its siege lockdown too), without a
+     connected game server (503), for a door of another gate (400); no answer in time is 504. Every command is written
+     to the audit log (`GateCommandSent`, with the user, action, door and result).
+  3. `GET api/Map/config` now reports `gateCommands.enabled` from the setting.
+  4. Admin steps: none to keep it off. To turn it on, set `Map__GateCommands__Enabled=true` in the API's environment
+     file (`Map__GateCommands__TimeoutSeconds`, default 5). No plugin setting (the plugin answers what it receives,
+     with `realtime.enabled: true`). No migration. Steps:
+     [overview map smoke test § 7](guides/overview-map-smoke-test.md#7-phase-6a-gate-commands-backend-741-tier3),
+     [production installation § 4.3](guides/production-installation.md#43-api-configuration-file--etcknkapienv).
+
 - **Navigation destination engine, phase 1: the pure engine in knk-core** ([PandiO/knk-workspace#96](https://github.com/PandiO/knk-workspace/issues/96),
   link L1 of the destination engine chain, [#25](https://github.com/PandiO/knk-workspace/issues/25)). knk-plugin and
   knk-workspace branches `claude/navigation-destination-engine` (PRs into `next`). Nothing changes for players: the
