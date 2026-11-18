@@ -1,7 +1,8 @@
 # Navigation destination engine — smoke test
 
-**Status:** Draft from the design (2026-11-18); no steps run. Steps not yet automated (the links tag them).
-**Last updated:** 2026-11-18 (design approved: tiers confirmed, phase 4b is #747); 2026-11-18 (draft from the design refresh, phases 1, 2, 3, 4, 4b and 5)
+**Status:** Draft from the design (2026-11-18); § 1 updated by the P1 link (9 of 11 steps automated, tagged); no
+manual steps run. Later sections are not yet automated (their links tag them).
+**Last updated:** 2026-11-18 (§ 1 updated to the P1 code, steps tagged, #96); 2026-11-18 (design approved: tiers confirmed, phase 4b is #747); 2026-11-18 (draft from the design refresh, phases 1, 2, 3, 4, 4b and 5)
 **Design:** [specs/navigation-destination-engine/DESIGN.md](../specs/navigation-destination-engine/DESIGN.md) · **Issue:**
 [PandiO/knk-workspace#25](https://github.com/PandiO/knk-workspace/issues/25)
 
@@ -22,9 +23,14 @@ Accounts and data used throughout:
 
 ## 1. Phase 1: pure engine in knk-core (#96, tier:2)
 
-*Draft from the design (2026-11-18); the link updates it to what was built and tags the automated steps.*
+*Updated by the P1 link (2026-11-18) to what was built: knk-plugin `claude/navigation-destination-engine`, package
+`net.knightsandkings.knk.core.navigation.destinations`. 9 of 11 steps automated in CI (tagged); every step can
+still be run by hand; manual steps not run. Full manual run about 25 minutes; the untagged steps (10 and 11) about
+10 minutes.*
 
-Nothing is wired in this phase: the engine is code and tests only. The manual check is that nothing changed.
+Nothing is wired in this phase: the engine is code and tests only, with no config key and no migration. The manual
+check is that nothing changed. The tagged steps are knk-core JUnit tests (`./gradlew :knk-core:test`, part of CI's
+build); to run one by hand, read the test named in its tag and check the stated result in its assertions.
 
 ### 1.0 Preconditions
 
@@ -34,14 +40,51 @@ Nothing is wired in this phase: the engine is code and tests only. The manual ch
 
 ### 1.1 Steps
 
-1. Read the P1 pull request's Testing section. **Expected:** tests for every scope of DESIGN § 4.1 (A01–A06), name
-   resolution in the world and in a match (A07), other-world places (A08), the handle rule in `ArchitectureGuardTest`
-   and revalidation by key, and a landmark-like provider in the World scope (A09), all green in CI.
-2. As Player, `/navigate` a town, a street and a Location target, and press Tab after `/navigate ` and after a few
-   letters. **Expected:** the same routes, messages and suggestions as before the update.
-3. As Player in a running siege match, right-click the compass a few times and type `/navigate ` with Tab.
-   **Expected:** the same objectives and team spawn as before, in the same order; other places are refused with the
-   same message.
+1. [automated: `InitialScopesTest.theTableIsWalkedInTheDesignsOrder`, `DestinationEngineTest` scope tests] Read the
+   scope table in `InitialScopes`. **Expected:** scopes in the order account loading 110, frozen 110, bypass 100, no
+   permission 80, siege match 60, siege match with the compass off 55, siege lobby 50, world 10; the first that
+   applies decides the whole list and lower scopes are not asked (A01).
+2. [automated: `InitialScopesTest` loading and frozen tests, `ReasonTest.theInitialTableHasTheDesignsCodesAndTodaysTexts`]
+   Check the loading and frozen scopes for a plain player, in owner mode, in staff mode and with `knk.navigate.any`.
+   **Expected:** an empty list with code `loading` and "Your account is still loading - try again in a moment.", or
+   code `frozen` and "You can't navigate while frozen.", in every mode (A02, E9).
+3. [automated: `InitialScopesTest` bypass tests, `LandmarkLikeProviderTest.theBypassListsLandmarksEvenInAMatch`] Check
+   owner mode, staff mode and `knk.navigate.any`, also inside a running match. **Expected:** the bypass scope lists
+   every world provider and the match provider (A03, E5, E6).
+4. [automated: `InitialScopesTest` no-permission tests] Check a player without `knk.navigate`. **Expected:** an empty
+   list with code `no-permission` and "You don't have permission to use /navigate." (A04).
+5. [automated: `InitialScopesTest.aMatchWithoutDestinationsListsNothingWithTodaysText`,
+   `withTheCompassOffAMatchMemberGetsTheReason`, `aMatchListIsRebuiltOnEveryCallNotCached`] Check a member of a running
+   match with the compass on, with the compass off, and with an empty match list. **Expected:** only the match's
+   objectives and team spawn in the compass's order; with the compass off (item disabled or off for sieges) an empty
+   list with code `siege-compass-off`; an empty match list with code `siege-match-empty`; both with today's text "This
+   match has no destinations to navigate to."; the match list is built again on every call, not cached (A05, E15, E18).
+6. [automated: `InitialScopesTest.aLobbyMemberWithoutARunningMatchGetsTheSiegeReason`,
+   `aHubProviderWithDestinationsReplacesTheLobbyReason`] Check a lobby member without a running match, without and
+   with a hub provider. **Expected:** an empty list with code `siege-lobby` and "You can't navigate while you are in a
+   siege."; a hub provider with places in the player's world lists them instead (A06, E10).
+7. [automated: `DestinationEngineTest` resolving and completion tests, `InitialScopesTest` match resolution tests]
+   Resolve `Kardenna`, `town:Kardenna`, `town:#1`, an ambiguous `Market` and a misspelt name, in the world and in a
+   match. **Expected:** found, found, found, a choice of `district:Market` and `town:Market`, suggestions; in a match
+   the same forms work on objectives (`objective:Keep Gate`) (A07).
+8. [automated: `InitialScopesTest.anotherWorldIsHiddenFromCompletionButResolvesToItsMessage`,
+   `LandmarkLikeProviderTest.aLandmarkInAnotherWorldIsNotCompletedButResolvesApart`] Complete and resolve a town and a
+   landmark in another world. **Expected:** not offered in completion; resolving gives the other-world answer (A08,
+   E11).
+9. [automated: `ArchitectureGuardTest.onlyTheDestinationEngineConstructsAllowedDestination`,
+   `InitialScopesTest` and `DestinationEngineTest` re-validation tests, `LandmarkLikeProviderTest`] Check the handle
+   and re-validation, and the landmark-like provider in the World scope. **Expected:** only the engine package
+   constructs `AllowedDestination`; a session's destination is found by key after re-ordering and after a rename,
+   stays when an objective changes kind, and ends with the scope's reason (or code `no-longer-listed`) when it drops
+   out; a landmark (key `landmark:<id>`, type word `landmark`, detail `in <domain>`, a point with an optional arrival
+   radius or a region) is listed in the world, hidden in a match, the lobby, loading, frozen and without permission,
+   and listed for the bypass (A09, E3, E4, E16, § 3.2).
+10. As Player, `/navigate` a town, a street and a Location target, and press Tab after `/navigate ` and after a few
+    letters. **Expected:** the same routes, messages and suggestions as before the update. (Manual: checks that
+    nothing is wired; needs a server and a player.)
+11. As Player in a running siege match, right-click the compass a few times and type `/navigate ` with Tab.
+    **Expected:** the same objectives and team spawn as before, in the same order; other places are refused with the
+    same message. (Manual: checks that nothing is wired; needs a server, a siege and a player.)
 
 ## 2. Phase 2: navigation model and offline snapshot (#103, tier:2)
 
