@@ -1,7 +1,7 @@
 # Off-road navigation and landmarks — smoke test
 
-**Status:** Draft from the design (2026-11-17); no steps run. Phase 5.1 (§ 6): 21 of 22 steps automated (6 in part); Phase 0 (§ 1): 1 of 9 steps automated; phase 1 (§ 2): 4 of 4 steps automated; phase 6.1 (§ 8): 6 of 8 steps automated (3 of them in part); phase 6.2 (§ 9): 11 of 11 steps automated (3 of them in part); phase 7 step 1 (§ 10.1): 4 of 7 steps automated (3 of them in part), the looking is the developer's; the other phases not yet automated (the links tag them).
-**Last updated:** 2026-11-18 (§ 6.3 phase 5.1 step B, link L8: the in-game steps); 2026-11-18 (§ 6 phase 5.1 updated to what link L8 step A built, #708: API and web steps, plugin steps marked step B); 2026-11-18 (§ 10 phase 7 split into step 1, built by link L10, #712: the staff preview and the developer's viewing steps on Cinix and Brink, and step 2, the trail, not built yet); 2026-11-18 (§ 9 phase 6.2 updated to what link L4 built, #711: eleven steps, all automated, three in part); 2026-11-17 (§ 8 phase 6.1 updated to what link L3 built, #710: eight steps, six automated); 2026-11-17 (§ 2 phase 1 updated to what link L2 built, #704: every step automated); 2026-11-17 (§ 1 phase 0 updated to what link L1 built, #703: the measurement steps and the `/knk road status` lines); 2026-11-17 (draft from the design, phases 0, 1, 2, 3, 4, 5.1, 5.2, 6.1, 6.2, 7)
+**Status:** Draft from the design (2026-11-17); no steps run. Phase 5.1 (§ 6): 21 of 22 steps automated (6 in part); Phase 0 (§ 1): 1 of 9 steps automated; phase 1 (§ 2): 4 of 4 steps automated; phase 6.1 (§ 8): 6 of 8 steps automated (3 of them in part); phase 6.2 (§ 9): 11 of 11 steps automated (3 of them in part); phase 7 step 1 (§ 10.1): 4 of 7 steps automated (3 of them in part), viewed by the developer 2026-11-18; phase 7 step 2 (§ 10.2): 9 of 9 steps automated (3 of them in part); the other phases not yet automated (the links tag them).
+**Last updated:** 2026-11-18 (§ 10 phase 7: step 1 viewed by the developer, O33; § 10.2 step 2 built by link L10, #712: nine steps, all automated, three in part); 2026-11-18 (§ 6.3 phase 5.1 step B, link L8: the in-game steps); 2026-11-18 (§ 6 phase 5.1 updated to what link L8 step A built, #708: API and web steps, plugin steps marked step B); 2026-11-18 (§ 10 phase 7 split into step 1, built by link L10, #712: the staff preview and the developer's viewing steps on Cinix and Brink, and step 2, the trail, not built yet); 2026-11-18 (§ 9 phase 6.2 updated to what link L4 built, #711: eleven steps, all automated, three in part); 2026-11-17 (§ 8 phase 6.1 updated to what link L3 built, #710: eight steps, six automated); 2026-11-17 (§ 2 phase 1 updated to what link L2 built, #704: every step automated); 2026-11-17 (§ 1 phase 0 updated to what link L1 built, #703: the measurement steps and the `/knk road status` lines); 2026-11-17 (draft from the design, phases 0, 1, 2, 3, 4, 5.1, 5.2, 6.1, 6.2, 7)
 **Design:** [specs/navigation-offroad/DESIGN.md](../specs/navigation-offroad/DESIGN.md) · **Issue:**
 [PandiO/knk-workspace#698](https://github.com/PandiO/knk-workspace/issues/698)
 
@@ -524,15 +524,15 @@ automated, 3 of them in part; the developer's live test is the feel of steps 1 t
 
 ## 10. Phase 7: plaza lines for the players' trail (#712, tier:2)
 
-*Step 1 built 2026-11-18 (link L10, knk-plugin `claude/offroad-plaza-lines`): the plaza line in knk-core
-(`PlazaCurve` in `core/navigation/shape`: a curve from where a route enters a plaza to where it leaves, pulled towards
-the plaza node by `plaza-pull` 0.35, checked on the plaza's clearance map, regions and floor, with `PlazaLine`'s A*
-guided by the curve when the curve does not fit; plazas only, by the NPC rule) and a staff preview,
-`/knk road plazaline [<plaza or junction>]`, that draws the lines for 10 seconds and writes their lengths to chat. The
-trail does not use plaza lines yet: the developer looks at them on Cinix and Brink first (O16, risk 12.5), § 10.1. Step
-2 (the trail uses them, § 10.2) starts after the developer's OK on #712. With `navigation.plaza-lines` off (the default)
-routes, trails, the session and NPC movement are exactly as before. Of § 10.1's 7 steps, 4 are automated (3 of them
-in part); the looking is the developer's.*
+*Step 1 built 2026-11-18 (link L10): the plaza line in knk-core (`PlazaCurve` in `core/navigation/shape`: a curve from
+where a route enters a plaza to where it leaves, pulled towards the plaza node by `plaza-pull` 0.35, checked on the
+plaza's clearance map, regions and floor, with `PlazaLine`'s A* guided by the curve when the curve does not fit; plazas
+only, by the NPC rule) and the staff preview `/knk road plazaline [<plaza or junction>]`. The developer viewed the lines
+on 2026-11-18 (§ 10.1, #712): "Cinix" is Brink and the South Gate plaza; a curve is taken down to 0.65 from an obstacle
+(`plaza-curve-clearance`, O33). Step 2 built the same day (link L10): with `navigation.plaza-lines` on the road trail is
+drawn along the plaza line where a route crosses a plaza (§ 10.2); the route, its length, the ETA, the maneuvers and
+the HUD are unchanged. With the flag off (the default) everything is as before. § 10.1: 4 of 7 steps automated (3 in
+part), done by the developer; § 10.2: 9 of 9 steps automated (3 in part), the look is the developer's.*
 
 ### 10.0 Preconditions
 
@@ -591,19 +591,50 @@ in part); the looking is the developer's.*
    `ConfigLoaderNavigationTest.thePlazaLineKeysAreInConfigYmlOffWithTheDesignDefaultsAndAreChecked`,
    `PlazaCrossingsOfTest` (the route's plaza junctions unchanged)]
 
-### 10.2 Step 2: the trail uses the plaza lines (after the developer's OK; not built yet)
+### 10.2 Step 2: the trail draws the plaza lines
 
-1. Settings: `navigation.guidance-v2: true`, `navigation.plaza-lines: true`, `plaza-pull` as chosen in § 10.1 step 5.
-2. As the player, navigate through Cinix's plaza, entering on one road and leaving on a road at a right angle.
-   **Expected:** the trail takes the rounded line from road to road that bends towards the plaza's middle, neither
-   along the edges nor to the centre and back; it keeps clear of walls and objects. (A22)
-3. Navigate through the plaza with the stall or well on the crossing line. **Expected:** the trail goes around the
-   obstacle, not through it. (A23)
-4. Navigate through the street T junction. **Expected:** no plaza line; the road trail as today. (A22)
-5. Compare the HUD distance and the maneuver announcements with the flag on and off for the same route.
-   **Expected:** the same distance, ETA and maneuvers. (A25)
-6. Turn `navigation.plaza-lines` off, restart and repeat step 2. **Expected:** today's line through the plaza node.
-   (A24)
+Preconditions: plugin from `next` with phase 7 step 2 (knk-plugin PR for #712 step 2 merged). Under `navigation:` set
+`plaza-lines: true` and keep (or add) `plaza-pull: 0.35`, `plaza-guide-cost: 2` and `plaza-curve-clearance: 0.65`;
+restart. `guidance-v2` may be on or off (the road trail's spots are fixed along the route either way). A player account
+without staff rights; a staff account with `knk.admin.road` for step 8.
+
+1. As the player, `/navigate` to a place beyond Brink so the route enters Brink on one road and leaves on another at
+   about a right angle (the quarry-to-keep route). Walk towards Brink. **Expected:** before you reach the square, the
+   gold trail ahead bends from road to road along a rounded line pulled gently towards the node, not to the node and
+   back and not along the square's edge; it is the green or orange line `/knk road plazaline Brink` shows for that
+   pair of roads. (A22) [automated: knk-paper
+   `NavigationServiceTest.withPlazaLinesTheTrailRoundsTheJunctionOnThePlazaLine` (the spot at the node drawn 35 % of
+   the way from the chord's middle to the node), knk-core `PlazaTrailTest.spotsInsideACrossingMoveOntoItsLineByTheirShareOfTheWay`,
+   `PlazaTrailTest.aPlazaCrossingIsPlacedOnTheRoutePolylineByItsEntryAndExit`; the look is manual]
+2. Stand still on the square for ten seconds, then take a few steps along the trail. **Expected:** the particles on
+   the square stay where they were on every redraw; they do not slide along the line. (A22, A17) [automated: knk-core
+   `PlazaTrailTest.theSameAlongIsAlwaysTheSamePointSoParticlesStayPut`]
+3. Do the same through the South Gate plaza (node 39) and Northern Gate Square. **Expected:** as in step 1; the lines
+   keep clear of walls, wells, stalls and posts by about two thirds of a block or more (a curve), or go round them (an
+   orange A* line, at least a third of a block from any obstacle). (A22, A23, O33) [automated in part: knk-core
+   `PlazaCurveTest` (the L, T, well and stall scenes, `theCurveIsTakenDownToItsOwnClearance`); scenarios
+   `plaza-line-brink`, `plaza-line-cinix-south-square`, `plaza-line-cinix-northern-gate-square` (every line over
+   walkable floor and at least 0.35 from a wall, post or drop on the real blocks)]
+4. Navigate through a plaza whose crossing line has a well, stall or tree on it (Merchant's Square from Wearway #19 to
+   #35 has one). **Expected:** the trail goes round the obstacle, not through it. (A23) [automated: knk-core
+   `PlazaCurveTest.aStallOnTheCurveGivesTheGuidedLineRoundIt`]
+5. Navigate through a street T junction (3-wide streets). **Expected:** no plaza line; the road trail turns there as
+   today. (A22, O19) [automated: knk-core `PlazaCurveTest.aStreetTJunctionGetsNoPlazaLine`]
+6. On a route through a plaza, watch the HUD distance, the ETA and the turn announcements; then set
+   `plaza-lines: false`, restart and walk the same route. **Expected:** the same distance, ETA, percentage and the
+   same maneuver messages at the same places, with the flag on and off; only the drawn trail on the plazas differs.
+   (A25) [automated: knk-paper `NavigationServiceTest.plazaLinesChangeNeitherTheRouteNorItsNumbers` (a transcript of
+   the session's progress, the route length, the maneuvers, every HUD update and every chat line, flag on and off)]
+7. With `plaza-lines: false` walk through a plaza. **Expected:** today's trail: through the node with its sharp bend.
+   (A24) [automated: knk-paper `NavigationServiceTest.withPlazaLinesOffTheTrailIsDrawnAsToday`,
+   `NavigationServiceTest.withoutAPlazaWorldTheFlagDrawsAsToday`, `TrailRendererTest.withoutAPlazaTrailTheRouteIsDrawnAsBefore`]
+8. As staff, with `plaza-lines: true`, run `/knk road status` after the walks. **Expected:** a line
+   "plaza lines: on; placed N of M crossings" with N at least the plazas you crossed with a line. [automated in part:
+   knk-paper `NavigationServiceTest.withPlazaLinesTheTrailRoundsTheJunctionOnThePlazaLine` (the status text);
+   `RoadAdminCommandTest` (the status lines)]
+9. NPCs: start an NPC walking a road route across a plaza while a player navigates. **Expected:** the NPC moves exactly
+   as before (its own plaza lines follow `npc.navigation.plaza-lines`). [automated: the unchanged NPC unit tests
+   (`PlazaLineTest`, `RouteFollowerPlazaTest`, `NavGroupPlazaTest`) and the paper-boot `npc-plaza-line` scenarios]
 
 ## 11. Phase 8: persisted walk tiles (#713)
 

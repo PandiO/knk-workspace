@@ -4,6 +4,22 @@ This is a human-readable record of capabilities merged into the V3 default branc
 
 ## Unreleased — on feature branches, not merged
 
+- **Off-road navigation: the trail rounds plazas** ([PandiO/knk-workspace#712](https://github.com/PandiO/knk-workspace/issues/712),
+  link L10 of the off-road navigation chain, phase 7 step 2). Where your route crosses a plaza from one road to
+  another, the navigation trail now takes a rounded line across the square instead of a sharp corner at its middle,
+  keeping clear of walls, wells and stalls. knk-plugin and knk-workspace branches `claude/offroad-plaza-lines` (PRs into
+  `next`). Behind `navigation.plaza-lines`, off by default: with it off the trail is exactly as before. No migration.
+  1. With the flag on, the road trail's spots inside a plaza crossing are drawn at the same share of the way along
+     the plaza line (`core/navigation/PlazaTrail`, a `TrailRenderer.drawRoute` overload). The crossings are worked out
+     lazily on the main thread, one per redraw, when the trail comes within 24 blocks, once per route.
+  2. The route, its length, the ETA, the HUD, the maneuvers and the session's progress and cursor stay on the route
+     polyline (A25, transcript test).
+  3. The developer's decision after viewing the lines on Cinix and Brink (O33): a curve is taken down to 0.65 from an
+     obstacle (`plaza-curve-clearance`); the A* line still never comes under 0.35.
+  4. `/knk road status` shows "plaza lines: on; placed N of M crossings".
+  5. Admin steps (only to try it): under `navigation:` add `plaza-curve-clearance: 0.65` beside the step-1 keys and set
+     `plaza-lines: true`; restart.
+
 - **Off-road navigation, phase 5.1 step B: landmarks in game** ([PandiO/knk-workspace#708](https://github.com/PandiO/knk-workspace/issues/708),
   link L8 of the off-road navigation chain). knk-plugin and knk-workspace branches `claude/offroad-landmarks` (PRs into
   `next`). Behind the new `config.yml` key `navigation.landmarks` (off by default: nothing changes for players).
