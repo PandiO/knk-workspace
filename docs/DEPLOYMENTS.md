@@ -1,6 +1,6 @@
 # Deployment log
 
-**Status:** Current · **Last updated:** 2026-11-15 (release tags `v0.2` and `v0.3` added, PandiO/knk-workspace#577)
+**Status:** Current · **Last updated:** 2026-11-18 (deploy of the trunk heads and the 18 Nov content); 2026-11-15 (release tags `v0.2` and `v0.3` added, PandiO/knk-workspace#577)
 **Sources:** the dated deploy reports in [`reports/`](reports/) (cited per row), the component repos' git history and tags
 **Related:** [changelog](CHANGELOG.md) (what was merged) · [closed-alpha deployment runbook § Every deploy](guides/closed-alpha-deployment-runbook.md#every-deploy-gate-tags-release-and-log) (how a deploy is recorded) · [NAS operations access § 7](guides/nas-ops-access.md#7-stage-b-delegated-changes-knk-deploy) (`knk-deploy`)
 
@@ -30,19 +30,18 @@ No secrets, LAN addresses or private hostnames in this file: knk-workspace is pu
 
 ### Current state
 
-**To be confirmed by the developer.** The last deploy on record is 2026-11-02. If nothing was deployed since, the
-alpha runs:
+Checked 2026-11-18 (`ssh knk-deploy status` and the deploy results). The alpha runs:
 
 | Component | Commit | Since | Source |
 |---|---|---|---|
-| knk-web-api | `8df59b75` (image `knk-web-api:alpha-8df59b75`), 102 migrations | 2026-11-01 | [2026-11-01 report](reports/2026-11-01-alpha-update-trunk-heads.md) |
-| knk-web-app | `1c9524d0` (image `knk-web-app:alpha-1c9524d0`) | 2026-11-02 | [2026-11-02 report](reports/2026-11-02-alpha-web-image-permissions-fix.md) |
-| knk-plugin | `c8232607` (jar `e92afe2f…`) | 2026-11-01 | [2026-11-01 report](reports/2026-11-01-alpha-update-trunk-heads.md) |
-| Data | seed `4abf42c` (2026-10-24) + content patch `alpha-patch-20261101.sql` (from seed `4cc1263`) | 2026-11-01 | [seed import](reports/2026-10-24-alpha-seed-import.md), [2026-11-01 report § 4](reports/2026-11-01-alpha-update-trunk-heads.md#4-content-patch-from-the-1-nov-seed) |
-| Compose | `2334937f…`; `ALLOW_FLIGHT: "TRUE"` still set unless removed since (2026-10-25 workaround) | 2026-11-02 | [2026-11-02 report](reports/2026-11-02-alpha-web-image-permissions-fix.md), [2026-10-25 report § 4](reports/2026-10-25-alpha-update-api-6f08383d-plugin-ee35fb1d.md#4-later-the-same-day-allow_flight-workaround-developer) |
+| knk-web-api | `bcdb4d07` (image `knk-web-api:alpha-bcdb4d07`), 118 migrations | 2026-11-18 | [2026-11-18 report](reports/2026-11-18-alpha-update-trunk-heads.md) |
+| knk-web-app | `909e7089` (image `knk-web-app:alpha-909e7089`) | 2026-11-18 | [2026-11-18 report](reports/2026-11-18-alpha-update-trunk-heads.md) |
+| knk-plugin | `187f97ec` (jar `4324274a…`), config with `realtime.enabled: true` (`knk-alpha`) | 2026-11-18 | [2026-11-18 report § 3](reports/2026-11-18-alpha-update-trunk-heads.md#3-plugin-config) |
+| Data | seed `4abf42c` (2026-10-24) + content patches `alpha-patch-20261101.sql` (seed `4cc1263`) and `alpha-patch-20261118.sql` (seed `2aeae98`) | 2026-11-18 | [2026-11-18 report § 4](reports/2026-11-18-alpha-update-trunk-heads.md#4-content-patch) |
+| Compose | `7404fbf6…`; `ALLOW_FLIGHT: "TRUE"` still set unless removed since (2026-10-25 workaround) | 2026-11-18 | [2026-11-18 report](reports/2026-11-18-alpha-update-trunk-heads.md) |
 
-None of these commits has a release tag: they predate the first tags (below). Run `ssh knk-deploy status` to confirm
-the images, the live jar hash and the migration count, then replace "to be confirmed" with the date of that check.
+Open from that deploy (developer, web app): the ItemBlueprint and EnchantmentDefinition v5 forms and the Town display
+([report § 6](reports/2026-11-18-alpha-update-trunk-heads.md#6-open)). None of these commits has a release tag.
 
 ### Deploys
 
@@ -50,6 +49,7 @@ Newest first. Rows before 2026-11-13 are back-filled from the dated reports; not
 
 | Date | API | Web | Plugin | Data | Migrations | Config | Scripts | Checked | Rollback | Source |
 |---|---|---|---|---|---|---|---|---|---|---|
+| 2026-11-18 | `bcdb4d07` | `909e7089` | `187f97ec` | Content patch `alpha-patch-20261118.sql` (`2af6725e…`) from seed `2aeae98` + locations 2/13 by hand; forms and Town display still to import | 102 → **118** | `config.yml`: trunk file + alpha values, `realtime.enabled: true` (`knk-alpha`), 103 new keys on defaults; Compose `2334937f…` → `7404fbf6…` (images) | — | `knk-ops` health, logs, secret scan, Compose; Minecraft and API startup logs, realtime connected, road network as dev. Not in game or browser | `ssh knk-deploy rollback` ×4; DB: `knk-alpha-restore 20261118T181553Z-pre-content-patch-20261118` / `20261118T173255Z-pre-api-bcdb4d07` | [report](reports/2026-11-18-alpha-update-trunk-heads.md) |
 | 2026-11-02 | — | `1c9524d0` | — | — | — | Compose `97bfb08e…` → `2334937f…` (web image); `knk-deploy` program and web Dockerfile updated (#210) | — | Health by `deploy-web`; logo and landing slideshow by the developer in the browser; `/link` and `/join` fields pending | `ssh knk-deploy rollback` (back to `alpha-b3b415d0`, broken images) | [report](reports/2026-11-02-alpha-web-image-permissions-fix.md) |
 | 2026-11-01 | `8df59b75` | `b3b415d0` | `c8232607` | Content patch `alpha-patch-20261101.sql` (`7799dd03…`) from seed `4cc1263` | 5 → **102** | None merged: 7 new `config.yml` keys run on the jar's defaults | — | `knk-ops` status, health, logs, secret scan, Compose; Minecraft startup log. Not checked in game or browser | `ssh knk-deploy rollback` ×3; DB: `knk-alpha-restore 20261101T153532Z-pre-api-8df59b75`; patch: `20261101T160706Z-pre-content-patch` | [report](reports/2026-11-01-alpha-update-trunk-heads.md) (first deploy through `knk-deploy`) |
 | 2026-10-25 15:02Z | — | — | — | — | — | Compose `41f7b64a…` → `82def538…`: `ALLOW_FLIGHT: "TRUE"` (workaround, to be removed) | — | Developer | Compose backup `backups/20261025T150142Z/` | [report § 4](reports/2026-10-25-alpha-update-api-6f08383d-plugin-ee35fb1d.md#4-later-the-same-day-allow_flight-workaround-developer) |
@@ -99,6 +99,7 @@ and 17 in knk-plugin.
 
 ## Changes
 
-1. 2026-11-15: release tags `v0.2` and `v0.3` added, PandiO/knk-workspace#577
-2. 2026-11-14: knk-web-api's trunk renamed from `master` to `main`
-3. 2026-11-13: first version: structure, back-fill of the knk-alpha deploys the dated reports record, PandiO/knk-workspace#303
+1. 2026-11-18: knk-alpha deploy of the trunk heads and the 18 Nov content; current state checked
+2. 2026-11-15: release tags `v0.2` and `v0.3` added, PandiO/knk-workspace#577
+3. 2026-11-14: knk-web-api's trunk renamed from `master` to `main`
+4. 2026-11-13: first version: structure, back-fill of the knk-alpha deploys the dated reports record, PandiO/knk-workspace#303
