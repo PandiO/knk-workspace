@@ -54,7 +54,7 @@ on `next` (Decided 2026-11-18, O01–O33, O08 superseded by O31); smoke guide
 | L6 Staff details | #740 | Merged into `next` 2026-11-18 (knk-web-app `01ad4d9a`, knk-workspace `a130f2d6`); waiting for the developer's smoke test § 6 | `claude/overview-map-staff-details`: knk-web-app `1443cf5`, knk-workspace `fe64919d` (from `next`) | [knk-web-app#51](https://github.com/PandiO/knk-web-app/pull/51), [knk-workspace#755](https://github.com/PandiO/knk-workspace/pull/755) | Web app green (build-and-test, e2e); Codex at its limit | subagent of the coordinator (2026-11-18; the create_session attempt session_01R1w2UuaEs6VbL7BVnR7ZTJ was refused the knk-web-app attach, decision 10) |
 | L7 Gate commands backend | #741 | Merged into `next` 2026-11-18 (knk-web-api `0308377d`, knk-plugin `02aa110e`, knk-workspace `b7820e99`); waiting for the developer's smoke test § 7 | `claude/overview-map-gate-commands`: knk-web-api `16e4157`, knk-plugin `1f8bb3c7`, knk-workspace `8368b901` (from `next`) | [knk-web-api#48](https://github.com/PandiO/knk-web-api/pull/48), [knk-plugin#79](https://github.com/PandiO/knk-plugin/pull/79), [knk-workspace#758](https://github.com/PandiO/knk-workspace/pull/758) | API green (build-and-test, mysql-tests, fresh-database); plugin build and paper-boot green | create_session session_01R1w2UxDt6K1RcnDPPagNAN (2026-11-18) |
 | L8 Gate command buttons | #742 | Merged into `next` 2026-11-18 (knk-web-app `de43f6be`, knk-workspace `bf28138d`); waiting for the developer's smoke test § 8 | `claude/overview-map-gate-buttons`: knk-web-app `05a30ea`, knk-workspace `9fad9531` (from `next`) | [knk-web-app#53](https://github.com/PandiO/knk-web-app/pull/53), [knk-workspace#759](https://github.com/PandiO/knk-workspace/pull/759) | Web app build-and-test green on `05a30ea`, e2e running at report time (local full run 176 passed); knk-workspace no CI; Codex at its limit | create_session session_01R1w2UvQqqmQ9NwMTQbq3Cb (2026-11-18) |
-| L9 Player context panel | #743 | Running | `claude/overview-map-moderation`: knk-web-app, knk-workspace (from `next`) | – | – | create_session session_01R1w2Uw4EdZTG53RQ7gnyQ3 (2026-11-18) |
+| L9 Player context panel | #743 | In review (PRs into `next`, not merged) | `claude/overview-map-moderation`: knk-web-app `1ff5418`, knk-workspace `553c751b` (from `next`) | [knk-web-app#55](https://github.com/PandiO/knk-web-app/pull/55), [knk-workspace#765](https://github.com/PandiO/knk-workspace/pull/765) | Web app push runs green on `1ff5418` (build-and-test, e2e), pull_request runs running at report time (local full run: Jest 2754, e2e 191 passed); knk-workspace no CI; Codex at its limit | create_session session_01R1w2Uw4EdZTG53RQ7gnyQ3 (2026-11-18) |
 
 ## 3. Coordinator decisions
 
@@ -843,3 +843,61 @@ _(Each link appends its block here when it finishes.)_
 7. **Notes for later links.** L9: `visible(data, context)` now gets `MapPanelContext`; a panel reload no longer
    unmounts widgets. On merging L5: `MapDtos.ts` has L8's types at the end; `MapPage.tsx`, the bridge, `mapClient.ts`
    and `e2e/fixtures/map.ts` are unchanged by L8.
+
+### 4.9 L9 — Player context panel with moderation actions (#743)
+
+1. **Scope done.**
+    1. knk-web-app: `components/map/PlayerModerationPanel.tsx` as the `children` of `MapPlayerPanel` (two added lines in
+       `MapPage.tsx`; `PlayerCard.tsx` unchanged). The panel opens for any of `knk.freeze`, `knk.unfreeze`, `knk.kick`,
+       `knk.ban`, `knk.admin.user.manage`, checked through the shared per-page permission cache on a player click. It
+       renders nothing until one is allowed: anonymous viewers make no request, and a viewer without any node makes only
+       the five checks. The user id comes from the existing `GET api/Users/uuid/{uuid}` (new
+       `userManagementClient.getByUuid` and a minimal `UserByUuidDto` in `UserProfileSummaryDtos.ts`); a 404 says the
+       player has no web account. The actions are "Freeze…" or "Unfreeze" by state (with the reason while frozen),
+       "Kick…" and "Ban…". Each one shows only under its own node and goes through the unchanged `usePlayerFreeze` /
+       `usePlayerKickBan` (same dialogs, endpoints, toasts and audit entries). "Open profile" links to
+       `/admin/users/<id>`. Not touched: the moderation hooks, `PlayerProfilePage`, the bridge, `mapClient.ts`,
+       `e2e/fixtures/map.ts`, `objectConfigs`, `entityApiMapping`, the landmark pages. No API change, no migration, no
+       flag.
+    2. knk-workspace: smoke guide § 9 (8 steps: 3 automated, 4 partly automated, 1 manual only, tagged), spec § 6.3.8
+       as built and the last-updated line, changelog entry (merged `origin/next`; both sides of the changelog conflict
+       kept).
+2. **Commits and heads.** knk-web-app `claude/overview-map-moderation` at `1ff5418` (1 commit on `next` `5501be9`);
+   knk-workspace `claude/overview-map-moderation` at `553c751b` (1 commit and a merge of `origin/next`). Both were up
+   to date with `origin/next` when the PRs were opened.
+3. **PRs.** [knk-web-app#55](https://github.com/PandiO/knk-web-app/pull/55) (`Part of #743`),
+   [knk-workspace#765](https://github.com/PandiO/knk-workspace/pull/765) (`Closes #743`), base `next`. Not merged.
+4. **Tests, baseline → result.**
+    1. Jest `npm run test:ci`: 319 suites / 2741 passed → 320 / 2754 passed (+12 `PlayerModerationPanel.test.tsx`,
+       +1 `userManagementClient` `getByUuid`). The existing `usePlayerFreeze` / `usePlayerKickBan` / profile tests are
+       unchanged and green.
+    2. Playwright, all specs: 186 → 191 passed (+5 `overview-map-moderation.spec.ts`, new fixture
+       `e2e/fixtures/mapModeration.ts`).
+    3. `tsc --noEmit`, `typecheck:e2e`, `CI=true npm run build`: green → green. Known reds: none.
+    4. Acceptance: A20 (e2e "a viewer with only knk.kick ...", Jest; the kick in game by hand, smoke § 9 steps 1–2),
+       A21 (e2e logged-in and anonymous, Jest).
+    5. CI on `1ff5418`: push runs build-and-test and e2e green; the pull_request runs were still running when this
+       block was written (see the final message).
+    6. Codex: at its usage limit on both PRs (noted on each PR). No review, so no findings to handle.
+5. **Decisions (DESIGN § 4.3).**
+    1. *UUID → user id.* Chosen: the existing `GET api/Users/uuid/{uuid}` (any login), because it needs no API change
+       and the map API resolves labels with the same lookup. Alternatives: (a) `userId` in `MapPlayerDto`: an API
+       change, and it widens the public allow-list (O32); (b) user search by name: ambiguous, and it needs
+       `knk.admin.user.manage`.
+    2. *Freeze / Unfreeze.* Chosen: one button by frozen state, as on the profile. Alternatives: (a) both at once, as
+       the draft smoke step listed them: one of the two always does nothing.
+    3. *Hidden, not disabled.* Chosen: hidden (A20 "sees only Kick", § 5 rule 13). Alternatives: (a) the profile's
+       #280 "Requires <node>" disabled buttons: contradicts A20.
+    4. *"Open profile" without `knk.admin.user.manage`.* Chosen: shown to every panel viewer, as A20 says; the profile
+       page keeps its own gate, so a kick-only moderator gets its "no access" answer (smoke § 9 step 3). Alternatives:
+       (a) hide it without the node: contradicts A20.
+    5. *Player who left the snapshot.* Chosen: L5's "no longer on the map" without the moderation section.
+       Alternatives: (a) keep the section mounted: needs a `MapPlayerPanel` change, and the profile page covers this
+       case.
+    6. *When the nodes are checked.* Chosen: on the first player click (the panel mounts then; answers are cached for
+       the page load). Alternatives: (a) at page load: permission traffic for every logged-in visitor who never clicks
+       a player.
+6. **Out of scope, noted.** For the developer to decide (no issue filed): A20 combined with the profile's
+   `knk.admin.user.manage` route gate means a kick-only moderator's "Open profile" leads to "no access". The admin
+   guide and register lines are follow-ups for the documentation issue (PR docs impact).
+7. **Notes for later links.** None; L9 is the chain's last link. For the docs session: smoke § 9, spec § 6.3.8.
