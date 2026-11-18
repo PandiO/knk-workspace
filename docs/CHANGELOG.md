@@ -4,6 +4,24 @@ This is a human-readable record of capabilities merged into the V3 default branc
 
 ## Unreleased — on feature branches, not merged
 
+- **Overview map: public map API** ([PandiO/knk-workspace#736](https://github.com/PandiO/knk-workspace/issues/736),
+  link L2 of the overview map chain, [#732](https://github.com/PandiO/knk-workspace/issues/732)). knk-web-api and
+  knk-workspace branches `claude/overview-map-public-api` (PRs into `next`). Behind the new API setting `Map:Enabled`
+  (off by default: every `api/Map` route answers 404). Nothing changes for players yet: the web map page (phase 3)
+  reads these.
+  1. New anonymous read routes under `api/Map`: `config` (label distances, flash settings, marker version),
+     `markers` (pins and outlines of every town, district and structure, labelled with their names; structures with
+     type and subtype; a pin at the spawn location, else at the centre of the region outline), and the public panels
+     `towns/{id}`, `districts/{id}`, `structures/{id}` (a gate adds its doors with open state, destroyed and health,
+     and "under siege"). The responses hold only the fields the design allows for anyone (O32); tests pin each field
+     set.
+  2. A new per-IP rate limit `map` (120 requests per minute by default) covers every map route.
+  3. Admin steps: none to keep it off. To turn it on, set `Map__Enabled=true` in the API's environment file; the other
+     new keys (`RateLimiting__Map__PermitPerMinute`, `Map__Labels__*__MaxDistance`, `Map__Flash__*`,
+     `Map__Markers__CacheSeconds`) have defaults. No migration. Steps:
+     [overview map smoke test § 2](guides/overview-map-smoke-test.md#2-phase-2-public-map-api-736-tier3),
+     [production installation § 4.3](guides/production-installation.md#43-api-configuration-file--etcknkapienv).
+
 - **Overview map: the game server reports town, district and structure outlines** ([PandiO/knk-workspace#735](https://github.com/PandiO/knk-workspace/issues/735),
   link L1 of the overview map chain, [#732](https://github.com/PandiO/knk-workspace/issues/732)). knk-plugin,
   knk-web-api and knk-workspace branches `claude/overview-map-outlines` (PRs into `next`). Behind the new plugin key
