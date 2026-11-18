@@ -1,7 +1,7 @@
 # Overview map — smoke test
 
-**Status:** Draft from the design (2026-11-18); no steps run. § 1 updated to what L1 built (7 steps, all partly automated, tagged), § 2 to what L2 built (7 steps: 2 automated, 5 partly automated, tagged); the other sections are not automated yet (the links tag them).
-**Last updated:** 2026-11-18 (§ 2 to what L2 built, #736); 2026-11-18 (§ 1 to what L1 built, #735); 2026-11-18 (draft from the design, phases 1, 2, 3, 4a, 4b, 5, 6a, 6b, 7)
+**Status:** Draft from the design (2026-11-18); no steps run. § 1 updated to what L1 built (7 steps, all partly automated, tagged), § 2 to what L2 built (7 steps: 2 automated, 5 partly automated, tagged), § 3 to what L3 built (11 steps: 1 automated, 9 partly automated, 1 manual only, tagged); the other sections are not automated yet (the links tag them).
+**Last updated:** 2026-11-18 (§ 3 to what L3 built, #737); 2026-11-18 (§ 2 to what L2 built, #736); 2026-11-18 (§ 1 to what L1 built, #735); 2026-11-18 (draft from the design, phases 1, 2, 3, 4a, 4b, 5, 6a, 6b, 7)
 **Design:** [specs/in-game-maps/OVERVIEW_MAP_DESIGN.md](../specs/in-game-maps/OVERVIEW_MAP_DESIGN.md) · **Issue:**
 [PandiO/knk-workspace#732](https://github.com/PandiO/knk-workspace/issues/732)
 
@@ -151,28 +151,77 @@ Tests named below, all in knk-web-api `Tests/knkwebapi_v2.Tests`: `Api/MapContro
 
 ## 3. Phase 3: map page (#737, tier:2)
 
-*Draft from the design (2026-11-18); the link updates it to what was built and tags the automated steps.*
+*Built by link L3 (knk-web-app branch `claude/overview-map-page`, deploy notes on knk-workspace
+`claude/overview-map-page`; PRs into `next`). 11 steps: 1 automated, 9 partly automated, 1 manual only (tagged). The
+suites run the page against a mocked API and a fake BlueMap web app that loads the real bridge script; a real render,
+real zooming and a real phone are checked by hand. **The live run waits for the developer's NAS change** (runbook
+Phase 10: the `bluemap-test` container moved into the `knk-alpha` stack, `/bluemap/` served, the full-world render).
+Not run yet. Full manual run about 20 minutes.*
+
+Tests named below: knk-web-app `e2e/overview-map.spec.ts` (Playwright, "e2e") and the Jest suites in
+`src/components/map/__tests__/` (`bridgeProtocol`, `mapMarkers`, `mapActionRegistry`, `GateDoorsWidget`,
+`useMapAvailability`).
 
 ### 3.0 Preconditions
 
-1. Deployed: phase 2, the web app from `next`, and BlueMap tiles and web app under `/bluemap/` with the bridge script
-   in `webapp.conf`. The render container is the existing NAS `bluemap-test`, migrated into the `knk-alpha` stack
-   (spec § 3.1.10); `docker ps` shows it as a stack service, not a hand-started container.
-2. Settings: `Map:Enabled=true`.
+1. Deployed: phases 1 and 2, the web app from `next`, and
+   [closed-alpha runbook Phase 10](closed-alpha-deployment-runbook.md#phase-10--overview-map-bluemap-in-the-stack-737):
+   the render service `bluemap` in the `knk-alpha` stack (BlueMap v5.29), nginx serving `web/` under `/bluemap/`,
+   `webapp.conf` with `client-decompression: true` and `scripts: ["/bluemap-bridge/bridge.js?worlds=<map id>:<world>"]`,
+   and a render that covers the test town.
+2. Settings: API `Map__Enabled=true` (`/etc/knk/api.env`, restart the API). Other `Map__*` keys at their defaults.
+3. Data: the test data above, with outlines stored (smoke § 1) and the town's spawn location set.
 
 ### 3.1 Steps
 
-1. As **anonymous**, open the web app. **Expected:** a "Map" entry in the header. `/map` loads the 3D map without a
-   login. Town labels show at every zoom. District and structure labels appear only when zoomed in. (A07)
-2. Click the town pin. **Expected:** the town outline flashes three times and disappears. The panel shows the town's
-   public fields. (A08)
-3. Turn on "Show region" in the panel. **Expected:** the town outline and all its districts stay visible. Each
-   district is labelled with its name, never a region id. Judge whether showing all districts at once works, and note
-   your verdict for a follow-up (O30). (A08)
-4. Click the gate structure. **Expected:** the panel lists each door with open/closed, destroyed and a health bar.
-   (A09)
-5. On a phone, repeat steps 2 and 4. **Expected:** the panel opens as a bottom sheet and the map stays usable. (A07)
-6. With `Map:Enabled=false`, reload the web app. **Expected:** no "Map" entry. `/map` shows "not available". (A07)
+1. [manual only: deployment] On the NAS: `docker ps --format '{{.Names}}' | grep -i bluemap` shows no `bluemap-test`;
+   `docker compose --profile bluemap config --services` lists `bluemap`. In a browser (through Cloudflare Access),
+   open `https://app.knightsandkings.net/bluemap/`. **Expected:** BlueMap's viewer shows the rendered area; the
+   response of `/bluemap/` has `X-Frame-Options: SAMEORIGIN` (developer tools, Network), any other page `DENY`;
+   `/bluemap/settings.json` lists the bridge script under `scripts`.
+2. [partly automated: e2e `the start page links to the map, and /map shows pins with labels by zoom (A07)`,
+   `logged in with the map on: the bar has a Map entry that opens the map`; by hand: the real render and zoom] As
+   **anonymous**, open the start page. **Expected:** "Explore the world on the map" with a link; it opens `/map` with
+   the 3D map, no login. As the **player**, the top bar has a "Map" entry that opens it. Town pins have their names at
+   every zoom. Zoom out far: district and structure labels fade out, their pins stay; zoom in on the town: district
+   names appear (within about 1500 blocks), structure labels (name over "Structure" or "Structure, Gate") within about
+   600. Pins of another world are not on this map. (A07)
+3. [partly automated: e2e `clicking a town flashes its outline three times and opens its public panel (A08)`,
+   Jest `mapActionRegistry` "shows the town panel ..."; by hand: the real flash] Click the town pin (or its label).
+   **Expected:** the town's outline flashes three times (about 0.4 s each) and disappears. The panel on the right
+   shows the town's name, description and number of districts. (A08)
+4. [partly automated: e2e `"Show region" shows the town and all its districts by name, and hides them again (A08)`;
+   by hand: the verdict] Turn on "Show region". **Expected:** the town outline and every district of that town stay
+   visible, each district labelled with its name, never a region id (`domain_...`). Close the panel (× or Escape):
+   the regions stay. Click the town again: the switch is on; turn it off: the regions disappear. Judge whether
+   showing all districts at once works and note your verdict for a follow-up (O30). (A08)
+5. [partly automated: e2e `clicking a gate shows its doors with open/closed, destroyed and a health bar (A09)`, Jest
+   `GateDoorsWidget`; by hand: real gate data] Click the gate structure. **Expected:** the panel shows its name,
+   "Structure, Gate", district, town and address, and a "Doors" list: each door with Open/Closed (or Opening,
+   Closing, Jammed), "Destroyed" when destroyed, and a health bar with "Health current / max". No buttons (gate
+   commands come with #742). During a siege match on that gate: "Under siege", health still shown. (A09)
+6. [partly automated: e2e `on a phone the panel opens as a bottom sheet and the page does not scroll sideways`; by
+   hand: a real phone] On a phone, repeat steps 3 and 5. **Expected:** the panel opens as a bottom sheet over the
+   lower part of the screen, the map stays usable above it, the × closes it, no sideways scrolling. (A07)
+7. [partly automated: e2e `bridge messages from another origin or another window are ignored (A10)`, Jest
+   `bridgeProtocol`; by hand: the console] On `/map`, open the developer tools console and run
+   `window.postMessage({ v: 1, type: 'markerClicked', payload: { kind: 'town', id: <town id> } }, '*')`.
+   **Expected:** nothing opens (the page only listens to the map's own frame on its own origin). Clicking the pin
+   still opens the panel. (A10)
+8. [partly automated: e2e `the bridge keeps its pins when BlueMap reloads its own marker file`; by hand: the real
+   viewer] Stay on `/map` for at least 30 seconds without reloading. **Expected:** the pins and labels stay (BlueMap
+   reloads its own marker file every 10 seconds; the bridge's pins must survive it).
+9. [partly automated: e2e `a new marker version reloads the markers (§ 5 rule 2)`; by hand: the deployed API] Keep
+   `/map` open, rename the test town in the web app (another tab), wait about 90 seconds (30 s marker cache plus the
+   page's 60 s check). **Expected:** the town's label shows the new name without reloading the page.
+10. [automated: Jest `mapActionRegistry` "shows a newly registered action only to a viewer holding its node ... (A22)",
+    "hides the action without the node and from anonymous viewers", "shows a staff widget under its node ..."]
+    Registering a new action for a type in `mapActionRegistry` shows it in the panel under its node, with no change to
+    the bridge script. (A22; code-level, nothing to do by hand.)
+11. [partly automated: e2e `map off (Map:Enabled false)` › `anonymous: no map link on the start page, and /map says
+    not available`, `logged in: the bar has no Map entry`, Jest `useMapAvailability`; by hand: the deployed API] Set
+    `Map__Enabled=false`, restart the API, reload the web app. **Expected:** no "Map" entry in the bar, no map link on
+    the start page; `/map` shows "The map is not available." and loads no iframe. (A07)
 
 ## 4. Phase 4a: live players backend (#738, tier:3)
 
