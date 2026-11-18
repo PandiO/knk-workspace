@@ -4,6 +4,27 @@ This is a human-readable record of capabilities merged into the V3 default branc
 
 ## Unreleased — on feature branches, not merged
 
+- **NPC navigation: off-road starts and ends with the walk navigator's search** ([PandiO/knk-workspace#700](https://github.com/PandiO/knk-workspace/issues/700),
+  link C1 of the NPC navigation follow-ups chain). knk-plugin and knk-workspace branches `claude/npc-movement-c1` (PRs
+  into `next`). Behind `npc.navigation.enabled` (off by default); no new `config.yml` key, no migration.
+  1. An NPC's off-road start (to the road), off-road goal (from the road's end) and a trip with no road are planned
+     with the walk search players' trails use (the capture of loaded chunks, the NPC's gate, door and region access,
+     `navigation.walk`'s caps) and walked as part of the route line: stretches, the 3D handover, the join from the
+     feet, the walking surface. Before, they were straight lines cut into 16-block hops.
+  2. The road is joined where the walk reaches it (any road point within 32 blocks along the road); the walk to the goal
+     is tried from further back along the road when the road's end reaches nothing. Hops stay the fallback.
+  3. A group's followers take the leader's walked path, as on roads; a walk's cells are not shaped or moved off walls
+     (a spiral stair stays a spiral).
+  4. An open door or fence gate no longer counts as a wall for NPC lines; the walk planner checks a found path against
+     the NPC's body and searches again round cells it cannot stand in (an open trapdoor's panel).
+  5. `/knk npc nav snapshot` takes the route's from and to into its box, so an off-road goal (a tower top) is inside.
+  6. Scenario replays read Minecraft 26.x block states written as `{id, properties}` (stairs not facing north, top
+     slabs, open doors); they were missing from every replay before.
+  7. The developer's failed tower route of 2026-11-17 (`northern-wearway-upper-keep-tower`, stuck at 1405 85 −510) is
+     replayed: a leader alone and a group of 20 reach the goal up the spiral staircase (`npc-replay-keep-tower`), and
+     three scenes (a detour round a courtyard, a two-turn spiral, a ravine) run in CI's `paper-boot` job (59 scenarios with the off-road chain's L3, L4 and L10).
+     Steps: [NPC movement smoke test, link C1](guides/npc-movement-smoke-test.md#link-c1-off-road-ends-with-the-walk-search-retest-of-2026-11-17-step-5).
+
 - **Off-road navigation: plaza lines, step 1 (preview for staff)** ([PandiO/knk-workspace#712](https://github.com/PandiO/knk-workspace/issues/712),
   link L10 of the off-road navigation chain, phase 7 step 1). knk-plugin and knk-workspace branches
   `claude/offroad-plaza-lines` (PRs into `next`). The trail does not use plaza lines yet: the developer looks at them
