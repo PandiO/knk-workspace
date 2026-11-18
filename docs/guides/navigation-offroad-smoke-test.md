@@ -1,7 +1,7 @@
 # Off-road navigation and landmarks — smoke test
 
-**Status:** Draft from the design (2026-11-17); no steps run. Phase 0 (§ 1): 1 of 9 steps automated; phase 1 (§ 2): 4 of 4 steps automated; phase 6.1 (§ 8): 6 of 8 steps automated (3 of them in part); phase 6.2 (§ 9): 11 of 11 steps automated (3 of them in part); phase 7 step 1 (§ 10.1): 4 of 7 steps automated (3 of them in part), the looking is the developer's; the other phases not yet automated (the links tag them).
-**Last updated:** 2026-11-18 (§ 10 phase 7 split into step 1, built by link L10, #712: the staff preview and the developer's viewing steps on Cinix and Brink, and step 2, the trail, not built yet); 2026-11-18 (§ 9 phase 6.2 updated to what link L4 built, #711: eleven steps, all automated, three in part); 2026-11-17 (§ 8 phase 6.1 updated to what link L3 built, #710: eight steps, six automated); 2026-11-17 (§ 2 phase 1 updated to what link L2 built, #704: every step automated); 2026-11-17 (§ 1 phase 0 updated to what link L1 built, #703: the measurement steps and the `/knk road status` lines); 2026-11-17 (draft from the design, phases 0, 1, 2, 3, 4, 5.1, 5.2, 6.1, 6.2, 7)
+**Status:** Draft from the design (2026-11-17); no steps run. Phase 5.1 (§ 6): 21 of 22 steps automated (6 in part); Phase 0 (§ 1): 1 of 9 steps automated; phase 1 (§ 2): 4 of 4 steps automated; phase 6.1 (§ 8): 6 of 8 steps automated (3 of them in part); phase 6.2 (§ 9): 11 of 11 steps automated (3 of them in part); phase 7 step 1 (§ 10.1): 4 of 7 steps automated (3 of them in part), the looking is the developer's; the other phases not yet automated (the links tag them).
+**Last updated:** 2026-11-18 (§ 6.3 phase 5.1 step B, link L8: the in-game steps); 2026-11-18 (§ 6 phase 5.1 updated to what link L8 step A built, #708: API and web steps, plugin steps marked step B); 2026-11-18 (§ 10 phase 7 split into step 1, built by link L10, #712: the staff preview and the developer's viewing steps on Cinix and Brink, and step 2, the trail, not built yet); 2026-11-18 (§ 9 phase 6.2 updated to what link L4 built, #711: eleven steps, all automated, three in part); 2026-11-17 (§ 8 phase 6.1 updated to what link L3 built, #710: eight steps, six automated); 2026-11-17 (§ 2 phase 1 updated to what link L2 built, #704: every step automated); 2026-11-17 (§ 1 phase 0 updated to what link L1 built, #703: the measurement steps and the `/knk road status` lines); 2026-11-17 (draft from the design, phases 0, 1, 2, 3, 4, 5.1, 5.2, 6.1, 6.2, 7)
 **Design:** [specs/navigation-offroad/DESIGN.md](../specs/navigation-offroad/DESIGN.md) · **Issue:**
 [PandiO/knk-workspace#698](https://github.com/PandiO/knk-workspace/issues/698)
 
@@ -223,36 +223,144 @@ is one look at the startup log.*
 
 ## 6. Phase 5.1: landmark entity (#708, tier:3)
 
-*Draft from the design (2026-11-17); the link updates it to what was built and tags the automated steps.*
+*Step A built 2026-11-18 (link L8, knk-web-api and knk-web-app `claude/offroad-landmarks`, PRs into `next`): the
+`landmarks` table (migration `AddLandmarks`), `api/landmarks` (anonymous `GET ?world=` and `GET {id}` under the `map`
+rate limit, `POST search` for the dashboard, writes behind the new node `knk.admin.world.landmark` or the plugin key),
+the default form seed `Landmark`, the dashboard type with its columns and a Landmarks list on every domain's detail
+page. Step B built the same day (knk-plugin `claude/offroad-landmarks`): `/knk landmark …` and the `LandmarkProvider`
+behind `navigation.landmarks`, § 6.3. API and web steps: 11 of 12 automated (tagged), 2 of them in part; not run by
+hand yet. Time: about 25 min for the API and web steps (6.1 to 6.4), 20 min for step B's.*
+
+Who may do what (DESIGN § 6.4, O26):
+
+1. **Read** a landmark by world or by id: anyone, also without logging in (`GET api/landmarks?world=`,
+   `GET api/landmarks/{id}`), 120 requests a minute per IP (`RateLimiting:Map:PermitPerMinute`).
+2. **List** them on the dashboard (`POST api/landmarks/search`): the World area node `knk.admin.world` or
+   `knk.admin.world.landmark`, or the plugin key.
+3. **Create and edit**: `knk.admin.world.landmark` and `knk.admin.content` (the dashboard's change rule, #374), or the
+   plugin key. **Delete**: `knk.admin.world.landmark` and `knk.admin.delete`, or the plugin key.
+4. `knk.admin.world.landmark` is matched by `knk.admin.world.*`, `knk.admin.*` and `*`; a bare `knk.admin.world`
+   grant does **not** include it (a grant without `*` matches only its own node).
 
 ### 6.0 Preconditions
 
-1. Deployed: API with the `landmarks` migration; web app; plugin build from `next` with phase 5.1; the destination
-   engine P1, P2 and P3 (#96, #103, #69).
-2. Settings: `navigation.landmarks: true`.
-3. Accounts and data: a staff account with `knk.admin.world.landmark`; a staff account without it; a player account;
-   the keep as a structure domain; a WorldGuard region `keep_throne` around the throne room.
+1. Deployed: knk-web-api with the migration `AddLandmarks` applied (`dotnet ef database update`, or the API's
+   migration on start); knk-web-app from the same `next`. For step B also: the plugin build from `next` with phase
+   5.1 step B and the destination engine P1, P2 and P3 (#96, #103, #69), `navigation.destination-engine: true`.
+2. Settings: none for the API and web app. Step B: `navigation.landmarks: true` and `navigation.destination-engine: true`
+   in the plugin's `config.yml`, then restart.
+3. Data: the form seed `Landmark` imported on the form configuration list (Import / seeds, "Landmark - Default
+   (seed v1)"; it becomes the default when Landmark has none); the keep as a structure domain; a WorldGuard region
+   `keep_throne` around the throne room.
+4. Accounts: staff **A** with `knk.admin.world`, `knk.admin.world.landmark`, `knk.admin.content` and
+   `knk.admin.delete` (or `knk.admin.*`); staff **B** with `knk.admin.world` and `knk.admin.content` but not
+   `knk.admin.world.landmark`; a player account (step B).
 
-### 6.1 Steps
+### 6.1 API (A12)
 
-1. As staff with the node, stand in the throne room and run `/knk landmark create Throne room region keep_throne`.
-   **Expected:** a confirmation; `/knk landmark list` shows it. (A12)
-2. `/knk landmark link <keep domain>`, then `/knk landmark show Throne room`. **Expected:** the domain is shown.
-   (A12)
-3. In the web app as the same staff member, open the landmark list, rename it to "Throne hall" and save; open the
-   keep's domain page. **Expected:** the new name; the landmark is listed on the domain page. (A12)
-4. As staff without the node, try to create a landmark in game and in the web app. **Expected:** refused in both;
-   nothing is created. (A12)
-5. Without logging in, read `GET api/landmarks?world=<world>`. **Expected:** the list is returned (anonymous read).
-   (A12)
-6. As the player, `/navigate Throne hall` from outside the keep and walk there. **Expected:** navigation ends when you
-   enter the `keep_throne` region. (A13)
-7. As staff, create a landmark with `radius 5` and one with no extent; navigate to each as the player. **Expected:**
-   arrival inside the radius, and within the arrive distance of the pin. (A13)
-8. As the player, type `/navigate ` and press tab. **Expected:** landmarks of this world you may navigate to are
-   offered; a landmark with `NavigationEnabled` off, one in another world, and (during a siege match) all landmarks are
-   not. (A14)
-9. As staff, delete the landmark. **Expected:** it disappears from the list, the domain page and tab completion. (A12)
+1. Without logging in, open `<api>/api/landmarks?world=world` in a browser (or `curl -s`). **Expected:** `200` and a
+   JSON list (empty before step 6.2.2); each landmark has `id`, `name`, `world`, `location` (x, y, z), `domainId`,
+   `domainName`, `extentKind`, `regionId`, `radius`, `preference`, `navigationEnabled` and `kind`.
+   [automated: knk-web-api `EndpointAccessRulesTests.AllowAnonymous_IsLimitedToTheAllowList`,
+   `ReadAccessRulesTests` (`LandmarksController.GetAll` = P), `LandmarkServiceTests.Create_WithDefaults_ReturnsWhatThePluginNeeds`,
+   `GetAll_ByWorld_IgnoresCase_AndSortsByName`]
+2. Without logging in, `POST <api>/api/landmarks` with `{"name":"x","locationId":1}`. **Expected:** `401`; nothing is
+   created. [automated: knk-web-api `EndpointAccessRulesTests`, `DashboardChangeAccessRulesTests`
+   (`LandmarksController.Create`/`Update`), `DeleteAccessRulesTests` (`LandmarksController.Delete`)]
+3. The rules, by hand or by request: a second landmark with the same name in the same world (any case), a `Region`
+   area without a region id, a `Radius` of 0 or above 512, a preference outside 0.25 to 4.0. **Expected:** each is
+   refused with `400` and the reason; the same name in another world is accepted.
+   [automated: knk-web-api `LandmarkServiceTests` (17 tests)]
+
+### 6.2 Web app (A12)
+
+1. As staff A, open the dashboard and pick **Landmark** under World. **Expected:** the table has the columns ID, Name,
+   World, Point, Domain, Area and In /navigate; the search box narrows the list by name, world or domain.
+   [automated: knk-web-app `e2e/landmarks.spec.ts` "lists the landmarks with world, point, domain, area and /navigate",
+   "the search box asks the API with the search term"]
+2. Click **Create** (the Landmark form): Name "Throne room", Domain: the keep, Offer in /navigate on; on the Location
+   step stand in the throne room in game and use Send to Minecraft; on the Area step choose Region and type
+   `keep_throne`; Submit. **Expected:** "Landmark created."; the row shows the keep under Domain and Region under Area.
+   [automated in part: `e2e/landmarks.spec.ts` "the landmark form saves through POST api/landmarks" (a one-step test
+   form; the Location world task and the domain picker are the form wizard's own specs)]
+3. Open the keep's detail page (Dashboard → Structure → the keep → View). **Expected:** below the details a
+   **Landmarks** box lists "Throne room" with "Region · x y z · world"; the name opens the landmark's page.
+   [automated: `e2e/landmarks.spec.ts` "lists the landmarks linked to the town, each linking to its page" (a town;
+   every domain type shows the box, `DomainLandmarksPanel.test.tsx`)]
+4. On the landmark's page click **Edit**, rename it to "Throne hall", Submit; reopen the keep's page. **Expected:** the
+   new name in the table and in the keep's Landmarks box. (A12)
+5. Log in as staff B. **Expected:** the dashboard lists Landmark (B holds `knk.admin.world`) but **Create** and **Edit**
+   are greyed out with "Requires knk.admin.world.landmark"; on the keep's page **Add landmark** is greyed out with the
+   same hint. A save sent anyway answers `403`. [automated: `e2e/landmarks.spec.ts` "Add landmark needs the landmark
+   node, and says which"; knk-web-api `DashboardAccessTests.Metadata_CreateAndEdit_AreTheChangeNodes` (Landmark)]
+6. As staff with only `knk.admin.content`. **Expected:** no Landmark in the dashboard's explorer.
+   [automated: `e2e/landmarks.spec.ts` "content-only staff do not get the landmark type"]
+7. As staff A delete "Throne hall" (its page → Delete → confirm). **Expected:** "Landmark "Throne hall" deleted."; it is
+   gone from the table and from the keep's Landmarks box, which says "No landmarks are linked to <keep>.". Its Location
+   stays and shows up later in the orphaned-Location list (KNG-80), like a deleted domain's.
+   [automated in part: `LandmarkServiceTests.Delete_RemovesTheLandmark_AndLeavesThePinToTheRetentionCheck`,
+   `e2e/landmarks.spec.ts` "says when no landmark is linked"]
+8. Delete the keep's domain while a landmark is linked to it (on a copy, or a test structure). **Expected:** the
+   landmark stays, without a domain. [automated: `AddLandmarksTests.Up_LocationRestricts_DomainIsClearedOnDelete`,
+   `LandmarkServiceTests.DeletingTheDomain_ClearsTheLink`]
+
+### 6.3 In game (step B, A12 to A14)
+
+*Built 2026-11-18 (link L8 step B, knk-plugin `claude/offroad-landmarks`): `/knk landmark`, the destination engine's
+`LandmarkProvider` and the landmarks section of the navigation model, all behind `navigation.landmarks`. For these
+steps set both `navigation.landmarks: true` and `navigation.destination-engine: true` and restart. 10 of 10 steps
+automated (4 of them in part); the live run (a real client walking, tab completion as typed) is the developer's.
+About 20 min.*
+
+1. As staff A, stand in the throne room and run `/knk landmark create Throne room region keep_throne`.
+   **Expected:** "Created landmark Throne room (#<id>) region keep_throne."; `/knk landmark list` shows it; the web
+   app's Landmark table shows it after a reload. (A12) [automated in part: knk-plugin
+   `LandmarkAdminCommandTest.createTakesTheNameTheExtentAndThePlayersPosition`, `listShowsThePlayersWorld`;
+   `LandmarksApiImplTest.createSendsTheNameThePinAndTheExtentInTheApisWords` (the API's answer is faked)]
+2. `/knk landmark link Throne room <keep's name>`, then `/knk landmark show Throne room`. **Expected:** "Linked Throne
+   room to <keep> (Structure)."; `show` lists the domain, the point, "region keep_throne" and "In /navigate: yes". A
+   domain name several domains share answers with their `#id`s; `link Throne room #<id>` then works. (A12)
+   [automated: `LandmarkAdminCommandTest.linkTakesADomainByNameOrId_andAnAmbiguousNameAsksForTheId`,
+   `showFindsANameWithSpacesOrAnId`]
+3. Stand a few blocks away and run `/knk landmark move Throne room`, then `/knk landmark show Throne room`.
+   **Expected:** the new position; the domain link is kept. [automated:
+   `LandmarkAdminCommandTest.moveMovesTheSameLocationAndKeepsTheDomain`]
+4. As staff B (no `knk.admin.world.landmark`), `/knk landmark create Test`. **Expected:** "You don't have permission"
+   and nothing is created; `/knk help` does not list `landmark`. (A12) [automated in part:
+   `LandmarkAdminCommandTest.theMetadataGatesOnTheLandmarkNode`, the registry's check in `CommandRegistryPermissionsTest`]
+5. As the player, `/navigate Throne room` from outside the keep and walk there. **Expected:** the trail leads to the
+   keep; navigation ends with "You have arrived" as you step into the `keep_throne` region. (A13) [automated in part:
+   `HandleDestinationsLandmarkTest.noExtentIsAPlainPoint_aRegionExtentIsTheRegion` (the region destination; region
+   arrival is the existing WorldGuard check)]
+6. As staff, `/knk landmark create Market well radius 5` at the well and `/knk landmark create Old gate` at a gate;
+   as the player navigate to each. **Expected:** "Market well" ends as you come within 5 blocks of the well (also 1 to 4
+   blocks off the point); "Old gate" only within the arrive distance (4 blocks). (A13) [automated:
+   `NavigationServiceLandmarkTest.aRadiusExtentIsReachedInsideItsCylinder`,
+   `withoutAnExtentEightBlocksAwayIsNotThereYet`, `standingInsideTheRadiusIsAlreadyThere`]
+7. As the player type `/navigate ` and press tab; then `/navigate landmark:` and tab. **Expected:** this world's
+   landmarks you may navigate to are offered ("Throne", "Market", "Old"). A landmark with "Offer in /navigate" off (set
+   it in the web app, wait a minute or `/knk cache refresh`), one in another world, and every landmark during a running
+   siege match are not offered; `/navigate <other-world landmark>` says it is in another world. Staff mode lists them
+   even in a match. (A14) [automated: knk-core `LandmarkProviderTest.tabCompletionOffersOnlyLandmarksThePlayerMayNavigateTo`,
+   `enabledLandmarksOfThePlayersWorldAreListedByName`, `resolvesByNameAndIdAndTheBypassListsThemInAMatch`]
+8. Start `/navigate Old gate`, then in the web app untick "Offer in /navigate" on it (or delete it) and wait up to a
+   minute (the model refresh). **Expected:** the navigation ends with the "no longer" message; renaming it instead
+   keeps the navigation going. [automated: `NavigationServiceLandmarkTest.disablingTheLandmarkEndsTheSessionWithDestinationNotAllowed`,
+   `deletingTheLandmarkEndsTheSessionWithDestinationNotAllowed`, `aLandmarkSessionSurvivesReValidationAndARename`]
+9. As staff, `/knk landmark delete Throne room`. **Expected:** "Deleted landmark Throne room (#<id>)."; it is gone from
+   `/knk landmark list`, the keep's Landmarks box in the web app and tab completion (within a few seconds: the command
+   refreshes the model). (A12) [automated in part: `LandmarkAdminCommandTest.unlinkSendsNoDomain_deleteDeletes`,
+   `NavigationModelLandmarksTest.aDeletedLandmarkLeavesTheModelOnTheNextRefresh`]
+10. Set `navigation.landmarks: false`, restart. **Expected:** `/knk landmark list` says "Landmarks are off on this
+    server"; no landmark is offered by `/navigate`; the server log's model line names no landmarks.
+    [automated: `LandmarkAdminCommandTest.withTheFlagOffNothingHappens`, `LandmarksConfigTest`,
+    `NavigationModelLandmarksTest.withTheFlagOffTheSectionStaysEmpty`]
+
+### 6.4 Migration (A12, deploy)
+
+1. On a copy of the production database, apply the migrations. **Expected:** one new table `landmarks`, no change to
+   any other table; `Down` drops only `landmarks`. [automated: knk-web-api `AddLandmarksTests`; CI "Migrations (fresh
+   DB)" on the API PR]
 
 ## 7. Phase 5.2: landmark preference weights (#709, tier:2)
 
