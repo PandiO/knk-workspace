@@ -46,7 +46,7 @@ on `next` (Decided 2026-11-17).
 | L7 Phase 4 route modes | #707 | Not started (gate: L5 in `next`) | `claude/offroad-route-modes` | — | — | — |
 | L8 Phase 5.1 landmark entity | #708 | Waiting (destination engine #96, #103, #69 not in `next`, O27) | `claude/offroad-landmarks` | — | — | — |
 | L9 Phase 5.2 landmark weights | #709 | Not started (gate: L7 and L8 in `next`) | `claude/offroad-landmark-weights` | — | — | — |
-| L10 Phase 7 plaza lines | #712 | Running, step 1 (line + staff preview; the developer views Cinix and Brink before step 2, O16); started 2026-11-18 01:36 from plugin `next` `580aafa1` | `claude/offroad-plaza-lines` | — | — | create_session `session_01R1w2Ussca79jpGCPqzcTf8` (2026-11-18) |
+| L10 Phase 7 plaza lines | #712 | Step 1 in review (2026-11-18): the plaza line and `/knk road plazaline`; waits for the developer to view the lines on Cinix and Brink (O16) and answer on #712 before step 2 | knk-plugin `claude/offroad-plaza-lines` `97d1bafc`; knk-workspace `claude/offroad-plaza-lines` `d794c716` | [knk-plugin#73](https://github.com/PandiO/knk-plugin/pull/73), [#723](https://github.com/PandiO/knk-workspace/pull/723) (step 1, `Part of`) | green (build, paper-boot on `97d1bafc`) | create_session `session_01R1w2Ussca79jpGCPqzcTf8` (2026-11-18) |
 
 ## 3. Coordinator decisions
 
@@ -533,3 +533,82 @@ _(Each link appends its block here when it finishes.)_
         3. `JoinPoint.choose` takes any polyline.
     2. L10 (plaza lines): the road trail is still drawn by `centredWindow` from `cursor()`. A plaza line that changes the drawn polyline must keep the cursor's along on the route polyline (A25: length, ETA and maneuvers unchanged).
     3. Local paper-boot runs: a copy of `boot-test.sh` whose `knk scenario run all` names one scenario. `run` takes a single name.
+
+### 4.5 L10 — Phase 7: plaza lines for the players' trail, step 1 (#712)
+
+*Step 1 of 2: the plaza line and a staff preview. The developer views the lines on Cinix and Brink before the trail uses them (O16). Step 2 waits for the coordinator to pass on the developer's OK.*
+
+1. **Scope done.** `navigation.plaza-lines` is new, off, and read by nothing yet. Routes, trails, the session and NPC movement are unchanged.
+    1. knk-core `core/navigation/shape/PlazaCurve` (new, additive):
+        1. The pulled cubic curve of DESIGN § 8.3: control points P0 + a·t0 and P1 − a·t1 with a = |P0P1|/3, both moved so that the middle lies at chord midpoint + pull × (node − chord midpoint). `plaza-pull` 0.35 (O30).
+        2. The check of § 8.4, every 0.5 block, on `Corridor.build` round the route with the footprint as a disc.
+        3. The fallback: `PlazaLine`'s A* guided by the curve, through a new additive overload `PlazaLine.search(..., guide, guideCost)`. The plain search is unchanged.
+        4. Plazas only, by `CorridorShaper.resolve` (O19).
+        5. The result kinds are CURVE, GUIDED, NONE, STREET and NOT_CROSSED. Each result carries where the line sits on the route polyline (`entryAlong`, `exitAlong`) for step 2, the lengths (line, chord, right angle), the least clearance and why the curve failed.
+    2. knk-core `core/navigation/PlazaLinePreviews` (new): the passes through a named node (every pair of its roads, followed on through split nodes) or along a route, and the chat line.
+    3. knk-paper:
+        1. `/knk road plazaline [<plaza or junction>]` (`knk.admin.road`, `PlazaLinePreview`, wired into `RoadAdminCommand` and `KnKPlugin`). It draws for 10 seconds (green curve, orange A* line, red rejected curve, white road bend, light blue plaza edge), writes to chat and works with the flag off.
+        2. Keys `navigation.plaza-lines` (false), `plaza-pull` (0.35) and `plaza-guide-cost` (2), in `NavigationConfig.PlazaLinesConfig`. `corridor-half-width` and `plaza-corridor-blocks` come from the NPC settings for the world (O19, § 8.7); the clearance is `navigation.walk.wall-clearance`.
+        3. `NavigationService.routePlazas(Player)` (read only). `plazaCrossingsOf` is split into `plazaNodesOf` with no behaviour change.
+        4. Scenarios `plaza-line-brink`, `plaza-line-cinix-south-square` and `plaza-line-cinix-northern-gate-square`, with two new trimmed snapshots of 175 KB each. `MIN_SCENARIOS` 52 → 55.
+    4. knk-workspace:
+        1. Smoke test § 10: step 1 (§ 10.1, 7 steps, 4 tagged automated, 3 of them in part) and step 2 (§ 10.2, not built).
+        2. Plugin configuration reference § 4.15 and § 2.1, and the commands guide.
+        3. CHANGELOG (Unreleased) and DESIGN § 8.10 "as built".
+    5. Public signatures of `WalkLegPreparer`, `WalkSearch`/`WalkPathfinder`, `MovementProfile` and the existing shape classes are unchanged (additions only).
+2. **Commits and heads.**
+    1. knk-plugin `claude/offroad-plaza-lines` at `97d1bafc`: 4 commits (core, core, paper, scenarios) on `next` `580aafa1`.
+    2. knk-workspace `claude/offroad-plaza-lines` at `d794c716`: 1 commit on `next` `ff8cf291`.
+3. **PRs.** Both target `next`, with `Part of PandiO/knk-workspace#712` (step 1). Not merged.
+    1. [PandiO/knk-plugin#73](https://github.com/PandiO/knk-plugin/pull/73).
+    2. [PandiO/knk-workspace#723](https://github.com/PandiO/knk-workspace/pull/723).
+4. **Tests, baseline → result.**
+    1. knk-plugin (`./gradlew build -x deployToDevServer --max-workers=1`):
+        1. knk-core 3 071 → 3 097 (+26: `PlazaCurveTest` 18, `PlazaLinePreviewsTest` 8).
+        2. knk-paper 2 924 → 2 935 (+11, 18 skipped).
+        3. knk-api-client 344 → 344 (2 skipped).
+        4. No failures. `PlazaLineTest` (10) and every NPC test are unchanged.
+    2. A22: the L, T and well scenes (the pull exactly 35 % of the way, inside the footprint, clearance 0.75 or more, shorter than the right angle); a street T junction gives STREET.
+    3. A23: the stall gives GUIDED round it; a region the route does not pass is kept out; nothing fitting gives NONE.
+    4. A24 and A25: no trail, session or route code reads the flag in step 1 (`ConfigLoaderNavigationTest`, `PlazaCrossingsOfTest`).
+    5. Local paper-boot (Paper 26.3 build 205, Citizens, NPC navigation on), the three scenarios one by one: all PASS. Lengths are against the right angle at the node.
+        1. Brink: 1 curve (−53 %) and 3 A* lines (−14 to −28 %). The route's curve failed on a step of more than a block (a slope).
+        2. The square on the quarry-to-keep route: 1 curve (−25 %) and 3 A* lines (0 to −32 %).
+        3. Northern Gate Square: 7 A* lines (−7 to −49 %).
+        4. Most rejected curves missed `wall-clearance` 0.8 by 0.06 to 0.16. The A* line is then nearly the chord, without the pull. Asked on #712 (question 2).
+    6. CI on `97d1bafc`: `build` and `paper-boot` green on both the push and the pull-request runs (all 55 scenarios, the `npc-plaza-*` and snapshot-replay NPC scenarios included; 2026-11-18 02:35 UTC).
+    7. Known reds: none.
+    8. Codex: at its code-review usage limit on both PRs (2026-11-18 02:16 UTC), so neither has a Codex review (developer decision 2026-11-14). This is said on both PRs; no findings to handle.
+5. **Decisions (DESIGN § 4.3).**
+    1. *How much clearance the curve must keep.* Chosen: `wall-clearance` wherever the entry and exit allow it (less only near an end that has less, by the distance from it), and never under the hard minimum 0.35. A22 asks the line to keep `wall-clearance`. Alternatives: (a) only the hard minimum, as § 8.4 reads; more curves, but A22 would not hold; (b) L3's tolerance (0.7). Both are offered to the developer on #712.
+    2. *Where the code lives.* Chosen: `PlazaCurve` in `core/navigation/shape`, next to `PlazaLine` and `Corridor`, which it uses package-privately (`CorridorShaper.resolve`); the preview's road-graph logic goes in `core/navigation/PlazaLinePreviews`. Alternatives: (a) `core/roads/walk` beside `WalkPathShaper`; a plaza line belongs to the road trail, not to a walk path, and would need `resolve` made public; (b) knk-paper; against spec § 11.
+    3. *`WalkPathShaper` not used.* Chosen: the plaza line is not built through `WalkPathShaper`, which shapes walk legs over the captured terrain. The road trail's plaza line runs on the live world on the main thread, as M5's does. Alternative: shape road stretches through `WalkPathShaper` with plazas; that needs a walk capture of the road, a cost nothing else pays. This is for step 2 to revisit if the trail is shaped off the main thread.
+    4. *Corridor seeds.* Chosen: the route is clipped by distance along it (entry − 4 to exit + 4 blocks) and densified to a point per block snapped to real floors (`NavGeometry.floorNear`). On Northern Gate Square the graph's sparse points shut the square's own region out of the corridor (found by the scenario). Alternatives: (a) the route's own points only, as M5 does with dense NPC waypoints; fails there; (b) ignore regions on the plaza; against § 8.4.
+    5. *The node's centre.* Chosen: the node's block centre. A block corner is equally near three route points, and the first one won, shifting the footprint by a block (found by a test). Alternative: leave `PlazaCrossing` as given; the NPC side keeps that (unchanged).
+    6. *Shared keys.* Chosen: `corridor-half-width` and `plaza-corridor-blocks` from the NPC settings for the world; the clearance from `navigation.walk.wall-clearance`. Alternative: new player keys; § 8.7 names the NPC key as shared.
+    7. *The preview for a named node.* Chosen: every pair of the roads at the node, 40 blocks of each, followed through split nodes, so the developer sees all turns without navigating. Alternative: only the player's route; that needs a route per turn.
+    8. *Snapshots for Cinix.* Chosen: two windows trimmed from the full evidence zips of 2026-11-17 (quarry-to-keep's square, node 39, radius 8; Northern Gate Square, node 37, radius 12). Brink is in the committed stair-house snapshot (node 6). Which plaza "Cinix" means is asked on #712. Alternative: no Cinix scenario; the prompt asks for both where a snapshot exists.
+    9. *The scenarios' live check.* Chosen: over walkable floor between the line's end floors (±1) and at least 0.35 from a wall, post or drop; on the road's own cells, the road graph's floor. At (1384 -580) on Northern Gate Square the graph names floor 43, a stair block the walk rule does not call a floor, and the corridor seeds it as the NPC side does. Alternative: L3's helper as it is; it judged that stair as a 2-block wall.
+    10. *Build aid.* Chosen: `--max-workers=1`, because parallel downloads through the proxy got random 404s from Maven Central. A scratchpad init script with Google's mirror (L1, L3) was refused by the session's permission check. Not committed.
+6. **Out of scope, noted.**
+    1. Step 1 found that the road graph can name a floor the walk rule does not stand on (a stair at Northern Gate Square, decision 5.9). It affects the NPC corridor in the same way. Not filed: no behaviour shown wrong yet.
+    2. Docs follow-ups at merge: npc-navigation § 12.4 (the players' side uses the shape package), the player guide (step 2), the register.
+7. **Blockers.** None. Step 2 waits for the developer's view (O16).
+8. **At merge / what the developer must do.**
+    1. The coordinator merges knk-plugin#73 and #723 into `next` after CI is green (or holds them until step 2, as the coordinator decides).
+    2. Deploy: nothing required. Optional, for the pull:
+
+       ```yaml
+       navigation:
+         plaza-lines: false
+         plaza-pull: 0.35
+         plaza-guide-cost: 2
+       ```
+
+    3. View the lines (smoke test § 10.1): `/knk road plazaline Brink`, `"Northern Gate Square"`, `"Merchant's Square"`, the quarry-to-keep square. Answer the four questions on #712: which plaza "Cinix" is, the curve's clearance, the pull, and OK or what falls short.
+    4. Optionally comment `@codex review` on both PRs once the Codex limit resets.
+9. **Notes for later links.**
+    1. Step 2 (this link):
+        1. `PlazaCurve.Result.entryAlong` and `exitAlong` are horizontal distances along the polyline it was given. The trail must splice them into the drawn polyline while `NavigationSession.cursor()` keeps the route polyline's along (A25, L4's note 9.2).
+        2. Cache per (plaza, entry, exit) for the route's life (§ 8.6).
+    2. Local paper-boot: `knk scenario run <name>` per boot; three boots take about 3 minutes.
