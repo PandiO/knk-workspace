@@ -27,7 +27,7 @@ on `next` (Decided 2026-11-18, O01–O33, O08 superseded by O31); smoke guide
 
 | Link | Issue | Status | Branch heads | PR | CI | How started |
 |---|---|---|---|---|---|---|
-| L1 Region outlines | #735 | In review (PRs open, not merged) | `claude/overview-map-outlines`: knk-web-api `253a6ee`, knk-plugin `cf3a975a`, knk-workspace `e6e815dd` (from `next`) | [knk-web-api#45](https://github.com/PandiO/knk-web-api/pull/45), [knk-plugin#76](https://github.com/PandiO/knk-plugin/pull/76), [knk-workspace#749](https://github.com/PandiO/knk-workspace/pull/749) | API green; plugin build green, paper-boot running | create_session session_01R1w2UuqJyStWv2zia5FTQg (2026-11-18, decision 3) |
+| L1 Region outlines | #735 | In review (PRs open, not merged) | `claude/overview-map-outlines`: knk-web-api `253a6ee`, knk-plugin `cf3a975a`, knk-workspace `e6e815dd` (from `next`) | [knk-web-api#45](https://github.com/PandiO/knk-web-api/pull/45), [knk-plugin#76](https://github.com/PandiO/knk-plugin/pull/76), [knk-workspace#749](https://github.com/PandiO/knk-workspace/pull/749) | API green; plugin build and paper-boot green | create_session session_01R1w2UuqJyStWv2zia5FTQg (2026-11-18, decision 3) |
 | L2 Public map API | #736 | Not started (gate: L1 merged into `next`) | – | – | – | – |
 | L3 `/map` page | #737 | Not started (gate: L2 merged into `next`) | – | – | – | – |
 | L4 Live players backend | #738 | Not started (gate: L2 merged into `next`) | – | – | – | – |
@@ -100,7 +100,7 @@ _(Each link appends its block here when it finishes.)_
     2. knk-plugin: baseline on `next` knk-core 3138, knk-api-client 344 (2 skipped), knk-paper 2953 (18 skipped), 0
        failed; branch 3151 / 344 (2 skipped) / 2957 (18 skipped), 0 failed (+17: `MapReportingServiceTest` 10,
        `ManagedRegionRepairServiceTest` 3, `RegionOutlineAdapterTest` 4). CI on `cf3a975a`: build green; paper-boot
-       still running when this block was written (the link stays subscribed to the PR).
+       green (completed 2026-11-18 10:35 UTC).
     3. Known reds (also red on the base): none.
     4. Environment: Maven Central answered about 20 % of requests with 404 through this container's proxy, and Gradle
        caches the misses. Local plugin builds used the build's own repositories plus a scratchpad file repository of
