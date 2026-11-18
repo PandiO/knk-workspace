@@ -1,7 +1,7 @@
 # Off-road navigation and landmarks — smoke test
 
-**Status:** Draft from the design (2026-11-17); no steps run. Phase 4 (§ 5): 8 of 9 steps automated (2 in part); Phase 2 (§ 3): 13 of 14 steps automated (5 in part); Phase 5.1 (§ 6): 21 of 22 steps automated (6 in part); Phase 0 (§ 1): 1 of 9 steps automated; phase 1 (§ 2): 4 of 4 steps automated; phase 6.1 (§ 8): 6 of 8 steps automated (3 of them in part); phase 6.2 (§ 9): 11 of 11 steps automated (3 of them in part); phase 7 step 1 (§ 10.1): 4 of 7 steps automated (3 of them in part), viewed by the developer 2026-11-18; phase 7 step 2 (§ 10.2): 9 of 9 steps automated (3 of them in part); the other phases not yet automated (the links tag them).
-**Last updated:** 2026-11-18 (§ 5 phase 4 built by link L7, #707: nine steps, eight automated, two in part); 2026-11-18 (§ 3 phase 2 built by link L5, #705: fourteen steps, thirteen automated, five in part); 2026-11-18 (§ 10 phase 7: step 1 viewed by the developer, O33; § 10.2 step 2 built by link L10, #712: nine steps, all automated, three in part); 2026-11-18 (§ 6.3 phase 5.1 step B, link L8: the in-game steps); 2026-11-18 (§ 6 phase 5.1 updated to what link L8 step A built, #708: API and web steps, plugin steps marked step B); 2026-11-18 (§ 10 phase 7 split into step 1, built by link L10, #712: the staff preview and the developer's viewing steps on Cinix and Brink, and step 2, the trail, not built yet); 2026-11-18 (§ 9 phase 6.2 updated to what link L4 built, #711: eleven steps, all automated, three in part); 2026-11-17 (§ 8 phase 6.1 updated to what link L3 built, #710: eight steps, six automated); 2026-11-17 (§ 2 phase 1 updated to what link L2 built, #704: every step automated); 2026-11-17 (§ 1 phase 0 updated to what link L1 built, #703: the measurement steps and the `/knk road status` lines); 2026-11-17 (draft from the design, phases 0, 1, 2, 3, 4, 5.1, 5.2, 6.1, 6.2, 7)
+**Status:** Draft from the design (2026-11-17); no steps run. Phase 5.2 (§ 7): 7 of 8 steps automated (3 in part); Phase 4 (§ 5): 8 of 9 steps automated (2 in part); Phase 2 (§ 3): 13 of 14 steps automated (5 in part); Phase 5.1 (§ 6): 21 of 22 steps automated (6 in part); Phase 0 (§ 1): 1 of 9 steps automated; phase 1 (§ 2): 4 of 4 steps automated; phase 6.1 (§ 8): 6 of 8 steps automated (3 of them in part); phase 6.2 (§ 9): 11 of 11 steps automated (3 of them in part); phase 7 step 1 (§ 10.1): 4 of 7 steps automated (3 of them in part), viewed by the developer 2026-11-18; phase 7 step 2 (§ 10.2): 9 of 9 steps automated (3 of them in part); the other phases not yet automated (the links tag them).
+**Last updated:** 2026-11-18 (§ 7 phase 5.2 built by link L9, #709: eight steps, seven automated, three in part); 2026-11-18 (§ 5 phase 4 built by link L7, #707: nine steps, eight automated, two in part); 2026-11-18 (§ 3 phase 2 built by link L5, #705: fourteen steps, thirteen automated, five in part); 2026-11-18 (§ 10 phase 7: step 1 viewed by the developer, O33; § 10.2 step 2 built by link L10, #712: nine steps, all automated, three in part); 2026-11-18 (§ 6.3 phase 5.1 step B, link L8: the in-game steps); 2026-11-18 (§ 6 phase 5.1 updated to what link L8 step A built, #708: API and web steps, plugin steps marked step B); 2026-11-18 (§ 10 phase 7 split into step 1, built by link L10, #712: the staff preview and the developer's viewing steps on Cinix and Brink, and step 2, the trail, not built yet); 2026-11-18 (§ 9 phase 6.2 updated to what link L4 built, #711: eleven steps, all automated, three in part); 2026-11-17 (§ 8 phase 6.1 updated to what link L3 built, #710: eight steps, six automated); 2026-11-17 (§ 2 phase 1 updated to what link L2 built, #704: every step automated); 2026-11-17 (§ 1 phase 0 updated to what link L1 built, #703: the measurement steps and the `/knk road status` lines); 2026-11-17 (draft from the design, phases 0, 1, 2, 3, 4, 5.1, 5.2, 6.1, 6.2, 7)
 **Design:** [specs/navigation-offroad/DESIGN.md](../specs/navigation-offroad/DESIGN.md) · **Issue:**
 [PandiO/knk-workspace#698](https://github.com/PandiO/knk-workspace/issues/698)
 
@@ -483,22 +483,75 @@ About 20 min.*
 
 ## 7. Phase 5.2: landmark preference weights (#709, tier:2)
 
-*Draft from the design (2026-11-17); the link updates it to what was built and tags the automated steps.*
+*Built 2026-11-18 (link L9, knk-plugin `claude/offroad-landmark-weights`), behind `navigation.landmarks` (off by
+default). In the `preferred` route mode (the default) a landmark with an extent (a region or a radius) and a
+`Preference` other than 1.0 multiplies the walk cost of every cell inside it: above 1.0 the walk search avoids the
+area, below 1.0 it prefers it. `shortest` and `efficient` ignore the weights. Overlapping landmarks multiply, capped at
+`navigation.preference-max` (default 4.0, and at its inverse 0.25 the other way). The weights apply to walk legs (the
+walk from the player to the road, from the road to the destination, and direct mode); a cached walk link keeps the path
+its search found without them (L7's rule). Landmarks standing on a road node (within 4 blocks across and 3 up or down)
+also make that node a walk-link end (`navigation.walk-links`). NPC movement never uses the weights. 7 of 8 steps
+automated (3 of them in part); the developer's live test is steps 1 to 3 in the keep (about 15 minutes).*
 
 ### 7.0 Preconditions
 
-1. Deployed: plugin build from `next` with phases 4 and 5.2.
-2. Settings: `navigation.landmarks: true`.
-3. Accounts and data: a player account; two corridors of the keep that lead to the same place, the shorter one
-   covered by a landmark with a region and `Preference` 2.0.
+1. Deployed: plugin build from `next` with phases 4, 5.1 and 5.2 (knk-plugin PR for #709 merged); the API and web app
+   with phase 5.1 (#708). Add to the plugin's `config.yml` under `navigation:` the key `preference-max: 4.0` (see the
+   PR's Admin steps) and restart.
+2. Settings: `navigation.landmarks: true` and `navigation.destination-engine: true`; `navigation.walk.enabled: true`
+   (the shipped default).
+3. Accounts and data:
+    1. Player A: a player account (no mode node needed for steps 1 and 3; `knk.navigate.mode.shortest` for step 2).
+    2. Staff A: an account with `knk.admin.world.landmark` and `knk.admin.content` (to edit a landmark in the web app).
+    3. Two corridors of the keep that lead to the same place within about 40 blocks (a walk leg, not a road), the
+       shorter one covered by a WorldGuard region (for example `keep_east_corridor`), and a destination at their far
+       end (a landmark without an extent, "Keep library", or any point destination).
+    4. As staff A: `/knk landmark create East corridor region keep_east_corridor`, then in the web app set its
+       `Preference` to 2.0 and save; wait a minute or run `/knk cache refresh` (the navigation model refresh).
 
 ### 7.1 Steps
 
-1. As the player, `/navigate <place>`. **Expected:** the trail takes the longer corridor (the weighted one is avoided
-   in `preferred`). (A10)
-2. `/navigate <place> shortest`. **Expected:** the trail takes the shorter, weighted corridor. (A10)
-3. As staff, set the landmark's `Preference` back to 1.0 and navigate again. **Expected:** the shorter corridor.
-   (A10)
+1. As player A, stand at the near end of the two corridors and run `/navigate Keep library`. **Expected:** the walk
+   trail takes the longer corridor: the weighted one is avoided in `preferred`, the default mode. (A10)
+   [automated in part: knk-core `WalkPreferenceWeightsTest.anAreaWithAPreferenceOfTwoIsWalkedAround`; knk-paper
+   `NavigationServiceLandmarkWeightsTest.inPreferredTheGardenWeightsTheWalkCells`; the keep is manual]
+2. `/navigate Keep library shortest` (player A needs `knk.navigate.mode.shortest`). **Expected:** the trail takes the
+   shorter, weighted corridor: `shortest` ignores the weight. `/navigate Keep library efficient` does the same. (A10)
+   [automated in part: knk-paper `NavigationServiceLandmarkWeightsTest.shortestAndEfficientIgnoreTheWeights`,
+   `forModeAddsTheWeightsInPreferredOnly`; the keep is manual]
+3. As staff A, set the landmark's `Preference` back to 1.0 in the web app, wait a minute (or `/knk cache refresh`), and
+   as player A navigate again with no mode word. **Expected:** the shorter corridor again: a weight of 1.0 is no
+   weight. (A10) [automated in part: knk-core `LandmarkWeightsTest.onlyLandmarksWithAnExtentAndAWeightInTheWorldBecomeAreas`,
+   `WalkPreferenceWeightsTest.noWeightsIsTheSearchAsBefore`; the refresh and the keep are manual]
+4. Two overlapping landmarks of `Preference` 3.0 each cover one hall. **Expected:** a cell in both costs 4 times its
+   move (3 × 3 = 9, capped at `preference-max` 4.0); with `preference-max: 10` and a restart it costs 9 times. Two of
+   0.25 cost 0.25 times, not 0.0625. [automated: knk-core
+   `LandmarkWeightsTest.overlappingAreasMultiplyCappedByPreferenceMaxBothWays`,
+   `WalkPreferenceWeightsTest.aCellInsideCostsItsMoveTimesThePreference`; knk-paper
+   `LandmarksConfigTest.preferenceMaxIsReadAndABadValueIsTheDefault`]
+5. A landmark with `Preference` 0.5 on a side lane. **Expected:** the walk trail is drawn through the lane where it is
+   not much longer, and the path found is still the cheapest one (the heuristic stays admissible). (DESIGN § 5.4.4)
+   [automated: knk-core `WalkPreferenceWeightsTest.anAreaWithAPreferenceBelowOneDrawsThePathIn`,
+   `WalkPreferenceWeightsTest.theHeuristicStaysAdmissibleTheFoundCostIsTheOptimum`,
+   `LandmarkWeightsTest.theHeuristicScaleIsTheSmallestMultiplierInForce`]
+6. Set `navigation.landmarks: false` and restart; navigate as in step 1. **Expected:** the shorter corridor, exactly
+   today's walk; no landmark is read for the walk. With the flag on, a world or leg without weighted landmarks is
+   also today's. (A11, chain rule) [automated: knk-paper
+   `NavigationServiceLandmarkWeightsTest.withLandmarksOffTheWalkIsTodays`,
+   `aLandmarkFarFromTheLegOrNoneGivesNoWeights`, `aFailingLookupMeansNoWeightsNotNoWalk`; knk-core
+   `WalkLegDefaultTranscriptTest.theDefaultModeIsTodaysWalkLegs`, `WalkPreferenceWeightsTest.noWeightsIsTheSearchAsBefore`]
+7. Restart the server after step 1's setup (the model comes from its snapshot `offline/navigation-model.json`).
+   **Expected:** the weight still applies before the API answers; a snapshot written before phase 5.2 loads every
+   landmark with no weight. [automated: knk-core `NavigationModelSnapshotTest.aLandmarksPreferenceSurvivesTheRoundTrip`,
+   `aSchemaOneFileWrittenBeforePhaseFiveTwoReadsTheMissingPreferenceAsOne`]
+8. With `navigation.walk-links: true`, a landmark pinned on a road node at one side of the courtyard (§ 3) where that
+   node is a tile boundary. **Expected:** the node becomes a walk-link end like a junction (`/knk road status` counts a
+   link search across the courtyard). No stored landmark-to-landmark links exist in v1 (O05); landmark nodes in the
+   hierarchical search's clusters come with phase 3 (#706). [automated: knk-core
+   `WalkLinkLandmarkNodesTest.aLandmarkOnTheBoundaryMakesItALinkEndWithInferredConnections`,
+   `aBlockedStoredLinkRemovesThePair`, `LandmarkLinkNodesTest`; knk-paper
+   `NavigationServiceLandmarkWeightsTest.landmarkNodesReachTheWalkLinkCandidates`, `ModelLandmarksTest`; manual: none
+   needed beyond § 3]
 
 ## 8. Phase 6.1: walk-trail corners (#710, tier:3)
 
