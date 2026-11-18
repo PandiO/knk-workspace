@@ -1,7 +1,7 @@
 # Overview map — BlueMap in the web app for players, staff and moderation
 
 **Status:** **Decided 2026-11-18** (developer). Proposed the same day; no open questions.
-**Last updated:** 2026-11-18 (phase 3, #737, built on `claude/overview-map-page` in knk-web-app and knk-workspace, in review; as built in § 6.3.5, deploy notes in the closed-alpha runbook Phase 10); 2026-11-18 (phase 2, #736, built on `claude/overview-map-public-api` in knk-web-api, in review; as built in § 6.2.8); 2026-11-18 (phase 1, #735, built on `claude/overview-map-outlines` in knk-plugin and knk-web-api, in review, not in `next` yet; stored shape in § 6.1.1); 2026-11-18 (§ 3.1.10: existing NAS render container, migration to the alpha stack; Decided; phases filed as #735–#743; first version from the working draft of 2026-11-17 and the design session of 2026-11-18)
+**Last updated:** 2026-11-18 (phase 5, #740, built on `claude/overview-map-staff-details` in knk-web-app and knk-workspace, in review; as built in § 6.3.3); 2026-11-18 (phase 3, #737, built on `claude/overview-map-page` in knk-web-app and knk-workspace, in review; as built in § 6.3.5, deploy notes in the closed-alpha runbook Phase 10); 2026-11-18 (phase 2, #736, built on `claude/overview-map-public-api` in knk-web-api, in review; as built in § 6.2.8); 2026-11-18 (phase 1, #735, built on `claude/overview-map-outlines` in knk-plugin and knk-web-api, in review, not in `next` yet; stored shape in § 6.1.1); 2026-11-18 (§ 3.1.10: existing NAS render container, migration to the alpha stack; Decided; phases filed as #735–#743; first version from the working draft of 2026-11-17 and the design session of 2026-11-18)
 **Issue:** [PandiO/knk-workspace#732](https://github.com/PandiO/knk-workspace/issues/732); phases as sub-issues in § 11.
 **Dependencies:** the offline BlueMap tile pipeline ([BLUEMAP_EVALUATION.md](BLUEMAP_EVALUATION.md) § 5–7); the SignalR
 game hub (#66, built); managed WorldGuard regions (`docs/architecture/managed-worldguard-regions.md`, built); gate
@@ -263,6 +263,15 @@ Related: [DESIGN.md](DESIGN.md) (in-game maps, M2–M5), [DECISION-map-data-sour
        `webapp.conf` `scripts` (deploy note).
     3. Compact display mode: a `compact` prop on the display renderer (no header, collapsed collections, links
        instead of actions) used by `MapPanel`.
+       **As built (#740):** `DisplayWizard` `compact` (passed on to `DisplaySection` and `CollectionSection`; default
+       false, the detail page unchanged): no header, every collection a collapsed `<details>` with its name and count,
+       values read-only with links to related records, no buttons, hot edit or pickers, and no checks of the nodes of
+       those actions. `components/map/staffDetailsRegistrations.tsx` adds a staff widget `staff-details` under
+       `knk.admin.world` to town, district and structure (`addWidget`); it renders "Details" with "Open full page" to
+       `/display/<type>/<id>?returnTo=/map`, where the type is `Town`, `District`, `Structure` or, for a gate,
+       `GateStructure`. The widget (`widgets/StaffDetailsWidget.tsx`) is a lazily loaded chunk, mounted only once the
+       viewer's node check says allowed, so anonymous viewers and viewers without the node load neither the renderer
+       nor a display configuration (A17, e2e `overview-map-staff-details.spec.ts`).
     4. Playwright specs with the mocked API: pins, panel, toggle, anonymous player list, staff panel, gate buttons,
        moderation panel. The iframe side is mocked by a fake bridge.
     5. **As built (#737):** `pages/map/MapPage.tsx`; `components/map/` with `BlueMapFrame`, `bridgeProtocol.ts`

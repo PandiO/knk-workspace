@@ -1,7 +1,7 @@
 # Overview map — smoke test
 
-**Status:** Draft from the design (2026-11-18); no steps run. § 1 updated to what L1 built (7 steps, all partly automated, tagged), § 2 to what L2 built (7 steps: 2 automated, 5 partly automated, tagged), § 3 to what L3 built (11 steps: 1 automated, 9 partly automated, 1 manual only, tagged); the other sections are not automated yet (the links tag them).
-**Last updated:** 2026-11-18 (§ 3 to what L3 built, #737); 2026-11-18 (§ 2 to what L2 built, #736); 2026-11-18 (§ 1 to what L1 built, #735); 2026-11-18 (draft from the design, phases 1, 2, 3, 4a, 4b, 5, 6a, 6b, 7)
+**Status:** Draft from the design (2026-11-18); no steps run. § 1 updated to what L1 built (7 steps, all partly automated, tagged), § 2 to what L2 built (7 steps: 2 automated, 5 partly automated, tagged), § 3 to what L3 built (11 steps: 1 automated, 9 partly automated, 1 manual only, tagged); § 6 to what L6 built (7 steps: 2 automated, 5 partly automated, tagged); the other sections are not automated yet (the links tag them).
+**Last updated:** 2026-11-18 (§ 6 to what L6 built, #740); 2026-11-18 (§ 3 to what L3 built, #737); 2026-11-18 (§ 2 to what L2 built, #736); 2026-11-18 (§ 1 to what L1 built, #735); 2026-11-18 (draft from the design, phases 1, 2, 3, 4a, 4b, 5, 6a, 6b, 7)
 **Design:** [specs/in-game-maps/OVERVIEW_MAP_DESIGN.md](../specs/in-game-maps/OVERVIEW_MAP_DESIGN.md) · **Issue:**
 [PandiO/knk-workspace#732](https://github.com/PandiO/knk-workspace/issues/732)
 
@@ -275,18 +275,61 @@ Tests named below: knk-web-app `e2e/overview-map.spec.ts` (Playwright, "e2e") an
 
 ## 6. Phase 5: staff details (#740, tier:2)
 
-*Draft from the design (2026-11-18); the link updates it to what was built and tags the automated steps.*
+*Built by link L6 (knk-web-app branch `claude/overview-map-staff-details`, docs on knk-workspace
+`claude/overview-map-staff-details`; PRs into `next`). 7 steps: 2 automated, 5 partly automated (tagged); every step
+can still be run by hand. The suites run the map page against a mocked API and a fake BlueMap web app (as § 3); real
+display configurations, a real render and a real phone are checked by hand. No flag: the section follows the node
+`knk.admin.world`. The live run waits for § 3 (the NAS render). Not run yet. Full manual run about 10 minutes; the
+untagged parts about 5.*
+
+Tests named below: knk-web-app `e2e/overview-map-staff-details.spec.ts` (Playwright, "e2e") and the Jest suites
+`src/components/map/__tests__/staffDetails.test.tsx` ("Jest `staffDetails`") and
+`src/components/DisplayWizard/__tests__/DisplayWizard.compact.test.tsx` ("Jest `DisplayWizard.compact`").
 
 ### 6.0 Preconditions
 
-1. Deployed: phase 3, the web app from `next`. Structures have a default display configuration.
+1. Deployed: phase 3 as in § 3.0 (the map on: `Map__Enabled=true`), the web app from `next`.
+2. Data: the test data above. The types have a default display configuration: `Structure` and `GateStructure` are
+   seeded by the API; for `Town` and `District` create one in the display builder if you want to check step 3 fully.
+3. Accounts: **world staff** (`knk.admin.world` only), the **player**, and **anonymous**.
 
 ### 6.1 Steps
 
-1. As **world staff**, click a structure. **Expected:** a "Details" section under the public part shows the display
-   configuration in compact form, with "Open full page" leading to `/display/Structure/<id>`. (A17)
-2. As the **player** account, click the same structure. **Expected:** no "Details" section. The browser's network tab
-   shows no display-configuration request. (A17)
+1. [partly automated: e2e `a structure shows "Details" in compact form under the public part, with "Open full page"
+   (A17)`, Jest `staffDetails` "shows "Details" under the public part for a viewer with knk.admin.world (A17)"; by
+   hand: a real display configuration] As **world staff**, open `/map` and click the structure that is not a gate.
+   **Expected:** the panel shows the public part as before (name, type, district, town, address, description) and
+   under it a "Details" section with "Open full page". The section shows the type's default display configuration in
+   compact form: no heading with the configuration's name or description, small read-only sections with their
+   values. "Open full page" opens `/display/Structure/<id>`; its Back button returns to `/map`. (A17)
+2. [partly automated: e2e `details are read-only: links instead of buttons, no hot edit`, `collections are collapsed
+   and open on a click, their items as links`, Jest `DisplayWizard.compact`; by hand: the real configuration's
+   sections] In the same "Details" section. **Expected:** no buttons at all (no Edit, Select, Unlink, Add, Delete,
+   Create New, no pencil on a field). A related record (for example the district) is a link to its detail page.
+   Every list (collection) is collapsed under its name with the number of items; clicking the name opens it and shows
+   the items, each as a link to its own detail page.
+3. [partly automated: Jest `staffDetails` "uses the gate's own type for a gate, and Town / District for those panels";
+   by hand: the real pages] Click the gate structure, then the town, then a district. **Expected:** the gate's
+   "Details" shows the gate display configuration (`GateStructure`) and "Open full page" opens
+   `/display/GateStructure/<id>`; the town's and the district's open `/display/Town/<id>` and `/display/District/<id>`.
+   A type without a default display configuration shows a one-line message in the section instead of the details;
+   the public part stays.
+4. [automated: e2e `a logged-in player without knk.admin.world sees no "Details" and no display configuration is
+   requested (A17)`, Jest `staffDetails` "mounts nothing for a viewer whose node is denied (A17)"] As the **player**,
+   open the browser's developer tools (Network), open `/map` and click the same structure. **Expected:** the public
+   panel only, no "Details" section. The network list has no request to `api/DisplayConfigurations/...` and none to
+   `api/Structures/...`. (A17)
+5. [automated: e2e `an anonymous viewer sees no "Details", and no permission or display configuration request is made
+   (A17)`, Jest `staffDetails` "mounts nothing for a viewer whose node is unauthenticated (A17)"] As **anonymous**,
+   repeat step 4. **Expected:** no "Details" section; no request to `api/Users/.../permissions/check`, to
+   `api/DisplayConfigurations/...` or to `api/Structures/...`. (A17)
+6. [partly automated: e2e `on a phone the details fit the bottom sheet without sideways scrolling`; by hand: a real
+   phone] As **world staff** on a phone, repeat step 1. **Expected:** the "Details" section is inside the bottom sheet,
+   which scrolls vertically; nothing scrolls sideways; the × closes the panel.
+7. [partly automated: Jest `DisplayWizard.compact` "the full page keeps its header and buttons (default mode
+   unchanged)", the existing detail page suites (e2e `entity-detail.spec.ts`, `town-detail.spec.ts`); by hand: a look]
+   As **world staff**, open a structure's detail page from the dashboard. **Expected:** unchanged: the page header with
+   the name, Edit and Delete, the sections with their buttons and the pencil on editable fields, lists not collapsed.
 
 ## 7. Phase 6a: gate commands backend (#741, tier:3)
 
