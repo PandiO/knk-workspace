@@ -4,6 +4,27 @@ This is a human-readable record of capabilities merged into the V3 default branc
 
 ## Unreleased — on feature branches, not merged
 
+- **Off-road navigation: plaza lines, step 1 (preview for staff)** ([PandiO/knk-workspace#712](https://github.com/PandiO/knk-workspace/issues/712),
+  link L10 of the off-road navigation chain, phase 7 step 1). knk-plugin and knk-workspace branches
+  `claude/offroad-plaza-lines` (PRs into `next`). The trail does not use plaza lines yet: the developer looks at them
+  on Cinix and Brink first (O16). New flag `navigation.plaza-lines`, off by default and read by nothing yet; routes,
+  trails, the session and NPC movement are unchanged. No migration.
+  1. knk-core `core/navigation/shape/PlazaCurve`: where a route enters a plaza on one road and leaves on another, a
+     cubic curve from the entry to the exit pulled towards the plaza node (`plaza-pull` 0.35, O30), checked every 0.5
+     block on the plaza's clearance map, regions and floor; when it does not fit, `PlazaLine`'s A* guided by the curve
+     (`plaza-guide-cost` 2; a new additive `PlazaLine.search` overload, the plain search unchanged); plazas only, by the
+     NPC rule (O19). `core/navigation/PlazaLinePreviews`: the passes through a named node (every pair of its roads) or
+     along a route, and the chat line.
+  2. `/knk road plazaline [<plaza or junction>]` (`knk.admin.road`): draws the lines of your route's junctions, or of
+     every pair of roads at a named node, for 10 seconds (green curve, orange A* line, red rejected curve, white the
+     road graph's bend, light blue the plaza's edge) and writes each one's length against the chord and the right
+     angle, its least clearance and why a curve did not fit.
+  3. Three paper-boot scenarios on real plazas from the developer's snapshots: `plaza-line-brink`,
+     `plaza-line-cinix-south-square`, `plaza-line-cinix-northern-gate-square` (two new trimmed snapshots of 175 KB
+     each).
+  4. Admin steps (optional, for the preview's pull): under `navigation:` add `plaza-lines: false`, `plaza-pull: 0.35`,
+     `plaza-guide-cost: 2`; restart.
+
 - **Off-road navigation: walk-trail particles stay put, and the guidance winds back** ([PandiO/knk-workspace#711](https://github.com/PandiO/knk-workspace/issues/711),
   link L4 of the off-road navigation chain, phase 6.2). knk-plugin and knk-workspace branches
   `claude/offroad-trail-cursor` (PRs into `next`). Behind `navigation.guidance-v2`, off by default: with it off the
