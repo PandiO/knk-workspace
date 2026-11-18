@@ -1,7 +1,7 @@
 # Overview map — smoke test
 
-**Status:** Draft from the design (2026-11-18); no steps run. § 1 updated to what L1 built (7 steps, all partly automated, tagged), § 2 to what L2 built (7 steps: 2 automated, 5 partly automated, tagged), § 3 to what L3 built (11 steps: 1 automated, 9 partly automated, 1 manual only, tagged), § 4 to what L4 built (9 steps: 1 automated, 5 partly automated, 3 manual visibility steps), § 5 to what L5 built (8 steps: 1 automated, 7 partly automated, tagged), § 6 to what L6 built (7 steps: 2 automated, 5 partly automated, tagged); the other sections are not automated yet (the links tag them).
-**Last updated:** 2026-11-18 (§ 5 to what L5 built, #739); 2026-11-18 (§ 6 to what L6 built, #740); 2026-11-18 (§ 4 to what L4 built, #738); 2026-11-18 (§ 3 to what L3 built, #737); 2026-11-18 (§ 2 to what L2 built, #736); 2026-11-18 (§ 1 to what L1 built, #735); 2026-11-18 (draft from the design, phases 1, 2, 3, 4a, 4b, 5, 6a, 6b, 7)
+**Status:** Draft from the design (2026-11-18); no steps run. § 1 updated to what L1 built (7 steps, all partly automated, tagged), § 2 to what L2 built (7 steps: 2 automated, 5 partly automated, tagged), § 3 to what L3 built (11 steps: 1 automated, 9 partly automated, 1 manual only, tagged), § 4 to what L4 built (9 steps: 1 automated, 5 partly automated, 3 manual visibility steps), § 5 to what L5 built (8 steps: 1 automated, 7 partly automated, tagged), § 6 to what L6 built (7 steps: 2 automated, 5 partly automated, tagged), § 7 to what L7 built (10 steps: 4 automated, 6 partly automated), § 8 to what L8 built (9 steps: 3 automated, 6 partly automated); the other sections are not automated yet (the links tag them).
+**Last updated:** 2026-11-18 (§ 5 to what L5 built, #739); 2026-11-18 (§ 8 to what L8 built, #742); 2026-11-18 (§ 7 to what L7 built, #741); 2026-11-18 (§ 6 to what L6 built, #740); 2026-11-18 (§ 4 to what L4 built, #738); 2026-11-18 (§ 3 to what L3 built, #737); 2026-11-18 (§ 2 to what L2 built, #736); 2026-11-18 (§ 1 to what L1 built, #735); 2026-11-18 (draft from the design, phases 1, 2, 3, 4a, 4b, 5, 6a, 6b, 7)
 **Design:** [specs/in-game-maps/OVERVIEW_MAP_DESIGN.md](../specs/in-game-maps/OVERVIEW_MAP_DESIGN.md) · **Issue:**
 [PandiO/knk-workspace#732](https://github.com/PandiO/knk-workspace/issues/732)
 
@@ -437,47 +437,152 @@ Tests named below: knk-web-app `e2e/overview-map-staff-details.spec.ts` (Playwri
 
 ## 7. Phase 6a: gate commands backend (#741, tier:3)
 
-*Draft from the design (2026-11-18); the link updates it to what was built and tags the automated steps.*
+*Built by link L7 (knk-web-api and knk-plugin branches `claude/overview-map-gate-commands`, PRs into `next`). 10 steps:
+4 automated, 6 partly automated (tagged); the by-hand parts need a real Paper server with the gate in the world, a
+real siege match and a real audit log. The suites cover the access rule, every refusal, the timeout, the audit entry,
+the hub round trip and the plugin handler with the real gate manager. Not run yet. Full manual run about 30 minutes;
+without the automated steps about 20.*
+
+Tests named below: knk-web-api `Tests/knkwebapi_v2.Tests` `Services/Map/GateCommandServiceTests`,
+`Api/GateCommandsPipelineTests`, `Security/EndpointAccessRulesTests`, `Realtime/RealtimeHubTests`; knk-plugin
+`knk-core/.../core/gates/command/GateCommandHandlerTest`, `knk-api-client/.../api/realtime/GateCommandEventsTest` and
+`knk-paper/.../paper/realtime/GateCommandRealtimeSyncTest`.
 
 ### 7.0 Preconditions
 
-1. Deployed: phase 2, the API and plugin from `next`, with the game server connected.
-2. Settings: `Map:GateCommands:Enabled=true`.
-3. Accounts: **gate admin**, **world staff**. The test gate's doors start closed. Stand next to the gate in game.
+1. Deployed: the API and the plugin from `next`, with the game server connected to the game hub
+   (`realtime.enabled: true`; the API log shows `Game server <id> connected to the realtime hub`). No plugin setting:
+   the plugin answers every command it receives.
+2. Settings: API (`/etc/knk/api.env`, production installation guide § 4.3; restart the API after a change):
+   `Map__GateCommands__Enabled=true`. Leave `Map__GateCommands__TimeoutSeconds=5` at its default. `Map__Enabled` is not
+   needed for this endpoint (it is for the panel in § 8).
+3. Accounts: **gate admin** (holds `knk.gate.admin`), **world staff** (holds `knk.admin.world` only), and an account
+   with `knk.admin.user.manage` to read the audit log. The test gate (id `<gate>`) has two doors (`<door 1>`,
+   `<door 2>`, from `GET api/GateStructures/<gate>/doors`), both closed and active. A door of another gate:
+   `<foreign door>`. Stand next to the gate in game.
+4. Calls: `curl -s -X POST https://<host>/api/GateStructures/<gate>/commands -H "Authorization: Bearer <token>"
+   -H "Content-Type: application/json" -d '{"action":"open","doorId":<door 1>}' -w "\n%{http_code}\n"` (the access
+   token the web app sends; copy it from the browser's network tab). Leave `doorId` out for the whole gate.
 
 ### 7.1 Steps
 
-1. As **gate admin**, call `POST api/GateStructures/{id}/commands` `{action: "open", doorId: <door 1>}`.
-   **Expected:** 200 with the result "done". Door 1 opens in game with its normal animation, and its stored state is
-   open. (A18)
-2. Repeat with `close`, `toggle`, and `open` without `doorId`. **Expected:** each acts as named, and the last one opens
-   every door. (A18)
-3. Damage door 1 in game, then send `repair`. **Expected:** health is back to full and the door is no longer destroyed.
-   (A18)
-4. Send a command as **world staff**. **Expected:** 403, and nothing changes. (A19)
-5. Start a siege match on the gate and send `open` as **gate admin**. **Expected:** 409 "Gate is in a running
-   siege", and nothing changes. (A19)
-6. Stop the game server and send `open`. **Expected:** 503. (A19)
-7. Send a `doorId` of another gate. **Expected:** 400. (A19)
-8. Read the audit log. **Expected:** one entry per command with the user, the action, the door and the result. (A19)
-9. With `Map:GateCommands:Enabled=false`, send a command. **Expected:** the endpoint refuses, and nothing changes.
-   (flag)
+1. [partly automated: `GateCommandServiceTests.ACommand_IsPublishedToTheGameServers_AndTheResultAnswers`,
+   `RealtimeHubTests.GameHub_GateCommand_RoundTrip_TheResultAnswersTheEndpoint`,
+   `GateCommandHandlerTest.openOneDoor_StartsItsOpeningAnimation_OnlyThatDoor`,
+   `GateCommandRealtimeSyncTest.open_RunsOnTheMainThread_AnimatesTheDoor_AndAnswersDone`; by hand: the animation in a
+   real world] As **gate admin**, send `{"action":"open","doorId":<door 1>}`. **Expected:** 200 within a second with
+   `result: "done"`, a `message` like `Gate '<name>' open: <door 1 name> started.` and `doors[0]` with
+   `state: "opening"`, `outcome: "started"`. Door 1 opens in game with its normal animation; door 2 stays closed. The
+   plugin log shows `[KnK Gates] Web gate command open gate <gate> door <door 1> by <user>: done`. After the animation
+   `GET api/GateStructures/<gate>/doors` shows door 1 with `openedState` open (persisted when the animation ends). (A18)
+2. [partly automated: `GateCommandHandlerTest.close_StartsTheClosingAnimation`,
+   `toggle_OpensAClosedDoor_AndClosesAnOpenOne_SkipsAMovingOne`, `openWithoutADoor_OpensEveryDoorOfTheGate_NotOtherGates`,
+   `alreadyInTheAskedState_IsDone_AndNothingMoves`, `GateCommandServiceTests.WithoutADoor_TheCommandIsForTheWholeGate`;
+   by hand: real animations] Send `close` for door 1, then `toggle` for door 1 twice (wait for each animation), then
+   `open` without `doorId`. **Expected:** each answers 200 `done` and acts as named; the last one opens both doors
+   (`doors` lists both, door 1 `already` if it was open). A `toggle` sent while the door still moves answers `refused`
+   with the door's `reason: "moving"`. (A18)
+3. [partly automated: `GateCommandHandlerTest.repair_UsesTheSharedRepair_FullHealthNotDestroyed`,
+   `GateCommandRealtimeSyncTest.repair_PersistsHealthAndState_LikeGateRepair`; by hand: real damage] Damage door 1 in
+   game until it is destroyed (or `/gatedoor health <door 1> 0`), then send `{"action":"repair","doorId":<door 1>}`.
+   **Expected:** 200 `done`, `doors[0]` with `outcome: "repaired"`, `healthCurrent` = `healthMax`, `destroyed: false`;
+   in game the door is whole and its health display full; `GET api/GateStructures/<gate>/doors` shows the same. Before
+   the repair, `open` for the destroyed door answers 200 `refused` with `reason: "destroyed"`. (A18)
+4. [automated: `GateCommandsPipelineTests.WithoutKnkGateAdmin_Is403_EvenWithKnkAdminWorld_AndNothingRuns`,
+   `Anonymous_Is401_AndNothingRuns`, `EndpointAccessRulesTests.GateCommands_ArePinnedToKnkGateAdmin_WebOnly`] Send a
+   command as **world staff**, and once without a token. **Expected:** 403 `Requires the knk.gate.admin permission.`
+   and 401; nothing changes in game and no audit entry is written. (A19)
+5. [partly automated: `GateCommandServiceTests.DuringASiegeMatchOnTheGate_Is409_NothingSent_Audited`,
+   `ASiegeSeenByTheGameServer_Is409`, `GateCommandHandlerTest.underASiegeLockdown_IsRefusedAsSiege_AndNothingChanges`,
+   `GateCommandRealtimeSyncTest.underASiegeLockdown_AnswersSiege_AndTheDoorStays`; by hand: a real match] Start a siege
+   match whose scenario uses the gate and send `open` as **gate admin**. **Expected:** 409 with
+   `error: "GateInSiege"`, `message: "Gate is in a running siege."`; nothing changes in game. A command for another
+   gate still works. After the match ends (gates restored) the command works again. (A19)
+6. [automated: `GateCommandServiceTests.NoGameServer_Is503_NothingSent_Audited`] Stop the game server (or set
+   `realtime.enabled: false` and restart it) and send `open`. **Expected:** 503 `NoGameServerConnected`. (A19)
+7. [automated: `GateCommandServiceTests.ADoorOfAnotherGate_Is400_AndNothingIsSent`,
+   `GateCommandHandlerTest.aDoorOfAnotherGate_OrAnUnknownDoor_IsRefused_NothingMoves`] Send
+   `{"action":"open","doorId":<foreign door>}` to `<gate>`. **Expected:** 400 `DoorNotOfGate`; nothing moves. An
+   unknown action (`"explode"`) is 400 `ValidationFailed`. (A19)
+8. [partly automated: `GateCommandServiceTests.EveryCommand_IsAuditLogged_WithUserActionDoorAndResult`; by hand: the
+   real log] With the audit-log account, call `GET api/audit-log?subjectType=GateStructure&subjectId=<gate>` (or open
+   the audit log page). **Expected:** one `GateCommandSent` entry per command of steps 1–3, 5 and 6, newest first,
+   each with the gate admin as actor and details `commandId`, `action`, `doorId` (left out for the whole gate),
+   `result` (`done`, `refused`, `siege`, `no-game-server`), `message` and `gameServers`. Steps 4 and 7 wrote none.
+   (A19)
+9. [automated: `GateCommandServiceTests.NoResult_TimesOutWith504_AndALateResultIsIgnored`] (A game server that does not
+   answer within 5 s.) **Expected:** 504 with `result: "timeout"`; the audit entry says `timeout`; a late answer is
+   ignored. Not reproducible by hand without a stalled server; the suite covers it. (§ 5 rule 11)
+10. [automated: `GateCommandServiceTests.Off_Is404_SendsNothing_AuditsNothing`, `TheFlag_IsOffByDefault`,
+    `RealtimeHubTests.GameHub_GateCommandResult_IgnoredWhileOff`, `MapPublicServiceTests.Config_GateCommands_FollowsItsFlag`]
+    With `Map__GateCommands__Enabled=false` (or absent), send a command. **Expected:** 404 `GateCommandsOff`, nothing
+    changes in game, no audit entry; `GET api/Map/config` (with `Map__Enabled=true`) shows `gateCommands.enabled: false`,
+    and `true` once the flag is on. (O27)
 
 ## 8. Phase 6b: gate command buttons (#742, tier:2)
 
-*Draft from the design (2026-11-18); the link updates it to what was built and tags the automated steps.*
+*Built by link L8 (knk-web-app branch `claude/overview-map-gate-buttons`, docs on knk-workspace
+`claude/overview-map-gate-buttons`; PRs into `next`). 9 steps: 3 automated, 6 partly automated (tagged); every step
+can still be run by hand. The suites run the map page against a mocked API and a fake BlueMap web app (as § 3); the
+door animating in game, a real siege match and a real phone are checked by hand. Behind the API's
+`Map:GateCommands:Enabled` (§ 7.0), read by the page from `config.gateCommands.enabled`. Not run yet. Full manual run
+about 20 minutes; the untagged parts about 12.*
+
+Tests named below: knk-web-app `e2e/overview-map-gate-commands.spec.ts` (Playwright, "e2e") and the Jest suite
+`src/components/map/__tests__/gateCommands.test.tsx` ("Jest `gateCommands`").
 
 ### 8.0 Preconditions
 
-1. Deployed: phases 3 and 6a, the web app from `next`. Settings as § 7.0.
+1. Deployed: phase 3 as in § 3.0 (the map on: `Map__Enabled=true`) and phase 6a as in § 7.0 (the game server connected
+   to the game hub, `Map__GateCommands__Enabled=true`); the web app from `next`. Reload `/map` after changing a setting:
+   the page reads `api/Map/config` once per load.
+2. Data: the test gate with two doors, both closed and active; stand next to it in game.
+3. Accounts: **gate admin** (`knk.gate.admin` only), **world staff** (`knk.admin.world` only), the **player** and
+   **anonymous**.
 
 ### 8.1 Steps
 
-1. As **gate admin**, open `/map` and click the gate. **Expected:** Open, Close, Toggle and Repair per door and for the
-   whole gate. (A18)
-2. Click Open on door 1. **Expected:** the door opens in game, and the panel shows "open" after the result. (A18)
-3. Start a siege on the gate. **Expected:** the buttons are disabled with "Gate is in a running siege". (A18)
-4. As **world staff**, click the gate. **Expected:** no command buttons. (A18)
+1. [partly automated: e2e `sees Open, Close, Toggle and Repair for the whole gate and per door (A18)`, Jest
+   `gateCommands` "a knk.gate.admin holder sees Open, Close, Toggle and Repair for the whole gate and per door (A18)";
+   by hand: the real doors] As **gate admin**, open `/map` and click the gate. **Expected:** under the public "Doors"
+   part a "Gate commands" section with a "Whole gate" row and one row per door (name, state, "Destroyed" when it is),
+   each with Open, Close, Toggle and Repair, all enabled. No "Details" section (that needs `knk.admin.world`). (A18)
+2. [partly automated: e2e `opens a door: the command carries its doorId, the result shows and the panel shows the new
+   state (A18)`, Jest `gateCommands` "sends a door command with its doorId, shows the result and reads the panel and the
+   doors again"; by hand: the animation in game] Click Open on door 1. **Expected:** the door opens in game with its
+   normal animation. Under the buttons the result appears ("Done: ..." with the game server's message), and the
+   public "Doors" part and the door's row show the new state ("Opening", then "Open" after clicking the gate again).
+   (A18)
+3. [partly automated: e2e `closes, toggles and repairs; a whole-gate command has no doorId (A18)`, Jest `gateCommands`
+   "sends a whole-gate command without a doorId and shows a refusal with its reason"; by hand: the doors in game] Click
+   Close on door 1, then Toggle in the "Whole gate" row, then damage door 2 in game and click Repair on door 2.
+   **Expected:** each command shows its result; door 1 closes; Toggle moves both doors; door 2 is repaired and its
+   health bar is full after the panel re-reads. (A18)
+4. [partly automated: e2e `shows a refusal, "no game server" and a time-out as the API words them`, Jest `gateCommands`
+   "shows "no game server" and the time-out from the API"; by hand: a stopped game server] Stop the game server (or its
+   hub connection) and click Open on the whole gate. **Expected:** the result says no game server is connected; the
+   buttons work again for the next click. Start the server again. (§ 5 rule 11)
+5. [partly automated: e2e `during a siege match every button is disabled with "Gate is in a running siege"`,
+   `a 409 from the API (siege started meanwhile) disables the buttons too`, Jest `gateCommands` "disables every button
+   with "Gate is in a running siege" while the public panel says under siege"; by hand: a real match] Start a siege
+   match on the gate and click the gate again. **Expected:** the public part says "Under siege"; "Gate is in a running
+   siege" shows above the buttons and every button is greyed out with the same text as its tooltip. With the panel
+   already open when the match starts, the next click gives "Gate is in a running siege" and disables the buttons.
+   End the match and click the gate again: the buttons work. (A18)
+6. [automated: e2e `with Map:GateCommands:Enabled off there are no buttons and no door or command request`, Jest
+   `gateCommands` "is hidden without the node, for anonymous viewers, for a structure that is not a gate and with the
+   flag off"] Set `Map__GateCommands__Enabled=false`, restart the API and reload `/map` as **gate admin**; click the
+   gate. **Expected:** only the public "Doors" part; the Network tab has no request to `api/GateStructures/...`.
+   Turn the setting on again.
+7. [automated: e2e `a logged-in player without knk.gate.admin sees the doors but no buttons, and no door ids are
+   requested`] As **world staff**, then as the **player**, click the gate. **Expected:** no "Gate commands" section
+   (world staff sees "Details"); the Network tab has no request to `api/GateStructures/...`. (A18)
+8. [automated: e2e `an anonymous viewer sees the doors, no buttons, and no permission, door or command request is
+   made`] As **anonymous**, click the gate. **Expected:** the public "Doors" part only; no request to
+   `api/Users/.../permissions/check` or `api/GateStructures/...`.
+9. [partly automated: e2e `on a phone the buttons fit the bottom sheet without sideways scrolling`; by hand: a real
+   phone] As **gate admin** on a phone, repeat step 1. **Expected:** the buttons wrap inside the bottom sheet, which
+   scrolls vertically; nothing scrolls sideways.
 
 ## 9. Phase 7: player moderation panel (#743, tier:2)
 

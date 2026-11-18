@@ -19,6 +19,51 @@ This is a human-readable record of capabilities merged into the V3 default branc
      step 3); without it everyone has BlueMap's default head. Steps:
      [overview map smoke test § 5](guides/overview-map-smoke-test.md#5-phase-4b-live-players-layer-739-tier2).
 
+- **Overview map: gate command buttons in the map panel** ([PandiO/knk-workspace#742](https://github.com/PandiO/knk-workspace/issues/742),
+  link L8 of the overview map chain, [#732](https://github.com/PandiO/knk-workspace/issues/732)). knk-web-app and
+  knk-workspace branches `claude/overview-map-gate-buttons` (PRs into `next`). Behind the API setting
+  `Map:GateCommands:Enabled` (phase 6a, off by default: no buttons, no requests).
+  1. A web account holding `knk.gate.admin` sees "Gate commands" when clicking a gate on `/map`: Open, Close, Toggle
+     and Repair for the whole gate and for each door. The door moves in game; the panel shows the result (done, refused
+     with the reason, no game server, timed out) and then reads the gate again.
+  2. During a siege match on the gate the buttons are disabled with "Gate is in a running siege".
+  3. Everyone else sees the panel as before; anonymous viewers make no permission request, and nobody without the node
+     asks for door ids or sends commands.
+  4. Admin steps: none to keep it off. To turn it on, set `Map__GateCommands__Enabled=true` as in phase 6a and reload
+     `/map`. No migration, no plugin setting. Steps:
+     [overview map smoke test § 8](guides/overview-map-smoke-test.md#8-phase-6b-gate-command-buttons-742-tier2).
+
+- **Overview map: gate commands backend** ([PandiO/knk-workspace#741](https://github.com/PandiO/knk-workspace/issues/741),
+  link L7 of the overview map chain, [#732](https://github.com/PandiO/knk-workspace/issues/732)). knk-web-api,
+  knk-plugin and knk-workspace branches `claude/overview-map-gate-commands` (PRs into `next`). Behind the new API
+  setting `Map:GateCommands:Enabled` (off by default: the route answers 404 and nothing is sent). Nothing changes for
+  players yet: the map panel's gate buttons (phase 6b) call this.
+  1. New staff route `POST api/GateStructures/{id}/commands` with `{action: open|close|toggle|repair, doorId?}`, for
+     web staff holding `knk.gate.admin` only. The API sends the command to the game server over the game hub and waits
+     up to 5 s for its answer; the game server runs the existing gate operations, so the door animates as with
+     `/gate`, and repair works as `/gate repair`.
+  2. Refused while a siege match runs on the gate (409; the game server checks its siege lockdown too), without a
+     connected game server (503), for a door of another gate (400); no answer in time is 504. Every command is written
+     to the audit log (`GateCommandSent`, with the user, action, door and result).
+  3. `GET api/Map/config` now reports `gateCommands.enabled` from the setting.
+  4. Admin steps: none to keep it off. To turn it on, set `Map__GateCommands__Enabled=true` in the API's environment
+     file (`Map__GateCommands__TimeoutSeconds`, default 5). No plugin setting (the plugin answers what it receives,
+     with `realtime.enabled: true`). No migration. Steps:
+     [overview map smoke test § 7](guides/overview-map-smoke-test.md#7-phase-6a-gate-commands-backend-741-tier3),
+     [production installation § 4.3](guides/production-installation.md#43-api-configuration-file--etcknkapienv).
+
+- **Navigation destination engine, phase 1: the pure engine in knk-core** ([PandiO/knk-workspace#96](https://github.com/PandiO/knk-workspace/issues/96),
+  link L1 of the destination engine chain, [#25](https://github.com/PandiO/knk-workspace/issues/25)). knk-plugin and
+  knk-workspace branches `claude/navigation-destination-engine` (PRs into `next`). Nothing changes for players: the
+  engine is code and tests only and nothing in the plugin uses it yet (phase 3 switches to it behind a flag).
+  1. The engine decides which places a player may navigate to: exclusive scopes by priority (loading, frozen, staff
+     bypass, no permission, siege match, siege lobby, world), providers of candidates, name resolution and completion
+     inside the list, an engine-issued handle, and re-validation of a running session by key.
+  2. Each refusal carries a reason code and today's `/navigate` text, so the compass can keep its own wording; places
+     may carry an arrival radius, ready for the landmark provider of off-road navigation (#708).
+  3. Admin steps: none (no flag, no `config.yml` key, no migration). Steps:
+     [destination engine smoke test § 1](guides/navigation-destination-engine-smoke-test.md#1-phase-1-pure-engine-in-knk-core-96-tier2).
+
 - **Overview map: staff details in the map panel** ([PandiO/knk-workspace#740](https://github.com/PandiO/knk-workspace/issues/740),
   link L6 of the overview map chain, [#732](https://github.com/PandiO/knk-workspace/issues/732)). knk-web-app and
   knk-workspace branches `claude/overview-map-staff-details` (PRs into `next`). No flag: gated by the node
