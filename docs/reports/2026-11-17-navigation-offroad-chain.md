@@ -18,6 +18,10 @@ on `next` (Decided 2026-11-17).
    `max-chunks-per-request: 64` under `navigation.walk:`, run smoke guide § 1 (also on #703; long legs need
    `/forceload`) and fill `docs/reports/2026-11-17-offroad-navigation-measurements.md`. L5 waits for its budgets; if
    option A fits the keep, the coordinator asks you before L6 (O32).
+3. **L3 (#710) live test (tier:3):** L3 is in `next` (plugin `54dfe8d7`). Deploy with `navigation.guidance-v2: false`
+   and under `navigation.walk:` `clearance-cost: 5`, `wall-clearance: 0.8`, `curve: true`; then set
+   `guidance-v2: true`, restart and follow smoke test § 8 (manual steps 1, 3 and 6: the stair house, a keep corner and
+   a 1-wide door, `/knk road status` with the tick time). It can be combined with L4's test once L4 is in `next`.
 2. **Decision to confirm (from the NPC chain's comment on #698, 2026-11-17):** NPC use of the long walks (walk links
    and clusters, O32) moves from "after v1" into v1, as the phase after phase 3. It has no sub-issue or link in this
    chain yet; the spec's § 14 and § 15 need the change in a docs PR. Proposal: a design follow-up (sub-issue of #698)
@@ -29,8 +33,8 @@ on `next` (Decided 2026-11-17).
 |---|---|---|---|---|---|---|
 | L1 Phase 0 measurements | #703 | Merged into next (2026-11-17); waits for the developer's live measurements and the filled report | knk-plugin `claude/offroad-measurements` `71a43bc1`; knk-workspace `claude/offroad-measurements` `2337d3a4` | [knk-plugin#68](https://github.com/PandiO/knk-plugin/pull/68) → `next` `04506d8c`, [#717](https://github.com/PandiO/knk-workspace/pull/717) → `next` `a6240f5d` | green (build, paper-boot on `71a43bc1`) | create_session `session_01R1w2Uub8CZ7NuvatVUifP7` (2026-11-17) |
 | L2 Phase 1 shared shaping package | #704 | Merged into next (2026-11-17) | knk-plugin `claude/offroad-shape-package` `0d0cff84`; knk-workspace `claude/offroad-shape-package` `ef17bcc3` | [knk-plugin#69](https://github.com/PandiO/knk-plugin/pull/69) → `next` `c45c16bb`, [#718](https://github.com/PandiO/knk-workspace/pull/718) → `next` `d8ebd9f4` | green (build, paper-boot) | create_session `session_01R1w2UwTnENVNKzfaXudBUh` (2026-11-17) |
-| L3 Phase 6.1 trail corners | #710 | In review (2026-11-17): PRs open, not merged; waits for the developer's live test (tier:3) | knk-plugin `claude/offroad-trail-corners` `9dd3ee5f`; knk-workspace `claude/offroad-trail-corners` `daffbc1d` | [knk-plugin#70](https://github.com/PandiO/knk-plugin/pull/70), [#719](https://github.com/PandiO/knk-workspace/pull/719) | green (build, paper-boot on `9dd3ee5f`; paper-boot's first runs crossed midnight UTC and failed on the log rollover with all 51 scenarios passed, [#720](https://github.com/PandiO/knk-workspace/issues/720); re-runs green 2026-11-18) | create_session `session_01R1w2Uv9tRTPyjZsFJNWGec` (2026-11-17) |
-| L4 Phase 6.2 anchored particles, winding back | #711 | Not started (gate: L3 in `next`) | `claude/offroad-trail-cursor` | — | — | — |
+| L3 Phase 6.1 trail corners | #710 | Merged into next (2026-11-18); waits for the developer's live test (tier:3, smoke § 8) | knk-plugin `claude/offroad-trail-corners` `9dd3ee5f`; knk-workspace `claude/offroad-trail-corners` `daffbc1d` | [knk-plugin#70](https://github.com/PandiO/knk-plugin/pull/70) → `next` `54dfe8d7`, [#719](https://github.com/PandiO/knk-workspace/pull/719) → `next` `d07deabf` | green (build; paper-boot on re-run, #720) | create_session `session_01R1w2Uv9tRTPyjZsFJNWGec` (2026-11-17) |
+| L4 Phase 6.2 anchored particles, winding back | #711 | Running (started 2026-11-18 00:43 from plugin `next` `54dfe8d7`) | `claude/offroad-trail-cursor` | — | — | create_session `session_01R1w2UwkAiptAq4cPVFVBTS` (2026-11-18) |
 | L5 Phase 2 walk links | #705 | Not started (gate: L1 done, L4 in `next`) | `claude/offroad-walk-links` | — | — | — |
 | L6 Phase 3 hierarchical walk search | #706 | Not started (gate: L5 in `next`; O32 question first if L1 says option A fits) | `claude/offroad-hierarchical` | — | — | — |
 | L7 Phase 4 route modes | #707 | Not started (gate: L5 in `next`) | `claude/offroad-route-modes` | — | — | — |
@@ -94,6 +98,16 @@ on `next` (Decided 2026-11-17).
     public signatures of `WalkLegPreparer`, `WalkSearch`/`WalkPathfinder` and the shape classes stable (additions
     only), so both merges stay mechanical; told to L3. Alternatives: (a) pause L3 until C1 merges; rejected, the files
     are disjoint; (b) let L3 change signatures and fix C1 afterwards; rejected, it would break C1's compile.
+11. **L3 merged into `next` (2026-11-18 00:43).** § 6 checks held: heads matched, branch contained `next`, `build`
+    green, `paper-boot` green on re-run; the first runs crossed midnight UTC and failed only on the log rollover (all
+    51 scenarios passed), filed by L3 as #720. Accepted the re-run as proof, because the failure was in the log check,
+    not a test. Alternatives: (a) require a new commit; rejected, nothing to change; (b) fix #720 first; rejected, out
+    of scope and the re-run is the documented workaround. Flag off by default with identity tests (A16), no Codex
+    findings (usage limit), public signatures stable for C1. The NPC coordinator is told.
+12. **`trail-leg-spacing` default (L4).** DESIGN § 7.6 says 1.5, § 7.2.2 and decision O20 say 3.0 (found by L3).
+    Chosen: 3.0, because O20 is a recorded decision and § 7.2.2 states the rule; L4 corrects § 7.6 in its docs PR.
+    Alternative: ask the developer; rejected, the decision log already settles it and the value is a config key.
+13. **L4 started (2026-11-18 00:43).** Gate "L3 merged into `next`" checked (merge commit `54dfe8d7`).
 
 ## 4. Link blocks
 
