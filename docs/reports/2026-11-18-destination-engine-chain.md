@@ -24,7 +24,7 @@
 | L1 P1 pure engine in knk-core | #96 | Merged into next (2026-11-18) | `claude/navigation-destination-engine`: knk-plugin `64ca8815`, knk-workspace `7eb86cc3` | [knk-plugin#78](https://github.com/PandiO/knk-plugin/pull/78) (merge `1105ec15`), [knk-workspace#754](https://github.com/PandiO/knk-workspace/pull/754) (merge `732ba191`) | build + paper-boot green on the PR; Codex skipped (usage limit) | create_session session_01R1w2Uw3gPf2REJMYZEGE6a |
 | L2 P2 model, snapshot, domain search Location | #103 | Merged into next (2026-11-18) | `claude/navigation-destination-engine`: knk-web-api `a49fba23`, knk-plugin `61fe656a`, knk-workspace `30894797` | [knk-web-api#49](https://github.com/PandiO/knk-web-api/pull/49) (merge `6094276d`), [knk-plugin#80](https://github.com/PandiO/knk-plugin/pull/80) (merge `2f1c783e`), [knk-workspace#760](https://github.com/PandiO/knk-workspace/pull/760) (merge `560dd839`) | API build-and-test, mysql-tests, fresh-database green; plugin build + paper-boot green; Codex skipped (usage limit) | subagent of the coordinator (two repos besides knk-workspace, SKILL § 4.1.4 item 2) |
 | L3 P3 switch-over behind the flag | #69 | Merged into next (2026-11-18) | `claude/navigation-destination-engine`: knk-plugin `03ec14ce`, knk-workspace `9dda7c92` | [knk-plugin#81](https://github.com/PandiO/knk-plugin/pull/81) (merge `073fa4cf`), [knk-workspace#761](https://github.com/PandiO/knk-workspace/pull/761) (merge `d484361e`) | build + paper-boot green on the PR; Codex skipped (usage limit) | create_session session_01R1w2UvmCT8TsW9NNue38Vg |
-| L4 P4 hard blocks as scopes, live re-validation | #62 | Running | `claude/navigation-destination-engine`: knk-plugin from `next` `073fa4cf` | — | — | create_session session_01R1w2Ux1p4b4KMqSayuzntM |
+| L4 P4 hard blocks as scopes, live re-validation | #62 | In review (2026-11-18) | `claude/navigation-destination-engine`: knk-plugin `d38fb46c`, knk-workspace `ba4676dc` | [knk-plugin#82](https://github.com/PandiO/knk-plugin/pull/82), [knk-workspace#762](https://github.com/PandiO/knk-workspace/pull/762) | build + paper-boot green on the PR; Codex skipped (usage limit) | create_session session_01R1w2Ux1p4b4KMqSayuzntM |
 | L5 phase 4b removal of old paths and the flag | #747 | Not started | — | — | — | — |
 | L6 P5 arena duels provider and scope | #55 | Not started | — | — | — | — |
 
@@ -357,3 +357,98 @@ _(Each link appends its block here when it finishes.)_
     3. Off-road L8 (#708): register the landmark provider in `KnKPlugin.startDestinationEngine` (the World list);
        `HandleDestinations` needs the arrival radius.
     4. Gradle: the init script of L1 note 4 worked again.
+
+### 4.4 L4 — P4 hard blocks as scopes, live re-validation (#62)
+
+1. **Scope done** (all behind `navigation.destination-engine: false`; nothing deleted, prompt item 2).
+    1. knk-plugin (commit `d38fb46c`): `NavigationService` keeps the handle on `Active` and re-validates through
+       `SessionRevalidator` (`PlayerNavigationEngine.revalidate`) every 40 ticks and at once on `revalidateSoon()`
+       (run at the start of the next tick); a destination that left the list ends with the new
+       `EndReason.DESTINATION_NOT_ALLOWED` and the scope's reason in `/navigate`'s words; `EndReason.SIEGE` is not
+       used with the flag on. The handle path no longer asks `NavigationEligibility`. Triggers: the siege observer
+       (`objectiveCaptured`, `matchEnded`, `lobbyChanged`, `roundReleased`), `ModeService.addModeListener` (new),
+       the freeze hook, `NavigationModelHolder.onChange`. With the engine the command, its completion and the compass
+       leave `knk.navigate` to the no-permission scope; `CommandNodes` lists `knk.navigate.any` for `navigate`
+       (`plugin.yml` already declared it, L3).
+    2. Existing lines changed (coordinator note 4.1): `NavigationService`: the eligibility block of
+       `navigate(Player, AllowedDestination)` removed and its Javadoc rewritten; in `tick` the
+       `if (deps.eligibility().inSiege(…))` line became the `else if` of the new revalidator branch; one line added at
+       the start of `tickAll`, `lobbyChanged`, `objectiveCaptured`, `roundReleased` and `matchEnded`; no
+       guidance-v2 section (shaped walk trails, cursor, anchored trails, plaza-line preview) touched.
+       `NavigateCommand`: the two `hasNode` conditions (`onCommand`, `onTabComplete`) skip with the engine on.
+       Compass (`NavigationCompassService.use`): the same for its `hasNode` condition. `KnKPlugin`: one block in the
+       freeze hook (`revalidateSoon`), the revalidator and model/mode listeners in `startDestinationEngine`. Also
+       `ModeService.applyMode` (listener call), `NavigationEffect.EndReason`, `NavigationMessages.ended`,
+       `CommandNodes`. `TrailRenderer`, `core/roads/`, `core/navigation/shape/` untouched.
+    3. knk-workspace (commit `ba4676dc`): smoke § 4 rewritten (16 of 18 steps tagged), DESIGN § 10.5 and § 13 A22–A26
+       marked met, changelog entry, `plugin-permission-checks.md` § 4, `commands.md`.
+    4. Acceptance (DESIGN § 13): A22, A23, A24, A25, A26 met by tests; A16 kept (flag-off pins). Live form: smoke § 4.
+2. **Commits and heads.** knk-plugin `claude/navigation-destination-engine` at `d38fb46c` (1 commit over `next`
+   `073fa4cf`, 0 behind). knk-workspace `claude/navigation-destination-engine` at `ba4676dc` (1 commit over `next`
+   `d484361e`, 0 behind).
+3. **PRs.** [PandiO/knk-plugin#82](https://github.com/PandiO/knk-plugin/pull/82) (`Closes PandiO/knk-workspace#62`),
+   [PandiO/knk-workspace#762](https://github.com/PandiO/knk-workspace/pull/762) (`Part of`), both base `next`. Not
+   merged.
+4. **Tests, baseline → result.**
+    1. knk-plugin `./gradlew build -x deployToDevServer` (JDK 21 Gradle, JDK 25 toolchain): baseline `next` `073fa4cf`
+       knk-core 3 316, knk-api-client 351 (2 skipped), knk-paper 3 036 (18 skipped), 0 failures; branch knk-core 3 316,
+       knk-api-client 351 (2 skipped), knk-paper 3 065 (+29, 18 skipped), 0 failures. Red check: with the re-check
+       disabled 12 of the 21 `NavigationServiceRevalidationTest` tests fail. CI on `d38fb46c`: `build` and `paper-boot` green (runs 44334679616, 44334679699).
+    2. Known reds: none.
+    3. Codex: at its code-review usage limit on both PRs; skipped under global "Branches" rule 4's usage-limit
+       exception, said on both PRs. No findings to handle.
+5. **Decisions (DESIGN § 4.3).**
+    1. *Old issue text vs DESIGN § 10.* Chosen: DESIGN § 10 and the charter: nothing deleted; with the flag on the
+       engine path stops using `NavigationEligibility`, `EndReason.SIEGE` and the lobby ending, with it off they work
+       as today; removal is L5 (#747). Alternatives: (a) delete as the October text of #62 says: the flag-off path
+       and the developer's comparison would be gone before the live test.
+    2. *When an immediate re-check runs.* Chosen: `revalidateSoon()` sets a volatile flag and the next tick runs the
+       re-check on the main thread, so the siege state, the mode or the model has settled and callers on other
+       threads (the freeze hook, the model refresh) are safe. Alternatives: (a) re-check inside the callback: during
+       `matchEnded` the match may still be registered, and the freeze hook and model listener run off the main
+       thread; (b) schedule a Bukkit task per trigger: same effect, not testable without a scheduler.
+    3. *Message on the end.* Chosen: the scope's reason in `/navigate`'s words (`EngineReasons.forCommand`, the same
+       line as a refusal), also for a route started with the compass; `no-longer-listed` reads "<name> is no longer
+       part of this match." / "… of the world.". Alternatives: (a) "Navigation to X ended - <reason>": a new text
+       per reason; (b) the compass's wording for compass routes: the session does not know which client started it.
+    4. *Mode-change trigger.* Chosen: a listener list on `ModeService` told by `applyMode` on every change (all mode
+       switches go through it). Alternatives: (a) a Bukkit event: a new event class for one listener; (b) hook
+       `ModeCommand` only: misses realtime `UserModeChanged` and join restores.
+    5. *Freeze trigger.* Chosen: one line in the existing freeze hook in `KnKPlugin` (it already hears every freeze
+       start and end, any thread). Alternatives: (a) a listener list on `AdminFreezeManager`: a second hook for the
+       same signal.
+    6. *Re-check scope of a trigger.* Chosen: every running session is re-checked on any trigger (few sessions; the
+       catalogue part is built once per model). Alternatives: (a) only the affected player: needs a player per
+       trigger (the model refresh and siege events have none).
+    7. *`knk.navigate` with the engine on.* Chosen: the command, its completion and the compass skip their own
+       `hasNode` (L3 note 9.1: the other duplicate); the scope gives the same message; `CommandNodes` lets
+       `knk.navigate.any` through the command gate. Alternatives: (a) keep the command's check: a `knk.navigate.any`
+       holder without `knk.navigate` would be refused although the bypass sits above the permission scope (E5).
+    8. *`CommandNodes` with the flag off.* Chosen: the entry lists both nodes regardless of the flag (it is static);
+       a holder of only `knk.navigate.any` then passes the gate and sees `/navigate` in "/" suggestions with the flag
+       off, and the command refuses with today's no-permission line. Alternatives: (a) flag-aware gate: touches the
+       shared gate for a flag that L5 removes.
+    9. *A failing re-check.* Chosen: logged, the session keeps going. Alternatives: (a) end it: a bug in a provider
+       would end every route.
+    10. *L3's test `theHardBlocksStillApplyToAHandle`.* Chosen: replaced by `sincePhaseFourTheOldEligibilityIsNotAskedOnTheHandlePath`
+        plus a flag-off pin of the raw entry (`theRawEntryStillAsksTheOldEligibilityWithTheFlagOff`); it pinned the
+        P3 state that this link changes by design. Alternatives: (a) keep it: contradicts DESIGN § 10.5 item 1.
+    11. *Permission change trigger.* Chosen: none; the 2-second re-check sees it (§ 8 lists no permission trigger).
+        Alternatives: (a) hook `forgetPermissionAnswers`: outside § 8.
+    12. *Scenario.* Chosen: no plugin scenario; MockBukkit tests against the real engine (as L3: the flag is read at
+        start-up and CI's server runs with it off). Alternatives: (a) a flag-on scenario: needs a second server
+        config in `paper-boot`.
+6. **Out of scope, noted.** Nothing new. Still open from L3: `/knk road` status showing the model's age; a
+   knk-web-api rank seed for `knk.navigate.any`.
+7. **Blockers.** None.
+8. **At merge / what the developer must do.**
+    1. Nothing to deploy beyond L3's key (no new key, migration or API change).
+    2. The live test before L5: `navigation.destination-engine: true`, restart, smoke § 3 and § 4 (accounts: Player,
+       Opponent, Staff, Senior Staff, Bypass with `knk.navigate.any`); say on #62 or #25 that they passed.
+9. **Notes for later links.**
+    1. L5 (#747): delete `NavigationEligibility` and its `Deps` field, the `else if (inSiege)` branch and the flag-off
+       `lobbyChanged` ending, `EndReason.SIEGE` (and its message case), `refusedByEligibility` and the raw entry; the
+       `engine.get() == null && !hasNode(...)` conditions become no check; `setRevalidator` can become constructor
+       wiring; `NavigationServiceRevalidationTest`'s flag-off tests go.
+    2. Off-road L8 (#708): a landmark session re-validates like any other (key `landmark:<id>`); nothing to add.
+    3. Gradle: the papermc-first init script worked again (no 404s seen).
