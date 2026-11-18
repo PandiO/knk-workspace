@@ -400,6 +400,9 @@ the configuration reference § 4.27), then restart. In test order:
     coordinator). Docs follow-up #726 for L9, B1–B5, C1 and E1 with its docs session started. Open: the developer's
     retest (smoke guide sections B5, C1, E1), the review decisions of B5, C1 and E1, #695, #702, #724, the option-B
     decision, the `collidable` default, promotion.
+48. **R1 started for #724** (2026-11-18). The off-road chain's coordinator does not take #724 (no link of theirs covers
+    the cache-refresh path) and agreed it runs in this chain; R1 keeps any `paper/navigation` edit to the refresh path,
+    away from guidance-v2, and reports the files first.
 
 ## 4. Link blocks
 

@@ -68,6 +68,7 @@ component repos.
 | B5 | #699 | tier:3 | Group followers under a leader one flight above: lanes, rejoin and slots in 3D (smoke test 2026-11-17) | knk-plugin, knk-workspace | `claude/npc-movement-b5` | `next` | `npc.navigation.enabled` (off) | B3 merged |
 | C1 | #700 | tier:3 | Off-road starts and ends with today's walk search within its caps, walked like stretches; road join by reachability; hops as fallback; snapshot box over from/to (long walks come from #698) | knk-plugin, knk-workspace | `claude/npc-movement-c1` | `next` | `npc.navigation.enabled` (off) | B5 merged and #698 phase 1 (move to `core/navigation/shape/`) merged (report decision 44) |
 | E1 | #701 | tier:2 | Exit rules checked while NPCs walk (recheck, trespass guard, follower lanes), not only when planned | knk-plugin, knk-workspace | `claude/npc-movement-e1` | `next` | `npc.navigation.enabled` (off) | C1 merged |
+| R1 | #724 | tier:2 | A cache refresh's first event with an empty region map lets held NPCs cross; fix the refresh path, count such a crossing | knk-plugin, knk-workspace | `claude/npc-movement-r1` | `next` | `npc.navigation.enabled` (off) | E1 merged; off-road coordinator's OK (2026-11-18) |
 
 ## 2. Gates
 
