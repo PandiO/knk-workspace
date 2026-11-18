@@ -1,7 +1,7 @@
 # Off-road navigation and landmarks — smoke test
 
-**Status:** Draft from the design (2026-11-17); no steps run. Phase 0 (§ 1): 1 of 9 steps automated; phase 1 (§ 2): 4 of 4 steps automated; the other phases not yet automated (the links tag them).
-**Last updated:** 2026-11-17 (§ 2 phase 1 updated to what link L2 built, #704: every step automated); 2026-11-17 (§ 1 phase 0 updated to what link L1 built, #703: the measurement steps and the `/knk road status` lines); 2026-11-17 (draft from the design, phases 0, 1, 2, 3, 4, 5.1, 5.2, 6.1, 6.2, 7)
+**Status:** Draft from the design (2026-11-17); no steps run. Phase 0 (§ 1): 1 of 9 steps automated; phase 1 (§ 2): 4 of 4 steps automated; phase 6.1 (§ 8): 6 of 8 steps automated (3 of them in part); the other phases not yet automated (the links tag them).
+**Last updated:** 2026-11-17 (§ 8 phase 6.1 updated to what link L3 built, #710: eight steps, six automated); 2026-11-17 (§ 2 phase 1 updated to what link L2 built, #704: every step automated); 2026-11-17 (§ 1 phase 0 updated to what link L1 built, #703: the measurement steps and the `/knk road status` lines); 2026-11-17 (draft from the design, phases 0, 1, 2, 3, 4, 5.1, 5.2, 6.1, 6.2, 7)
 **Design:** [specs/navigation-offroad/DESIGN.md](../specs/navigation-offroad/DESIGN.md) · **Issue:**
 [PandiO/knk-workspace#698](https://github.com/PandiO/knk-workspace/issues/698)
 
@@ -275,28 +275,63 @@ is one look at the startup log.*
 
 ## 8. Phase 6.1: walk-trail corners (#710, tier:3)
 
-*Draft from the design (2026-11-17); the link updates it to what was built and tags the automated steps.*
+*Built 2026-11-17 (link L3, knk-plugin `claude/offroad-trail-corners`): with `navigation.guidance-v2` on, the walk
+search uses the clearance cost (`walk.clearance-cost` per block of clearance a cell lacks to `walk.wall-clearance`) in
+place of `walk.wall-cost`; a found or partial walk path is then shaped on the walk thread by the shared
+`CorridorShaper` over the captured terrain (`WalkTerrainNavWorld`, `WalkPathShaper` in knk-core `core/roads/walk/`)
+and drawn with its corners as curves checked against the clearance map (`walk.curve`). The trail keeps the leg colour
+and the 3.0 spacing (O20). The road trail is unchanged. 6 of 8 steps are automated; the developer's live test is steps
+1, 3 and 6 on the dev world (the feel of the trail and the tick time).*
 
 ### 8.0 Preconditions
 
-1. Deployed: plugin build from `next` with phase 6.1.
-2. Settings: `navigation.guidance-v2: true`, `walk.clearance-cost: 5`, `walk.wall-clearance: 0.8`,
-   `walk.curve: true`.
-3. Accounts and data: a player account; the stair house; the keep.
+1. Deployed: plugin build from `next` with phase 6.1 (knk-plugin PR for #710 merged).
+2. Settings: under `navigation:` set `guidance-v2: true`; under `navigation.walk:` keep (or add) `clearance-cost: 5`,
+   `wall-clearance: 0.8`, `curve: true`; then restart the server (the walk services read these at startup).
+3. Accounts and data: a player account without staff rights and a staff account (for `/knk road status`); the stair
+   house and the keep on the dev world; walk paths on (`navigation.walk.enabled: true`).
 
 ### 8.1 Steps
 
-1. As the player, stand at the foot of the stair house's spiral stair and `/navigate` to its top. **Expected:** the
-   trail keeps about a block from the inner wall (the newel) all the way up, where the stair allows it; it reads as a
-   spiral, not a polygon. (A15)
-2. Walk up slowly and watch the trail redraw. **Expected:** it stays off the inner wall on every redraw. (A15)
-3. Navigate through a keep corridor with a right-angle turn. **Expected:** the trail rounds the corner with room to
-   spare and never cuts through the wall. (A15)
-4. Navigate through a 1-wide door. **Expected:** the trail goes through the door; the clearance does not close it.
-   (A15)
-5. Turn `navigation.guidance-v2` off, reload, and repeat step 1. **Expected:** today's trail, unchanged. (A16)
-6. Turn it on again and navigate while staff watches `/knk road status`. **Expected:** the shaping time is reported,
-   and the server's tick time does not rise noticeably. (A27)
+1. As the player, stand at the foot of the stair house's stair, `/navigate` to a point on its top floor (a region or
+   location there) and watch the walk trail (the light blue particles) while standing still. **Expected:** the trail
+   keeps clear of the inner wall and the stair's edges, about a block from the inner wall where the stair is wide
+   enough, and rounds each turn as a curve instead of cutting the inner corner. Where a flight is narrower than twice
+   the clearance it runs in the middle of it. It never runs through a wall, over a stair well or off the steps. (A15)
+   [automated in part: knk-core `WalkPathShaperTest.onASpiralStairOfWidthThreeTheTrailKeepsTheClearanceFromTheNewel`
+   (a 3-wide spiral stair: at least 0.7 from the newel, never under 0.35); paper-boot scenario `walk-trail-stairhouse`
+   (the developer's stair house schematic: over walkable floor everywhere, never under 0.35, at least 0.7 from walls,
+   posts and drops; a local run had 0 % of the trail under 0.7 against 44.7 % of today's path)]
+2. Walk up slowly and watch the trail redraw as you go (every half second). **Expected:** on every redraw it stays off
+   the inner wall and follows the same curve; it does not flicker between the wall side and the middle. (A15)
+   [automated: knk-paper `NavigationServiceTest.withGuidanceV2TheWalkLegDrawsTheShapedCurveOfItsPath` (every redraw
+   draws the shaped trail of the current path); the redraw window itself is phase 6.2]
+3. In the keep, `/navigate` to a room behind a corridor with a right-angle turn. **Expected:** the trail rounds the
+   corner with room to spare on the inside and never cuts through the wall or a pillar. (A15)
+   [automated in part: knk-core `WalkPathShaperTest.oneSceneThroughTheNpcShaperAndThePlayerShaperGivesTheSameLine`
+   (a building's corner) and `WalkClearanceTest.theClearanceCostKeepsAPathOffTheFaceOfABuilding`]
+4. Navigate through a 1-wide door. **Expected:** the trail goes through the door's middle; the clearance does not
+   close the door off. (A15) [automated: knk-core `WalkClearanceTest.eachCellEnteredCostsTheClearanceItLacksTimesTheCost`
+   (a 1-wide way is only dearer, never blocked) and the shaper's chokepoint alignment in `CorridorShaperTest`]
+5. Navigate near a region you may not enter (a domain that denies you). **Expected:** the trail never moves onto the
+   denied cells to gain clearance. [automated: knk-core
+   `WalkPathShaperTest.theShapedLineNeverMovesOntoACellTheAccessBlocks`]
+6. As staff, run `/knk road status reset`, navigate as the player to the stair house's top three times, then run
+   `/knk road status`. **Expected:** the `walk paths:` line ends with `shaped N (mean X ms)`, N counting the walk paths
+   drawn, X a few tens of milliseconds at most; the server's tick time (`/mspt` or the TPS in the tab list) does not
+   rise noticeably while navigating, because the search and the shaping run on the walk threads. (A27)
+   [automated in part: knk-paper `NavigationServiceTest.withGuidanceV2TheWalkLegDrawsTheShapedCurveOfItsPath` (the
+   status line); scenario `walk-trail-stairhouse` (shaped on another thread from the capture only; local run 39 to
+   81 ms); the tick time is manual]
+7. Set `navigation.guidance-v2: false`, restart, and repeat step 1. **Expected:** today's trail exactly (the walk
+   path's block centres, hugging the inner wall as before); `/knk road status` shows no `shaped` count. (A16)
+   [automated: knk-paper `NavigationServiceTest.withGuidanceV2OffTheWalkLegDrawsTheCellsOfItsPathExactly`,
+   `WalkLegPreparerTest.withGuidanceV2TheRequestCarriesTheClearanceCostAndWithoutItTodaysProfile`,
+   `ConfigLoaderNavigationTest.withGuidanceV2OffTheWalkProfileIsTodaysExactly`]
+8. With `guidance-v2: true`, set `walk.clearance-cost: 0` and restart. **Expected:** the walk search picks the same
+   cells as with the flag off (the shaping still runs). (A16) [automated: knk-core
+   `WalkClearanceTest.aClearanceCostOfZeroIsTodaysSearchExactly` (five scenes); scenario `walk-trail-stairhouse`
+   (the stair house)]
 
 ## 9. Phase 6.2: anchored particles and winding back (#711, tier:3)
 
