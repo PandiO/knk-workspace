@@ -19,6 +19,21 @@ This is a human-readable record of capabilities merged into the V3 default branc
   3. Admin steps: none (no new key, no migration, no API change). Steps:
      [destination engine smoke test § 4](guides/navigation-destination-engine-smoke-test.md#4-phase-4-hard-blocks-as-scopes-and-live-re-validation-62-tier3).
 
+- **Overview map: live players on the map** ([PandiO/knk-workspace#739](https://github.com/PandiO/knk-workspace/issues/739),
+  link L5 of the overview map chain, [#732](https://github.com/PandiO/knk-workspace/issues/732)). knk-web-app and
+  knk-workspace branches `claude/overview-map-players-page` (PRs into `next`). Behind the API setting
+  `Map:LivePlayers:Enabled` (off by default: the page asks for no players and draws nothing new).
+  1. The map shows online players with a head and their name label as in the in-game chat line, in the same colours,
+     updated about every 2 s. Tags show AFK, and for staff who may see hidden players also "Staff mode", "Owner mode"
+     and the minigame.
+  2. A running siege shows one pin, for example "[Siege] 12 players", instead of its participants.
+  3. Clicking a player opens a name card with the label and tags.
+  4. Admin steps: none to keep it off. With the backend on (§ 4), the layer appears by itself. Optional: player heads
+     from a skin service through `heads=` in BlueMap's `webapp.conf`
+     ([closed-alpha runbook Phase 10](guides/closed-alpha-deployment-runbook.md#phase-10--overview-map-bluemap-in-the-stack-737)
+     step 3); without it everyone has BlueMap's default head. Steps:
+     [overview map smoke test § 5](guides/overview-map-smoke-test.md#5-phase-4b-live-players-layer-739-tier2).
+
 - **Navigation destination engine, phase 3: `/navigate`, tab completion, the compass and the route start on the engine, behind a flag** ([PandiO/knk-workspace#69](https://github.com/PandiO/knk-workspace/issues/69),
   link L3 of the destination engine chain, [#25](https://github.com/PandiO/knk-workspace/issues/25)). knk-plugin and
   knk-workspace branches `claude/navigation-destination-engine` (PRs into `next`). Behind the new `config.yml` key

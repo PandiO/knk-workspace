@@ -1,7 +1,7 @@
 # Overview map — smoke test
 
-**Status:** Draft from the design (2026-11-18); no steps run. § 1 updated to what L1 built (7 steps, all partly automated, tagged), § 2 to what L2 built (7 steps: 2 automated, 5 partly automated, tagged), § 3 to what L3 built (11 steps: 1 automated, 9 partly automated, 1 manual only, tagged), § 4 to what L4 built (9 steps: 1 automated, 5 partly automated, 3 manual visibility steps), § 6 to what L6 built (7 steps: 2 automated, 5 partly automated, tagged), § 7 to what L7 built (10 steps: 4 automated, 6 partly automated), § 8 to what L8 built (9 steps: 3 automated, 6 partly automated); the other sections are not automated yet (the links tag them).
-**Last updated:** 2026-11-18 (§ 8 to what L8 built, #742); 2026-11-18 (§ 7 to what L7 built, #741); 2026-11-18 (§ 6 to what L6 built, #740); 2026-11-18 (§ 4 to what L4 built, #738); 2026-11-18 (§ 3 to what L3 built, #737); 2026-11-18 (§ 2 to what L2 built, #736); 2026-11-18 (§ 1 to what L1 built, #735); 2026-11-18 (draft from the design, phases 1, 2, 3, 4a, 4b, 5, 6a, 6b, 7)
+**Status:** Draft from the design (2026-11-18); no steps run. § 1 updated to what L1 built (7 steps, all partly automated, tagged), § 2 to what L2 built (7 steps: 2 automated, 5 partly automated, tagged), § 3 to what L3 built (11 steps: 1 automated, 9 partly automated, 1 manual only, tagged), § 4 to what L4 built (9 steps: 1 automated, 5 partly automated, 3 manual visibility steps), § 5 to what L5 built (8 steps: 1 automated, 7 partly automated, tagged), § 6 to what L6 built (7 steps: 2 automated, 5 partly automated, tagged), § 7 to what L7 built (10 steps: 4 automated, 6 partly automated), § 8 to what L8 built (9 steps: 3 automated, 6 partly automated); the other sections are not automated yet (the links tag them).
+**Last updated:** 2026-11-18 (§ 5 to what L5 built, #739); 2026-11-18 (§ 8 to what L8 built, #742); 2026-11-18 (§ 7 to what L7 built, #741); 2026-11-18 (§ 6 to what L6 built, #740); 2026-11-18 (§ 4 to what L4 built, #738); 2026-11-18 (§ 3 to what L3 built, #737); 2026-11-18 (§ 2 to what L2 built, #736); 2026-11-18 (§ 1 to what L1 built, #735); 2026-11-18 (draft from the design, phases 1, 2, 3, 4a, 4b, 5, 6a, 6b, 7)
 **Design:** [specs/in-game-maps/OVERVIEW_MAP_DESIGN.md](../specs/in-game-maps/OVERVIEW_MAP_DESIGN.md) · **Issue:**
 [PandiO/knk-workspace#732](https://github.com/PandiO/knk-workspace/issues/732)
 
@@ -322,24 +322,60 @@ Tests named below: knk-web-api `Tests/knkwebapi_v2.Tests` `Api/MapPlayersPipelin
 
 ## 5. Phase 4b: live players layer (#739, tier:2)
 
-*Draft from the design (2026-11-18); the link updates it to what was built and tags the automated steps.*
+*Built by link L5 (knk-web-app branch `claude/overview-map-players-page`, PR into `next`). 8 steps: 1 automated, 7
+partly automated (tagged). The suites run the page against a mocked `GET api/Map/players` (answering per audience as
+the API's snapshots do) and the fake BlueMap web app that loads the real bridge script; a real server, real accounts,
+real colours on the real viewer and a real siege match are checked by hand. Not run yet. Full manual run about
+20 minutes.*
+
+Tests named below: knk-web-app `e2e/overview-map-players.spec.ts` (Playwright, "e2e") and the Jest suites in
+`src/components/map/__tests__/` (`mapPlayers`, `useLivePlayers`, `PlayerCard`).
 
 ### 5.0 Preconditions
 
-1. Deployed: phases 3 and 4a, the web app from `next`.
-2. Settings: as § 4.0.
+1. Deployed: phases 3 and 4a (§ 3.0, § 4.0), the web app from `next`.
+2. Settings: as § 4.0 (API `Map__Enabled=true`, `Map__LivePlayers__Enabled=true`; plugin `map.reporting.enabled: true`).
+   Optional: player heads from a skin service, `heads=<address with {uuid}>` on the bridge line of BlueMap's
+   `webapp.conf` ([closed-alpha runbook Phase 10](closed-alpha-deployment-runbook.md#phase-10--overview-map-bluemap-in-the-stack-737)
+   step 3); without it every player has BlueMap's default head.
+3. Accounts: as § 4.0 (players A, B, C, P, D; web logins **player** and **staff viewer**).
 
 ### 5.1 Steps
 
-1. As **anonymous**, open `/map` with player A online and walking. **Expected:** A's head and name label move along
-   about every 2 s. (A11)
-2. Look at labels for an owner, a staff member, a premium player and a default player. **Expected:** the same format
-   and colours as their in-game chat lines. AFK shows as a tag. (A13, A15)
-3. B is in staff mode. **Expected:** B is not on the map for anonymous or the **player** account. The **staff viewer**
-   sees B as a normal player with the "Staff mode" tag. (A12)
-4. During a siege match, look at the gate. **Expected:** the participants are not shown. One pin reads
-   "[Siege] <count> players". (A14)
-5. Click player A as **anonymous**. **Expected:** a name card with the label and tags only. (A11)
+1. [partly automated: e2e `players appear with head and name label and move with the next poll (A11)`, Jest
+   `useLivePlayers` "polls right away and then every interval ..."; by hand: a real server] As **anonymous**, open
+   `/map` with player A online and walking. **Expected:** A's head with the name label above it, on A's position;
+   it moves along about every 2 s. A player in another world is not on this BlueMap map. (A11)
+2. [partly automated: e2e `labels have the in-game chat format and colours; AFK shows as a tag (A13, A15)`, Jest
+   `mapPlayers` › `labelParts (A15)`, `styleOfCodes`; by hand: real groups and colours] Look at the labels of C
+   (owner), B (staff, not in a mode), P (premium) and D (default), next to their in-game chat lines.
+   **Expected:** the same text and colours: `[OWNER]-{title}- C` with gold brackets and dark purple text, title bold;
+   `[STAFF]-{title}- B` dark aqua and blue (or the staff group's own chat colours); `-{tier title}- P` in the tier's
+   colours; D in green (or the Default group's colours). (A15)
+3. [partly automated: e2e `labels have the in-game chat format ...` (AFK part), Jest `mapPlayers` › `playerTags`; by
+   hand: the plugin's AFK detection] D goes AFK (idle, or `/afk`). **Expected:** within about 4 s an "AFK" tag shows
+   under D's label and D's label and head are dimmed; it goes away when D moves again. (A13)
+4. [partly automated: e2e `logged in: the token goes with every poll and staff viewers see mode players tagged (A12)`,
+   `anonymous: mode players the API leaves out are not drawn (A12)`; by hand: the real audiences] B enters
+   `/staffmode`, C `/ownermode`. **Expected:** as **anonymous** and as the **player** account, B and C are not on the
+   map. As the **staff viewer**, B shows with a "Staff mode" tag and C with "Owner mode". When B leaves staff mode,
+   B shows again for everyone within about 4 s, without a tag. (A12)
+5. [partly automated: e2e `a running siege shows one arena pin instead of its participants (A14)`, Jest `mapPlayers` ›
+   `arena pins (A14)`; by hand: a real match] Start a siege match with A in it, then look at the objective gate as
+   **anonymous** and as the **player**. **Expected:** A is not on the map; one pin at the gate reads
+   "[Siege] <count> players", its label visible within about 1500 blocks. The **staff viewer** sees A with a "Siege"
+   tag and the same arena pin. After the match the pin is gone and A is back. (A14)
+6. [partly automated: e2e `a player who quits disappears with the next poll (A16)`; by hand: a real quit] A quits.
+   **Expected:** A's head and label are gone within about 6 s (normally at the next poll). (A16)
+7. [partly automated: e2e `clicking a player opens the name card with the label and tags only (§ 4.4)`, `on a phone
+   the name card is a bottom sheet and the page does not scroll sideways`, Jest `PlayerCard`; by hand: the real
+   viewer and a phone] Click D's head or label as **anonymous**. **Expected:** a panel "Player details" with D's name,
+   the coloured label and the tags (for example "AFK"), and nothing else (no position, no buttons). Clicking a town
+   replaces it with the town's panel; the × closes it (Escape too, once the keyboard focus is on the page rather than inside the map). On a phone it opens as a bottom sheet. (A11)
+8. [automated: e2e `live players off (Map:LivePlayers:Enabled false): no players request and no player layer (O27)`,
+   Jest `useLivePlayers` "makes no request and returns null while the flag is off"] With
+   `Map__LivePlayers__Enabled=false` the map shows no players and no arena pins, and the browser's network tab shows
+   no `api/Map/players` request. (O27)
 
 ## 6. Phase 5: staff details (#740, tier:2)
 
