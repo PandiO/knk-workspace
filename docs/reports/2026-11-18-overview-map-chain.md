@@ -28,9 +28,11 @@ on `next` (Decided 2026-11-18, O01–O33, O08 superseded by O31); smoke guide
    `knk-alpha` Compose stack, Nginx `/bluemap/`; knk-deploy, ask before each change), run the full-world render
    (about 20 hours), then set `Map__Enabled=true` and follow smoke guide § 3. Optional: `@codex review` on
    knk-web-app#50 (Codex at its limit).
-4. Known gates ahead (not blockers now):
-   1. L5 (#739) is not merged into `next` before your live check of the L4 visibility steps (smoke § 4.1 steps 2, 3
-      and 5), recorded on #738.
+4. **L4 (#738) live check, gate for L5 (tier:3):** L4 is in `next` (knk-web-api `f2f523c3`, knk-plugin `ef4e99d9`).
+   Set API `Map__Enabled=true`, `Map__LivePlayers__Enabled=true`; plugin `map.reporting.enabled: true` (needs
+   `realtime.enabled: true`; new key `map.reporting.interval-ticks: 40`). Run smoke guide § 4, and record the
+   visibility steps § 4.1 steps 2, 3 and 5 on #738: L5 (#739) is not merged into `next` before that. Optional:
+   `@codex review` on knk-web-api#47, knk-plugin#77, knk-workspace#752.
 
 ## 2. Summary
 
@@ -39,10 +41,10 @@ on `next` (Decided 2026-11-18, O01–O33, O08 superseded by O31); smoke guide
 | L1 Region outlines | #735 | Merged into `next` 2026-11-18 (knk-web-api `562f504`, knk-plugin `7f4bdd3a`, knk-workspace `ac4b620f`); waiting for the developer's smoke test § 1 | `claude/overview-map-outlines`: knk-web-api `253a6ee`, knk-plugin `cf3a975a`, knk-workspace `e6e815dd` (from `next`) | [knk-web-api#45](https://github.com/PandiO/knk-web-api/pull/45), [knk-plugin#76](https://github.com/PandiO/knk-plugin/pull/76), [knk-workspace#749](https://github.com/PandiO/knk-workspace/pull/749) | API green; plugin build and paper-boot green | create_session session_01R1w2UuqJyStWv2zia5FTQg (2026-11-18, decision 3) |
 | L2 Public map API | #736 | Merged into `next` 2026-11-18 (knk-web-api `612ad62`, knk-workspace `55d01897`); waiting for the developer's smoke test § 2 | `claude/overview-map-public-api`: knk-web-api `3a014f8`, knk-workspace `fcde4be8` (from `next`) | [knk-web-api#46](https://github.com/PandiO/knk-web-api/pull/46), [knk-workspace#751](https://github.com/PandiO/knk-workspace/pull/751) | API green on `3a014f8` (build-and-test, mysql-tests, fresh-database); knk-workspace no CI | create_session session_01R1w2UvvpPXaMVExy9eZZpL (2026-11-18) |
 | L3 `/map` page | #737 | Merged into `next` 2026-11-18 (knk-web-app `f551804d`, knk-workspace `0f0f8e7f`); waiting for the NAS deploy notes (runbook Phase 10), the full-world render and the developer's smoke test § 3 | `claude/overview-map-page`: knk-web-app `ee9a68d`, knk-workspace `23b028dc` (from `next`) | [knk-web-app#50](https://github.com/PandiO/knk-web-app/pull/50), [knk-workspace#753](https://github.com/PandiO/knk-workspace/pull/753) | web app green on `ee9a68d` (build-and-test, e2e); knk-workspace no CI | create_session session_01R1w2UtuNmGWaJ6a65D2YeS (2026-11-18) |
-| L4 Live players backend | #738 | In review 2026-11-18 (PRs open, not merged; waiting for the developer's live check of smoke § 4.1 steps 2, 3 and 5 before L5's merge) | `claude/overview-map-players-api`: knk-web-api `a9ed3af`, knk-plugin `8b1efdcc`, knk-workspace `09982caa` (from `next`) | [knk-web-api#47](https://github.com/PandiO/knk-web-api/pull/47), [knk-plugin#77](https://github.com/PandiO/knk-plugin/pull/77), [knk-workspace#752](https://github.com/PandiO/knk-workspace/pull/752) | API green (build-and-test, mysql-tests, fresh-database); plugin build and paper-boot green | create_session session_01R1w2UwcYKiPMueCHWqsys4 (2026-11-18) |
+| L4 Live players backend | #738 | Merged into `next` 2026-11-18 (knk-web-api `f2f523c3`, knk-plugin `ef4e99d9`, knk-workspace `d9c07b37`); waiting for the developer's live check of smoke § 4.1 steps 2, 3 and 5 on #738 (gates L5's merge) | `claude/overview-map-players-api`: knk-web-api `a9ed3af`, knk-plugin `8b1efdcc`, knk-workspace `09982caa` (from `next`) | [knk-web-api#47](https://github.com/PandiO/knk-web-api/pull/47), [knk-plugin#77](https://github.com/PandiO/knk-plugin/pull/77), [knk-workspace#752](https://github.com/PandiO/knk-workspace/pull/752) | API green (build-and-test, mysql-tests, fresh-database); plugin build and paper-boot green | create_session session_01R1w2UwcYKiPMueCHWqsys4 (2026-11-18) |
 | L5 Live players layer | #739 | Not started (gate: L3 and L4 merged, developer's L4 check) | – | – | – | – |
 | L6 Staff details | #740 | Running | `claude/overview-map-staff-details`: knk-web-app, knk-workspace (from `next`) | – | – | subagent of the coordinator (2026-11-18; the create_session attempt session_01R1w2UuaEs6VbL7BVnR7ZTJ was refused the knk-web-app attach, decision 10) |
-| L7 Gate commands backend | #741 | Not started (gate: L2 merged into `next`) | – | – | – | – |
+| L7 Gate commands backend | #741 | Running | `claude/overview-map-gate-commands`: knk-web-api, knk-plugin, knk-workspace (from `next`) | – | – | create_session session_01R1w2UxDt6K1RcnDPPagNAN (2026-11-18) |
 | L8 Gate command buttons | #742 | Not started (gate: L3 and L7 merged into `next`) | – | – | – | – |
 | L9 Player context panel | #743 | Not started (gate: L5 merged into `next`) | – | – | – | – |
 
@@ -114,6 +116,22 @@ on `next` (Decided 2026-11-18, O01–O33, O08 superseded by O31); smoke guide
     forbids it; (b) start a new session in a non-Auto mode: it would ask the developer before other tool calls.
     Lesson: the classifier is not consistent (L1–L4 attaches worked); later single-repo links still try
     `create_session` first.
+
+11. **L4 check and merge (2026-11-18).** Chosen: merge knk-web-api#47, knk-plugin#77 and knk-workspace#752 into `next`
+    with merge commits (API, plugin, docs). Every skill § 6 check held: heads matched, code branches contained
+    `next`, scope limited to #738 (additive edits incl. `SiegeService.runningMatchApiId` for the match filter), CI
+    green (API build-and-test, mysql-tests, fresh-database; plugin build, paper-boot), tests API 4333 → 4372 and
+    plugin core 3151 → 3161 / paper 2957 → 2963 with 0 failed, every audience's response body tested (removing the
+    visibility filter fails 4 tests), flags off by default, 13 decisions logged, smoke § 4 tagged with the three
+    visibility steps manual, #738 in review. Codex at its limit on all three. The knk-workspace branch conflicted with
+    L3's merge in four header/entry lines (CHANGELOG, smoke guide, production-installation, spec status): mechanical,
+    resolved on the branch by merging `origin/next` and keeping both sides (`64ec62de`), per skill § 7.3.
+    Alternatives: (a) send the conflict back to L4: a mechanical merge is the coordinator's per the skill; (b) hold
+    L4 until the developer's live check: the charter gates L5's merge on it, not L4's.
+12. **L7 started after L4.** Chosen: start L7 (#741, knk-web-api + knk-plugin) now: its gate (L2 merged) is open and
+    L4 freed both repositories (L4 and L7 run one after the other, charter). Route `create_session` with the subagent
+    fallback (decision 10). L5 waits: L6 holds knk-web-app, and L5's merge waits for the developer's L4 check.
+    Alternatives: (a) L5 first: knk-web-app is busy with L6.
 
 ## 4. Link blocks
 
