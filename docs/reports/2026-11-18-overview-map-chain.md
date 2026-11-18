@@ -39,7 +39,7 @@ on `next` (Decided 2026-11-18, O01–O33, O08 superseded by O31); smoke guide
 | L1 Region outlines | #735 | Merged into `next` 2026-11-18 (knk-web-api `562f504`, knk-plugin `7f4bdd3a`, knk-workspace `ac4b620f`); waiting for the developer's smoke test § 1 | `claude/overview-map-outlines`: knk-web-api `253a6ee`, knk-plugin `cf3a975a`, knk-workspace `e6e815dd` (from `next`) | [knk-web-api#45](https://github.com/PandiO/knk-web-api/pull/45), [knk-plugin#76](https://github.com/PandiO/knk-plugin/pull/76), [knk-workspace#749](https://github.com/PandiO/knk-workspace/pull/749) | API green; plugin build and paper-boot green | create_session session_01R1w2UuqJyStWv2zia5FTQg (2026-11-18, decision 3) |
 | L2 Public map API | #736 | Merged into `next` 2026-11-18 (knk-web-api `612ad62`, knk-workspace `55d01897`); waiting for the developer's smoke test § 2 | `claude/overview-map-public-api`: knk-web-api `3a014f8`, knk-workspace `fcde4be8` (from `next`) | [knk-web-api#46](https://github.com/PandiO/knk-web-api/pull/46), [knk-workspace#751](https://github.com/PandiO/knk-workspace/pull/751) | API green on `3a014f8` (build-and-test, mysql-tests, fresh-database); knk-workspace no CI | create_session session_01R1w2UvvpPXaMVExy9eZZpL (2026-11-18) |
 | L3 `/map` page | #737 | Merged into `next` 2026-11-18 (knk-web-app `f551804d`, knk-workspace `0f0f8e7f`); waiting for the NAS deploy notes (runbook Phase 10), the full-world render and the developer's smoke test § 3 | `claude/overview-map-page`: knk-web-app `ee9a68d`, knk-workspace `23b028dc` (from `next`) | [knk-web-app#50](https://github.com/PandiO/knk-web-app/pull/50), [knk-workspace#753](https://github.com/PandiO/knk-workspace/pull/753) | web app green on `ee9a68d` (build-and-test, e2e); knk-workspace no CI | create_session session_01R1w2UtuNmGWaJ6a65D2YeS (2026-11-18) |
-| L4 Live players backend | #738 | Running | `claude/overview-map-players-api`: knk-plugin, knk-web-api, knk-workspace (from `next`) | – | – | create_session session_01R1w2UwcYKiPMueCHWqsys4 (2026-11-18) |
+| L4 Live players backend | #738 | In review 2026-11-18 (PRs open, not merged; waiting for the developer's live check of smoke § 4.1 steps 2, 3 and 5 before L5's merge) | `claude/overview-map-players-api`: knk-web-api `a9ed3af`, knk-plugin `8b1efdcc`, knk-workspace `09982caa` (from `next`) | [knk-web-api#47](https://github.com/PandiO/knk-web-api/pull/47), [knk-plugin#77](https://github.com/PandiO/knk-plugin/pull/77), [knk-workspace#752](https://github.com/PandiO/knk-workspace/pull/752) | API green (build-and-test, mysql-tests, fresh-database); plugin build and paper-boot green | create_session session_01R1w2UwcYKiPMueCHWqsys4 (2026-11-18) |
 | L5 Live players layer | #739 | Not started (gate: L3 and L4 merged, developer's L4 check) | – | – | – | – |
 | L6 Staff details | #740 | Running | `claude/overview-map-staff-details`: knk-web-app, knk-workspace (from `next`) | – | – | subagent of the coordinator (2026-11-18; the create_session attempt session_01R1w2UuaEs6VbL7BVnR7ZTJ was refused the knk-web-app attach, decision 10) |
 | L7 Gate commands backend | #741 | Not started (gate: L2 merged into `next`) | – | – | – | – |
@@ -381,3 +381,119 @@ _(Each link appends its block here when it finishes.)_
     4. L9: add a `player` registration once `playerClicked` is wired (L5); `MapEntityKind` and `parseBridgeMessage`
        need the new kind only if players come through `markerClicked`.
     5. The bridge protocol v1 is frozen (O14): #613 adds message types or a new version.
+
+### 4.4 L4 — Live players backend: plugin reports, per-audience snapshots, arena pins (#738)
+
+1. **Scope done.**
+    1. knk-web-api: game hub `ReportMapPlayers` (one method; `PlayerLeft` one line to drop the player);
+       `Services/Map/MapPlayerRegistry` (latest report per player, three missed intervals, fail-closed unknown mode),
+       `Services/Map/MapPlayerSnapshots` (three audience snapshots per tick, `MapPlayerLabels` as `ChatLineFormat`,
+       label cache), `Services/Map/MapLivePlayerData` (labels from `IUserService.GetByUuidAsync` and the `knk.mode.*`
+       rank, arena pins from running `SiegeMatch` rows at the objective gate's marker pin); `GET api/Map/players` on
+       `MapController` (anonymous, `map` limit, `[MapEnabled]`, 404 while `Map:LivePlayers:Enabled` is off,
+       `no-store`); `config.livePlayers` from `Map:LivePlayers:*`; DTOs `MapPlayersDto`, `MapPlayerDto`,
+       `MapPlayerLabelDto`, `MapArenaDto`; settings `Map:LivePlayers:Enabled` (false), `PollIntervalMs` (2000),
+       `LabelCacheSeconds` (60). Additive: three DI lines, `appsettings.json` `Map:LivePlayers`, the route in both
+       access tests, the DTOs in `MapPublicDtoFieldTests.Pinned` (plus one reviewed name exception, `MapPlayerDto.uuid`).
+       No migration.
+    2. knk-plugin: knk-core `map/OnlinePlayerSnapshotPort`, `OnlinePlayerPosition`, the player report in
+       `MapReportingService`; knk-paper `map/PaperOnlinePlayerSnapshot` and `MapReporting.startPlayerReports`
+       (main-thread snapshot timed as `map.player_snapshot`, async send). Additive: `KnKPlugin` (suppliers in the
+       existing `MapReporting.create` call, one start line after `initializeRealtime`), `SiegeService.runningMatchApiId`,
+       `config.yml` `map.reporting.interval-ticks: 40`.
+    3. knk-workspace: smoke guide § 4 (9 steps: 1 automated, 5 partly automated and tagged, steps 2, 3 and 5 full
+       manual), plugin configuration § 4.29 and § 2.1 row, production installation § 4.3, changelog entry, spec status
+       line, § 6.2.9 and § 7.4 as built.
+2. **Commits and heads.** knk-web-api `claude/overview-map-players-api` at `a9ed3af` (1 commit, base `next` at
+   `612ad62`); knk-plugin `claude/overview-map-players-api` at `8b1efdcc` (1 commit, base `next` at `7f4bdd3a`);
+   knk-workspace `claude/overview-map-players-api` at `09982caa` (1 commit, base `next` at `55d01897`). All up to date
+   with `origin/next` at the time of the PRs.
+3. **PRs.** [knk-web-api#47](https://github.com/PandiO/knk-web-api/pull/47),
+   [knk-plugin#77](https://github.com/PandiO/knk-plugin/pull/77) (both `Part of #738`),
+   [knk-workspace#752](https://github.com/PandiO/knk-workspace/pull/752) (`Closes #738`), base `next`. Not merged.
+4. **Tests, baseline → result.**
+    1. knk-web-api: baseline on `next` 4333 passed, 100 skipped (MySQL, no `KNK_TEST_MYSQL`), 0 failed; branch 4372
+       passed, 100 skipped, 0 failed (+39: `MapPlayersPipelineTests` 7, `MapPlayerSnapshotsTests` 10,
+       `MapPlayerRegistryTests` 6, `MapPlayerLabelsTests` 5, `MapLivePlayerDataTests` 4, `RealtimeHubTests` 3,
+       `MapPublicDtoFieldTests` 4). Each audience's raw response body is checked through the real controller,
+       default-deny filter, JWT bearer and rate limiter (A12, A14). Seen failing: removing the visibility filter fails
+       4 tests. CI on `a9ed3af`: build-and-test, mysql-tests and fresh-database green.
+    2. knk-plugin: baseline on `next` knk-core 3151, knk-api-client 344 (2 skipped), knk-paper 2957 (18 skipped), 0
+       failed; branch 3161 / 344 (2 skipped) / 2963 (18 skipped), 0 failed (+16: `MapReportingServicePlayersTest` 10,
+       `PaperOnlinePlayerSnapshotTest` 6). CI on `8b1efdcc`: build green; paper-boot green (completed 2026-11-18 11:54 UTC).
+    3. Known reds (also red on the base): none.
+    4. Environment: Maven Central through this container's proxy again answered some requests with 404 (L1's note).
+       Local plugin builds used a scratchpad retry mirror (a small local HTTP server retrying Central and the Gradle
+       plugin portal, plus an init script; not committed). Baselines ran in a separate worktree of `origin/next`.
+       MockBukkit's `waitAsyncTasksFinished` cancels repeating tasks, so the scheduler test polls for the async send.
+    5. Codex: at its usage limit on all three PRs (noted on each PR); no review, no findings handled.
+5. **Decisions (DESIGN § 4.3).**
+    1. *Snapshot tick.* Chosen: built lazily on the first request after `PollIntervalMs` ran out, one build at a time
+       (`SemaphoreSlim`), all three audiences in one build; requests answer from the stored set (O21). Alternatives: (a)
+       a background timer building every tick: works while nobody watches; (b) filtering per request: O21 rules it out.
+    2. *Audience check.* Chosen: `IPermissionReadCache.HoldsAnyAsync` with `knk.mode.staff` / `knk.mode.owner` (30 s
+       cache, wildcards via the resolver); a missing or invalid token is anonymous. Alternatives: (a) uncached
+       `CheckAnyAsync`: a database read per 2 s poll per viewer; (b) a JWT claim: tokens carry no nodes.
+    3. *Logged-in snapshot.* Chosen: built separately with the same content as the anonymous one (O08 is superseded
+       by O31, nothing differs today). Alternatives: (a) serve the anonymous object to logged-in viewers: the spec
+       names three snapshots and a later difference would need a new code path.
+    4. *Match players in the "may see hidden" snapshot.* Chosen: listed with a `minigame` tag (spec § 5 rule 8: left
+       out of every snapshot except that one). Alternatives: (a) left out everywhere (the sub-issue's shorter wording):
+       the spec rule is the binding one.
+    5. *Unknown mode value.* Chosen: hidden (tag `hidden` for staff viewers). Alternatives: (a) treat as no mode: a
+       future mode would leak to the public.
+    6. *Label data.* Chosen: `IUserService.GetByUuidAsync` (title, tier, group colours with group ids, the data behind
+       the chat line) and the rank by `knk.mode.owner` / `knk.mode.staff`, as `PlayerListener`; the plugin's fixed
+       owner/staff/default colours mirrored as `&` codes; cached per player for `LabelCacheSeconds` (60). A UUID
+       without an account gets its presence name in default colours. Alternatives: (a) the plugin sends the label: the
+       spec puts label parts in the API (O23); (b) no cache: about five queries per player every tick.
+    7. *Arena pin.* Chosen: one pin per running match (`SiegeMatch` created or in progress, as L2's "under siege") at
+       the first objective gate (by `SortOrder`) with a marker pin, else the scenario's lowest gate id with one; no pin
+       (logged once) otherwise; count = reported players with that match id. Tag "Siege", label
+       "[Siege] n players" ("1 player" singular). Alternatives: (a) the objective's `Location`: siege objectives in
+       use are gates and the markers already resolve gate pins; (b) the match's roster count: O24 says live
+       participants.
+    8. *Minigame id.* Chosen: two fields, `minigame` (`siege`) and `matchId` (the API's `SiegeMatch` id from
+       `SiegeService.runningMatchApiId`; null until the API answered the start, then the player is still hidden but
+       no pin is drawn). "In a running match" = lobby phase `IN_PROGRESS` and on the roster (`runningMatchOf`);
+       hub-phase lobby members still show. Alternatives: (a) the match token: the API stores no token; (b) hide
+       lobby members at the hub too: O13 speaks of a running match.
+    9. *Report shape and size.* Chosen: `{intervalMs, players: [...]}`, positions to 0.1 block, yaw whole degrees,
+       split below L1's 24,000-character budget (260 characters per player assumed); upsert per player in the API, so
+       split messages need no "complete set" marker; one empty report when the server empties. Alternatives: (a)
+       replace a server's set per message: a split report would drop players; (b) send every interval even when empty:
+       needless traffic.
+    10. *`interval-ticks` bounds.* Chosen: clamped to 10..1200 in the plugin, the API clamps the interval to
+        0.5..60 s for the drop rule. Alternatives: (a) unbounded: 1 tick would report 20 times a second.
+    11. *Hub flag check.* Chosen: the hub ignores reports while `Map:LivePlayers:Enabled` is off, so nothing is held.
+        Alternatives: (a) keep them anyway: memory for a disabled feature.
+    12. *Route wiring.* Chosen: the action resolves `MapPlayerSnapshots` and the options from request services, so
+        `MapController`'s constructor (and L2's pipeline tests) stay unchanged. Alternatives: (a) constructor
+        injection: L2's tests would need the new services registered.
+    13. *uuid in a public DTO.* Chosen: `MapPlayerDto.uuid` (the head and L9's player panel need it; a Minecraft UUID is
+        public), as a reviewed exception in `NoPublicMapDto_NamesARegionOwnerOrPermission`. Alternatives: (a) name
+        only: heads by name break on renames and L9 needs a stable id.
+6. **Out of scope, noted.** None new.
+7. **Blockers.** None.
+8. **At merge / what the developer must do.**
+    1. Nothing to keep it off; no migration.
+    2. The live check of smoke § 4.1 steps 2, 3 and 5 (visibility) on #738 before L5 is merged: API from `next` with
+       `Map__Enabled=true` and `Map__LivePlayers__Enabled=true`; plugin `config.yml`:
+       ```yaml
+       map:
+         reporting:
+           enabled: true
+           interval-ticks: 40
+       ```
+       (needs `realtime.enabled: true`), then smoke guide § 4.
+9. **Notes for later links.**
+    1. L5: poll `GET api/Map/players` every `config.livePlayers.pollIntervalMs` (only when `config.livePlayers.enabled`).
+       Draw `players` by `uuid` (head) with `label` parts: `[rankTag]` in `bracketColor`/`textColor`, `-{braced}-`
+       (bold when `bracedBold`), `name`; colours are the `&` code strings as the groups store them (the plugin
+       parses the same strings with `LegacyStyles`). Tags: `afk`, `mode` (`staff`, `owner`, `hidden`), `minigame`
+       (`Siege`) — the last two only reach staff viewers. `arenas[]` have `label`, `playerCount` and a `pin` like the
+       markers (`y` may be null); label distance `config.labels.arena`. Send the JWT when logged in: it selects the
+       audience. Responses are `no-store`.
+    2. L7: `GameServerHub` now also has `ReportMapPlayers`; `MapController` has `GetPlayers`. `MapOptions` has a
+       `LivePlayers` block; add `GateCommands` beside it.
+    3. L9: `MapPlayerDto.uuid` is the player's Minecraft UUID (lower case), for the moderation panel.
