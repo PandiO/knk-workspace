@@ -50,7 +50,7 @@ on `next` (Decided 2026-11-18, O01–O33, O08 superseded by O31); smoke guide
 | L4 Live players backend | #738 | Merged into `next` 2026-11-18 (knk-web-api `f2f523c3`, knk-plugin `ef4e99d9`, knk-workspace `d9c07b37`); waiting for the developer's live check of smoke § 4.1 steps 2, 3 and 5 on #738 (gates L5's merge) | `claude/overview-map-players-api`: knk-web-api `a9ed3af`, knk-plugin `8b1efdcc`, knk-workspace `09982caa` (from `next`) | [knk-web-api#47](https://github.com/PandiO/knk-web-api/pull/47), [knk-plugin#77](https://github.com/PandiO/knk-plugin/pull/77), [knk-workspace#752](https://github.com/PandiO/knk-workspace/pull/752) | API green (build-and-test, mysql-tests, fresh-database); plugin build and paper-boot green | create_session session_01R1w2UwcYKiPMueCHWqsys4 (2026-11-18) |
 | L5 Live players layer | #739 | Checks passed (coordinator 2026-11-18 12:25), not merged: waits for the developer's L4 live check on #738 (charter gate 4) | `claude/overview-map-players-page`: knk-web-app `bc17a48`, knk-workspace `69244809` (from `next`) | [knk-web-app#52](https://github.com/PandiO/knk-web-app/pull/52), [knk-workspace#756](https://github.com/PandiO/knk-workspace/pull/756) | Web app green on `bc17a48` (build-and-test, e2e); knk-workspace no CI; Codex at its limit | create_session session_01R1w2UwXPWsCYjRUw6RoxVH (2026-11-18) |
 | L6 Staff details | #740 | Merged into `next` 2026-11-18 (knk-web-app `01ad4d9a`, knk-workspace `a130f2d6`); waiting for the developer's smoke test § 6 | `claude/overview-map-staff-details`: knk-web-app `1443cf5`, knk-workspace `fe64919d` (from `next`) | [knk-web-app#51](https://github.com/PandiO/knk-web-app/pull/51), [knk-workspace#755](https://github.com/PandiO/knk-workspace/pull/755) | Web app green (build-and-test, e2e); Codex at its limit | subagent of the coordinator (2026-11-18; the create_session attempt session_01R1w2UuaEs6VbL7BVnR7ZTJ was refused the knk-web-app attach, decision 10) |
-| L7 Gate commands backend | #741 | Running | `claude/overview-map-gate-commands`: knk-web-api, knk-plugin, knk-workspace (from `next`) | – | – | create_session session_01R1w2UxDt6K1RcnDPPagNAN (2026-11-18) |
+| L7 Gate commands backend | #741 | In review: PRs open into `next`, CI green, Codex at its limit | `claude/overview-map-gate-commands`: knk-web-api `16e4157`, knk-plugin `1f8bb3c7`, knk-workspace `8368b901` (from `next`) | [knk-web-api#48](https://github.com/PandiO/knk-web-api/pull/48), [knk-plugin#79](https://github.com/PandiO/knk-plugin/pull/79), [knk-workspace#758](https://github.com/PandiO/knk-workspace/pull/758) | API green (build-and-test, mysql-tests, fresh-database); plugin build and paper-boot green | create_session session_01R1w2UxDt6K1RcnDPPagNAN (2026-11-18) |
 | L8 Gate command buttons | #742 | Not started (gate: L3 and L7 merged into `next`) | – | – | – | – |
 | L9 Player context panel | #743 | Not started (gate: L5 merged into `next`) | – | – | – | – |
 
@@ -665,3 +665,85 @@ _(Each link appends its block here when it finishes.)_
        details widget has id `staff-details` per kind. Register further staff widgets with other ids; registering the
        same id replaces it.
     2. The compact renderer is reusable: `<DisplayWizard entityTypeName=... entityId=... compact />` (needs a router).
+
+### 4.7 L7 — Gate commands backend: endpoint, hub command, plugin handler (#741)
+
+1. **Scope done.**
+    1. knk-web-api: `Controllers/GateCommandsController` (`POST api/GateStructures/{id}/commands`, own controller on the
+       `api/GateStructures` prefix, `[RequirePermission(GateAdmin)]` only), `Services/Map/GateCommandService`,
+       singleton `Services/Map/GateCommandWaiter`, DTOs `GateCommandRequestDto` / `GateCommandResponseDto`, hub contract
+       `GateCommand` v1 (`GateCommandPayload`) and `GateCommandResultDto` in `Realtime/Contracts/MapContracts.cs`, game hub
+       `GateCommandResult`, `AuditAction.GateCommandSent` (65) and `AuditSubjectTypes.GateStructure`, `MapOptions.GateCommands`
+       (`Enabled` false, `TimeoutSeconds` 5), `config.gateCommands.enabled` from the flag. Additive shared edits: two DI
+       lines, `appsettings.json` `Map:GateCommands`, one hub method, the pin in `EndpointAccessRulesTests`, three hub
+       tests. No migration (the audit action is stored as text).
+    2. knk-plugin: knk-core `gates/command/GateCommandHandler`; knk-api-client `realtime/GateCommandEvents`; knk-paper
+       `realtime/GateCommandRealtimeSync`; `KnKPlugin.registerGateCommandSync` (one call after `registerModerationSync`
+       plus the method). The existing gate operations (`GateManager.openGate` / `closeGate`, `GateCommandSupport.repair`)
+       are called, not changed. No `config.yml` key.
+    3. knk-workspace: smoke guide § 7 (10 steps: 4 automated, 6 partly automated, tagged), changelog entry, production
+       installation § 4.3 `Map__GateCommands__*`, spec status line, § 6.2.10 and § 7.5 as built; `origin/next` merged in
+       (L6's entries kept beside L7's).
+2. **Commits and heads.** knk-web-api `claude/overview-map-gate-commands` at `16e4157` (1 commit, base `next` at
+   `f2f523c`); knk-plugin `claude/overview-map-gate-commands` at `1f8bb3c7` (1 commit, base `next` at `ef4e99d9`);
+   knk-workspace `claude/overview-map-gate-commands` at `8368b901` (1 commit plus the merge of `next` at `a130f2d6`). All
+   up to date with `origin/next` at the time of the PRs.
+3. **PRs.** [knk-web-api#48](https://github.com/PandiO/knk-web-api/pull/48),
+   [knk-plugin#79](https://github.com/PandiO/knk-plugin/pull/79) (both `Part of #741`),
+   [knk-workspace#758](https://github.com/PandiO/knk-workspace/pull/758) (`Closes #741`), base `next`. Not merged.
+4. **Tests, baseline → result.**
+    1. knk-web-api: baseline on `next` 4372 passed, 100 skipped (MySQL, no `KNK_TEST_MYSQL`), 0 failed; branch 4406
+       passed, 100 skipped, 0 failed (+34: `GateCommandServiceTests` 26 through the real controller and service,
+       `GateCommandsPipelineTests` 3 through routing, JWT, default-deny and `RequirePermission`, `RealtimeHubTests` 3
+       including a real game-hub round trip, `EndpointAccessRulesTests` 1, `MapPublicServiceTests` 1). Covers 403 without
+       `knk.gate.admin` (also with `knk.admin.world`), 409 during a siege match on the gate, 503 without a game server,
+       400 for a foreign door, 504 timeout with a late answer ignored, the audit entry per command, flag off (404,
+       nothing sent or audited). Seen failing: disabling the siege or the door check fails 4 tests. CI on `16e4157`: build-and-test, mysql-tests and fresh-database green (push and pull_request runs).
+    2. knk-plugin: baseline on `next` knk-core 3161, knk-api-client 344 (2 skipped), knk-paper 2963 (18 skipped), 0
+       failed; branch 3176 / 347 (2 skipped) / 2972 (18 skipped), 0 failed (+27: `GateCommandHandlerTest` 15 with the real
+       `GateManager`, `GateCommandEventsTest` 3, `GateCommandRealtimeSyncTest` 9 with the real `GateCommandSupport.repair`
+       persisting through a mocked `GateDoorsApi`). CI on `1f8bb3c7`: build green; paper-boot green (completed 2026-11-18 12:45 UTC).
+    3. Known reds (also red on the base): none.
+    4. Environment: Maven Central and the Gradle plugin portal through this container's proxy again answered some
+       requests with 404 (L1/L4's note); local plugin builds used a scratchpad retry mirror for those two only (a small
+       local HTTP server plus an init script; not committed). The EngineHub repository refused the mirror (403), so it
+       stays direct.
+    5. Codex: at its usage limit on all three PRs (noted on each PR); no review, no findings handled.
+5. **Decisions (DESIGN § 4.3).**
+    1. *Where the endpoint lives.* Chosen: a new `GateCommandsController` on the `api/GateStructures` prefix (as
+       `PlayerModerationController` on `api/Users`). Alternatives: (a) an action on `GateStructuresController`: a
+       shared file with a class-level `DashboardReads` rule; the new controller is additive.
+    2. *Status codes.* Chosen: 200 for the game server's `done` and `refused` (body `result` and `message`), 409 for
+       `siege` (API check or the game server's lockdown), 504 for `timeout`; flag off 404 `GateCommandsOff`, like the
+       other map flags. Alternatives: (a) 409 or 422 for `refused`: the panel shows the game server's reason either
+       way, and an error status would hide the door states; (b) 200 for a timeout: the command's fate is unknown.
+    3. *Siege test in the API.* Chosen: the gate's `CurrentSiegeId` is a match created or in progress, the same test as
+       the public panel's "under siege" (§ 6.2.8), so the panel and the endpoint agree. Alternatives: (a) any running
+       match whose scenario lists the gate: the lockdown sets `CurrentSiegeId`, so this adds a query for no case seen.
+    4. *Siege test in the plugin.* Chosen: the live siege lockdown (`SiegeGateController.lobbyIdOf`). Alternatives: (a)
+       the cached `currentSiegeId`: can be stale after a match and would refuse wrongly.
+    5. *What is audited.* Chosen: every command past validation, with its outcome (`done`, `refused`, `siege`,
+       `no-game-server`, `timeout`), one entry after the result. Alternatives: (a) also malformed requests (400/404):
+       not commands; (b) an entry before sending plus one after: two rows per command for no extra information.
+    6. *Which game server.* Chosen: every connected game server gets the command; the first answer per command id wins,
+       later ones are ignored. Alternatives: (a) route by the gate's world: needs a world → server map the API doesn't
+       keep; one game server today.
+    7. *Whole-gate result.* Chosen: `done` when at least one door acted or already was in the asked state, else
+       `refused`; per door `outcome` (`started`, `already`, `repaired`, `skipped`) and `reason`. Alternatives: (a)
+       `refused` when any door is skipped: an inactive door would block the whole gate.
+    8. *Staff door list for L8.* Chosen: no new endpoint; the existing `GET api/GateStructures/{id}/doors`
+       (`GateDoorsController`, any login or the plugin key) gives door ids, names and states. Alternatives: (a) door ids
+       in the public panel DTO: O32 keeps public fields to the allow-list.
+6. **Out of scope, noted.** None new. The web app's audit-log action labels and the realtime contract catalogue
+   (realtime DESIGN § 6) get `GateCommandSent` / `GateCommand` in the documentation follow-up (PR docs impact lines).
+7. **Blockers.** None.
+8. **At merge / what the developer must do.**
+    1. Nothing to keep it off; no migration, no plugin key.
+    2. To test: API `Map__GateCommands__Enabled=true` (`Map__GateCommands__TimeoutSeconds=5` default), plugin from
+       `next` connected to the hub (`realtime.enabled: true`), then smoke guide § 7 (A18, A19).
+9. **Notes for later links.**
+    1. L8: show the buttons only when `config.gateCommands.enabled` and the viewer holds `knk.gate.admin`; door ids from
+       `GET api/GateStructures/{id}/doors`. Send `POST api/GateStructures/{id}/commands` `{action, doorId?}` (leave
+       `doorId` out for "whole gate"). Show `message`; 200 has `result` `done` or `refused`, 409 `GateInSiege` (disable
+       with "Gate is in a running siege"; the public panel's `underSiege` predicts it), 503 "no game server", 504
+       timeout ("timed out after 5 s"). Re-read the panel after the result: `doors[].state` may still be `opening`.
