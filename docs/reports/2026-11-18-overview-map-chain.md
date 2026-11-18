@@ -871,7 +871,8 @@ _(Each link appends its block here when it finishes.)_
     1. Jest `npm run test:ci`: 319 suites / 2741 passed → 320 / 2754 passed (+12 `PlayerModerationPanel.test.tsx`,
        +1 `userManagementClient` `getByUuid`). The existing `usePlayerFreeze` / `usePlayerKickBan` / profile tests are
        unchanged and green.
-    2. Playwright, all specs: 186 → 191 passed (+5 `overview-map-moderation.spec.ts`, new fixture
+    2. Playwright, all specs: 191 passed, all green (186 existing + 5 new `overview-map-moderation.spec.ts`; the base was
+       not run separately; new fixture
        `e2e/fixtures/mapModeration.ts`).
     3. `tsc --noEmit`, `typecheck:e2e`, `CI=true npm run build`: green → green. Known reds: none.
     4. Acceptance: A20 (e2e "a viewer with only knk.kick ...", Jest; the kick in game by hand, smoke § 9 steps 1–2),
