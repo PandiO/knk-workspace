@@ -48,7 +48,7 @@ on `next` (Decided 2026-11-17).
 | L7 Phase 4 route modes | #707 | Not started (gate: L5 in `next`) | `claude/offroad-route-modes` | — | — | — |
 | L8 Phase 5.1 landmark entity | #708 | Merged into next (2026-11-18); waits for the developer's live test (tier:3, smoke § 6) | knk-web-api `d331bdf4`, knk-web-app `b50c4134`, knk-plugin `be9e3a74`, knk-workspace `eb3321a9` (`claude/offroad-landmarks`) | [knk-web-api#50](https://github.com/PandiO/knk-web-api/pull/50) → `935fe8cc`, [knk-web-app#54](https://github.com/PandiO/knk-web-app/pull/54) → `3432e6ef`, [knk-plugin#83](https://github.com/PandiO/knk-plugin/pull/83) → `5fd81466`, [#763](https://github.com/PandiO/knk-workspace/pull/763) → `7722cc76` | green (all jobs) | subagent of the coordinator (three component repos; resumed once after the usage limit) |
 | L9 Phase 5.2 landmark weights | #709 | Not started (gate: L7 and L8 in `next`) | `claude/offroad-landmark-weights` | — | — | — |
-| L10 Phase 7 plaza lines | #712 | Step 1 merged into next (2026-11-18); step 2 running (started 17:50 after the developer's OK on #712, curve clearance 0.65) | knk-plugin `claude/offroad-plaza-lines` `97d1bafc`; knk-workspace `claude/offroad-plaza-lines` `d794c716` | step 1: [knk-plugin#73](https://github.com/PandiO/knk-plugin/pull/73) → `next` `ce0f65ec`, [#723](https://github.com/PandiO/knk-workspace/pull/723) → `next` `c7f61e9e` | green (build, paper-boot 55) | create_session `session_01R1w2Ussca79jpGCPqzcTf8` (2026-11-18) |
+| L10 Phase 7 plaza lines | #712 | Step 1 merged into next (2026-11-18); step 2 in review (2026-11-18): the trail draws plaza lines behind `navigation.plaza-lines`, `plaza-curve-clearance` 0.65 (O33) | knk-plugin `claude/offroad-plaza-lines` `28ad18c5`; knk-workspace `claude/offroad-plaza-lines` `d7e4e834` | step 1: [knk-plugin#73](https://github.com/PandiO/knk-plugin/pull/73), [#723](https://github.com/PandiO/knk-workspace/pull/723) (merged); step 2: [knk-plugin#84](https://github.com/PandiO/knk-plugin/pull/84) (`Closes #712`), [#769](https://github.com/PandiO/knk-workspace/pull/769) | green (build, paper-boot on `28ad18c5`) | create_session `session_01R1w2Ussca79jpGCPqzcTf8` (2026-11-18) |
 
 ## 3. Coordinator decisions
 
@@ -778,3 +778,63 @@ _(Each link appends its block here when it finishes.)_
 9. **Notes for later links.**
     1. L9 (#709): `KnkLandmark.preference()` is read from the API but not in the model's `Landmark` record. Weights need it in the model, which means adding a field to the record and to `NavigationModelSnapshot.LandmarkFile`; snapshot schema 1 reads an unknown field as missing, so the field is additive. `LandmarkExtent.Cylinder.contains` and `LandmarkConnections` are the seams for the walk planner.
     2. The `/knk landmark` writes go through `api/landmarks` with the plugin key. The API's `PUT` keeps null fields except `domainId`, so `LandmarkWrite.from(landmark)` resends the domain.
+
+### 4.5b L10 — Phase 7 step 2: the trail draws plaza lines (#712)
+
+*Step 2, after the developer's view of the lines (#712, comment of 2026-11-18 16:31, recorded as O33) and the coordinator's go.*
+
+1. **Scope done.** Everything is behind `navigation.plaza-lines`, off by default.
+    1. knk-core:
+        1. `core/navigation/PlazaTrail` (new): a route's plaza crossings, each with where the route passes its node. They are worked out lazily: one per redraw, when the trail's window comes within 24 blocks, once for the route's life (§ 8.6).
+        2. `PlazaTrail.draw` moves the trail's spots inside a crossing onto its line by their share of the way.
+        3. `segmentOf` places a `PlazaCurve.Result` on the route polyline in the route's own 3D measure.
+    2. knk-core `PlazaCurve.Options.curveClearance` (O33): a curve is taken down to 0.65. The A* line keeps `wall-clearance` where it can and never goes under 0.35. Step 1's 5-argument constructor keeps its meaning.
+    3. knk-paper:
+        1. `NavigationService`, in a new section "plaza lines on the trail": a `PlazaTrail` per route on `Active`. `setPlazaLines(world, options)` is wired in `KnKPlugin` beside `navigationService.start()`. The three road-trail draws (`drawRouteFromPlayer` twice, `drawStartLeg` once) call the new overload only with the flag on and a plaza world; otherwise they make exactly the old calls. `plazaLineStatus()` is shown in `/knk road status`.
+        2. `TrailRenderer.drawRoute(..., PlazaTrail)`, with `trailPointAlongs` and `centredWindowAlongs`. The old overloads are unchanged.
+        3. Key `navigation.plaza-curve-clearance` (0.65); `PlazaLinesConfig` keeps a 3-argument constructor. The preview's header names both clearances.
+    4. knk-workspace:
+        1. DESIGN: decision O33, § 8.4, § 8.7, and § 8.11 as built.
+        2. Smoke test § 10: step 1 viewed; § 10.2 with nine steps, all tagged automated, three in part.
+        3. Plugin configuration reference § 4.15 and § 2.1; CHANGELOG.
+    5. Untouched: `core/navigation/destinations`, the engine-handle code in `NavigationService`, NPC code, and the public signatures of `WalkLegPreparer`, `WalkSearch`/`WalkPathfinder`, `MovementProfile` and the shape package (additions only).
+2. **Commits and heads.**
+    1. knk-plugin `claude/offroad-plaza-lines` at `28ad18c5`: 2 commits on `next` `5fd81466` (the branch was fast-forwarded to it).
+    2. knk-workspace `claude/offroad-plaza-lines` at `d7e4e834`: 1 commit on `next` `7722cc76`.
+3. **PRs.** Both target `next`. Not merged.
+    1. [PandiO/knk-plugin#84](https://github.com/PandiO/knk-plugin/pull/84): `Closes PandiO/knk-workspace#712`.
+    2. [PandiO/knk-workspace#769](https://github.com/PandiO/knk-workspace/pull/769): `Part of`.
+4. **Tests, baseline on `next` `5fd81466` → result.**
+    1. knk-core 3 334 → 3 343 (+9). knk-paper 3 089 → 3 096 (+7, 18 skipped). knk-api-client 358 → 358 (2 skipped). No failures.
+    2. A22: `NavigationServiceTest.withPlazaLinesTheTrailRoundsTheJunctionOnThePlazaLine` (the spot at the node is drawn 35 % of the way to the node; straight on, the line is the road) and the `PlazaTrailTest` cases.
+    3. A23: `PlazaCurveTest` (the stall).
+    4. A24: `withPlazaLinesOffTheTrailIsDrawnAsToday`, `withoutAPlazaWorldTheFlagDrawsAsToday`, and `TrailRendererTest.withoutAPlazaTrailTheRouteIsDrawnAsBefore`. All of L3's and L4's flag-off identity tests are unchanged and green.
+    5. A25: `plazaLinesChangeNeitherTheRouteNorItsNumbers`. A transcript of the progress, the route length, the maneuvers, every HUD update and every chat line is equal with the flag on and off.
+    6. Local paper-boot (the three real-plaza scenarios with 0.65): all PASS. The South Gate plaza now has 4 curves (was 1); Northern Gate Square 3 curves and 4 A* lines (was 7 A* lines); Brink is unchanged (its snapshot predates the node move).
+    7. CI on `28ad18c5`: `build` and `paper-boot` green on the push and the pull-request runs (2026-11-18 18:26 UTC, no midnight crossing).
+    8. Codex: at its usage limit on both PRs (2026-11-18 18:00 UTC), said on both; no findings.
+5. **Decisions (DESIGN § 4.3).**
+    1. *How the trail uses the line.* Chosen: the route's own spots (every 1.5 blocks from its start) inside a crossing are drawn at the same share of the way along the plaza line. The particles keep fixed spots, and the cursor and progress stay on the route polyline (L4's note 9.2, A25). Alternatives: (a) splice the line into the route polyline; that changes the length, the ETA and the cursor (against A25); (b) a separate polyline with its own cursor; more state for no gain on a 20 to 30 block stretch.
+    2. *When a crossing is worked out.* Chosen: lazily on the main thread, one per redraw (every 10 ticks), when the window comes within 24 blocks of its node, then kept for the route. Alternatives: (a) all crossings at route adoption; several A* runs in one tick on long routes; (b) on the routing thread; `BukkitNavWorld` reads live blocks, which is main-thread only.
+    3. *guidance-v2.* Chosen: the same drawing with the flag on or off. The road trail's spots are fixed along the route in both cases; with `guidance-v2` on they are drawn from L4's cursor. Alternative: plaza lines only with `guidance-v2`; the coordinator's note asks for the anchored trail with it on, not for a dependency.
+    4. *The curve's threshold.* Chosen: a new key `plaza-curve-clearance` (0.65, O33), separate from `walk.wall-clearance`, which the A* line keeps. Alternative: lower `wall-clearance` for plazas; that would make the A* lines hug obstacles too.
+    5. *The step-1 constructor of `Options`.* Chosen: it keeps the step-1 meaning (the curve keeps the A* clearance), so callers outside this link stay as they were; `defaults()` uses 0.65. Alternative: change it to 0.65; that is a silent change for a public constructor.
+6. **Out of scope, noted.** The stair-house door choice at Brink is a road edit of edge #57 (the developer's note on #712), not done. Docs follow-ups at merge: npc-navigation § 12.4, the player guide, the register.
+7. **Blockers.** None.
+8. **At merge / what the developer must do.**
+    1. The coordinator merges knk-plugin#84 and #769 into `next`. #84 closes #712; then the documentation sub-issue and the docs session (CLAUDE.md "Shipping a change").
+    2. Deploy: add under `navigation:` and restart. Set `plaza-lines: true` to test.
+
+       ```yaml
+       navigation:
+         plaza-lines: false
+         plaza-pull: 0.35
+         plaza-guide-cost: 2
+         plaza-curve-clearance: 0.65
+       ```
+
+    3. Live test, smoke test § 10.2: Brink, the South Gate plaza and Northern Gate Square with `plaza-lines: true`; a street T junction; the HUD and turns flag on against flag off; then off again.
+    4. Optionally comment `@codex review` on both PRs once the Codex limit resets.
+9. **Notes for later links.**
+    1. L5 (route as a leg list): `PlazaTrail` measures in the route polyline's own 3D distance along it. A route of several legs needs one `PlazaTrail` per leg polyline, or one over the joined polyline.
+    2. The real-plaza scenarios use snapshots from 2026-11-17. Brink's node has moved since; a new snapshot would show the developer's view.
