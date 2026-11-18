@@ -4,6 +4,28 @@ This is a human-readable record of capabilities merged into the V3 default branc
 
 ## Unreleased — on feature branches, not merged
 
+- **Overview map: the game server reports town, district and structure outlines** ([PandiO/knk-workspace#735](https://github.com/PandiO/knk-workspace/issues/735),
+  link L1 of the overview map chain, [#732](https://github.com/PandiO/knk-workspace/issues/732)). knk-plugin,
+  knk-web-api and knk-workspace branches `claude/overview-map-outlines` (PRs into `next`). Behind the new plugin key
+  `map.reporting.enabled` (off by default). Nothing changes for players yet: the outlines are what the coming web map
+  draws.
+  1. With reporting on, the plugin sends the outline (2D points, min and max Y) of every Town, District, Structure and
+     Gate region to the API over the game hub (`ReportRegionOutlines`): after every managed-region repair (startup,
+     `/knk regions repair`), after a world task's region is renamed or redefined (the old name is removed), and again
+     on every hub (re)connect. Large reports are split under the hub's message limit.
+  2. The API keeps them in the new table `map_region_outlines`, one row per world and region id, linked to the domain
+     that names the region (main region or sub-region), so the map keeps its outlines while the game server is down.
+     Only a plugin-key game hub connection can write them.
+  3. Admin steps: apply the migration `AddMapRegionOutlines` (additive, one new table). To turn reporting on, paste into
+     the plugin's `config.yml` (it also needs `realtime.enabled: true`):
+     ```yaml
+     map:
+       reporting:
+         enabled: true
+     ```
+     Steps: [overview map smoke test § 1](guides/overview-map-smoke-test.md#1-phase-1-region-outlines-735-tier3),
+     [plugin configuration § 4.29](guides/admin/plugin-configuration.md#429-map).
+
 - **NPC navigation: held NPCs stay held through `/knk cache refresh`** ([PandiO/knk-workspace#724](https://github.com/PandiO/knk-workspace/issues/724),
   link R1 of the NPC navigation follow-ups chain). knk-plugin and knk-workspace branches `claude/npc-movement-r1` (PRs
   into `next`). Behind `npc.navigation.enabled` (off by default); no new `config.yml` key, no migration.

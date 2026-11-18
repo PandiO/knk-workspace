@@ -1,7 +1,7 @@
 # Overview map — smoke test
 
-**Status:** Draft from the design (2026-11-18); no steps run. Steps not yet automated (the links tag them).
-**Last updated:** 2026-11-18 (draft from the design, phases 1, 2, 3, 4a, 4b, 5, 6a, 6b, 7)
+**Status:** Draft from the design (2026-11-18); no steps run. § 1 updated to what L1 built (7 steps, all partly automated, tagged); the other sections are not automated yet (the links tag them).
+**Last updated:** 2026-11-18 (§ 1 to what L1 built, #735); 2026-11-18 (draft from the design, phases 1, 2, 3, 4a, 4b, 5, 6a, 6b, 7)
 **Design:** [specs/in-game-maps/OVERVIEW_MAP_DESIGN.md](../specs/in-game-maps/OVERVIEW_MAP_DESIGN.md) · **Issue:**
 [PandiO/knk-workspace#732](https://github.com/PandiO/knk-workspace/issues/732)
 
@@ -19,24 +19,65 @@ gate structure with two doors.
 
 ## 1. Phase 1: region outlines (#735, tier:3)
 
-*Draft from the design (2026-11-18); the link updates it to what was built and tags the automated steps.*
+*Built by link L1 (knk-plugin and knk-web-api branches `claude/overview-map-outlines`, PRs into `next`). 7 steps, all
+partly automated (tagged): the suites cover the plugin's reports, the hub method and the table; a real Paper server
+with WorldGuard, the game hub and MySQL is checked by hand. Every step can still be run by hand; not run yet. Full manual
+run about 30 minutes.*
+
+Tests named below: knk-plugin `knk-core` `MapReportingServiceTest`, `ManagedRegionRepairServiceTest`, `knk-paper`
+`RegionOutlineAdapterTest`; knk-web-api `MapRegionOutlineServiceTests`, `RealtimeHubTests`, `AddMapRegionOutlinesTests`.
 
 ### 1.0 Preconditions
 
-1. Deployed: the API from `next` with the `map_region_outlines` migration applied, and the plugin build from `next`.
-2. Settings: plugin `config.yml` `map.reporting.enabled: true`.
+1. Deployed: the API from `next` with the `AddMapRegionOutlines` migration applied (new table `map_region_outlines`),
+   and the plugin build from `next`.
+2. Settings: plugin `config.yml` `realtime.enabled: true` (the reports travel over the game hub) and the new block
+   ```yaml
+   map:
+     reporting:
+       enabled: true
+   ```
+   Existing servers don't get the block by themselves: paste it (plugin configuration reference § 4.29).
 3. Data: the test town, its districts and the structures above, each with a WorldGuard region.
+4. To read the table: `SELECT WgRegionId, WorldName, MinY, MaxY, DomainId, UpdatedAt, LEFT(PointsJson, 80) FROM
+   map_region_outlines ORDER BY WorldName, WgRegionId;`
 
 ### 1.1 Steps
 
-1. Start the game server and wait for the startup reconcile to finish. In the database, read `map_region_outlines`.
-   **Expected:** one row per domain region id and world, with points, min Y and max Y. (A01)
-2. Restart the game server. **Expected:** the same rows, updated in place with no duplicates. (A01)
-3. In game, re-run the region step of one district so its region changes shape. **Expected:** that district's row has
-   new points and a newer `UpdatedAt` within one reconcile. (A02)
-4. Rename a `tempregion_worldtask_<n>` to `domain_<id>` through the world task flow. **Expected:** the row carries the
-   new region id, and no row is left for the old id. (A02)
-5. Set `map.reporting.enabled: false` and restart. Change a region. **Expected:** the row does not change. (flag)
+1. [partly automated: `ManagedRegionRepairServiceTest.theAfterRunListenerGetsTheDomainRegionsOfEveryRun`,
+   `MapReportingServiceTest.startup_sendsEveryDomainRegionWithPointsAndYRange`, `RegionOutlineAdapterTest`,
+   `RealtimeHubTests.GameHub_ReportRegionOutlines_StoresOneRowPerRegion`,
+   `MapRegionOutlineServiceTests.StartupReport_StoresOneRowPerRegionWithPointsYRangeAndDomainLink`; by hand: a real
+   server, WorldGuard and MySQL] Start the game server and wait for the startup repair (`[KnK Regions] Managed-region
+   repair: …` in the server log). **Expected:** the server log shows `[KnK Map] Region outlines (domain regions): <n>
+   outline(s), 0 removed, …`; the API log shows `Game server <id> reported region outlines: <n> stored, …`. The table
+   has one row per domain region id and world, with points (four corners for a cuboid region, the polygon's points
+   otherwise), min Y, max Y and `DomainId` set to the domain. (A01)
+2. [partly automated: `MapRegionOutlineServiceTests.ReportingAgain_UpdatesInPlaceWithoutDuplicates_AndKeepsUnchangedRowsUntouched`;
+   by hand: a real restart] Restart the game server. **Expected:** the same rows, no duplicates; rows whose region did
+   not change keep their `UpdatedAt` (the API log counts them as unchanged). (A01)
+3. [partly automated: `MapReportingServiceTest.reRunOfARegionStep_replacesInPlace_andNeverRemovesTheFinalName`,
+   `MapRegionOutlineServiceTests.RedefinedInPlace_RemovedNamesTheSameRegion_TheRowIsKept`; by hand: the world task in
+   game] In the web app, re-run the Region and Location step of one district and draw a different shape in game.
+   **Expected:** right after the step, that district's row has the new points and a newer `UpdatedAt`; the server log
+   shows `[KnK Map] Region outlines (region domain_<id>): 1 outline(s), 1 removed, …` (the removed one is the temp
+   name). (A02)
+4. [partly automated: `MapReportingServiceTest.rename_sendsTheNewOutlineAndRemovesTheOldNames`,
+   `MapRegionOutlineServiceTests.Rename_StoresTheNewIdAndRemovesTheOldRow`; by hand: the world task flow] Create a new
+   structure through the form wizard so its `tempregion_worldtask_<n>` is renamed to `domain_<id>`. **Expected:** a
+   row for `domain_<id>` with the structure's `DomainId`; no row for `tempregion_worldtask_<n>`. (A02)
+5. [partly automated: `MapReportingServiceTest.startup_sendsEveryDomainRegionWithPointsAndYRange`; by hand: the
+   command] Change a region by hand (`/rg redefine domain_<id>` with a new selection), then run `/knk regions repair`.
+   **Expected:** that row has the new points after the repair (the repair resends every domain region; a hand edit
+   alone is not reported until then).
+6. [partly automated: `MapReportingServiceTest.notConnected_isReportedAndTheReconnectResendsTheCurrentOutlines`; by
+   hand: an API restart] With the game server running, stop the API, empty the table (`DELETE FROM
+   map_region_outlines;`), and start the API again. **Expected:** once the plugin's hub reconnects (server log
+   `Realtime resync after reconnect: …`), the rows are back.
+7. [partly automated: `MapReportingServiceTest.offByDefault_readsAndSendsNothing`; by hand: the restart] Set
+   `map.reporting.enabled: false` and restart. Change a region (step 3 or 5). **Expected:** the server log shows
+   `[KnK Map] Map reporting off (map.reporting.enabled=false)`, no `[KnK Map] Region outlines` line, and the row does
+   not change. (flag)
 
 ## 2. Phase 2: public map API (#736, tier:3)
 

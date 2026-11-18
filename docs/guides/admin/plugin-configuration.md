@@ -1,6 +1,6 @@
 # Plugin configuration reference (`config.yml`)
 
-**Status:** Current · **Last updated:** 2026-11-18 (§ 4.27: every `npc.navigation` key checked against `config.yml` on knk-plugin `next` `7aef3de4`, no key added; texts of `pathfinder`, `hop-blocks`, `recheck-ticks`, `walk-only-blocks` and `stop-on-trespass` for the fix links C1 and E1, region overrides for NPCs since L9, #726); 2026-11-18 (§ 4.15 `navigation.plaza-lines`, `plaza-pull`, `plaza-guide-cost` and § 2.1, #712 step 1); 2026-11-18 (§ 4.15 `navigation.trail-leg-spacing`, `navigation.cursor-jump`, `guidance-v2` text, and § 2.1, #711); 2026-11-17 (§ 4.15 `navigation.guidance-v2`, `walk.clearance-cost`, `walk.wall-clearance`, `walk.curve` and § 2.1, #710); 2026-11-17 (§ 4.15 `navigation.walk.max-chunks-per-request` and § 2.1, #703); 2026-11-16 (§ 4.27 `npc`: the per-NPC table no longer split by the `collidable` note, link to the NPC navigation admin guide, docs #658); 2026-11-16 (§ 4.27 `npc`: push resistance for `collidable` (still false), `players-push-npcs`, `push-return`, `push-exempt-after`, `push-exempt-window-ticks`, `push-exempt-ticks`, `push-teleport-ticks`, #627); 2026-11-16 (§ 4.27 `npc`: `crowd-awareness`, #626); 2026-11-16 (§ 4.27 `npc`: `plaza-lines`, `plaza-corridor-blocks`, #625); 2026-11-15 (§ 4.27 `npc`: `group-formation-keeping`, `group-lateral-spacing-min`, `group-spacing-min`, `group-lookahead-blocks`, #624); 2026-11-15 (§ 4.27 `npc`: `local-legs-clearance`, #623); 2026-11-15 (§ 4.27 `npc`: `corridor-steering`, `corridor-half-width`, `wall-clearance`, #622); 2026-11-15 (§ 4.3 `realtime.moderation` and § 2.1, web kick/ban, #574); 2026-11-15 (§ 2.1: #522 merged into `next` `deb7ff49`, #589); 2026-11-15 (§ 4.27 `npc`: `group-lateral-spacing`, `group-width-hysteresis-blocks`, `group-followers-finish-trip`, `group-spacing` 2.0 → 1.5, `group-formation` and `group-ranks-width` texts, #522); 2026-11-15 (§ 4.27 `npc`: `corner-clearance`, `waypoint-margin`, `recovery-wait-ticks`, `stationary-ticks` and `no-progress-ticks` 40, `max-retries` reworded, #521); 2026-11-14 (§ 4.28 `testing.scenarios`, test servers only, #421); 2026-11-14 (§ 4.18 `messages.web-account-registered`, #485); 2026-11-14 (§ 2.1: the #377 `group-*` keys are in `next` since 2026-11-13, PandiO/knk-workspace#496); 2026-11-13 (§ 4.11 gates are discovered too; § 4.21 realtime push; § 4.26 the kit cache, PandiO/knk-workspace#300)
+**Status:** Current · **Last updated:** 2026-11-18 (§ 4.29 `map.reporting.enabled`, § 2.1 and § 3 rows, overview map L1, #735); 2026-11-18 (§ 4.27: every `npc.navigation` key checked against `config.yml` on knk-plugin `next` `7aef3de4`, no key added; texts of `pathfinder`, `hop-blocks`, `recheck-ticks`, `walk-only-blocks` and `stop-on-trespass` for the fix links C1 and E1, region overrides for NPCs since L9, #726); 2026-11-18 (§ 4.15 `navigation.plaza-lines`, `plaza-pull`, `plaza-guide-cost` and § 2.1, #712 step 1); 2026-11-18 (§ 4.15 `navigation.trail-leg-spacing`, `navigation.cursor-jump`, `guidance-v2` text, and § 2.1, #711); 2026-11-17 (§ 4.15 `navigation.guidance-v2`, `walk.clearance-cost`, `walk.wall-clearance`, `walk.curve` and § 2.1, #710); 2026-11-17 (§ 4.15 `navigation.walk.max-chunks-per-request` and § 2.1, #703); 2026-11-16 (§ 4.27 `npc`: the per-NPC table no longer split by the `collidable` note, link to the NPC navigation admin guide, docs #658); 2026-11-16 (§ 4.27 `npc`: push resistance for `collidable` (still false), `players-push-npcs`, `push-return`, `push-exempt-after`, `push-exempt-window-ticks`, `push-exempt-ticks`, `push-teleport-ticks`, #627); 2026-11-16 (§ 4.27 `npc`: `crowd-awareness`, #626); 2026-11-16 (§ 4.27 `npc`: `plaza-lines`, `plaza-corridor-blocks`, #625); 2026-11-15 (§ 4.27 `npc`: `group-formation-keeping`, `group-lateral-spacing-min`, `group-spacing-min`, `group-lookahead-blocks`, #624); 2026-11-15 (§ 4.27 `npc`: `local-legs-clearance`, #623); 2026-11-15 (§ 4.27 `npc`: `corridor-steering`, `corridor-half-width`, `wall-clearance`, #622); 2026-11-15 (§ 4.3 `realtime.moderation` and § 2.1, web kick/ban, #574); 2026-11-15 (§ 2.1: #522 merged into `next` `deb7ff49`, #589); 2026-11-15 (§ 4.27 `npc`: `group-lateral-spacing`, `group-width-hysteresis-blocks`, `group-followers-finish-trip`, `group-spacing` 2.0 → 1.5, `group-formation` and `group-ranks-width` texts, #522); 2026-11-15 (§ 4.27 `npc`: `corner-clearance`, `waypoint-margin`, `recovery-wait-ticks`, `stationary-ticks` and `no-progress-ticks` 40, `max-retries` reworded, #521); 2026-11-14 (§ 4.28 `testing.scenarios`, test servers only, #421); 2026-11-14 (§ 4.18 `messages.web-account-registered`, #485); 2026-11-14 (§ 2.1: the #377 `group-*` keys are in `next` since 2026-11-13, PandiO/knk-workspace#496); 2026-11-13 (§ 4.11 gates are discovered too; § 4.21 realtime push; § 4.26 the kit cache, PandiO/knk-workspace#300)
 **Checked against:** knk-plugin `main` `121030f`; § 4.11, § 4.21 and § 4.26 against `57884e9`; § 4.27 `npc`, the `realtime.erasure` and `realtime.moderation` blocks and `regions.temp-retention.release-interval-minutes` against knk-plugin `next` (not on trunk yet). Update this page in place whenever a `config.yml` key is added, renamed, removed or gets a new default.
 **Source:** knk-plugin `knk-paper/src/main/resources/config.yml` (1,152 lines at `121030f`), read by
 `knk-paper/.../paper/config/ConfigLoader.java`, `EnchantmentConfigManager.java` and `KnKPlugin.java`
@@ -85,6 +85,7 @@ Newest first. Builds before this list: compare the files with the script.
 
 | Merged | Issue | Added (+), removed (−) or changed | Applies |
 |---|---|---|---|
+| in review, not in `next` yet (`claude/overview-map-outlines`) | [#735](https://github.com/PandiO/knk-workspace/issues/735) | + `map.reporting.enabled` (false): region outlines to the API for the overview map; needs `realtime.enabled: true` | Restart |
 | in review, not in `next` yet (`claude/offroad-plaza-lines`) | [#712](https://github.com/PandiO/knk-workspace/issues/712) | + `navigation.plaza-lines` (false), + `navigation.plaza-pull` (0.35), + `navigation.plaza-guide-cost` (2); phase 7 step 1: only the staff preview `/knk road plazaline` reads the last two, the trail does not use plaza lines yet | Restart |
 | in review, not in `next` yet (`claude/offroad-trail-cursor`) | [#711](https://github.com/PandiO/knk-workspace/issues/711) | + `navigation.trail-leg-spacing` (3.0), + `navigation.cursor-jump` (12); both act only with `guidance-v2: true` | Restart |
 | in review, not in `next` yet (`claude/offroad-trail-corners`) | [#710](https://github.com/PandiO/knk-workspace/issues/710) | + `navigation.guidance-v2` (false), + `navigation.walk.clearance-cost` (5), + `walk.wall-clearance` (0.8), + `walk.curve` (true); the three walk keys act only with `guidance-v2: true` | Restart |
@@ -154,6 +155,7 @@ Newest first. Builds before this list: compare the files with the script.
 | 4.26 | `cache` | API response cache per entity |
 | 4.27 | `npc` | NPC navigation on Citizens (off by default) |
 | 4.28 | `testing` | In-plugin test scenarios, test servers only (off by default) |
+| 4.29 | `map` | Overview map reports to the API (off by default) |
 
 ## 4. Key reference
 
@@ -814,6 +816,24 @@ testing:
       z: 30000
 ```
 
+### 4.29 `map`
+
+Overview map in the web app ([design](../../specs/in-game-maps/OVERVIEW_MAP_DESIGN.md) § 7, [smoke test § 1](../overview-map-smoke-test.md#1-phase-1-region-outlines-735-tier3),
+[#732](https://github.com/PandiO/knk-workspace/issues/732)). Off by default: with `reporting.enabled: false` the plugin
+reads and sends nothing for the map and behaves as before. The reports travel over the game hub, so they also need
+`realtime.enabled: true` (§ 4.3); with realtime off the plugin logs a warning and sends nothing. The block sits between
+`regions` and `command-visibility` in the file.
+
+| Key | Default | What it does, safe values | Applies | Added by |
+|---|---|---|---|---|
+| `reporting.enabled` | `false` | `true` sends the outline (2D points, min and max Y) of every Town, District, Structure and Gate region to the API, which keeps them in `map_region_outlines`: after every managed-region repair (startup, `/knk regions repair`), after a world task's region is renamed or redefined (the old name is removed), and again on every game hub (re)connect | Restart | #735 |
+
+```yaml
+map:
+  reporting:
+    enabled: false
+```
+
 ## 5. Maintaining this page
 
 - A change that adds, renames or removes a key, or changes a default, updates § 2.1 and the section's table in the
@@ -825,6 +845,7 @@ testing:
 
 ## Changes
 
+1. 2026-11-18: § 4.29 `map.reporting.enabled` (#735), § 2.1 and § 3 rows; checked against knk-plugin `claude/overview-map-outlines`, not merged into `next` yet
 1. 2026-11-18: § 4.15 `navigation.plaza-lines`, `plaza-pull`, `plaza-guide-cost` (#712 step 1), § 2.1 row; checked against knk-plugin `claude/offroad-plaza-lines`, not merged into `next` yet
 1. 2026-11-16: § 4.27 `npc`: push resistance with `collidable` (default still false), `players-push-npcs`, `push-return`, `push-exempt-after`, `push-exempt-window-ticks`, `push-exempt-ticks`, `push-teleport-ticks` (#627), § 2.1 row; checked against knk-plugin `claude/npc-movement-m7`, not merged into `next` yet
 1. 2026-11-16: § 4.27 `npc`: `crowd-awareness` (#626), § 2.1 row (and the #625 row now in `next`); checked against knk-plugin `claude/npc-movement-m4`, not merged into `next` yet
