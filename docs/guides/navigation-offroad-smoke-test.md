@@ -179,10 +179,11 @@ dev world.*
    `WalkLinkRoutingTest.aCachedLinkMakesTheRouteRoadWalkRoad`,
    `WalkLinkRoutingTest.theInstructionsSayWhereTheRouteLeavesTheRoad`; the look of the trail is manual]
 2. Walk the whole route along the trail. **Expected:** one route on the HUD, no "You left the road - recalculating."
-   while you follow the trail, also on the courtyard stretch (it is part of the route); arrival at the building. Then
+   while you follow the trail, also on the courtyard stretch (it is part of the route); the gold road trail leads until
+   the road's end, and only there does the last light blue walk into the building begin; arrival at the building. Then
    `/knk road status`: **Expected:** "walk links: … 1 with links (1 links) …", "walk link searches: … 1 found …". (A02)
    [automated in part: knk-paper `NavigationServiceWalkLinksTest.aFoundLinkGivesTheShortcutAcrossTheCourtyard` (the
-   status lines); walking it is manual]
+   status lines), `NavigationServiceWalkLinksTest.theRoadTrailKeepsTheLeadUntilTheRoadsEnd`; walking it is manual]
 3. Navigate along one straight street between two junctions that are close by road as well (the road no more than
    twice the straight distance). **Expected:** no walk link; the route stays on the road; `/knk road status` shows no
    link search for it. (A03) [automated: knk-core `WalkLinkCandidatesTest.theRatioDecides`,
@@ -230,7 +231,7 @@ dev world.*
 12. Tick time: with `/spark tps` (or the server's TPS) watch steps 1 and 7. **Expected:** no drop: link searches run
     off the main thread and their captures within the capture tick budget (budget 1). [manual]
 13. NPCs: let an NPC walk a road route while the player navigates. **Expected:** the NPC moves exactly as before; NPC
-    routes never take walk links. [automated: the unchanged NPC unit tests and paper-boot NPC scenarios]
+    routes never take walk links. [automated: knk-paper `NavigationServiceWalkLinksTest.anNpcRoadPlanNeverTakesAWalkLink`; the unchanged NPC unit tests and paper-boot NPC scenarios]
 14. Turn `navigation.walk-links` off, restart, and navigate as in step 1 and as in step 9. **Expected:** today's
     routes: walk leg, road, walk leg only, and direct mode within 48 blocks; `/knk road status` has no walk-link lines;
     the other walk-link keys change nothing. [automated: knk-paper
