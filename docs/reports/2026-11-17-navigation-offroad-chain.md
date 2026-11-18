@@ -47,7 +47,7 @@ on `next` (Decided 2026-11-17).
 | L5 Phase 2 walk links | #705 | Not started (L4 in `next`; waits for L1 done: the developer's filled measurements report) | `claude/offroad-walk-links` | — | — | — |
 | L6 Phase 3 hierarchical walk search | #706 | Not started (gate: L5 in `next`; O32 question first if L1 says option A fits) | `claude/offroad-hierarchical` | — | — | — |
 | L7 Phase 4 route modes | #707 | Not started (gate: L5 in `next`) | `claude/offroad-route-modes` | — | — | — |
-| L8 Phase 5.1 landmark entity | #708 | Step A done (2026-11-18), PRs open, not merged; step B (plugin `LandmarkProvider`, `/knk landmark`) after engine L4 #62 is merged | knk-web-api `claude/offroad-landmarks` `d331bdf`; knk-web-app `claude/offroad-landmarks` `b50c413`; knk-workspace `claude/offroad-landmarks` `97a71701` | [knk-web-api#50](https://github.com/PandiO/knk-web-api/pull/50), [knk-web-app#54](https://github.com/PandiO/knk-web-app/pull/54), [#763](https://github.com/PandiO/knk-workspace/pull/763) | green (API build-and-test, mysql-tests, fresh-database; web app build-and-test, e2e) | subagent of the coordinator (three component repos, skill § 4.1.4.2) |
+| L8 Phase 5.1 landmark entity | #708 | Steps A and B done (2026-11-18), PRs open, not merged | knk-web-api `claude/offroad-landmarks` `d331bdf4`; knk-web-app `b50c4134`; knk-plugin `be9e3a74`; knk-workspace `eb3321a9` | [knk-web-api#50](https://github.com/PandiO/knk-web-api/pull/50), [knk-web-app#54](https://github.com/PandiO/knk-web-app/pull/54), [knk-plugin#83](https://github.com/PandiO/knk-plugin/pull/83) (Closes #708), [#763](https://github.com/PandiO/knk-workspace/pull/763) | green (API build-and-test, mysql-tests, fresh-database; web app build-and-test, e2e; plugin build, paper-boot) | subagent of the coordinator (three component repos, skill § 4.1.4.2) |
 | L9 Phase 5.2 landmark weights | #709 | Not started (gate: L7 and L8 in `next`) | `claude/offroad-landmark-weights` | — | — | — |
 | L10 Phase 7 plaza lines | #712 | Step 1 merged into next (2026-11-18); step 2 waits for the developer's viewing and answers on #712 (O16) | knk-plugin `claude/offroad-plaza-lines` `97d1bafc`; knk-workspace `claude/offroad-plaza-lines` `d794c716` | step 1: [knk-plugin#73](https://github.com/PandiO/knk-plugin/pull/73) → `next` `ce0f65ec`, [#723](https://github.com/PandiO/knk-workspace/pull/723) → `next` `c7f61e9e` | green (build, paper-boot 55) | create_session `session_01R1w2Ussca79jpGCPqzcTf8` (2026-11-18) |
 
@@ -720,3 +720,50 @@ _(Each link appends its block here when it finishes.)_
 9. **Notes for later links.**
     1. Step B (this link): the plugin reads `GET api/landmarks?world=` (anonymous, but the plugin key works too) into the model's `Landmark` record. The fields map one to one: `extentKind` "None"/"Region"/"Radius" (`Landmark.Extent.parse`), `location.x/y/z`, `world`, `domainId`, `domainName`, `navigationEnabled`. Writes for `/knk landmark` go through `POST`/`PUT`/`DELETE api/landmarks` with the plugin key. The `PUT` keeps null fields, so `move` sends `name` and `locationId` or `location`, and `link`/`unlink` send `name` and `domainId`, with the current domain id resent on the other updates.
     2. L9: `Preference` is stored and validated (0.25 to 4.0, CHECK in the database); nothing reads it yet.
+
+### 4.7 L8 — Phase 5.1: landmark entity, step B (plugin) (#708)
+
+1. **Scope done (step B, started at once after step A on the coordinator's message; engine L4 #62 is in knk-plugin `next` `3e04ba8f`).**
+    1. knk-api-client: `LandmarkDto` (with the write body), `LandmarkMapper`, `LandmarksApiImpl` (`api/landmarks`: list by world, get, create, update, delete), `KnkApiClient.getLandmarksApi()`.
+    2. knk-core:
+        1. `domain/landmarks/KnkLandmark` and `LandmarkWrite`, and the `ports/api/LandmarksApi` port.
+        2. `landmarks/LandmarkExtent` (point, region or cylinder, Bukkit-free), `LandmarkConnections.INFERRED` (a seam only) and `LandmarkCommandArgs`.
+        3. `navigation/engine/LandmarkProvider` (World scope; key `landmark:<id>`, detail `in <domain>`; Region extent as `Place.Region`, Radius as `Place.Point` with `arrivalRadius`, None as a plain point).
+        4. `NavigationModelRefresher.Source.landmarks()` fills the reserved section. A failed read keeps the current landmarks; E16's snapshot schema 1 needed no change.
+    3. knk-paper:
+        1. The provider in `startDestinationEngine`'s World list, only with `navigation.landmarks` on.
+        2. `NavigationModelRuntime.source(..., landmarksApi)`.
+        3. `Destination.arrivalRadius` via `HandleDestinations`; `NavigationService` arrives inside the cylinder (start, session tick, direct-leg tick, route end; arrival lines only, no guidance-v2 section).
+        4. `/knk landmark create|list|show|move|delete|link|unlink` (`commands/LandmarkAdminCommand`, `/knk` metadata node `knk.admin.world.landmark`, documented in `plugin.yml` under `knk.admin`).
+        5. `config.yml` `navigation.landmarks: false`, `LandmarksConfig`.
+    4. knk-workspace (same PR #763, `origin/next` merged in with one mechanical CHANGELOG conflict, both entries kept): smoke § 6.3 (10 steps, all tagged, 4 in part), CHANGELOG step B entry, plugin configuration § 2.1 and § 4.15, commands guide, DESIGN § 6.5.4.
+2. **Commits and heads.** knk-plugin `claude/offroad-landmarks` at `be9e3a74` (1 commit, base `next` `3e04ba8f`); knk-workspace `claude/offroad-landmarks` at `eb3321a9` (step A commit, merge of `origin/next`, step B docs).
+3. **PRs.** [knk-plugin#83](https://github.com/PandiO/knk-plugin/pull/83) into `next` with `Closes PandiO/knk-workspace#708`; [#763](https://github.com/PandiO/knk-workspace/pull/763) updated (title and body cover both steps, still `Part of`). Not merged.
+4. **Tests, baseline → result.**
+    1. knk-plugin `./gradlew build -x deployToDevServer`:
+        1. knk-core 3316 → 3334 (+18).
+        2. knk-api-client 351 → 358 (+7; 2 skipped both times).
+        3. knk-paper 3065 → 3089 (+24; 18 skipped both times).
+        4. 0 failures. The cylinder arrival test was seen failing with the check removed.
+    2. CI on `be9e3a74`: `build` and `paper-boot` green on both the push and the pull-request runs (2026-11-18 16:43 UTC).
+    3. Known reds: none.
+    4. Codex: at its usage limit on knk-plugin#83 and again on #763 after `@codex review`; said on both PRs.
+5. **Decisions (DESIGN § 4.3).**
+    1. *Core `Landmark`.* Chosen: the model's existing `navigation/model/Landmark` record (E16) is what the provider and snapshot use; the richer `domain/landmarks/KnkLandmark` (Location id, preference, domain type) is what `/knk landmark` reads and writes, with `toModel()`. Alternatives: (a) one record with every field; changes the snapshot record P2 pinned; (b) a third `core/landmarks/Landmark`; a duplicate of the model record.
+    2. *Region extent.* Chosen: `Place.Region` (destination engine § 3.2.3, `InitialScopes` doc), arrival by the existing WorldGuard containment. The coordinator's "point place with an arrival radius" applies to Radius and None. Alternative: a point with the region attached; a second region arrival path.
+    3. *Cylinder height.* Chosen: as many blocks up and down as the radius across (A13 doesn't say). Alternative: unbounded height; a landmark on one floor of a keep would count every floor.
+    4. *Failed landmark read.* Chosen: keep the current model's landmarks and refresh the rest (log a warning). Alternative: fail the whole refresh like the other three parts; an API before step A (404) would then freeze the model.
+    5. *The command with the flag off.* Chosen: registered, and every action answers "Landmarks are off on this server". Alternative: not registered; staff would see "unknown subcommand" with no reason.
+    6. *Arguments.* Chosen: names with spaces; `link <landmark> <domain>` takes the longest landmark name that matches, then a domain by exact name or `#id` (an ambiguous name lists the ids); `#id` for landmarks everywhere. Alternative: quoted names; Bukkit doesn't parse quotes.
+    7. *After a write.* Chosen: refresh the navigation model at once, so `/navigate` sees the change within seconds. Alternative: wait for the 60 s refresh.
+    8. *`NavigationModelUnreadTest`.* Chosen: widen its allow-list by the six landmark files, with the reason in the class comment (they use the model's `Landmark` record or names; none is a navigation client). Alternative: copy `Landmark.Extent` into another package to stay outside the guard; a duplicate enum.
+    9. *No paper-boot scenario.* Chosen: MockBukkit session tests for arrival and re-validation (cheap, deterministic); a scenario would need landmarks from the API on the boot server. `MIN_SCENARIOS` unchanged. Alternative: a scenario with a fixed model; not cheap with the model refresher in the way.
+6. **Out of scope, noted.** None filed. Docs follow-ups at merge: the player guide (`/navigate` to a landmark), architecture of the navigation model's landmarks section, `docs/specs/api/` landmark contract, the register.
+7. **Blockers.** None.
+8. **At merge / what the developer must do.**
+    1. The coordinator merges knk-web-api#50, knk-web-app#54, knk-plugin#83 and #763 into `next`. The plugin needs the API's `api/landmarks`; with an older API the read is a logged 404 and the section stays empty.
+    2. Deploy: the API's migration `AddLandmarks`, the form seed `Landmark`, a grant of `knk.admin.world.landmark`; in the plugin's `config.yml` under `navigation:` add `landmarks: false` (true, with `destination-engine: true`, for the smoke test), then restart.
+    3. Smoke test § 6.1 to § 6.4 (about 45 min).
+9. **Notes for later links.**
+    1. L9 (#709): `KnkLandmark.preference()` is read from the API but not in the model's `Landmark` record. Weights need it in the model, which means adding a field to the record and to `NavigationModelSnapshot.LandmarkFile`; snapshot schema 1 reads an unknown field as missing, so the field is additive. `LandmarkExtent.Cylinder.contains` and `LandmarkConnections` are the seams for the walk planner.
+    2. The `/knk landmark` writes go through `api/landmarks` with the plugin key. The API's `PUT` keeps null fields except `domainId`, so `LandmarkWrite.from(landmark)` resends the domain.
