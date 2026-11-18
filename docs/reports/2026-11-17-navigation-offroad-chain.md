@@ -34,7 +34,7 @@ on `next` (Decided 2026-11-17).
 | L1 Phase 0 measurements | #703 | Merged into next (2026-11-17); waits for the developer's live measurements and the filled report | knk-plugin `claude/offroad-measurements` `71a43bc1`; knk-workspace `claude/offroad-measurements` `2337d3a4` | [knk-plugin#68](https://github.com/PandiO/knk-plugin/pull/68) → `next` `04506d8c`, [#717](https://github.com/PandiO/knk-workspace/pull/717) → `next` `a6240f5d` | green (build, paper-boot on `71a43bc1`) | create_session `session_01R1w2Uub8CZ7NuvatVUifP7` (2026-11-17) |
 | L2 Phase 1 shared shaping package | #704 | Merged into next (2026-11-17) | knk-plugin `claude/offroad-shape-package` `0d0cff84`; knk-workspace `claude/offroad-shape-package` `ef17bcc3` | [knk-plugin#69](https://github.com/PandiO/knk-plugin/pull/69) → `next` `c45c16bb`, [#718](https://github.com/PandiO/knk-workspace/pull/718) → `next` `d8ebd9f4` | green (build, paper-boot) | create_session `session_01R1w2UwTnENVNKzfaXudBUh` (2026-11-17) |
 | L3 Phase 6.1 trail corners | #710 | Merged into next (2026-11-18); waits for the developer's live test (tier:3, smoke § 8) | knk-plugin `claude/offroad-trail-corners` `9dd3ee5f`; knk-workspace `claude/offroad-trail-corners` `daffbc1d` | [knk-plugin#70](https://github.com/PandiO/knk-plugin/pull/70) → `next` `54dfe8d7`, [#719](https://github.com/PandiO/knk-workspace/pull/719) → `next` `d07deabf` | green (build; paper-boot on re-run, #720) | create_session `session_01R1w2Uv9tRTPyjZsFJNWGec` (2026-11-17) |
-| L4 Phase 6.2 anchored particles, winding back | #711 | Running (started 2026-11-18 00:43 from plugin `next` `54dfe8d7`) | `claude/offroad-trail-cursor` | — | — | create_session `session_01R1w2UwkAiptAq4cPVFVBTS` (2026-11-18) |
+| L4 Phase 6.2 anchored particles, winding back | #711 | In review (2026-11-18); waits for the coordinator's merge, then the developer's live test (tier:3, smoke § 9) | knk-plugin `claude/offroad-trail-cursor` `1925cf73`; knk-workspace `claude/offroad-trail-cursor` `cb7b55f8` | [knk-plugin#72](https://github.com/PandiO/knk-plugin/pull/72), [#722](https://github.com/PandiO/knk-workspace/pull/722) | green (build, paper-boot on `1925cf73`) | create_session `session_01R1w2UwkAiptAq4cPVFVBTS` (2026-11-18) |
 | L5 Phase 2 walk links | #705 | Not started (gate: L1 done, L4 in `next`) | `claude/offroad-walk-links` | — | — | — |
 | L6 Phase 3 hierarchical walk search | #706 | Not started (gate: L5 in `next`; O32 question first if L1 says option A fits) | `claude/offroad-hierarchical` | — | — | — |
 | L7 Phase 4 route modes | #707 | Not started (gate: L5 in `next`) | `claude/offroad-route-modes` | — | — | — |
@@ -393,3 +393,126 @@ _(Each link appends its block here when it finishes.)_
     3. Local paper-boot runs work in the cloud session:
         1. Fetch the pinned Paper, WorldEdit and WorldGuard jars from `paper-boot.yml`.
         2. Run `tools/paper-boot/boot-test.sh` with `--scenarios`. A copy whose `run all` names one scenario takes about a minute.
+
+### 4.4 L4 — Phase 6.2: anchored walk-trail particles, progress and cursor, winding back (#711)
+
+1. **Scope done.** Everything is behind `navigation.guidance-v2`, off by default.
+    1. knk-core `core/navigation/`:
+        1. `PolylineCursor`: a player's place on a polyline, followed with continuity.
+            1. Within a window the nearest point wins.
+            2. Between two branches at least 3 blocks apart along the line and within 0.75 of the same distance, the one nearer the previous cursor wins.
+            3. A far point is taken only by the caller's rule. On the route, when the old stretch is beyond `reroute-distance`. On a walk path, when the player is nearer it by more than 1 block, beyond a 3-block window.
+            4. Off the line the cursor stays.
+        2. `NavigationSession`: with `CursorParameters` (`cursor-jump`) it keeps two numbers.
+            1. A monotone progress, `along()`, drives the ETA and the percentage.
+            2. A `cursor()` follows the player both ways. The trail, the HUD distance, the arrow, the maneuver ahead, the off-route distance and `remainingBlocks()` come from it.
+            3. A new route starts the cursor at 0.
+            4. The old constructor, or `null`, is today's session.
+        3. `JoinPoint`: the join point with the least remaining cost, 1.5 × the straight distance plus the route left after the point, within `max-start-distance`.
+    2. knk-paper:
+        1. `TrailRenderer.anchoredWindow` and `drawPath(viewer, path, cursor)`: one particle exactly at each anchor every `trail-leg-spacing` from the path's start, using the new `ParticleDraw.points`. The leg colour stays.
+        2. `NavigationService`, in its own section ("anchored walk trails and winding back"):
+            1. Sessions get `config.cursorParameters()`, which is null with the flag off.
+            2. Walk legs keep a cursor, and their trail, HUD distance and arrow come from it.
+            3. A direct walk leg within `walk.recompute-distance` of its path stays. Beyond it, the leg is recomputed from the player, with the target re-derived, at most once per `reroute-min-interval`.
+            4. The start leg's N16 "heading away" is replaced by the distance to its path. Beyond it, the leg ends and the session re-routes.
+            5. The walk to the road aims at the join point.
+            6. The D13 re-check's "walked already" uses `cursor()`.
+        3. Config:
+            1. `navigation.trail-leg-spacing` (3.0, 0.5 to 16) and `navigation.cursor-jump` (12, positive).
+            2. `NavigationConfig.withTrail` and `withCursorJump`.
+            3. `TrailConfig` keeps its 4-argument constructor.
+        4. A new paper-boot scenario, `walk-trail-cursor-stairhouse`. `MIN_SCENARIOS` is now 52.
+    3. Kept: KNG-124, N17, rev. 9, the partial path rule. Legs without a path (the straight line, no way) keep today's rules. NPC navigation is untouched.
+    4. The public signatures of `WalkLegPreparer`, `WalkSearch`/`WalkPathfinder`, `MovementProfile` and the shape package are unchanged. The only change outside the files I own: L3's scenario helpers `overFloor` and `describe` became package-private (they were private).
+    5. knk-workspace:
+        1. Smoke test § 9: 11 steps, all tagged automated, 3 of them in part.
+        2. Plugin configuration reference: § 4.15 and § 2.1.
+        3. CHANGELOG (Unreleased).
+        4. DESIGN § 7.6: `trail-leg-spacing` corrected from 1.5 to 3.0, as O20 and § 7.2.2 say (found by L3).
+        5. DESIGN "as built" notes: § 7.2.4 and § 7.5.9.
+2. **Commits and heads.**
+    1. knk-plugin `claude/offroad-trail-cursor` at `1925cf73`: three commits (core, paper, scenario) on `next` `54dfe8d7`.
+    2. knk-workspace `claude/offroad-trail-cursor` at `cb7b55f8`: one commit on `next` `d07deabf`.
+3. **PRs.** Both target `next`. Not merged.
+    1. [PandiO/knk-plugin#72](https://github.com/PandiO/knk-plugin/pull/72): `Closes PandiO/knk-workspace#711`.
+    2. [PandiO/knk-workspace#722](https://github.com/PandiO/knk-workspace/pull/722): `Part of`.
+4. **Tests, baseline → result.**
+    1. knk-plugin (`./gradlew build -x deployToDevServer`):
+        1. knk-core 3 050 → 3 071 (+21: `PolylineCursorTest` 10, `JoinPointTest` 5, `NavigationSessionCursorTest` 6).
+        2. knk-paper 2 911 → 2 924 (+13, 18 skipped).
+        3. knk-api-client 344 → 344 (2 skipped).
+        4. No failures.
+        5. Two of L3's flag-on tests now verify the three-argument `drawPath` (same path content). Its flag-off identity tests are unchanged.
+    2. A16:
+        1. `NavigationSessionCursorTest.withTheFlagOffTheSessionIsTodays`: a 149-tick session transcript (forwards, back, off the road with a re-route, on round the turn), the same with the old constructor and `null`, today's numbers pinned.
+        2. `NavigationServiceTest.withTheFlagOffTheNewKeysChangeNothing`: trail, HUD, chat and events call for call, with `trail-leg-spacing` 1.5 and `cursor-jump` 4 against the defaults.
+        3. Two tests pin today's road walk-back and today's heading away of the start leg.
+    3. A17: anchors fixed on redraw and on a step (`TrailRendererTest`, and the scenario on the stair house's live floor).
+    4. A18: `NavigationServiceTest.withGuidanceV2WalkingBackOnTheRoadDrawsTheRoadTrailFromThePlayer` and the session test. The trail is drawn from 40 after walking 60 forward and 20 back; the HUD shows 160; the progress stays at 60; there is no walk leg and no re-route.
+    5. A19: `JoinPointTest` (ahead, behind, the road behind the player on a U-turn) and the service test (30 off the road joins about 27 ahead).
+    6. A20: `PolylineCursorTest` (a loop that passes its start again; a switchback, including a player standing between the arms).
+    7. A21:
+        1. A walk leg walked forwards and back: one search, no "heading away", the cursor wound back to 3.
+        2. Beyond the recompute distance: recomputed, at most once per 60 ticks.
+        3. The start leg walked back along stays.
+    8. Local paper-boot run (Paper 26.3 build 205, without Citizens, the new scenario only): `walk-trail-cursor-stairhouse` PASS. The cursor stayed within a block of the player's place on the shaped trail walked up and back down with a sideways wobble, and every anchor was over walkable floor.
+    9. CI on `1925cf73`: `build` green and `paper-boot` green (all 52 scenarios, the NPC movement scenarios included).
+    10. Known reds: none.
+    11. Codex: at its code-review usage limit on both PRs (2026-11-18 01:08 UTC), so neither has a Codex review (developer decision 2026-11-14). This is said on both PRs; no findings to handle.
+5. **Decisions (DESIGN § 4.3).**
+    1. *Cursor continuity on the route (§ 7.5.2).* Chosen: within `cursor-jump`, the nearest point wins. Two branches at least 3 apart along the route that are within 0.75 of the same distance go to the one nearer the previous cursor. Taken literally, "smallest change from the previous cursor wins" keeps the cursor on a corner the player has passed: the previous segment's end point stays within `reroute-distance` for blocks (shown in `PolylineCursorTest.aCornerDoesNotHoldTheCursorBack`). Alternatives:
+        1. The literal rule. Rejected for that reason.
+        2. Plain nearest point. Rejected: a player standing between the arms of a switchback flickers between them (risk 12.4).
+    2. *A new route's cursor starts at 0.* Chosen because a route starts where the player joins the road. A loop that passes its start again then keeps the first pass. A player who is far along (after a network change) is found by the far rule. Alternative: the nearest point at the first tick. Rejected: it takes the second pass of a loop through the start.
+    3. *What the cursor drives and what the progress drives.* Chosen:
+        1. The cursor drives the trail, the HUD distance, the arrow, the maneuver ahead, the off-route distance, `remainingBlocks()` (and so the improvement check) and the D13 "walked already". A gate that closes ahead of a player who walked back past it re-routes.
+        2. The progress drives the ETA and the percentage.
+        3. A maneuver is still announced in chat once, through the service's announced index, which only grows.
+        4. Alternatives:
+            1. D13 from the progress (today's number). Rejected: it would ignore a gate the player must pass again.
+            2. The ETA from the cursor. Rejected: § 7.5.2 names the progress for it.
+    4. *Join point cost (§ 7.5.4).* Chosen: 1.5 × the straight distance, plus the route length left, over every block of the route within `max-start-distance`. It is used whenever a route is adopted with the player off it. With a factor of 1 the point nearest the destination always wins, because a straight line is never longer than the road. Alternatives:
+        1. A walk search per candidate. Rejected: far too costly on the main thread's budget.
+        2. A config key for the factor. Not added: the design names no key; easy to add after the live test.
+    5. *Walk legs beyond `recompute-distance` (§ 7.5.5).*
+        1. Chosen for a direct leg: recompute silently from the player's position, with the target re-derived, at most once per `reroute-min-interval`, keeping the old path drawn until the new one arrives. The smoke-test draft expected a "recalculating" message; that message belongs to "heading away", which the design replaces.
+        2. Chosen for the walk to the road: the leg ends, and the session's off-route re-route brings a new route and a new join point. A player who walks off towards another road may get a different road.
+        3. Alternatives:
+            1. Keep the message. Rejected: it says "heading away", which no longer applies.
+            2. Re-aim the start leg on the same route. Rejected: it would ignore a better road nearby.
+    6. *Legs without a path.* Chosen: the straight line, NO_PATH and PENDING keep today's `best` rule. There is no path polyline to measure, and the straight line is redrawn from the player anyway. Alternative: never recompute them. Rejected: a region or street target would not be re-derived for a player who drifted.
+    7. *Particles exactly at the anchors.* Chosen: the new `ParticleDraw.points`. `ParticleDraw.polyline` resamples from the first point with a carry, so on a curve particles would fall between anchors. Alternative: `polyline` with the anchors as vertices. Rejected for that reason.
+    8. *What `trail-leg-spacing` covers.* Chosen: the anchored walk trail only. Straight legs stay at 3.0, like today's `drawLeg`. The design names the walk trail. Alternative: every off-road leg. Rejected: a straight leg is redrawn from the player and has no anchors.
+    9. *Walk-path cursor window and margin.* Chosen: 3 blocks (§ 7.2.3) and 1 block for "really nearer". On the stair house the flight above is about 3 blocks away, and the scenario keeps the cursor within a block. Alternative: a margin of 0.5. Rejected: a wobble near a wall could switch flights.
+6. **Out of scope, noted.**
+    1. The plugin configuration reference § 2.1 still lists L3's #710 row as "in review, not in `next` yet", but it is merged (`54dfe8d7`). Left for the docs issue.
+    2. Docs follow-ups at merge: the player guide (the walk trail and winding back), the register.
+    3. None filed.
+7. **Blockers.** None. The live test is the developer's.
+8. **At merge / what the developer must do.**
+    1. The coordinator merges knk-plugin#72 and #722 into `next` after CI is green.
+    2. Deploy: add the keys below and restart. The flag stays off until the live test.
+
+       ```yaml
+       navigation:
+         guidance-v2: false
+         trail-leg-spacing: 3.0
+         cursor-jump: 12
+       ```
+
+    3. Live test, [smoke test § 9](https://github.com/PandiO/knk-workspace/blob/next/docs/guides/navigation-offroad-smoke-test.md#9-phase-62-anchored-particles-and-winding-back-711-tier3), which can be combined with L3's § 8:
+        1. Set `guidance-v2: true` and restart.
+        2. In the keep and on the stair house, stand still and step along a walk trail; the particles stay put (steps 1 to 3).
+        3. On a road, walk 40 forward and 20 back; the trail is drawn from you, with no walk leg (step 4).
+        4. Step 15 off the road; the walk to the road leads to the join point, usually a little ahead (step 6).
+        5. Walk back along a walk leg, then 7 or more blocks off it (steps 8 and 9).
+        6. Set the flag off again to confirm today's behaviour (step 10).
+    4. Optionally comment `@codex review` on both PRs once the Codex limit resets.
+9. **Notes for later links.**
+    1. L5 (walk links, route as a leg list):
+        1. `NavigationSession.cursor()` and `PolylineCursor` work on the route's polyline.
+        2. A route made of legs needs one cumulative polyline, or a cursor per leg with the far rule across legs.
+        3. `JoinPoint.choose` takes any polyline.
+    2. L10 (plaza lines): the road trail is still drawn by `centredWindow` from `cursor()`. A plaza line that changes the drawn polyline must keep the cursor's along on the route polyline (A25: length, ETA and maneuvers unchanged).
+    3. Local paper-boot runs: a copy of `boot-test.sh` whose `knk scenario run all` names one scenario. `run` takes a single name.
