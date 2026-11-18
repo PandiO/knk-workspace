@@ -3,7 +3,7 @@
 **Status:** **Decided 2026-11-18** (developer). Approved in the design refresh session: § 14.1–14.6 "yes"
 (E14–E21 accepted as written). Decisions of 2026-10-22 are recorded in §1; the refresh of 2026-11-18 in § 1.1, § 2.1,
 § 3.2, § 5.1, § 10, § 13, § 14; E1–E13 unchanged.
-**Last updated:** 2026-11-18 (P3 link: § 10.4, what was applied); 2026-11-18 (P2 link: § 10.3 item 5, what was applied); 2026-11-18 (P1 link: § 10.2 item 7, what was applied); 2026-11-18 (approved by the developer: status Decided, phase 4b filed as #747, tier labels applied,
+**Last updated:** 2026-11-18 (P4 link: § 10.5, what was applied; § 13 A22–A26 met by tests); 2026-11-18 (P3 link: § 10.4, what was applied); 2026-11-18 (P2 link: § 10.3 item 5, what was applied); 2026-11-18 (P1 link: § 10.2 item 7, what was applied); 2026-11-18 (approved by the developer: status Decided, phase 4b filed as #747, tier labels applied,
 § 14 answered); refreshed 2026-11-18 (§ 2, § 5 and § 10 re-checked against knk-plugin `next` `1f414d08`; landmark
 provider hook § 3.2; the October P1 code checked on `next` § 10.2; tiers, flag and links § 10; acceptance items § 13;
 points for approval § 14; agent decisions E14–E21 in § 1.1); 2026-10-23 (E9–E13 recorded; KNG-234 merged to main
@@ -459,6 +459,29 @@ For P4, 4b and the landmark link; the choices and their alternatives are in the 
 6. **Not done here (later links):** the deletions of § 10 row 4b; `/knk road` showing the model's age (§ 7.3);
    a rank seed for `knk.navigate.any` in knk-web-api (proposed, not added).
 
+### 10.5 What the P4 link applied (#62, knk-plugin `claude/navigation-destination-engine`, 2026-11-18)
+
+For 4b and the landmark link; the choices and their alternatives are in the chain report's L4 block. All of it only
+with `navigation.destination-engine: true`; nothing was deleted (4b).
+
+1. **Hard blocks in the scopes:** `navigate(Player, AllowedDestination)` no longer asks `NavigationEligibility`
+   (loading, frozen and the lobby refused before the handle was minted). `/navigate`, its completion and the compass
+   leave the `knk.navigate` check to the no-permission scope (80), so the bypass (100) works without the node; the
+   command gate (`CommandNodes`) lets `knk.navigate.any` open `/navigate`. With the flag off the raw entry, the
+   command and the compass check as before.
+2. **Re-validation (§ 8):** the session keeps its handle (`Active.handle`); `NavigationService.setRevalidator` takes
+   `PlayerNavigationEngine.revalidate` (the engine's `revalidate` for the player's context now). The 40-tick re-check
+   calls it instead of the siege rule; a destination no longer listed, or an `Empty` scope, ends the session with
+   the new `EndReason.DESTINATION_NOT_ALLOWED` and the reason in `/navigate`'s words (`EngineReasons.forCommand`).
+   `EndReason.SIEGE` is not used with the flag on (A26); `lobbyChanged` re-checks instead of ending.
+3. **Immediate triggers:** `NavigationService.revalidateSoon()` (any thread) marks a re-check that runs at the start of
+   the next tick on the main thread, so the change has settled. Callers: the siege observer (`objectiveCaptured`,
+   `matchEnded`, `lobbyChanged`, `roundReleased`), the new `ModeService.addModeListener` (every in-session mode
+   change), the freeze hook in `KnKPlugin` and `NavigationModelHolder.onChange` (a refresh that changed the model).
+4. **Not done here:** the deletions of § 10 row 4b (#747): `NavigationEligibility`, `EndReason.SIEGE`, the
+   `lobbyChanged` ending, the raw entry. Permission changes are seen by the 2-second re-check, not at once (§ 8 lists
+   no permission trigger).
+
 ## 11. Risks and details to settle in implementation
 
 - **Key stability:** candidate keys must survive renames (use ids, not names); matches use ids already.
@@ -516,11 +539,11 @@ Each item is checked by a test or a smoke step (guide: [navigation-destination-e
 19. A19: with the flag on, the compass cycles the engine's list, keeps its own wording per reason code (E15), and a resume re-resolves the stored key.
 20. A20: with the flag on, `NavigationService` starts a session only from a handle; `/knk road why` still works through `explain`.
 21. A21: road-access answers come from the model and match today's (E19), also after a restart with the API down.
-22. A22: with the flag on, loading, frozen, permission and lobby refusals come from the scopes with unchanged texts.
-23. A23: a running session whose destination leaves the list ends with the scope's reason (`DESTINATION_NOT_ALLOWED`).
-24. A24: immediate re-checks on objective captured, match ended, lobby changed, round released, mode change, freeze change and model refresh.
-25. A25: an objective that changes kind but stays listed does not end the session; switching owner/staff mode on or off lifts or applies the bypass at once; freeze ends a staff session (E9).
-26. A26: with the flag on `EndReason.SIEGE` is never used.
+22. A22: with the flag on, loading, frozen, permission and lobby refusals come from the scopes with unchanged texts. Met by P4 (#62): `NavigateCommandEngineTest`, `NavigationCompassEngineTest`, `InitialScopesTest`; smoke § 4.1.
+23. A23: a running session whose destination leaves the list ends with the scope's reason (`DESTINATION_NOT_ALLOWED`). Met by P4 (#62): `NavigationServiceRevalidationTest`; smoke § 4.2.
+24. A24: immediate re-checks on objective captured, match ended, lobby changed, round released, mode change, freeze change and model refresh. Met by P4 (#62): `NavigationServiceRevalidationTest`, `ModeServiceListenerTest`; smoke § 4.2, § 4.3.
+25. A25: an objective that changes kind but stays listed does not end the session; switching owner/staff mode on or off lifts or applies the bypass at once; freeze ends a staff session (E9). Met by P4 (#62): `NavigationServiceRevalidationTest`; smoke § 4.2 step 5, § 4.3.
+26. A26: with the flag on `EndReason.SIEGE` is never used. Met by P4 (#62): `NavigationServiceRevalidationTest.joiningALobbyEndsTheSessionWithTheLobbysReasonNeverSiege`, `theRecheckNeverEndsWithSiegeWithTheFlagOn`; smoke § 4.2 step 2.
 27. A27: after 4b the removed classes and the flag are gone, the handle is the only `navigate` entry, and the architecture test guards it.
 28. A28: after 4b every A16–A26 behaviour holds without a flag.
 29. A29: an arena duel restricts navigation through its own provider and scope without changes to the command, the compass or the service.
