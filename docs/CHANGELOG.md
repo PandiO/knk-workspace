@@ -4,6 +4,14 @@ This is a human-readable record of capabilities merged into the V3 default branc
 
 ## Unreleased — on feature branches, not merged
 
+- **Off-road navigation: landmark preference weights** ([PandiO/knk-workspace#709](https://github.com/PandiO/knk-workspace/issues/709),
+  link L9 of the off-road navigation chain, phase 5.2). Behind `navigation.landmarks` (off by default). A landmark
+  with an area (a region or a radius) and a `Preference` above 1.0 makes walking routes avoid that area in the default
+  `preferred` mode; below 1.0 they prefer it (preference indoors without an indoor road graph). `shortest` and
+  `efficient` ignore the weights, NPCs never use them. Overlapping landmarks multiply, capped by the new
+  `navigation.preference-max` (4.0). Landmarks standing on a road also become walk-link ends. knk-plugin and
+  knk-workspace branches `claude/offroad-landmark-weights` (PRs into `next`). Admin steps: add
+  `preference-max: 4.0` under `navigation:` in `config.yml`, restart. No migration.
 - **Off-road navigation: route modes `shortest`, `efficient`, `preferred`** ([PandiO/knk-workspace#707](https://github.com/PandiO/knk-workspace/issues/707),
   link L7 of the off-road navigation chain, phase 4). `/navigate <place> [shortest|efficient|preferred] [spawn|region]`
   picks how the route is chosen, on roads and on foot: `shortest` the fewest blocks, `efficient` the cheapest road
