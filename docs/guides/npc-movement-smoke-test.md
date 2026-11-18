@@ -3,7 +3,7 @@
 **Status:** Written 2026-11-16 for knk-plugin `next` `cc5262ff` (links M1–M7 merged into `next`, behind
 `npc.navigation.enabled` and each link's own key, all off by default); only the steps no plugin scenario checks; not
 run yet (the developer's run with every key on is planned for 2026-11-16)
-**Last updated:** 2026-11-17 (link B5 section, [#699](https://github.com/PandiO/knk-workspace/issues/699)); 2026-11-16 (assembled from the developer tests of implementation plan 4c.4, PandiO/knk-workspace#658)
+**Last updated:** 2026-11-18 (link C1 section, [#700](https://github.com/PandiO/knk-workspace/issues/700)); 2026-11-17 (link B5 section, [#699](https://github.com/PandiO/knk-workspace/issues/699)); 2026-11-16 (assembled from the developer tests of implementation plan 4c.4, PandiO/knk-workspace#658)
 **Issue:** [PandiO/knk-workspace#358](https://github.com/PandiO/knk-workspace/issues/358) (links
 [#621](https://github.com/PandiO/knk-workspace/issues/621)–[#627](https://github.com/PandiO/knk-workspace/issues/627));
 post results on the link's sub-issue or [#603](https://github.com/PandiO/knk-workspace/issues/603)
@@ -118,6 +118,32 @@ step only.
 3. **How it looks** (manual: game feel). Whether the group still looks like a formation on the flights (a column on the
    stairs, pairs on the landings), and anything odd at the first steps of flight 4, where the hall floor lies a block
    below the step (plan 4c.8 item 4.7.2).
+
+## Link C1: off-road ends with the walk search (retest of 2026-11-17 step 5)
+
+Added 2026-11-18 for knk-plugin `claude/npc-movement-c1` ([#700](https://github.com/PandiO/knk-workspace/issues/700));
+run it on `next` once C1 is merged. Same setup as above (steps 1–9 keys on, `collidable: false`). 2 of 4 steps partly
+automated (tagged); every step can still be run by hand; not run yet. About 20 minutes; 10 minutes for the untagged
+steps only.
+
+1. [partly automated: `npc-replay-keep-tower`, a leader alone and a group of 20 from the keep's road on the replayed
+   snapshot; by hand: the whole route from its start] **One NPC up the keep tower.** `/knk npc nav route load
+   northern-wearway-upper-keep-tower`, `/knk npc nav clear`, `/knk npc nav stats reset`, `/knk npc nav spawn 1`. Follow
+   it: after the road it walks through the throne room, through the open door at 1405 104 −494 and up the spiral
+   staircase to the goal (1401 113 −502), without stopping at 1405 85 −510. In the `npc-logs/` run log: one line
+   "off-road walk to the goal … from the road at …: N cells (… blocks walked, … expansions, cap … blocks, body check:
+   …)" and no "walked in hops"; no "engine found no path". `stats`: `orders failed 0`.
+2. [partly automated: the same scenario's group of 20; by hand: the group from the route's start, how it looks]
+   **A `ranks` group of 20 up the tower.** `/knk npc nav clear`, then `/knk npc nav group 20 ranks`. The leader arrives;
+   the followers come up the spiral behind it in single file and end on the tower's top or the last turns of the
+   stair; `stats` groups line: `lost 0`, `left behind 0`.
+3. **An off-road start** (manual: needs a start the scenarios do not have). Set the route's start a few blocks inside
+   a building beside a road whose nearest point is behind a wall (`/knk npc nav route from` standing there), the end on
+   the road. `/knk npc nav spawn 1`: the NPC walks out through the building's door and joins the road where it can
+   reach it, not at the point behind the wall. Log: "off-road walk from … joins the road at …".
+4. **A new snapshot of the tower route** (manual: the command on the dev server). `/knk npc nav snapshot
+   northern-wearway-upper-keep-tower`; its `manifest.json` box reaches above y 113 (the goal) and round the route's
+   start (1279 64 −621). Put the zip on the evidence branch.
 
 ## After the run
 
