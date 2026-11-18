@@ -43,7 +43,7 @@ on `next` (Decided 2026-11-18, O01–O33, O08 superseded by O31); smoke guide
 | L3 `/map` page | #737 | Merged into `next` 2026-11-18 (knk-web-app `f551804d`, knk-workspace `0f0f8e7f`); waiting for the NAS deploy notes (runbook Phase 10), the full-world render and the developer's smoke test § 3 | `claude/overview-map-page`: knk-web-app `ee9a68d`, knk-workspace `23b028dc` (from `next`) | [knk-web-app#50](https://github.com/PandiO/knk-web-app/pull/50), [knk-workspace#753](https://github.com/PandiO/knk-workspace/pull/753) | web app green on `ee9a68d` (build-and-test, e2e); knk-workspace no CI | create_session session_01R1w2UtuNmGWaJ6a65D2YeS (2026-11-18) |
 | L4 Live players backend | #738 | Merged into `next` 2026-11-18 (knk-web-api `f2f523c3`, knk-plugin `ef4e99d9`, knk-workspace `d9c07b37`); waiting for the developer's live check of smoke § 4.1 steps 2, 3 and 5 on #738 (gates L5's merge) | `claude/overview-map-players-api`: knk-web-api `a9ed3af`, knk-plugin `8b1efdcc`, knk-workspace `09982caa` (from `next`) | [knk-web-api#47](https://github.com/PandiO/knk-web-api/pull/47), [knk-plugin#77](https://github.com/PandiO/knk-plugin/pull/77), [knk-workspace#752](https://github.com/PandiO/knk-workspace/pull/752) | API green (build-and-test, mysql-tests, fresh-database); plugin build and paper-boot green | create_session session_01R1w2UwcYKiPMueCHWqsys4 (2026-11-18) |
 | L5 Live players layer | #739 | Not started (gate: L3 and L4 merged, developer's L4 check) | – | – | – | – |
-| L6 Staff details | #740 | Running | `claude/overview-map-staff-details`: knk-web-app, knk-workspace (from `next`) | – | – | subagent of the coordinator (2026-11-18; the create_session attempt session_01R1w2UuaEs6VbL7BVnR7ZTJ was refused the knk-web-app attach, decision 10) |
+| L6 Staff details | #740 | In review 2026-11-18 (not merged) | `claude/overview-map-staff-details`: knk-web-app `1443cf5`, knk-workspace `fe64919d` (from `next`) | [knk-web-app#51](https://github.com/PandiO/knk-web-app/pull/51), [knk-workspace#755](https://github.com/PandiO/knk-workspace/pull/755) | Web app green (build-and-test, e2e); Codex at its limit | subagent of the coordinator (2026-11-18; the create_session attempt session_01R1w2UuaEs6VbL7BVnR7ZTJ was refused the knk-web-app attach, decision 10) |
 | L7 Gate commands backend | #741 | Running | `claude/overview-map-gate-commands`: knk-web-api, knk-plugin, knk-workspace (from `next`) | – | – | create_session session_01R1w2UxDt6K1RcnDPPagNAN (2026-11-18) |
 | L8 Gate command buttons | #742 | Not started (gate: L3 and L7 merged into `next`) | – | – | – | – |
 | L9 Player context panel | #743 | Not started (gate: L5 merged into `next`) | – | – | – | – |
@@ -515,3 +515,60 @@ _(Each link appends its block here when it finishes.)_
     2. L7: `GameServerHub` now also has `ReportMapPlayers`; `MapController` has `GetPlayers`. `MapOptions` has a
        `LivePlayers` block; add `GateCommands` beside it.
     3. L9: `MapPlayerDto.uuid` is the player's Minecraft UUID (lower case), for the moderation panel.
+
+### 4.6 L6 — Staff details: compact display-configuration renderer (#740)
+
+1. **Scope done.**
+    1. knk-web-app: `DisplayWizard` `compact` prop (passed on to `DisplaySection` and `CollectionSection`; default
+       false, the detail page unchanged; the prop type in `DisplayModels.ts`): no header, every collection a collapsed
+       `<details>` with its name and count, values read-only with links to related records, no buttons, hot edit or
+       pickers, and no checks of the edit, link or delete nodes. New `components/map/staffDetailsRegistrations.tsx`
+       (staff widget `staff-details` under `knk.admin.world` for town, district and structure through
+       `mapActionRegistry.addWidget`; `structureEntityType`) and `components/map/widgets/StaffDetailsWidget.tsx`
+       ("Details", "Open full page" to `/display/<type>/<id>?returnTo=/map`, the compact renderer), lazily loaded.
+       Additive edit: one call in `createMapActionRegistry`. `MapPanel` unchanged. No API change, no migration.
+    2. knk-workspace: smoke guide § 6 (7 steps: 2 automated, 5 partly automated, tagged), changelog entry, spec status
+       line and § 6.3.3 as built.
+2. **Commits and heads.** knk-web-app `claude/overview-map-staff-details` at `1443cf5` (1 commit, base `next` at
+   `f551804`); knk-workspace `claude/overview-map-staff-details` at `fe64919d` (1 commit, base `next` at `0f0f8e7f`).
+   Both up to date with `origin/next` at the time of the PRs.
+3. **PRs.** [knk-web-app#51](https://github.com/PandiO/knk-web-app/pull/51) (`Part of #740`),
+   [knk-workspace#755](https://github.com/PandiO/knk-workspace/pull/755) (`Closes #740`), base `next`. Not merged.
+4. **Tests, baseline → result.**
+    1. knk-web-app: Jest 313 suites / 2699 tests → 315 / 2712, all green (+13: `DisplayWizard.compact` 6,
+       `staffDetails` 7; L3's pin "no staff widgets yet" in `mapActionRegistry` now pins `knk.admin.world`).
+       Playwright 160 → 166 passed (+6 in `e2e/overview-map-staff-details.spec.ts`, A17: staff details with "Open full
+       page", read-only with links, collapsed collections, phone; player without the node: no Details and no
+       `DisplayConfigurations` / `Structures` request; anonymous: also no permission check). Seen failing once (compact
+       branch disabled: 2 Jest red; node changed: 4 e2e red). `tsc`, `typecheck:e2e`, `CI=true npm run build` clean.
+       The Playwright baseline 160 is L3's count on the same `next` commit. CI on `1443cf5`: build-and-test and e2e green (push and pull_request runs).
+    2. knk-workspace: docs only; links and anchors checked by hand.
+    3. Known reds: none.
+    4. Codex: at its usage limit on knk-web-app#51 and knk-workspace#755 (review failed; noted on both PRs); no
+       findings handled.
+5. **Decisions (DESIGN § 4.3).**
+    1. *Type of a gate.* Chosen: `GateStructure` when the public panel has `gate` (same id; the API seeds its display
+       configuration with doors and siege settings). Alternatives: (a) always `Structure` (the smoke draft's
+       wording): a gate's details would miss its gate fields.
+    2. *Node.* Chosen: the fixed `knk.admin.world` for town, district and structure (their world area node; L3's
+       note). Alternatives: (a) the type's `readNodes` from `Metadata/entities`: one more request for every viewer, and
+       extra read nodes such as `knk.admin.config` would open staff details to non-world staff.
+    3. *Loading.* Chosen: `React.lazy` for the widget: anonymous viewers don't download the renderer, and the registry
+       module stays free of router imports. Alternatives: (a) a static import: a bigger map page and
+       `react-router-dom` mocks in every registry test.
+    4. *Collapsed collections.* Chosen: native `<details>`/`<summary>`, paged above 12 items like the full page.
+       Alternatives: (a) a custom toggle button: compact mode would then have buttons.
+    5. *Problems in compact form* (no configuration, no access, error). Chosen: one line in the section, the public
+       part stays. Alternatives: (a) the full page's problem box with Back / Try again: page-sized buttons in a panel.
+6. **Out of scope, noted.** None new. Towns and districts have no seeded default display configuration; their
+   "Details" says so in one line until staff create one (smoke § 6.0).
+7. **Blockers.** None.
+8. **At merge / what the developer must do.**
+    1. Nothing: no flag, no settings, no migration. The section appears only where the map is on (`Map__Enabled`).
+    2. Smoke guide § 6 with the § 3 deployment (waits for the NAS render).
+    3. Optional: `@codex review` on both PRs once the Codex limit resets.
+9. **Notes for later links.**
+    1. L8 / L9: `MapPanel` renders staff widgets in the "Staff details" section and actions below it; the staff
+       details widget has id `staff-details` per kind. Register further staff widgets with other ids; registering the
+       same id replaces it.
+    2. The compact renderer is reusable: `<DisplayWizard entityTypeName=... entityId=... compact />` (needs a router).
