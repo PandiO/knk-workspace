@@ -3,7 +3,7 @@
 **Status:** **Decided 2026-11-18** (developer). Approved in the design refresh session: § 14.1–14.6 "yes"
 (E14–E21 accepted as written). Decisions of 2026-10-22 are recorded in §1; the refresh of 2026-11-18 in § 1.1, § 2.1,
 § 3.2, § 5.1, § 10, § 13, § 14; E1–E13 unchanged.
-**Last updated:** 2026-11-18 (P1 link: § 10.2 item 7, what was applied); 2026-11-18 (approved by the developer: status Decided, phase 4b filed as #747, tier labels applied,
+**Last updated:** 2026-11-18 (P2 link: § 10.3 item 5, what was applied); 2026-11-18 (P1 link: § 10.2 item 7, what was applied); 2026-11-18 (approved by the developer: status Decided, phase 4b filed as #747, tier labels applied,
 § 14 answered); refreshed 2026-11-18 (§ 2, § 5 and § 10 re-checked against knk-plugin `next` `1f414d08`; landmark
 provider hook § 3.2; the October P1 code checked on `next` § 10.2; tiers, flag and links § 10; acceptance items § 13;
 points for approval § 14; agent decisions E14–E21 in § 1.1); 2026-10-23 (E9–E13 recorded; KNG-234 merged to main
@@ -419,6 +419,18 @@ behind `next` `1f414d08`; 15 new files, 1 932 lines, additions only (8 classes i
    `DomainMappingProfile`, and `.Include(d => d.Location)` in `SearchAsync`. Additive, no migration, older clients
    ignore the field; tests for a domain with and without a Location. The plugin pages through the search with a large
    page size (`SearchAsync` takes the page size as given; the link checks the service layer and sets a cap if needed).
+5. **Applied by the P2 link (#103, 2026-11-18)**, for P3 and the landmark link: the API sends `location` on every
+   item (`null` when the domain has none; the key is always written, so the plugin tells "none" from an older API) and
+   no page-size cap was added (the plugin asks for 200, as `NavigationDestinations` does). In knk-plugin the model is
+   `core/navigation/model`: `NavigationModel` (domains as `DomainPlace` with `spawn` and `placeKnown`, Locations as
+   `ModelPoint`, `CompassSettings`, `Landmark` list, `roadAccessIgnored`/`roadsIgnoreRegion`), `NavigationModelHolder`
+   (volatile swap; `version()` moves only with the content: the `modelVersion` of § 3), `NavigationModelRefresher`
+   (60 s refresh, all three API parts or nothing; paced fallback two lookups a second for Towns, Districts and
+   Structures; snapshot written when complete and changed, or once a day to keep `asOf` current), `ModelFreshness`
+   (`LIMITED`/`STALE`/`FRESH`, `applyTo(DestinationList)`). The file is `<plugin folder>/offline/navigation-model.json`
+   (`plugins/KnightsAndKings/…`; "KnK" in § 7.2 is shorthand). knk-paper starts it in
+   `paper/navigation/model/NavigationModelRuntime` (`KnKPlugin.startNavigationModel`); nothing reads it yet
+   (`NavigationModelUnreadTest`, which P3 widens).
 
 ## 11. Risks and details to settle in implementation
 
