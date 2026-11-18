@@ -47,7 +47,7 @@ on `next` (Decided 2026-11-17).
 | L5 Phase 2 walk links | #705 | Not started (L4 in `next`; waits for L1 done: the developer's filled measurements report) | `claude/offroad-walk-links` | — | — | — |
 | L6 Phase 3 hierarchical walk search | #706 | Not started (gate: L5 in `next`; O32 question first if L1 says option A fits) | `claude/offroad-hierarchical` | — | — | — |
 | L7 Phase 4 route modes | #707 | Not started (gate: L5 in `next`) | `claude/offroad-route-modes` | — | — | — |
-| L8 Phase 5.1 landmark entity | #708 | Waiting (destination engine L1–L3 = #96, #103, #69 not in `next`, O27; engine design Decided 2026-11-18, chain charter `DESTINATION_ENGINE_CHAIN.md`, not started) | `claude/offroad-landmarks` | — | — | — |
+| L8 Phase 5.1 landmark entity | #708 | Running, step A (knk-web-api + knk-web-app; started 2026-11-18 15:10 from `next`); step B (plugin `LandmarkProvider`, `/knk landmark`) after engine L4 #62 is merged | `claude/offroad-landmarks` | — | — | subagent of the coordinator (three component repos, skill § 4.1.4.2) |
 | L9 Phase 5.2 landmark weights | #709 | Not started (gate: L7 and L8 in `next`) | `claude/offroad-landmark-weights` | — | — | — |
 | L10 Phase 7 plaza lines | #712 | Step 1 merged into next (2026-11-18); step 2 waits for the developer's viewing and answers on #712 (O16) | knk-plugin `claude/offroad-plaza-lines` `97d1bafc`; knk-workspace `claude/offroad-plaza-lines` `d794c716` | step 1: [knk-plugin#73](https://github.com/PandiO/knk-plugin/pull/73) → `next` `ce0f65ec`, [#723](https://github.com/PandiO/knk-workspace/pull/723) → `next` `c7f61e9e` | green (build, paper-boot 55) | create_session `session_01R1w2Ussca79jpGCPqzcTf8` (2026-11-18) |
 
@@ -172,6 +172,16 @@ on `next` (Decided 2026-11-17).
     L3's merge, which also opens L8 (#708); L8 then asks for a window before engine L4/4b. Alternative: take the
     window and start L10 step 2 with the curve clearance as a config key (option 2 offered to the developer at 08:5x,
     not answered); rejected without the developer's go.
+24. **Engine L3 (#69) merged into `next` (2026-11-18 15:06, plugin `073fa4cf`): L8's gate is open.** Engine L4 (#62)
+    and L8 must not run side by side in knk-plugin navigation code. Chosen: engine L4 takes the plugin slot now; L8
+    starts at once in two steps: step A (knk-web-api: `landmarks` table, migration, `api/landmarks`, access rule
+    `knk.admin.world.landmark`; knk-web-app: list, form, domain pages; docs), step B (knk-plugin: `LandmarkProvider`
+    registered in `KnKPlugin.startDestinationEngine`, `/knk landmark`) after engine L4's merge, before engine L5.
+    Step A shares no file with engine L4. Alternatives: (a) all of L8 after engine L4; rejected, it idles the API and
+    web-app work; (b) all of L8 now and engine L4 after it; rejected, the engine chain asked first and L8's plugin part
+    is the smaller half. Route: subagent (three component repos). Overlap noted: the overview map chain's additive
+    API/web-app work in `next` (`map_region_outlines`, `/map`): L8 keeps `KnKDbContext`, `objectConfigs` and seeds
+    additive and merges `next` before its migration.
 
 ## 4. Link blocks
 
