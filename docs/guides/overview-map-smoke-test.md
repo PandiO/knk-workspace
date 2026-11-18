@@ -1,6 +1,6 @@
 # Overview map — smoke test
 
-**Status:** Draft · **Last updated:** 2026-11-18 (§ 3 step 4: Escape only with the focus on the page, #757; docs #766)
+**Status:** Draft · **Last updated:** 2026-11-18 (§ 3 step 1: opening `/bluemap` itself goes to `/map`, #737); 2026-11-18 (§ 3 step 4: Escape only with the focus on the page, #757; docs #766)
 **Coverage:** Written from the design 2026-11-18; no steps run. § 1 updated to what L1 built (7 steps, all partly automated, tagged), § 2 to what L2 built (7 steps: 2 automated, 5 partly automated, tagged), § 3 to what L3 built (11 steps: 1 automated, 9 partly automated, 1 manual only, tagged), § 4 to what L4 built (9 steps: 1 automated, 5 partly automated, 3 manual visibility steps), § 5 to what L5 built (8 steps: 1 automated, 7 partly automated, tagged), § 6 to what L6 built (7 steps: 2 automated, 5 partly automated, tagged), § 7 to what L7 built (10 steps: 4 automated, 6 partly automated), § 8 to what L8 built (9 steps: 3 automated, 6 partly automated), § 9 to what L9 built (8 steps: 3 automated, 4 partly automated, 1 manual only); every section is now updated to what was built.
 **Design:** [specs/in-game-maps/OVERVIEW_MAP_DESIGN.md](../specs/in-game-maps/OVERVIEW_MAP_DESIGN.md) · **Issue:**
 [PandiO/knk-workspace#732](https://github.com/PandiO/knk-workspace/issues/732)
@@ -177,9 +177,10 @@ Tests named below: knk-web-app `e2e/overview-map.spec.ts` (Playwright, "e2e") an
 
 1. [manual only: deployment] On the NAS: `docker ps --format '{{.Names}}' | grep -i bluemap` shows no `bluemap-test`;
    `docker compose --profile bluemap config --services` lists `bluemap`. In a browser (through Cloudflare Access),
-   open `https://app.knightsandkings.net/bluemap/`. **Expected:** BlueMap's viewer shows the rendered area; the
-   response of `/bluemap/` has `X-Frame-Options: SAMEORIGIN` (developer tools, Network), any other page `DENY`;
-   `/bluemap/settings.json` lists the bridge script under `scripts`.
+   open `https://app.knightsandkings.net/bluemap` and `https://app.knightsandkings.net/bluemap/`. **Expected:** both
+   go to `/map` (a 302; BlueMap only opens inside the map page's frame, under the app's header); in `/map` the frame's
+   request for `/bluemap/` answers 200 with `X-Frame-Options: SAMEORIGIN` (developer tools, Network), any other page
+   `DENY`; `/bluemap/settings.json` opened in a tab lists the bridge script under `scripts`.
 2. [partly automated: e2e `the start page links to the map, and /map shows pins with labels by zoom (A07)`,
    `logged in with the map on: the bar has a Map entry that opens the map`; by hand: the real render and zoom] As
    **anonymous**, open the start page. **Expected:** "Explore the world on the map" with a link; it opens `/map` with

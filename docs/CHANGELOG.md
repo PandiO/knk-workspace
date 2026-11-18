@@ -223,6 +223,7 @@ This is a human-readable record of capabilities merged into the V3 default branc
   default): while it is off the web app shows no map anywhere.
   1. A public `/map` page with BlueMap's 3D viewer in a frame (served by our own Nginx under `/bluemap/`) and a bridge
      script inside it that draws our pins and outlines and reports clicks (versioned messages, own origin only).
+     Opening `/bluemap` itself in the browser goes to `/map`, so the map always shows under the app's header.
   2. Town, district and structure pins with their names: towns at every zoom, districts and structures when zoomed in;
      structures also show their type ("Structure, Gate").
   3. Clicking a town flashes its outline three times and opens a panel with its public fields; "Show region" keeps the

@@ -1,6 +1,6 @@
 # Closed-alpha deployment runbook
 
-**Status:** Current · **Last updated:** 2026-11-18 (Phase 10 step 3: optional `heads=` for live players, #739); 2026-11-18 (Phase 10: overview map, BlueMap in the stack, deploy notes for #737, not applied); 2026-11-16 (§ Every deploy step 2: the Release workflow reuses an existing tag at the same commit, one concurrency group per tag, #426); 2026-11-14 (knk-web-api's trunk renamed from `master` to `main`); 2026-11-13 (§ Every deploy: deploy gate, release tags, deployment log row and GitHub Release, PandiO/knk-workspace#303)
+**Status:** Current · **Last updated:** 2026-11-18 (Phase 10 step 8: opening `/bluemap` itself goes to `/map`, #737); 2026-11-18 (Phase 10 step 3: optional `heads=` for live players, #739); 2026-11-18 (Phase 10: overview map, BlueMap in the stack, deploy notes for #737, not applied); 2026-11-16 (§ Every deploy step 2: the Release workflow reuses an existing tag at the same commit, one concurrency group per tag, #426); 2026-11-14 (knk-web-api's trunk renamed from `master` to `main`); 2026-11-13 (§ Every deploy: deploy gate, release tags, deployment log row and GitHub Release, PandiO/knk-workspace#303)
 **Progress:** In progress — phases 0–3 complete; phase 3b (API upgrade to the KNG-64 build, [KNG-227](https://linear.app/kngpandi/issue/KNG-227)) complete 2026-10-22 ([report](../reports/2026-10-22-alpha-api-kng64-upgrade.md)); API updated to `4aeb794` ([KNG-275](https://linear.app/kngpandi/issue/KNG-275)) and phase 4 Stage 2 (KnK plugin `d56e41da`, [KNG-225](https://linear.app/kngpandi/issue/KNG-225)) done 2026-10-24 ([report](../reports/2026-10-24-alpha-api-4aeb794-and-plugin-stage-2.md)); `/hub` waits for a hub selection in the approved seed. Phase 5 (playit.gg, `play.knightsandkings.net`) done 2026-10-24 ([report](../reports/2026-10-24-alpha-phase-5-playit.md)). Phase 6 (web app, `app.knightsandkings.net`, own tunnel, Access; API `a38c8ee9`) done 2026-10-24 ([report](../reports/2026-10-24-alpha-phase-6-web-ingress.md)). Security probe (go-live § 8) passed 2026-10-24 privately and through Cloudflare ([report](../reports/2026-10-24-alpha-security-probe.md)). HSTS and the apex redirect done the same day. Phase 7 deferred to beta (developer, 2026-10-24); the alpha uses manual snapshots (`scripts/alpha-snapshot/`). Phase 9 done 2026-10-24: mail relay, Access sync and bypass, sign-up by invitation, admission gate with the whitelist off ([report](../reports/2026-10-24-alpha-phase-9-invite-only.md)). Approved seed and fresh world imported 2026-10-24 ([report](../reports/2026-10-24-alpha-seed-import.md)); `/hub` works. Next: the first alpha run. Web hostname decided 2026-10-21: `app.knightsandkings.net`
 **Progress report:** [2026-10-11 closed-alpha infrastructure progress](../reports/2026-10-11-closed-alpha-infrastructure-progress.md)
 **Handoff:** [2026-10-11 closed-alpha infrastructure](../ai-agents/handoffs/2026-10-11-closed-alpha-infrastructure.md)
@@ -643,8 +643,12 @@ Steps (root shell on the NAS: `sudo -i` on its own line first, as in
    `docker compose --profile bluemap run --rm bluemap -g`. Then
    `jq '.scripts, .clientDecompression' /mnt/fast/knk-alpha/bluemap/web/settings.json` shows the bridge URL and `true`.
 8. **Check.** `curl -sI https://app.knightsandkings.net/bluemap/ | grep -i x-frame` answers `SAMEORIGIN` (through
-   Cloudflare Access, so from a logged-in browser or with the service token); `/bluemap/settings.json` is JSON; the
-   browser's `/bluemap/` shows the test render. With `Map__Enabled=true`, `/map` shows it with the pins: smoke guide
+   Cloudflare Access, so from a logged-in browser or with the service token); `/bluemap/settings.json` is JSON. A
+   browser that opens `/bluemap` or `/bluemap/` itself is sent to `/map` (302, from its `Sec-Fetch-Dest: document`
+   header): BlueMap only shows inside the map page's frame, under the app's header. `curl` sends no such header and
+   gets the viewer, so to look at the bare render from the NAS use
+   `docker compose exec web wget -qO- http://127.0.0.1:8080/bluemap/ | head`. With `Map__Enabled=true`, `/map`
+   shows it with the pins: smoke guide
    [§ 3](overview-map-smoke-test.md#3-phase-3-map-page-737-tier2).
 9. **Full-world render** (about 20 hours on 4 threads, about 40 GB, BLUEMAP_EVALUATION § 6), in the background:
    `docker compose --profile bluemap run -d --name knk-alpha-bluemap-render bluemap -r -g` (add `-f` after a config
