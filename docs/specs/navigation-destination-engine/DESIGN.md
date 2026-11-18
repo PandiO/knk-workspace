@@ -3,7 +3,7 @@
 **Status:** **Decided 2026-11-18** (developer). Approved in the design refresh session: § 14.1–14.6 "yes"
 (E14–E21 accepted as written). Decisions of 2026-10-22 are recorded in §1; the refresh of 2026-11-18 in § 1.1, § 2.1,
 § 3.2, § 5.1, § 10, § 13, § 14; E1–E13 unchanged.
-**Last updated:** 2026-11-18 (approved by the developer: status Decided, phase 4b filed as #747, tier labels applied,
+**Last updated:** 2026-11-18 (P1 link: § 10.2 item 7, what was applied); 2026-11-18 (approved by the developer: status Decided, phase 4b filed as #747, tier labels applied,
 § 14 answered); refreshed 2026-11-18 (§ 2, § 5 and § 10 re-checked against knk-plugin `next` `1f414d08`; landmark
 provider hook § 3.2; the October P1 code checked on `next` § 10.2; tiers, flag and links § 10; acceptance items § 13;
 points for approval § 14; agent decisions E14–E21 in § 1.1); 2026-10-23 (E9–E13 recorded; KNG-234 merged to main
@@ -399,6 +399,12 @@ behind `next` `1f414d08`; 15 new files, 1 932 lines, additions only (8 classes i
 5. **Verdict:** reuse (E14). The P1 link merges `next` into the branch, resolves the conflict as in item 1, applies
    item 4 and opens the pull request into `next`.
 6. **#96's label:** remove `status:in-review` (nothing was merged); the P1 link sets `status:in-progress` (E21).
+7. **Applied by the P1 link (#96, 2026-11-18)**, for the adapters of P3 and P4: `Reason(code, text)` in the engine
+   package; `InitialScopes` codes `loading`, `frozen`, `no-permission`, `siege-compass-off` (scope 55),
+   `siege-match-empty` (scope 60 with nothing listed: a member without a team, a board without objectives; today's
+   same text) and `siege-lobby`; the engine's own `no-longer-listed` when a running session's key dropped out of a list.
+   The siege context keeps one `compassEnabled`, which the P3 adapter builds as `item().enabled() && siegeEnabled()`.
+   `Place.Point` has a nullable `arrivalRadius` (positive, finite). No list cache in P1 (E18).
 
 ### 10.3 E12: what the domain search returns today (knk-web-api `next` `8ec54e1`, checked 2026-11-18)
 
