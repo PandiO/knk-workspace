@@ -30,9 +30,9 @@ on `next` (Decided 2026-11-17).
 | L4 Phase 6.2 anchored particles, winding back | #711 | Merged into next (2026-11-18); waits for the developer's live test (tier:3, smoke § 9) | knk-plugin `claude/offroad-trail-cursor` `1925cf73`; knk-workspace `claude/offroad-trail-cursor` `cb7b55f8` | [knk-plugin#72](https://github.com/PandiO/knk-plugin/pull/72) → `next` `580aafa1`, [#722](https://github.com/PandiO/knk-workspace/pull/722) → `next` `ff8cf291` | green (build, paper-boot) | create_session `session_01R1w2UwkAiptAq4cPVFVBTS` (2026-11-18) |
 | L5 Phase 2 walk links | #705 | Merged into next (2026-11-18); waits for the developer's live test (tier:3, smoke § 3) and confirmation of the road-first defaults | knk-plugin `claude/offroad-walk-links` `5b4f666d`; knk-workspace `06b3f92a` | [knk-plugin#85](https://github.com/PandiO/knk-plugin/pull/85) → `3977329c`, [#774](https://github.com/PandiO/knk-workspace/pull/774) → `e2cac646` | green (build, paper-boot) | create_session `session_01R1w2UsbXwf6jzEc33aVwLL` (2026-11-18) |
 | L6 Phase 3 hierarchical walk search | #706 | Not started (L5 in `next`; waits for the developer's O32 answer: option A fits the keep) | `claude/offroad-hierarchical` | — | — | — |
-| L7 Phase 4 route modes | #707 | In review (2026-11-18); waits for the coordinator's checks and merge, then the developer's node grants and live test (smoke § 5 steps 2, 3, 9) | knk-plugin `claude/offroad-route-modes` `d374b016`; knk-workspace `claude/offroad-route-modes` `ed01ab75` | [knk-plugin#86](https://github.com/PandiO/knk-plugin/pull/86), [#775](https://github.com/PandiO/knk-workspace/pull/775) → `next` | green (build, paper-boot) | create_session `session_01R1w2UveW7t8KTUAYeD5kAa` (2026-11-18) |
+| L7 Phase 4 route modes | #707 | Merged into next (2026-11-18); waits for the developer's smoke § 5 (steps 2, 3, 9) and the node grants | knk-plugin `claude/offroad-route-modes` `d374b016`; knk-workspace `ed01ab75` | [knk-plugin#86](https://github.com/PandiO/knk-plugin/pull/86) → `a94332d9`, [#775](https://github.com/PandiO/knk-workspace/pull/775) → `dd09f782` | green (build, paper-boot) | create_session `session_01R1w2UveW7t8KTUAYeD5kAa` (2026-11-18) |
 | L8 Phase 5.1 landmark entity | #708 | Merged into next (2026-11-18); waits for the developer's live test (tier:3, smoke § 6) | knk-web-api `d331bdf4`, knk-web-app `b50c4134`, knk-plugin `be9e3a74`, knk-workspace `eb3321a9` (`claude/offroad-landmarks`) | [knk-web-api#50](https://github.com/PandiO/knk-web-api/pull/50) → `935fe8cc`, [knk-web-app#54](https://github.com/PandiO/knk-web-app/pull/54) → `3432e6ef`, [knk-plugin#83](https://github.com/PandiO/knk-plugin/pull/83) → `5fd81466`, [#763](https://github.com/PandiO/knk-workspace/pull/763) → `7722cc76` | green (all jobs) | subagent of the coordinator (three component repos; resumed once after the usage limit) |
-| L9 Phase 5.2 landmark weights | #709 | Not started (gate: L7 and L8 in `next`) | `claude/offroad-landmark-weights` | — | — | — |
+| L9 Phase 5.2 landmark weights | #709 | Running (started 2026-11-18 22:07 from plugin `next` `a94332d9`) | `claude/offroad-landmark-weights` | — | — | create_session `session_01R1w2Ut1P9c2jGxRYC3weCJ` (2026-11-18) |
 | L10 Phase 7 plaza lines | #712 | Merged into next (step 1 and step 2, 2026-11-18); waits for the developer's smoke § 10.2 | knk-plugin `claude/offroad-plaza-lines` `28ad18c5`; knk-workspace `d7e4e834` | step 1: [knk-plugin#73](https://github.com/PandiO/knk-plugin/pull/73) → `ce0f65ec`, [#723](https://github.com/PandiO/knk-workspace/pull/723) → `c7f61e9e`; step 2: [knk-plugin#84](https://github.com/PandiO/knk-plugin/pull/84) → `4daa0c84`, [#769](https://github.com/PandiO/knk-workspace/pull/769) → `2e0c04d4` | green (build, paper-boot) | create_session `session_01R1w2Ussca79jpGCPqzcTf8` (2026-11-18) |
 
 ## 3. Coordinator decisions
@@ -202,6 +202,12 @@ on `next` (Decided 2026-11-17).
     answer (asked on #698 and in the session at 20:13). L7 (tier:2, no flag, default = today) takes the plugin slot;
     the mode rides the shared route request so engine L5's removal of the old path stays mechanical. Alternative:
     start L6 as decided (option B) without the answer; rejected, charter § 2.3 says ask first.
+31. **L7 merged into `next` (2026-11-18 22:06), L9 started (22:07).** L7 § 6 checks held: heads matched, branches
+    contained `next`, `build` and `paper-boot` green on `d374b016`, golden transcripts written on `next` `3977329c`
+    with the old API prove default = `preferred` = today (O24), no NPC/shape/destinations/`RoadPlanner` file in the
+    diff, mode parsing shared by both `/navigate` branches and tested on the engine path, nodes `default: op` (grants
+    are the developer's), no Codex findings (usage limit). L9's gate (L7 and L8 in `next`) is open; landmark nodes in
+    clusters stay a seam for L6. Engine and NPC coordinators told.
 
 ## 4. Link blocks
 
