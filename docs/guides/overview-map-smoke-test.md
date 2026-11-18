@@ -1,7 +1,7 @@
 # Overview map — smoke test
 
-**Status:** Draft from the design (2026-11-18); no steps run. § 1 updated to what L1 built (7 steps, all partly automated, tagged); the other sections are not automated yet (the links tag them).
-**Last updated:** 2026-11-18 (§ 1 to what L1 built, #735); 2026-11-18 (draft from the design, phases 1, 2, 3, 4a, 4b, 5, 6a, 6b, 7)
+**Status:** Draft from the design (2026-11-18); no steps run. § 1 updated to what L1 built (7 steps, all partly automated, tagged), § 2 to what L2 built (7 steps: 2 automated, 5 partly automated, tagged); the other sections are not automated yet (the links tag them).
+**Last updated:** 2026-11-18 (§ 2 to what L2 built, #736); 2026-11-18 (§ 1 to what L1 built, #735); 2026-11-18 (draft from the design, phases 1, 2, 3, 4a, 4b, 5, 6a, 6b, 7)
 **Design:** [specs/in-game-maps/OVERVIEW_MAP_DESIGN.md](../specs/in-game-maps/OVERVIEW_MAP_DESIGN.md) · **Issue:**
 [PandiO/knk-workspace#732](https://github.com/PandiO/knk-workspace/issues/732)
 
@@ -81,29 +81,73 @@ Tests named below: knk-plugin `knk-core` `MapReportingServiceTest`, `ManagedRegi
 
 ## 2. Phase 2: public map API (#736, tier:3)
 
-*Draft from the design (2026-11-18); the link updates it to what was built and tags the automated steps.*
+*Built by link L2 (knk-web-api branch `claude/overview-map-public-api`, PR into `next`). 7 steps: 2 automated, 5
+partly automated (tagged); the by-hand parts need a real API with MySQL behind Nginx. The suites cover the routes, the flag, the
+rate limit and the exact public field sets; a real database with the phase 1 outlines and a real client IP are checked
+by hand. Every step can still be run by hand; not run yet. Full manual run about 20 minutes.*
+
+Tests named below, all in knk-web-api `Tests/knkwebapi_v2.Tests`: `Api/MapControllerPipelineTests`,
+`Api/MapPublicDtoFieldTests`, `Services/Map/MapPublicServiceTests`, `Security/EndpointAccessRulesTests`,
+`Security/ReadAccessRulesTests`.
 
 ### 2.0 Preconditions
 
-1. Deployed: phase 1, and the API from `next`.
-2. Settings: `Map:Enabled=true`.
-3. Data: the phase 1 data with stored outlines.
+1. Deployed: phase 1 (the `map_region_outlines` table filled by the plugin, smoke § 1 step 1), and the API from `next`.
+2. Settings (environment file of the API, `/etc/knk/api.env`, production installation guide § 4.3; restart the API
+   after a change): `Map__Enabled=true`. Leave the other `Map__*` keys at their defaults (label distances 0 / 1500 /
+   600 / 1500, flash 3 × 400 ms, marker cache 30 s) and `RateLimiting__Map__PermitPerMinute=120`.
+3. Data: the test town with two districts, a structure with a spawn location, a structure without one, and the gate
+   structure with two doors, all with stored outlines. Note their ids from the web app.
+4. Calls without a token, for example `curl -s https://<host>/api/Map/markers | jq`.
 
 ### 2.1 Steps
 
-1. With `Map:Enabled=false`, call `GET api/Map/config` and `GET api/Map/markers` without a token. **Expected:** 404
-   for both. (A03)
-2. With `Map:Enabled=true`, call `GET api/Map/markers` without a token. **Expected:** 200. The response has the town,
-   its districts and the structures, each labelled with its name (not the region id). Structures add type and
-   subtype. The structure with a spawn location has its pin there. The structure without one has its pin at the
-   centre of its outline. (A04)
-3. Call `GET api/Map/towns/{id}`, `GET api/Map/districts/{id}` and `GET api/Map/structures/{gateId}` without a token.
-   **Expected:** only the O32 fields. Town: name, description, district count. District: name, description, town.
-   Structure: name, description, type and subtype, district, town, street and house number. Gate: plus, per door,
-   name, open/closed, destroyed and health. No region ids, owner data or internal ids beyond the entity's own.
-   (A05)
-4. Send 121 requests to `GET api/Map/markers` within one minute from one IP. **Expected:** the 121st answers 429.
-   (A06)
+1. [automated: `MapControllerPipelineTests.MapOff_EveryRouteAnswers404_AndReadsNothing`,
+   `MapControllerPipelineTests.MapOffByDefault_WithoutAnySetting_EveryRouteAnswers404`] With `Map__Enabled=false` (or
+   the key absent), call `GET api/Map/config`, `GET api/Map/markers`, `GET api/Map/towns/{id}`,
+   `GET api/Map/districts/{id}` and `GET api/Map/structures/{id}` without a token. **Expected:** 404 for every one.
+   (A03)
+2. [partly automated: `MapControllerPipelineTests.MapOn_EveryRouteAnswersAnonymously`,
+   `EndpointAccessRulesTests` (the anonymous allow-list), `ReadAccessRulesTests` (pinned `P`); by hand: the deployed
+   API] With `Map__Enabled=true`, call `GET api/Map/config` without a token. **Expected:** 200 with `enabled: true`, a
+   16-character `markerVersion`, `labels` `{town: null, district: 1500, structure: 600, arena: 1500}`, `flash`
+   `{count: 3, durationMs: 400}`, `livePlayers.enabled: false` and `gateCommands.enabled: false`.
+3. [partly automated: `MapPublicServiceTests.Markers_ListTownsDistrictsAndStructures_LabelledWithTheirNames`,
+   `Markers_StructuresCarryTypeAndSubtype`, `Markers_PinAtTheSpawnLocation_ElseAtTheOutlineCentroid`,
+   `Markers_ShapeIsTheMainRegionThenCurrentSubRegions_StaleAndUnlinkedRowsIgnored`; by hand: real outlines] Call
+   `GET api/Map/markers` without a token. **Expected:** 200. `towns` has the test town, `districts` its two districts
+   (with the town's `townId`), `structures` the three structures, each with `name` = its name, never a region id
+   (search the raw JSON for `domain_`: no hit). Structures have `type: "Structure"`; the gate has `subtype: "Gate"`
+   and `typeLabel: "Structure, Gate"`, the others `subtype: null` and `typeLabel: "Structure"`. The structure with a
+   spawn location has `pin.source: "location"` at that location (x, y, z); the one without has `pin.source:
+   "centroid"`, `y: null`, at the centre of its outline. Each item's `outlines` starts with its main region; the points
+   match the phase 1 rows. A domain with neither a location nor an outline is not listed, and the API log has one
+   `Overview map: domain <id> (<name>) has no spawn location and no region outline` line for it after the first call
+   (not repeated on later calls). (A04)
+4. [automated: `MapPublicDtoFieldTests.PublicDto_HasExactlyThePinnedFields`, `EveryPublicMapDto_IsPinned`,
+   `NoPublicMapDto_NamesARegionOwnerOrPermission`, `MapPublicServiceTests.TownPanel_NameDescriptionAndDistrictCount_Only`,
+   `DistrictPanel_NameDescriptionAndTown_Only`, `StructurePanel_PlainStructure_HasNoGate`,
+   `StructurePanel_Gate_AddsDoorsWithStateDestroyedHealth_AndUnderSiege`, `Panels_UnknownOrWrongTypeIds_AreNull`]
+   Call `GET api/Map/towns/{townId}`, `GET api/Map/districts/{districtId}` and `GET api/Map/structures/{gateId}`
+   without a token. **Expected:** only the O32 fields. Town: `id`, `name`, `description`, `districtCount` (2).
+   District: `id`, `name`, `description`, `townName`. Structure: `id`, `name`, `description`, `type`, `subtype`,
+   `districtName`, `townName`, `streetName`, `houseNumber`, `gate`. For the gate, `gate` has `underSiege` and `doors`,
+   each door only `name`, `openState` (`open`, `closed`, `opening`, `closing` or `jammed`), `isDestroyed`,
+   `healthCurrent` and `healthMax`; a plain structure has `gate: null`. No region ids, owner data or other internal
+   ids. A town id on `structures/{id}`, or an unknown id, answers 404. (A05)
+5. [partly automated: `MapPublicServiceTests.StructurePanel_Gate_StructureOverridesWin_AndAFinishedMatchIsNoSiege`;
+   by hand: a real match] Start a siege match on the gate and call `GET api/Map/structures/{gateId}` again.
+   **Expected:** `underSiege: true` while the match is created or running, door health still shown; after the match
+   ends, `false`.
+6. [partly automated: `MapPublicServiceTests.Markers_VersionChangesWhenAnOutlineChanges`,
+   `Markers_AreReusedForCacheSeconds_ThenRebuilt`; by hand: the deployed API] Note `markerVersion` from
+   `GET api/Map/config`, rename the test town in the web app, wait 30 seconds (the marker cache) and call it again.
+   **Expected:** a different `markerVersion`, and `GET api/Map/markers` shows the new name.
+7. [partly automated: `MapControllerPipelineTests.MapPolicy_Refuses121stRequestInAMinute_With429`,
+   `MapPolicy_PermitIsConfigurable`; by hand: the real client IP behind Nginx] From one machine, send 121 requests
+   to `GET api/Map/markers` within one minute (`for i in $(seq 121); do curl -s -o /dev/null -w "%{http_code}\n"
+   https://<host>/api/Map/markers; done | sort | uniq -c`). **Expected:** 120 × 200 and 1 × 429 (with a `Retry-After`
+   header). From a second machine (another IP) in the same minute: 200. (A06)
 
 ## 3. Phase 3: map page (#737, tier:2)
 

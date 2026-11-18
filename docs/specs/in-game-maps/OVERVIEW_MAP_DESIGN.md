@@ -1,7 +1,7 @@
 # Overview map — BlueMap in the web app for players, staff and moderation
 
 **Status:** **Decided 2026-11-18** (developer). Proposed the same day; no open questions.
-**Last updated:** 2026-11-18 (phase 1, #735, built on `claude/overview-map-outlines` in knk-plugin and knk-web-api, in review, not in `next` yet; stored shape in § 6.1.1); 2026-11-18 (§ 3.1.10: existing NAS render container, migration to the alpha stack; Decided; phases filed as #735–#743; first version from the working draft of 2026-11-17 and the design session of 2026-11-18)
+**Last updated:** 2026-11-18 (phase 2, #736, built on `claude/overview-map-public-api` in knk-web-api, in review; as built in § 6.2.8); 2026-11-18 (phase 1, #735, built on `claude/overview-map-outlines` in knk-plugin and knk-web-api, in review, not in `next` yet; stored shape in § 6.1.1); 2026-11-18 (§ 3.1.10: existing NAS render container, migration to the alpha stack; Decided; phases filed as #735–#743; first version from the working draft of 2026-11-17 and the design session of 2026-11-18)
 **Issue:** [PandiO/knk-workspace#732](https://github.com/PandiO/knk-workspace/issues/732); phases as sub-issues in § 11.
 **Dependencies:** the offline BlueMap tile pipeline ([BLUEMAP_EVALUATION.md](BLUEMAP_EVALUATION.md) § 5–7); the SignalR
 game hub (#66, built); managed WorldGuard regions (`docs/architecture/managed-worldguard-regions.md`, built); gate
@@ -245,6 +245,16 @@ Related: [DESIGN.md](DESIGN.md) (in-game maps, M2–M5), [DECISION-map-data-sour
        `GateCommandResult`; API → plugin `GateCommand`.
     7. The new `[AllowAnonymous]` routes join the pinned allow-list in `EndpointAccessRulesTests`; the command
        endpoint gets its rule test.
+    8. **As built (#736):** `config`, `markers`, `towns/{id}`, `districts/{id}`, `structures/{id}` in
+       `Controllers/MapController.cs`, with the DTOs in `Dtos/MapDtos.cs` (field sets pinned by
+       `MapPublicDtoFieldTests`). Settings: `Map:Enabled` (default false: every route 404 before the action runs),
+       `Map:Labels:<Town|District|Structure|Arena>:MaxDistance` (0 / 1500 / 600 / 1500; 0 = every zoom, sent as
+       `null`), `Map:Flash:Count` / `DurationMs` (3 / 400), `Map:Markers:CacheSeconds` (30),
+       `RateLimiting:Map:PermitPerMinute` (120). The marker version is a hash of the marker content, rebuilt at most
+       every `CacheSeconds`, so a changed domain or outline gets a new version without an `EntityChanged` hook.
+       Outline points are served as stored (block coordinates, inclusive); the bridge draws them through the block
+       centres (+0.5). A centroid pin has `y: null` (the bridge picks the height). `config.livePlayers` and
+       `config.gateCommands` are present and always off until phases 4a and 6a wire their flags.
 3. **Web app:**
     1. Route `/map` (public in `routeTable.ts`), page `pages/MapPage.tsx`, `components/map/` with `BlueMapFrame`
        (iframe + bridge client), `MapPanel`, `mapActionRegistry.ts`, public widgets per type, `GateDoorsWidget`,
