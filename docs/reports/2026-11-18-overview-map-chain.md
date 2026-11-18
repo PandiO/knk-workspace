@@ -46,7 +46,7 @@ on `next` (Decided 2026-11-18, O01–O33, O08 superseded by O31); smoke guide
 | L2 Public map API | #736 | Merged into `next` 2026-11-18 (knk-web-api `612ad62`, knk-workspace `55d01897`); waiting for the developer's smoke test § 2 | `claude/overview-map-public-api`: knk-web-api `3a014f8`, knk-workspace `fcde4be8` (from `next`) | [knk-web-api#46](https://github.com/PandiO/knk-web-api/pull/46), [knk-workspace#751](https://github.com/PandiO/knk-workspace/pull/751) | API green on `3a014f8` (build-and-test, mysql-tests, fresh-database); knk-workspace no CI | create_session session_01R1w2UvvpPXaMVExy9eZZpL (2026-11-18) |
 | L3 `/map` page | #737 | Merged into `next` 2026-11-18 (knk-web-app `f551804d`, knk-workspace `0f0f8e7f`); waiting for the NAS deploy notes (runbook Phase 10), the full-world render and the developer's smoke test § 3 | `claude/overview-map-page`: knk-web-app `ee9a68d`, knk-workspace `23b028dc` (from `next`) | [knk-web-app#50](https://github.com/PandiO/knk-web-app/pull/50), [knk-workspace#753](https://github.com/PandiO/knk-workspace/pull/753) | web app green on `ee9a68d` (build-and-test, e2e); knk-workspace no CI | create_session session_01R1w2UtuNmGWaJ6a65D2YeS (2026-11-18) |
 | L4 Live players backend | #738 | Merged into `next` 2026-11-18 (knk-web-api `f2f523c3`, knk-plugin `ef4e99d9`, knk-workspace `d9c07b37`); waiting for the developer's live check of smoke § 4.1 steps 2, 3 and 5 on #738 (gates L5's merge) | `claude/overview-map-players-api`: knk-web-api `a9ed3af`, knk-plugin `8b1efdcc`, knk-workspace `09982caa` (from `next`) | [knk-web-api#47](https://github.com/PandiO/knk-web-api/pull/47), [knk-plugin#77](https://github.com/PandiO/knk-plugin/pull/77), [knk-workspace#752](https://github.com/PandiO/knk-workspace/pull/752) | API green (build-and-test, mysql-tests, fresh-database); plugin build and paper-boot green | create_session session_01R1w2UwcYKiPMueCHWqsys4 (2026-11-18) |
-| L5 Live players layer | #739 | Running (merge waits for the developer's L4 check on #738) | `claude/overview-map-players-page`: knk-web-app, knk-workspace (from `next`) | – | – | create_session session_01R1w2UwXPWsCYjRUw6RoxVH (2026-11-18) |
+| L5 Live players layer | #739 | In review 2026-11-18 (not merged; merge waits for the developer's L4 check on #738, gate 4) | `claude/overview-map-players-page`: knk-web-app `bc17a48`, knk-workspace `69244809` (from `next`) | [knk-web-app#52](https://github.com/PandiO/knk-web-app/pull/52), [knk-workspace#756](https://github.com/PandiO/knk-workspace/pull/756) | Web app green on `bc17a48` (build-and-test, e2e); knk-workspace no CI; Codex at its limit | create_session session_01R1w2UwXPWsCYjRUw6RoxVH (2026-11-18) |
 | L6 Staff details | #740 | Merged into `next` 2026-11-18 (knk-web-app `01ad4d9a`, knk-workspace `a130f2d6`); waiting for the developer's smoke test § 6 | `claude/overview-map-staff-details`: knk-web-app `1443cf5`, knk-workspace `fe64919d` (from `next`) | [knk-web-app#51](https://github.com/PandiO/knk-web-app/pull/51), [knk-workspace#755](https://github.com/PandiO/knk-workspace/pull/755) | Web app green (build-and-test, e2e); Codex at its limit | subagent of the coordinator (2026-11-18; the create_session attempt session_01R1w2UuaEs6VbL7BVnR7ZTJ was refused the knk-web-app attach, decision 10) |
 | L7 Gate commands backend | #741 | Running | `claude/overview-map-gate-commands`: knk-web-api, knk-plugin, knk-workspace (from `next`) | – | – | create_session session_01R1w2UxDt6K1RcnDPPagNAN (2026-11-18) |
 | L8 Gate command buttons | #742 | Not started (gate: L3 and L7 merged into `next`) | – | – | – | – |
@@ -531,6 +531,71 @@ _(Each link appends its block here when it finishes.)_
     2. L7: `GameServerHub` now also has `ReportMapPlayers`; `MapController` has `GetPlayers`. `MapOptions` has a
        `LivePlayers` block; add `GateCommands` beside it.
     3. L9: `MapPlayerDto.uuid` is the player's Minecraft UUID (lower case), for the moderation panel.
+
+### 4.5 L5 — Live players layer on the page (#739)
+
+1. **Scope done.**
+    1. knk-web-app: `components/map/useLivePlayers.ts` (polls `GET api/Map/players` only while
+       `config.livePlayers.enabled`: at once, then every `intervalMs` of the last answer, else `pollIntervalMs`,
+       clamped 0.5–60 s, one request at a time, none while the tab is hidden, players cleared after three failed polls;
+       the JWT goes with it through `serviceCall`); `components/map/mapPlayers.ts` (the `ChatLineFormat` line
+       `[RANK]-{braced}- name` as styled parts, `&` codes read with the existing legacy-text parser into `#RRGGBB` and
+       formats; tags Staff mode, Owner mode, Hidden mode, minigame, AFK; the v1 `setPlayers` entry with the optional
+       `parts` and `tags`); `components/map/PlayerCard.tsx` (`PlayerCard`, `MapPlayerPanel` with `children` for #743);
+       arena pins `mapMarkers.toArenaPins` (kind `arena`, `labels.arena`), sent with `setMarkers` only when the arenas
+       change; `bridge.js` draws one HTML marker per player at head height (coloured label, only `#RRGGBB` accepted;
+       tags; head from `?heads=<address with {uuid}>`, else BlueMap's `assets/steve.png`; AFK dimmed);
+       `MapPage.onBridgeMessage` handles `playerClicked`. Additive: `MapDtos.ts` (players DTOs),
+       `mapClient.getPlayers`, `translateAlternateColorCodes` exported, `e2e/fixtures/map.ts` (players fixtures,
+       `serveFakeBlueMap(page, bridgeQuery)`), `bridgeProtocol.ts` (optional `parts`, `tags`). `MapPanel` and
+       `mapActionRegistry` unchanged. No API change, no migration.
+    2. knk-workspace: smoke guide § 5 (8 steps: 1 automated, 7 partly automated, tagged), changelog entry, spec status
+       line and § 6.3.6 as built, closed-alpha runbook Phase 10 step 3 (optional `heads=`, with the privacy note).
+2. **Commits and heads.** knk-web-app `claude/overview-map-players-page` at `bc17a48` (1 commit, base `next` at
+   `01ad4d9`); knk-workspace `claude/overview-map-players-page` at `69244809` (1 commit, base `next` at `a130f2d6`).
+   Both up to date with `origin/next` at the time of the PRs.
+3. **PRs.** [knk-web-app#52](https://github.com/PandiO/knk-web-app/pull/52) (`Part of #739`),
+   [knk-workspace#756](https://github.com/PandiO/knk-workspace/pull/756) (`Closes #739`), base `next`. Not merged
+   (charter gate 4: the developer's live check of the L4 visibility steps on #738 first).
+4. **Tests, baseline → result.**
+    1. knk-web-app: Jest 315 suites / 2712 tests → 318 / 2733, all green (+21: `mapPlayers` 12, `useLivePlayers` 6,
+       `PlayerCard` 3). Playwright 166 → 176 passed (+10 in `e2e/overview-map-players.spec.ts`: A11 heads, labels and
+       movement; A13/A15 colours, bold and the AFK tag; A12 staff viewer's tags and the token on every poll; A14 arena
+       pin; A16 quit; name card; phone bottom sheet; `heads=`; flag off without a players request; 3 repeats green).
+       Seen failing: the AFK tag removed → 3 Jest red. `tsc`, `typecheck:e2e`, `CI=true npm run build` clean. The
+       Playwright baseline 166 is L6's count on the same `next` commit. CI on `bc17a48`: build-and-test and e2e green (push and pull_request runs).
+    2. knk-workspace: docs only; links and anchors checked by hand.
+    3. Known reds: none.
+    4. Codex: at its usage limit on knk-web-app#52 and knk-workspace#756 (review failed; noted on both PRs); no findings handled.
+5. **Decisions (DESIGN § 4.3).**
+    1. *Player click target.* Chosen: a separate `MapPlayerPanel` with `PlayerCard`, extendable through `children`,
+       because the registry is keyed by numeric ids and the spec names `PlayerCard` / `PlayerModerationPanel` as
+       components (§ 6.3.1). Alternatives: (a) a `player` kind in `mapActionRegistry`: widens `MapEntityKind` (bridge
+       protocol) and the numeric `id` of every registration.
+    2. *Heads.* Chosen: BlueMap's default head unless `heads=` is set in `webapp.conf`, because a skin service sees
+       every viewer's IP address. Alternatives: (a) a fixed third-party service by default: a privacy choice for the
+       developer; (b) no head: O07 asks for one.
+    3. *Arena pin ids.* Chosen: the position in the list (the API sends none; no `arena` panel, so a click opens
+       nothing). Alternatives: (a) a hash of the pin position: no use until arenas get a panel.
+    4. *Hidden tab.* Chosen: no polls while the tab is hidden. Alternatives: (a) keep polling: rate limit and server
+       work for nobody.
+    5. *Poll failures.* Chosen: players cleared after three failed polls in a row (the API's own drop rule).
+       Alternatives: (a) clear at once: one network blip blanks the map; (b) never: stale players stay.
+    6. *Label weight.* Chosen: normal weight with bold only where the chat line is bold, on a dark strip as in game.
+       Alternatives: (a) the pins' semi-bold: bold titles would not stand out.
+6. **Out of scope, noted.** [#757](https://github.com/PandiO/knk-workspace/issues/757): Escape doesn't close the map
+   panel after a click inside the map (focus is in the iframe; also L3's place panel).
+7. **Blockers.** None.
+8. **At merge / what the developer must do.**
+    1. Nothing to keep it off; no migration, no new setting (`Map__LivePlayers__Enabled` from L4 turns the layer on).
+    2. Optional: `&heads=<address with {uuid}>` on the bridge line of BlueMap's `webapp.conf` (runbook Phase 10 step 3);
+       choose a service only if the privacy trade-off is fine.
+    3. Smoke guide § 5 with the § 3 and § 4 deployments.
+9. **Notes for later links.**
+    1. L9: `playerClicked` opens `MapPlayerPanel` (`components/map/PlayerCard.tsx`) from `MapPage`; put
+       `PlayerModerationPanel` in its `children` (the clicked player's `MapPlayerDto` is `clickedPlayer` in `MapPage`,
+       `uuid` lower case). The panel's `player` is null when the player left the viewer's snapshot.
+    2. `useLivePlayers` returns the whole snapshot (`players`, `arenas`); reuse it rather than a second poll.
 
 ### 4.6 L6 — Staff details: compact display-configuration renderer (#740)
 
