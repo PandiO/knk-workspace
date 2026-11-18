@@ -27,20 +27,32 @@ This report is dated and is not overwritten: a later measurement run gets a new 
 | Item | Value |
 |---|---|
 | Date of the run | _to fill_ |
-| Plugin build | _to fill_ (knk-plugin `next` commit with #703) |
-| Server | _to fill_ (dev server, CPU, memory, players online) |
+| Plugin build | knk-plugin `next` `073fa4cf` (`v0.1.0+073fa4cf`, contains #703 `04506d8c`), dev server DEV_SERVER_26.3 (Paper 26.3) |
+| Server | _to fill_ (CPU, memory, players online) |
 | Settings, run 1 | as shipped: `max-snap-distance` 48, `walk.max-expansions` 20000, `walk.max-length` 144, `walk.max-chunks-per-request` 64 |
-| Settings, run 2 (option A) | `max-snap-distance` 450, `walk.max-expansions` 200000, `walk.max-length` 600, `walk.max-chunks-per-request` 512 |
+| Settings, run 2 (option A) | `max-snap-distance` 600, `walk.max-expansions` 200000, `walk.max-length` 1000, `walk.max-chunks-per-request` 800. Changed from the guide's 450 / 600 / 512 because the dev world's open-country targets are 482 and 569 blocks away (not 200 and 400): the outpost leg's capture box is 24 by 32 = 768 chunks. The keep scenes are short, so the keep rule of § 4 reads the same either way. |
 | Settings, run 3 (only if needed) | run 2 with `walk.max-expansions` 500000 |
-| Chunks force-loaded | _to fill_ (`/forceload` boxes used) |
+| Chunks force-loaded | Coal mine: `/forceload add 945 -593 1459 -551` (132 chunks). Outpost, four bands of at most 216 chunks: `/forceload add 1427 -583 1797 -456`, `1427 -455 1797 -328`, `1427 -327 1797 -200`, `1427 -199 1797 -93`. Southern Marshes, destination end only: `/forceload add 1468 1210 1692 1434` (225 chunks). Indoor scenes: none (the player's view distance loads them). Afterwards `/forceload remove all`. |
+
+The developer chose the scenes on 2026-11-18 from six Locations in `world_KNK-DEV`. Scenes 1 to 6 start at the siege
+spawn by the south gate, x 1443, y 43, z -567 (`/tp 1443 43 -567`); scenes 7 to 9 start at a Location (`/tp` to its
+coordinates) and go to another, as indoor routes with bits of road between them. Straight distance is horizontal.
 
 | # | Scene | Start | Destination (`/navigate`) | Straight distance | Height difference | Notes |
 |---|---|---|---|---|---|---|
-| 1 | Keep (longest corridor route) | _to fill_ | _to fill_ | _to fill_ | _to fill_ | _to fill_ |
-| 2 | Stair house (spiral stair, bottom to top) | _to fill_ | _to fill_ | _to fill_ | _to fill_ | _to fill_ |
-| 3 | Courtyard shortcut | _to fill_ | _to fill_ | _to fill_ | _to fill_ | _to fill_ |
-| 4 | Open country, 200 blocks | _to fill_ | _to fill_ | about 200 | _to fill_ | _to fill_ |
-| 5 | Open country, 400 blocks | _to fill_ | _to fill_ | about 400 | _to fill_ | _to fill_ |
+| 1 | Keep (corridor route) | spawn 1443 43 -567 | `Keep storage hall` (Location 56; 1421 73 -488) | 82 | +30 | over 48: run 1 is road plus walk legs; run 2 one walk search |
+| 2 | Climb: keep tower (stairs, bottom to top) | spawn 1443 43 -567 | `Keep Tower Roof` (Location 52; 1411 113 -504) | 71 | +70 | over 48 (as scene 1); `length-pruned` matters here (climb allowance 5 blocks per block of height) |
+| 3 | Climb: garrison watchtower | spawn 1443 43 -567 | `Garrison Watchtower Roof` (Location 53; 1401 107 -542) | 49 | +64 | just over 48, so run 1 already routes it over the road |
+| 4 | Open country, about 400 blocks | spawn 1443 43 -567 | `Coal mine` (Location 55; 961 79 -577) | 482 | +36 | run 1 roads plus end legs; run 2 one walk search (within 600) |
+| 5 | Open country, about 570 blocks | spawn 1443 43 -567 | `Outpost under construction` (Location 54; 1781 134 -109) | 569 | +91 | run 2's largest capture (about 768 chunks, about 10 s at 4 per tick): note the tick time |
+| 6 | Very long haul (extra) | spawn 1443 43 -567 | `Southern Marshes` (Location 57; 1580 45 1322) | 1894 | +2 | beyond every run's `max-snap-distance`: both runs are roads plus end legs; shows the end legs and how far the walk search is from such distances (option C territory) |
+| 7 | Indoor pair: tower roof to storage hall (extra) | Keep Tower Roof 1411 113 -504 | `Keep storage hall` | 19 | -40 | within 48: direct walk in both runs; a long way down through the keep |
+| 8 | Indoor pair: watchtower to tower roof (extra) | Garrison Watchtower Roof 1401 107 -542 | `Keep Tower Roof` | 39 | +6 | down one building, across, up the other |
+| 9 | Indoor pair: storage hall to watchtower (extra) | Keep storage hall 1421 73 -488 | `Garrison Watchtower Roof` | 58 | +34 | over 48: run 1 road plus walk legs, run 2 one walk search |
+
+No scene is about 200 blocks away; scene 4 stands in for the 400-block row, scene 5 goes beyond it. Rows of § 3.2 are
+read with these numbers: "keep" = scene 1, "stair house" = scene 2, "courtyard" = scene 3, "400" = scene 4, "200"
+unused; add rows for scenes 5 to 9.
 
 ## 3. Measurements
 
@@ -77,6 +89,15 @@ lines after walking the whole route ("whole walk").
 | 200, run 2 | _to fill_ | _to fill_ | _to fill_ | _to fill_ | _to fill_ | _to fill_ | _to fill_ | _to fill_ | _to fill_ | _to fill_ | _to fill_ | _to fill_ |
 | 400, run 1 | _to fill_ | _to fill_ | _to fill_ | _to fill_ | _to fill_ | _to fill_ | _to fill_ | _to fill_ | _to fill_ | _to fill_ | _to fill_ | _to fill_ |
 | 400, run 2 | _to fill_ | _to fill_ | _to fill_ | _to fill_ | _to fill_ | _to fill_ | _to fill_ | _to fill_ | _to fill_ | _to fill_ | _to fill_ | _to fill_ |
+| 5 outpost, run 1 | _to fill_ | _to fill_ | _to fill_ | _to fill_ | _to fill_ | _to fill_ | _to fill_ | _to fill_ | _to fill_ | _to fill_ | _to fill_ | _to fill_ |
+| 5 outpost, run 2 | _to fill_ | _to fill_ | _to fill_ | _to fill_ | _to fill_ | _to fill_ | _to fill_ | _to fill_ | _to fill_ | _to fill_ | _to fill_ | _to fill_ |
+| 6 marshes, run 1 | _to fill_ | _to fill_ | _to fill_ | _to fill_ | _to fill_ | _to fill_ | _to fill_ | _to fill_ | _to fill_ | _to fill_ | _to fill_ | _to fill_ |
+| 7 tower roof to storage hall, run 1 | _to fill_ | _to fill_ | _to fill_ | _to fill_ | _to fill_ | _to fill_ | _to fill_ | _to fill_ | _to fill_ | _to fill_ | _to fill_ | _to fill_ |
+| 7 tower roof to storage hall, run 2 | _to fill_ | _to fill_ | _to fill_ | _to fill_ | _to fill_ | _to fill_ | _to fill_ | _to fill_ | _to fill_ | _to fill_ | _to fill_ | _to fill_ |
+| 8 watchtower to tower roof, run 1 | _to fill_ | _to fill_ | _to fill_ | _to fill_ | _to fill_ | _to fill_ | _to fill_ | _to fill_ | _to fill_ | _to fill_ | _to fill_ | _to fill_ |
+| 8 watchtower to tower roof, run 2 | _to fill_ | _to fill_ | _to fill_ | _to fill_ | _to fill_ | _to fill_ | _to fill_ | _to fill_ | _to fill_ | _to fill_ | _to fill_ | _to fill_ |
+| 9 storage hall to watchtower, run 1 | _to fill_ | _to fill_ | _to fill_ | _to fill_ | _to fill_ | _to fill_ | _to fill_ | _to fill_ | _to fill_ | _to fill_ | _to fill_ | _to fill_ |
+| 9 storage hall to watchtower, run 2 | _to fill_ | _to fill_ | _to fill_ | _to fill_ | _to fill_ | _to fill_ | _to fill_ | _to fill_ | _to fill_ | _to fill_ | _to fill_ | _to fill_ |
 | run 3 (if needed) | _to fill_ | _to fill_ | _to fill_ | _to fill_ | _to fill_ | _to fill_ | _to fill_ | _to fill_ | _to fill_ | _to fill_ | _to fill_ | _to fill_ |
 | concurrency (step 8) | _to fill_ | _to fill_ | _to fill_ | _to fill_ | _to fill_ | _to fill_ | _to fill_ | _to fill_ | _to fill_ | _to fill_ | _to fill_ | _to fill_ |
 
