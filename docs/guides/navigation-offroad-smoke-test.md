@@ -1,7 +1,7 @@
 # Off-road navigation and landmarks — smoke test
 
-**Status:** Draft from the design (2026-11-17); no steps run. Phase 0 (§ 1): 1 of 9 steps automated; phase 1 (§ 2): 4 of 4 steps automated; phase 6.1 (§ 8): 6 of 8 steps automated (3 of them in part); the other phases not yet automated (the links tag them).
-**Last updated:** 2026-11-17 (§ 8 phase 6.1 updated to what link L3 built, #710: eight steps, six automated); 2026-11-17 (§ 2 phase 1 updated to what link L2 built, #704: every step automated); 2026-11-17 (§ 1 phase 0 updated to what link L1 built, #703: the measurement steps and the `/knk road status` lines); 2026-11-17 (draft from the design, phases 0, 1, 2, 3, 4, 5.1, 5.2, 6.1, 6.2, 7)
+**Status:** Draft from the design (2026-11-17); no steps run. Phase 0 (§ 1): 1 of 9 steps automated; phase 1 (§ 2): 4 of 4 steps automated; phase 6.1 (§ 8): 6 of 8 steps automated (3 of them in part); phase 6.2 (§ 9): 11 of 11 steps automated (3 of them in part); the other phases not yet automated (the links tag them).
+**Last updated:** 2026-11-18 (§ 9 phase 6.2 updated to what link L4 built, #711: eleven steps, all automated, three in part); 2026-11-17 (§ 8 phase 6.1 updated to what link L3 built, #710: eight steps, six automated); 2026-11-17 (§ 2 phase 1 updated to what link L2 built, #704: every step automated); 2026-11-17 (§ 1 phase 0 updated to what link L1 built, #703: the measurement steps and the `/knk road status` lines); 2026-11-17 (draft from the design, phases 0, 1, 2, 3, 4, 5.1, 5.2, 6.1, 6.2, 7)
 **Design:** [specs/navigation-offroad/DESIGN.md](../specs/navigation-offroad/DESIGN.md) · **Issue:**
 [PandiO/knk-workspace#698](https://github.com/PandiO/knk-workspace/issues/698)
 
@@ -335,34 +335,84 @@ and the 3.0 spacing (O20). The road trail is unchanged. 6 of 8 steps are automat
 
 ## 9. Phase 6.2: anchored particles and winding back (#711, tier:3)
 
-*Draft from the design (2026-11-17); the link updates it to what was built and tags the automated steps.*
+*Built 2026-11-18 (link L4, knk-plugin `claude/offroad-trail-cursor`): with `navigation.guidance-v2` on, a walk trail's
+particles sit on fixed anchors every `trail-leg-spacing` blocks (3.0) from the walk path's start, drawn from the leg's
+cursor, which follows the player along the path both ways and jumps more than 3 blocks only when the player really is
+nearer the other place. The route session keeps a monotone progress (ETA, percentage, maneuvers already announced) and
+a cursor that follows the player back along the road (continuity within `cursor-jump`, 12); the road trail, the HUD
+distance and the maneuver ahead come from the cursor. A player off the road walks to the join point with the least
+remaining cost. A walk leg stays while the player is within `walk.recompute-distance` (6) of its path, walking back
+included; "heading away" is gone under the flag. With the flag off everything is as before. All 11 steps are
+automated, 3 of them in part; the developer's live test is the feel of steps 1 to 4, 6, 8 and 9 on the dev world.*
 
 ### 9.0 Preconditions
 
-1. Deployed: plugin build from `next` with phase 6.2 (and 6.1 when both are in).
-2. Settings: `navigation.guidance-v2: true`, `trail-leg-spacing: 3.0`, `cursor-jump: 12`.
-3. Accounts and data: a player account; the stair house; a road route of at least 100 blocks; a route with a loop or
-   a switchback (a road that comes back near itself).
+1. Deployed: plugin build from `next` with phases 6.1 and 6.2 (knk-plugin PRs for #710 and #711 merged).
+2. Settings: under `navigation:` set `guidance-v2: true` and keep (or add) `trail-leg-spacing: 3.0` and
+   `cursor-jump: 12`; keep the phase 6.1 keys of § 8.0 under `navigation.walk:`; walk paths on
+   (`navigation.walk.enabled: true`). Restart the server (the navigation service reads these at startup).
+3. Accounts and data: a player account without staff rights; the keep and the stair house on the dev world; a road
+   route of at least 100 blocks with a turn in it; if there is one, a road that loops back or makes a switchback near
+   itself.
 
 ### 9.1 Steps
 
-1. As the player, start a walk-leg navigation in the keep and stand still for ten seconds. **Expected:** the particles
-   stay in the same places on every redraw; none slide. (A17)
-2. Take one step forward. **Expected:** the particles ahead of you do not move; only the ones behind you disappear.
-   (A17)
-3. Walk around a corner close to the wall. **Expected:** no particles jump to the other side of the wall. (A17)
-4. On the road route, walk 40 blocks forward, then turn and walk 20 blocks back along the road. **Expected:** the road
-   trail is drawn again from where you stand; no walk leg to the far point; the HUD distance grows again. (A18)
-5. Step off the road sideways by 15 blocks. **Expected:** a walk leg to the road; it leads to the join point with the
-   least remaining cost, which may be behind you. (A19)
-6. Walk the looped route through the place it passes twice. **Expected:** the trail stays on the branch you are on;
-   it does not jump to the other pass. (A20)
-7. On a walk leg, walk back two or three blocks along it. **Expected:** the leg is not recomputed; the trail is drawn
-   from your position; no "heading away" message. (A21)
-8. Walk off the walk leg by more than the recompute distance. **Expected:** the leg is recomputed from where you are,
-   with a "recalculating" message. (A21)
-9. Turn `navigation.guidance-v2` off, reload and repeat step 4. **Expected:** today's behaviour (the trail from the
-   farthest point and a straight leg to it). (A16)
+1. As the player, stand in the keep's entrance hall, `/navigate` to a room upstairs (a walk leg; light blue particles)
+   and stand still for ten seconds. **Expected:** every redraw (twice a second) puts the particles in exactly the same
+   places; none slide along the trail. (A17) [automated: knk-paper
+   `TrailRendererTest.aRedrawWithThePlayerStillOrSteppingMovesNoParticleAhead`,
+   `TrailRendererTest.drawPathWithACursorSpawnsOneParticleAtEachAnchorInTheLegColour`; scenario
+   `walk-trail-cursor-stairhouse` (the anchors over the stair house's live floor)]
+2. Take one step forward along the trail, then another. **Expected:** the particles ahead of you stay where they were;
+   only the ones you pass disappear, and a new one appears at the far end of the trail. (A17) [automated: the same
+   tests as step 1]
+3. On the stair house's spiral stair, walk up close to the inner wall and round a turn. **Expected:** the trail ahead
+   does not jump to the flight above or below or to the other side of a wall; it keeps following the flight you are
+   on. (A17, § 7.2.3) [automated in part: knk-core `PolylineCursorTest.aWalkPathCursorJumpsOnlyWhenThePlayerIsReallyNearer`;
+   scenario `walk-trail-cursor-stairhouse` (walked up and back down with a sideways wobble, the cursor within a
+   block of the player's place on the trail); the look of it is manual]
+4. On the road route, walk 40 blocks forward along the road, then turn and walk 20 blocks back along it. **Expected:**
+   the road trail (gold) is drawn from where you stand, ahead of you towards the destination; there is no light blue
+   walk leg and no straight line back to the far point; the HUD distance grows again as you walk back; the percentage
+   stays; no "You left the road" message. (A18) [automated: knk-paper
+   `NavigationServiceTest.withGuidanceV2WalkingBackOnTheRoadDrawsTheRoadTrailFromThePlayer`; knk-core
+   `NavigationSessionCursorTest.walkingBackAlongTheRoadWindsTheCursorBackAndKeepsTheProgress`]
+5. On the same route, walk back before the route's turn you already passed. **Expected:** the HUD shows the turn ahead
+   again, but its chat message is not said a second time. (A18) [automated in part: knk-core
+   `NavigationSessionCursorTest.theManeuverAheadComesFromTheCursor` (the turn ahead again); the chat line is said once
+   by the service's announced index, unchanged]
+6. Step off the road sideways by about 15 blocks and wait three seconds. **Expected:** "You left the road -
+   recalculating.", then a light blue walk leg to the road. It leads to the road ahead of the nearest point (about 13
+   blocks ahead when you stand 15 off a straight road), or behind you when the road there is the cheaper way on.
+   (A19) [automated: knk-paper `NavigationServiceTest.withGuidanceV2ThePlayerOffTheRoadJoinsItAtTheLeastRemainingCost`;
+   knk-core `JoinPointTest` (ahead, behind, the road behind the player on a U-turn)]
+7. If there is a looped road or a switchback: walk the route through the place it passes twice (or along one arm of
+   the switchback, close to the other). **Expected:** the trail stays on the branch you are on; it does not jump to
+   the other pass. (A20) [automated: knk-core `PolylineCursorTest.aLoopKeepsTheCursorOnTheRightBranch`,
+   `PolylineCursorTest.aSwitchbackDoesNotJumpToTheOtherArm`]
+8. On a walk leg (step 1), walk forwards along it, then walk back several blocks along it. **Expected:** the leg is not
+   recomputed and nothing is said; the trail is drawn from where you stand; no "You're heading away" message. Also on
+   the walk to the road (step 6): walking back along it keeps it. (A21) [automated: knk-paper
+   `NavigationServiceTest.withGuidanceV2AWalkLegIsNotRecomputedWhileThePlayerIsNearItAlsoWalkingBack`,
+   `NavigationServiceTest.withGuidanceV2TheStartLegStaysWhileThePlayerWalksBackAlongIt`]
+9. On a walk leg, walk more than 6 blocks away from its trail (through another door or across a field). **Expected:**
+   within two seconds a new walk leg appears from where you are (the old trail stays until it does), with no message;
+   at most one new leg every three seconds. On the walk to the road the leg ends instead, and after two seconds off
+   the road "You left the road - recalculating." brings a new route and a new walk to its join point. (A21)
+   [automated: knk-paper
+   `NavigationServiceTest.withGuidanceV2AWalkLegBeyondRecomputeDistanceIsRecomputedAtMostOncePerInterval`,
+   `NavigationServiceTest.withGuidanceV2TheStartLegStaysWhileThePlayerWalksBackAlongIt`; the feel is manual]
+10. Set `navigation.guidance-v2: false`, restart, and repeat step 4. **Expected:** today's behaviour: the trail stays
+    drawn from the farthest point you reached, with a straight light blue line from you to it; walking back along a
+    walk leg says "You're heading away … recalculating". `trail-leg-spacing` and `cursor-jump` change nothing. (A16)
+    [automated: knk-paper `NavigationServiceTest.withTheFlagOffTheNewKeysChangeNothing` (a full transcript of trail,
+    HUD, chat and events with other values of both keys),
+    `NavigationServiceTest.withTheFlagOffWalkingBackOnTheRoadKeepsTheTrailAtTheFarthestPoint`,
+    `NavigationServiceTest.withTheFlagOffTheStartLegWalkedBackAlongIsHeadingAwayAsToday`; knk-core
+    `NavigationSessionCursorTest.withTheFlagOffTheSessionIsTodays` (a transcript of today's session)]
+11. NPCs: start an NPC walking a road route (any NPC with navigation) while a player navigates. **Expected:** the NPC
+    moves exactly as before; nothing in this phase touches NPC navigation (§ 7.5.8). [automated: the unchanged NPC
+    unit tests and the paper-boot NPC movement scenarios]
 
 ## 10. Phase 7: plaza lines for the players' trail (#712, tier:2)
 

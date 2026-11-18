@@ -22,8 +22,30 @@ This is a human-readable record of capabilities merged into the V3 default branc
      slabs, open doors); they were missing from every replay before.
   7. The developer's failed tower route of 2026-11-17 (`northern-wearway-upper-keep-tower`, stuck at 1405 85 −510) is
      replayed: a leader alone and a group of 20 reach the goal up the spiral staircase (`npc-replay-keep-tower`), and
-     three scenes (a detour round a courtyard, a two-turn spiral, a ravine) run in CI's `paper-boot` job (55 scenarios with the off-road chain's L3).
+     three scenes (a detour round a courtyard, a two-turn spiral, a ravine) run in CI's `paper-boot` job (56 scenarios with the off-road chain's L3 and L4).
      Steps: [NPC movement smoke test, link C1](guides/npc-movement-smoke-test.md#link-c1-off-road-ends-with-the-walk-search-retest-of-2026-11-17-step-5).
+
+- **Off-road navigation: walk-trail particles stay put, and the guidance winds back** ([PandiO/knk-workspace#711](https://github.com/PandiO/knk-workspace/issues/711),
+  link L4 of the off-road navigation chain, phase 6.2). knk-plugin and knk-workspace branches
+  `claude/offroad-trail-cursor` (PRs into `next`). Behind `navigation.guidance-v2`, off by default: with it off the
+  session, the trail, the re-routes and the walk legs are exactly as before (transcript tests). No migration. NPC
+  navigation unchanged.
+  1. Walk-trail particles sit on fixed anchors every `trail-leg-spacing` (3.0) blocks from the walk path's start, drawn
+     from the leg's cursor, which follows the player along the path both ways and jumps more than 3 blocks only when
+     the player really is nearer the other place (`TrailRenderer.anchoredWindow`, `PolylineCursor`).
+  2. The route session keeps a monotone progress (ETA, percentage, maneuvers already announced) and a cursor that
+     follows the player back along the road (continuity within `cursor-jump`, 12, for loops and switchbacks); the
+     trail, the HUD distance and the maneuver ahead come from the cursor (`NavigationSession`, `CursorParameters`).
+  3. A player off the road walks to the join point with the least remaining cost (`JoinPoint`); a walk leg stays while
+     the player is within `walk.recompute-distance` of its path, walking back included, and is recomputed from the
+     player beyond it (at most once per `reroute-min-interval`). `DirectLeg.best` and the start leg's "heading away"
+     (N16) are not used under the flag. KNG-124, N17, rev. 9 and the partial path rule are kept.
+  4. Admin steps (only to try it on a test server): under `navigation:` add `trail-leg-spacing: 3.0` and
+     `cursor-jump: 12` beside `guidance-v2`; restart.
+  5. Tests: knk-core +21 (the cursor on lines, corners, loops and switchbacks, the join point, the session's progress
+     and cursor, today's session as a transcript), knk-paper +13 (anchors, the service with the flag on and off, the
+     keys), new paper-boot scenario `walk-trail-cursor-stairhouse` (the cursor and the anchors on the stair house's
+     shaped trail).
 
 - **Off-road navigation: walk trails keep off the walls and round their corners** ([PandiO/knk-workspace#710](https://github.com/PandiO/knk-workspace/issues/710),
   link L3 of the off-road navigation chain, phase 6.1). knk-plugin and knk-workspace branches
