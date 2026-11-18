@@ -166,6 +166,12 @@ on `next` (Decided 2026-11-17).
     when the developer's answers open L10 step 2 or L5, this coordinator asks the engine coordinator for the next free
     window (it offered to hold one). Alternative: claim the slot now for L10 step 2 or L5; rejected, both still wait for
     the developer, so the slot would sit idle.
+23. **Engine L2 (#103) merged into `next` (2026-11-18 13:27, plugin `2f1c783e`); engine L3 (#69) gets the slot.** Its
+    coordinator offered the window before L3. Chosen: decline, because L10 step 2 and L5 both still wait for the
+    developer (no answers on #712 and #703 at 13:27), so the slot would sit idle. My next plugin link waits for engine
+    L3's merge, which also opens L8 (#708); L8 then asks for a window before engine L4/4b. Alternative: take the
+    window and start L10 step 2 with the curve clearance as a config key (option 2 offered to the developer at 08:5x,
+    not answered); rejected without the developer's go.
 
 ## 4. Link blocks
 
