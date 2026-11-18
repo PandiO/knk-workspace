@@ -1,6 +1,6 @@
 # Off-road navigation and landmarks chain — progress report
 
-**Status:** Running, waiting for the developer (2026-11-18) · **Last updated:** 2026-11-18
+**Status:** Running, waiting for the developer (2026-11-18) · **Last updated:** 2026-11-18 (L8 step A block)
 
 **Issue:** [PandiO/knk-workspace#698](https://github.com/PandiO/knk-workspace/issues/698), links
 [#703](https://github.com/PandiO/knk-workspace/issues/703) (L1), [#704](https://github.com/PandiO/knk-workspace/issues/704) (L2),
@@ -47,7 +47,7 @@ on `next` (Decided 2026-11-17).
 | L5 Phase 2 walk links | #705 | Not started (L4 in `next`; waits for L1 done: the developer's filled measurements report) | `claude/offroad-walk-links` | — | — | — |
 | L6 Phase 3 hierarchical walk search | #706 | Not started (gate: L5 in `next`; O32 question first if L1 says option A fits) | `claude/offroad-hierarchical` | — | — | — |
 | L7 Phase 4 route modes | #707 | Not started (gate: L5 in `next`) | `claude/offroad-route-modes` | — | — | — |
-| L8 Phase 5.1 landmark entity | #708 | Running, step A (knk-web-api + knk-web-app; started 2026-11-18 15:10 from `next`); step B (plugin `LandmarkProvider`, `/knk landmark`) after engine L4 #62 is merged | `claude/offroad-landmarks` | — | — | subagent of the coordinator (three component repos, skill § 4.1.4.2) |
+| L8 Phase 5.1 landmark entity | #708 | Step A done (2026-11-18), PRs open, not merged; step B (plugin `LandmarkProvider`, `/knk landmark`) after engine L4 #62 is merged | knk-web-api `claude/offroad-landmarks` `d331bdf`; knk-web-app `claude/offroad-landmarks` `b50c413`; knk-workspace `claude/offroad-landmarks` `97a71701` | [knk-web-api#50](https://github.com/PandiO/knk-web-api/pull/50), [knk-web-app#54](https://github.com/PandiO/knk-web-app/pull/54), [#763](https://github.com/PandiO/knk-workspace/pull/763) | green (API build-and-test, mysql-tests, fresh-database; web app build-and-test, e2e) | subagent of the coordinator (three component repos, skill § 4.1.4.2) |
 | L9 Phase 5.2 landmark weights | #709 | Not started (gate: L7 and L8 in `next`) | `claude/offroad-landmark-weights` | — | — | — |
 | L10 Phase 7 plaza lines | #712 | Step 1 merged into next (2026-11-18); step 2 waits for the developer's viewing and answers on #712 (O16) | knk-plugin `claude/offroad-plaza-lines` `97d1bafc`; knk-workspace `claude/offroad-plaza-lines` `d794c716` | step 1: [knk-plugin#73](https://github.com/PandiO/knk-plugin/pull/73) → `next` `ce0f65ec`, [#723](https://github.com/PandiO/knk-workspace/pull/723) → `next` `c7f61e9e` | green (build, paper-boot 55) | create_session `session_01R1w2Ussca79jpGCPqzcTf8` (2026-11-18) |
 
@@ -669,3 +669,54 @@ _(Each link appends its block here when it finishes.)_
         1. `PlazaCurve.Result.entryAlong` and `exitAlong` are horizontal distances along the polyline it was given. The trail must splice them into the drawn polyline while `NavigationSession.cursor()` keeps the route polyline's along (A25, L4's note 9.2).
         2. Cache per (plaza, entry, exit) for the route's life (§ 8.6).
     2. Local paper-boot: `knk scenario run <name>` per boot; three boots take about 3 minutes.
+
+### 4.6 L8 — Phase 5.1: landmark entity, step A (API and web app) (#708)
+
+1. **Scope done (step A).**
+    1. knk-web-api:
+        1. Model `Models/Landmark.cs`: `Name` (100), `LocationId` (RESTRICT), `DomainId` (SET NULL), `ExtentKind`/`Kind` stored as strings, `RegionId` (128), `Radius`, `Preference` (with a CHECK constraint from 0.25 to 4), `NavigationEnabled`, `CreatedAt`.
+        2. The `KnKDbContext` block and the migration `20261118152046_AddLandmarks`, which only creates the `landmarks` table.
+        3. DTOs (`LandmarkReadDto` with world, point, domain id and name, extent and flags for step B), repository, service, AutoMapper profile.
+        4. `LandmarksController` at `api/landmarks`: anonymous `GET ?world=` and `GET {id}` under the `map` limit; `POST search` (F Landmark); writes through `RequireServiceOrPermissionForWrites(knk.admin.world.landmark)` plus `RequireDashboardChange` and `knk.admin.delete`.
+        5. `StaffPermissions.LandmarkManage`; registry entry (World area, write node the landmark node); lookup with a `domainId` filter; DI; seed `Landmark.json` and its README row.
+        6. The pinned access tests and the new service, controller and migration tests.
+    2. knk-web-app:
+        1. DTO types, `LandmarkClient` (`Controllers.Landmarks = 'landmarks'`) and the five `entityApiMapping` cases.
+        2. Dashboard columns (World, Point, Domain, Area, In /navigate).
+        3. `DomainLandmarksPanel` on every domain detail page, with Add landmark gated on `knk.admin.world.landmark` and `knk.admin.content`.
+        4. Jest tests and `e2e/landmarks.spec.ts` (7). Mocks of `landmarks/search` added to the strict `town-detail` and `entity-setup-delete-details` specs.
+    3. knk-workspace (`next` branch): smoke test § 6 (API and web steps in full, 11 of 12 automated with 2 in part, plugin steps marked "step B"), CHANGELOG (Unreleased) with the admin steps, dashboard access admin guide § 2, DESIGN § 6.4.4.
+2. **Commits and heads.**
+    1. knk-web-api `claude/offroad-landmarks` at `d331bdf` (1 commit, base `next` `6094276`).
+    2. knk-web-app `claude/offroad-landmarks` at `b50c413` (1 commit, base `next` `de43f6b`).
+    3. knk-workspace `claude/offroad-landmarks` at `97a71701` (1 commit, base `next` `d484361e`).
+    4. All three contain the current `next` (checked again before opening the PRs).
+3. **PRs.** [knk-web-api#50](https://github.com/PandiO/knk-web-api/pull/50), [knk-web-app#54](https://github.com/PandiO/knk-web-app/pull/54), [#763](https://github.com/PandiO/knk-workspace/pull/763), base `next`, all `Part of PandiO/knk-workspace#708` (step B's plugin PR closes it). Not merged.
+4. **Tests, baseline → result.**
+    1. knk-web-api: 4409 passed, 100 skipped → 4452 passed, 100 skipped (MySQL tests skip locally without `KNK_TEST_MYSQL`). CI is green: `build-and-test`, `mysql-tests` and `fresh-database` (migrations on an empty MySQL).
+    2. knk-web-app: Jest 2720 → 2733; tsc and `typecheck:e2e` clean; build ok; Playwright 176 → 183 (two full runs green). CI is green: `build-and-test`, `e2e`.
+    3. Known reds: none. One flake: `login.spec.ts` failed once in a loaded full run, then passed 3 of 3 alone and in two later full runs. It is not touched by this link.
+    4. Codex: at its usage limit on all three PRs (2026-11-18 ~15:50 UTC), so there was no review. This is said on each PR.
+5. **Decisions (DESIGN § 4.3).**
+    1. *What "matched by knk.admin.world" means.* Chosen: `knk.admin.world.landmark` follows the resolver's rule: it is matched by `knk.admin.world.*`, `knk.admin.*` and `*`, and a bare `knk.admin.world` grant does not match it. The admin step says to grant it. This keeps one permission rule everywhere; O26 names only `knk.admin.*` and `*`. Alternatives: (a) an any-of rule that also lets a bare `knk.admin.world` write landmarks; needs a new attribute and a change to the dashboard's all-of change nodes; (b) a data migration granting the node to holders of `knk.admin.world`; against "only the additive table" (charter § 3.3).
+    2. *Rate limit of the anonymous reads.* Chosen: the `map` policy (120/min per IP), the public-read budget. Alternatives: (a) `lookup` (20/min), which is shared with the game server's link-code calls from the same IP, and the plugin polls landmarks; (b) a new `landmarks` policy and setting; a new config key for little gain.
+    3. *DESIGN's "like road network reads".* Road network reads are category D (logged in or plugin key), not anonymous. Chosen: anonymous, as § 6.4.1 and A12 say. Alternative: D like the roads; against A12's "its reads are anonymous".
+    4. *Name unique per world.* Chosen: checked by the service, ignoring case, joined on the Location's world, plus a plain index on `Name`. Alternatives: (a) a `WorldName` column with a unique (world, name) index; adds a field § 6.3 doesn't have and must be kept in sync with the Location; (b) unique per table; stricter than the design.
+    5. *Limits § 6.3 leaves open.* Chosen: radius above 0 and at most 512 blocks; a Region needs a region id of at most 128 characters; the field of the other extent is cleared on save. Alternative: no upper bound; a typo would make a landmark cover a town.
+    6. *Delete.* Chosen: the landmark's Location stays and goes to the Location retention check (KNG-80), as a domain delete does. Alternative: delete the Location with the landmark; a picked shared Location would go too.
+    7. *Update semantics.* Chosen: `name` is required; `domainId` is taken as sent (null unlinks); pin, extent, preference, navigation flag and kind keep their stored values when null. The `PUT` returns the saved landmark, not 204. Alternative: full replace; `/knk landmark move|link` in step B would then have to send everything.
+    8. *Domain pages.* Chosen: a `DomainLandmarksPanel` under the detail page of every domain type (town, district, structure, gate structure, domain), fed by the search's `domainId` filter. Alternatives: (a) a `Landmarks` navigation collection on `Domain` shown by the display configuration; changes the domain model and DTOs; (b) only town, district and structure; § 6.1 says any domain.
+    9. *Form seed.* Chosen: `LocationId` (a Location picker with the LocationSelection world task, like `SiegeSpawnpoint`), because `FormConfigurationSeedFilesTests` requires every non-nullable FK on the form. The API also takes an embedded `location`. Alternative: the embedded `Location` field like Structure; the seed test refuses it.
+    10. *Plugin reads pinned now.* `LandmarksController.GetAll`/`GetById` are in `ReadAccessRulesTests.PluginReads`, so step B needs no API change. Alternative: add them in step B.
+6. **Out of scope, noted.**
+    1. No issue filed.
+    2. Docs follow-ups for the `documentation` sub-issue at merge: `docs/specs/api/` landmark contract, the next release's migration list in `production-installation.md` § 5.3, a landmark admin how-to, the player guide (with step B), the register.
+7. **Blockers.** None.
+8. **At merge / what the developer must do.**
+    1. The coordinator merges knk-web-api#50, knk-web-app#54 and #763 into `next` (the web app needs the API).
+    2. Deploy: apply the migration `AddLandmarks`; import the form seed "Landmark - Default (seed v1)"; grant `knk.admin.world.landmark` to the ranks that make landmarks (`knk.admin.*` already has it).
+    3. Smoke test § 6.1, § 6.2 and § 6.4 (about 25 min); § 6.3 after step B.
+    4. Optionally comment `@codex review` on the three PRs once the Codex limit resets.
+9. **Notes for later links.**
+    1. Step B (this link): the plugin reads `GET api/landmarks?world=` (anonymous, but the plugin key works too) into the model's `Landmark` record. The fields map one to one: `extentKind` "None"/"Region"/"Radius" (`Landmark.Extent.parse`), `location.x/y/z`, `world`, `domainId`, `domainName`, `navigationEnabled`. Writes for `/knk landmark` go through `POST`/`PUT`/`DELETE api/landmarks` with the plugin key. The `PUT` keeps null fields, so `move` sends `name` and `locationId` or `location`, and `link`/`unlink` send `name` and `domainId`, with the current domain id resent on the other updates.
+    2. L9: `Preference` is stored and validated (0.25 to 4.0, CHECK in the database); nothing reads it yet.
