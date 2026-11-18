@@ -4,6 +4,26 @@ This is a human-readable record of capabilities merged into the V3 default branc
 
 ## Unreleased — on feature branches, not merged
 
+- **Overview map: live players backend** ([PandiO/knk-workspace#738](https://github.com/PandiO/knk-workspace/issues/738),
+  link L4 of the overview map chain, [#732](https://github.com/PandiO/knk-workspace/issues/732)). knk-plugin,
+  knk-web-api and knk-workspace branches `claude/overview-map-players-api` (PRs into `next`). Behind the new API setting
+  `Map:LivePlayers:Enabled` and the plugin's existing `map.reporting.enabled` (both off by default: nothing is sent,
+  kept or served). Nothing changes for players yet: the map page's player layer (phase 4b) reads this.
+  1. The plugin reports its online players every `map.reporting.interval-ticks` (new key, default 40 = 2 s): world,
+     position, facing, AFK, active mode and running minigame match, over the game hub.
+  2. New anonymous read route `GET api/Map/players` (map rate limit): the live players with their name label as in
+     the in-game chat line, and one pin per running siege match, "[Siege] 12 players". Players in staff or owner mode
+     or in a running match never reach anonymous or plain logged-in viewers, not even in the response; a viewer with
+     `knk.mode.staff` or `knk.mode.owner` sees them with a mode or minigame tag. A player who quits disappears at once,
+     a server that stops reporting within three intervals.
+  3. Admin steps: none to keep it off. To turn it on, set `Map__LivePlayers__Enabled=true` (with `Map__Enabled=true`)
+     in the API's environment file and `map.reporting.enabled: true` in the plugin's `config.yml` (needs
+     `realtime.enabled: true`); `Map__LivePlayers__PollIntervalMs` (2000), `Map__LivePlayers__LabelCacheSeconds` (60)
+     and `map.reporting.interval-ticks` (40) have defaults. No migration. Steps:
+     [overview map smoke test § 4](guides/overview-map-smoke-test.md#4-phase-4a-live-players-backend-738-tier3),
+     [production installation § 4.3](guides/production-installation.md#43-api-configuration-file--etcknkapienv),
+     [plugin configuration § 4.29](guides/admin/plugin-configuration.md#429-map).
+
 - **Overview map: the `/map` page** ([PandiO/knk-workspace#737](https://github.com/PandiO/knk-workspace/issues/737),
   link L3 of the overview map chain, [#732](https://github.com/PandiO/knk-workspace/issues/732)). knk-web-app and
   knk-workspace branches `claude/overview-map-page` (PRs into `next`). Behind the API setting `Map:Enabled` (off by
