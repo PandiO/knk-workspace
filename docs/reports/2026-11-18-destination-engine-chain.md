@@ -21,8 +21,8 @@
 
 | Link | Issue | Status | Branch heads | PR | CI | How started |
 |---|---|---|---|---|---|---|
-| L1 P1 pure engine in knk-core | #96 | In review | `claude/navigation-destination-engine`: knk-plugin `64ca8815`, knk-workspace `55c4fb13` | [knk-plugin#78](https://github.com/PandiO/knk-plugin/pull/78), [knk-workspace#754](https://github.com/PandiO/knk-workspace/pull/754) | build green, paper-boot see block | create_session session_01R1w2Uw3gPf2REJMYZEGE6a |
-| L2 P2 model, snapshot, domain search Location | #103 | Not started | — | — | — | — |
+| L1 P1 pure engine in knk-core | #96 | Merged into next (2026-11-18) | `claude/navigation-destination-engine`: knk-plugin `64ca8815`, knk-workspace `7eb86cc3` | [knk-plugin#78](https://github.com/PandiO/knk-plugin/pull/78) (merge `1105ec15`), [knk-workspace#754](https://github.com/PandiO/knk-workspace/pull/754) (merge `732ba191`) | build + paper-boot green on the PR; Codex skipped (usage limit) | create_session session_01R1w2Uw3gPf2REJMYZEGE6a |
+| L2 P2 model, snapshot, domain search Location | #103 | Running | `claude/navigation-destination-engine`: knk-web-api new, knk-plugin from `next` `1105ec15` | — | — | subagent of the coordinator (two repos besides knk-workspace, SKILL § 4.1.4 item 2) |
 | L3 P3 switch-over behind the flag | #69 | Not started | — | — | — | — |
 | L4 P4 hard blocks as scopes, live re-validation | #62 | Not started | — | — | — | — |
 | L5 phase 4b removal of old paths and the flag | #747 | Not started | — | — | — | — |
@@ -50,6 +50,25 @@
    knk-web-api work is small (a DTO field and an `Include`) and one link per issue keeps the check simple.
    Alternatives: (a) start the knk-web-api part now as a separate session, which the charter allows — revisit if L1
    runs long.
+
+6. **L1 check (2026-11-18).** Chosen: merge knk-plugin#78 into `next` (merge `1105ec15`) after the § 6 checks: heads
+   match, `next` moved by two overview-map commits during the link but `git merge-tree` showed no conflict and the
+   files do not overlap, PR CI `build` and `paper-boot` green, scope only `core/navigation/destinations/` and
+   `ArchitectureGuardTest`, knk-core 3 151 → 3 221 with 0 failures, decisions logged, Codex at its usage limit (rule 4
+   exception, noted on the PR). knk-workspace#754 was sent back once for a missing changelog entry (the other chains'
+   links ship one with the feature), then merged (`732ba191`). Alternatives: (a) merge #754 without the entry and add
+   it at the end of the chain — rejected, the global rules ship the changelog entry with the feature; (b) write the
+   entry myself — rejected, the coordinator does not implement and the link session was idle with full context.
+7. **Order with the off-road chain (2026-11-18, by message with session_01R1w2UuBBnWjqekMFxEMefN).** Chosen: L1 then
+   L2 run now; when an off-road link (L10 step 2 on #712 or L5 #705) becomes ready, it gets the window after L2 and
+   before L3, and I hold L3 until it is merged into `next`. I tell that coordinator when L2 and when L3 are merged (L3
+   opens its L8 #708). Alternatives: (a) run L1–L3 back to back first — delays off-road work that waits only on the
+   developer; (b) let the off-road links go before L2 — neither was ready.
+8. **Route for L2.** Chosen: a subagent of this session (variant B), because L2 changes two repositories besides
+   knk-workspace (SKILL § 4.1.4 item 2). Scope follows the charter and DESIGN § 10 over the October text of #103:
+   the providers reading the model (`CatalogueProvider`, `CompassTargetsProvider`) belong to L3. Alternatives: (a)
+   create_session with two `add_repo` calls — refused attaches were seen with several repos; (b) split L2 into an API
+   and a plugin session — the API part is small and one link per issue keeps the check simple.
 
 ## 4. Link blocks
 
