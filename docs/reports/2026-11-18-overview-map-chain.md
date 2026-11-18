@@ -28,14 +28,9 @@ on `next` (Decided 2026-11-18, O01–O33, O08 superseded by O31); smoke guide
    `knk-alpha` Compose stack, Nginx `/bluemap/`; knk-deploy, ask before each change), run the full-world render
    (about 20 hours), then set `Map__Enabled=true` and follow smoke guide § 3. Optional: `@codex review` on
    knk-web-app#50 (Codex at its limit).
-4. **L4 (#738) live check, gate for L5 (tier:3):** L4 is in `next` (knk-web-api `f2f523c3`, knk-plugin `ef4e99d9`).
-   Set API `Map__Enabled=true`, `Map__LivePlayers__Enabled=true`; plugin `map.reporting.enabled: true` (needs
-   `realtime.enabled: true`; new key `map.reporting.interval-ticks: 40`). Run smoke guide § 4, and record the
-   visibility steps § 4.1 steps 2, 3 and 5 on #738: L5 (#739) is not merged into `next` before that. L5 is done and
-   checked (knk-web-app#52 `bc17a48`, knk-workspace#756 `69244809`, CI green); the coordinator merges it once your
-   result is on #738. Optional:
-   `@codex review` on knk-web-api#47, knk-plugin#77, knk-workspace#752.
-
+4. **L4 (#738) live check: done 2026-11-18** (comment on #738: steps 2, 3 and 5 pass; step 3's `/ownermode` part not
+   run, no second staff account). L5 is merged. Remaining for L4/L5: the `mode: "owner"` case when a second staff
+   account is at hand, and smoke guide § 5 once the map is live (§ 3).
 5. **L6 (#740) smoke test (tier:2):** L6 is in `next` (knk-web-app `01ad4d9a`). With the map on (§ 3), run smoke guide
    § 6. Towns and districts have no seeded default display configuration: until one is made in the display builder,
    their "Details" shows a one-line message. Optional: `@codex review` on knk-web-app#51, knk-workspace#755.
@@ -55,11 +50,11 @@ on `next` (Decided 2026-11-18, O01–O33, O08 superseded by O31); smoke guide
 | L2 Public map API | #736 | Merged into `next` 2026-11-18 (knk-web-api `612ad62`, knk-workspace `55d01897`); waiting for the developer's smoke test § 2 | `claude/overview-map-public-api`: knk-web-api `3a014f8`, knk-workspace `fcde4be8` (from `next`) | [knk-web-api#46](https://github.com/PandiO/knk-web-api/pull/46), [knk-workspace#751](https://github.com/PandiO/knk-workspace/pull/751) | API green on `3a014f8` (build-and-test, mysql-tests, fresh-database); knk-workspace no CI | create_session session_01R1w2UvvpPXaMVExy9eZZpL (2026-11-18) |
 | L3 `/map` page | #737 | Merged into `next` 2026-11-18 (knk-web-app `f551804d`, knk-workspace `0f0f8e7f`); waiting for the NAS deploy notes (runbook Phase 10), the full-world render and the developer's smoke test § 3 | `claude/overview-map-page`: knk-web-app `ee9a68d`, knk-workspace `23b028dc` (from `next`) | [knk-web-app#50](https://github.com/PandiO/knk-web-app/pull/50), [knk-workspace#753](https://github.com/PandiO/knk-workspace/pull/753) | web app green on `ee9a68d` (build-and-test, e2e); knk-workspace no CI | create_session session_01R1w2UtuNmGWaJ6a65D2YeS (2026-11-18) |
 | L4 Live players backend | #738 | Merged into `next` 2026-11-18 (knk-web-api `f2f523c3`, knk-plugin `ef4e99d9`, knk-workspace `d9c07b37`); waiting for the developer's live check of smoke § 4.1 steps 2, 3 and 5 on #738 (gates L5's merge) | `claude/overview-map-players-api`: knk-web-api `a9ed3af`, knk-plugin `8b1efdcc`, knk-workspace `09982caa` (from `next`) | [knk-web-api#47](https://github.com/PandiO/knk-web-api/pull/47), [knk-plugin#77](https://github.com/PandiO/knk-plugin/pull/77), [knk-workspace#752](https://github.com/PandiO/knk-workspace/pull/752) | API green (build-and-test, mysql-tests, fresh-database); plugin build and paper-boot green | create_session session_01R1w2UwcYKiPMueCHWqsys4 (2026-11-18) |
-| L5 Live players layer | #739 | Checks passed, not merged: waits for the developer's L4 live check on #738 (gate 4). Branches already contain `next` incl. L8 (web app `54d8a01`, workspace `fa94f24a`; CI to re-run) | `claude/overview-map-players-page`: knk-web-app `bc17a48`, knk-workspace `69244809` (from `next`) | [knk-web-app#52](https://github.com/PandiO/knk-web-app/pull/52), [knk-workspace#756](https://github.com/PandiO/knk-workspace/pull/756) | Web app green on `bc17a48` (build-and-test, e2e); knk-workspace no CI; Codex at its limit | create_session session_01R1w2UwXPWsCYjRUw6RoxVH (2026-11-18) |
+| L5 Live players layer | #739 | Merged into `next` 2026-11-18 (knk-web-app `5501be96`, knk-workspace `f7ea5ed9`) after the developer's L4 check on #738; waiting for the developer's smoke test § 5 | `claude/overview-map-players-page`: knk-web-app `bc17a48`, knk-workspace `69244809` (from `next`) | [knk-web-app#52](https://github.com/PandiO/knk-web-app/pull/52), [knk-workspace#756](https://github.com/PandiO/knk-workspace/pull/756) | Web app green on `bc17a48` (build-and-test, e2e); knk-workspace no CI; Codex at its limit | create_session session_01R1w2UwXPWsCYjRUw6RoxVH (2026-11-18) |
 | L6 Staff details | #740 | Merged into `next` 2026-11-18 (knk-web-app `01ad4d9a`, knk-workspace `a130f2d6`); waiting for the developer's smoke test § 6 | `claude/overview-map-staff-details`: knk-web-app `1443cf5`, knk-workspace `fe64919d` (from `next`) | [knk-web-app#51](https://github.com/PandiO/knk-web-app/pull/51), [knk-workspace#755](https://github.com/PandiO/knk-workspace/pull/755) | Web app green (build-and-test, e2e); Codex at its limit | subagent of the coordinator (2026-11-18; the create_session attempt session_01R1w2UuaEs6VbL7BVnR7ZTJ was refused the knk-web-app attach, decision 10) |
 | L7 Gate commands backend | #741 | Merged into `next` 2026-11-18 (knk-web-api `0308377d`, knk-plugin `02aa110e`, knk-workspace `b7820e99`); waiting for the developer's smoke test § 7 | `claude/overview-map-gate-commands`: knk-web-api `16e4157`, knk-plugin `1f8bb3c7`, knk-workspace `8368b901` (from `next`) | [knk-web-api#48](https://github.com/PandiO/knk-web-api/pull/48), [knk-plugin#79](https://github.com/PandiO/knk-plugin/pull/79), [knk-workspace#758](https://github.com/PandiO/knk-workspace/pull/758) | API green (build-and-test, mysql-tests, fresh-database); plugin build and paper-boot green | create_session session_01R1w2UxDt6K1RcnDPPagNAN (2026-11-18) |
 | L8 Gate command buttons | #742 | Merged into `next` 2026-11-18 (knk-web-app `de43f6be`, knk-workspace `bf28138d`); waiting for the developer's smoke test § 8 | `claude/overview-map-gate-buttons`: knk-web-app `05a30ea`, knk-workspace `9fad9531` (from `next`) | [knk-web-app#53](https://github.com/PandiO/knk-web-app/pull/53), [knk-workspace#759](https://github.com/PandiO/knk-workspace/pull/759) | Web app build-and-test green on `05a30ea`, e2e running at report time (local full run 176 passed); knk-workspace no CI; Codex at its limit | create_session session_01R1w2UvQqqmQ9NwMTQbq3Cb (2026-11-18) |
-| L9 Player context panel | #743 | Not started (gate: L5 merged into `next`) | – | – | – | – |
+| L9 Player context panel | #743 | Running | `claude/overview-map-moderation`: knk-web-app, knk-workspace (from `next`) | – | – | create_session session_01R1w2Uw4EdZTG53RQ7gnyQ3 (2026-11-18) |
 
 ## 3. Coordinator decisions
 
@@ -197,6 +192,15 @@ on `next` (Decided 2026-11-18, O01–O33, O08 superseded by O31); smoke guide
     appended at the end), and the docs headers, changelog and spec § 6.3.6 (L8's as-built item renumbered to 7). CI
     re-runs on the new web-app head; L5 then merges as soon as the developer's check is on #738. Alternatives:
     (a) resolve at merge time: delays L5 by a CI cycle after the developer's go.
+
+20. **Gate 4 passed; L5 merged; L9 started (2026-11-18).** The developer recorded the L4 visibility check on #738 at
+    15:53 (steps 2, 3 and 5 pass on the dev server with plugin `next` `073fa4cf`, API `next` `6094276`; the
+    `/ownermode` half of step 3 not run) and wrote "The L5 merge (#739) can go ahead". Chosen: merge knk-web-app#52
+    (`54d8a01`, CI green, already contained `next`) and knk-workspace#756 after merging `next` into it again (one
+    changelog conflict with the destination engine P3 entry, both kept, `c2d16a08`); then start L9 (#743), its gate
+    (L5 merged) being open and knk-web-app free. Route `create_session` with the subagent fallback (decision 10).
+    Alternatives: (a) wait for the `/ownermode` case: the developer explicitly cleared the merge; the case is listed
+    in § 1 item 4.
 
 ## 4. Link blocks
 
