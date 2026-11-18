@@ -142,6 +142,11 @@ on `next` (Decided 2026-11-17).
     tells the NPC coordinator when it starts (`MIN_SCENARIOS`, `PaperScenariosTest` merges). Data point from C1 for
     L1's report and O32: the tower's spiral staircase route fits within today's walk caps (172 to 180 blocks against
     220), so it is not an acceptance case for long walks.
+19. **#724 (found by NPC E1, merged into `next` as `7aef3de4`): a `/knk cache refresh` sends its first availability
+    event before the region map is re-warmed.** Not a link of this chain and outside L5–L10's scope. Chosen: leave it
+    to the NPC chain, which offered to schedule it; told its coordinator to keep it to the refresh path and to say
+    which files it touches before it starts. Alternatives: (a) add it to this chain as a link; rejected, scope by
+    sub-issue (skill § 2.2) and it is NPC behaviour; (b) leave it unowned; rejected, the NPC chain offered.
 
 ## 4. Link blocks
 
