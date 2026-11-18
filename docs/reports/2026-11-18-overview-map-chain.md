@@ -31,7 +31,9 @@ on `next` (Decided 2026-11-18, O01–O33, O08 superseded by O31); smoke guide
 4. **L4 (#738) live check, gate for L5 (tier:3):** L4 is in `next` (knk-web-api `f2f523c3`, knk-plugin `ef4e99d9`).
    Set API `Map__Enabled=true`, `Map__LivePlayers__Enabled=true`; plugin `map.reporting.enabled: true` (needs
    `realtime.enabled: true`; new key `map.reporting.interval-ticks: 40`). Run smoke guide § 4, and record the
-   visibility steps § 4.1 steps 2, 3 and 5 on #738: L5 (#739) is not merged into `next` before that. Optional:
+   visibility steps § 4.1 steps 2, 3 and 5 on #738: L5 (#739) is not merged into `next` before that. L5 is done and
+   checked (knk-web-app#52 `bc17a48`, knk-workspace#756 `69244809`, CI green); the coordinator merges it once your
+   result is on #738. Optional:
    `@codex review` on knk-web-api#47, knk-plugin#77, knk-workspace#752.
 
 5. **L6 (#740) smoke test (tier:2):** L6 is in `next` (knk-web-app `01ad4d9a`). With the map on (§ 3), run smoke guide
@@ -46,7 +48,7 @@ on `next` (Decided 2026-11-18, O01–O33, O08 superseded by O31); smoke guide
 | L2 Public map API | #736 | Merged into `next` 2026-11-18 (knk-web-api `612ad62`, knk-workspace `55d01897`); waiting for the developer's smoke test § 2 | `claude/overview-map-public-api`: knk-web-api `3a014f8`, knk-workspace `fcde4be8` (from `next`) | [knk-web-api#46](https://github.com/PandiO/knk-web-api/pull/46), [knk-workspace#751](https://github.com/PandiO/knk-workspace/pull/751) | API green on `3a014f8` (build-and-test, mysql-tests, fresh-database); knk-workspace no CI | create_session session_01R1w2UvvpPXaMVExy9eZZpL (2026-11-18) |
 | L3 `/map` page | #737 | Merged into `next` 2026-11-18 (knk-web-app `f551804d`, knk-workspace `0f0f8e7f`); waiting for the NAS deploy notes (runbook Phase 10), the full-world render and the developer's smoke test § 3 | `claude/overview-map-page`: knk-web-app `ee9a68d`, knk-workspace `23b028dc` (from `next`) | [knk-web-app#50](https://github.com/PandiO/knk-web-app/pull/50), [knk-workspace#753](https://github.com/PandiO/knk-workspace/pull/753) | web app green on `ee9a68d` (build-and-test, e2e); knk-workspace no CI | create_session session_01R1w2UtuNmGWaJ6a65D2YeS (2026-11-18) |
 | L4 Live players backend | #738 | Merged into `next` 2026-11-18 (knk-web-api `f2f523c3`, knk-plugin `ef4e99d9`, knk-workspace `d9c07b37`); waiting for the developer's live check of smoke § 4.1 steps 2, 3 and 5 on #738 (gates L5's merge) | `claude/overview-map-players-api`: knk-web-api `a9ed3af`, knk-plugin `8b1efdcc`, knk-workspace `09982caa` (from `next`) | [knk-web-api#47](https://github.com/PandiO/knk-web-api/pull/47), [knk-plugin#77](https://github.com/PandiO/knk-plugin/pull/77), [knk-workspace#752](https://github.com/PandiO/knk-workspace/pull/752) | API green (build-and-test, mysql-tests, fresh-database); plugin build and paper-boot green | create_session session_01R1w2UwcYKiPMueCHWqsys4 (2026-11-18) |
-| L5 Live players layer | #739 | In review 2026-11-18 (not merged; merge waits for the developer's L4 check on #738, gate 4) | `claude/overview-map-players-page`: knk-web-app `bc17a48`, knk-workspace `69244809` (from `next`) | [knk-web-app#52](https://github.com/PandiO/knk-web-app/pull/52), [knk-workspace#756](https://github.com/PandiO/knk-workspace/pull/756) | Web app green on `bc17a48` (build-and-test, e2e); knk-workspace no CI; Codex at its limit | create_session session_01R1w2UwXPWsCYjRUw6RoxVH (2026-11-18) |
+| L5 Live players layer | #739 | Checks passed (coordinator 2026-11-18 12:25), not merged: waits for the developer's L4 live check on #738 (charter gate 4) | `claude/overview-map-players-page`: knk-web-app `bc17a48`, knk-workspace `69244809` (from `next`) | [knk-web-app#52](https://github.com/PandiO/knk-web-app/pull/52), [knk-workspace#756](https://github.com/PandiO/knk-workspace/pull/756) | Web app green on `bc17a48` (build-and-test, e2e); knk-workspace no CI; Codex at its limit | create_session session_01R1w2UwXPWsCYjRUw6RoxVH (2026-11-18) |
 | L6 Staff details | #740 | Merged into `next` 2026-11-18 (knk-web-app `01ad4d9a`, knk-workspace `a130f2d6`); waiting for the developer's smoke test § 6 | `claude/overview-map-staff-details`: knk-web-app `1443cf5`, knk-workspace `fe64919d` (from `next`) | [knk-web-app#51](https://github.com/PandiO/knk-web-app/pull/51), [knk-workspace#755](https://github.com/PandiO/knk-workspace/pull/755) | Web app green (build-and-test, e2e); Codex at its limit | subagent of the coordinator (2026-11-18; the create_session attempt session_01R1w2UuaEs6VbL7BVnR7ZTJ was refused the knk-web-app attach, decision 10) |
 | L7 Gate commands backend | #741 | Running | `claude/overview-map-gate-commands`: knk-web-api, knk-plugin, knk-workspace (from `next`) | – | – | create_session session_01R1w2UxDt6K1RcnDPPagNAN (2026-11-18) |
 | L8 Gate command buttons | #742 | Not started (gate: L3 and L7 merged into `next`) | – | – | – | – |
@@ -148,6 +150,16 @@ on `next` (Decided 2026-11-18, O01–O33, O08 superseded by O31); smoke guide
     knk-web-app. Its merge into `next` still waits for the developer's live check of the L4 visibility steps on #738
     (charter gate 4). Route `create_session` with the subagent fallback (decision 10). Alternatives: (a) wait for the
     developer's check before starting: the gate is on the merge, not the work.
+
+15. **L5 checked, merge held for gate 4 (2026-11-18).** Every skill § 6 check held for knk-web-app#52 and
+    knk-workspace#756: heads matched, both branches contain `next`, scope web app plus docs (one out-of-folder line:
+    `translateAlternateColorCodes` in `MinecraftLegacyPreview.tsx` exported for reuse, no behaviour change), CI green
+    build-and-test and e2e, Jest 2712 → 2733 and Playwright 166 → 176, no players request while the flag is off,
+    bridge protocol v1 unchanged (optional fields only), smoke § 5 tagged, #739 in review, follow-up #757 filed.
+    Chosen: hold the merge until the developer records the L4 visibility check on #738 (charter gate 4). Alternatives:
+    (a) merge now behind the flag: the charter makes the developer's check a hard gate for this merge. L8 (#742) waits
+    for L7, and starting it before L5 is in `next` would branch both from the same `MapPage` without L5's edits;
+    L9 (#743) waits for L5 in `next`.
 
 ## 4. Link blocks
 
