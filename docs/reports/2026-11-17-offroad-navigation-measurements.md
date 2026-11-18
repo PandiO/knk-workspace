@@ -127,10 +127,12 @@ Run 2 notes (2026-11-18, developer's walk-through):
 5. Run 2b (capture margin 48): scene 1 still fails at the same spot. The cells searched grow with the box (2 093 in
    run 1, 3 133 in run 2, 13 643 in run 2b), so the search is not shut in; it never reaches its target. The gate door
    is not the cause: scenes 2 and 3 pass the same stair house spots and its gate, and scenes 7 and 9 reach and leave
-   the storage hall by its only two ways in. Agent hypothesis, to verify: a recompute re-derives the target from the
-   player's position (`NavigationService` line 1830: for a region destination, the region's closest point), and from
-   the stair house that point lies on the far side of a wall, where no walk path ends. The first search from spawn
-   targets another point and is found. To check: the stuck spot's coordinates against the hall region's edge.
+   the storage hall by its only two ways in. The storage hall is a point Location, not a region, so the target does
+   not move. The player gets stuck at x 1417, y 59, z -489: about 4 blocks across and 13 below the hall's floor
+   (1421 72 -488). The first search from spawn finds a path (371 to 416 long); every recompute from the stuck spot
+   searches the whole box without reaching the hall. Open question for the next test: is the stuck spot on the first
+   path (then the walk model lets the player in one way only, such as a drop it cannot climb back), or did the trail
+   lead the player off it (the trail drawn on the wrong flight of the stair house)?
 6. Scene 5 in run 2b is the only search that reached a cap in runs 2 and 2b: 200 000 expansions in about 5 s per
    search, without finding the way. The 1008-chunk capture took about 0.6 s of main-thread time spread over about 252
    ticks and a 9.4 s wait, and it was repeated with every recompute (the cache keeps 256 chunks). Option A does not
