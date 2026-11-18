@@ -383,6 +383,14 @@ the configuration reference § 4.27), then restart. In test order:
     lanes. Replay on the 2026-11-17 snapshot: 21 off-lane legs → 0, 0 looping, 0 lost. For the developer's review: B5
     decisions 5.1 and 5.2. The off-road chain's coordinator (session_01R1w2UuBBnWjqekMFxEMefN) was told; its L2 (#704,
     the move to `core/navigation/shape/`) starts now; C1 starts when L2 is merged (decision 44).
+46. **C1 checked and merged; E1 started** (2026-11-18). § 6 held: CI `build` and `paper-boot` (59) green on
+    `b7608662`, no debug code, no edits in `core/roads/walk`, `paper/navigation` or `core/navigation/shape` (the off-road
+    chain's areas), walk searches on the walk executor, merged clean into `next` after two rounds of mechanical
+    conflicts (MIN_SCENARIOS, `PaperScenariosTest`) with the off-road chain's L4 and L10 step 1. Merged knk-plugin#71 →
+    `65c7d6d3`, knk-workspace#721 → `b0bd7f4a`. Keep tower: leader stuck → arrives 53.4 s, group of 20 arrives 59.1 s,
+    0 lost; the spiral fits the walk caps (172–180 of 220 blocks), so no acceptance case for #698's NPC phase. Detour
+    and ravine fail before, arrive after. Also fixed: the replay Anvil reader dropped 26.x block states since B1; open
+    doors were walls. For the developer's review: C1 decisions 5.3, 5.4, 5.10. E1 (#701) started.
 
 ## 4. Link blocks
 
