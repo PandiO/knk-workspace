@@ -23,12 +23,13 @@ on `next` (Decided 2026-11-18, O01–O33, O08 superseded by O31); smoke guide
 2. **L2 (#736) smoke test (tier:3):** L2 is in `next` (knk-web-api `612ad62`). With the API from `next`, set
    `Map__Enabled=true` and follow smoke guide § 2 (new settings with defaults in production-installation § 4.3; no
    migration). Optional: `@codex review` on knk-web-api#46 and knk-workspace#751 (Codex at its limit / failed).
-3. Known gates ahead (not blockers now):
-   1. L3 (#737): the BlueMap scripting spike (spec § 9.6); if BlueMap's web app does not accept runtime marker sets
-      and click listeners from a script, L3 stops and you decide the fallback.
-   2. L3: the deploy notes (move the `bluemap-test` container into the `knk-alpha` Compose stack, Nginx `/bluemap/`)
-      and the full-world render (about 20 hours) are yours to apply on the NAS; L3's live smoke steps wait for that.
-   3. L5 (#739) is not merged into `next` before your live check of the L4 visibility steps (smoke § 4.1 steps 2, 3
+3. **L3 (#737) NAS steps and smoke test (tier:2):** L3 is in `next` (knk-web-app `f551804d`). The BlueMap spike
+   passed (v5.29, evidence on #737). On the NAS, apply closed-alpha runbook Phase 10 (move `bluemap-test` into the
+   `knk-alpha` Compose stack, Nginx `/bluemap/`; knk-deploy, ask before each change), run the full-world render
+   (about 20 hours), then set `Map__Enabled=true` and follow smoke guide § 3. Optional: `@codex review` on
+   knk-web-app#50 (Codex at its limit).
+4. Known gates ahead (not blockers now):
+   1. L5 (#739) is not merged into `next` before your live check of the L4 visibility steps (smoke § 4.1 steps 2, 3
       and 5), recorded on #738.
 
 ## 2. Summary
@@ -37,10 +38,10 @@ on `next` (Decided 2026-11-18, O01–O33, O08 superseded by O31); smoke guide
 |---|---|---|---|---|---|---|
 | L1 Region outlines | #735 | Merged into `next` 2026-11-18 (knk-web-api `562f504`, knk-plugin `7f4bdd3a`, knk-workspace `ac4b620f`); waiting for the developer's smoke test § 1 | `claude/overview-map-outlines`: knk-web-api `253a6ee`, knk-plugin `cf3a975a`, knk-workspace `e6e815dd` (from `next`) | [knk-web-api#45](https://github.com/PandiO/knk-web-api/pull/45), [knk-plugin#76](https://github.com/PandiO/knk-plugin/pull/76), [knk-workspace#749](https://github.com/PandiO/knk-workspace/pull/749) | API green; plugin build and paper-boot green | create_session session_01R1w2UuqJyStWv2zia5FTQg (2026-11-18, decision 3) |
 | L2 Public map API | #736 | Merged into `next` 2026-11-18 (knk-web-api `612ad62`, knk-workspace `55d01897`); waiting for the developer's smoke test § 2 | `claude/overview-map-public-api`: knk-web-api `3a014f8`, knk-workspace `fcde4be8` (from `next`) | [knk-web-api#46](https://github.com/PandiO/knk-web-api/pull/46), [knk-workspace#751](https://github.com/PandiO/knk-workspace/pull/751) | API green on `3a014f8` (build-and-test, mysql-tests, fresh-database); knk-workspace no CI | create_session session_01R1w2UvvpPXaMVExy9eZZpL (2026-11-18) |
-| L3 `/map` page | #737 | In review (PRs open, not merged); spike passed (BlueMap v5.29) | `claude/overview-map-page`: knk-web-app `ee9a68d`, knk-workspace `23b028dc` (from `next`) | [knk-web-app#50](https://github.com/PandiO/knk-web-app/pull/50), [knk-workspace#753](https://github.com/PandiO/knk-workspace/pull/753) | web app green on `ee9a68d` (build-and-test, e2e); knk-workspace no CI | create_session session_01R1w2UtuNmGWaJ6a65D2YeS (2026-11-18) |
+| L3 `/map` page | #737 | Merged into `next` 2026-11-18 (knk-web-app `f551804d`, knk-workspace `0f0f8e7f`); waiting for the NAS deploy notes (runbook Phase 10), the full-world render and the developer's smoke test § 3 | `claude/overview-map-page`: knk-web-app `ee9a68d`, knk-workspace `23b028dc` (from `next`) | [knk-web-app#50](https://github.com/PandiO/knk-web-app/pull/50), [knk-workspace#753](https://github.com/PandiO/knk-workspace/pull/753) | web app green on `ee9a68d` (build-and-test, e2e); knk-workspace no CI | create_session session_01R1w2UtuNmGWaJ6a65D2YeS (2026-11-18) |
 | L4 Live players backend | #738 | Running | `claude/overview-map-players-api`: knk-plugin, knk-web-api, knk-workspace (from `next`) | – | – | create_session session_01R1w2UwcYKiPMueCHWqsys4 (2026-11-18) |
 | L5 Live players layer | #739 | Not started (gate: L3 and L4 merged, developer's L4 check) | – | – | – | – |
-| L6 Staff details | #740 | Not started (gate: L3 merged into `next`) | – | – | – | – |
+| L6 Staff details | #740 | Running | `claude/overview-map-staff-details`: knk-web-app, knk-workspace (from `next`) | – | – | create_session session_01R1w2UuaEs6VbL7BVnR7ZTJ (2026-11-18) |
 | L7 Gate commands backend | #741 | Not started (gate: L2 merged into `next`) | – | – | – | – |
 | L8 Gate command buttons | #742 | Not started (gate: L3 and L7 merged into `next`) | – | – | – | – |
 | L9 Player context panel | #743 | Not started (gate: L5 merged into `next`) | – | – | – | – |
@@ -95,6 +96,16 @@ on `next` (Decided 2026-11-18, O01–O33, O08 superseded by O31); smoke guide
    worked in this chain, and a subagent would block this coordinator's session for hours. Fallback: rerun as a
    subagent on a refused attach. Alternatives: (a) L4 as a subagent from the start; (b) run L3 and L4 one after the
    other: slower with no file overlap to justify it.
+
+8. **L3 check and merge (2026-11-18).** Chosen: merge knk-web-app#50 and knk-workspace#753 into `next` with merge
+   commits: every skill § 6 check held (heads matched, branch contained `next`, scope web app plus deploy notes and
+   docs, nothing applied to the NAS, CI green build-and-test and e2e, Jest 2672 → 2699 and Playwright 149 → 160 with
+   the real `bridge.js` in a fake BlueMap, spike evidence on #737, smoke § 3 tagged, #737 in review). Codex at its
+   limit on #50, noted. Alternatives: (a) hold the merge until the NAS render exists: the live steps are the
+   developer's test of `next`, not a merge gate.
+9. **L6 started after L3.** Chosen: start L6 (#740, knk-web-app) now; L5 (needs L3, L4 and the developer's L4
+   visibility check) cannot start yet, and L6's only gate is L3. Route `create_session` (one repository besides
+   knk-workspace). Alternatives: (a) wait and run L5 first in charter order: L5's gate is closed.
 
 ## 4. Link blocks
 
