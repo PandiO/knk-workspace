@@ -71,7 +71,8 @@ gate structure with two doors.
 ### 3.0 Preconditions
 
 1. Deployed: phase 2, the web app from `next`, and BlueMap tiles and web app under `/bluemap/` with the bridge script
-   in `webapp.conf`.
+   in `webapp.conf`. The render container is the existing NAS `bluemap-test`, migrated into the `knk-alpha` stack
+   (spec § 3.1.10); `docker ps` shows it as a stack service, not a hand-started container.
 2. Settings: `Map:Enabled=true`.
 
 ### 3.1 Steps
