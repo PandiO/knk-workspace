@@ -1,6 +1,6 @@
 # Off-road navigation and landmarks chain — progress report
 
-**Status:** Running, waiting for the developer (2026-11-18) · **Last updated:** 2026-11-18 (L8 step A block)
+**Status:** Running, waiting for the developer (2026-11-18) · **Last updated:** 2026-11-18 (L5 block); 2026-11-18 (L8 step A block)
 
 **Issue:** [PandiO/knk-workspace#698](https://github.com/PandiO/knk-workspace/issues/698), links
 [#703](https://github.com/PandiO/knk-workspace/issues/703) (L1), [#704](https://github.com/PandiO/knk-workspace/issues/704) (L2),
@@ -28,7 +28,7 @@ on `next` (Decided 2026-11-17).
 | L2 Phase 1 shared shaping package | #704 | Merged into next (2026-11-17) | knk-plugin `claude/offroad-shape-package` `0d0cff84`; knk-workspace `claude/offroad-shape-package` `ef17bcc3` | [knk-plugin#69](https://github.com/PandiO/knk-plugin/pull/69) → `next` `c45c16bb`, [#718](https://github.com/PandiO/knk-workspace/pull/718) → `next` `d8ebd9f4` | green (build, paper-boot) | create_session `session_01R1w2UwTnENVNKzfaXudBUh` (2026-11-17) |
 | L3 Phase 6.1 trail corners | #710 | Merged into next (2026-11-18); waits for the developer's live test (tier:3, smoke § 8) | knk-plugin `claude/offroad-trail-corners` `9dd3ee5f`; knk-workspace `claude/offroad-trail-corners` `daffbc1d` | [knk-plugin#70](https://github.com/PandiO/knk-plugin/pull/70) → `next` `54dfe8d7`, [#719](https://github.com/PandiO/knk-workspace/pull/719) → `next` `d07deabf` | green (build; paper-boot on re-run, #720) | create_session `session_01R1w2Uv9tRTPyjZsFJNWGec` (2026-11-17) |
 | L4 Phase 6.2 anchored particles, winding back | #711 | Merged into next (2026-11-18); waits for the developer's live test (tier:3, smoke § 9) | knk-plugin `claude/offroad-trail-cursor` `1925cf73`; knk-workspace `claude/offroad-trail-cursor` `cb7b55f8` | [knk-plugin#72](https://github.com/PandiO/knk-plugin/pull/72) → `next` `580aafa1`, [#722](https://github.com/PandiO/knk-workspace/pull/722) → `next` `ff8cf291` | green (build, paper-boot) | create_session `session_01R1w2UwkAiptAq4cPVFVBTS` (2026-11-18) |
-| L5 Phase 2 walk links | #705 | Running (started 2026-11-18 20:13 from plugin `next` `4daa0c84`) | `claude/offroad-walk-links` | — | — | create_session `session_01R1w2UsbXwf6jzEc33aVwLL` (2026-11-18) |
+| L5 Phase 2 walk links | #705 | In review (2026-11-18); waits for the coordinator's checks and merge, then the developer's live test (tier:3, smoke § 3) | knk-plugin `claude/offroad-walk-links` `5b4f666d`; knk-workspace `claude/offroad-walk-links` `06b3f92a` | [knk-plugin#85](https://github.com/PandiO/knk-plugin/pull/85), [#774](https://github.com/PandiO/knk-workspace/pull/774) → `next` | green (build, paper-boot) | create_session `session_01R1w2UsbXwf6jzEc33aVwLL` (2026-11-18) |
 | L6 Phase 3 hierarchical walk search | #706 | Not started (gate: L5 in `next`; O32 question first if L1 says option A fits) | `claude/offroad-hierarchical` | — | — | — |
 | L7 Phase 4 route modes | #707 | Not started (gate: L5 in `next`) | `claude/offroad-route-modes` | — | — | — |
 | L8 Phase 5.1 landmark entity | #708 | Merged into next (2026-11-18); waits for the developer's live test (tier:3, smoke § 6) | knk-web-api `d331bdf4`, knk-web-app `b50c4134`, knk-plugin `be9e3a74`, knk-workspace `eb3321a9` (`claude/offroad-landmarks`) | [knk-web-api#50](https://github.com/PandiO/knk-web-api/pull/50) → `935fe8cc`, [knk-web-app#54](https://github.com/PandiO/knk-web-app/pull/54) → `3432e6ef`, [knk-plugin#83](https://github.com/PandiO/knk-plugin/pull/83) → `5fd81466`, [#763](https://github.com/PandiO/knk-workspace/pull/763) → `7722cc76` | green (all jobs) | subagent of the coordinator (three component repos; resumed once after the usage limit) |
@@ -837,3 +837,93 @@ _(Each link appends its block here when it finishes.)_
 9. **Notes for later links.**
     1. L5 (route as a leg list): `PlazaTrail` measures in the route polyline's own 3D distance along it. A route of several legs needs one `PlazaTrail` per leg polyline, or one over the joined polyline.
     2. The real-plaza scenarios use snapshots from 2026-11-17. Brink's node has moved since; a new snapshot would show the developer's view.
+
+### 4.8 L5 — Phase 2: walk links, route as a leg list, block-change hook (#705)
+
+1. **Scope done.** Everything is behind `navigation.walk-links`, off by default.
+    1. knk-core `core/roads/route/`:
+        1. `WalkLinkId`: its own id space, a separate type with value ≥ 2^62 (O17).
+        2. `WalkLink`: a path in network convention, length, walk cost, regions, gate doors and the chunks of its box widened by one block; `tagsEdge()` is a probe for the access policy.
+        3. `WalkLinkSource`: the router port.
+        4. `Route.LinkStep`, `WalkLinkStretch`, `legs()` (road and walk-link legs in any order), `buildPieces`, `stepPolylineStart`, `walkLinkAt`. A road-only route is built by the unchanged `build`.
+        5. `AStarRouter.route(request, links)` and `routeOrExplain(request, links)`.
+        6. `AccessPolicy.checkWalkLink`; `CompositeAccessPolicy` does not cache it.
+        7. `Maneuver.Kind.WALK` ("Leave the road and walk across").
+    2. knk-core `core/roads/links/`:
+        1. `WalkLinkCandidates`: range 40, ratio 2.0, junctions, end points, anchors and named nodes in one component (O28).
+        2. `WalkLinkCache`: per player, TTL 600, retry 600, `claim`, per-chunk invalidation, `dropNone`, LRU of 4 096 entries.
+        3. `WalkLinkPlanner` (per request), `WalkLinkCounters`, `RoadFirstRule`.
+        4. The port `core/roads/walk/TerrainChangeListener` (O18).
+        5. `NavigationSession.onWalkLinksFound`.
+    3. knk-paper:
+        1. `NavigationService`, new section "walk links and mixed routes":
+            1. The planner goes into `computeRoute`, and the wanted links are searched after the route.
+            2. A FIFO queue of at most 32 searches; at most `max-concurrent-searches - 1` run at once (at least 1).
+            3. Captures and access go through the walk preparer.
+            4. A found link is tagged on the main thread, cached, and the session asks for an improvement.
+            5. The D13 re-check covers links; a gate or availability change drops the "none" entries; a network change clears the world.
+            6. Road-first runs in `walkDelivered` for a found direct path.
+        2. `TrailRenderer` draws link stretches on the road trail's fixed spots in the leg colour.
+        3. `walk/WalkTerrainListener`: place, break, burn, fade, form, explosions, pistons, entity changes; MONITOR, batched per chunk every 20 ticks.
+        4. `walk/WalkLinkTagger`: WorldGuard regions every second point, gate doors at feet and head.
+        5. Eight config keys, `NavigationConfig.WalkLinksConfig`, `/knk road status` lines, the `roadFirst` message, and the `KnKPlugin.startWalkLinks` wiring.
+    4. knk-workspace:
+        1. Smoke test § 3: 14 steps, 13 automated (5 in part).
+        2. Plugin configuration § 4.15 and § 2.1.
+        3. CHANGELOG (Unreleased).
+        4. DESIGN § 5.2.6 (road-first) and § 5.2.7 (as built).
+    5. Kept stable for the NPC chain: the public signatures of `WalkLegPreparer`, `WalkSearch`/`WalkPathfinder`, `MovementProfile` and the shape package. `core/navigation/destinations` and the engine-handle code are untouched.
+2. **Commits and heads.** knk-plugin `claude/offroad-walk-links` at `5b4f666d` (2 commits, base `next` at `4daa0c84`); knk-workspace `claude/offroad-walk-links` at `06b3f92a` (2 commits, base `next` at `79b118ef`).
+3. **PRs.** [PandiO/knk-plugin#85](https://github.com/PandiO/knk-plugin/pull/85) (`Closes #705`), [PandiO/knk-workspace#774](https://github.com/PandiO/knk-workspace/pull/774) (`Part of`), base `next`. Not merged.
+4. **Tests, baseline → result.**
+    1. knk-plugin (`./gradlew build -x deployToDevServer`): baseline on `next` `4daa0c84` was knk-core 3 343, knk-api-client 358 (2 skipped), knk-paper 3 096 (18 skipped), all green. The result on the branch is knk-core 3 382 (+39), knk-api-client 358, knk-paper 3 111 (+15), no failures. CI on `5b4f666d`: build and paper-boot green (runs 44394049451, 44394049111; the push runs 44394040072, 44394039949 green too).
+    2. New tests:
+        1. knk-core: `WalkLinkIdTest`, `WalkLinkCandidatesTest`, `WalkLinkCacheTest`, `WalkLinkRoutingTest`, `RoadFirstRuleTest`, one `NavigationSessionTest`.
+        2. knk-paper: `NavigationServiceWalkLinksTest` (10, including the flag-off transcript, the road-to-walk handover and an NPC plan without links), `WalkTerrainListenerTest` (MockBukkit, 4), one `ConfigLoaderNavigationTest`.
+    3. L3, L4 and L10's flag-off identity tests and the engine's handle tests are unchanged and green.
+    4. Known reds: none.
+5. **Decisions (DESIGN § 4.3).**
+    1. *How "lazy" works with an asynchronous walk search.* Chosen: the first route is today's road route; the A\* records the unsearched candidates it met with a lower bound (cost to the From node + straight × cheapest factor + heuristic from the To node). The candidates whose bound beats the found route are searched afterwards, at most `walk-link-searches-per-route` (4, cheapest first). A found link makes the session ask for an improvement (kept unless clearly shorter). This keeps the router synchronous and pure, and the first trail as fast as today. Alternatives: (a) hold the first route until the link searches return: a delay of one or more walk searches for every navigation; (b) search every candidate of every expanded node: far more searches than useful.
+    2. *Whose access a cached link carries.* Chosen: cache per player, because the walk search used that player's cell access (WorldGuard door use, gates, regions). The link's regions and gate doors are judged by the player's access policy at every route and by D13. Alternatives: (a) one link for everyone, searched with open access and re-checked cell by cell per player: needs the player's door and region answers for the link's box on the main thread at each route; (b) a link per access fingerprint: no such fingerprint exists today.
+    3. *Probe edge for the policy.* Chosen: the policies judge edges, so a link's tags go in a probe `RoadEdge` with id `Integer.MIN_VALUE`. It is never in a snapshot or route, and `CompositeAccessPolicy.checkWalkLink` does not touch its per-edge-id cache. Alternatives: (a) a second method on every policy for tags: more surface for the same answer; (b) a probe id from the link: link ids are not ints (O17).
+    4. *Which nodes are link ends.* Chosen: junctions, end points, anchors and named nodes of one network component; split and boundary nodes are plumbing (the same rule as maneuvers), pruned nodes are not routed on. Alternatives: (a) every node: gate split nodes would give links that start at a door; (b) also across components: the router refuses different components before searching, so such links could never be used without changing that rule.
+    5. *Link cost.* Chosen: walk cost × max(1, cheapest road factor), and never below straight × cheapest factor, which keeps the heuristic admissible. Alternatives: (a) walk length only: below the heuristic when every class cost is above 1; (b) a separate config factor: a key nobody asked for.
+    6. *Concurrency (budget 5).* Chosen: link searches share the walk pool, at most `max-concurrent-searches - 1` at once (1 with the shipped 2), queue of 32, skipped beyond that and counted ("dropped first under load", § 9.3.4). Alternatives: (a) as many as the pool: a walk leg could wait behind two link searches; (b) a separate pool: more threads than the measured budget.
+    7. *Block-change hook.* Chosen: MONITOR place, break, burn, fade, form, block and entity explosions, pistons and entity block changes, one batch per chunk every 20 ticks. A link's chunks are its path's box widened by one block. A gate or rule change drops every "none"; a network change clears the world (node ids may mean other places). WorldEdit is left to the TTL. Alternatives: (a) also physics and liquid flow: too frequent for what changes a walk path; (b) a WorldEdit extent hook like the road dirty tracker: more code for a rare staff action that the TTL covers.
+    8. *Road-first rule (the developer's wish, #698, 2026-11-18).* Chosen: only in direct mode (within `max-snap-distance`, unchanged), once per navigation after the first found walk path. Lengths in walked blocks; the walks to and from the road are estimated at 1.5 × straight, as in L4's join point. Keys `road-first-share` 0.6 ("most of the way") and `road-first-max-ratio` 1.5 ("similar cost"), **for the developer to confirm.** Alternatives: (a) compare routing costs: class factors make the numbers hard to read; (b) search the two end walks before deciding: two more walk searches for a question asked once; (c) share 0.5 / ratio 2.0: takes the road where it is clearly the longer way; (d) share 0.75 / ratio 1.25: misses scenes 1 to 3's 75 to 80 % road share at the edge.
+    9. *Trail of a link stretch.* Chosen: the road trail's fixed 1.5 spots inside a link drawn as points in the leg colour, not centred on a road (O20: off-road legs in the leg colour). Alternatives: (a) the anchored walk trail at 3.0 from the link's start: two anchor systems on one route window; (b) road colour: hides that the player leaves the road.
+    10. *Plugin scenario.* Chosen: none. The scenario framework has no loaded courtyard world with a road graph, so building one is more than "cheap"; the core and service tests cover the rules and steps 1, 2 and 5 to 8 are live. Alternative: (a) a scenario that builds a courtyard and a hand-made snapshot: a day's work for a check the developer's live test makes anyway.
+    11. *Budgets (report § 3.3).* Budget 1: link captures go through `WalkSnapshotService` within its tick budget. Budget 2: a link search is a plain walk search within the `walk:` budget, so the 150 ms p95 holds for ≤ 40-block links. Budget 3: not used (no hierarchical search). Budget 4 (memory, 22 to 30 KB per chunk): it applies to the clusters of L6; walk-link entries hold only paths (about 4 096 × a few hundred bytes); captured chunks are the walk capture's 256-chunk cache. Budget 5: as in decision 6. Budget 6: the `/knk road status` link lines.
+    12. *Destination engine (coordinator note, 2026-11-18).* Chosen: the walk-link code hangs off the shared session path (`computeRoute`, reached from `begin`) and direct mode's `walkDelivered`. Road-first builds its goals like `tryRoadsInstead` does, from the leg's target and a `Destination.point` value. Nothing uses `navigate(Player, Destination)`, `setHandleOnly`, `NavigationDestinations`, `NavigationEligibility`, `MatchNavigationScope` or `EndReason.SIEGE`, so #747's removal stays mechanical. Alternative: (a) a hook in the raw `navigate(Player, Destination)` entry: removed later.
+    13. *NPC plans (coordinator note, NPC chain).* Chosen: no per-request option is needed. Only the player's `computeRoute` passes a `WalkLinkPlanner`; `planRoadFor` (the NPC port) keeps calling `routeOrExplain(request)` without a link source, so NPC plans are today's with the flag on or off. Road-first lives in the player's direct mode only. Tested by `NavigationServiceWalkLinksTest.anNpcRoadPlanNeverTakesAWalkLink`. Alternative: (a) a `RouteRequest` option: a field on a shared record for a difference the call site already makes.
+    14. *Road-to-walk handover (coordinator note, the developer's scene 3).* Checked: with the flag on, the last walk leg starts only at the road's end (within `arrive-distance` of it). A walk link is part of the route, not a leg that takes over. Tested by `theRoadTrailKeepsTheLeadUntilTheRoadsEnd`. The flag-off case is #771 item 5, untouched.
+6. **Out of scope, noted.**
+    1. None filed. The coordinator's list (#771: scene 1 stuck, trapdoor over ladder, sparse trail in grass, road overshoot, garrison gate end) is untouched.
+    2. Known limits of this phase:
+        1. WorldEdit edits are caught by the TTL only.
+        2. A link searched for one player is not shared with others.
+7. **Blockers.** None. Codex reached its code-review usage limit on both PRs (its comments of 2026-11-18 20:40), so the link finished without its review, as the developer decided on 2026-11-14. This is said on both PRs.
+8. **At merge / what the developer must do.**
+    1. Under `navigation:` add the keys below and restart. They change nothing while `walk-links` is false.
+       ```yaml
+         walk-links: false
+         walk-link-range: 40
+         walk-link-ratio: 2.0
+         walk-link-ttl-seconds: 600
+         walk-link-retry-seconds: 600
+         walk-link-searches-per-route: 4
+         road-first-share: 0.6
+         road-first-max-ratio: 1.5
+       ```
+    2. Live test (tier:3): set `walk-links: true` and restart, then run smoke test § 3. Pick a courtyard (two junctions at most 40 apart, more than twice that by road), a region on it and a gate on its exit. Steps 1, 2, 5 to 9 and 12 are manual; step 9 is scene 7 for road-first.
+    3. Confirm or change `road-first-share` 0.6 and `road-first-max-ratio` 1.5 after step 9, and `walk-link-range` and `walk-link-ratio` (O28).
+9. **Notes for later links.**
+    1. L6 (hierarchical search):
+        1. Clusters can reuse `TerrainChangeListener`; `WalkTerrainListener` takes one target, so wrap the cache and the clusters in a composite listener.
+        2. The walk-link entries are not the cluster cache; budget 4 is L6's.
+    2. L7 (route modes):
+        1. A link's routing cost is set in `WalkLinkPlanner`; `shortest` would use `link.length()` and `efficient` its walk cost.
+        2. Make `Route.buildPieces` and `ManeuverBuilder.buildWithLinks` mode-aware if needed.
+    3. L9 (landmark nodes): `WalkLinkCandidates.takesPart` decides which nodes are link ends.
+    4. L10's note (one `PlazaTrail` per leg or one over the joined polyline): a route with links has one joined polyline (the link paths are part of it), so the plaza crossings are projected onto it as before.
+    5. Local builds: the Maven Central mirror init script (L1's note) worked again.
