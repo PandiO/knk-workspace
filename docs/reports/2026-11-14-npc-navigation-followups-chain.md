@@ -392,6 +392,14 @@ the configuration reference § 4.27), then restart. In test order:
     0 lost; the spiral fits the walk caps (172–180 of 220 blocks), so no acceptance case for #698's NPC phase. Detour
     and ravine fail before, arrive after. Also fixed: the replay Anvil reader dropped 26.x block states since B1; open
     doors were walls. For the developer's review: C1 decisions 5.3, 5.4, 5.10. E1 (#701) started.
+47. **E1 checked and merged; chain back to In review** (2026-11-18). § 6 held: CI `build` and `paper-boot` (61) green on
+    `de1c8a6a`, no debug code, no edits in the off-road chain's areas or in `core/roads/route` and `core/regions`; the
+    exit rule comes from `DomainAvailability.exitDeniedRegions` through `DomainEntryRule`'s new `RegionRule`. Merged
+    knk-plugin#74 → `7aef3de4`, knk-workspace#725 → `7a397e15`. For the developer's review: E1 decisions 5.1, 5.4, 5.5.
+    Filed by E1: #724 (a cache refresh's first event with the map empty; in the off-road chain's area, offered to its
+    coordinator). Docs follow-up #726 for L9, B1–B5, C1 and E1 with its docs session started. Open: the developer's
+    retest (smoke guide sections B5, C1, E1), the review decisions of B5, C1 and E1, #695, #702, #724, the option-B
+    decision, the `collidable` default, promotion.
 
 ## 4. Link blocks
 

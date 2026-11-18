@@ -1,7 +1,7 @@
 # NPC navigation follow-ups chain — charter
 
-**Status:** Running (2026-11-17): smoke test of 2026-11-17 mostly passed; B5 (group a flight apart) running, C1 (off-road legs) next
-**Last updated:** 2026-11-17
+**Status:** Done (2026-11-18): fix links L9, B1–B5, C1 and E1 merged into `next`; the developer's retest, review decisions and promotion open
+**Last updated:** 2026-11-18
 **Issues:** parent [PandiO/knk-workspace#358](https://github.com/PandiO/knk-workspace/issues/358); link sub-issues
 [#519](https://github.com/PandiO/knk-workspace/issues/519) (L1),
 [#520](https://github.com/PandiO/knk-workspace/issues/520) (L2),
