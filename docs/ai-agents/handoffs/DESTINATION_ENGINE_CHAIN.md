@@ -5,7 +5,7 @@
 refresh session)
 **Issues:** parent [PandiO/knk-workspace#25](https://github.com/PandiO/knk-workspace/issues/25); sub-issues per
 link below. Reference issues as `PandiO/knk-workspace#n` in component repos.
-**Progress report:** to be created by the coordinator at its first run (`docs/reports/<date>-destination-engine-chain.md`).
+**Progress report:** [reports/2026-11-18-destination-engine-chain.md](../../reports/2026-11-18-destination-engine-chain.md) (coordinator session_01R1w2UvZSm3y5hAXB8VfYuv).
 **Skills:** coordinator `.claude/skills/knk-coordinator/`, links `.claude/skills/knk-link/` (knk-workspace).
 
 ## 0. Binding documents

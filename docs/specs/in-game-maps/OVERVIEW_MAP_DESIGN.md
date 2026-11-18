@@ -1,7 +1,7 @@
 # Overview map — BlueMap in the web app for players, staff and moderation
 
 **Status:** **Decided 2026-11-18** (developer). Proposed the same day; no open questions.
-**Last updated:** 2026-11-18 (phase 6b, #742, built on `claude/overview-map-gate-buttons` in knk-web-app and knk-workspace, in review; as built in § 6.3.6); 2026-11-18 (phase 6a, #741, built on `claude/overview-map-gate-commands` in knk-web-api and knk-plugin, in review; as built in § 6.2.10 and § 7.5); 2026-11-18 (phase 5, #740, built on `claude/overview-map-staff-details` in knk-web-app and knk-workspace, in review; as built in § 6.3.3); 2026-11-18 (phase 4a, #738, built on `claude/overview-map-players-api` in knk-plugin and knk-web-api, in review; as built in § 6.2.9 and § 7.4); 2026-11-18 (phase 3, #737, built on `claude/overview-map-page` in knk-web-app and knk-workspace, in review; as built in § 6.3.5, deploy notes in the closed-alpha runbook Phase 10); 2026-11-18 (phase 2, #736, built on `claude/overview-map-public-api` in knk-web-api, in review; as built in § 6.2.8); 2026-11-18 (phase 1, #735, built on `claude/overview-map-outlines` in knk-plugin and knk-web-api, in review, not in `next` yet; stored shape in § 6.1.1); 2026-11-18 (§ 3.1.10: existing NAS render container, migration to the alpha stack; Decided; phases filed as #735–#743; first version from the working draft of 2026-11-17 and the design session of 2026-11-18)
+**Last updated:** 2026-11-18 (phase 7, #743, built on `claude/overview-map-moderation` in knk-web-app and knk-workspace, in review; as built in § 6.3.8); 2026-11-18 (phase 6b, #742, built on `claude/overview-map-gate-buttons` in knk-web-app and knk-workspace, in review; as built in § 6.3.6); 2026-11-18 (phase 6a, #741, built on `claude/overview-map-gate-commands` in knk-web-api and knk-plugin, in review; as built in § 6.2.10 and § 7.5); 2026-11-18 (phase 4b, #739, built on `claude/overview-map-players-page` in knk-web-app and knk-workspace, in review; as built in § 6.3.6); 2026-11-18 (phase 5, #740, built on `claude/overview-map-staff-details` in knk-web-app and knk-workspace, in review; as built in § 6.3.3); 2026-11-18 (phase 4a, #738, built on `claude/overview-map-players-api` in knk-plugin and knk-web-api, in review; as built in § 6.2.9 and § 7.4); 2026-11-18 (phase 3, #737, built on `claude/overview-map-page` in knk-web-app and knk-workspace, in review; as built in § 6.3.5, deploy notes in the closed-alpha runbook Phase 10); 2026-11-18 (phase 2, #736, built on `claude/overview-map-public-api` in knk-web-api, in review; as built in § 6.2.8); 2026-11-18 (phase 1, #735, built on `claude/overview-map-outlines` in knk-plugin and knk-web-api, in review, not in `next` yet; stored shape in § 6.1.1); 2026-11-18 (§ 3.1.10: existing NAS render container, migration to the alpha stack; Decided; phases filed as #735–#743; first version from the working draft of 2026-11-17 and the design session of 2026-11-18)
 **Issue:** [PandiO/knk-workspace#732](https://github.com/PandiO/knk-workspace/issues/732); phases as sub-issues in § 11.
 **Dependencies:** the offline BlueMap tile pipeline ([BLUEMAP_EVALUATION.md](BLUEMAP_EVALUATION.md) § 5–7); the SignalR
 game hub (#66, built); managed WorldGuard regions (`docs/architecture/managed-worldguard-regions.md`, built); gate
@@ -320,7 +320,21 @@ Related: [DESIGN.md](DESIGN.md) (in-game maps, M2–M5), [DECISION-map-data-sour
        #739. The specs run the real bridge in a fake BlueMap web app (`e2e/fixtures/map.ts`). Hosting: nginx serves
        BlueMap's static `web/` with `X-Frame-Options: SAMEORIGIN` on `/bluemap/` only; BlueMap renders as a profile-gated
        Compose job (closed-alpha runbook Phase 10).
-    6. **As built (#742):** `components/map/gateCommandRegistrations.tsx` adds a staff widget `gate-commands` under
+    6. **As built (#739):** `components/map/useLivePlayers.ts` polls `GET api/Map/players` (`mapClient.getPlayers`,
+       the JWT when logged in) only while `config.livePlayers.enabled`: at once, then every `intervalMs` of the last
+       answer (else `pollIntervalMs`), clamped to 0.5–60 s, one request at a time, skipped while the tab is hidden;
+       three failed polls in a row clear the players. `mapPlayers.ts` turns each player into the v1 `setPlayers` entry
+       with two optional fields (O14 unchanged): `parts` (the `ChatLineFormat` line `[RANK]-{braced}- name`, the `&`
+       codes read with the web app's legacy-text parser into `#RRGGBB` and bold/italic/underline/strikethrough) and
+       `tags` (`staff` "Staff mode", `owner` "Owner mode", `hidden` "Hidden mode", `minigame`, `afk` "AFK"); `label`
+       stays the plain text. Arena pins: `mapMarkers.toArenaPins` (kind `arena`, id = position in the list, label
+       distance `labels.arena`), sent with `setMarkers` only when the arenas change. The bridge draws each player as
+       one HTML marker at head height (y + 1.8): label (only `#RRGGBB` colours accepted), tags, head; AFK dims it. The
+       head is `bridge.js?heads=<address with {uuid}>` when set in `webapp.conf`, else BlueMap's `assets/steve.png`.
+       `playerClicked` opens `MapPlayerPanel` with `PlayerCard` (label and tags from the snapshot, no request); it takes
+       `children` for the moderation panel (#743). One panel at a time: a player click closes a place's panel and the
+       other way round. Tests: Jest `mapPlayers`, `useLivePlayers`, `PlayerCard`; e2e `overview-map-players.spec.ts`.
+    7. **As built (#742):** `components/map/gateCommandRegistrations.tsx` adds a staff widget `gate-commands` under
        `knk.gate.admin` to `structure`, visible for a gate while `config.gateCommands.enabled` is on;
        `MapPanelContext.gateCommands.enabled` comes from the page's shared `api/Map/config` answer
        (`useMapAvailability`, no extra request), and `visible(data, context)` now also gets the context. The widget
@@ -333,6 +347,18 @@ Related: [DESIGN.md](DESIGN.md) (in-game maps, M2–M5), [DECISION-map-data-sour
        staff details. A panel reload now keeps the current data and widgets on screen until the fresh data arrives
        (a new selection still shows "Loading…"). Anonymous viewers make no permission call; without the node or with
        the flag off no door or command request is made (e2e `overview-map-gate-commands.spec.ts`).
+    8. **As built (#743):** `components/map/PlayerModerationPanel.tsx` is the `children` of `MapPlayerPanel` for the
+       clicked player. It asks the five nodes (`knk.freeze`, `knk.unfreeze`, `knk.kick`, `knk.ban`,
+       `knk.admin.user.manage`) through the shared per-page permission cache once a player is clicked and renders
+       nothing until one is allowed: anonymous viewers make no request, a viewer without any node makes only those
+       checks. Then it reads the player's account by Minecraft UUID with the existing `GET api/Users/uuid/{uuid}`
+       (`userManagementClient.getByUuid`, any login; the same lookup the API's map labels use), because the moderation
+       endpoints and the profile take the user id; a 404 says the player has no web account yet. A "Moderation" section
+       shows "Freeze…" or "Unfreeze" (by the frozen state, as on the profile; with the reason while frozen), "Kick…"
+       and "Ban…", each only under its own node (hidden, not disabled), through the profile's unchanged
+       `usePlayerFreeze` and `usePlayerKickBan` (same dialogs, endpoints and toasts; a freeze change re-reads the
+       account), and "Open profile" to `/admin/users/<id>` (the profile page keeps its own `knk.admin.user.manage`
+       gate). No API change. Tests: Jest `PlayerModerationPanel`, e2e `overview-map-moderation.spec.ts` (A20, A21).
 
 ## 7. Plugin
 

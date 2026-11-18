@@ -24,6 +24,48 @@ This is a human-readable record of capabilities merged into the V3 default branc
      [dashboard access admin guide § 2](guides/admin/dashboard-access-admin-guide.md#2-area-nodes-one-per-part-of-the-dashboard)).
      No new settings. Steps: [off-road smoke test § 6](guides/navigation-offroad-smoke-test.md#6-phase-51-landmark-entity-708-tier3).
 
+- **Overview map: moderation from the map** ([PandiO/knk-workspace#743](https://github.com/PandiO/knk-workspace/issues/743),
+  link L9 of the overview map chain, [#732](https://github.com/PandiO/knk-workspace/issues/732)). knk-web-app and
+  knk-workspace branches `claude/overview-map-moderation` (PRs into `next`). No flag of its own: it needs the live
+  players layer (`Map:LivePlayers:Enabled`) and is shown by the viewer's nodes.
+  1. A moderator holding any of `knk.freeze`, `knk.unfreeze`, `knk.kick`, `knk.ban` or `knk.admin.user.manage` who
+     clicks a player on the map gets a "Moderation" section under the name card: Freeze or Unfreeze, Kick and Ban, each
+     only with its own node, with the same dialogs, endpoints and audit entries as the player profile, and
+     "Open profile".
+  2. Everyone else still gets only the name card; anonymous viewers make no extra request.
+  3. Admin steps: none. Steps:
+     [overview map smoke test § 9](guides/overview-map-smoke-test.md#9-phase-7-player-moderation-panel-743-tier2).
+
+- **Navigation destination engine, phase 4: the hard blocks are scopes and running routes are re-checked, behind the flag** ([PandiO/knk-workspace#62](https://github.com/PandiO/knk-workspace/issues/62),
+  link L4 of the destination engine chain, [#25](https://github.com/PandiO/knk-workspace/issues/25)). knk-plugin and
+  knk-workspace branches `claude/navigation-destination-engine` (PRs into `next`). Only with
+  `navigation.destination-engine: true` (off by default: nothing changes for players).
+  1. With the key on, "still loading", "frozen", "no permission" and "in a siege" come from the engine's list with
+     today's texts; freeze also holds for owner mode, staff mode and `knk.navigate.any`. `knk.navigate.any` alone
+     (without `knk.navigate`) is enough to use `/navigate`.
+  2. A running route is checked against the player's list every 2 seconds and at once when an objective is captured,
+     the match ends, the lobby changes, a round is released, owner/staff mode is switched, a freeze starts or ends, or
+     the list of places is refreshed. A destination that left the list ends the route with the reason as the message,
+     for example "You can't navigate while frozen." or "Keep Gate is no longer part of this match."; an objective that
+     only changed from capture to defend keeps the route.
+  3. Admin steps: none (no new key, no migration, no API change). Steps:
+     [destination engine smoke test § 4](guides/navigation-destination-engine-smoke-test.md#4-phase-4-hard-blocks-as-scopes-and-live-re-validation-62-tier3).
+
+- **Overview map: live players on the map** ([PandiO/knk-workspace#739](https://github.com/PandiO/knk-workspace/issues/739),
+  link L5 of the overview map chain, [#732](https://github.com/PandiO/knk-workspace/issues/732)). knk-web-app and
+  knk-workspace branches `claude/overview-map-players-page` (PRs into `next`). Behind the API setting
+  `Map:LivePlayers:Enabled` (off by default: the page asks for no players and draws nothing new).
+  1. The map shows online players with a head and their name label as in the in-game chat line, in the same colours,
+     updated about every 2 s. Tags show AFK, and for staff who may see hidden players also "Staff mode", "Owner mode"
+     and the minigame.
+  2. A running siege shows one pin, for example "[Siege] 12 players", instead of its participants.
+  3. Clicking a player opens a name card with the label and tags.
+  4. Admin steps: none to keep it off. With the backend on (§ 4), the layer appears by itself. Optional: player heads
+     from a skin service through `heads=` in BlueMap's `webapp.conf`
+     ([closed-alpha runbook Phase 10](guides/closed-alpha-deployment-runbook.md#phase-10--overview-map-bluemap-in-the-stack-737)
+     step 3); without it everyone has BlueMap's default head. Steps:
+     [overview map smoke test § 5](guides/overview-map-smoke-test.md#5-phase-4b-live-players-layer-739-tier2).
+
 - **Navigation destination engine, phase 3: `/navigate`, tab completion, the compass and the route start on the engine, behind a flag** ([PandiO/knk-workspace#69](https://github.com/PandiO/knk-workspace/issues/69),
   link L3 of the destination engine chain, [#25](https://github.com/PandiO/knk-workspace/issues/25)). knk-plugin and
   knk-workspace branches `claude/navigation-destination-engine` (PRs into `next`). Behind the new `config.yml` key

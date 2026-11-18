@@ -1,7 +1,7 @@
 # Plugin permission checks and command visibility
 
 **Status:** Implemented, live-tested by the developer and merged 2026-10-18: knk-plugin `main` `3ca5b3f`, knk-web-api `master` `ac3c869`. Linear [KNG-107](https://linear.app/kngpandi/issue/KNG-107)
-**Last updated:** 2026-11-18 (§ 4: `knk.navigate.any`, the destination engine's bypass, knk-plugin branch `claude/navigation-destination-engine`, PandiO/knk-workspace#69); 2026-11-14 (§ 4: `knk.admin.scenario` for `/knk scenario`, test servers only, in knk-plugin `next`, PandiO/knk-workspace#421); 2026-11-14 (§ 4: `knk.admin.npc` for `/knk npc`, on knk-plugin `next`, PandiO/knk-workspace#496); 2026-11-05 (#239 offer permission check, #240 Send again merged); 2026-11-04 (#239, #240 on a feature branch); 2026-11-01 (packages F, G, I and #193 merged: § 4 custom enchantments, package I seeds); 2026-10-27 (§ 4: package I rank seeds, #171/#175, in review on `claude/alpha-run-1-teleport-items`, not merged); 2026-10-26 (§ 4 "Bukkit-only checks", alpha run 1 package C, [PandiO/knk-workspace#158](https://github.com/PandiO/knk-workspace/issues/158), in review on `claude/alpha-run-1-permissions`, not merged); 2026-10-18
+**Last updated:** 2026-11-18 (§ 4: with the destination engine on, `knk.navigate` is checked by the engine's scope and `knk.navigate.any` opens `/navigate` in `CommandNodes`, PandiO/knk-workspace#62); 2026-11-18 (§ 4: `knk.navigate.any`, the destination engine's bypass, knk-plugin branch `claude/navigation-destination-engine`, PandiO/knk-workspace#69); 2026-11-14 (§ 4: `knk.admin.scenario` for `/knk scenario`, test servers only, in knk-plugin `next`, PandiO/knk-workspace#421); 2026-11-14 (§ 4: `knk.admin.npc` for `/knk npc`, on knk-plugin `next`, PandiO/knk-workspace#496); 2026-11-05 (#239 offer permission check, #240 Send again merged); 2026-11-04 (#239, #240 on a feature branch); 2026-11-01 (packages F, G, I and #193 merged: § 4 custom enchantments, package I seeds); 2026-10-27 (§ 4: package I rank seeds, #171/#175, in review on `claude/alpha-run-1-teleport-items`, not merged); 2026-10-26 (§ 4 "Bukkit-only checks", alpha run 1 package C, [PandiO/knk-workspace#158](https://github.com/PandiO/knk-workspace/issues/158), in review on `claude/alpha-run-1-permissions`, not merged); 2026-10-18
 **Related:** [`offline-security-cache.md`](offline-security-cache.md) (answers when the API can't be asked); [`api-connectivity.md`](api-connectivity.md) (no API call while DOWN); [`specs/user-features/DESIGN.md`](../specs/user-features/DESIGN.md) §2.2 (the resolution rules); KNG-24 (Bukkit-or-in-house checks), KNG-30 (completion sweep)
 
 ## 1. Problem
@@ -92,6 +92,11 @@ rank grant has no effect. Every vanilla command needs its `minecraft.command.*` 
   with `default: false`, so not even operators hold it unless granted; during an API outage an unknown answer counts
   as not granted (DESIGN § 2.1 item 10). No rank seed exists for it yet (a knk-web-api seed migration is proposed in
   the PR, not added).
+  Since phase 4 ([#62](https://github.com/PandiO/knk-workspace/issues/62)), with the engine on, `/navigate`, its tab
+  completion and the compass no longer check `knk.navigate` themselves: the engine's no-permission scope does (same
+  message), below the bypass, so `knk.navigate.any` alone is enough; `CommandNodes` lists both nodes for `navigate`, so
+  the command gate and the "/" suggestions let either through. With the engine off the command and the compass check
+  `knk.navigate` as before.
 
 - **Test scenarios (`knk.admin.scenario`, in knk-plugin `next` since 2026-11-14, [#421](https://github.com/PandiO/knk-workspace/issues/421), not on trunk)**:
   the node of `/knk scenario`, which is registered only on a test server (`testing.scenarios.enabled`, default off).
