@@ -1,6 +1,6 @@
 # Closed alpha update: trunk heads (API `bcdb4d07`, web `909e708`, plugin `187f97ec`) and the 18 Nov content — 2026-11-18
 
-**Status:** Done, except two web-app steps the developer still has to do (§ 6)
+**Status:** Done (the web-app steps of § 6 done by the developer the same evening)
 **Last updated:** 2026-11-18
 **Procedure:** [NAS ops access § 7](../guides/nas-ops-access.md) (`knk-deploy`); the content patch as in the
 [2026-11-01 report § 4](2026-11-01-alpha-update-trunk-heads.md#4-content-patch-from-the-1-nov-seed)
@@ -87,10 +87,10 @@ kick/ban) and in the browser.
 
 ## 6. Open
 
-1. **Developer, alpha web app:** delete form "ItemBlueprint - Default (seed v1)" (Id 27), import the bundled
+1. ~~**Developer, alpha web app:** delete form "ItemBlueprint - Default (seed v1)" (Id 27), import the bundled
    `ItemBlueprint.json` as default (the import refuses while 27 exists: same GUID), import the bundled
-   `EnchantmentDefinition.json` (seed v5) as default.
-2. **Developer:** export "Town Display" on dev, import it on the alpha.
+   `EnchantmentDefinition.json` (seed v5) as default.~~ **Done** by the developer, 2026-11-18.
+2. ~~**Developer:** export "Town Display" on dev, import it on the alpha.~~ **Done** by the developer, 2026-11-18.
 3. World builds made on dev since the 24 Oct world copy (e.g. the outpost at location 54) are not in the alpha world.
 4. Still open from 1 Nov: the live-ids floors in the seed ledger.
 
