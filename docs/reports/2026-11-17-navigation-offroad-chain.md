@@ -137,6 +137,11 @@ on `next` (Decided 2026-11-17).
     idle for the answers.
 17. **The chain waits for the developer (2026-11-18 02:40).** No gate is open: L5 needs L1's filled report; L6, L7,
     L9 hang on L5; L8 on the destination engine; L10 step 2 on the viewing. No link is running.
+18. **NPC C1 (#700) merged into knk-plugin `next` (2026-11-18 03:07, `65c7d6d3`, `MIN_SCENARIOS` 59);** E1 (#701)
+    follows in `core/npc/nav` and `paper/npc/nav` only. Every later plugin link of this chain merges `next` first and
+    tells the NPC coordinator when it starts (`MIN_SCENARIOS`, `PaperScenariosTest` merges). Data point from C1 for
+    L1's report and O32: the tower's spiral staircase route fits within today's walk caps (172 to 180 blocks against
+    220), so it is not an acceptance case for long walks.
 
 ## 4. Link blocks
 
