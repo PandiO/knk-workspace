@@ -3,7 +3,7 @@
 **Status:** Written 2026-11-16 for knk-plugin `next` `cc5262ff` (links M1–M7 merged into `next`, behind
 `npc.navigation.enabled` and each link's own key, all off by default); only the steps no plugin scenario checks; not
 run yet (the developer's run with every key on is planned for 2026-11-16)
-**Last updated:** 2026-11-18 (link E1 section, [#701](https://github.com/PandiO/knk-workspace/issues/701)); 2026-11-18 (link C1 section, [#700](https://github.com/PandiO/knk-workspace/issues/700)); 2026-11-17 (link B5 section, [#699](https://github.com/PandiO/knk-workspace/issues/699)); 2026-11-16 (assembled from the developer tests of implementation plan 4c.4, PandiO/knk-workspace#658)
+**Last updated:** 2026-11-18 (link R1 section, [#724](https://github.com/PandiO/knk-workspace/issues/724)); 2026-11-18 (link E1 section, [#701](https://github.com/PandiO/knk-workspace/issues/701)); 2026-11-18 (link C1 section, [#700](https://github.com/PandiO/knk-workspace/issues/700)); 2026-11-17 (link B5 section, [#699](https://github.com/PandiO/knk-workspace/issues/699)); 2026-11-16 (assembled from the developer tests of implementation plan 4c.4, PandiO/knk-workspace#658)
 **Issue:** [PandiO/knk-workspace#358](https://github.com/PandiO/knk-workspace/issues/358) (links
 [#621](https://github.com/PandiO/knk-workspace/issues/621)–[#627](https://github.com/PandiO/knk-workspace/issues/627));
 post results on the link's sub-issue or [#603](https://github.com/PandiO/knk-workspace/issues/603)
@@ -172,7 +172,34 @@ exit-short`).
    and follow.
 3. **The refresh path** (manual: needs the real `/knk cache refresh`). Repeat step 2 with `/knk cache refresh` right
    after each change: the same result, and `[KnK Resolver] warmCache: completed` in the log. A held follower that walks
-   out in the half second right after the refresh is the known gap #724; note how many.
+   out in the half second right after the refresh was the known gap #724, fixed by link R1 (see the next section).
+
+## Link R1: a cache refresh while NPCs are held at an edge
+
+Added 2026-11-18 for knk-plugin `claude/npc-movement-r1` ([#724](https://github.com/PandiO/knk-workspace/issues/724));
+run it on `next` once R1 is merged. Same setup as above; the movement keys don't matter for this section. Realtime on
+(the web app and the server connected to the hub). 2 of 3 steps partly automated (tagged); every step can still be run
+by hand; not run yet. About 15 minutes; 5 minutes for the untagged step only.
+
+1. [partly automated: `npc-group-cache-refresh-held` (followers held inside a district they may not leave, a cache
+   refresh with the rules unchanged, the fake API answering 2 s later), knk-core `NavGroupCacheRefreshTest`
+   (entry and exit, followers and a single NPC); by hand: the real web app, hub and API, a real district, the log]
+   **Followers held at the edge, then a refresh.** `/knk npc nav route load quarry-to-keep` (or your `exit-short`),
+   `/knk npc nav clear`, `/knk npc nav stats reset`, `/knk npc nav group 20`. When about half the column is inside the
+   Residential District, set its AllowEntry to false in the web app (no refresh yet). Wait until the outside followers
+   stand still at the edge. Then run `/knk cache refresh` three times, a few seconds apart. Look: none of the held
+   followers enters, not even for a block, during or after each refresh; the log has `[KnK Resolver] warmCache:
+   completed` after each one; no `TRESPASS` line; `stats` `rules: trespasses 0`. Set AllowEntry back to true: they
+   follow.
+2. [partly automated: knk-core `NavGroupCacheRefreshTest` (`anNpcHeldInADistrictItMayNotLeaveStaysHeldThroughACacheRefresh`
+   and the entry case); by hand: a real NPC, district and API] **A single NPC held at the edge, then a refresh.**
+   `/knk npc nav clear`, `/knk npc nav stats reset`, `/knk npc nav spawn 1` on `exit-short`. When the NPC is about 10
+   blocks from the edge, still inside, set the district's AllowExit to false. When it stands at the edge, run
+   `/knk cache refresh`. Look: it stays inside at the edge; `trespasses 0`. Set AllowExit back to true: it walks out.
+3. **A real change with a refresh at once** (manual: the real order of the realtime hub and the refresh). Repeat step 1,
+   but run `/knk cache refresh` within a second of setting AllowEntry back to true. Look: the followers follow within
+   about a second of the refresh (they switch to the new answers when the re-warm's event comes, not before); no
+   `TRESPASS` line.
 
 ## After the run
 

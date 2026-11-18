@@ -4,6 +4,23 @@ This is a human-readable record of capabilities merged into the V3 default branc
 
 ## Unreleased — on feature branches, not merged
 
+- **NPC navigation: held NPCs stay held through `/knk cache refresh`** ([PandiO/knk-workspace#724](https://github.com/PandiO/knk-workspace/issues/724),
+  link R1 of the NPC navigation follow-ups chain). knk-plugin and knk-workspace branches `claude/npc-movement-r1` (PRs
+  into `next`). Behind `npc.navigation.enabled` (off by default); no new `config.yml` key, no migration.
+  1. A cache refresh cleared the region → domain map and sent its first availability event at once, about half a
+     second before the re-warm's answers were in. In that gap every region looked open to the NPC checks, so NPCs held
+     at a district edge (followers by their lane check, a single NPC by its blocking element) walked on and crossed,
+     for entry and exit alike. The re-warm's event then reset the trespass guard, so `trespasses` stayed 0.
+  2. A clear of the map (the cache refresh, and a realtime domain change) now keeps the last known answers for the NPC
+     checks until the re-warm is done. While it runs, a region the NPCs knew keeps its answer from before the clear.
+     When the answers are in, the trespass guards of every NPC and follower take a last look under the old answers, the
+     hold ends and the availability event follows, so the NPCs switch to the new answers at that event. A crossing in
+     the gap (an NPC carried over the edge) is counted. Players' lookups are unchanged. A hold that no re-warm ends
+     (NPC navigation off, no roads) ends by itself after a minute.
+  3. Scenario `npc-group-cache-refresh-held` (followers held inside a district they may not leave, then a cache refresh with a slow API; it fails on `next` before the fix)
+     runs in CI's `paper-boot` job (62 scenarios). Steps: [NPC movement smoke test, link R1](guides/npc-movement-smoke-test.md#link-r1-a-cache-refresh-while-npcs-are-held-at-an-edge),
+     [plan Phase 4 known limit 4](specs/npc-platform/IMPLEMENTATION_PLAN.md#phase-4--groups-plugin).
+
 - **NPC navigation: exit rules held while NPCs walk, not only where a route is planned** ([PandiO/knk-workspace#701](https://github.com/PandiO/knk-workspace/issues/701),
   link E1 of the NPC navigation follow-ups chain). knk-plugin and knk-workspace branches `claude/npc-movement-e1` (PRs
   into `next`). Behind `npc.navigation.enabled` (off by default); no new `config.yml` key, no migration.
