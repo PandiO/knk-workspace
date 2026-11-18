@@ -1,8 +1,9 @@
 # Navigation destination engine — smoke test
 
 **Status:** Draft from the design (2026-11-18); § 1 updated by the P1 link (9 of 11 steps automated, tagged), § 2 by
-the P2 link (12 of 13 steps automated, tagged); no manual steps run. Later sections are not yet automated (their links tag them).
-**Last updated:** 2026-11-18 (§ 2 updated to the P2 code, steps tagged, #103); 2026-11-18 (§ 1 updated to the P1 code, steps tagged, #96); 2026-11-18 (design approved: tiers confirmed, phase 4b is #747); 2026-11-18 (draft from the design refresh, phases 1, 2, 3, 4, 4b and 5)
+the P2 link (12 of 13 steps automated, tagged), § 3 by the P3 link (20 of 22 steps automated, tagged); no manual steps
+run. Later sections are not yet automated (their links tag them).
+**Last updated:** 2026-11-18 (§ 3 updated to the P3 code, steps tagged, #69); 2026-11-18 (§ 2 updated to the P2 code, steps tagged, #103); 2026-11-18 (§ 1 updated to the P1 code, steps tagged, #96); 2026-11-18 (design approved: tiers confirmed, phase 4b is #747); 2026-11-18 (draft from the design refresh, phases 1, 2, 3, 4, 4b and 5)
 **Design:** [specs/navigation-destination-engine/DESIGN.md](../specs/navigation-destination-engine/DESIGN.md) · **Issue:**
 [PandiO/knk-workspace#25](https://github.com/PandiO/knk-workspace/issues/25)
 
@@ -175,58 +176,158 @@ check the stated result in its assertions, or do the manual form written in the 
 
 ## 3. Phase 3: switch-over behind the flag (#69, tier:3)
 
-*Draft from the design (2026-11-18); the link updates it to what was built and tags the automated steps.*
+*Updated by the P3 link (2026-11-18) to what was built: knk-plugin `claude/navigation-destination-engine`, providers
+in `net.knightsandkings.knk.core.navigation.engine` (`CatalogueProvider`, `SiegeMatchProvider`, `CompassTargets`),
+plugin adapters in `net.knightsandkings.knk.paper.navigation.engine` (`PlayerNavigationEngine`, `RoadAccessAnswers`,
+`DestinationEngineConfig`) and the engine branches of `NavigateCommand`, `NavigationCompassService` and
+`NavigationService`. 20 of 22 steps automated in CI (tagged); every step can still be run by hand, and the developer
+runs this section and § 4 live with the flag on before phase 4b (charter gate of L5). Full manual run about 60
+minutes; the untagged steps (§ 3.2 step 6, § 3.3 step 1) about 15 minutes.*
+
+With `navigation.destination-engine: true` the command, its tab completion and the compass ask the engine for the
+player's list (one list per player, built from the navigation model of § 2 and the road network), and
+`NavigationService` starts a session only from the engine's handle. What does not change yet: the refusals while the
+account is loading, while frozen and in a siege lobby keep coming from today's checks as well (same texts; phase 4
+moves them into the scopes and re-checks running routes), and `/navigate` still needs `knk.navigate`. The tagged steps
+are knk-core JUnit tests and knk-paper MockBukkit/Mockito tests (`./gradlew test`, part of CI's build) against the real
+engine with fake providers; to run one by hand, read the test named in its tag and check the stated result in its
+assertions, or do the manual form written in the step.
 
 ### 3.0 Preconditions
 
-1. Deployed: plugin build from `next` with phases 1 to 3; knk-web-api as in § 2.
-2. Settings: first `navigation.destination-engine: false`, then `true` (`/knk reload` or a restart, as the link's
-   deploy notes say).
-3. Accounts and data: Player, Staff, Bypass; the dev world and the second world; the siege scenario.
+1. Deployed: plugin build from `next` with phases 1 to 3; knk-web-api from `next` with phase 2 (the domain search's
+   `location`, § 2.0).
+2. Settings: for § 3.1 `navigation.destination-engine: false` under `navigation:` in `config.yml` (or the key
+   missing). For § 3.2 to § 3.4 set it to `true` and **restart** the server: the key is read at start-up only;
+   `/knk reload` does not switch it. With it on, the start-up log has "[Navigation] Destination engine on
+   (navigation.destination-engine): /navigate, completion, the compass and road access use the navigation model".
+3. Accounts and data: Player, Staff, Bypass (granted `knk.navigate.any` through the in-house permission system; the
+   node is not granted by default, not even to operators); the dev world and the second world; the siege scenario.
+4. Compass settings in the web app: general targets switched on, with at least a street and a town listed, for
+   example `Main Street` and `<town> spawn`, and one line that names nothing (`Nowhere`).
+5. Before § 3.2, start the server once with the API up so `plugins/KnightsAndKings/offline/navigation-model.json`
+   exists (§ 2.1 step 3).
 
 ### 3.1 Flag off
 
-1. With the flag off, repeat § 1.1 steps 2 and 3. **Expected:** exactly today's behaviour. (A16)
+1. [automated: `DestinationEngineConfigTest.theShippedConfigHasTheKeySwitchedOff`, `aMissingKeyOrConfigMeansOff`]
+   Start the server with the key `false` or missing. **Expected:** no "Destination engine on" line in the log; the
+   shipped `config.yml` has `destination-engine: false` under `navigation:`. (A16, E17)
+2. [automated: the unchanged `NavigateCommandTest` and `NavigationCompassServiceTest`,
+   `NavigateCommandEngineTest.withTheFlagOffTheEngineIsNotUsed`, `NavigationCompassEngineTest.withTheFlagOffTheEngineIsNotUsed`,
+   `NavigationServiceHandleTest.withTheFlagOffTheRawEntryWorksAsToday`] As Player, repeat § 1.1 steps 10 and 11
+   (`/navigate` a town, a street and a Location target, Tab after `/navigate ` and after a few letters; in a running
+   siege match right-click the compass and type `/navigate ` with Tab). **Expected:** exactly today's routes, messages,
+   suggestions and compass behaviour. (A16)
+3. [automated: `RoadAccessAnswersTest.withTheFlagOffTheCatalogueAnswersAndTheModelIsNotAsked`,
+   `withTheFlagOffAndNoCatalogueEveryRuleIsKept`] As Player, walk a route that passes a domain whose road access is
+   "Ignored". **Expected:** the route uses its roads as before (the answers come from today's catalogue). (A16, E19)
 
 ### 3.2 Flag on, outside a siege
 
-1. As Player, `/navigate <town>`, `/navigate <town> spawn`, `/navigate <district> region`, `/navigate street:<name>`
-   and `/navigate location:<name>`. **Expected:** the same routes as with the flag off; no delay at click time. (A17)
-2. As Player, Tab after `/navigate ` and after `town:`. **Expected:** the same suggestions as with the flag off; places
-   of the second world are not suggested. (A17, A08)
-3. As Player, `/navigate <domain of the second world>`. **Expected:** "… is in another world" as today. (A08)
-4. As Player, type a misspelt town name. **Expected:** "unknown destination" and a "did you mean" line as today. (A07)
-5. As Player, right-click the compass outside a siege with general targets configured. **Expected:** it cycles the
-   configured targets as today; with the general switch off it says "The navigation compass has no destinations
-   here." while `/navigate` still works. (A19)
-6. As Staff, run `/knk road why <town>`. **Expected:** the explanation as today. (A20)
-7. As Player, walk a route that passes a domain whose road access is "Ignored". **Expected:** the route uses its
-   roads as before. (A21)
+1. [automated: `NavigateCommandEngineTest.aNameStartsASessionFromAHandleNeverFromARawDestination`,
+   `typeNameIdAndTheModeWordsWork`, `aDomainAskedForWithAModeItLacksGoesToTheOtherAsToday`,
+   `HandleDestinationsTest.everyDomainShapeAndModeGoesWhereItGoesToday`,
+   `CatalogueProviderTest.namesResolveAsTodayTypeNameIdAmbiguityAndSuggestions`] As Player, `/navigate <town>`,
+   `/navigate <town> spawn`, `/navigate <district> region`, `/navigate town:#<id of the town>`,
+   `/navigate street:<name>` and `/navigate location:<name>`. **Expected:** the same routes as with the flag off; each
+   starts at once (the place is in the model, nothing is looked up when you press Enter); a district that has only a
+   region and is asked for with `spawn` is led to its region, as today. (A17)
+2. [automated: `NavigateCommandEngineTest.completionOffersStopAndTheListsNamesButNotAnotherWorld`,
+   `completionOffersTheModeWordsAfterACompleteName`, `CatalogueProviderTest.anotherWorldsPlaceIsNotCompletedButResolvesApart`,
+   `theOrderIsTodaysCatalogueOrder`] As Player, press Tab after `/navigate `, after the first letters of the town,
+   after `town:`, and after the full town name and a space. **Expected:** `stop` and the names (domains, then
+   Locations, streets and road points); the town; `town:<name>` for every town; `spawn` and `region`. Places of the
+   second world are not suggested. (A17, A08)
+3. [automated: `NavigateCommandEngineTest.aPlaceInAnotherWorldGetsTodaysMessage`, `ResolveKeyTest.aKeyOfAnotherWorldIsAnsweredApart`]
+   As Player, `/navigate <domain of the second world>`. **Expected:** "<name> is in another world." as today. (A08,
+   E11)
+4. [automated: `NavigateCommandEngineTest.aMisspeltNameIsUnknownWithDidYouMean`, `aSharedNameOffersTheTypeNameChoices`,
+   `aDomainWithoutAnyPlaceHasNoLocation`] As Player, type a misspelt town name (`/navigate Kardena`), a name two
+   domains share, and a domain without a Location or region. **Expected:** "unknown destination" and a "did you mean"
+   line; the `type:name` choices to click; "<name> has no Location" as today. (A07)
+5. [automated: `NavigationCompassEngineTest.outsideASiegeItCyclesTheConfiguredTargetsThatAreListed`,
+   `withTheGeneralSwitchOffItHasNoDestinationsHere`, `CompassTargetsTest.theLinesAreKeptInTheirOrderWithTheirModeWords`,
+   `unknownAmbiguousAndOtherWorldLinesAreLeftOut`] As Player outside a siege, right-click the compass a few times;
+   then switch the compass's general targets off in the web app, wait about a minute (the model's refresh) and
+   right-click again. **Expected:** "Compass 1/2: Main Street", then "Compass 2/2: <town>" with a route to its spawn
+   (the `Nowhere` line is skipped); with the general targets off "The navigation compass has no destinations here."
+   while `/navigate <town>` still works. (A19)
+6. As Staff, `/knk road why <town>`; afterwards search the server log for "A raw destination". **Expected:** the
+   explanation as today (it does not go through the list); no "A raw destination (…) was refused" warning anywhere
+   in this section's run (only engine handles started sessions). (A20) (Manual: `explain` is unchanged and the log
+   check needs the live run; the refusal itself is automated in
+   `NavigationServiceHandleTest.withTheFlagOnTheRawEntryRefusesAndTheHandleStillWorks`.)
+7. [automated: `RoadAccessAnswersTest.withTheFlagOnTheModelAnswersAndTheCatalogueIsNotAsked`,
+   `withTheFlagOnTheListenerRunsOnlyWhenTheIgnoredRegionsChange`, `NavigationModelRuntimeTest.theRoadAccessAnswersAreTheCataloguesAnswers`]
+   As Player, walk a route that passes a domain whose road access is "Ignored"; then set another domain on a road to
+   "Ignored" in the web app and wait about a minute. **Expected:** the route uses the first domain's roads as before;
+   after the change routes use the second domain's roads too (the live road tags recut once). (A21, E19)
 
 ### 3.3 Flag on, API down
 
-1. Stop the web API, restart the game server, then as Player `/navigate <town>` and right-click the compass.
-   **Expected:** the town is found and routed from the snapshot; the compass uses the saved settings, not the
-   defaults. (A12, A17)
-2. Stop the server, delete `navigation-model.json`, start with the API still down, then `/navigate ` with Tab.
-   **Expected:** streets and named nodes are offered; towns are not; `/navigate` and the compass say "Some places
-   aren't available while the web API is down.". (A13)
+1. Stop the web API, restart the game server, then as Player `/navigate <town>`, right-click the compass outside a
+   siege, and walk past the "Ignored" domain of § 3.2 step 7. **Expected:** the log has "Navigation model snapshot
+   loaded from …"; the town is found and routed from the snapshot; the compass cycles the general targets of § 3.0
+   item 4 (the saved settings, not the defaults, which have no general targets); the "Ignored" domain's roads are
+   still used. (A12, A17, A19, A21) (Manual: needs a restart with the API stopped.)
+2. [automated: `CatalogueProviderTest.withoutAModelOnlyTheNetworkIsOffered`,
+   `NavigateCommandEngineTest.aNameNotFoundWhileTheModelIsLimitedCarriesTheNote`,
+   `ModelFreshnessTest.withoutAnyModelTheListIsLimitedWithTheDesignsText`] Stop the server, delete
+   `navigation-model.json`, start with the API still down, then press Tab after `/navigate ` and run
+   `/navigate <town>` and `/navigate <street>`; right-click the compass outside a siege. **Expected:** streets and
+   named road points are offered, towns are not; `/navigate <town>` says "unknown destination" and then "Some places
+   aren't available while the web API is down."; the street is routed; the compass says "The navigation compass has
+   no destinations here." (without a model it has only the default settings, with no general targets). (A13)
+3. [automated: `ModelFreshnessTest.aModelOlderThanTheLimitGetsTheMayBeOutOfDateNote`,
+   `NavigationCompassEngineTest.withNothingListedWhileTheModelIsLimitedItAddsTheNote`] Stop the server, set the
+   snapshot's `asOf` to 15 days ago, start with the API down, then `/navigate Kardena` (a misspelt name). **Expected:**
+   "unknown destination", "did you mean" and "The list of places may be out of date (last updated 15 days ago)."; the
+   note also follows the compass's "has no destinations here" when none of its targets is listed. (A15)
 
 ### 3.4 Flag on, in a siege match
 
-1. As Player in a running match, Tab after `/navigate `. **Expected:** only the match's objectives, the team spawn and
-   `stop`. (A18)
-2. As Player, `/navigate objective:<name>` and `/navigate <start of an objective name>`. **Expected:** both start a
-   route to that objective. (A18, A07)
-3. As Player, `/navigate <town>`. **Expected:** refused; the message names the match's destinations. (A18)
-4. As Player of the attacking team, select the objective behind the closed gate with the compass. **Expected:** the
-   route leads to the gate, not the capture point (#176). (A18)
-5. Switch the compass off for sieges in the web app, wait a minute, then `/navigate ` and right-click the compass.
-   **Expected:** `/navigate` says "This match has no destinations to navigate to."; the compass says "The navigation
-   compass is switched off during sieges.". (A05, A19)
-6. As Bypass in the match, `/navigate <town>`. **Expected:** a route starts (the bypass lists everything). (A03)
-7. As Player, select an objective with the compass, stop with shift-click, then shift-click again. **Expected:** the
-   compass resumes the same objective while it is still listed. (A19)
+1. [automated: `NavigateCommandEngineTest.inAMatchCompletionOffersOnlyTheMatchsDestinationsAndStop`] As Player in a
+   running match, press Tab after `/navigate `, and after the first word of a two-word objective name and a space.
+   **Expected:** only `stop`, the first words of the match's objectives and the team spawn; then the next word of that
+   name, without `spawn` or `region`. (A18)
+2. [automated: `NavigateCommandEngineTest.inAMatchTypeNameAndTheStartOfANameWork`,
+   `inAMatchTheStartOfExactlyOneNamePicksIt`, `inAMatchAWholeNameEndingInSpawnIsTheTeamSpawn`,
+   `SiegeMatchProviderTest.theEngineListsThemInTheCompassOrderAndTypeNameWorksInTheMatch`] As Player,
+   `/navigate objective:<name>`, `/navigate objective:#<id>`, `/navigate <start of an objective name>` and
+   `/navigate <the team spawn's name>`. **Expected:** each starts a route to that objective or the spawn; `type:name`
+   and `type:#id` are new in a match (§ 3.1 of the design). (A18, A07)
+3. [automated: `NavigateCommandEngineTest.inAMatchATownIsRefusedNamingTheMatchsDestinations`,
+   `inAMatchTheStartOfSeveralNamesIsAChoice`] As Player, `/navigate <town>`, then `/navigate <start shared by two
+   objectives>`. **Expected:** "\"<town>\" is not part of this match. You can navigate to: …" with the match's
+   destinations to click; "Several destinations start with …" with the choices. (A18)
+4. [automated: `SiegeMatchProviderTest.anObjectiveToCaptureBehindAClosedGateLeadsToTheGate`,
+   `defendersAreNotSentToAGate`] As Player of the attacking team, select the objective behind the closed gate with
+   the compass (and with `/navigate objective:<its name>`). **Expected:** the route leads to the gate, not the capture
+   point (#176); for a defender it leads to the objective. (A18)
+5. [automated: `NavigationCompassEngineTest.inAMatchTheCompassCyclesTheMatchsListInItsOrder`,
+   `SiegeMatchProviderTest.theCandidatesAreTheCompassTargetsInTheirOrder`] As Player, right-click the compass through
+   the whole list. **Expected:** the same order and details as with the flag off ("Compass 1/3: <objective>
+   (capture, …)", the team spawn last), then the first again. (A18, A19)
+6. [automated: `NavigateCommandEngineTest.withTheCompassOffForSiegesAMatchHasNoDestinations`,
+   `NavigationCompassEngineTest.withTheCompassOffForSiegesItSaysSo`, `EngineReasonsTest`] Switch the compass off for
+   sieges in the web app, wait about a minute, then `/navigate <objective>` and right-click the compass. **Expected:**
+   `/navigate` says "This match has no destinations to navigate to."; the compass says "The navigation compass is
+   switched off during sieges.". (A05, A19, E15)
+7. [automated: `NavigateCommandEngineTest.theBypassListsEverythingInAMatch`, `staffModeIsTheBypassToo`,
+   `NavigationCompassEngineTest.forTheBypassInAMatchItCyclesTheMatchNotTheWorld`] As Bypass in the match,
+   `/navigate <town>` and right-click the compass; then as Staff in staff mode the same. **Expected:** a route to the
+   town starts (the bypass lists everything); the compass still cycles the match's destinations. (A03)
+8. [automated: `NavigationCompassEngineTest.aResumeResolvesTheStoredKeyAgain`,
+   `aDestinationThatLeftTheListIsNotResumed`, `ResolveKeyTest.aKeyThatIsNotListedGetsNoHandle`] As Player, select an
+   objective with the compass, shift-right-click to stop, shift-right-click again; then select an objective the other
+   team then captures for good, stop, and shift-right-click. **Expected:** the first resume continues to the same
+   objective; once it is no longer listed the resume says "Right-click the compass to pick a destination." (A19)
+9. [automated: `NavigateCommandEngineTest.aFrozenPlayerOrALobbyMemberGetsTodaysWords`,
+   `NavigationCompassEngineTest.inTheLobbyItWaitsForTheMatch`, `forTheBypassInTheLobbyItStillWaitsForTheMatch`] As
+   Player in the siege lobby before the match, `/navigate <town>` and right-click the compass. **Expected:**
+   `/navigate`: "You can't navigate while you are in a siege."; the compass: "The navigation compass works once the
+   siege match has started.". (A06, E15; ending running routes is § 4)
 
 ## 4. Phase 4: hard blocks as scopes and live re-validation (#62, tier:3)
 
