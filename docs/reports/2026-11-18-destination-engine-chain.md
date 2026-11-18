@@ -23,7 +23,7 @@
 |---|---|---|---|---|---|---|
 | L1 P1 pure engine in knk-core | #96 | Merged into next (2026-11-18) | `claude/navigation-destination-engine`: knk-plugin `64ca8815`, knk-workspace `7eb86cc3` | [knk-plugin#78](https://github.com/PandiO/knk-plugin/pull/78) (merge `1105ec15`), [knk-workspace#754](https://github.com/PandiO/knk-workspace/pull/754) (merge `732ba191`) | build + paper-boot green on the PR; Codex skipped (usage limit) | create_session session_01R1w2Uw3gPf2REJMYZEGE6a |
 | L2 P2 model, snapshot, domain search Location | #103 | Merged into next (2026-11-18) | `claude/navigation-destination-engine`: knk-web-api `a49fba23`, knk-plugin `61fe656a`, knk-workspace `30894797` | [knk-web-api#49](https://github.com/PandiO/knk-web-api/pull/49) (merge `6094276d`), [knk-plugin#80](https://github.com/PandiO/knk-plugin/pull/80) (merge `2f1c783e`), [knk-workspace#760](https://github.com/PandiO/knk-workspace/pull/760) (merge `560dd839`) | API build-and-test, mysql-tests, fresh-database green; plugin build + paper-boot green; Codex skipped (usage limit) | subagent of the coordinator (two repos besides knk-workspace, SKILL § 4.1.4 item 2) |
-| L3 P3 switch-over behind the flag | #69 | Not started | — | — | — | — |
+| L3 P3 switch-over behind the flag | #69 | Running | `claude/navigation-destination-engine`: knk-plugin from `next` `2f1c783e` | — | — | create_session session_01R1w2UvmCT8TsW9NNue38Vg |
 | L4 P4 hard blocks as scopes, live re-validation | #62 | Not started | — | — | — | — |
 | L5 phase 4b removal of old paths and the flag | #747 | Not started | — | — | — | — |
 | L6 P5 arena duels provider and scope | #55 | Not started | — | — | — | — |
@@ -83,6 +83,12 @@
     declines or does not answer within about 30 minutes, as agreed in item 7. Alternatives: (a) start L3 at once —
     breaks the agreement; (b) wait for the off-road links without a limit — they wait for the developer, maybe until
     this evening.
+11. **L3 start (2026-11-18).** The off-road coordinator declined the window (its links wait for the developer), so
+    L3 started at once with create_session (knk-plugin only besides knk-workspace). Its prompt follows the charter and
+    DESIGN § 10 over the October text of #69: nothing is deleted in L3 (that is L5, #747), everything new sits behind
+    `navigation.destination-engine: false`, and the switch-over keeps out of the off-road guidance-v2 sections of
+    `NavigationService`. Alternatives: (a) a subagent — not needed for one repository; (b) wait for `next` CI on the L2
+    merge before starting — starting is not a merge; the CI is checked before L3 merges.
 
 ## 4. Link blocks
 
