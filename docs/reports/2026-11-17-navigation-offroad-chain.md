@@ -29,7 +29,7 @@ on `next` (Decided 2026-11-17).
 6. **L8 (#708) live test (tier:3):** apply `AddLandmarks`, import the "Landmark - Default (seed v1)" form seed, grant
    `knk.admin.world.landmark`, set `navigation.landmarks: true` and `navigation.destination-engine: true`, restart,
    smoke test § 6.1–6.4 (about 45 min). Confirm the node rule (plain `knk.admin.world` does not include it).
-5. **L10 (#712) plaza-line viewing:** done by the developer 2026-11-18 16:31 (step 2 OK, clearance 0.65, pull 0.35).
+5. **L10 (#712) step 2 smoke test:** add `plaza-curve-clearance: 0.65` under `navigation:`, set `plaza-lines: true`, restart, smoke test § 10.2 (9 steps).
 2. **Decision to confirm (from the NPC chain's comment on #698, 2026-11-17):** NPC use of the long walks (walk links
    and clusters, O32) moves from "after v1" into v1, as the phase after phase 3. It has no sub-issue or link in this
    chain yet; the spec's § 14 and § 15 need the change in a docs PR. Proposal: a design follow-up (sub-issue of #698)
@@ -48,7 +48,7 @@ on `next` (Decided 2026-11-17).
 | L7 Phase 4 route modes | #707 | Not started (gate: L5 in `next`) | `claude/offroad-route-modes` | — | — | — |
 | L8 Phase 5.1 landmark entity | #708 | Merged into next (2026-11-18); waits for the developer's live test (tier:3, smoke § 6) | knk-web-api `d331bdf4`, knk-web-app `b50c4134`, knk-plugin `be9e3a74`, knk-workspace `eb3321a9` (`claude/offroad-landmarks`) | [knk-web-api#50](https://github.com/PandiO/knk-web-api/pull/50) → `935fe8cc`, [knk-web-app#54](https://github.com/PandiO/knk-web-app/pull/54) → `3432e6ef`, [knk-plugin#83](https://github.com/PandiO/knk-plugin/pull/83) → `5fd81466`, [#763](https://github.com/PandiO/knk-workspace/pull/763) → `7722cc76` | green (all jobs) | subagent of the coordinator (three component repos; resumed once after the usage limit) |
 | L9 Phase 5.2 landmark weights | #709 | Not started (gate: L7 and L8 in `next`) | `claude/offroad-landmark-weights` | — | — | — |
-| L10 Phase 7 plaza lines | #712 | Step 1 merged into next (2026-11-18); step 2 in review (2026-11-18): the trail draws plaza lines behind `navigation.plaza-lines`, `plaza-curve-clearance` 0.65 (O33) | knk-plugin `claude/offroad-plaza-lines` `28ad18c5`; knk-workspace `claude/offroad-plaza-lines` `d7e4e834` | step 1: [knk-plugin#73](https://github.com/PandiO/knk-plugin/pull/73), [#723](https://github.com/PandiO/knk-workspace/pull/723) (merged); step 2: [knk-plugin#84](https://github.com/PandiO/knk-plugin/pull/84) (`Closes #712`), [#769](https://github.com/PandiO/knk-workspace/pull/769) | green (build, paper-boot on `28ad18c5`) | create_session `session_01R1w2Ussca79jpGCPqzcTf8` (2026-11-18) |
+| L10 Phase 7 plaza lines | #712 | Merged into next (step 1 and step 2, 2026-11-18); waits for the developer's smoke § 10.2 | knk-plugin `claude/offroad-plaza-lines` `28ad18c5`; knk-workspace `d7e4e834` | step 1: [knk-plugin#73](https://github.com/PandiO/knk-plugin/pull/73) → `ce0f65ec`, [#723](https://github.com/PandiO/knk-workspace/pull/723) → `c7f61e9e`; step 2: [knk-plugin#84](https://github.com/PandiO/knk-plugin/pull/84) → `4daa0c84`, [#769](https://github.com/PandiO/knk-workspace/pull/769) → `2e0c04d4` | green (build, paper-boot) | create_session `session_01R1w2Ussca79jpGCPqzcTf8` (2026-11-18) |
 
 ## 3. Coordinator decisions
 
@@ -193,6 +193,11 @@ on `next` (Decided 2026-11-17).
     The plugin slot was free (engine L5 waits for the developer's engine test; told the engine and NPC coordinators).
     Same session as step 1 (`session_01R1w2Ussca79jpGCPqzcTf8`); the 0.65 threshold becomes a config key. Gate check:
     the stair-house door (edge #57) is a road edit, out of scope.
+27. **L10 step 2 merged into `next` (2026-11-18 18:35).** § 6 checks held: heads matched, branches contained `next`,
+    `build` and `paper-boot` green on `28ad18c5`, the flag-off path checked in the diff (`plazaTrail` returns null
+    with the flag off, the old draw calls follow), A25 transcript test, shape change additive (`Options` 6th
+    component, old constructor kept), O33 recorded, no Codex findings (usage limit). Engine and NPC coordinators told
+    the plugin slot is free. No link of this chain runs now; L5 waits for the developer's measurements (#703).
 
 ## 4. Link blocks
 
