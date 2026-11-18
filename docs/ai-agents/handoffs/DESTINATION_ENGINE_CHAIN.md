@@ -1,8 +1,8 @@
 # Navigation destination engine chain — charter
 
-**Status:** Draft, waiting for the design's approval (2026-11-18). Not ready to start: the design is Proposed; the
-manager schedules the chain after the developer approves it on PandiO/knk-workspace#25.
-**Last updated:** 2026-11-18 (draft by the design refresh session)
+**Status:** Ready to start (2026-11-18). The design is Decided 2026-11-18; the manager schedules the chain.
+**Last updated:** 2026-11-18 (design approved: tiers confirmed, phase 4b is #747); 2026-11-18 (draft by the design
+refresh session)
 **Issues:** parent [PandiO/knk-workspace#25](https://github.com/PandiO/knk-workspace/issues/25); sub-issues per
 link below. Reference issues as `PandiO/knk-workspace#n` in component repos.
 **Progress report:** to be created by the coordinator at its first run (`docs/reports/<date>-destination-engine-chain.md`).
@@ -11,8 +11,8 @@ link below. Reference issues as `PandiO/knk-workspace#n` in component repos.
 ## 0. Binding documents
 
 1. [specs/navigation-destination-engine/DESIGN.md](../../specs/navigation-destination-engine/DESIGN.md) on
-   knk-workspace `next`, status Proposed, refreshed 2026-11-18 (decisions E1–E13 of the developer, agent decisions
-   E14–E21 for review; becomes binding when the status reads Decided). § 3.2 (landmark provider), § 10 (phases,
+   knk-workspace `next`, status **Decided 2026-11-18** (developer decisions E1–E13; agent decisions E14–E21, accepted by
+   the developer on 2026-11-18). § 3.2 (landmark provider), § 10 (phases,
    tiers, flag), § 10.2 (the October P1 code and its deltas), § 10.3 (the API change), § 13 (acceptance items).
 2. [guides/navigation-destination-engine-smoke-test.md](../../guides/navigation-destination-engine-smoke-test.md), one
    section per phase (draft; each link updates its section).
@@ -24,17 +24,17 @@ link below. Reference issues as `PandiO/knk-workspace#n` in component repos.
 
 | Link | Sub-issue | Tier | What | Repos | Branch | Base | Flag | Gate |
 |---|---|---|---|---|---|---|---|---|
-| L1 | #96 | tier:2 (proposed) | P1: pure engine in knk-core. Reuse: merge `next` into the October branch (conflict in `ArchitectureGuardTest`: keep both tests), apply the deltas of DESIGN § 10.2.4, finish and test | knk-plugin | `claude/navigation-destination-engine` (existing, `ea368a8b`) | `next` (merged in) | none | design Decided |
-| L2 | #103 | tier:2 (proposed) | P2: domain search returns each domain's Location (knk-web-api); `NavigationModel` with domain places, Locations, compass settings, road-access answers and an empty `landmarks` section; snapshot, refresh, paced fallback, `degraded` | knk-web-api, knk-plugin | `claude/navigation-destination-engine` (API: new) | `next` | none (nothing reads the model before L3) | L1 merged into `next` |
-| L3 | #69 | tier:3 (proposed) | P3: command, completion, compass and `NavigationService` on the engine handle; catalogue, siege match and compass target providers; road access from the model | knk-plugin | `claude/navigation-destination-engine` | `next` | `navigation.destination-engine` (off) | L2 merged into `next` |
-| L4 | #62 | tier:3 (proposed) | P4: hard blocks into scopes, live re-validation, `DESTINATION_NOT_ALLOWED` | knk-plugin | `claude/navigation-destination-engine` | `next` | `navigation.destination-engine` (off) | L3 merged into `next` |
-| L5 | to be filed on approval (phase 4b) | tier:2 (proposed) | Removal: old paths, `NavigationDestinations`, `NavigationEligibility`, `EndReason.SIEGE`, the flag; the handle is the only entry | knk-plugin | `claude/navigation-destination-engine` | `next` | removes the flag | L4 merged into `next` and the developer's live test of smoke § 3 and § 4 with the flag on |
-| L6 | #55 | tier:2 (proposed) | P5: arena duels provider and scope; optional hub list | knk-plugin | `claude/navigation-destination-engine` | `next` | none | L5 merged and the arena duels work merged into `next`; timing not confirmed by the developer |
+| L1 | #96 | tier:2 | P1: pure engine in knk-core. Reuse: merge `next` into the October branch (conflict in `ArchitectureGuardTest`: keep both tests), apply the deltas of DESIGN § 10.2.4, finish and test | knk-plugin | `claude/navigation-destination-engine` (existing, `ea368a8b`) | `next` (merged in) | none | design Decided |
+| L2 | #103 | tier:2 | P2: domain search returns each domain's Location (knk-web-api); `NavigationModel` with domain places, Locations, compass settings, road-access answers and an empty `landmarks` section; snapshot, refresh, paced fallback, `degraded` | knk-web-api, knk-plugin | `claude/navigation-destination-engine` (API: new) | `next` | none (nothing reads the model before L3) | L1 merged into `next` |
+| L3 | #69 | tier:3 | P3: command, completion, compass and `NavigationService` on the engine handle; catalogue, siege match and compass target providers; road access from the model | knk-plugin | `claude/navigation-destination-engine` | `next` | `navigation.destination-engine` (off) | L2 merged into `next` |
+| L4 | #62 | tier:3 | P4: hard blocks into scopes, live re-validation, `DESTINATION_NOT_ALLOWED` | knk-plugin | `claude/navigation-destination-engine` | `next` | `navigation.destination-engine` (off) | L3 merged into `next` |
+| L5 | #747 (phase 4b) | tier:2 | Removal: old paths, `NavigationDestinations`, `NavigationEligibility`, `EndReason.SIEGE`, the flag; the handle is the only entry | knk-plugin | `claude/navigation-destination-engine` | `next` | removes the flag | L4 merged into `next` and the developer's live test of smoke § 3 and § 4 with the flag on |
+| L6 | #55 | tier:2 | P5: arena duels provider and scope; optional hub list | knk-plugin | `claude/navigation-destination-engine` | `next` | none | L5 merged and the arena duels work merged into `next`; timing not confirmed by the developer |
 
 ## 2. Gates
 
 1. "Design Decided": `git show origin/next:docs/specs/navigation-destination-engine/DESIGN.md` has the status line
-   `**Decided <date>** (developer)`.
+   `**Decided 2026-11-18** (developer)` (met once PR #744 is merged into `next`).
 2. "L<n> merged into `next`": `git rev-list --count origin/next..origin/<branch>` is 0 in every repo L<n> changed.
 3. "L<n> done": L<n>'s block is in the progress report, its heads match `git ls-remote`, its checks passed.
 4. "Developer's live test of P3 and P4" (gate of L5): the developer's word on #25 or on the sub-issue of L4 that smoke
