@@ -33,7 +33,7 @@ on `next` (Decided 2026-11-18, O01–O33, O08 superseded by O31); smoke guide
 | Link | Issue | Status | Branch heads | PR | CI | How started |
 |---|---|---|---|---|---|---|
 | L1 Region outlines | #735 | Merged into `next` 2026-11-18 (knk-web-api `562f504`, knk-plugin `7f4bdd3a`, knk-workspace `ac4b620f`); waiting for the developer's smoke test § 1 | `claude/overview-map-outlines`: knk-web-api `253a6ee`, knk-plugin `cf3a975a`, knk-workspace `e6e815dd` (from `next`) | [knk-web-api#45](https://github.com/PandiO/knk-web-api/pull/45), [knk-plugin#76](https://github.com/PandiO/knk-plugin/pull/76), [knk-workspace#749](https://github.com/PandiO/knk-workspace/pull/749) | API green; plugin build and paper-boot green | create_session session_01R1w2UuqJyStWv2zia5FTQg (2026-11-18, decision 3) |
-| L2 Public map API | #736 | Running | `claude/overview-map-public-api`: knk-web-api, knk-workspace (from `next`) | – | – | create_session session_01R1w2UvvpPXaMVExy9eZZpL (2026-11-18) |
+| L2 Public map API | #736 | In review (PRs open, not merged) | `claude/overview-map-public-api`: knk-web-api `3a014f8`, knk-workspace `fcde4be8` (from `next`) | [knk-web-api#46](https://github.com/PandiO/knk-web-api/pull/46), [knk-workspace#751](https://github.com/PandiO/knk-workspace/pull/751) | API: running at PR time (see block 4.2) | create_session session_01R1w2UvvpPXaMVExy9eZZpL (2026-11-18) |
 | L3 `/map` page | #737 | Not started (gate: L2 merged into `next`) | – | – | – | – |
 | L4 Live players backend | #738 | Not started (gate: L2 merged into `next`) | – | – | – | – |
 | L5 Live players layer | #739 | Not started (gate: L3 and L4 merged, developer's L4 check) | – | – | – | – |
@@ -172,3 +172,77 @@ _(Each link appends its block here when it finishes.)_
     2. L4 adds `map.reporting.interval-ticks` and the player report to `MapReportingService` (same class, spec § 7.1)
        and can reuse `MapReporting` for the wiring and `MapReportSender` for the hub.
     3. Hand edits to a region (`/rg redefine`) are reported at the next repair, not at once.
+
+### 4.2 L2 — Public map API: config, markers, panel DTOs, `map` rate limit, access tests (#736)
+
+1. **Scope done.**
+    1. knk-web-api: `Controllers/MapController.cs` (`api/Map`, all `[AllowAnonymous]`: `config`, `markers`,
+       `towns/{id}`, `districts/{id}`, `structures/{id}` with gate doors), the `[MapEnabled]` resource filter (404 before
+       the action while `Map:Enabled` is off); `Dtos/MapDtos.cs` (O32 allow-list DTOs); `Services/Map/MapPublicService.cs`
+       (`IMapPublicService`, `MapMarkerCache` singleton, `MapGeometry.Centroid`); `Configuration/MapOptions.cs`. Additive
+       edits: the `map` policy in `RateLimitingSetup.cs`, three DI lines, `Map` and `RateLimiting:Map` in
+       `appsettings.json`, five routes in `EndpointAccessRulesTests.AnonymousAllowList` and `ReadAccessRulesTests`
+       (`P`). No migration.
+    2. knk-workspace: smoke guide § 2 (7 steps: 2 automated, 5 partly automated, tagged), production installation
+       § 4.3 (`Map__*`, `RateLimiting__Map__PermitPerMinute`), changelog entry, spec status line and § 6.2.8 as built.
+2. **Commits and heads.** knk-web-api `claude/overview-map-public-api` at `3a014f8` (1 commit, base `next` at
+   `562f504`); knk-workspace `claude/overview-map-public-api` at `fcde4be8` (1 commit, base `next` at `ac4b620f`). Both
+   up to date with `origin/next` at the time of the PRs.
+3. **PRs.** [knk-web-api#46](https://github.com/PandiO/knk-web-api/pull/46) (`Part of #736`),
+   [knk-workspace#751](https://github.com/PandiO/knk-workspace/pull/751) (`Closes #736`), base `next`. Not merged.
+4. **Tests, baseline → result.**
+    1. knk-web-api: baseline on `next` 4294 passed, 100 skipped (MySQL, no `KNK_TEST_MYSQL`), 0 failed; branch 4333
+       passed, 100 skipped, 0 failed (+39: `MapPublicServiceTests` 16, `MapPublicDtoFieldTests` 18,
+       `MapControllerPipelineTests` 5; the two access tests extended). A03 and A06 run through the real controller,
+       the real default-deny filter and the real rate limiter on a test server; A04 and A05 on an in-memory database,
+       A05 also by reflection on every `Map*Dto`. Seen failing once: removing `[MapEnabled]` and adding a `wgRegionId`
+       field each fail the tests (A06's 120 comes from the shipped `appsettings.json`, which the test host loads).
+    2. Known reds: none.
+    3. Codex: at its usage limit on knk-web-api#46 and failed on knk-workspace#751 (noted on both PRs); no review, no
+       findings handled.
+5. **Decisions (DESIGN § 4.3).**
+    1. *Marker version.* Chosen: a short SHA-256 of the marker content; the built set is reused for
+       `Map:Markers:CacheSeconds` (30 s), so a changed domain or outline gets a new version within that time.
+       Alternatives: (a) bump on `EntityChanged` from the save interceptor: outline writes publish none (L1) and it
+       hooks a shared file; (b) the newest `UpdatedAt`: misses domain renames.
+    2. *Outline points (L1 note 5.8).* Chosen: served as stored (block coordinates, inclusive); the bridge draws them
+       through the block centres (+0.5); a centroid pin already has +0.5. Alternatives: (a) +1 on max edges in the
+       API: only right for cuboids, wrong for polygons.
+    3. *Centroid pin height.* Chosen: `y: null`, the bridge picks the height. Alternatives: (a) `MaxY` or the middle
+       of the range: a region up to the build limit puts the pin in the sky.
+    4. *Domain shape.* Chosen: the main region row by the domain's own `WgRegionId` (any case, in its world when set),
+       then rows linked by `DomainId` whose region id is still one of the domain's sub-regions; unlinked and stale rows
+       ignored. The centroid uses the main region (else the first sub-region). Alternatives: (a) every row with the
+       `DomainId`: a domain moved to another region would keep its old shape.
+    5. *Door state.* Chosen: `openState` string of the effective state (`open`, `closed`, `opening`, `closing`,
+       `jammed`; structure overrides applied), `isDestroyed` effective too. Alternatives: (a) a bool: loses jammed and
+       the moving states.
+    6. *Ids in public panels.* Chosen: none beyond the entity's own (district and town by name, no door ids), as the
+       smoke draft says. Markers carry `townId` / `districtId` for the town toggle. Alternatives: (a) door ids for gate
+       commands: L7/L8 read them from a staff route.
+    7. *Under siege.* Chosen: `CurrentSiegeId` set and its match `Created` or `InProgress` (the rule of
+       `SiegeMatchGateService`). Alternatives: (a) `CurrentSiegeId` alone: a stale pointer would show a siege.
+    8. *Later parts in config.* Chosen: `livePlayers {enabled, pollIntervalMs}` and `gateCommands {enabled}` present
+       and always off; no `Map:LivePlayers` / `Map:GateCommands` keys read yet. Alternatives: (a) read those flags now:
+       turning one on before its phase exists would send the page to routes that answer 404; (b) leave the fields out:
+       the spec lists enabled parts and the polling interval in § 6.2.1.
+    9. *Disabled response.* Chosen: a resource filter on the controller returns 404 before model binding or the
+       service (nothing is read). Alternatives: (a) remove the routes at startup: a settings reload would need a
+       restart.
+    10. *Layering.* Chosen: one service on `KnKDbContext`, like L1's `MapRegionOutlineService`. Alternatives: (a)
+        repositories for read-only projections: more files, no reuse.
+6. **Out of scope, noted.** None new. #750 (older sub-regions not reported) still limits district shapes.
+7. **Blockers.** None.
+8. **At merge / what the developer must do.**
+    1. Nothing to keep it off. To try it: `Map__Enabled=true` in `/etc/knk/api.env`, then smoke guide § 2.
+    2. Optional: `@codex review` on both PRs once the Codex limit resets.
+9. **Notes for later links.**
+    1. L3: `GET api/Map/config` then `GET api/Map/markers`; reload markers when `markerVersion` changes. Label distance
+       `null` = every zoom. Draw outline points +0.5; a centroid pin has `y: null`. Districts carry `townId`,
+       structures `townId` and `districtId`. Panels: `towns/{id}`, `districts/{id}`, `structures/{id}` (404 for an
+       unknown id or another type). Door `openState` is lower case.
+    2. L4: add `GET api/Map/players` to `MapController` (it inherits the `map` limit and the `[MapEnabled]` 404), set
+       `config.livePlayers` from `Map:LivePlayers:*` in `MapPublicService.GetConfigAsync`, pin the route in both access
+       tests and add its DTOs to `MapPublicDtoFieldTests.Pinned` (the test fails for an unpinned `Map*Dto`). Arena pins
+       and `Map:Labels:Arena` are ready in config.
+    3. L7: set `config.gateCommands.enabled` from `Map:GateCommands:Enabled`; the public panel has no door ids.
