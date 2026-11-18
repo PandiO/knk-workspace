@@ -1,8 +1,9 @@
 # Off-road navigation: phase 0 measurements of the walk search
 
-**Status:** Skeleton (2026-11-17), waiting for the developer's live run. Every "_to fill_" cell is a live value from
-the dev world; nothing in this report is measured live yet. · **Last updated:** 2026-11-17 (skeleton by link L1 of
-the off-road navigation chain: tables, steps, decision rules)
+**Status:** Measured (2026-11-18): runs 1, 2 and 2b on the dev world, by the developer, read by the smoke test
+coordinator. Open: the tick time during a large capture (§ 3.3 budget 1), the concurrency step (step 8) and scene 1
+(§ 2, run 2 notes 5). · **Last updated:** 2026-11-18 (live values, answers § 1 and § 4 to § 6); 2026-11-17 (skeleton by
+link L1 of the off-road navigation chain: tables, steps, decision rules)
 
 **Issue:** [PandiO/knk-workspace#703](https://github.com/PandiO/knk-workspace/issues/703) (phase 0, link L1 of the
 [off-road navigation chain](https://github.com/PandiO/knk-workspace/blob/main/docs/ai-agents/handoffs/NAVIGATION_OFFROAD_CHAIN.md)), parent
@@ -15,20 +16,28 @@ budgets, decision O06), § 5.6 (options A, B, C; decision O32), § 13 A01.
 
 This report is dated and is not overwritten: a later measurement run gets a new dated report.
 
-## 1. Answers (to fill after the run)
+## 1. Answers
 
-1. **Does option A (raised caps) already fit the keep?** _to fill_ (yes / no, with the rule of § 4 and the numbers of
-   table 3.2). If yes, the developer is asked again before L6 (decision O32; charter § 2.3).
-2. **Which cluster size?** _to fill_ (§ 5).
-3. **Which budgets?** _to fill_ (table 3.3); they replace the proposals of DESIGN § 9.3 for L5 and L6.
+1. **Does option A (raised caps) already fit the keep?** Yes, with two conditions (§ 4). Every keep route that a
+   search can reach was found in one search that no cap ended, in 102 to 236 ms, within the proposed 400 ms; the
+   capture waits stayed under 1.3 s. The conditions: the tick time during a capture is still to be measured, and option
+   A must raise the walk caps on walk legs only, not `max-snap-distance` (run 2 notes 2 and 7: the developer wants the
+   road guidance wherever a road carries the route). Scene 1 fails for a reason no cap changes. Beyond the keep, A
+   reaches 483 blocks of open country (646 ms) but not 576 (200 000 expansions, 5 s, not found). The developer is
+   asked again before L6 (decision O32; charter § 2.3); the findings are on
+   [#698](https://github.com/PandiO/knk-workspace/issues/698#issuecomment-6989922879).
+2. **Which cluster size?** One chunk column per level (1 by 1), as DESIGN § 5.3.2 proposes: the only size whose first
+   request is estimated within 400 ms on a 400-block leg (§ 5).
+3. **Which budgets?** Table 3.3: the proposals of DESIGN § 9.3 hold, except the memory per chunk, which is about
+   twice the estimate (22 to 30 KB, not 12).
 
 ## 2. Run and scenes
 
 | Item | Value |
 |---|---|
-| Date of the run | _to fill_ |
+| Date of the run | 2026-11-18 (run 1 in the evening, run 2 20:09 to 20:28, run 2b 20:39 to 20:55) |
 | Plugin build | knk-plugin `next` `073fa4cf` (`v0.1.0+073fa4cf`, contains #703 `04506d8c`), dev server DEV_SERVER_26.3 (Paper 26.3) |
-| Server | _to fill_ (CPU, memory, players online) |
+| Server | the developer's Windows 11 PC, Java 25, one player online, the web API and the web app running on the same machine; CPU and memory not recorded |
 | Settings, run 1 | as shipped: `max-snap-distance` 48, `walk.max-expansions` 20000, `walk.max-length` 144, `walk.max-chunks-per-request` 64 |
 | Settings, run 2 (option A) | `max-snap-distance` 600, `walk.max-expansions` 200000, `walk.max-length` 1000, `walk.max-chunks-per-request` 800, `walk.detour-allowance` 600. The detour allowance was added after run 1: the length cap is min(`max-length`, max(`max-length-factor` × straight, straight + `detour-allowance`)) + `climb-allowance` × rise, so raising `max-length` alone leaves a 17-block keep leg capped near 65 blocks (scene 1, run 1 ended at that cap). Changed from the guide's 450 / 600 / 512 because the dev world's open-country targets are 482 and 569 blocks away (not 200 and 400): the outpost leg's capture box is 24 by 32 = 768 chunks. The keep scenes are short, so the keep rule of § 4 reads the same either way. |
 | Settings, run 2b | run 2 with `walk.capture-margin` 48 (was 16) and `walk.max-chunks-per-request` 1024 (the limit): scenes 1 and 3 closed inside the capture box in run 2, and scenes 4 and 5 ran no search because their chunks were not loaded. Scene 5's box is then 28 by 36 = 1008 chunks. Force-loaded for run 2b: Coal mine `/forceload add 913 -625 1199 -519` and `/forceload add 1200 -625 1491 -519` (296 chunks); Outpost `/forceload add 1395 -624 1829 -481`, `1395 -480 1829 -337`, `1395 -336 1829 -193`, `1395 -192 1829 -49` (1008 chunks) |
@@ -63,12 +72,12 @@ unused; add rows for scenes 5 to 9.
 
 | Measure | Value in DESIGN § 9.1 (from the docs) | Live value | From (scene, run) |
 |---|---|---|---|
-| Straight 95 block walk search | about 3 to 5 ms | _to fill_ | _to fill_ |
-| 96 by 96 open field fully expanded | 80 to 90 ms (default budget: about 75 ms) | _to fill_ (or n/a) | _to fill_ |
-| Walk searches in live tests | 2 to 140 ms, off the main thread | _to fill_ (p50 / p95 / max of search µs) | all scenes, run 1 |
-| Chunk capture | 0.4 to 0.7 ms per chunk (synthetic), about 12 KB per chunk | _to fill_ (capture µs / chunks of the cold requests; KB from `walk paths:` "cached (KB)") | _to fill_ |
-| Chunks per request | up to 64 (15 % of 96 block legs need 50 to 64) | _to fill_ (max / p95 of chunks) | _to fill_ |
-| Budgets today | 20 000 expansions, 144 blocks, 2 concurrent searches | _to fill_ (how many searches ended at each cap in run 1) | run 1 |
+| Straight 95 block walk search | about 3 to 5 ms | 36 ms for 94 blocks of open country (4 634 expansions, 7.8 µs each, path 123) | scene 4, run 2b, recompute #33 |
+| 96 by 96 open field fully expanded | 80 to 90 ms (default budget: about 75 ms) | n/a (no scene expands a whole open field) | — |
+| Walk searches in live tests | 2 to 140 ms, off the main thread | run 1: 0.5 to 127 ms per scene (p95); run 2: p50 15 to 30 ms, max 329 ms (the first search after the server start; the same search again 116 ms); run 2b: keep up to 236 ms, 483 blocks 646 ms, 576 blocks 4.8 to 5.3 s (cap) | all scenes |
+| Chunk capture | 0.4 to 0.7 ms per chunk (synthetic), about 12 KB per chunk | 0.5 to 0.8 ms per chunk once warm, 1.3 to 1.8 ms in the first minutes after a start; 22 to 30 KB per cached chunk (886 KB / 40, 2 920 KB / 108, 7 620 KB / 256) | `walk paths:` lines, runs 2 and 2b |
+| Chunks per request | up to 64 (15 % of 96 block legs need 50 to 64) | keep legs 9 to 40 with margin 16, 49 to 108 with margin 48; 483 blocks 296; 576 blocks 1 008 | runs 2 and 2b |
+| Budgets today | 20 000 expansions, 144 blocks, 2 concurrent searches | run 1: no search at `max-expansions`; `max-length` ended scene 1 (2 of 2) and most of scene 9's walk legs (5 of 6, length-pruned); runs 2 and 2b: only scene 5 reached a cap (27 of 27 at 200 000) | runs 1, 2, 2b |
 | Road router | target under 5 ms for a few thousand nodes (a target, not a measurement) | not measured by phase 0 (the counters cover the walk search) | — |
 
 Reference only, not live (fixture terrain in the cloud build container, 4 cores, `WalkSearchTimingTest`, knk-plugin
@@ -88,8 +97,8 @@ lines after walking the whole route ("whole walk").
 | stair house, run 2 | FOUND (no cap), the route worked; 7 searches, 6 found, 1 NO_PATH (64 straight) | 481 (99 straight) | 15394 | 15405 | 35 (0) | 23300 | ≤ 476 | 101955 | ≤ 998 | no | not measured | 7 searches; max 102.0 ms; max 23.3 ms |
 | courtyard, run 1 | FOUND (scene 3, Garrison Watchtower Roof) | 129 (28 straight) | 2914 | 2932 | 12 (0) | 4984 | ≤ 150 | 40484 | ≤ 31 | no | not measured | 4 searches; 40.5 ms; 5.0 ms |
 | courtyard, run 2 | NO_PATH on the cold search (7714 cells exhausted: closed inside the capture box), then FOUND 10 of 10 as the player walked; the route worked | 162 (81 straight) | 7714 | 7714 | 30 (0) | 16889 | 357 | 54224 | 17 | no | not measured | 11 searches; 54.2 ms; 16.9 ms |
-| 200, run 1 | _to fill_ | _to fill_ | _to fill_ | _to fill_ | _to fill_ | _to fill_ | _to fill_ | _to fill_ | _to fill_ | _to fill_ | _to fill_ | _to fill_ |
-| 200, run 2 | _to fill_ | _to fill_ | _to fill_ | _to fill_ | _to fill_ | _to fill_ | _to fill_ | _to fill_ | _to fill_ | _to fill_ | _to fill_ | _to fill_ |
+| 200, run 1 | unused (no scene about 200 blocks away) | — | — | — | — | — | — | — | — | — | — | — |
+| 200, run 2 | unused (no scene about 200 blocks away) | — | — | — | — | — | — | — | — | — | — | — |
 | 400, run 1 | no route: "No road connects you to Coal mine." (scene 4); no walk search ran | — | — | — | — | — | — | — | — | — | — | — |
 | 400, run 2 | not captured 11 of 11: the chunks were not loaded (no `/forceload` after the restart), so no search ran and the straight line was shown. To repeat | — | — | — | — | — | — | — | — | — | — | — |
 | 5 outpost, run 1 | no route: "No road connects you to …" (as scene 4); no walk search ran | — | — | — | — | — | — | — | — | — | — | — |
@@ -105,8 +114,8 @@ lines after walking the whole route ("whole walk").
 | courtyard, run 2b | FOUND 8 of 8 (no cap), the whole route a walk trail; the route worked | 398 (81 straight) | 27839 | 27895 | 90 (0) | 65684 | 1146 | 203604 | 13 | no | not measured | 8 searches; 203.6 ms; 65.7 ms |
 | 400, run 2b | FOUND 17 of 17 (no cap), the route worked; the trail was hard to see in the grass | 664 (483 straight) | 57885 | 58224 | 296 (0) | 208008 (spread over about 74 ticks) | 3692 | 646041 | 16 | no | not measured (no "Can't keep up" in the log) | 17 searches; 646.0 ms; 208.0 ms |
 | 5 outpost, run 2b | FALLBACK (max-expansions) 27 of 27 (no search found the way; the straight line throughout); the recompute repeated about every 10 s for 9 minutes, each time a full 1008-chunk capture | 740 (576 straight, partial) | 200000 | 200866 | 1008 (256) | 620957 (p50; max 852952), spread over about 252 ticks | 9404 (p50; max 12576) | 4794751 (p50; max 5298395) | 17 | no | not measured | 27 searches; 5164.4 ms; 672.8 ms |
-| run 3 (if needed) | _to fill_ | _to fill_ | _to fill_ | _to fill_ | _to fill_ | _to fill_ | _to fill_ | _to fill_ | _to fill_ | _to fill_ | _to fill_ | _to fill_ |
-| concurrency (step 8) | _to fill_ | _to fill_ | _to fill_ | _to fill_ | _to fill_ | _to fill_ | _to fill_ | _to fill_ | _to fill_ | _to fill_ | _to fill_ | _to fill_ |
+| run 3 (if needed) | not run: only scene 5 reached a cap, and it is open country beyond option A (run 2 notes 6) | — | — | — | — | — | — | — | — | — | — | — |
+| concurrency (step 8) | not run (one player); open | — | — | — | — | — | — | — | — | — | — | — |
 
 Run 2 notes (2026-11-18, developer's walk-through):
 
@@ -154,11 +163,11 @@ end legs, one line each.
 
 | # | Budget | Proposed in DESIGN § 9.3 | Measured | Set to |
 |---|---|---|---|---|
-| 1 | Main thread: capture within `TickBudget`, navigation work per player per tick unchanged | as proposed | _to fill_ (capture µs of the largest cold request; tick time) | _to fill_ |
-| 2 | Plain walk search, p95 for 144 blocks | at most 150 ms | _to fill_ (search µs p95, run 1) | _to fill_ |
-| 3 | Hierarchical search, p95 for 400 blocks indoors | at most 400 ms | _to fill_ (run 2's single search is the upper bound a hierarchical search must beat) | _to fill_ |
-| 4 | Memory: `cluster-cache-chunks` | 1024 chunks, about 12 MB | _to fill_ (KB per captured chunk on the dev world) | _to fill_ |
-| 5 | Concurrency: `max-concurrent-searches` | stays 2 until measured | _to fill_ (queue µs, step 8) | _to fill_ |
+| 1 | Main thread: capture within `TickBudget`, navigation work per player per tick unchanged | as proposed | keep: up to 66 ms per cold capture (90 chunks), about 3 ms per tick at 4 chunks per tick; 296 chunks 208 ms; 1 008 chunks 0.6 to 0.85 s, repeated with every recompute because the cache keeps 256 chunks. No "Can't keep up" in the log; tick time not measured | as proposed; tick time still to measure (spark during scene 4) |
+| 2 | Plain walk search, p95 for 144 blocks | at most 150 ms | run 1: at most 127 ms (p95 per scene, the first search after a start), usually 16 to 41 ms | 150 ms |
+| 3 | Hierarchical search, p95 for 400 blocks indoors | at most 400 ms | upper bounds from single searches: keep 102 to 236 ms (up to 28 000 expansions), 483 blocks of open country 646 ms | 400 ms |
+| 4 | Memory: `cluster-cache-chunks` | 1024 chunks, about 12 MB | 22 to 30 KB per captured chunk | 1024 chunks, about 30 MB |
+| 5 | Concurrency: `max-concurrent-searches` | stays 2 until measured | queue at most 1 ms with one player (usually under 30 µs); step 8 (several players) not run | 2 |
 | 6 | Counters in `/knk road status` | searches, expansions, cache hits, links, shaping time | phase 0 built searches, expansions, cells, capture, wait, queue, caps | later phases add links (L5) and shaping (L3) |
 
 ## 4. Question 1: does option A fit the keep?
@@ -172,7 +181,12 @@ Proposed rule (agent proposal, for the developer to accept or change): option A 
 4. the 400 block open-country leg is not part of this rule: option A was never meant for the wilderness beyond loaded
    chunks (DESIGN § 5.6, option C), but its run 2 row shows how far A goes.
 
-Answer: _to fill_. If yes, the coordinator asks the developer before L6 (O32): A for the keep now, B later.
+Answer: yes, with conditions. (1) Scenes 2 and 3 (and scene 1's first search) were found in one search without a cap;
+scene 1's later failure is not a cap (run 2 notes 5). (2) 102 to 236 ms, within 400 ms. (3) Waits up to 1.25 s, under
+2 s; the tick time is not measured yet, but no "Can't keep up" was logged. (4) Open country: 483 blocks found in 646 ms,
+576 blocks not found at 200 000 expansions (5 s). Condition from the developer (run 2 notes 7): A raises the walk caps
+on walk legs only, never `max-snap-distance`. The coordinator asks the developer before L6 (O32): A for the keep now,
+B later.
 
 ## 5. Question 2: which cluster size?
 
@@ -181,7 +195,11 @@ DESIGN § 5.3.2 proposes one chunk column per level (16 by 16). The live numbers
 
 1. **Cost of one cluster edge** (a bounded walk search between two entrances of a cluster, § 5.3.3): about the cells of
    one level of the cluster times the µs per expansion. µs per expansion = search µs / expansions over the scenes of run
-   2: _to fill_.
+   2 and 2b: 5 to 8 µs indoors (scene 7 5.1, scene 9 5.6, scene 2 6.6, scenes 1 and 3 7.2 to 7.3), 11 µs on the
+   483-block leg, 24 µs at 200 000 expansions (scene 5; larger open sets). Estimates below use 7 µs, and 11 µs in
+   brackets.
+4. **Edges actually asked for** are fewer than the 276 possible: the abstract A* asks only for edges along the
+   corridor. The estimate assumes 6 per cluster (an agent assumption; L5's counters will show the real number).
 2. **First request in an area** (lazy HPA*): clusters along the corridor times the edges per cluster (up to
    `cluster-entrances` 6 per border, 4 borders: at most 24 entrances, so up to 276 edges, fewer in practice) times the
    cost of one edge.
@@ -189,16 +207,21 @@ DESIGN § 5.3.2 proposes one chunk column per level (16 by 16). The live numbers
 
 | Cluster | Cells per level | One edge (µs) | Clusters on the 400 block leg | First request (estimate) | Fits budget 3? |
 |---|---|---|---|---|---|
-| 1 by 1 chunk | 256 | _to fill_ | about 25 | _to fill_ | _to fill_ |
-| 2 by 2 chunks | 1 024 | _to fill_ | about 13 | _to fill_ | _to fill_ |
-| 4 by 4 chunks | 4 096 | _to fill_ | about 7 | _to fill_ | _to fill_ |
+| 1 by 1 chunk | 256 | 1 800 (2 800) | about 25 | 270 ms (420 ms) | yes (borderline at 11 µs) |
+| 2 by 2 chunks | 1 024 | 7 200 (11 300) | about 13 | 560 ms (880 ms) | no |
+| 4 by 4 chunks | 4 096 | 28 700 (45 100) | about 7 | 1.2 s (1.9 s) | no |
 
-Answer: _to fill_ (the largest cluster whose first request stays within budget 3; smaller clusters invalidate less on a
-block change, O18).
+Answer: 1 by 1 chunk (one chunk column per level), as proposed. It is the only size estimated within budget 3, and
+the smallest clusters also invalidate least on a block change (O18). The estimate excludes the refinement (one plain
+search along the corridor: about 30 chunks of one level, some 7 700 cells, about 55 to 85 ms) and assumes 6 edges per
+cluster; L5 checks both with its counters.
 
 ## 6. Question 3: which budgets?
 
-Answer: _to fill_ (the "Set to" column of table 3.3, and the values L5 and L6 put in `config.yml`).
+Answer: the "Set to" column of table 3.3. For `config.yml` in L5 and L6: the shipped walk values stay (20 000
+expansions, 144 blocks, `max-chunks-per-request` 64, `capture-margin` 16, `max-concurrent-searches` 2), and
+`cluster-cache-chunks` 1024 is about 30 MB, not 12. Raised walk caps for option A are set only if O32 chooses A, and
+then on walk legs only. Still open: the tick time during a large capture, and step 8 (concurrency).
 
 ## 7. Limits of these numbers
 
@@ -207,6 +230,6 @@ Answer: _to fill_ (the "Set to" column of table 3.3, and the values L5 and L6 pu
    both, and a chunk from the 10 s cache costs nothing. Read the cold request (the first `walk recent:` line after
    `/knk road status reset`) for a scene's full capture cost.
 3. The dev server is not production hardware; the budgets get a margin for that.
-4. Run 2's `max-snap-distance` 450 changes which destinations are routed over roads; it is a measurement setting only,
-   restored in step 9.
+4. Run 2's `max-snap-distance` 600 changes which destinations are routed over roads (direct mode); it is a
+   measurement setting only, restored on 2026-11-18 (run 2 notes 2).
 5. Force-loaded chunks stay loaded until `/forceload remove all`.
