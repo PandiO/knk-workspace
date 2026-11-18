@@ -55,7 +55,7 @@ on `next` (Decided 2026-11-18, O01–O33, O08 superseded by O31); smoke guide
 | L5 Live players layer | #739 | Checks passed (coordinator 2026-11-18 12:25), not merged: waits for the developer's L4 live check on #738 (charter gate 4) | `claude/overview-map-players-page`: knk-web-app `bc17a48`, knk-workspace `69244809` (from `next`) | [knk-web-app#52](https://github.com/PandiO/knk-web-app/pull/52), [knk-workspace#756](https://github.com/PandiO/knk-workspace/pull/756) | Web app green on `bc17a48` (build-and-test, e2e); knk-workspace no CI; Codex at its limit | create_session session_01R1w2UwXPWsCYjRUw6RoxVH (2026-11-18) |
 | L6 Staff details | #740 | Merged into `next` 2026-11-18 (knk-web-app `01ad4d9a`, knk-workspace `a130f2d6`); waiting for the developer's smoke test § 6 | `claude/overview-map-staff-details`: knk-web-app `1443cf5`, knk-workspace `fe64919d` (from `next`) | [knk-web-app#51](https://github.com/PandiO/knk-web-app/pull/51), [knk-workspace#755](https://github.com/PandiO/knk-workspace/pull/755) | Web app green (build-and-test, e2e); Codex at its limit | subagent of the coordinator (2026-11-18; the create_session attempt session_01R1w2UuaEs6VbL7BVnR7ZTJ was refused the knk-web-app attach, decision 10) |
 | L7 Gate commands backend | #741 | Merged into `next` 2026-11-18 (knk-web-api `0308377d`, knk-plugin `02aa110e`, knk-workspace `b7820e99`); waiting for the developer's smoke test § 7 | `claude/overview-map-gate-commands`: knk-web-api `16e4157`, knk-plugin `1f8bb3c7`, knk-workspace `8368b901` (from `next`) | [knk-web-api#48](https://github.com/PandiO/knk-web-api/pull/48), [knk-plugin#79](https://github.com/PandiO/knk-plugin/pull/79), [knk-workspace#758](https://github.com/PandiO/knk-workspace/pull/758) | API green (build-and-test, mysql-tests, fresh-database); plugin build and paper-boot green | create_session session_01R1w2UxDt6K1RcnDPPagNAN (2026-11-18) |
-| L8 Gate command buttons | #742 | Running | `claude/overview-map-gate-buttons`: knk-web-app, knk-workspace (from `next`) | – | – | create_session session_01R1w2UvQqqmQ9NwMTQbq3Cb (2026-11-18) |
+| L8 Gate command buttons | #742 | In review (link done 2026-11-18); not merged | `claude/overview-map-gate-buttons`: knk-web-app `05a30ea`, knk-workspace `9fad9531` (from `next`) | [knk-web-app#53](https://github.com/PandiO/knk-web-app/pull/53), [knk-workspace#759](https://github.com/PandiO/knk-workspace/pull/759) | Web app build-and-test green on `05a30ea`, e2e running at report time (local full run 176 passed); knk-workspace no CI; Codex at its limit | create_session session_01R1w2UvQqqmQ9NwMTQbq3Cb (2026-11-18) |
 | L9 Player context panel | #743 | Not started (gate: L5 merged into `next`) | – | – | – | – |
 
 ## 3. Coordinator decisions
@@ -768,3 +768,58 @@ _(Each link appends its block here when it finishes.)_
        `doorId` out for "whole gate"). Show `message`; 200 has `result` `done` or `refused`, 409 `GateInSiege` (disable
        with "Gate is in a running siege"; the public panel's `underSiege` predicts it), 503 "no game server", 504
        timeout ("timed out after 5 s"). Re-read the panel after the result: `doors[].state` may still be `opening`.
+
+### 4.8 L8 — Gate command buttons in the panel (#742)
+
+1. **Scope done.**
+    1. knk-web-app: staff widget `gate-commands` in `mapActionRegistry` (`components/map/gateCommandRegistrations.tsx`,
+       `widgets/GateCommandsWidget.tsx`) under `knk.gate.admin`, visible for a gate while `config.gateCommands.enabled`;
+       Open, Close, Toggle and Repair for the whole gate (no `doorId`) and per door (ids from
+       `GET api/GateStructures/{id}/doors`); `apiClients/gateCommandClient.ts` (`POST api/GateStructures/{id}/commands`,
+       35 s client timeout); result shown (done, refused with reason, 409 "Gate is in a running siege", 503, 504, other
+       errors with the API's message), then the panel and the door list are read again; disabled with "Gate is in a
+       running siege" while `underSiege` or after a 409. `MapPanelContext.gateCommands.enabled` from the shared config
+       answer (`useMapAvailability`, no extra request); `visible(data, context)` gets the context (additive); a panel
+       reload keeps its data and widgets mounted until the fresh data arrives. DTO types appended to `MapDtos.ts`; e2e
+       fixtures in a new `e2e/fixtures/mapGateCommands.ts`. Not touched: `MapPage.tsx`, the bridge, `mapClient.ts`,
+       `e2e/fixtures/map.ts` (L5 overlap).
+    2. knk-workspace: smoke guide § 8 (9 steps: 3 automated, 6 partly automated, tagged), spec § 6.3.6 as built and
+       status line, changelog entry.
+2. **Commits and heads.** knk-web-app `claude/overview-map-gate-buttons` at `05a30ea` (1 commit on `next` `01ad4d9`);
+   knk-workspace `claude/overview-map-gate-buttons` at `9fad9531` (1 commit on `next`). Both up to date with
+   `origin/next` when the PRs were opened.
+3. **PRs.** [knk-web-app#53](https://github.com/PandiO/knk-web-app/pull/53) (`Part of #742`),
+   [knk-workspace#759](https://github.com/PandiO/knk-workspace/pull/759) (`Closes #742`), base `next`. Not merged.
+4. **Tests, baseline → result.**
+    1. Jest `npm run test:ci`: 315 suites / 2712 passed → 316 / 2720 passed (+8 `gateCommands.test.tsx`;
+       `mapActionRegistry.test.tsx` now expects `knk.gate.admin` among the structure nodes; `GateDoorsWidget.test.tsx`
+       context gets the new field).
+    2. Playwright, all specs: 166 passed → 176 passed (+10 `overview-map-gate-commands.spec.ts`, also green with
+       `--repeat-each=3`).
+    3. `tsc --noEmit`, `typecheck:e2e`, `CI=true npm run build`: green → green. Known reds: none.
+    4. Acceptance: A18 page side (e2e and Jest; door animation in game by hand, smoke § 8 steps 2–3), A22 (the buttons
+       are a registry registration; no bridge change).
+    5. CI on `05a30ea`: build-and-test green; e2e still running when this block was written (see the final message).
+    6. Codex: at its usage limit on both PRs (noted on each PR); no review, no findings handled.
+5. **Decisions (DESIGN § 4.3).**
+    1. *Widget, not registry actions.* Chosen: one staff widget, because per-door buttons and the result need their own
+       state. Alternatives: (a) whole-gate `addAction` entries plus a door widget: one feature in two places, and the
+       action bar can't show results; (b) one action per door: door ids are not in the public panel.
+    2. *Hidden, not disabled, without the node.* Chosen: hidden (the panel's rule since L3); `useActionGate` inside the
+       widget shares the permission cache. Alternatives: (a) disabled with "Requires knk.gate.admin": shows gate
+       buttons to every logged-in player.
+    3. *Flag source.* Chosen: the page load's shared `api/Map/config` answer. Alternatives: (a) a `MapPanel` prop from
+       `MapPage`: touches `MapPage.tsx` (L5 overlap); (b) a config request per panel: extra traffic. Consequence: a
+       flag change needs a page reload (smoke § 8.0).
+    4. *Placement.* Chosen: gate commands above the staff "Details". Alternatives: (a) below: buttons pushed out of view
+       by the long details.
+    5. *409 lock.* Chosen: stays until the panel is reopened or `underSiege` turns from true to false. Alternatives: (a)
+       cleared on every re-read: the public flag can lag the API and re-enable buttons that will be refused.
+    6. *Reload behaviour.* Chosen: `MapPanel` keeps the current data on a reload (the result would otherwise vanish when
+       the widgets unmount). Alternatives: (a) keep "Loading…" and lift the result into the panel: a larger change to
+       the panel's API.
+6. **Out of scope, noted.** None. The admin guide and register lines are follow-ups for the documentation issue (PR
+   docs impact).
+7. **Notes for later links.** L9: `visible(data, context)` now gets `MapPanelContext`; a panel reload no longer
+   unmounts widgets. On merging L5: `MapDtos.ts` has L8's types at the end; `MapPage.tsx`, the bridge, `mapClient.ts`
+   and `e2e/fixtures/map.ts` are unchanged by L8.
