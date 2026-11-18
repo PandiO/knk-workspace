@@ -1,6 +1,6 @@
 # Writing a plugin scenario
 
-**Status:** Active (in knk-plugin `next` since `309d3580`, 2026-11-14; not on trunk yet) · **Last updated:** 2026-11-17 (§ 3 items 13 and 14: the climb fails on a queue let go by the crowd's 30 s guard, both report why, link B3 [#672](https://github.com/PandiO/knk-workspace/issues/672)); 2026-11-17 (§ 3 items 13 and 14: jumps by upward speed, the engine's stair hops apart, the climb fails on a jump toward a waypoint, the replay on a lost follower and reports where stuck spells opened, link B4 [#673](https://github.com/PandiO/knk-workspace/issues/673)); 2026-11-16 (§ 3 items 13 and 14: the climb and the replay fail on falls, handovers onto another level and turns dropped after a fall, link B2 [#671](https://github.com/PandiO/knk-workspace/issues/671)); 2026-11-16 (§ 1, § 3 items 1, 7.5 and 8, § 7: a bigger box per scenario (`SizedScene`), the whole stair house, `npc-stairhouse-climb` and `npc-replay-quarry-to-keep` (50 scenarios), snapshot replay with `SnapshotReplay`, the developer's snapshot trimmed, link B1, [#670](https://github.com/PandiO/knk-workspace/issues/670)); 2026-11-16 (§ 1: the checks of the NPC movement scenarios since links M3, M4, M5 and M7, the three collision scenarios of M7 (48 scenarios), scripted pushes with `ScenarioPushes`; § 5.2 item 3: `move()` is refused on Paper 26.3; checked against knk-plugin `next` `cc5262ff`, docs [#658](https://github.com/PandiO/knk-workspace/issues/658)); 2026-11-15 (§ 2 item 3 and § 7: `npc-stuck-ladder` and `npc-stairhouse-singles` with `local-legs-clearance` on, report lines with the local legs, #623); 2026-11-15 (§ 7: the singles of `npc-stairhouse-singles` and `npc-jagged-straight` are checks with corridor steering on, #622); 2026-11-15 (§ 1, § 3 item 7 and § 7: scenes pasted from WorldEdit schematics (`SceneSchematic`, the developer's stair house), the five NPC movement scenarios in report mode with collision off and on, `KNK-NPC-REPORT` lines, 45 scenarios, [#621](https://github.com/PandiO/knk-workspace/issues/621)); 2026-11-15 (§ 1: `player-heal-needs-grant`, 32 scenarios with #522's, [#580](https://github.com/PandiO/knk-workspace/issues/580)); 2026-11-15 (§ 1 and § 4.7: the six NPC follow-up scenarios on the corner scene, `ScenarioNpcs` with access rules and gate crossings, `ScenarioNpcRules`, the short-trip rule; checked against knk-plugin `next` `deb7ff49`, [#589](https://github.com/PandiO/knk-workspace/issues/589)); 2026-11-15 (§ 5 rewritten: scripted players, `scene.player(...)`, six player scenarios; § 1, § 3.5, § 4.8, § 6 `run player-*`, new § 8 headless bot tests kept off, [#540](https://github.com/PandiO/knk-workspace/issues/540)); 2026-11-15 (§ 1, § 3.5, § 4.6, § 4.7 and § 6: NPC navigation scenarios on Citizens and a fake road network, `ScenarioRoadNpcs`, [#543](https://github.com/PandiO/knk-workspace/issues/543)); 2026-11-15 (§ 1 "Then" step 4: smoke-guide tag format, every step kept in full); 2026-11-14 (§ 1, § 3 and § 4: the scenarios and helpers of the plugin backfill, [#511](https://github.com/PandiO/knk-workspace/issues/511)); 2026-11-14 (§ 5 links #540); 2026-11-14 (first version, [PandiO/knk-workspace#421](https://github.com/PandiO/knk-workspace/issues/421))
+**Status:** Active (in knk-plugin `next` since `309d3580`, 2026-11-14; not on trunk yet) · **Last updated:** 2026-11-18 (§ 1: the replay since B5 (snapshot of 2026-11-17, the group to the route's end, off-lane and looping checks), the C1 scenarios (`npc-replay-keep-tower`, `npc-offroad-*`, `offRoadHops`) and the E1 scenarios (`npc-exit-denied-leader`, `npc-group-exit-denied`), 61 scenarios; § 3 items 5 and 8: `ScenarioDomainRules`, the NPC rule checks read regions through the live module (L9), `keep-tower.zip`, the 26.x `{id, properties}` palette entries; § 6: run times; checked against knk-plugin `next` `7aef3de4`, docs [#726](https://github.com/PandiO/knk-workspace/issues/726)); 2026-11-17 (§ 3 items 13 and 14: the climb fails on a queue let go by the crowd's 30 s guard, both report why, link B3 [#672](https://github.com/PandiO/knk-workspace/issues/672)); 2026-11-17 (§ 3 items 13 and 14: jumps by upward speed, the engine's stair hops apart, the climb fails on a jump toward a waypoint, the replay on a lost follower and reports where stuck spells opened, link B4 [#673](https://github.com/PandiO/knk-workspace/issues/673)); 2026-11-16 (§ 3 items 13 and 14: the climb and the replay fail on falls, handovers onto another level and turns dropped after a fall, link B2 [#671](https://github.com/PandiO/knk-workspace/issues/671)); 2026-11-16 (§ 1, § 3 items 1, 7.5 and 8, § 7: a bigger box per scenario (`SizedScene`), the whole stair house, `npc-stairhouse-climb` and `npc-replay-quarry-to-keep` (50 scenarios), snapshot replay with `SnapshotReplay`, the developer's snapshot trimmed, link B1, [#670](https://github.com/PandiO/knk-workspace/issues/670)); 2026-11-16 (§ 1: the checks of the NPC movement scenarios since links M3, M4, M5 and M7, the three collision scenarios of M7 (48 scenarios), scripted pushes with `ScenarioPushes`; § 5.2 item 3: `move()` is refused on Paper 26.3; checked against knk-plugin `next` `cc5262ff`, docs [#658](https://github.com/PandiO/knk-workspace/issues/658)); 2026-11-15 (§ 2 item 3 and § 7: `npc-stuck-ladder` and `npc-stairhouse-singles` with `local-legs-clearance` on, report lines with the local legs, #623); 2026-11-15 (§ 7: the singles of `npc-stairhouse-singles` and `npc-jagged-straight` are checks with corridor steering on, #622); 2026-11-15 (§ 1, § 3 item 7 and § 7: scenes pasted from WorldEdit schematics (`SceneSchematic`, the developer's stair house), the five NPC movement scenarios in report mode with collision off and on, `KNK-NPC-REPORT` lines, 45 scenarios, [#621](https://github.com/PandiO/knk-workspace/issues/621)); 2026-11-15 (§ 1: `player-heal-needs-grant`, 32 scenarios with #522's, [#580](https://github.com/PandiO/knk-workspace/issues/580)); 2026-11-15 (§ 1 and § 4.7: the six NPC follow-up scenarios on the corner scene, `ScenarioNpcs` with access rules and gate crossings, `ScenarioNpcRules`, the short-trip rule; checked against knk-plugin `next` `deb7ff49`, [#589](https://github.com/PandiO/knk-workspace/issues/589)); 2026-11-15 (§ 5 rewritten: scripted players, `scene.player(...)`, six player scenarios; § 1, § 3.5, § 4.8, § 6 `run player-*`, new § 8 headless bot tests kept off, [#540](https://github.com/PandiO/knk-workspace/issues/540)); 2026-11-15 (§ 1, § 3.5, § 4.6, § 4.7 and § 6: NPC navigation scenarios on Citizens and a fake road network, `ScenarioRoadNpcs`, [#543](https://github.com/PandiO/knk-workspace/issues/543)); 2026-11-15 (§ 1 "Then" step 4: smoke-guide tag format, every step kept in full); 2026-11-14 (§ 1, § 3 and § 4: the scenarios and helpers of the plugin backfill, [#511](https://github.com/PandiO/knk-workspace/issues/511)); 2026-11-14 (§ 5 links #540); 2026-11-14 (first version, [PandiO/knk-workspace#421](https://github.com/PandiO/knk-workspace/issues/421))
 **Related:** [CI § 7.1](ci.md#71-in-plugin-scenarios) (how CI runs them), [plugin architecture § Testing](../../architecture/plugin-architecture.md#testing),
 [`knk-test-writer` skill](../../../.claude/skills/knk-test-writer/SKILL.md) (which suite a behaviour belongs in),
 [AI agent workflow design § 6.3](../../specs/ai-agent-workflow/DESIGN.md#6-testing-and-ci),
@@ -51,7 +51,7 @@ Then:
    `[automated: plugin scenario <name>] <the step as written>`, or `[partly automated: plugin scenario <name>; by hand:
    <what is left>]` when a player still has to check part of it (developer decision 2026-11-15).
 
-The shipped scenarios are fuller examples (`PaperScenarios` lists all 32): `GateOpenCloseScenario`,
+The shipped scenarios are fuller examples (`PaperScenarios` lists all 61 on knk-plugin `next` `7aef3de4`): `GateOpenCloseScenario`,
 `GateClosingMovesEntityOutScenario` and `GlobalRegionExplosionScenario` (the full version of the example above, with a
 control inside a region) came with the framework; the backfill of
 [#511](https://github.com/PandiO/knk-workspace/issues/511) added seven gate-safety scenarios (`GateClosingKeepsSidesScenario`
@@ -190,6 +190,15 @@ every report line has a `local legs k&k N, engine N, none N` part:
     arrive. Since B4 ([#673](https://github.com/PandiO/knk-workspace/issues/673)) the group also fails on a lost
     follower, with the lost followers' run-log lines in the reason, and reports where each stuck spell opened (real
     block, how far behind its slot along the path, how far from the slot's point). Jumps are reported as in item 13.
+    Since B5 ([#699](https://github.com/PandiO/knk-workspace/issues/699)) it replays the developer's snapshot of
+    2026-11-17 19:34 (plugin `0.1.0+e69dba6a`, with the gate doors' states). The leader alone still walks to the top
+    hall (1415 76 −546); with the stored settings (the developer's: `elastic`, `crowd-awareness` on, `collidable` off)
+    the group walks on to the route's own end in the keep (1421 85 −516), so its leader goes on past the flights while
+    the rear ranks still climb them (`GROUP_TICKS` 240 s). The group also fails on an own leg back from off its lane on
+    the flights and landings and on a looping follower (three or more own legs back from one block), and reports both
+    (`followers off their lane on the stair house (B5)`, `looping followers (B5)`). Since C1 the replay places the
+    blocks with non-default states too (§ 3 item 8.6): 122,011 blocks instead of 111,286. The replays' numbers before
+    C1 were taken on a world without them.
 
 Every line also has falls, trespasses, `recovery no path` and K&K's navigation time per NPC per tick. The first
 numbers are the baseline in the chain report's M1 block.
@@ -238,6 +247,40 @@ default, so an attack neither hurts nor knocks them back).
 With `collidable` on for every NPC scenario (a trial, not on CI), `npc-ledge-corner`, `npc-corners-walk`,
 `npc-group-narrows` and `npc-stuck-ladder` fail; only the scenarios above run with collision on. That is why
 `collidable` stays off by default ([implementation plan 4c.4 item 7.4.10](../../specs/npc-platform/IMPLEMENTATION_PLAN.md)).
+
+The fix links after the smoke tests of 2026-11-16 and 2026-11-17 added these (each seen failing on the code before
+its fix; settings as on the developer's dev server unless named):
+
+1. `npc-replay-keep-tower` (`NpcKeepTowerReplayScenario`, [#700](https://github.com/PandiO/knk-workspace/issues/700),
+   link C1): the developer's snapshot of `northern-wearway-upper-keep-tower` (2026-11-17 19:37) trimmed to the keep
+   and the tower (`keep-tower.zip`, § 3 item 8.5). A leader alone, then a group of 20 in `ranks`, from the keep's road
+   (1420 82 −531) through the throne room and up the tower's spiral staircase to the goal (1401 113 −502), with the
+   stored settings. Fails when the leader does not arrive in time; the group also when a follower is lost or has not
+   come up into the tower (above the throne room's floor, within 24 blocks of the goal). Before C1 the leader stuck
+   at 1406 85 −510, where the developer's NPC did.
+2. `npc-offroad-detour`, `npc-offroad-upstairs`, `npc-offroad-ravine` (`NpcOffRoadScenario` on `NpcOffRoadScene`, a
+   64 × 32 × 64 box, #700): an off-road goal in a walled courtyard whose gate is on the far side from the road; a goal
+   on top of a 7 × 7 tower up a two-turn spiral stair inside a curtain wall, with a group of 5 after the single NPC;
+   and a start across a 5-deep ravine from the road's nearest point, so the road is joined on the bridge. Code
+   defaults with `local-legs-clearance` and `corridor-steering` on. Each fails when the NPC does not arrive in time,
+   falls into the ravine, has a stuck spell, or when no off-road part was planned with the walk search.
+3. `-Dknk.scenario.offRoadHops=true` (a JVM property of the test server) makes the C1 scenarios walk off-road parts
+   in hops, as before C1: the before run. The four fail then.
+4. `npc-exit-denied-leader` (`NpcExitDeniedLeaderScenario`, [#701](https://github.com/PandiO/knk-workspace/issues/701),
+   link E1): an NPC walks out of a district on a route planned while leaving was allowed; the district's exit is
+   denied through realtime (`EntityChanged`) mid-trip. It stops at the edge, inside, and waits; once leaving is
+   allowed again (through `/knk cache refresh` this time) it walks on and arrives. Nobody trespasses.
+5. `npc-group-exit-denied` (`NpcGroupExitDeniedScenario`, #701): a group of 8 walks out of a district on the corner
+   scene; leaving is denied through realtime when the leader and the first followers are out. The followers inside
+   stop at the edge, inside; the leader and those already out walk on; once leaving is allowed again (realtime) the
+   rest follow. Nobody trespasses.
+
+Both E1 scenarios read the rules as a server does (`ScenarioDomainRules`, § 3 item 5) and need Citizens and
+WorldGuard. Their fake road answers BLOCKED from inside a region the NPC may not leave, as the router does
+(`ScenarioNpcs.plan`). The NPC scenarios with domain rules, among them `npc-group-realtime-entry` and
+`npc-group-access-change`, read regions through the live NPC module since L9
+([#668](https://github.com/PandiO/knk-workspace/issues/668)), so they fail when the module's rule checks see no
+WorldGuard region.
 
 A scenario must fail when its behaviour breaks (report-mode scenarios excepted until a link gives them checks). For the backfill each behaviour was broken once on a local server (the
 side rule, the other-door rule, the suffocation guard, the predictive push, the region rename, the lootbox area lookup,
@@ -298,7 +341,13 @@ cleared before and after the run, so keep it as small as the scene allows ([#670
    road along the scene (x, z) points you give, spawns Citizens NPCs, sends one or a group, measures the distance from
    the road's centre line and counts the navigation's events; `close()` as a cleanup, because NPCs are player
    entities the scene does not remove); `ScenarioNpcs` and `ScenarioNpcRules` (real NPCs walking the corner scene,
-   with access rules and gate crossings of their own, § 4.7). Scripted players come from the scene itself:
+   with access rules and gate crossings of their own, § 4.7); `ScenarioDomainRules` (#593, #701: a fake API, the
+   plugin's region → domain map and the rules NPCs walk by through `DomainEntryRule`, entry and exit; a change reaches
+   the NPCs through the plugin's own classes, either by `realtime` (`EntityChanged`, `NavigationDomainChanges`, one
+   `DomainCacheRewarm`, then the availability event) or by `refresh` (as `/knk cache refresh`)). The NPC rule checks
+   read WorldGuard regions through the live NPC module (`scene.services().npcRules()`, its `rulesWorld()`; L9,
+   [#668](https://github.com/PandiO/knk-workspace/issues/668)), and the C1 off-road walks get the walk search's parts
+   from `scene.services().npcWalks()`. Scripted players come from the scene itself:
    `scene.player(name, …)` (§ 5).
 6. **Where:** `testing.scenarios.origin` (default 30000, 100, 30000) in the main world (or `testing.scenarios.world`);
    scene *n* of a run sits 64 × *n* blocks further along x. Keep it far from anything built.
@@ -352,12 +401,23 @@ cleared before and after the run, so keep it as small as the scene allows ([#670
       replay.gates(scene))`.
    5. **A real snapshot is trimmed before it is committed.** The command copies whole region files (8 to 9 MB each),
       and a scene is at most 64 blocks wide. `tools/scenario-scenes/trim_snapshot.py IN.zip OUT.zip minX minY minZ
-      maxX maxY maxZ` keeps the chunks round a window and sets the box to it (deterministic bytes). The developer's
-      `quarry-to-keep` of 2026-11-16 (17.5 MB, on knk-plugin `evidence/smoke-2026-11-16`) is committed as
-      `quarry-to-keep-stairhouse.zip` (x 1391..1454, y 36..96, z −559..−480, 30 chunks, 371 KB) and replayed by
-      `npc-replay-quarry-to-keep`.
+      maxX maxY maxZ` keeps the chunks round a window and sets the box to it (deterministic bytes). The region files
+      hold whole columns, so a point above the snapshot's own box is still there. Committed:
+      1. `quarry-to-keep-stairhouse.zip`: the developer's `quarry-to-keep` trimmed to x 1391..1454, y 36..96,
+         z −559..−480 (30 chunks, 371 KB), replayed by `npc-replay-quarry-to-keep`. Since B5 it is the snapshot of
+         2026-11-17 19:34 (with the gate doors' states); B1 to B4 used the one of 2026-11-16 21:25.
+      2. `keep-tower.zip`: the developer's `northern-wearway-upper-keep-tower` of 2026-11-17 19:37 trimmed to x
+         1391..1454, y 66..130, z −559..−480 (371 KB), replayed by `npc-replay-keep-tower`.
+
+      The whole zips (17.5 and 17.6 MB) stay on knk-plugin `evidence/smoke-2026-11-16` (folder
+      `knk-paper/src/test/resources/scenario/evidence/<date>/`). To replace one, trim the new zip with the same window
+      and commit it under the same name; how to take and hand one in is in the
+      [admin guide § 3](../admin/npc-navigation-admin-guide.md#3-test-commands).
    6. `AnvilRegion` reads Minecraft 26.x palettes: a list of block state strings, each wrapped in `{"": ...}` in a list
-      of mixed types; and the older `{Name, Properties}`.
+      of mixed types, and `{id, properties}` entries for a state whose properties differ from the block's defaults
+      (stairs not facing north, top slabs, open doors); and the older `{Name, Properties}`. The `{id, properties}`
+      entries were dropped before C1 ([#700](https://github.com/PandiO/knk-workspace/issues/700)), so every replay
+      before it lacked those blocks.
    7. `stairhouse-sample.zip`, made from the schematic by `tools/scenario-scenes/make_snapshot_sample.py`, is kept for
       the unit tests (`AnvilRegionTest`, `SnapshotReplayTest`).
 
@@ -543,7 +603,10 @@ client's movement and rendering, Bedrock, real alpha data.
    Citizens jars in an empty folder (`plugins/`; the pinned URLs are in the workflow's `env`), build with
    `./gradlew :knk-paper:shadowJar`, then
    `tools/paper-boot/boot-test.sh --server-dir <folder> --plugin-jar knk-paper/build/libs/knk-paper-0.1.0-SNAPSHOT.jar --java <jdk25>/bin/java --scenarios --npc-navigation`.
-   About three minutes with the NPC scenarios (the #521 corner walk alone takes 90 s); it prints the result table. Details: [CI § 7](ci.md#7-plugin-the-paper-boot-test).
+   A whole run takes about 25 minutes with the NPC scenarios (54 scenarios in 23 minutes with the boot, 2026-11-18;
+   the quarry replay alone about 6 minutes, the four C1 scenarios together about 5.5); it prints the result table.
+   For one scenario or a few, run `knk scenario run <name>` or `knk scenario run npc-*` on a local test server
+   (item 1); a single scenario with the server's boot took about 4 minutes in link B3. Details: [CI § 7](ci.md#7-plugin-the-paper-boot-test).
 3. **In CI:** every push and pull request runs all scenarios in the `paper-boot` job ([CI § 7.1](ci.md#71-in-plugin-scenarios)).
    The job summary shows the table; the `paper-boot-log` artifact has the full log.
 
