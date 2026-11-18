@@ -4,6 +4,23 @@ This is a human-readable record of capabilities merged into the V3 default branc
 
 ## Unreleased — on feature branches, not merged
 
+- **Off-road navigation, phase 5.1 step B: landmarks in game** ([PandiO/knk-workspace#708](https://github.com/PandiO/knk-workspace/issues/708),
+  link L8 of the off-road navigation chain). knk-plugin and knk-workspace branches `claude/offroad-landmarks` (PRs into
+  `next`). Behind the new `config.yml` key `navigation.landmarks` (off by default: nothing changes for players).
+  1. With the key on (and `navigation.destination-engine` on), players can `/navigate` to a landmark by name or as
+     `landmark:<name>`; tab completion offers the landmarks of their world they may navigate to, not those with
+     "Offer in /navigate" off, not other worlds' and none during a siege match. A landmark with a region ends the
+     navigation inside the region, one with a radius inside that radius, one without either within the arrive distance.
+     A navigation to a landmark that is deleted or switched off ends with the "no longer" message; a rename keeps it.
+  2. Staff with `knk.admin.world.landmark` use `/knk landmark create <name> [region <id> | radius <n>]`, `list`, `show`,
+     `move`, `delete`, `link <landmark> <domain>` and `unlink` in game.
+  3. The navigation model keeps the landmarks in its snapshot (`offline/navigation-model.json`), so they work with the
+     API down after a restart; a failed landmark read keeps the last ones.
+  4. Admin steps: add `landmarks: false` under `navigation:` in `config.yml` (a missing key means `false`; see
+     [plugin configuration § 4.15](guides/admin/plugin-configuration.md#415-navigation)); restart after changing it.
+     The API side (migration, node) is step A's entry below. Steps:
+     [off-road smoke test § 6.3](guides/navigation-offroad-smoke-test.md#63-in-game-step-b-a12-to-a14).
+
 - **Off-road navigation, phase 5.1 step A: landmarks in the API and the web app** ([PandiO/knk-workspace#708](https://github.com/PandiO/knk-workspace/issues/708),
   link L8 of the off-road navigation chain, [#698](https://github.com/PandiO/knk-workspace/issues/698)). knk-web-api,
   knk-web-app and knk-workspace branches `claude/offroad-landmarks` (PRs into `next`). Nothing changes for players
