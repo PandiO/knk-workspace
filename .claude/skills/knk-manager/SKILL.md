@@ -145,8 +145,8 @@ For each of the four repos, after `git fetch`:
 
 ## 7. The sessions board
 
-The board is `docs/ACTIVE_SESSIONS.md` on knk-workspace `main` (DESIGN § 8). Work in a detached worktree on
-`origin/main`; commit only the board and archive files; push `HEAD:main`; on a rejected push fetch, rebase that one
+The board is `docs/ACTIVE_SESSIONS.md` on knk-workspace `main` (DESIGN § 8). Run `git fetch origin` first, then work
+in a detached worktree on `origin/main`; commit only the board and archive files; push `HEAD:main`; on a rejected push fetch, rebase that one
 commit and keep both sides of any conflict.
 
 1. **Finished rows.** A row is finished when its status says done, merged and closed, or archived, or when every issue

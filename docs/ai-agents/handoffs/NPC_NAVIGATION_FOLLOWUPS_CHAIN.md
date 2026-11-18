@@ -1,7 +1,7 @@
 # NPC navigation follow-ups chain — charter
 
-**Status:** Done (2026-11-17): fix links L9 and B1–B4 merged into `next`; the developer's smoke test, the option-B decision and promotion open
-**Last updated:** 2026-11-17
+**Status:** Done (2026-11-18): fix links L9, B1–B5, C1 and E1 merged into `next`; the developer's retest, review decisions and promotion open
+**Last updated:** 2026-11-18
 **Issues:** parent [PandiO/knk-workspace#358](https://github.com/PandiO/knk-workspace/issues/358); link sub-issues
 [#519](https://github.com/PandiO/knk-workspace/issues/519) (L1),
 [#520](https://github.com/PandiO/knk-workspace/issues/520) (L2),
@@ -65,6 +65,10 @@ component repos.
 | B2 | #671 | tier:3 | Stretch handover: 3D progress, append instead of replace, bridge from the feet, unbridgeable step as a local leg, no falls copied into the group path | knk-plugin, knk-workspace | `claude/npc-movement-b2` | `next` | `npc.navigation.enabled` (off) | B1 merged |
 | B3 | #672 | tier:2 | Crowd turns judged in 3D | knk-plugin, knk-workspace | `claude/npc-movement-b3` | `next` | `crowd-awareness` (off) | B4 merged; needed (report decision 39) |
 | B4 | #673 | tier:2 | Waypoints and group slots at real stair heights; jump detection by upward speed | knk-plugin, knk-workspace | `claude/npc-movement-b4` | `next` | `npc.navigation.enabled` (off) | B2 merged (report decision 38) |
+| B5 | #699 | tier:3 | Group followers under a leader one flight above: lanes, rejoin and slots in 3D (smoke test 2026-11-17) | knk-plugin, knk-workspace | `claude/npc-movement-b5` | `next` | `npc.navigation.enabled` (off) | B3 merged |
+| C1 | #700 | tier:3 | Off-road starts and ends with today's walk search within its caps, walked like stretches; road join by reachability; hops as fallback; snapshot box over from/to (long walks come from #698) | knk-plugin, knk-workspace | `claude/npc-movement-c1` | `next` | `npc.navigation.enabled` (off) | B5 merged and #698 phase 1 (move to `core/navigation/shape/`) merged (report decision 44) |
+| E1 | #701 | tier:2 | Exit rules checked while NPCs walk (recheck, trespass guard, follower lanes), not only when planned | knk-plugin, knk-workspace | `claude/npc-movement-e1` | `next` | `npc.navigation.enabled` (off) | C1 merged |
+| R1 | #724 | tier:2 | A cache refresh's first event with an empty region map lets held NPCs cross; fix the refresh path, count such a crossing | knk-plugin, knk-workspace | `claude/npc-movement-r1` | `next` | `npc.navigation.enabled` (off) | E1 merged; off-road coordinator's OK (2026-11-18) |
 
 ## 2. Gates
 

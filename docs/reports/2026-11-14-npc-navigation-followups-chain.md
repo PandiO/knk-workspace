@@ -58,6 +58,10 @@ the configuration reference § 4.27), then restart. In test order:
 | B2 Stretch handover in 3D, appended, bridged from the feet | #671 | In review (PRs open, not merged) | knk-plugin `a30ac085`; knk-workspace `cbff95cc` | PandiO/knk-plugin#64, PandiO/knk-workspace#693 | `build` and `paper-boot` (50) green on `a30ac085` (runs 43988727914, 43988727937); 50/50 locally; Codex at its usage limit | create_session (2026-11-16) |
 | B4 Waypoints and group slots at the real stair heights; jumps by upward speed | #673 | In review (PRs open, not merged) | knk-plugin `2a261289`; knk-workspace `73160c65` | PandiO/knk-plugin#65, PandiO/knk-workspace#694 | `build` and `paper-boot` (50) green on `2a261289` (push run 44008785404, PR run 44008842004); 50/50; Codex at its usage limit | create_session (2026-11-17) |
 | B3 Crowd turns judged in 3D; the guard counts from the last entry | #672 | In review (PRs open, not merged) | knk-plugin `89eeb3eb`; knk-workspace `bcf7a3d9` | PandiO/knk-plugin#66, PandiO/knk-workspace#696 | `build` and `paper-boot` (50) green on `89eeb3eb` (push run 44017052199, PR run 44019311124); climb let go 0 in CI and three local runs; 27/27 `npc-*` locally; Codex at its usage limit | create_session session_01R1w2UwCdu4jcMQD9mXoQv8 (2026-11-17) |
+| B5 Group followers under a leader a flight above: shaped path kept on the walk | #699 | In review (PRs open, not merged) | knk-plugin `6b186840`; knk-workspace `33add9f8` | PandiO/knk-plugin#67, PandiO/knk-workspace#716 | `build` and `paper-boot` (50) green on `6b186840` (push and PR runs); docs no CI; Codex at its usage limit | create_session session_01R1w2UvW8pwfjEAwo5hVKp1 (2026-11-17) |
+| C1 Off-road starts and ends with the walk search, walked like the road line | #700 | In review (PRs open, not merged) | knk-plugin `b7608662`; knk-workspace `bafe631f` (`next` `ce0f65ec` merged in) | PandiO/knk-plugin#71, PandiO/knk-workspace#721 | `build` and `paper-boot` (59) green on `b7608662` (runs 44225040650, 44225046762, 44225040520, 44225046831); one red `paper-boot` on `ced61331` fixed (doorway jam); docs no CI; Codex at its usage limit | create_session (2026-11-17) |
+| E1 Exit rules checked while NPCs walk | #701 | In review (PRs open, not merged) | knk-plugin `de1c8a6a`; knk-workspace `a827abc6` | PandiO/knk-plugin#74, PandiO/knk-workspace#725 | `build` and `paper-boot` (61) green on `de1c8a6a` (push and PR runs); both new scenarios fail on `next`'s walking checks, pass with E1; docs no CI; Codex at its usage limit | create_session (2026-11-18) |
+| R1 Fix: held NPCs stay held through `/knk cache refresh` | #724 | In review (PRs open, not merged) | knk-plugin `836ddf62`; knk-workspace `3f1ec0c5` | PandiO/knk-plugin#75, PandiO/knk-workspace#730 | `build` and `paper-boot` (62) green on `836ddf62` (push and PR runs); the new scenario and core test fail on `next`, pass with R1; docs no CI; Codex at its usage limit | create_session (2026-11-18) |
 
 ## 3. Coordinator decisions
 
@@ -347,6 +351,65 @@ the configuration reference § 4.27), then restart. In test order:
     every region mapped to a domain, whatever its type (town, district, structure, gate). Exit rules hold where a
     route is planned, from the NPC's position, but the walking checks do not re-check them (`DomainEntryRule` is
     entry only; the module's own warning says "exit rules hold only where a route is planned").
+42. **Developer smoke test of 2026-11-17 on `e69dba6a`; links B5 and C1** (evidence on knk-plugin
+    `evidence/smoke-2026-11-16` under `.../evidence/2026-11-17/`).
+    1. Passed: the leader alone through the stair house (no fall, no skipped flight, no stop at 1410 49 -503, arrives;
+       about 4 small hops after a stair step, added to #695); the access change mid-group (#668), completely; the
+       singles of the crowd step.
+    2. Failed: a `ranks` group (elastic) on the second-last flight; the leader ended up one flight directly above its
+       group and the followers looped on the flight below ("off its lane at 1413 67 -539: its own leg back to 1416 69
+       -542" repeated). Same in the crowd step. Link **B5** (#699) started.
+    3. New route `northern-wearway-upper-keep-tower`: the road part went well; the ~100-block off-road end through the
+       throne room and up a spiral staircase failed (stuck at 1405 85 -510). Link **C1** (#700, off-road legs with the
+       walk navigator's search) after B5. The developer's question about off-road parts is answered in the coordinator
+       session; the exit-rule gap (decision 41) waits for the developer's answer.
+    4. The developer noted that there are no places on the test routes narrow enough to make groups queue; a route for
+       that comes later. Collision stayed off.
+43. **Developer answers, 2026-11-17.** (1) The exit-rule gap runs as its own link E1 (#701) after C1. (2) Idea filed:
+    NPCs avoid drops that would hurt them, the cost scaling with the drop, read from cells already captured (#702,
+    future, `idea`). (3) The developer is designing road graph and knk navigator improvements (walk legs, plaza
+    navigation) in a separate session, implementation from 2026-11-18. C1 therefore uses the walk navigator through its
+    entry points without changing its code, and the coordinator reads that design before C1 starts (comment on #700).
+44. **Order with the off-road navigation design #698 (developer decision 2026-11-17).** The coordinator had missed
+    #698's sessions board row (on the board since 14:11 UTC; a keyword search instead of a match by issue and files;
+    the board-fetch rule is being fixed on `claude/board-fetch-before-read`). #698's phase 1 moves the corridor code and
+    `NavWorld`, `NavPoint`, `NavGeometry` and `HopPlanner`'s floor helpers to `core/navigation/shape/`; its long walks
+    (clusters, O32) cover most of C1. Agreed order: B5 → #698 phase 1 → a narrowed C1 (today's walk search within its
+    caps, road join by reachability, hops as fallback) → E1. NPC use of #698's long walks moves into that design's v1.
+    Recorded on #698 and #700. Alternative: C1 as filed first (rejected: it would collide with the move and duplicate
+    the long walks).
+45. **B5 checked and merged; C1 waits for #698's L2** (2026-11-17). § 6 held: CI `build` and `paper-boot` (50) green on
+    `6b186840`, no debug code, no files in `core/roads/walk` (the off-road chain's L1), `GroupPath.addShaped` reviewed.
+    Merged knk-plugin#67 → `55ea7df3`, knk-workspace#716 → `c54786ac`. Cause: corridor-shaped line points cut the
+    stacked hairpin across the stairwell, so the group path skipped flight 5's top and followers looped off their
+    lanes. Replay on the 2026-11-17 snapshot: 21 off-lane legs → 0, 0 looping, 0 lost. For the developer's review: B5
+    decisions 5.1 and 5.2. The off-road chain's coordinator (session_01R1w2UuBBnWjqekMFxEMefN) was told; its L2 (#704,
+    the move to `core/navigation/shape/`) starts now; C1 starts when L2 is merged (decision 44).
+46. **C1 checked and merged; E1 started** (2026-11-18). § 6 held: CI `build` and `paper-boot` (59) green on
+    `b7608662`, no debug code, no edits in `core/roads/walk`, `paper/navigation` or `core/navigation/shape` (the off-road
+    chain's areas), walk searches on the walk executor, merged clean into `next` after two rounds of mechanical
+    conflicts (MIN_SCENARIOS, `PaperScenariosTest`) with the off-road chain's L4 and L10 step 1. Merged knk-plugin#71 →
+    `65c7d6d3`, knk-workspace#721 → `b0bd7f4a`. Keep tower: leader stuck → arrives 53.4 s, group of 20 arrives 59.1 s,
+    0 lost; the spiral fits the walk caps (172–180 of 220 blocks), so no acceptance case for #698's NPC phase. Detour
+    and ravine fail before, arrive after. Also fixed: the replay Anvil reader dropped 26.x block states since B1; open
+    doors were walls. For the developer's review: C1 decisions 5.3, 5.4, 5.10. E1 (#701) started.
+47. **E1 checked and merged; chain back to In review** (2026-11-18). § 6 held: CI `build` and `paper-boot` (61) green on
+    `de1c8a6a`, no debug code, no edits in the off-road chain's areas or in `core/roads/route` and `core/regions`; the
+    exit rule comes from `DomainAvailability.exitDeniedRegions` through `DomainEntryRule`'s new `RegionRule`. Merged
+    knk-plugin#74 → `7aef3de4`, knk-workspace#725 → `7a397e15`. For the developer's review: E1 decisions 5.1, 5.4, 5.5.
+    Filed by E1: #724 (a cache refresh's first event with the map empty; in the off-road chain's area, offered to its
+    coordinator). Docs follow-up #726 for L9, B1–B5, C1 and E1 with its docs session started. Open: the developer's
+    retest (smoke guide sections B5, C1, E1), the review decisions of B5, C1 and E1, #695, #702, #724, the option-B
+    decision, the `collidable` default, promotion.
+48. **R1 started for #724** (2026-11-18). The off-road chain's coordinator does not take #724 (no link of theirs covers
+    the cache-refresh path) and agreed it runs in this chain; R1 keeps any `paper/navigation` edit to the refresh path,
+    away from guidance-v2, and reports the files first.
+49. **R1 checked and merged** (2026-11-18). § 6 held: CI `build` and `paper-boot` (62) green on `836ddf62`, no debug code,
+    `paper/navigation` limited to `DomainCacheRewarm` and one NPC-only line in `NavigationAccess` (the off-road
+    coordinator saw no clash; its A16 condition, players unchanged, pinned by a test), resolver change reviewed. Merged
+    knk-plugin#75 → `1f414d08`, knk-workspace#730 → `f82b5975`. Held NPCs no longer cross after a cache refresh
+    (6 unit tests and a scenario fail before, pass after). For the developer's review: R1 decisions 5.1, 5.2, 5.6.
+    No NPC link running; the chain waits for the developer's retest.
 
 ## 4. Link blocks
 
@@ -1712,3 +1775,271 @@ _(Each link appends its block here when it finishes.)_
 9. **Notes for later links.**
     1. `why the guard let them go (B3)` and `waits of 10 s or more (B3)` in the climb and replay reports name every holder and blocker in 3D. Use them before guessing at a crowd fault.
     2. Local scenario runs worked in this container (Citizens' libraries loaded). `tools/paper-boot/boot-test.sh` with `knk scenario run <name>` (a local copy that replaces `run all`) runs one scenario in about 4 minutes; `npc-*` runs 27 in about 12.
+
+### 4.21 B5 — A group's shaped path kept on the walk on stacked flights (#699)
+
+1. **Scope done** (prompt § 1, sub-issue #699). Behind `npc.navigation.enabled` (off by default), and only with `group-formation-keeping: elastic` or `plaza-lines`; no new key.
+    1. **Reproduced on the real blocks.** `npc-replay-quarry-to-keep` now replays the snapshot of 2026-11-17 19:34 (with the gate doors). With the stored settings (the developer's: `elastic`, `crowd-awareness` on, `collidable` off) its group of 20 walks on to the route's end in the keep (1421 85 −516), as the developer's did, so the leader goes on past the flights while the rear ranks still climb them. On `next` every one of the 19 followers left its lane at flight 5's top (1410 74 −537) and took an own leg back: 21 in all. The scenario passed before only because it did not look.
+    2. **Cause.** An `elastic` group (or one with `plaza-lines`) builds its path from corridor-shaped line points (`NavGroup.shapedLinePoint`, the route line pulled straight in 2D). A dump of the group path: from mid flight 5 (1410.5 72 −541.5) its next point was the far end of the landing above (1415 74 −536.4); the flight's top and the landing were missing. A log of each shaped point against the line's own point showed why: two shaped points lay over the stairwell (no floor near the path's last floor, so `GroupPath.addSnapped` repeated the point before), and the next eight all projected onto the landing's far end. A follower at the flight's top was judged against a path point 5 blocks across the stairwell (more than its lane allows), so it was off its lane. Where the shaped line lands on the hall floor beside a flight (the hall at feet 66 under flight 4's first steps), the path and the lanes run a level below the flight: the developer's step 3 log has slots at 1417 66 −538 there.
+    3. **How the leader got a flight above.** It did not walk wrong: the leader went on along its line while its followers, judged against the broken path, stood or walked back down. With `group-regroup-blocks` 24 it waited on the passage right above flight 4 for a follower 24 or more blocks behind (along the path), timed out after 30 s, walked a tick and waited again, for 4 minutes.
+    4. **Fix** (knk-core `GroupPath.addShaped`, used by `NavGroup.trackLeader`). A shaped point goes into the group path only where it has a floor near the path's last point, at most a block above or below the floor of the line's own point, and a straight walk (`NavGeometry.straightWalkable`, the body's width) leads to it from the path's last point. Otherwise the line's own point goes in (`addSnapped`, as without shaping). Generic: no coordinates, any stacked stair, landing or ramp.
+    5. **Checks.** The replay's group fails on an own leg back from off the lane on the flights and landings (`NpcMovementScene.climbPlaceAt` > 0) and on a looping follower (three or more own legs back from one block), and reports both (`followers off their lane on the stair house (B5)`, `looping followers (B5)`).
+    6. **Snapshot.** `trim_snapshot.py IN OUT 1391 36 -559 1454 96 -480`, as B1 (30 chunks, 370,602 bytes); nothing else changed. `SnapshotReplayTest` updated (plugin `e69dba6a`, 101 line points, gate doors recorded).
+2. **Commits and heads.**
+    1. knk-plugin `claude/npc-movement-b5` (base `next` `e69dba6a`): `938b775e` (fix and unit tests), `d402d865` (replay), `6b186840` (test update), head **`6b186840`**.
+    2. knk-workspace `claude/npc-movement-b5` (base `next` `35005d6b`): head **`33add9f8`**.
+3. **PRs** (base `next`, not merged).
+    1. PandiO/knk-plugin#67 (`Part of #699`).
+    2. PandiO/knk-workspace#716 (`Closes #699`).
+4. **Tests, baseline → result.**
+    1. `./gradlew build -x deployToDevServer`: baseline on `next` `e69dba6a` core 3011, api-client 344 (2 skipped), paper 2891 (18 skipped); result core 3015 (+4), api-client 344, paper 2891; 0 failures.
+    2. New: `GroupPathTest` +4 (a shaped point over the stairwell gives way to the line's own point; one on the hall floor two blocks under the step gives way; one across a void on the same floor gives way; one on one floor with a straight walk is kept). Three fail on the old code.
+    3. Scenarios, locally (Paper 26.3 b205, Citizens b4269, `--npc-navigation`).
+        1. Old core with the new checks: `npc-replay-quarry-to-keep` **fails** (21 own legs back from off the lane, all at flight 5's top).
+        2. This branch: **50/50** in 17 min 16 s.
+        3. Replay group to the route's end, stored settings: off the lane 21 → 0, looping 0, lost 0, leader 123.8 → 105.5 s, stuck spells 4 → 4 (on the street while it forms up, as since B4), jumps toward a waypoint 4 → 4, falls 0.
+        4. Replay group, the 2026-11-16 smoke settings (`levels`): 0 off the lane, 0 lost, 0 stuck, 70.5 s; 63 jumps at the hall entry (#695, report only; 56 in B4's run).
+        5. `npc-stairhouse-climb` unchanged (76.2 s, 0 falls, 0 let go, 0 stuck, 0 lost).
+    4. CI: knk-plugin#67 on `6b186840`: `build` and `paper-boot` (50 scenarios) green on the push run (44178102216, 44178102371) and the PR run (44178163338, 44178163361). knk-workspace has no docs CI.
+    5. Codex: at its code-review usage limit on both PRs (said on each); finished without its review.
+5. **Decisions (DESIGN § 4.3).**
+    1. *Where to fix.* Chosen: where shaped points enter the group path (`GroupPath.addShaped`), so lanes, slots, rejoin targets and the off-lane judgement all see a path on the walk. Alternatives: (a) make the off-lane check and the follower's place on the path 3D-aware (they were right: the path was wrong); (b) turn shaping off for groups on stairs (loses corridor steering's wall clearance for groups everywhere a flight is near); (c) fix `CorridorShaper` to shape in 3D (the shaper serves the leader alone too, which passes; larger and riskier).
+    2. *Which shaped points stay.* Chosen: a floor near the path's last point, within a block of the line's own point's floor, and a straight walk from the path's last point. Alternatives: (a) the very same floor block as the line's own point (tried: refused shaped points on the hall-entry stair, jumps toward a waypoint 4 → 35, stuck spells 4 → 15); (b) only "has a floor" (keeps the jump across the stairwell to the landing's far end, which has a floor).
+    3. *A refused shaped point.* Chosen: the line's own point, snapped as without shaping. Alternative: (a) repeat the point before (today's fallback; that is what skipped the flight).
+    4. *Reproduction.* Chosen: the replay's group to the route's end with the stored settings, from the same street start. Alternatives: (a) start further back, past the south gate's plaza, like the developer's group (tried: the fake road's there-and-back loop is walked the wrong way round from there, a harness quirk, known limit 4c.8 item 4.7.4); (b) `npc-stairhouse-climb` (its schematic has no hall floor under flights 4 and 5).
+    5. *The check.* Chosen: fail on any own leg back from off the lane on the flights and landings, and on three or more own legs back from one block anywhere (looping). Alternatives: (a) only looping (on `next` the replay has 21 off-lane legs but no loop, so it would pass); (b) any own leg back anywhere (the street's forming-up spells would fail it).
+    6. *Group walk length.* Chosen: `GROUP_TICKS` 240 s for both configurations (the walk to the keep takes 105–124 s). Alternative: (a) a separate walk (3 more minutes of CI).
+    7. *Evidence files.* Chosen: not copied into test resources (no test reads them; they stay on `evidence/smoke-2026-11-16`). Alternative: (a) copy the 2026-11-17 traces with `git add -f`, as B1 did for its traces (B1's were the climb's line).
+6. **Out of scope, noted.**
+    1. Lanes beside a flight's first step can still lie on a floor a block lower (the rule allows a block); plan 4c.8 item 4.7.2. No run showed it after the fix.
+    2. A follower's place on the path is searched forward only (`NavGroup.WINDOW`); one that ends up a flight below its place is still sent an own leg back (item 4.7.3).
+    3. The replay's fake road walks the there-and-back loop the wrong way from a start past the south gate's plaza (item 4.7.4); test harness only.
+    4. #695 (jumps at the hall entry with `levels`): 63 in this run, unchanged by B5.
+    5. Docs follow-up for the docs session: `docs/architecture/npc-navigation.md`, the shaped group path rule.
+7. **Blockers.** None.
+8. **At merge / what the developer must do.**
+    1. Nothing in `config.yml`, no migration.
+    2. The retest: `docs/guides/npc-movement-smoke-test.md`, section "Link B5" (smoke test of 2026-11-17 steps 2 and 3 again, with the same keys).
+    3. Review decisions 5.1 and 5.2.
+9. **Notes for later links.**
+    1. The replay's group now walks to the route's end; its report lines `followers off their lane on the stair house (B5)` and `looping followers (B5)` show where a group's followers leave the path.
+    2. C1 (off-road legs): the snapshot box reaches y 96; the replay window ends at z −480 and x 1454 (a scene is at most 64 wide along x). A start north of the house needs the harness's loop fixed first (item 6.3).
+
+### 4.22 C1 — Off-road starts and ends with the walk navigator's search, walked like the road line (#700)
+
+1. **Scope done** (#700 with its second comment, decision 44; plan § 4c.8 item 5). Behind `npc.navigation.enabled` (off by default); no new key. No file in `core/roads/walk`, `paper/navigation` or `core/navigation/shape` changed; `ArchitectureGuardTest` green.
+    1. **The walk search for every off-road leg.** knk-core port `OffRoadWalks`, used by `NpcNavigationService` for an off-road start, an off-road goal (also one right above or below the road's end) and a walk-only trip. Paper `NpcWalkPlanner` calls `WalkSnapshotService`, `WalkAccessFactory` (the NPC's access subject) and today's `WalkSearch` with `navigation.walk`'s budget. Its parts come from `KnKPlugin` through `NpcNavigationModule.setWalkSources` and `ScenarioServices.npcWalks`.
+    2. **The road join by reachability.** The walk to the road arrives at any road point within 32 blocks along it, the first the search reaches. The walk to the goal starts at the road's end and is tried from up to 3 points further back (every 8 blocks). Both walks run at once.
+    3. **Walked like the road line.** A found walk is spliced into the `RouteFollower` line: stretches, 3D handover, join from the feet, walking surface. A group's followers take it as their path. The walk's cells are marked as walked: no corridor shaping, no corner clearance (both cut a spiral in 2D), each on its own floor; the group path takes them unshaped too.
+    4. **Hops stay the fallback**, counted (`offRoadWalks()`, `offRoadHops()`) and logged with the search's numbers and the walked cells.
+    5. **The snapshot box** (`SnapshotBox.aroundRoute`) covers the route's from and to plus the margins.
+    6. **Two fixes the tower needed:**
+        1. `BukkitNavWorld.passable`: an open door or fence gate is no wall for NPC floors, headroom and "blocks a body". The tower's open door at 1405 104 −494 was a gap neither local leg could take.
+        3. Waypoints through an open doorway (`CitizensNpcMover`, `BukkitNavWorld.openingCentre`): moved to the middle of the 13/16 opening the panel leaves; a body passes only within about 0.1 of it. CI found the jam once in two runs before the fix.
+        2. The planner's body check: a found path is checked against the NPC's body rule; failing cells are closed and the search runs again, at most 4 times (an open trapdoor's panel). On an unloaded chunk the box is captured once more with a margin of 4.
+    7. **Replay harness fix** (`AnvilRegion`). Minecraft 26.x writes non-default block states as `{id, properties}` palette entries. They were dropped from **every** replay since B1: stairs not facing north, top slabs, open doors. The quarry replay now places 122 011 blocks instead of 111 286, and still passes.
+    8. **Scenarios** (four new, `MIN_SCENARIOS` 59 with the off-road chain's scenarios):
+        1. `npc-replay-keep-tower`: the developer's snapshot trimmed to x 1391..1454, y 66..130, z −559..−480 (`keep-tower.zip`, 371 KB, keeps the goal and the spiral). A leader alone and a group of 20 in ranks, from the keep's road.
+        2. `npc-offroad-detour`, `npc-offroad-upstairs` (two-turn spiral in a curtain wall, with a group of 5) and `npc-offroad-ravine`.
+        3. `-Dknk.scenario.offRoadHops=true` leaves the walk search out (the before run).
+2. **Commits and heads.**
+    1. knk-plugin `claude/npc-movement-c1` at **`b7608662`** (base `next` `c45c16bb`; `origin/next` merged in three times, up to `ce0f65ec` with the off-road chain's L3, L4 and L10 step 1; mechanical conflicts only: `KnKPlugin.initializeWalkPaths`, `MIN_SCENARIOS`, `PaperScenariosTest`'s count).
+    2. knk-workspace `claude/npc-movement-c1` at **`bafe631f`** (base `next`, `origin/next` merged up to the same point; the changelog and the commands guide's header kept both sides).
+3. **PRs** (base `next`, not merged).
+    1. PandiO/knk-plugin#71 (`Part of #700`).
+    2. PandiO/knk-workspace#721 (`Closes #700`).
+4. **Tests, baseline → result.**
+    1. knk-plugin `./gradlew build -x deployToDevServer`.
+        1. Baseline on `next` `c45c16bb`: core 3033, api-client 344 (2 skipped), paper 2904 (18 skipped).
+        2. Result on the final head `b7608662` (with `next` `ce0f65ec`): core 3111, api-client 344 (2 skipped), paper 2946 (18 skipped); 0 failures. C1's own tests are core +14 and paper +11 (one more for the doorway rule); the rest came with the off-road chain's links.
+        3. New tests: `NpcNavigationOffRoadWalksTest` 10, `RouteFollowerWalkedTest` 3, `SnapshotBoxTest` +1, `NpcWalkPlannerTest` 8, `BukkitNavWorldBlocksTest` +1, `AnvilRegionTest` +1.
+    2. **Scenarios, before (hops) → after** (local, Paper 26.3 b205, Citizens b4269):
+        1. `npc-replay-keep-tower`: the leader **fails**, "stuck at 1406 85 −510: retries and replans used up" (the developer's 1405 85 −510) → **arrives in 53.4 s**, 0 stuck, 0 falls. The group of 20 arrives in 59.1 s: 0 lost, 0 stuck, every follower on the tower top (y 113).
+        2. `npc-offroad-detour`: fails (order failed, stuck) → 28.3 s.
+        3. `npc-offroad-ravine`: fails (order failed, stuck) → 19.1 s.
+        4. `npc-offroad-upstairs`: 1 stuck spell, 50.1 s → 0 stuck, 41.5 s; the group of 5 in 42.0 s.
+        5. Before = this branch with `offRoadHops`, so the harness fix and the open-door rule are in both runs.
+    3. **The spiral fits the caps** (prompt § 3.2). Road end to goal: 172–180 blocks walked against a cap of 220–223 (`max-length` 144 plus `climb-allowance` 5 × 29 blocks of rise), 4 432 expansions against 20 000. It is no acceptance case for #698's NPC phase.
+    4. Whole suite: 54/54 locally on the pre-merge head `87ccc5bd` (23 min with boot). CI on knk-plugin#71: on `ced61331` `build` green twice, `paper-boot` green once (44212713839) and red once (44212627665: the tower replay's followers jammed on the open door's panel, item 1.6.3). On `2a2e626f`: `build` (44218253937) and `paper-boot` with 55 scenarios (44218253973) green. On the final head `b7608662`: `build` (44225040650, 44225046762) and `paper-boot` with **59 scenarios** (44225040520, 44225046831) green, push and PR runs. Not #720 (the runs started after 01:00 UTC).
+    5. Known reds: none. Codex: at its usage limit on both PRs (said on each); finished without its review.
+5. **Decisions (DESIGN § 4.3).**
+    1. *How a walk is walked.* Chosen: splice it into the route line, so B2/B4's handover, bridge and surface heights and the group path apply unchanged. Alternatives: (a) a waypoint list handed to the mover as one local leg (no handover, no group path); (b) the walk cut into hops (the bridge gaps today's hops have).
+    2. *Walked cells unshaped.* Chosen: no corridor shaping or corner clearance on walk cells, own floor first. Alternatives: (a) shape them like road points (cut the tower's spiral and gave a 3.6-block gap); (b) B5's `addShaped` guard on the leader's stretches too (the shaper still pulls a 1-wide spiral off it).
+    3. *Road join.* Chosen: one search with every road point within 32 blocks along the road as a goal, aimed at the router's snap; for the goal, up to 4 searches from the end and further back. Alternatives: (a) a search back from the goal (moves are not reversible: drops); (b) a new road plan from the reached point (a second router call for little gain); (c) more join points (larger box and cap).
+    4. *The open-door rule in `BukkitNavWorld`.* Chosen: open doors and fence gates passable everywhere in NPC navigation. Alternatives: (a) only on walk cells (two body rules for one NPC); (b) leave it (the tower's door stays a gap; the engine leg failed there too).
+    5. *Body check.* Chosen: check a found path on the main thread and search again with the failing cells closed, at most 4 times. Alternatives: (a) change the walk capture's passability (forbidden, `paper/navigation`); (b) scan the whole box on the main thread (too much work per leg).
+    6. *NPC movement profile.* Chosen: the walk settings' with doors per the access profile, no ladders, no wading. Alternatives: (a) the player profile unchanged (Citizens' waypoint following does not climb ladders; water drowns NPCs, #490).
+    7. *`walk-only-blocks`.* Chosen: unchanged at 64 (within the walk search's caps; the narrowed scope does not ask for it). Alternative: (a) 96, the players' start-leg reach (a default change for a case no test shows).
+    8. *Scenario scenes.* Chosen: scenes enlarged until the before run fails on behaviour (Citizens' Minecraft search stops at 1 024 blocks), and "no stuck spell" as a check. Alternative: (a) only "the walk search planned it" (passes the hops version on behaviour).
+    9. *Fixing `AnvilRegion` in this link.* Chosen: fix it, since the tower replay needs its stairs, and rerun the quarry replay (passes). Alternative: (a) a separate issue first (C1's proof would wait on it).
+    10. *Doorway waypoints.* Chosen: the Citizens mover moves a waypoint in an open doorway to the opening's middle, from the block's collision boxes (one place every list passes). Alternatives: (a) treat open doors as walls again (the tower gap returns); (b) narrow groups to a column earlier at doors (lateral drift of 0.1 still jams); (c) a new `NavWorld` method (`core/navigation/shape` is the off-road chain's).
+6. **Out of scope, noted.**
+    1. A replan from inside an off-road walk plans the whole route again (the walk back to the road first); no run showed it after the fixes (plan item 5.13.3).
+    2. A gate door on an off-road walk is not one of the route's gates for event replans (item 5.13.2).
+    3. Docs follow-up for the docs session: `docs/architecture/npc-navigation.md`, `plugin-scenarios.md` (four scenarios, `offRoadHops`, the replay's `{id, properties}`), the admin guide's log lines.
+7. **Blockers.** None.
+8. **At merge / what the developer must do.**
+    1. Nothing in `config.yml`, no migration; `navigation.walk.enabled` stays true (it already must for NPC local legs).
+    2. The retest: `docs/guides/npc-movement-smoke-test.md`, section "Link C1" (the tower route, an off-road start, a new snapshot).
+    3. Review decisions 5.3, 5.4 and 5.10.
+9. **Notes for later links.**
+    1. E1: an off-road walk's cells are in the route line, so the recheck and the trespass guard look at them like road points.
+    2. #698's NPC phase: hook long walks in at `OffRoadWalks` (the service needs no change); `NpcWalkPlanner` is the only caller of the walk search for NPCs.
+    3. Replays made before this link lacked every `{id, properties}` block; numbers from B1–B5's replays were taken on that world.
+
+### 4.23 E1 — Exit rules checked while NPCs walk, not only where a route is planned (#701)
+
+1. **Scope done** (#701, decision 41; plan Phase 4 known limit 4). Behind `npc.navigation.enabled` (off by default); no new key. No file in `core/roads/walk`, `paper/navigation`, `core/navigation/shape`, `core/roads/route` or `core/regions` changed.
+    1. **One rule, the router's.** `DomainEntryRule.of` returns a new `RegionRule`: the entry predicate as before, plus `mayLeave` and `exitDenied` for the regions the NPC stands in. They come from `DomainAvailability.exitDeniedRegions` over the shared `DomainAccessEvaluator`, for every domain type. The new default `AccessRules.regionRule(subject)` reads them. `StepCheck` judges one step: an entry before an exit, and the rule is asked for only when a step crosses a region border.
+    2. **`NpcNavigationService`** (a leader or a single NPC):
+        1. the recheck of the way ahead (`way ahead is closed by exit <region>`);
+        2. `allowedPart` (the walk to the blocking element is cut at the edge, inside);
+        3. `mayStand`;
+        4. the trespass guard (`TRESPASS <npc> left <region> at x y z (…)`).
+    3. **`NavGroup`**: follower lanes (`laneAllowed`), waypoints (`mayEnterAll`, `sendTrip`), `mayStand` and the follower guard. Exit verdicts are cached per set of regions stood in and cleared with the entry verdicts. Waypoints that leave a region mark the follower for the periodic recheck, as entering ones do.
+    4. **Paper**: no code change. `NavigationAccess.mayEnter` already returns `DomainEntryRule.of(...)`, and road navigation's `accessRules()` passes the object on, so the exits arrive on a server. `NpcExitRuleAccessTest` pins this and the agreement with the router per profile.
+    5. **Profile**: `bypass-domain-rules`, an allow list naming the region, and a domain whose rule does not apply to roads let the NPC leave (tested). The realtime and refresh paths wake NPCs as for entry: they are type-agnostic, and the scenarios drive both.
+    6. **Scenarios** (`MIN_SCENARIOS` 59 → 61):
+        1. `npc-exit-denied-leader`: an NPC alone, exit denied through realtime `EntityChanged`, allowed again through the cache-refresh path.
+        2. `npc-group-exit-denied`: a group of 8 half inside, both ways through realtime.
+        3. Helper `ScenarioDomainRules` (fake API, the plugin's map, `NavigationDomainChanges`, `DomainCacheRewarm`).
+        4. `ScenarioNpcs.plan` answers BLOCKED from inside a region the NPC may not leave, as the router does (no other scenario denies an exit).
+    7. **knk-workspace**:
+        1. The changelog entry.
+        2. Plan Phase 4 known limit 4 and the new developer test step 15 (exit denied mid-trip, a leader and a group half inside; automated parts tagged).
+        3. The smoke test's "Link E1" section.
+2. **Commits and heads.**
+    1. knk-plugin `claude/npc-movement-e1` at **`de1c8a6a`** (1 commit, base `next` `65c7d6d3`; `origin/next` unchanged at the PR).
+    2. knk-workspace `claude/npc-movement-e1` at **`a827abc6`** (1 docs commit, base `next` `b0bd7f4a`).
+3. **PRs** (base `next`, not merged).
+    1. PandiO/knk-plugin#74 (`Closes #701`).
+    2. PandiO/knk-workspace#725 (`Part of #701`).
+4. **Tests, baseline → result.**
+    1. knk-plugin `./gradlew build -x deployToDevServer`.
+        1. Baseline on `next` `65c7d6d3`: core 3111, api-client 344 (2 skipped), paper 2946 (18 skipped).
+        2. Result on `de1c8a6a`: core 3126 (+15), api-client 344 (2 skipped), paper 2948 (+2); 0 failures.
+        3. New tests: `DomainEntryRuleTest` 11, `NavGroupExitRulesTest` 4 (an NPC alone, a group of 16 half inside, the guard counting a follower carried out, the bypass), `NpcExitRuleAccessTest` 2; `PaperScenariosTest` updated for 61.
+    2. **Before → after.**
+        1. `NavGroupExitRulesTest` against `next`'s `NavGroup` and `NpcNavigationService`: 3 of 4 fail (the NPC "left Old Town at x=50.17"; follower npc-7 "left Old Town at x=50.01") → 4/4 pass.
+        2. Scenarios, local (Paper 26.3 b205, the pinned WorldEdit, WorldGuard, Citizens b4269, `--npc-navigation`), with `next`'s walking checks in the jar: `npc-exit-denied-leader` FAIL ("left the district … furthest x …026.5") and `npc-group-exit-denied` FAIL ("knk-sc-4 left the district") → with E1: PASS (373 and 239 ticks), log check passed.
+    3. CI on `de1c8a6a`: `build` green (134555657727); `paper-boot` (61) green (push run 134555658454, PR run 134561833704; `build` PR run 134561833367).
+    4. Known reds: none. Codex: at its usage limit on both PRs (said on both).
+    5. Local toolchain note: Maven Central answered an intermittent 404 through the proxy, which Gradle does not retry. A local retrying mirror in the scratchpad (`~/.gradle/init.d`) fixed it; nothing in the repos.
+5. **Decisions (DESIGN § 4.3).**
+    1. *How the exits reach the walking checks.* Chosen: `DomainEntryRule.of` returns a `RegionRule` and `AccessRules.regionRule` reads it, because the exits are the router's own and `paper/navigation` (the off-road chain's area) stays untouched. Alternatives: (a) a new `AccessRules.mayLeave` port answered in `NavigationAccess`, `PolicyFactory` and `accessRules()` (three edits in `paper/navigation`, which needs the coordinator's OK); (b) a second exit check in core over the map (ruled out by the brief).
+    2. *A step's verdict.* Chosen: an entry is checked before an exit, and the rule is asked for only when the step crosses a region border, so a recheck that crosses nothing costs what it did. Alternative: (a) always build the rule (one more map lookup per region stood in, every check).
+    3. *Trespass on exit.* Chosen: the same `TRESPASS` event and counter with the verb `left`, so `trespasses 0` covers both. Alternative: (a) a separate event and stats line (a metrics name and docs change for the same rule).
+    4. *Periodic follower recheck.* Chosen: waypoints that leave a region mark the follower like entering ones, so a rule change without an event is seen for exits too (the lane is re-handed every `max(20, recheck-ticks)` while they do). Alternative: (a) entry only (exits would hold only through events).
+    5. *Scenario road.* Chosen: the fake road answers BLOCKED from inside a region the NPC may not leave, as `DomainAvailability` does, or the leader's replan would find a route and walk out (the tolerated path). Alternatives: (a) the real router on a fake network (no network or API in a scenario); (b) followers only (the brief asks for a leader).
+    6. *Paths in the scenarios.* Chosen: the leader's deny through realtime and its restore through the cache refresh, and the group both ways through realtime, so both paths are driven. Alternative: (a) `ScenarioNpcRules`-style fake data (does not exercise the plugin's realtime and refresh classes).
+6. **Out of scope, noted.**
+    1. Filed #724: `/knk cache refresh` sends its first event with the map empty, so held NPCs can cross a denied edge before the re-warm's answers arrive, and the guard does not count it. It is on `next` for entry today, and exit has the same parity. Probe: 7 held → 5 held after the refresh, 0 trespasses. It needs `paper/navigation` or a core change.
+    2. `docs/guides/developer/ci.md` § 7.1 still says 50 scenarios (61 now); the admin guide's trespass line should name `left`. Both are for the docs sub-issue.
+7. **Blockers.** None.
+8. **At merge / what the developer must do.**
+    1. Nothing in `config.yml`, no migration. Deploy and check the startup line `0.1.0+<sha>`.
+    2. Plan Phase 4 developer test step 15 (or the smoke test's "Link E1" section): exit denied mid-trip on a real district through the web app, for a leader alone and a group half inside, then allowed again; once with `/knk cache refresh`. Post the stats and the log on #701.
+    3. For review: decisions 5.1, 5.4 and 5.5.
+9. **Notes for later links.**
+    1. Ask `ports.rules().regionRule(subject)` (or `StepCheck`) for a step, not `mayEnter` alone, so exits hold.
+    2. A fake `AccessRules` whose `mayEnter` is not a `RegionRule` allows every exit; use `DomainEntryRule.of` or `RegionRule.of(enter, exitDenied)` in tests that need exits.
+    3. `ScenarioDomainRules` gives any scenario the realtime and refresh paths over a fake API.
+
+### 4.24 R1 — Held NPCs stay held through `/knk cache refresh`: the last known domain answers while the map is warmed again (#724)
+
+1. **Scope done** (#724, filed by E1; plan Phase 4 known limit 4). Behind `npc.navigation.enabled` (off by default); no new key, no migration.
+    1. **Reproduced first.** knk-core `NavGroupCacheRefreshTest` reads the rules as a server does (the map through `DomainEntryRule`), with followers and a single NPC held at a district edge, for entry and for exit. Then `/knk cache refresh` runs as the plugin does: clear, first event, the API 10 ticks later, the re-warm's event. Against `next`'s code all 6 tests fail: the held NPCs cross (`npc-6 entered the district after the refresh`, `npc-1 left the district …`) and the guard counts 0.
+    2. **The fix: the NPC checks keep the last known answers (option b).**
+        1. `RegionDomainResolver.clearRegionCache()` (the cache refresh and the realtime `EntityChanged` handler) keeps the map as it was. `getLastKnownDomain(world, region)` serves those answers to the NPC checks until `releaseLastKnown(generation)`, or for at most `LAST_KNOWN_HOLD` (1 min).
+        2. While held, a region known before the clear keeps its old answer even after the map learns a new one; a region nobody knew is read from the map. A clear during a hold keeps the answers from before the first clear.
+        3. Players' lookups (`getDomainByRegionIdNoRefresh` and the rest) are unchanged.
+        4. `NavigationAccess.mayEnter(AccessSubject)` reads `getLastKnownDomain` for NPC subjects only.
+    3. **Players unchanged (the off-road chain's acceptance item A16, through the coordinator).** How it is guaranteed and pinned:
+        1. Player navigation never reads the held answers. `mayEnter(Player)` and `mayEnter(Player, regions)` (the trail rule) and `policyFor(Player, …)` (routes) read `getDomainByRegionIdNoRefresh`, unchanged.
+        2. The `AccessSubject` overload is reached only through `NavigationService.accessRules()`, whose only callers are the NPC module's two ports.
+        3. Inside that overload, a subject with a player id (`PlayerAccessSubject`) reads `getDomainByRegionIdNoRefresh` too; only subjects without one (NPCs) read `getLastKnownDomain`.
+        4. `NavigationAccessSubjectTest.onlyNpcSubjectsReadTheHeldDomainAnswersPlayersReadTheMap` pins this; it fails with the guard taken out.
+    4. **The switch.** `DomainCacheRewarm` takes the hold's generation when it starts. Once its answers are in, on the main thread, it does three things in order: the NPC trespass guards look, the hold is released, the availability event is sent. So the NPCs switch to the new answers exactly at the event, as on the realtime path (L6). Without road regions, or with NPC navigation off, it releases at once. Both `KnKPlugin` instances (refresh and realtime) are wired.
+    5. **The guard counts a crossing in the gap.**
+        1. `NpcNavigationService.lookBeforeRulesChange()` and `NavGroupService` / `NavGroup.lookBeforeRulesChange()` judge a region entered or left since the last look under the answers still in force, before the event's fresh look (L6's reset). This includes NPCs waiting at a blocking element, whose rule check never ran the guard.
+        2. `NpcNavigationModule.lookBeforeRulesChange()` (paper) calls both.
+        3. Without the look, the two guard tests fail: the window between the last periodic look and the release was swallowed by the reset.
+    6. **Scenario** `npc-group-cache-refresh-held` (`MIN_SCENARIOS` 61 → 62).
+        1. E1's group exit scene: followers held inside a district they may not leave, then a refresh with the rules unchanged; the fake API answers the re-warm in 2 s (`ScenarioDomainRules.apiTicks`).
+        2. `ScenarioDomainRules`, `NpcGroupRealtimeEntryScenario`, `npc-exit-denied-leader` and `npc-group-exit-denied` now read the rules and run the re-warm (hold, look, release) as the plugin does (`ScenarioNpcs.lookBeforeRulesChange`).
+    7. **knk-workspace.**
+        1. Plan Phase 4 known limit 4.
+        2. The changelog entry.
+        3. The smoke test's "Link R1" section (3 steps, 2 partly automated).
+        4. `ci.md` § 7 and § 7.1, and `plugin-scenarios.md` § 1 item 6 (62).
+        5. `origin/next` merged in (the #729 docs; no conflict).
+    8. **Boundaries.**
+        1. `paper/navigation`: `DomainCacheRewarm` (refresh path) and one line in `NavigationAccess`. The coordinator was told before the push.
+        2. Nothing in `NavigationService`, `TrailRenderer`, the `guidance-v2` sections, `core/roads/walk` or `core/navigation/shape`.
+2. **Commits and heads.**
+    1. knk-plugin `claude/npc-movement-r1` at **`836ddf62`** (3 commits on `next` `7aef3de4`; `origin/next` unchanged at the last merge).
+    2. knk-workspace `claude/npc-movement-r1` at **`3f1ec0c5`** (4 docs commits and a merge of `origin/next` `67596152`).
+3. **PRs** (base `next`, not merged).
+    1. PandiO/knk-plugin#75 (`Closes #724`).
+    2. PandiO/knk-workspace#730 (`Part of #724`).
+4. **Tests, baseline → result.**
+    1. knk-plugin `./gradlew build -x deployToDevServer`.
+        1. Baseline on `next` `7aef3de4`: core 3126, api-client 344 (2 skipped), paper 2948 (18 skipped).
+        2. Result on `836ddf62`: core 3138 (+12), api-client 344 (2 skipped), paper 2953 (+5); 0 failures.
+        3. New tests:
+            1. `NavGroupCacheRefreshTest` 6.
+            2. `RegionDomainLastKnownTest` 6.
+            3. `DomainCacheRewarmTest` +3.
+            4. `NpcExitRuleAccessTest` +1 (a real resolver through `NavigationAccess`).
+            5. `NavigationAccessSubjectTest` +1 (A16: players read the map).
+        4. Changed: `NavigationAccessSubjectTest` and `NpcExitRuleAccessTest` stubs for the new lookup; `PaperScenariosTest` for 62.
+    2. **Before → after.**
+        1. `NavGroupCacheRefreshTest` against `next`'s code: 6 of 6 fail → 6/6 pass.
+        2. Scenario `npc-group-cache-refresh-held`, local (Paper 26.3 b205, pinned WorldEdit and WorldGuard, Citizens b4269, `--npc-navigation`, one scenario per boot):
+            1. On a `next` jar with only the scenario added: FAIL ("knk-sc-4 left the district after the refresh").
+            2. On this branch: PASS (379 ticks).
+            3. With the fake API's usual 10 ticks it passed on `next` as well, so it uses 2 s (decision 5.8).
+        3. Also local on this branch: `npc-group-exit-denied` PASS (239 ticks), `npc-exit-denied-leader` PASS (384), `npc-group-realtime-entry` PASS (265). The log check passed on each.
+    3. CI on `836ddf62`: `build` green (push run 44240404677, PR run 44240410192); `paper-boot` green with 62 scenarios, `npc-group-cache-refresh-held` PASS in 379 ticks (push run 44240404578, PR run 44240410126). On `a45d1a93` `build` was green and `paper-boot` was cancelled by the next push. #586 did not hit.
+    4. Known reds: none. Codex: at its usage limit on both PRs (said on both).
+    5. Local toolchain notes.
+        1. Maven Central answered intermittent 404s through the proxy, as for E1. A local retrying mirror in the scratchpad (`~/.gradle/init.d`) fixed it; nothing in the repos.
+        2. Citizens once failed to enable on a fresh server because its runtime library download failed. Copying the libraries of an earlier boot fixed it, as CI's cache does.
+5. **Decisions (DESIGN § 4.3).**
+    1. *Which fix.* Chosen: (b), the NPC checks keep the last known answers while the map is warmed again. It covers every NPC check: the events, the periodic rechecks and the guard. It covers the realtime clear too, and players are untouched. Alternatives:
+        1. (a) Don't send the first event to NPC navigation. The periodic rechecks and the guard would still read an empty map.
+        2. (c) `RegionDomainResolver` refreshes in place on a cache refresh. This changes KNG-104's semantics for players: a stale answer would be served to them.
+    2. *What a hold serves.* Chosen: a region known before the clear keeps its old answer even after the re-warm's answer is in, until the release; the NPCs switch at the event, all at once, which is what L6's guard reset assumes. Alternative:
+        1. (a) Fill only the misses. The NPCs would mix old and new answers per region during the re-warm, and the guard could not tell under which rules a step was made.
+    3. *Where the hold lives.* Chosen: in `RegionDomainResolver.clearRegionCache`, so both clears (the refresh hook and the realtime `EntityChanged` handler) hold without new wiring. Alternatives:
+        1. (a) A decorator in `core/npc/nav`. It needs a hook before each clear, plus a reordering of the refresh hooks.
+        2. (b) In `NavigationAccess`. That is more code in `paper/navigation`.
+    4. *Ending the hold.* Chosen: by generation, so a clear after a re-warm started keeps the hold for its own re-warm. Alternatives:
+        1. (a) A plain flag. An overlapping re-warm would end another's hold early.
+        2. (b) A counter. The realtime path coalesces several clears into one re-warm, so it would never reach 0.
+    5. *A hold nobody ends.* Chosen: it ends by itself after a minute (the map's TTL). Alternatives:
+        1. (a) No limit. A stale denial would stay forever without a re-warm.
+        2. (b) Hold only while NPC navigation runs. That duplicates the re-warm's checks at the clear.
+    6. *Counting a crossing in the gap.* Chosen: the guards look under the held answers right before the release. Alternatives:
+        1. (a) Look at the event under the new answers. This gives L6's false trespass for a realtime change.
+        2. (b) Rely on the periodic look. Its last window before the event's reset is lost (the two guard tests fail).
+    7. *What the look does.* Chosen: count and log only. Alternative:
+        1. (a) Replan with `stop-on-trespass`. The event that follows rechecks every NPC anyway.
+    8. *The scenario's API delay.* Chosen: 2 s for the refresh's re-warm (a slow API), because with 10 ticks the held Citizens followers did not get going before the re-warm's event and the scenario passed on `next`. Alternatives:
+        1. (a) 10 ticks. It doesn't show the bug on a real server.
+        2. (b) An entry variant. The same timing applies, and the core test covers entry.
+    9. *A player subject (A16).* Chosen: a guard on `playerId()` in `NavigationAccess.mayEnter(AccessSubject)`, so a player subject reads the map even if one ever reaches it. Alternative:
+        1. (a) Rely on the callers alone (today NPC only). That is not pinned against a future player caller.
+    10. *Config.* Chosen: no new key. The hold's minute is a constant. Alternative:
+        1. (a) A key for the hold. Nothing to tune for an admin.
+6. **Out of scope, noted.**
+    1. Regions that no road edge lists are still not re-warmed (L6's note 6.1). After the hold ends they are unknown, so open, as before R1. Not filed: not seen.
+    2. `ScenarioDomainRules`' default 10-tick API is too short for a refresh scenario to show a gap on a real server. Later scenarios of that kind should use `apiTicks`.
+7. **Blockers.** None.
+8. **At merge / what the developer must do.**
+    1. Nothing in `config.yml`, no migration. Deploy and check the startup line `0.1.0+<sha>`.
+    2. The smoke test's "Link R1" section: three `/knk cache refresh` runs with followers held at a real district, and a single NPC. Post the stats and the log on #724.
+    3. For review: decisions 5.1, 5.2 and 5.6.
+9. **Notes for later links.**
+    1. NPC checks read domains through `RegionDomainResolver.getLastKnownDomain`. A new NPC rule check should too, not `getDomainByRegionIdNoRefresh`.
+    2. Any new path that clears the map and re-warms it should take `holdGeneration()` at the start and call `releaseLastKnown` after its answers are in, with the NPC guards' look first (`DomainCacheRewarm` does this).
