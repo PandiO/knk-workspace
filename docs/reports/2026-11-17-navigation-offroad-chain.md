@@ -47,7 +47,7 @@ on `next` (Decided 2026-11-17).
 | L5 Phase 2 walk links | #705 | Not started (L4 in `next`; waits for L1 done: the developer's filled measurements report) | `claude/offroad-walk-links` | — | — | — |
 | L6 Phase 3 hierarchical walk search | #706 | Not started (gate: L5 in `next`; O32 question first if L1 says option A fits) | `claude/offroad-hierarchical` | — | — | — |
 | L7 Phase 4 route modes | #707 | Not started (gate: L5 in `next`) | `claude/offroad-route-modes` | — | — | — |
-| L8 Phase 5.1 landmark entity | #708 | Waiting (destination engine #96, #103, #69 not in `next`, O27) | `claude/offroad-landmarks` | — | — | — |
+| L8 Phase 5.1 landmark entity | #708 | Waiting (destination engine L1–L3 = #96, #103, #69 not in `next`, O27; engine design Decided 2026-11-18, chain charter `DESTINATION_ENGINE_CHAIN.md`, not started) | `claude/offroad-landmarks` | — | — | — |
 | L9 Phase 5.2 landmark weights | #709 | Not started (gate: L7 and L8 in `next`) | `claude/offroad-landmark-weights` | — | — | — |
 | L10 Phase 7 plaza lines | #712 | Step 1 merged into next (2026-11-18); step 2 waits for the developer's viewing and answers on #712 (O16) | knk-plugin `claude/offroad-plaza-lines` `97d1bafc`; knk-workspace `claude/offroad-plaza-lines` `d794c716` | step 1: [knk-plugin#73](https://github.com/PandiO/knk-plugin/pull/73) → `next` `ce0f65ec`, [#723](https://github.com/PandiO/knk-workspace/pull/723) → `next` `c7f61e9e` | green (build, paper-boot 55) | create_session `session_01R1w2Ussca79jpGCPqzcTf8` (2026-11-18) |
 
@@ -154,6 +154,12 @@ on `next` (Decided 2026-11-17).
     prepares tiers, smoke guide and charter, and asks the developer to approve. The implementation chain is the
     manager's to schedule after approval. Alternative: a note on #25 for the manager to schedule; the developer chose
     to start it now.
+21. **Destination engine design Decided (2026-11-18, developer, in the refresh session).** DESIGN on `next` `870bc43`,
+    charter `docs/ai-agents/handoffs/DESTINATION_ENGINE_CHAIN.md` on `main` (`ddd11dc`), phase 4b filed as #747, tiers
+    set. Its chain is not started (the manager's daily run schedules it; the developer did not say "start now").
+    Shared rule from that charter § 2.2: at most one knk-plugin link touching navigation code at a time **across both
+    chains**; before a plugin link starts here, check the board and the engine chain for a running link and agree the
+    order with its coordinator. L8 (#708) waits for engine L1–L3 in `next` and must not run beside engine L3, L4 or L5.
 
 ## 4. Link blocks
 
