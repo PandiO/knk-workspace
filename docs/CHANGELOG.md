@@ -4,6 +4,28 @@ This is a human-readable record of capabilities merged into the V3 default branc
 
 ## Unreleased — on feature branches, not merged
 
+- **Navigation destination engine, phase 3: `/navigate`, tab completion, the compass and the route start on the engine, behind a flag** ([PandiO/knk-workspace#69](https://github.com/PandiO/knk-workspace/issues/69),
+  link L3 of the destination engine chain, [#25](https://github.com/PandiO/knk-workspace/issues/25)). knk-plugin and
+  knk-workspace branches `claude/navigation-destination-engine` (PRs into `next`). Behind the new `config.yml` key
+  `navigation.destination-engine` (off by default: nothing changes for players).
+  1. With the key on, `/navigate`, its tab completion and the navigation compass use one list of places per player,
+     built from the navigation model of phase 2 and the road network: the same names, forms and messages as today
+     outside a siege, and in a siege match only the match's objectives and team spawn, now also as
+     `objective:<name>` and `objective:#<id>`. Places of another world are not suggested but still get "… is in
+     another world". Nothing is looked up when a destination is chosen, so it works with the API down after a
+     restart; without any saved model only streets and road points are offered, with "Some places aren't available
+     while the web API is down.".
+  2. The compass cycles the same list (the match's in a match, the configured general targets outside a siege) and
+     keeps its own wording; a resume picks the stored destination again only while it is still listed. Routes start
+     only from the list. Owner mode, staff mode and the new node `knk.navigate.any` (not granted by default) list
+     every place, also in a match.
+  3. The road-access answers ("Ignored" domains whose roads stay usable) and the compass settings come from the
+     navigation model with the key on.
+  4. Admin steps: add `destination-engine: false` under `navigation:` in `config.yml` (a missing key means `false`;
+     see [plugin configuration § 4.15](guides/admin/plugin-configuration.md#415-navigation)); restart after changing
+     it. No migration, no API change. Grant `knk.navigate.any` only to accounts that should navigate anywhere. Steps:
+     [destination engine smoke test § 3](guides/navigation-destination-engine-smoke-test.md#3-phase-3-switch-over-behind-the-flag-69-tier3).
+
 - **Navigation destination engine, phase 2: the navigation model and its offline snapshot** ([PandiO/knk-workspace#103](https://github.com/PandiO/knk-workspace/issues/103),
   link L2 of the destination engine chain, [#25](https://github.com/PandiO/knk-workspace/issues/25)). knk-web-api,
   knk-plugin and knk-workspace branches `claude/navigation-destination-engine` (PRs into `next`). Nothing changes for
