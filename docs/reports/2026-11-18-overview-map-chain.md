@@ -37,7 +37,7 @@ on `next` (Decided 2026-11-18, O01–O33, O08 superseded by O31); smoke guide
 |---|---|---|---|---|---|---|
 | L1 Region outlines | #735 | Merged into `next` 2026-11-18 (knk-web-api `562f504`, knk-plugin `7f4bdd3a`, knk-workspace `ac4b620f`); waiting for the developer's smoke test § 1 | `claude/overview-map-outlines`: knk-web-api `253a6ee`, knk-plugin `cf3a975a`, knk-workspace `e6e815dd` (from `next`) | [knk-web-api#45](https://github.com/PandiO/knk-web-api/pull/45), [knk-plugin#76](https://github.com/PandiO/knk-plugin/pull/76), [knk-workspace#749](https://github.com/PandiO/knk-workspace/pull/749) | API green; plugin build and paper-boot green | create_session session_01R1w2UuqJyStWv2zia5FTQg (2026-11-18, decision 3) |
 | L2 Public map API | #736 | Merged into `next` 2026-11-18 (knk-web-api `612ad62`, knk-workspace `55d01897`); waiting for the developer's smoke test § 2 | `claude/overview-map-public-api`: knk-web-api `3a014f8`, knk-workspace `fcde4be8` (from `next`) | [knk-web-api#46](https://github.com/PandiO/knk-web-api/pull/46), [knk-workspace#751](https://github.com/PandiO/knk-workspace/pull/751) | API green on `3a014f8` (build-and-test, mysql-tests, fresh-database); knk-workspace no CI | create_session session_01R1w2UvvpPXaMVExy9eZZpL (2026-11-18) |
-| L3 `/map` page | #737 | Running (spike first, spec § 9.6) | `claude/overview-map-page`: knk-web-app, knk-workspace (from `next`) | – | – | create_session session_01R1w2UtuNmGWaJ6a65D2YeS (2026-11-18) |
+| L3 `/map` page | #737 | In review (PRs open, not merged); spike passed (BlueMap v5.29) | `claude/overview-map-page`: knk-web-app `ee9a68d`, knk-workspace `23b028dc` (from `next`) | [knk-web-app#50](https://github.com/PandiO/knk-web-app/pull/50), [knk-workspace#753](https://github.com/PandiO/knk-workspace/pull/753) | web app green on `ee9a68d` (build-and-test, e2e); knk-workspace no CI | create_session session_01R1w2UtuNmGWaJ6a65D2YeS (2026-11-18) |
 | L4 Live players backend | #738 | Running | `claude/overview-map-players-api`: knk-plugin, knk-web-api, knk-workspace (from `next`) | – | – | create_session session_01R1w2UwcYKiPMueCHWqsys4 (2026-11-18) |
 | L5 Live players layer | #739 | Not started (gate: L3 and L4 merged, developer's L4 check) | – | – | – | – |
 | L6 Staff details | #740 | Not started (gate: L3 merged into `next`) | – | – | – | – |
@@ -264,3 +264,101 @@ _(Each link appends its block here when it finishes.)_
        tests and add its DTOs to `MapPublicDtoFieldTests.Pinned` (the test fails for an unpinned `Map*Dto`). Arena pins
        and `Map:Labels:Arena` are ready in config.
     3. L7: set `config.gateCommands.enabled` from `Map:GateCommands:Enabled`; the public panel has no door ids.
+
+### 4.3 L3 — `/map` page, BlueMap bridge, pins, flash and toggle, public panels, action registry (#737)
+
+1. **Spike (spec § 9.6, charter gate 3): passed.** BlueMap **v5.29** (tag `v5.29`, commit `a61e143f`, 2026-10-10;
+   image `ghcr.io/bluemap-minecraft/bluemap:v5.29@sha256:bb49bfde…301e`). Evidence from the web app source at that tag,
+   posted on [#737](https://github.com/PandiO/knk-workspace/issues/737#issuecomment-6976627917): `BlueMapApp.load()`
+   appends a `<script>` per `webapp.conf` `scripts` entry after the maps load; `main.js` exposes `window.bluemap` and
+   `window.BlueMap` (with `MarkerSet`, `HtmlMarker`, `ExtrudeMarker`, …); `new BlueMap.MarkerSet(id)` added to
+   `bluemap.mapViewer.markers` takes `updateMarkersFromData` at runtime; clicks reach `elementObject.onClick` (HTML/POI
+   markers, `CSS2DRenderer.js`) and `onClick` (extrude, raycast); camera through `controlsManager` and the
+   `bluemapCameraMoved` / `bluemapMapChanged` events; postMessage to the parent works from the script. One caveat
+   found and handled: BlueMap's `NormalMarkerManager` reloads `live/markers.json` every 10 s and removes every root
+   marker set that file doesn't list; the bridge wraps the root's `updateMarkerSetsFromData` to add its own set ids to
+   the ignore list (tested).
+2. **Scope done.**
+    1. knk-web-app: `pages/map/MapPage.tsx` (public route `/map`); `components/map/`: `BlueMapFrame`,
+       `bridgeProtocol.ts` (v1 envelopes, page-side origin/source/version guard), `mapMarkers.ts` (markers → bridge
+       payload, +0.5), `MapPanel` (side panel, bottom sheet on phones), `mapActionRegistry.ts`,
+       `defaultMapRegistrations.ts`, `widgets/` (town with "Show region", district, structure, `GateDoorsWidget`),
+       `useMapAvailability`; `apiClients/mapClient.ts`, `types/dtos/map/MapDtos.ts`; `public/bluemap-bridge/bridge.js`.
+       Additive edits: `routeTable.ts` (route `map`, `MAP_ROUTE_ID`), `Navigation.tsx` (one filter), `LandingPage.tsx`
+       (one link), `App.tsx`, `utils/enums.ts`, `e2e/fixtures/auth.ts` (`mockSession` answers `Map/config` 404),
+       `README.md` (`REACT_APP_BLUEMAP_URL`).
+    2. knk-workspace: closed-alpha runbook **Phase 10** (deploy notes, not applied: `bluemap-test` → profile-gated
+       `bluemap` render service, nginx serves `web/` under `/bluemap/`, `webapp.conf` bridge and
+       `client-decompression`, version pin, rollback); `scripts/alpha-web/compose.bluemap-service.yaml` (new),
+       `nginx.conf` `location /bluemap/` (checked with `nginx -t` and a scratch nginx), README row; smoke guide § 3
+       (11 steps: 1 automated, 9 partly automated, 1 manual only, tagged); changelog entry; spec status and § 6.3.5 as
+       built; production installation § 4.3 note.
+3. **Commits and heads.** knk-web-app `claude/overview-map-page` at `ee9a68d` (2 commits, base `next` at `e7c9265`);
+   knk-workspace `claude/overview-map-page` at `23b028dc` (1 commit, base `next` at `55d01897`). Both up to date with
+   `origin/next` at the time of the PRs.
+4. **PRs.** [knk-web-app#50](https://github.com/PandiO/knk-web-app/pull/50) (`Part of #737`),
+   [knk-workspace#753](https://github.com/PandiO/knk-workspace/pull/753) (`Closes #737`), base `next`. Not merged.
+5. **Tests, baseline → result.**
+    1. knk-web-app: Jest baseline 308 suites / 2672 tests → 313 / 2699, all green (+27: `bridgeProtocol` 8,
+       `mapMarkers` 5, `mapActionRegistry` 7 (A22), `GateDoorsWidget` 4, `useMapAvailability` 3; the `routeTable` pins
+       updated for the new route). Playwright 149 → 160 passed (+11 in `e2e/overview-map.spec.ts`, A07–A10; 4 repeats
+       green). The specs serve a fake BlueMap web app that loads the **real** `bridge.js` (map ids named like the NAS
+       render, so the `?worlds=` mapping runs too). `tsc`, `typecheck:e2e`, `CI=true npm run build` clean. CI on `ee9a68d` green (build-and-test, e2e; push and pull_request runs).
+    2. knk-workspace: docs only; links and anchors checked by hand.
+    3. Known reds: none.
+    4. Codex: at its usage limit on knk-web-app#50 (review failed for `ee9a68d`); noted on both PRs; no findings
+       handled.
+6. **Decisions (DESIGN § 4.3).**
+    1. *Keeping the bridge's markers.* Chosen: wrap the root marker set's `updateMarkerSetsFromData` so BlueMap's
+       10 s marker-file reload ignores the bridge's sets. Alternatives: (a) re-add the sets after each reload: pins
+       blink every 10 s; (b) write our markers into BlueMap's `markers.json`: a writer on the NAS and no live updates.
+    2. *Pin drawing.* Chosen: two HTML markers per pin, a dot always and the label with the API's `maxDistance`.
+       Alternatives: (a) BlueMap POI markers: need an icon file and show the label BlueMap's way; (b) one HTML marker:
+       the label distance would hide the pin as well.
+    3. *World ↔ BlueMap map.* Chosen: `bridge.js?worlds=<mapId>:<world>` in `webapp.conf`; a map id equal to the world
+       name needs none. Alternatives: (a) rename the NAS map config to the world name: moves the tile folder (re-render);
+       (b) an API setting: a new key in another link's repo.
+    4. *Hosting.* Chosen: nginx serves BlueMap's static `web/` (`client-decompression: true`, 204 for unrendered tiles);
+       BlueMap runs as a profile-gated render job on the same folders. Alternatives: (a) keep BlueMap's own web server
+       (`-w`) and proxy to it: a second long-running server, and the spec has nginx serve `web/`; (b) watch mode
+       (`-u`): the world is a snapshot copy, nothing to watch.
+    5. *Framing.* Chosen: `X-Frame-Options: SAMEORIGIN` on `/bluemap/` only; the site keeps `DENY`. Alternatives:
+       (a) a CSP `frame-ancestors`: the site has no CSP yet.
+    6. *Signed-out entry.* Chosen: a map link on the start page, because the signed-out site has no top bar; signed in
+       the bar has "Map"; both only while the map is on. Alternatives: (a) show the bar signed out: changes the public
+       site's layout.
+    7. *Staff widgets and actions.* Chosen: hidden without their node (anonymous viewers never see them).
+       Alternatives: (a) the #280 rule, disabled with "Requires <node>": staff buttons for every anonymous visitor.
+    8. *Marker version check.* Chosen: `config` every 60 s, markers reloaded when `markerVersion` changes.
+       Alternatives: (a) no re-check: rule 2 asks for the reload; (b) every 10 s: the API's cache is 30 s anyway.
+    9. *Centroid pin height.* Chosen: BlueMap's `terrainHeightAt`, retried while tiles load, else Y 64. Alternatives:
+       (a) the region's `maxY`: L2 rejected it (pins in the sky).
+    10. *Toggle.* Chosen: towns only (O05), one at a time (bridge group `town-toggle`), kept when the panel closes.
+        Alternatives: (a) a toggle per district: not in the design.
+    11. *`setPlayers` now.* Chosen: the bridge already draws name labels and reports `playerClicked`, so L5 changes
+        no bridge message. Alternatives: (a) leave it to L5: L5 would change the bridge script.
+    12. *Other specs.* Chosen: `mockSession` answers `Map/config` with 404 (map off). Alternatives: (a) mock it in each
+        spec: every strict spec would need it.
+    13. *nginx.conf.* Chosen: edit `scripts/alpha-web/nginx.conf` directly (inert without the mount: 404).
+        Alternatives: (a) a snippet in the docs only: easy to miss at the next image build.
+7. **Out of scope, noted.** None new. Player guide and site pages: follow-up in the docs issue at merge.
+8. **Blockers.** None.
+9. **At merge / what the developer must do.**
+    1. Nothing to keep it off (`Map__Enabled` stays false: no map anywhere in the web app).
+    2. On the NAS (`knk-deploy`, ask before each change): closed-alpha runbook Phase 10, then the full-world render
+       (about 20 h). Check the game world name for `?worlds=` (the NAS map id is `overworld`).
+    3. Then `Map__Enabled=true` and smoke guide § 3 (the live steps wait for step 2).
+    4. Optional: `@codex review` on both PRs once the Codex limit resets.
+10. **Notes for later links.**
+    1. L5: `setPlayers {players: [{uuid, label, world, x, y, z}]}` exists; the bridge draws `.knk-player` labels and
+       posts `playerClicked {uuid}`, which `MapPage.onBridgeMessage` ignores today (wire it there). Add optional
+       payload fields (tags, colours) rather than new meanings. `arena` is already a `MapEntityKind`; add arena pins in
+       `mapMarkers.toBridgeMarkers` with `labels.arena`.
+    2. L6: `mapActionRegistry.addWidget('structure', 'staff', { id, node: 'knk.admin.world', Component })` (and per
+       kind); the panel checks nodes only for registered staff entries, so anonymous viewers make no permission calls.
+    3. L8: `mapActionRegistry.addAction('structure', { id, label, node: 'knk.gate.admin', visible: d => d.gate !== null,
+       run: async (d, ctx) => { …; ctx.reload(); } })`. `MapPanelContext` has no map config yet; add
+       `gateCommands.enabled` to it if the buttons must follow the flag. Door ids are not in the public panel (L2).
+    4. L9: add a `player` registration once `playerClicked` is wired (L5); `MapEntityKind` and `parseBridgeMessage`
+       need the new kind only if players come through `markerClicked`.
+    5. The bridge protocol v1 is frozen (O14): #613 adds message types or a new version.
