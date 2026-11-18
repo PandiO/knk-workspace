@@ -21,7 +21,7 @@
 
 | Link | Issue | Status | Branch heads | PR | CI | How started |
 |---|---|---|---|---|---|---|
-| L1 P1 pure engine in knk-core | #96 | Running | `claude/navigation-destination-engine`: knk-plugin `ea368a8b` (start) | — | — | create_session session_01R1w2Uw3gPf2REJMYZEGE6a |
+| L1 P1 pure engine in knk-core | #96 | In review | `claude/navigation-destination-engine`: knk-plugin `64ca8815`, knk-workspace `55c4fb13` | [knk-plugin#78](https://github.com/PandiO/knk-plugin/pull/78), [knk-workspace#754](https://github.com/PandiO/knk-workspace/pull/754) | build green, paper-boot see block | create_session session_01R1w2Uw3gPf2REJMYZEGE6a |
 | L2 P2 model, snapshot, domain search Location | #103 | Not started | — | — | — | — |
 | L3 P3 switch-over behind the flag | #69 | Not started | — | — | — | — |
 | L4 P4 hard blocks as scopes, live re-validation | #62 | Not started | — | — | — | — |
@@ -54,3 +54,65 @@
 ## 4. Link blocks
 
 _(Each link appends its block here when it finishes.)_
+
+### 4.1 L1 — P1 pure engine in knk-core (#96)
+
+1. **Scope done.**
+    1. knk-plugin: the October P1 branch reused (E14); `origin/next` `7f4bdd3a` merged in (merge `295ea235`); the one
+       conflict in `ArchitectureGuardTest` keeps both `onlyTheDestinationEngineConstructsAllowedDestination` and
+       `sharedShapingPackageDoesNotUseNpcPackages`; nothing else conflicted.
+    2. knk-plugin `core/navigation/destinations` (commit `64ca8815`), the deltas of DESIGN § 10.2.4: new `Reason(code,
+       text)` on `Scope.Empty`, `Listed.reasonWhenEmpty`, `DestinationList`, `Resolution` and `Revalidation` (E15);
+       codes `loading`, `frozen`, `no-permission`, `siege-compass-off`, `siege-match-empty`, `siege-lobby` and the
+       engine's `no-longer-listed`; scope 55 with today's "This match has no destinations to navigate to."; scope 60
+       empty gives the same text under `siege-match-empty`; `Place.Point.arrivalRadius` (E16) and the `landmark:<id>`
+       key documented; no list cache (E18), documented and tested.
+    3. New tests: `ReasonTest` (4), `LandmarkLikeProviderTest` (7, the § 3.2 provider: listed in World, hidden by every
+       exclusive scope, listed for the bypass, other world resolved apart, rename keeps the session), arrival radius in
+       `CandidateTest`, codes/texts/no-cache in `InitialScopesTest` and `DestinationEngineTest`.
+    4. knk-workspace (`55c4fb13`): smoke guide § 1 rewritten to what was built, 9 of 11 steps tagged; DESIGN § 10.2
+       item 7 (what was applied, for P3/P4).
+    5. Nothing wired into the plugin: no behaviour change, no config key, no migration. No file outside
+       `core/navigation/destinations/` and `ArchitectureGuardTest` changed in knk-plugin.
+2. **Commits and heads.** knk-plugin `claude/navigation-destination-engine` at `64ca8815` (3 commits over `next`:
+   `ea368a8b`, merge `295ea235`, `64ca8815`; base `next` at `7f4bdd3a`). knk-workspace
+   `claude/navigation-destination-engine` at `55c4fb13` (1 commit, base `next` at the time of branching, 0 behind).
+3. **PRs.** [PandiO/knk-plugin#78](https://github.com/PandiO/knk-plugin/pull/78) (`Closes PandiO/knk-workspace#96`),
+   [PandiO/knk-workspace#754](https://github.com/PandiO/knk-workspace/pull/754) (`Part of`), both base `next`. Not
+   merged.
+4. **Tests, baseline → result.**
+    1. knk-plugin `./gradlew build -x deployToDevServer` (JDK 21 Gradle, JDK 25 toolchain): baseline on `next`
+       `7f4bdd3a` knk-core 3 151, knk-api-client 344 (2 skipped), knk-paper 2 957 (18 skipped), 0 failures; branch
+       knk-core 3 221 (+70: 69 engine tests, 1 architecture rule), knk-api-client 344 (2 skipped), knk-paper 2 957
+       (18 skipped), 0 failures. PR CI: `build` green; `paper-boot` was still running when this block was written.
+    2. Known reds: none.
+    3. Codex: at its code-review usage limit on both PRs (its comment on #78 and #754); skipped under global
+       "Branches" rule 4's usage-limit exception, said on both PRs. No findings to handle.
+5. **Decisions (DESIGN § 4.3).**
+    1. *Compass item vs. siege switch (§ 10.2.4 item 2).* Chosen: one `Siege.compassEnabled`, documented as
+       `item().enabled() && siegeEnabled()` and built by the P3 adapter, because the two only ever matter together.
+       Alternatives: (a) a second `compassItemEnabled` field: more fields for the same rule.
+    2. *Empty match list.* Chosen: scope 60 refuses with `siege-match-empty` and today's text, matching today's
+       `/navigate`. Alternatives: (a) no reason, as in October: the adapter would invent the text; (b) reuse
+       `siege-compass-off`: the compass words the cases differently.
+    3. *Reason on the API.* Chosen: `Reason` replaces the `String` reason everywhere. Alternatives: (a) a parallel code
+       field: two fields that can disagree.
+    4. *Arrival radius.* Chosen: nullable `Double` on `Place.Point`, positive and finite, 4-argument constructor kept.
+       Alternatives: (a) a separate `Place.Area`: every `Point` consumer needs a second case.
+    5. *Cache (E18).* Chosen: no cache in P1; a model-backed cache belongs with the model (P2/P3). Alternatives: (a) a
+       cache keyed by (scope, world, modelVersion) now: nothing model-backed exists yet to cache.
+6. **Out of scope, noted.** None.
+7. **Blockers.** None.
+8. **At merge / what the developer must do.** Nothing beyond merging: no config key, no migration. Changelog entry and
+   the `documentation` sub-issue at the merge into `next` (the coordinator's step). Smoke § 1 steps 10 and 11 (nothing
+   changed) are manual.
+9. **Notes for later links.**
+    1. P3 adapters: switch on `Reason.code()`, not the text; the compass maps `siege-lobby` to "works once the siege
+       match has started." and `siege-compass-off` to "switched off during sieges."; build `Siege.compassEnabled`
+       from the item rule and `siegeEnabled`.
+    2. `Revalidation.reason()` is a `Reason` too (`no-longer-listed` for a dropped key) for P4's
+       `DESTINATION_NOT_ALLOWED`.
+    3. Off-road L8 (#708): `LandmarkLikeProviderTest` is the contract; register the provider as one more World
+       provider in `InitialScopes.create`, use `Place.Point(..., radius)` or `Place.Region`.
+    4. Maven Central through the proxy: a Gradle init script putting `repo.papermc.io/repository/maven-public/` first
+       (named repo moved to index 0) plus one `--refresh-dependencies` gave a clean build.
