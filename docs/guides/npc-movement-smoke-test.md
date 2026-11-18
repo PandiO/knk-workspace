@@ -3,7 +3,7 @@
 **Status:** Written 2026-11-16 for knk-plugin `next` `cc5262ff` (links M1–M7 merged into `next`, behind
 `npc.navigation.enabled` and each link's own key, all off by default); only the steps no plugin scenario checks; not
 run yet (the developer's run with every key on is planned for 2026-11-16)
-**Last updated:** 2026-11-18 (link C1 section, [#700](https://github.com/PandiO/knk-workspace/issues/700)); 2026-11-17 (link B5 section, [#699](https://github.com/PandiO/knk-workspace/issues/699)); 2026-11-16 (assembled from the developer tests of implementation plan 4c.4, PandiO/knk-workspace#658)
+**Last updated:** 2026-11-18 (link E1 section, [#701](https://github.com/PandiO/knk-workspace/issues/701)); 2026-11-18 (link C1 section, [#700](https://github.com/PandiO/knk-workspace/issues/700)); 2026-11-17 (link B5 section, [#699](https://github.com/PandiO/knk-workspace/issues/699)); 2026-11-16 (assembled from the developer tests of implementation plan 4c.4, PandiO/knk-workspace#658)
 **Issue:** [PandiO/knk-workspace#358](https://github.com/PandiO/knk-workspace/issues/358) (links
 [#621](https://github.com/PandiO/knk-workspace/issues/621)–[#627](https://github.com/PandiO/knk-workspace/issues/627));
 post results on the link's sub-issue or [#603](https://github.com/PandiO/knk-workspace/issues/603)
@@ -144,6 +144,35 @@ steps only.
 4. **A new snapshot of the tower route** (manual: the command on the dev server). `/knk npc nav snapshot
    northern-wearway-upper-keep-tower`; its `manifest.json` box reaches above y 113 (the goal) and round the route's
    start (1279 64 −621). Put the zip on the evidence branch.
+
+## Link E1: exit denied mid-trip
+
+Added 2026-11-18 for knk-plugin `claude/npc-movement-e1` ([#701](https://github.com/PandiO/knk-workspace/issues/701));
+run it on `next` once E1 is merged. Same setup as above; the movement keys don't matter for this section. Realtime on
+(the web app and the server connected to the hub). 2 of 3 steps partly automated (tagged); every step can still be run
+by hand; not run yet. About 15 minutes; 5 minutes for the untagged step only. The full steps, with what to look for in
+`stats` and the log, are plan Phase 4 developer test step 15.
+
+Pick a district a stored route leaves, with nothing else denied on the way, or save a short one from inside a district
+to a point 30 blocks outside it (`/knk npc nav from`, walk out, `/knk npc nav to`, `/knk npc nav route save
+exit-short`).
+
+1. [partly automated: `npc-exit-denied-leader` (realtime deny, allowed again through a cache refresh), knk-core
+   `NavGroupExitRulesTest`; by hand: the real web app, hub and API, a real district, the log] **A leader alone.**
+   `/knk npc nav route load exit-short`, `/knk npc nav clear`, `/knk npc nav stats reset`, `/knk npc nav spawn 1`.
+   When the NPC is about 10 blocks from the edge, still inside, set the district's AllowExit to false in the web app
+   (no `/knk cache refresh`). Look: within about a second it stops at the edge, inside; the `npc-logs/` run log has
+   "way ahead is closed by exit <region> (event)"; `stats` `rules: trespasses 0`. Set AllowExit back to true: it walks
+   out to the route's end.
+2. [partly automated: `npc-group-exit-denied` (both ways through realtime), knk-core `NavGroupExitRulesTest`; by hand:
+   a group of 20 on a real district, the log] **A group half inside.** `/knk npc nav clear`, `/knk npc nav stats
+   reset`, `/knk npc nav group 20`. When the leader and a few followers are out and the rest are still inside, set
+   AllowExit to false. Look: the followers inside stop at the edge, inside, and none leaves; the leader and the ones
+   out walk on (`leader waited 0`); no `TRESPASS` line, `trespasses 0`. Set AllowExit back to true: the rest walk out
+   and follow.
+3. **The refresh path** (manual: needs the real `/knk cache refresh`). Repeat step 2 with `/knk cache refresh` right
+   after each change: the same result, and `[KnK Resolver] warmCache: completed` in the log. A held follower that walks
+   out in the half second right after the refresh is the known gap #724; note how many.
 
 ## After the run
 

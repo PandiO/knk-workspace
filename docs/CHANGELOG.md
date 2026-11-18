@@ -4,6 +4,25 @@ This is a human-readable record of capabilities merged into the V3 default branc
 
 ## Unreleased — on feature branches, not merged
 
+- **NPC navigation: exit rules held while NPCs walk, not only where a route is planned** ([PandiO/knk-workspace#701](https://github.com/PandiO/knk-workspace/issues/701),
+  link E1 of the NPC navigation follow-ups chain). knk-plugin and knk-workspace branches `claude/npc-movement-e1` (PRs
+  into `next`). Behind `npc.navigation.enabled` (off by default); no new `config.yml` key, no migration.
+  1. The NPC walking checks now judge a step by the exit rule of every region the NPC stands in, as well as by the entry
+     rule. That covers the recheck of the way ahead, the trespass guard, the walk to a blocking element, and a group's
+     follower lanes, waypoints and guard. It applies to every domain type. Before, these checks were entry only, and an
+     exit denied while an NPC walked out on an earlier route did not stop it.
+  2. An NPC that would leave a region it may not leave stops at the edge, inside, and waits; it walks on when the rule
+     allows it again, through the same realtime and `/knk cache refresh` paths as entry. In a group, the followers
+     still inside stop at the edge and the leader and the followers already out walk on, as for entry.
+  3. The trespass guard counts a denied exit: `TRESPASS <npc> left <region> at x y z (…)`, in `rules: trespasses`.
+  4. The exit rule is the road router's own (`DomainAvailability` and the shared `DomainAccessEvaluator`). The NPC's
+     access profile applies: `bypass-domain-rules`, an allow list naming the region, and a domain whose rule does not
+     apply to roads all let it leave.
+  5. Scenarios `npc-exit-denied-leader` (an NPC alone: exit denied through realtime, allowed again through a cache
+     refresh) and `npc-group-exit-denied` (a group half inside, both ways through realtime) run in CI's `paper-boot`
+     job (61 scenarios). Steps: [NPC movement smoke test, link E1](guides/npc-movement-smoke-test.md#link-e1-exit-denied-mid-trip),
+     [plan Phase 4 developer test step 15](specs/npc-platform/IMPLEMENTATION_PLAN.md#phase-4--groups-plugin).
+
 - **NPC navigation: off-road starts and ends with the walk navigator's search** ([PandiO/knk-workspace#700](https://github.com/PandiO/knk-workspace/issues/700),
   link C1 of the NPC navigation follow-ups chain). knk-plugin and knk-workspace branches `claude/npc-movement-c1` (PRs
   into `next`). Behind `npc.navigation.enabled` (off by default); no new `config.yml` key, no migration.
