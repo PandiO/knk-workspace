@@ -1070,7 +1070,10 @@ step 5, an off-road goal up the keep tower's spiral staircase, failed in hops; C
     7. **Open doors** (`BukkitNavWorld.passable`). An open door or fence gate no longer counts as a wall for the NPC's
        floors, headroom and "blocks a body": its panel stands at the side of its cell. Before, a walk through an open
        doorway (the keep tower's at 1405 104 −494) was a gap the line could not bridge and that neither local leg could
-       walk.
+       walk. The panel leaves an opening 13/16 of a block wide, which a body 0.6 wide passes only within about 0.1 of
+       its middle: the Citizens mover moves a waypoint whose feet cell holds an open door or fence gate to the middle of
+       the opening (`BukkitNavWorld.openingCentre`, from the block's collision boxes). Without it, CI's `paper-boot`
+       saw the replay's followers jam on the tower door's panel in one of two runs.
     8. **Hops stay the fallback.** An end the walk search does not plan (no path within its caps, an unloaded chunk, a
        box over `max-chunks-per-request`) is walked in hops as before. Counted (`offRoadWalks()`, `offRoadHops()`) and
        logged with the search's numbers and the walked cells (`npc-logs/`).
