@@ -101,6 +101,10 @@ lines after walking the whole route ("whole walk").
 | 8 watchtower to tower roof, run 2 | NO_PATH on the roof (44 cells, the trapdoor gap); FOUND 5 of 5 once the player had climbed down; 8 searches, 5 found, 3 no path. Undetermined | 8 (40 straight) | 44 | 44 | 20 (0) | 6306 | 249 | 461 | 16 | no | not measured | 8 searches; 46.5 ms; 7.7 ms |
 | 9 storage hall to watchtower, run 1 | NO_PATH (37 straight, 44 expansions), then FALLBACK (max-length) 5 of 5 on the walk legs ("guiding you to the nearest road"; stuck after a few blocks) | 25 (25 straight) | 2165 | 2165 | 12 (0) | 3591 | ≤ 93 | 11875 | ≤ 17 | yes (5 of 6) | not measured | 6 searches; 24.8 ms; 4.3 ms |
 | 9 storage hall to watchtower, run 2 | FOUND 4 of 4, the route worked | 169 (67 straight) | 5454 | 5499 | 24 (0) | 9834 | 269 | 30601 | 16 | no | not measured | 4 searches; 30.6 ms; 9.8 ms |
+| keep, run 2b | FOUND on the first search (no cap), then NO_PATH 3 of 5 on the recomputes from the same spot as runs 1 and 2 (17 to 23 straight, 13 643 cells, 49 chunks): the area still closes with a 48-block margin, so the box is not the cause. Failed | 371 (50 straight) | 26306 | 26454 | 81 (81) | 0 (the cold capture of 108 chunks: 1788 µs per chunk) | ≤ 1251 | 189152 | ≤ 20 | no | not measured | 6 searches; 236.1 ms; 67.5 ms |
+| courtyard, run 2b | FOUND 8 of 8 (no cap), the whole route a walk trail; the route worked | 398 (81 straight) | 27839 | 27895 | 90 (0) | 65684 | 1146 | 203604 | 13 | no | not measured | 8 searches; 203.6 ms; 65.7 ms |
+| 400, run 2b | FOUND 17 of 17 (no cap), the route worked; the trail was hard to see in the grass | 664 (483 straight) | 57885 | 58224 | 296 (0) | 208008 (spread over about 74 ticks) | 3692 | 646041 | 16 | no | not measured (no "Can't keep up" in the log) | 17 searches; 646.0 ms; 208.0 ms |
+| 5 outpost, run 2b | the straight line, as in run 2; 6 s after `/navigate` one search was computing and one capture waiting (1008 chunks), and the log has no later status: outcome _to fill_ | _to fill_ | _to fill_ | _to fill_ | _to fill_ | _to fill_ | _to fill_ | _to fill_ | _to fill_ | _to fill_ | _to fill_ | _to fill_ |
 | run 3 (if needed) | _to fill_ | _to fill_ | _to fill_ | _to fill_ | _to fill_ | _to fill_ | _to fill_ | _to fill_ | _to fill_ | _to fill_ | _to fill_ | _to fill_ |
 | concurrency (step 8) | _to fill_ | _to fill_ | _to fill_ | _to fill_ | _to fill_ | _to fill_ | _to fill_ | _to fill_ | _to fill_ | _to fill_ | _to fill_ | _to fill_ |
 
@@ -120,7 +124,15 @@ Run 2 notes (2026-11-18, developer's walk-through):
    trail still cuts the stair's inner wall (`guidance-v2` is off, so the curve and `wall-clearance` do not shape it);
    scene 3 the road trail from the start (preferred), but the road part ends at the garrison gate rather than at
    "The Keep" node, which is nearer the destination (also in run 1).
-5. Trail density: the developer finds the walk trail too sparse to read as a line. Without `guidance-v2` the walk
+5. Run 2b (capture margin 48): scene 1 still fails at the same spot, now with 13 643 cells, so the spot is closed off
+   in the walk model itself, not by the box. Lead: the server warns at every start that gate door "Keep Stair House"
+   (id 2) has sheared reference points, and the stuck spot is in the keep stair house's lower flights.
+6. The developer wants a route that runs mostly along roads to use the road guidance (the road trail on stairs and
+   corners, "Turn left on ..." instructions) even when the walk search alone could reach the target. With the shipped
+   `max-snap-distance` 48, scenes 1 to 5 already do (road plus walk legs); run 2's direct mode does not. This argues
+   for option A as raised walk caps on walk legs only, never a raised `max-snap-distance`, and for a rule on direct
+   mode within 48 blocks when a road would carry most of the way (the mixed routes of DESIGN § 5.1 and § 5.2).
+7. Trail density: the developer finds the walk trail too sparse to read as a line. Without `guidance-v2` the walk
    trail has a fixed spacing of 3 blocks (`TrailRenderer.LEG_SPACING`); with it, `navigation.trail-leg-spacing`
    (0.5 to 16) sets it.
 
