@@ -32,7 +32,7 @@
 | L2 P2 model, snapshot, domain search Location | #103 | Merged into next (2026-11-18) | `claude/navigation-destination-engine`: knk-web-api `a49fba23`, knk-plugin `61fe656a`, knk-workspace `30894797` | [knk-web-api#49](https://github.com/PandiO/knk-web-api/pull/49) (merge `6094276d`), [knk-plugin#80](https://github.com/PandiO/knk-plugin/pull/80) (merge `2f1c783e`), [knk-workspace#760](https://github.com/PandiO/knk-workspace/pull/760) (merge `560dd839`) | API build-and-test, mysql-tests, fresh-database green; plugin build + paper-boot green; Codex skipped (usage limit) | subagent of the coordinator (two repos besides knk-workspace, SKILL § 4.1.4 item 2) |
 | L3 P3 switch-over behind the flag | #69 | Merged into next (2026-11-18) | `claude/navigation-destination-engine`: knk-plugin `03ec14ce`, knk-workspace `9dda7c92` | [knk-plugin#81](https://github.com/PandiO/knk-plugin/pull/81) (merge `073fa4cf`), [knk-workspace#761](https://github.com/PandiO/knk-workspace/pull/761) (merge `d484361e`) | build + paper-boot green on the PR; Codex skipped (usage limit) | create_session session_01R1w2UvmCT8TsW9NNue38Vg |
 | L4 P4 hard blocks as scopes, live re-validation | #62 | Merged into next (2026-11-18) | `claude/navigation-destination-engine`: knk-plugin `d38fb46c`, knk-workspace `0b1274d4` | [knk-plugin#82](https://github.com/PandiO/knk-plugin/pull/82) (merge `3e04ba8f`), [knk-workspace#762](https://github.com/PandiO/knk-workspace/pull/762) (merge `9db3df91`) | build + paper-boot green on the PR; Codex skipped (usage limit) | create_session session_01R1w2Ux1p4b4KMqSayuzntM |
-| L5 phase 4b removal of old paths and the flag | #747 | Waiting: developer's live test of smoke § 3 and § 4 with the flag on (gate); off-road L8 #708 plugin part runs first | — | — | — | — |
+| L5 phase 4b removal of old paths and the flag | #747 | Waiting: developer's live test of smoke § 3 and § 4 with the flag on (gate); off-road L8 #708 merged into `next` 16:46 (plugin `5fd81466`), slot free | — | — | — | — |
 | L6 P5 arena duels provider and scope | #55 | Not started | — | — | — | — |
 
 ## 3. Coordinator decisions
@@ -125,6 +125,12 @@
     chain's L8 (#708) plugin part takes the knk-plugin navigation slot now (agreed in item 13); L5 does not start until
     it is merged into `next`, even once the live test passes. Alternatives: (a) hold the slot for L5 — L5 cannot start
     before the live test anyway.
+16. **Off-road L8 merged (2026-11-18 16:46).** Its coordinator reports L8 (#708) merged into `next` (knk-plugin
+    `5fd81466`, knk-web-api `935fe8cc` with the additive `AddLandmarks` migration, knk-web-app `3432e6ef`, knk-workspace
+    `7722cc76`): a `LandmarkProvider` in the World scope and an arrival-cylinder check in `NavigationService`, behind
+    `navigation.landmarks` and `navigation.destination-engine`. The plugin slot is free; L5 starts when the developer's
+    live test passes, telling the off-road coordinator first (its L10 step 2 and L5 #705 also wait for the developer).
+    L5's prompt must keep the landmark provider and arrival check while removing the flag. Alternatives: none.
 
 ## 4. Link blocks
 
