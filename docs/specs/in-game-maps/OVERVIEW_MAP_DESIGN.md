@@ -1,8 +1,8 @@
 # Overview map — BlueMap in the web app for players, staff and moderation
 
-**Status:** **Proposed** (2026-11-18) — no open questions; waiting for the developer's approval.
-**Last updated:** 2026-11-18 (first version, from the working draft of 2026-11-17 and the design session of 2026-11-18)
-**Issue:** [PandiO/knk-workspace#732](https://github.com/PandiO/knk-workspace/issues/732); phases as sub-issues in § 11 (on approval).
+**Status:** **Decided 2026-11-18** (developer). Proposed the same day; no open questions.
+**Last updated:** 2026-11-18 (Decided; phases filed as #735–#743; first version from the working draft of 2026-11-17 and the design session of 2026-11-18)
+**Issue:** [PandiO/knk-workspace#732](https://github.com/PandiO/knk-workspace/issues/732); phases as sub-issues in § 11.
 **Dependencies:** the offline BlueMap tile pipeline ([BLUEMAP_EVALUATION.md](BLUEMAP_EVALUATION.md) § 5–7); the SignalR
 game hub (#66, built); managed WorldGuard regions (`docs/architecture/managed-worldguard-regions.md`, built); gate
 structures and siege matches (built).
@@ -313,23 +313,21 @@ Related: [DESIGN.md](DESIGN.md) (in-game maps, M2–M5), [DECISION-map-data-sour
 
 ## 11. Phases
 
-(Proposed outline for review; sub-issues are filed on approval.)
-
 | Phase | Scope | Acceptance | Repos | Tier | Flag | Sub-issue | Depends on |
 |---|---|---|---|---|---|---|---|
-| 1 | Region outlines: knk-core reporting, WorldGuard adapter, hub method, `map_region_outlines` table | A01–A02 | knk-plugin, knk-web-api | tier:3 | `map.reporting.enabled` | — | — |
-| 2 | Public map API: config, markers, panel DTOs, rate limit, access tests | A03–A06 | knk-web-api | tier:3 | `Map:Enabled` | — | 1 |
-| 3 | Map page: iframe, bridge script and protocol, pins, labels, flash and toggle, public panels, action registry, Nginx deploy notes | A07–A10, A22 | knk-web-app (deploy notes in knk-workspace) | tier:2 | `Map:Enabled` | — | 2 |
-| 4a | Live players backend: plugin player reports, registry, per-audience snapshots, arena pins | A11–A16 (API side) | knk-plugin, knk-web-api | tier:3 | `Map:LivePlayers:Enabled` | — | 2 |
-| 4b | Live players layer in the page, name labels and tags | A11–A16 (page side) | knk-web-app | tier:2 | `Map:LivePlayers:Enabled` | — | 3, 4a |
-| 5 | Staff detail: compact display renderer in the panel | A17 | knk-web-app | tier:2 | none (node-gated) | — | 3 |
-| 6a | Gate commands backend: endpoint, hub command, plugin handler | A18–A19 (API and plugin) | knk-web-api, knk-plugin | tier:3 | `Map:GateCommands:Enabled` | — | 2 |
-| 6b | Gate command buttons in the panel | A18 (page) | knk-web-app | tier:2 | `Map:GateCommands:Enabled` | — | 3, 6a |
-| 7 | Player context panel with moderation actions | A20–A21 | knk-web-app | tier:2 | none (node-gated) | — | 4b |
+| 1 | Region outlines: knk-core reporting, WorldGuard adapter, hub method, `map_region_outlines` table | A01–A02 | knk-plugin, knk-web-api | tier:3 | `map.reporting.enabled` | #735 | — |
+| 2 | Public map API: config, markers, panel DTOs, rate limit, access tests | A03–A06 | knk-web-api | tier:3 | `Map:Enabled` | #736 | 1 |
+| 3 | Map page: iframe, bridge script and protocol, pins, labels, flash and toggle, public panels, action registry, Nginx deploy notes | A07–A10, A22 | knk-web-app (deploy notes in knk-workspace) | tier:2 | `Map:Enabled` | #737 | 2 |
+| 4a | Live players backend: plugin player reports, registry, per-audience snapshots, arena pins | A11–A16 (API side) | knk-plugin, knk-web-api | tier:3 | `Map:LivePlayers:Enabled` | #738 | 2 |
+| 4b | Live players layer in the page, name labels and tags | A11–A16 (page side) | knk-web-app | tier:2 | `Map:LivePlayers:Enabled` | #739 | 3, 4a |
+| 5 | Staff detail: compact display renderer in the panel | A17 | knk-web-app | tier:2 | none (node-gated) | #740 | 3 |
+| 6a | Gate commands backend: endpoint, hub command, plugin handler | A18–A19 (API and plugin) | knk-web-api, knk-plugin | tier:3 | `Map:GateCommands:Enabled` | #741 | 2 |
+| 6b | Gate command buttons in the panel | A18 (page) | knk-web-app | tier:2 | `Map:GateCommands:Enabled` | #742 | 3, 6a |
+| 7 | Player context panel with moderation actions | A20–A21 | knk-web-app | tier:2 | none (node-gated) | #743 | 4b |
 
 Feature tier: **tier:3** (new public API surface, schema change, a new hub stream from the game server).
 
-Smoke test: [guides/overview-map-smoke-test.md](../../guides/overview-map-smoke-test.md) (written on approval).
+Smoke test: [guides/overview-map-smoke-test.md](../../guides/overview-map-smoke-test.md) 
 
 ## 12. Open questions
 
