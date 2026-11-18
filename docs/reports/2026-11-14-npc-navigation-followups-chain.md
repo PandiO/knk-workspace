@@ -404,6 +404,12 @@ the configuration reference § 4.27), then restart. In test order:
 48. **R1 started for #724** (2026-11-18). The off-road chain's coordinator does not take #724 (no link of theirs covers
     the cache-refresh path) and agreed it runs in this chain; R1 keeps any `paper/navigation` edit to the refresh path,
     away from guidance-v2, and reports the files first.
+49. **R1 checked and merged** (2026-11-18). § 6 held: CI `build` and `paper-boot` (62) green on `836ddf62`, no debug code,
+    `paper/navigation` limited to `DomainCacheRewarm` and one NPC-only line in `NavigationAccess` (the off-road
+    coordinator saw no clash; its A16 condition, players unchanged, pinned by a test), resolver change reviewed. Merged
+    knk-plugin#75 → `1f414d08`, knk-workspace#730 → `f82b5975`. Held NPCs no longer cross after a cache refresh
+    (6 unit tests and a scenario fail before, pass after). For the developer's review: R1 decisions 5.1, 5.2, 5.6.
+    No NPC link running; the chain waits for the developer's retest.
 
 ## 4. Link blocks
 
