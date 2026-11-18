@@ -1,0 +1,32 @@
+  # [#737, overview map; runbook Phase 10] Replaces the hand-started `bluemap-test` container (docker run, :latest,
+  # port 8100) with a stack service on the same folders. A render job, not a server: it is in the `bluemap` profile,
+  # so `docker compose up -d` never starts it. Run it with
+  #   docker compose --profile bluemap run --rm bluemap -r -g      # render changed chunks, regenerate the web app
+  # The `web` service (nginx) serves the result from /mnt/fast/knk-alpha/bluemap/web under /bluemap/.
+  # Goes with the other services, before `volumes:`.
+  bluemap:
+    image: ghcr.io/bluemap-minecraft/bluemap:v5.29@sha256:bb49bfdef996c6fd9cf68c8c6a2b79189e6711fa90ae4d43cf22d81a6811301e
+    container_name: knk-alpha-bluemap
+    profiles: ["bluemap"]
+    restart: "no"
+    command: ["-r", "-g"]
+    volumes:
+      - /mnt/fast/knk-alpha/bluemap/config:/app/config
+      - /mnt/fast/knk-alpha/bluemap/data:/app/data
+      - /mnt/fast/knk-alpha/bluemap/web:/app/web
+      # The world copy (runbook Phase 10 step 4), never the live world.
+      - /mnt/fast/knk-alpha/bluemap/world:/app/world:ro
+    # render-thread-count in config/core.conf stays at 4 or lower; this caps the container as well.
+    cpus: 4
+    security_opt:
+      - no-new-privileges:true
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  # In the existing `web` service, add this volume (the service has none yet):
+  #  web:
+  #    volumes:
+  #      - /mnt/fast/knk-alpha/bluemap/web:/usr/share/nginx/bluemap:ro

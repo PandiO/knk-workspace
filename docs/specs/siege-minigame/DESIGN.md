@@ -2,6 +2,8 @@
 
 **Related planned mode (2026-09-30):** [Siege Survival / Defend the Castle](../siege-survival/DESIGN.md) ([KNG-50](https://linear.app/kngpandi/issue/KNG-50/siege-survival-endless-npc-waves-gate-repair-and-match-economy), child of KNG-37) extends this foundation with endless NPC waves, cooperative gate repair and both equipment modes. It is design-only and does not change the implemented PvP rules described here.
 
+**Siege weapons (design complete for V1 gameplay 2026-11-15, not implemented):** [SIEGE_WEAPONS.md](SIEGE_WEAPONS.md) ([PandiO/knk-workspace#354](https://github.com/PandiO/knk-workspace/issues/354)) adds trebuchets, catapults and ballistas on team-owned scenario spots, pasted from schematics, with a build phase, health, wrecks and spot cooldowns, map-targeted artillery on a BlueMap web page, ammo types paid per shot with per-match siege points, and per-type unlocks with personal coins. Related Siege-wide work from the same sessions: siege shop (#611), notable events (#612), tactical map (#613), siege fire (#615). Nothing below changes until their implementation plans are written.
+
 **Status:** Implemented — all MVP phases (1–9) merged into the default branches on 2026-09-26 and smoke-tested live
 by the developer; Phase 10 (Scheduled lobbies) is post-MVP, not started. Seven decisions with the developer (§0; D6
 changed after the smoke test); remaining open questions in §13.
