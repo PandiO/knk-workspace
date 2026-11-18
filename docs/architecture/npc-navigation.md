@@ -1,18 +1,21 @@
 # NPC navigation in knk-plugin (Citizens adapter)
 
-**Status:** Current · **Last updated:** 2026-11-15 (Phase 4b: followers at doors and district edges, wall corners and the recovery ladder, narrowed formations, followers that finish their trip, the stats lines; PandiO/knk-workspace#589)
-**Checked against:** knk-plugin `next` `deb7ff49` (Phases 1–4, the Phase 1 follow-ups and Phase 4b: links L2 `11e07d64`,
-L3 `5dc88cfd`, L4 `deb7ff49`). None of it is on trunk yet.
+**Status:** Current · **Last updated:** 2026-11-18 (§ 13 new: the fix links L9, B1–B5, C1 and E1; § 3, § 4, § 11, § 12.5 and § 12.7 updated for them; old § 13 is § 14; PandiO/knk-workspace#726); 2026-11-17 (§ 1 and § 12: the shaping classes and `NavWorld`, `NavPoint`, `NavGeometry` moved to `core/navigation/shape/`, PandiO/knk-workspace#704; before: 2026-11-16, § 12 new, PandiO/knk-workspace#658)
+**Checked against:** knk-plugin `next` `cc5262ff` (Phases 1–4, the Phase 1 follow-ups, Phase 4b: links L2 `11e07d64`,
+L3 `5dc88cfd`, L4 `deb7ff49`; Phase 4c: links M1–M7, last `cc5262ff`); § 13 and the parts that point to it against
+`next` `7aef3de4` (fix links L9 `a78fcce8`, B1 `0f039203` and `80902942`, B2 `36ea2da0`, B4 `a3f0ebae`, B3 `e69dba6a`,
+B5 `55ea7df3`, C1 `65c7d6d3`, E1 `7aef3de4`). None of it is on trunk yet.
 **Applies to:** knk-plugin `next` only. Everything below runs only with `npc.navigation.enabled: true` (default
 `false`). The developer tests of Phases 2–4 ([#360](https://github.com/PandiO/knk-workspace/issues/360),
 [#361](https://github.com/PandiO/knk-workspace/issues/361), [#377](https://github.com/PandiO/knk-workspace/issues/377))
 the Phase 1 audit re-run ([#490](https://github.com/PandiO/knk-workspace/issues/490)) and the Phase 4b tests
 ([#520](https://github.com/PandiO/knk-workspace/issues/520), [#521](https://github.com/PandiO/knk-workspace/issues/521),
-[#522](https://github.com/PandiO/knk-workspace/issues/522)) are still open, so this is not live-tested behaviour. The
+[#522](https://github.com/PandiO/knk-workspace/issues/522)) and of Phase 4c ([#621](https://github.com/PandiO/knk-workspace/issues/621)–[#627](https://github.com/PandiO/knk-workspace/issues/627))
+are still open, so this is not live-tested behaviour. The
 plugin scenarios on CI's Paper server with Citizens check part of it (§ 11).
 **Related:** [implementation plan](../specs/npc-platform/IMPLEMENTATION_PLAN.md) (phases, decisions Q1–Q8, developer
 tests, known limits; Phase 4b for the follow-ups); [behavior model § 2](../specs/npc-platform/BEHAVIOR_MODEL.md)
-(requirements NAV-01–NAV-23); [plugin architecture](plugin-architecture.md); chain progress reports
+(requirements NAV-01–NAV-28); [plugin architecture](plugin-architecture.md); chain progress reports
 ([Phases 1–4](../reports/2026-11-13-npc-navigation-chain.md),
 [follow-ups](../reports/2026-11-14-npc-navigation-followups-chain.md)), with what each link built and its agent
 decisions; parent issue
@@ -21,8 +24,10 @@ decisions; parent issue
 This page describes how the code is split and how a navigation order runs. The settings are in the
 [plugin configuration reference § 4.27](../guides/admin/plugin-configuration.md), the commands in the
 [commands guide](../guides/users/commands.md) (`/knk npc`), the metric panels in the
-[performance metrics guide § 4.2](../guides/performance-metrics-and-capacity.md) and the load tests in the
-[Citizens stress test guide](../guides/citizens-stress-test.md). They are not repeated here.
+[performance metrics guide § 4.2](../guides/performance-metrics-and-capacity.md), the load tests in the
+[Citizens stress test guide](../guides/citizens-stress-test.md) and turning it on, the movement keys and reading the
+stats on a server in the [NPC navigation admin guide](../guides/admin/npc-navigation-admin-guide.md). They are not
+repeated here.
 
 ## 1. The split: K&K plans, Citizens moves
 
@@ -33,6 +38,7 @@ and `/knk npc status` then says why NPC navigation is unavailable.
 | Layer | Package | What it holds | Engine types |
 |---|---|---|---|
 | Core | `knk-core` `core/npc/nav/` | The navigation service (state machine, planning queue, watchdog, retries), the route follower, hop planner, layered settings, access subjects and profiles, metrics, and the ports the engine implements | None (decision Q1: Bukkit-free, engine-neutral) |
+| Shape | `knk-core` `core/navigation/shape/` | Shared with the players' navigation (off-road design O11, PandiO/knk-workspace#704): the world port `NavWorld`, `NavPoint`, `NavGeometry` (body size, walls, headroom, floor helpers), `PlazaCrossing`, and the shaping code `Corridor`, `CorridorShaper`, `FreeWidth`, `PlazaLine`. Imports nothing from `core/npc/` (`ArchitectureGuardTest`) | None |
 | Groups | `knk-core` `core/npc/nav/group/` | Groups that plan once: leader, followers in formation slots, narrowing to fewer abreast and folding into a column where the way is narrow, followers that finish their trip | None |
 | Adapter | `knk-paper` `paper/npc/citizens/` | `CitizensBootstrap`, `CitizensNpcRuntime` (the K&K NPC registry), `CitizensNpcMover`, `KnkBlockExaminer` | The only package that names Citizens types |
 | Wiring | `knk-paper` `paper/npc/nav/` | `NpcNavigationModule` (start and stop, `/knk npc`), config, the Bukkit implementations of the ports, the test drivers, the event audit, run files, `NpcEntities` | Bukkit, no Citizens |
@@ -56,7 +62,7 @@ and `/knk npc status` then says why NPC navigation is unavailable.
 
 The core reaches the server only through these interfaces. All of them are called on the main thread unless noted.
 
-| Port (`core/npc/nav/`) | Paper implementation | What it answers |
+| Port (`core/npc/nav/`; `NavWorld` in `core/navigation/shape/`) | Paper implementation | What it answers |
 |---|---|---|
 | `NpcMover`, `NpcMoverFactory` | `CitizensNpcMover`, created by `CitizensBootstrap` | Spawn, walk a stretch of waypoints (`follow(waypoints, margin)`: Citizens moves on to the next waypoint only within `waypoint-margin`; local legs keep Citizens' own margin) or a local leg, stop, despawn. The listener's `stuck(mover, StuckKind)` says what made Citizens give up: `STATIONARY` (its stationary check) or `NO_PATH` (a path search that found nothing). The factory is absent without Citizens |
 | `RoadPlanner` | `NavigationService.planRoadFor` (road router with the subject's access policy) | The road part of a route on the K&K road graph, with the gate crossings on it; needs no loaded chunks (NAV-14) |
@@ -82,9 +88,11 @@ verdicts case by case (report block 4.1 § 5.4).
    `walk-only-blocks` long; otherwise the order fails. There is never a straight-line fallback across terrain.
 2. **Follow the road line (trail mode, decision Q8).** `RouteFollower` turns the road line into floor points and hands
    the mover one stretch (`stretch-blocks`) of waypoints at a time. The next stretch is prepared before the current
-   one ends. Only the stretch ahead is looked at in the world.
-3. **Local legs.** The off-road ends, short trips and recovery legs use Citizens' own path search, cut into hops by
-   `HopPlanner`. `KnkBlockExaminer` puts K&K's verdicts in front of Citizens' examiners: a cell the leg blocks (a
+   one ends. Only the stretch ahead is looked at in the world. Since link B2 the next stretch is handed out by the
+   NPC's 3D progress along its waypoints and appended to the ones it still has (§ 13.3).
+3. **Local legs.** Short trips and recovery legs use Citizens' own path search, cut into hops by `HopPlanner`. Since
+   link C1 the off-road start and end of a route (and a walk-only trip) are searched with the players' walk search
+   and walked like the road line; hops are their fallback (§ 13.7). `KnkBlockExaminer` puts K&K's verdicts in front of Citizens' examiners: a cell the leg blocks (a
    closed gate, a denied region, a door the NPC may not open, anything outside the captured box) is impassable before
    Citizens is asked. Examiners that Citizens adds by itself are removed and counted as `examiner_leak`
    (must stay 0).
@@ -99,15 +107,20 @@ verdicts case by case (report block 4.1 § 5.4).
 ## 4. Rules stay binding (Phase 3)
 
 1. **Recheck.** Every `recheck-ticks`, a walking NPC's way ahead is checked against the current gate and access
-   rules. A denied region or a closed gate ahead makes it plan the route again. `rule-checks-per-tick` caps the number
+   rules. A denied region, a region it stands in and may not leave (since link E1, § 13.8) or a closed gate ahead
+   makes it plan the route again. `rule-checks-per-tick` caps the number
    of NPCs checked per tick.
 2. **Events.** A gate change or an availability change reaches the NPCs through `RuleChangeListener`. An NPC waiting at
    a closed gate or a district edge is woken by the change itself, not only by its wait timer.
-3. **Trespass guard.** An NPC that is inside a region its current rules deny is always logged and counted. With
-   `stop-on-trespass: true` (meant for dev servers) it is also stopped and its route planned again.
+3. **Trespass guard.** An NPC that entered a region its current rules deny, or (since E1) left one it may not leave, is
+   always logged and counted (`TRESPASS <npc> entered|left <region> at x y z (…)`). With `stop-on-trespass: true`
+   (meant for dev servers) it is also stopped and its route planned again.
 4. **Access profiles** (`access-profiles.<id>`, until NPCs get their own permission identity in Phase 5):
    `bypass-domain-rules`, `open-doors`, `allow-regions`, `deny-regions` (deny wins). NPCs pass open gates only and
    are never siege lockdown members; gate pass-through for NPCs is open question Q5, after Phase 5.
+5. **Where the checks get regions.** The rule checks read WorldGuard regions through `BukkitNavWorld.regionsAt`, built
+   from a `Supplier<RegionIds>` when route following is built (§ 1 item 4). Before link L9 the module took the region
+   tracker at start, before `KnKPlugin` had built it, so every NPC check saw no region (§ 13.1).
 
 ## 5. Wall corners and stuck recovery (Phase 4b, link L3)
 
@@ -303,6 +316,13 @@ The events behind them (`knk_npc_nav_events_total{event=…}` on the metrics end
 3. `recovery_no_path` counts Citizens path searches that found nothing; `fell` counts a navigating NPC whose feet
    dropped 3 or more blocks below the path's floor (Paper's fall distance on landing).
 4. `group_narrow`, `group_widen`, `group_fold`, `group_reform` and `group_finish_trip` (§ 6).
+5. Phase 4c (§ 12): `group_merge` and the reasons per width change
+   (`knk_npc_nav_group_width_reasons_total{change, reason}`: `door`, `stair`, `rules`, `edge`, `narrow`);
+   `local_leg_knk`, `local_leg_engine`, `local_leg_none`; `crowd_wait`, `crowd_yield`; `pushed`, `push_returned`,
+   `push_exempt`, `push_teleport`. The stats print them as `local legs: k&k N, engine N, none N`,
+   `crowd: waits N, yields N, longest queue N`, `pushes: N (players N, attacks N), returned N, exempted N (now N),
+   teleported N`, and `merges N (reasons)` in the groups line. Corridor steering has no stats line of its own: its
+   shaped and shared stretches and cost (`CorridorShaper.shaped()` and friends) show in the scenarios' report lines.
 
 ## 11. Tests
 
@@ -316,8 +336,319 @@ The events behind them (`knk_npc_nav_events_total{event=…}` on the metrics end
    `npc-group-access-change` on the corner scene, and the three road scenarios of #543. See
    [Writing a plugin scenario](../guides/developer/plugin-scenarios.md). The look of the widths on real roads, the
    spacing and a column of 20 at a real gate are the developer's manual steps (plan 4b.3, developer test).
+4. **Phase 4c:** knk-core `CorridorTest`, `CorridorShaperTest`, `RouteFollowerCorridorTest`, `LocalLegSearchTest`,
+   `NpcNavigationLocalLegsTest`, `NavGroupElasticTest`, `PlazaLineTest`, `RouteFollowerPlazaTest`, `NavGroupPlazaTest`,
+   `CrowdControlTest`, `NpcNavigationCrowdTest`, `NavGroupCrowdTest`, `PushWatchTest`, `PushLedgerTest`,
+   `EdgeGuardTest`, `NpcNavigationPushTest`; knk-paper `NpcNavigationConfigTest` (every key in every layer),
+   `BukkitCollisionPolicyTest`, `PlazaGeometryTest`, `NpcMovementSceneTest`. Scenarios on scenes pasted from WorldEdit
+   schematics (`SceneSchematic`, the developer's `knk-stairhouse.schem` and three generated stand-ins):
+   `npc-stairhouse-singles`, `npc-stairhouse-group`, `npc-jagged-straight`, `npc-doorway-crowd`, `npc-plaza-line`
+   (each also `…-collision-on`) and `npc-collision-policy`, `npc-guard-ledge-push`, `npc-door-column`; the keys and
+   checks of each are in [writing a plugin scenario § 1](../guides/developer/plugin-scenarios.md#1-a-scenario-in-under-30-lines).
+   The real dev world, 50 NPCs for 10 minutes and a real client are the
+   [NPC movement smoke test](../guides/npc-movement-smoke-test.md).
+5. **The fix links (§ 13):** knk-core `TrailTest`, `WaypointChainTest`, `NavGeometrySurfaceTest`, `JumpDetectorTest`,
+   `GroupPathTest`, `NpcNavigationOffRoadWalksTest`, `RouteFollowerWalkedTest`, `DomainEntryRuleTest`,
+   `NavGroupExitRulesTest`, `NavGroupDomainRulesTest`, new cases in `CrowdControlTest`, `NavGroupTest`,
+   `PathTargetsTest` and `NpcNavigationServiceTest`, and the snapshot classes (`NavSnapshotZipTest`, `SnapshotBoxTest`,
+   `SnapshotPartsTest`); knk-paper `NpcNavigationModuleRegionsTest`, `NavSnapshotTakerTest`, `AnvilRegionTest`,
+   `SnapshotReplayTest`, `BukkitNavWorldSurfaceTest`, `BukkitNavWorldBlocksTest`, `NpcWalkPlannerTest`,
+   `NpcExitRuleAccessTest`. Scenarios: `npc-stairhouse-climb`, the replays `npc-replay-quarry-to-keep` and
+   `npc-replay-keep-tower`, `npc-offroad-detour`, `npc-offroad-upstairs`, `npc-offroad-ravine`,
+   `npc-exit-denied-leader` and `npc-group-exit-denied` ([writing a plugin scenario § 1](../guides/developer/plugin-scenarios.md#1-a-scenario-in-under-30-lines)).
 
-## 12. Not built yet
+## 12. Movement quality (Phase 4c, links M1–M7)
+
+Plan [Phase 4c](../specs/npc-platform/IMPLEMENTATION_PLAN.md) (designed by link L8, #603; requirements NAV-24–NAV-28).
+Every feature has its own key and is off by default; with all keys at their defaults the code walks as Phase 4b.
+Decided: steering option A with add-on D. Open: option B (a short-horizon steering layer, plan 4c.4 item 8) and
+whether `collidable` turns on by default; both wait for the developer's tests.
+
+Package (PandiO/knk-workspace#704): `Corridor`, `CorridorShaper`, `FreeWidth` and `PlazaLine` live in the shared
+package `knk-core` `core/navigation/shape/`, beside `NavWorld`, `NavPoint`, `NavGeometry` and `PlazaCrossing` (formerly
+`RoadPlanner.PlazaCrossing`), so the players' trail can reuse them (off-road design O11). `LocalLegSearch` stays in
+`core/npc/nav/corridor/`. `HopPlanner.floor`, `feet`, `floorNear` and `CONTINUITY_RANGE` delegate to `NavGeometry`. The
+move changed no behaviour.
+
+### 12.1 The corridor (M1, M2: `corridor-steering`)
+
+1. **`shape/FreeWidth`** (M1): the free width across a line at a point, left and right, to a wall, post, full-block
+   step or drop, at most 4 a side. `/knk npc nav trace` writes it as a `# corridor:` line after each `# waypoints:`
+   line; M3 and M4 judge widths with it.
+2. **`shape/Corridor`**: the standable cells within `corridor-half-width` of a stretch's waypoints, flooded from the
+   line with floor continuity (a step of at most a block, the body's headroom) and in the regions the line passes;
+   everything else in the strip is an obstacle. Each cell's clearance is its distance to the nearest obstacle (capped
+   at 2), judged from its own floor, so stairs work. A line that passes one column on two levels gets a corridor per
+   piece.
+3. **`shape/CorridorShaper`**: samples the line every 0.5 block and moves each point square to the line to the
+   place nearest the road line that keeps `wall-clearance` (looking ±2 blocks along, so a notch doesn't pull it and a
+   jutting piece is seen early), the most clearance where the road is narrower than twice it. A chokepoint (under 2
+   blocks for at most 3 blocks, wider before and after) gets three pinned waypoints on its axis and the stretch the
+   waypoint margin 0.35. String pulling then joins the points by the longest straight steps that stay in the corridor.
+   Corner clearance (§ 5.1) and the waypoint chain run on the result. The route's last point never moves.
+4. **Cost and sharing:** one shape per stretch, cached 600 ticks and shared by every NPC whose stretch has the same
+   waypoints (`NpcNavigationService.corridors()`). The leader of a group keeps its unshaped route; with `elastic` the
+   group path is shaped per chunk of 20 points (§ 12.3).
+
+### 12.2 K&K's local legs (M6: `local-legs-clearance`)
+
+**`corridor/LocalLegSearch`**: every local leg goes through the service's hop planning (short trips, hops to and from
+the road, a follower's own leg back, the ladder's local leg). K&K builds a corridor round the straight line to the hop
+(6 blocks either side, up to 12 for long legs; regions don't shape it) and runs a bounded A* (8 directions, no corner
+cut, at most 2048 cells). A cell must be allowed by the leg's `CellAccess`, keep the body's half width, and costs 5
+per block of clearance it lacks to `wall-clearance` (4 more for an occupied cell with crowd awareness). The path is
+smoothed by line of sight and walked as a waypoint list, with a watchdog on progress (waypoint lists report no stuck,
+NAV-17). When K&K finds nothing, Citizens' search walks the leg as before.
+
+### 12.3 Elastic formations (M3: `group-formation-keeping: elastic`)
+
+`levels` (the default) is § 6.1. With `elastic` the group decides its width per group path point from the free width
+across the path (`GroupPath.fit`, looked up once per point; walls, drops, cells of another step on a flight, regions the
+group's rules deny):
+
+1. **Squeeze:** neighbours stand from `group-lateral-spacing` down to `group-lateral-spacing-min` (0.6) apart, the
+   formation's centre sits off the path's centre to keep its outer lanes `wall-clearance` from faces (never under
+   0.35), and rows close up towards `group-spacing-min` in quarter steps.
+2. **Look-ahead and hysteresis:** the width is decided from the rearmost slot to the formation's depth plus
+   `group-lookahead-blocks` ahead. A width is given up only for a tight place longer than
+   `group-width-hysteresis-blocks`, the column too; shorter ones are passed with the lanes merged (`merges`).
+3. **Stairs, rules, lanes:** on a flight a width fits only when each lane has a step of its own (reason `stair`); a
+   lane may enter another region when the leader's access verdicts allow it (reason `rules`); a lane keeps within the
+   bands from a step behind to 2 blocks ahead.
+4. **Re-assignment:** on a width change followers get the new slots by their place, so nobody overtakes.
+5. **Reasons:** each narrow, fold and merge is logged and counted with `door`, `stair`, `rules`, `edge` or `narrow`.
+
+### 12.4 Plaza lines (M5: `plaza-lines`)
+
+The road plan names every junction a route passes (`shape/PlazaCrossing`, knk-paper
+`NavigationService.plazaCrossingsOf`), designed plazas with their `PlazaRadius`. Automatic plazas are measured on the
+NPC side: 16 rays from the junction over standable floor; a junction whose open radius is no more than
+`corridor-half-width` is a street junction and left alone. The stretch's corridor is widened by the plaza's footprint
+(at most `plaza-corridor-blocks`), and **`shape/PlazaLine`** runs a bounded A* (at most 4,096 cells) from where the
+line enters the footprint to where it leaves, string-pulls it and slides its bends to the tangent points round
+obstacles; regions the route line doesn't pass stay obstacles. The plaza's points are pinned. With `corridor-steering`
+off only the plaza part changes. A group's path and its leader take the line with the formation's half width plus
+`wall-clearance` as margin (`NavGroup.plazaClearance`). The road graph and the players' trail are unchanged (builder
+through-edges are a future update, plan 4c.7).
+
+### 12.5 Crowd awareness (M4: `crowd-awareness`)
+
+1. **`crowd/Occupancy`**: every 5 ticks one pass hashes the feet cell of every spawned NPC (followers included);
+   lookups are O(1).
+2. **`crowd/CrowdControl`**: a narrow place is a run of points on the NPC's way ahead (6 blocks looked at) where the
+   free width is under 2 blocks; NPCs that see the same cells share it, and the first way through gives its axis and
+   so each NPC's direction. An NPC within 4 blocks may enter when no NPC of the other direction has a turn, it is the
+   earliest waiting, and the last of its own direction is a block in; otherwise it walks to its queue spot (1.5 blocks
+   before the place plus a block per NPC ahead, a block to the right where the floor allows). A turn ends 0.5 past the
+   place; a leader keeps it until its followers are through. A queue lets an NPC go after 30 s without an entry
+   (since link B3; a place's floor and holders on another level: § 13.5). `CrowdControl.earlier`
+   is the single place that orders two NPCs, the hook for authority and closed formations later (plan 4c.7).
+3. **Oncoming:** an NPC in a narrow place without a turn while the other direction entered first steps back out
+   (`yield`).
+4. **Waiting is not stuck:** a held NPC is not watched; a watchdog or engine stuck report with another NPC within 1.5
+   blocks along the way counts a wait instead of a stuck spell (after 30 s behind the same NPC it is stuck after all).
+   Recovery steps and local-leg targets skip occupied cells.
+
+### 12.6 Bodies and push resistance (M7: `collidable` and the `push-*` keys)
+
+1. **Collision policy** (knk-core port `NpcCollisionPolicy`, knk-paper `BukkitCollisionPolicy`): with `collidable` on,
+   every online player is in each NPC's collidable exemptions (Paper's `LivingEntity#getCollidableExemptions`, kept up
+   to date on joins, quits and respawns), so players never move NPCs while NPCs push each other. Chosen by the
+   scenario `npc-collision-policy` over a scoreboard team (Citizens sends its own per-NPC teams for name tags, an entity
+   is on one team only, and `FOR_OWN_TEAM` let players push). With `players-push-npcs` players collide too.
+2. **`push/PushWatch`** (every 2 ticks per NPC with collision on): a move the NPC's own walk doesn't explain is a push:
+   faster than 0.4 blocks a tick (plus 0.15), more than 0.2 back against its road line, more than 0.25 sideways right
+   after a contact, or 0.4 from where a standing NPC stands. Height is never judged (stairs and hops are its own walk).
+   One push per 20-tick episode. Contacts come from Citizens' `NPCCollisionEvent` and Paper's
+   `EntityPushedByEntityAttackEvent` (not cancelled, so knockback stays); an unreported push with an NPC within 1.5
+   blocks is that NPC's jostle.
+3. **Return** (`push-return`): straight back where that is a straight walk (L5's floor continuity), else along
+   `RecentSteps`, else a local leg, then on along the route; an NPC with no order walks back to its post; a follower is
+   left to its group's slot walks; other NPCs' jostles are the crowd's business unless towards a drop or moving an NPC
+   at its post a block or more. After `push-teleport-ticks` a teleport home, only while no player within 64 blocks has
+   a line of sight (`NpcSight`, knk-paper `BukkitNpcSight`).
+4. **`push/EdgeGuard`**: queue spots skip cells next to a drop; a push towards a drop always sends the NPC back and,
+   with `players-push-npcs`, exempts the pusher at once.
+5. **`push/PushLedger`**: with `players-push-npcs`, `push-exempt-after` pushes by one player within
+   `push-exempt-window-ticks` exempt that player from that NPC for `push-exempt-ticks`.
+
+### 12.7 Limits of Phase 4c
+
+1. `collidable` stays `false` by default: one NPC's body can shove another off a 1-wide flight or ledge (a trial with
+   collision on everywhere failed `npc-ledge-corner`, `npc-corners-walk`, `npc-group-narrows` and, by design,
+   `npc-stuck-ladder`). Missing before it can turn on: turns on 1-wide flights and ledges by a drop, the squeeze margin
+   below, the L3–L5 scenarios with collision on, and the developer's push test (plan 4c.4 item 7.4.10).
+2. With collision on, squeezed `elastic` rows still overlap (slots exactly 0.6, a body width, apart); 0.7 would hold
+   them but changes which roads take 3 abreast, a decision for the developer.
+3. The door mouth with bodies: [#657](https://github.com/PandiO/knk-workspace/issues/657). A group's arrival waits for
+   its settle time when followers stop 0.1–0.2 short of their slots: [#636](https://github.com/PandiO/knk-workspace/issues/636).
+4. Off its road line (a back-off, a queue walk, a winding leg) a push is judged by speed only, so a slow push there is
+   not seen; moot while players never push.
+5. The stair house in the M-link scenarios stops at the hall. Since link B1 the whole stair house is walked by
+   `npc-stairhouse-climb` and on the real blocks by `npc-replay-quarry-to-keep` (§ 13.2).
+
+## 13. Fixes after the smoke tests (links L9, B1–B5, C1, E1)
+
+The developer's smoke tests of 2026-11-16 and 2026-11-17 on the real stair house and the keep tower failed: groups
+ignored a realtime district deny, NPCs fell and jammed on the stacked flights, and an NPC stuck below its off-road goal.
+The fix links of the follow-ups chain ([report blocks 4.16–4.23](../reports/2026-11-14-npc-navigation-followups-chain.md),
+[implementation plan 4c.8](../specs/npc-platform/IMPLEMENTATION_PLAN.md)) changed the code below. All of it runs behind
+`npc.navigation.enabled`, and none of it added a config key. The retests are the
+[smoke test's](../guides/npc-movement-smoke-test.md) sections per link; not live-tested yet.
+
+### 13.1 Regions for the rule checks (L9, #668)
+
+`NpcNavigationModule` takes a `Supplier<RegionIds>` (`KnKPlugin` passes `() -> regionTracker.regionIds()`). Its
+`rulesWorld()` builds the `BukkitNavWorld` the rule checks read when route following is built, and the settings' region
+layer (`regionsOuterToInner`) asks the same supplier. `BukkitNavWorld.knowsRegions()` says whether there is a query;
+without one the module logs `[NPC] no WorldGuard region query: …` once.
+
+1. **Why:** the module starts in `registerCommands()`, before `onEnable` builds the region tracker, and took
+   `regionIds()` at start: `null` on every server. Every NPC check (the leader's recheck, the trespass guard, the
+   followers' lanes and guard) saw no region, and the per-region settings never applied to NPCs. Only the router's next
+   plan blocked a group, because the router reads the road edges' tags.
+2. **Rule for later code:** anything the NPC module needs from `onEnable` after `registerCommands` must be a supplier.
+3. **Subjects:** every NPC check judges an `NpcAccessSubject` whose domain bypass comes from the NPC's access profile
+   (`default`: no bypass), never from the player who typed the command.
+
+### 13.2 Evidence: the snapshot and the replays (B1, #670)
+
+1. **`/knk npc nav snapshot <route>`** (knk-paper `NavSnapshotTaker`; model and zip format in knk-core
+   `core/npc/nav/snapshot/`: `NavSnapshot`, `NavSnapshotZip`, `SnapshotBox`, `SnapshotParts`). It plans the saved
+   route for the `default` profile, reads the caches and the world on the main thread, saves the world, and copies and
+   zips the region files on another thread 40 ticks later. Contents: the
+   [commands guide](../guides/users/commands.md) (`/knk npc nav`); handing one in: the
+   [admin guide § 3](../guides/admin/npc-navigation-admin-guide.md#3-test-commands). The box
+   (`SnapshotBox.aroundRoute`) covers the line and, since C1, the route's from and to with a margin. A gate domain is
+   any domain type containing "gate" (the dev server's are `GateStructure`).
+2. **Replay** (knk-paper `scenario/`): `AnvilRegion` reads `.mca` files without the server (26.x palettes included),
+   `SnapshotReplay` with `SnapshotRegions` places the blocks, builds the WorldGuard regions and gives fake access
+   rules, the line, gates, plazas and settings. Trimmed snapshots and the scenarios:
+   [writing a plugin scenario § 3 item 8](../guides/developer/plugin-scenarios.md#3-the-scene).
+
+### 13.3 Stretch handover in 3D (B2, #671)
+
+1. **Where the NPC is on its list.** knk-core `Trail` keeps the waypoint list the mover was given and the index of the
+   waypoint the NPC walks to: the nearest in 3D from the current one on, or the next once reached (0.6) or passed,
+   never back. `NpcNavigationService.watch` hands out the next stretch once fewer than `HANDOVER_DISTANCE` (4) blocks
+   are left along those waypoints in 3D; without a list (after a crowd hold, a push or a recovery move) it uses the 3D
+   distance to the stretch end. Before, a handover measured in 2D could hand the NPC a stretch on the flight above.
+2. **Appended, not replaced.** `Trail.appended` puts the new stretch after the waypoints not yet walked. `Trail.fromFeet`
+   drops only those the NPC is already past (its feet beyond the waypoint along the next step, on its level, the next
+   one a straight walk), so corner zigs and corner clearance are kept.
+3. **Bridged from the feet.** `WaypointChain.split` starts at the NPC's feet when it is on the ground and returns the
+   first step it cannot bridge. The list is cut before it; once the cut list is walked, `startGapLeg` sends a local leg
+   to the waypoint after the step, and the follower restarts where the NPC stands. Logged
+   (`<npc>: no walk from … to … on the line, a local leg takes that step`) and counted (`gapLegs()`).
+4. **A leader's fall** (`NavGroup.leaderFell`): a leader more than `FELL_BELOW` (1.75) blocks below the lower of its last
+   group path point and the one before has fallen; its points stay out of the group path for up to 30 s, then the path
+   follows it again. Counted as `leaderFalls()`.
+
+### 13.4 Waypoints at the walking surface (B4, #673)
+
+1. **Surface heights on the mover's lists only** (knk-core `NavGeometry.onSurface`, `NavWorld.surfaceY`; knk-paper
+   `BukkitNavWorld.surfaceY`). Every list handed to `NpcMover.follow` goes at the top of the floor block's step: half a
+   block on a bottom slab or an upright stair, a whole block on a full block or an upside-down stair, 0.9375 on a path
+   block. Where two waypoints, or the feet and the first, rise more than a step (`STEP_UP` 0.6), the surface cell on the
+   line between them goes in. Planning, `Trail`, the handover and the group path keep `floor + 1`.
+2. **Group slots** go through the same rule, so a slot on a half-block flight stands on the slab, not half a block
+   above it.
+3. **Half-block steps are no jump.** `NavGeometry.jumpFits` counts a rise of at most a step at the surface as no jump,
+   so recovery's point ahead (`PathTargets.ahead`) works under a low flight; `NavGeometry.floorYOf` takes the floor from
+   feet at 72.5 as the block at 72.
+4. **Settled at the slot's point** (`NavGroup.atSlotPoint`, `SLOT_REACHED` 1.0): once the leader's trip has ended, a
+   follower within a block across of its slot's point and less than a block above or below it is settled, so a follower
+   whose place on a looping path is an earlier pass is not sent round the loop.
+5. **Jumps** (knk-core `JumpDetector`): leaving the ground at 0.3 blocks a tick upward or more (a jump takes off at
+   0.42); without the engine's speed, the rise per tick off the ground. `/knk npc nav trace` marks them `JUMP`.
+   Minecraft's move control, which Citizens uses, also hops whenever the block at the feet reaches above them (a stair's
+   step); no waypoint height removes that, so the scenarios report those hops apart.
+
+### 13.5 Crowd turns in 3D and the guard (B3, #672)
+
+1. **A place has a floor** (`CrowdControl.Place.levelGap`, `LEVEL_GAP` 1.5): flat, or a flight's slope fitted to the
+   cells' feet levels along the axis, with a band over the ends' level and the slope carried on up to 4 blocks. Feet 1.5
+   or more off it are on another level; a step (1) or a jump (1.25) still counts.
+   1. A holder on another level has passed: its turn ends unless a follower on the place's floor still keeps it.
+   2. A holder on another level never stops a waiter of its own direction; it stops one of the other direction only
+      while a follower of its turn is still in the place.
+   3. A follower on another level keeps no turn.
+2. **The guard counts from the last entry.** A queue lets an NPC go after `MAX_WAIT_TICKS` (600, 30 s) in which nobody
+   entered the place (from its arrival or the last entry, whichever is later); a place nobody enters still lets the
+   queue go after 30 s. `longest wait` is still counted from arrival. Log: `<npc> waited 30 s at a narrow place
+   without the queue moving: goes`. The 30 s itself is the developer's decision (plan 4c.4 decision 3), unchanged.
+3. **Diagnostics stay in production code:** `CrowdControl.releases()` and `longWaits()` keep the last 20 guard
+   releases and long waits with every holder and blocker in 3D; the scenarios print them.
+
+### 13.6 The group's shaped path on stacked flights (B5, #699)
+
+With `group-formation-keeping: elastic` or `plaza-lines` a group builds its path from shaped line points
+(`NavGroup.shapedLinePoint`, the line pulled straight in 2D). On stacked flights the shaped points lay over the
+stairwell or on the far end of the landing above, so followers at a flight's top were judged against a path point
+5 blocks across and took own legs back. `GroupPath.addShaped` (used by `NavGroup.trackLeader`) keeps a shaped point only
+where it has a floor near the path's last point, within a block of the line's own point's floor, and a straight walk
+(`NavGeometry.straightWalkable`, the body's width) leads to it from the path's last point. Otherwise the line's own point
+goes in (`addSnapped`). Generic: no coordinates, any stacked stair, landing or ramp.
+
+### 13.7 Off-road legs with the walk search (C1, #700)
+
+1. **Port and adapter.** knk-core port `OffRoadWalks`, used by `NpcNavigationService` for an off-road start, an
+   off-road goal (also one right above or below the road's end) and a walk-only trip. knk-paper `NpcWalkPlanner`
+   calls `WalkSnapshotService`, `WalkAccessFactory` (the NPC's access subject) and the players' `WalkSearch` with
+   `navigation.walk`'s budget. The movement profile is the walk settings' with doors per the access profile, no
+   ladders and no wading. The parts come from `KnKPlugin` through `NpcNavigationModule.setWalkSources` (scenarios:
+   `ScenarioServices.npcWalks`). No file in `core/roads/walk`, `paper/navigation` or `core/navigation/shape` changed;
+   `NpcWalkPlanner` is the only caller of the walk search for NPCs.
+2. **Road join by reachability.** The walk to the road ends at any road point within `JOIN_REACH` (32) blocks along the
+   road, the first the search reaches. The walk to the goal starts at the road's end and is tried again from points
+   further back (at most `TAIL_TRIES`, 4 searches in all). Both walks run at once.
+3. **Walked like the road line.** A found walk is spliced into the `RouteFollower` line, so stretches, the 3D handover,
+   the bridge from the feet and surface heights apply, and a group's followers take it as their path. Walk cells are
+   marked as walked: no corridor shaping, no corner clearance, each on its own floor; the group path takes them
+   unshaped too.
+4. **Body check.** A found path is checked on the main thread against the NPC's body rule; failing cells are closed and
+   the search runs again, at most `MAX_BODY_RECHECKS` (4) times. On an unloaded chunk the box is captured once more
+   with a margin of 4.
+5. **Fallback and log.** When no walk is found, the part is walked in hops as before. `offRoadWalks()` and
+   `offRoadHops()` count them; the log names the search's result and the walked cells (`<npc> off-road walk from …
+   joins the road at …: <n> cells (…)`, `…, walked in hops`).
+6. **Open doors** (`BukkitNavWorld.passable`): an open door or fence gate is no wall for NPC floors, headroom and
+   "blocks a body", everywhere in NPC navigation. `CitizensNpcMover` moves a waypoint in an open doorway to the middle
+   of the opening the panel leaves (`BukkitNavWorld.openingCentre`); a body passes only within about 0.1 of it.
+
+### 13.8 Exit rules while NPCs walk (E1, #701)
+
+1. **One rule, the router's.** `DomainEntryRule.of` returns a `RegionRule`: the entry predicate as before, plus
+   `mayLeave` and `exitDenied` for the regions the NPC stands in, from `DomainAvailability.exitDeniedRegions` over the
+   shared `DomainAccessEvaluator`, for every domain type. `AccessRules.regionRule(subject)` reads it (a fake whose
+   `mayEnter` is no `RegionRule` allows every exit). `StepCheck` judges one step: an entry before an exit, and the rule
+   is only asked for when the step crosses a region border.
+2. **Where it is checked.** `NpcNavigationService`: the recheck of the way ahead (`way ahead is closed by exit
+   <region>`), `allowedPart` (the walk to the blocking element is cut at the edge, inside), `mayStand` and the trespass
+   guard (`TRESPASS <npc> left <region> at x y z (…)`, the same event and counter as an entry). `NavGroup`: follower
+   lanes (`laneAllowed`), waypoints (`mayEnterAll`, `sendTrip`), `mayStand` and the follower guard. Exit verdicts are
+   cached per set of regions stood in and cleared with the entry verdicts; waypoints that leave a region mark the
+   follower for the periodic recheck, as entering ones do.
+3. **Paper** needed no change: `NavigationAccess.mayEnter` already returns `DomainEntryRule.of(...)`, and road
+   navigation's `accessRules()` passes it on (`NpcExitRuleAccessTest` pins this and the agreement with the router per
+   profile). `bypass-domain-rules`, an allow list naming the region and a domain whose rule doesn't apply to roads let
+   the NPC leave. Realtime changes and `/knk cache refresh` wake NPCs as for entry.
+
+### 13.9 Limits of the fix links
+
+1. A follower's place on the path is searched forward only (`NavGroup.WINDOW`); one that ends up a flight below its
+   place is still sent an own leg back (plan 4c.8 item 4.7.3). Lanes beside a flight's first step can lie on a floor a
+   block lower (item 4.7.2).
+2. A replan from inside an off-road walk plans the whole route again; a gate door on an off-road walk is not one of the
+   route's gates for event replans (plan 4c.8 items 5.13.2 and 5.13.3).
+3. With the 2026-11-16 smoke settings (`levels`) the replay's group jumps toward a waypoint at the hall entry's stair:
+   [#695](https://github.com/PandiO/knk-workspace/issues/695), report only.
+4. `/knk cache refresh` sends its first event with the map empty, so held NPCs can cross a denied edge, entry or exit,
+   before the re-warm answers, uncounted by the guard: [#724](https://github.com/PandiO/knk-workspace/issues/724).
+5. Waiters off the place's floor are not judged by level: a long queue's spots lie on the steps below the place
+   (plan 4c.8 item 3.7.2).
+
+## 14. Not built yet
 
 Phases 5–8 of the [implementation plan](../specs/npc-platform/IMPLEMENTATION_PLAN.md): an NPC access identity in the
 API and web app (5), detours and hidden routes (6), movement quality (7) and movement outside loaded areas (7b), and
