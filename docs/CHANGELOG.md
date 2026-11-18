@@ -4,6 +4,22 @@ This is a human-readable record of capabilities merged into the V3 default branc
 
 ## Unreleased — on feature branches, not merged
 
+- **Off-road navigation: walk trails keep off the walls and round their corners** ([PandiO/knk-workspace#710](https://github.com/PandiO/knk-workspace/issues/710),
+  link L3 of the off-road navigation chain, phase 6.1). knk-plugin and knk-workspace branches
+  `claude/offroad-trail-corners` (PRs into `next`). Behind `navigation.guidance-v2`, off by default: with it off the
+  walk paths, the search and the trail are exactly as before. No migration.
+  1. With the flag on, the walk search uses a clearance cost (`walk.clearance-cost` 5 per block of clearance a step
+     lacks to `walk.wall-clearance` 0.8) in place of `walk.wall-cost`; `clearance-cost: 0` keeps `wall-cost`.
+  2. A found or partial walk path is shaped on the walk thread by the shared `CorridorShaper` over the captured
+     terrain (`WalkTerrainNavWorld`, `WalkPathShaper` in `knk-core` `core/roads/walk/`), and its corners are drawn as
+     curves checked against the clearance map (`walk.curve`). Leg colour and 3.0 spacing unchanged; the road trail is
+     unchanged. `/knk road status` shows the shaped paths and their mean time.
+  3. Admin steps (only to try it on a test server): under `navigation:` add `guidance-v2: false` (set `true` to test)
+     and under `navigation.walk:` add `clearance-cost: 5`, `wall-clearance: 0.8`, `curve: true`; restart.
+  4. Tests: knk-core +17 (clearance cost, the flag-off identity over five scenes, a 3-wide spiral stair, the NPC and
+     player shapers on one scene), knk-paper +7, new paper-boot scenario `walk-trail-stairhouse` on the developer's
+     stair house (a local run: 0 % of the trail under 0.7 blocks from a wall, against 44.7 % of today's path).
+
 - **Off-road navigation: the shaping code is shared** ([PandiO/knk-workspace#704](https://github.com/PandiO/knk-workspace/issues/704),
   link L2 of the off-road navigation chain, phase 1). knk-plugin and knk-workspace branches
   `claude/offroad-shape-package` (PRs into `next`). Players and NPCs see no change; no `config.yml` key, no migration.
