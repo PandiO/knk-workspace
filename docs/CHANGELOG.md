@@ -23,6 +23,20 @@ This is a human-readable record of capabilities merged into the V3 default branc
      [overview map smoke test § 7](guides/overview-map-smoke-test.md#7-phase-6a-gate-commands-backend-741-tier3),
      [production installation § 4.3](guides/production-installation.md#43-api-configuration-file--etcknkapienv).
 
+- **Overview map: staff details in the map panel** ([PandiO/knk-workspace#740](https://github.com/PandiO/knk-workspace/issues/740),
+  link L6 of the overview map chain, [#732](https://github.com/PandiO/knk-workspace/issues/732)). knk-web-app and
+  knk-workspace branches `claude/overview-map-staff-details` (PRs into `next`). No flag: gated by the node
+  `knk.admin.world`, and shown only where the map is on (`Map:Enabled`).
+  1. World staff who click a town, district or structure on the map see a "Details" section under the public part:
+     the type's default display configuration in a compact form (no header, lists collapsed with their count,
+     related records as links, no buttons or inline edits), with "Open full page" to the record's detail page. A
+     gate shows its gate display (`GateStructure`).
+  2. Everyone else sees the panel as before; their browser asks for no display configuration.
+  3. The detail pages elsewhere in the web app are unchanged (the compact form is a new option of the same
+     renderer).
+  4. Admin steps: none. Steps:
+     [overview map smoke test § 6](guides/overview-map-smoke-test.md#6-phase-5-staff-details-740-tier2).
+
 - **Overview map: live players backend** ([PandiO/knk-workspace#738](https://github.com/PandiO/knk-workspace/issues/738),
   link L4 of the overview map chain, [#732](https://github.com/PandiO/knk-workspace/issues/732)). knk-plugin,
   knk-web-api and knk-workspace branches `claude/overview-map-players-api` (PRs into `next`). Behind the new API setting
