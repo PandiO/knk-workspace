@@ -22,7 +22,7 @@
 | Link | Issue | Status | Branch heads | PR | CI | How started |
 |---|---|---|---|---|---|---|
 | L1 P1 pure engine in knk-core | #96 | Merged into next (2026-11-18) | `claude/navigation-destination-engine`: knk-plugin `64ca8815`, knk-workspace `7eb86cc3` | [knk-plugin#78](https://github.com/PandiO/knk-plugin/pull/78) (merge `1105ec15`), [knk-workspace#754](https://github.com/PandiO/knk-workspace/pull/754) (merge `732ba191`) | build + paper-boot green on the PR; Codex skipped (usage limit) | create_session session_01R1w2Uw3gPf2REJMYZEGE6a |
-| L2 P2 model, snapshot, domain search Location | #103 | In review (PRs into `next`, 2026-11-18) | `claude/navigation-destination-engine`: knk-web-api `a49fba2`, knk-plugin `61fe656a`, knk-workspace `43a01a7c` | [knk-web-api#49](https://github.com/PandiO/knk-web-api/pull/49), [knk-plugin#80](https://github.com/PandiO/knk-plugin/pull/80), [knk-workspace#760](https://github.com/PandiO/knk-workspace/pull/760) | API build-and-test, mysql-tests, fresh-database green; plugin build + paper-boot green; Codex skipped (usage limit) | subagent of the coordinator (two repos besides knk-workspace, SKILL § 4.1.4 item 2) |
+| L2 P2 model, snapshot, domain search Location | #103 | Merged into next (2026-11-18) | `claude/navigation-destination-engine`: knk-web-api `a49fba23`, knk-plugin `61fe656a`, knk-workspace `30894797` | [knk-web-api#49](https://github.com/PandiO/knk-web-api/pull/49) (merge `6094276d`), [knk-plugin#80](https://github.com/PandiO/knk-plugin/pull/80) (merge `2f1c783e`), [knk-workspace#760](https://github.com/PandiO/knk-workspace/pull/760) (merge `560dd839`) | API build-and-test, mysql-tests, fresh-database green; plugin build + paper-boot green; Codex skipped (usage limit) | subagent of the coordinator (two repos besides knk-workspace, SKILL § 4.1.4 item 2) |
 | L3 P3 switch-over behind the flag | #69 | Not started | — | — | — | — |
 | L4 P4 hard blocks as scopes, live re-validation | #62 | Not started | — | — | — | — |
 | L5 phase 4b removal of old paths and the flag | #747 | Not started | — | — | — | — |
@@ -69,6 +69,20 @@
    the providers reading the model (`CatalogueProvider`, `CompassTargetsProvider`) belong to L3. Alternatives: (a)
    create_session with two `add_repo` calls — refused attaches were seen with several repos; (b) split L2 into an API
    and a plugin session — the API part is small and one link per issue keeps the check simple.
+9. **L2 check (2026-11-18).** Chosen: merge knk-web-api#49 and knk-plugin#80 into `next` after the § 6 checks: heads
+   match, 0 behind `next`, no conflicts, CI green on both (API build-and-test, mysql-tests, fresh-database; plugin
+   build, paper-boot), `next` CI green before the merge (paper-boot on `02aa110e`), scope as the sub-issue (API: DTO,
+   mapping, `Include`, tests; plugin: new `core/navigation/model/` and `paper/navigation/model/`, additive lines in
+   `KnKPlugin`, `config.yml`, the domain summary DTO/mapper/record), 11 decisions logged, Codex at its usage limit
+   (noted on each PR), tests up in every suite with 0 failures. knk-workspace#760 conflicted with overview map L8's
+   changelog entry after it merged; mechanical (both add an entry), so I merged `origin/next` into the branch keeping
+   both entries (`30894797`, SKILL § 7.3) and merged it (`560dd839`). Alternatives: (a) send #760 back to the link —
+   the subagent had finished and the conflict was two added entries; (b) wait for the overview map coordinator —
+   nothing to agree.
+10. **Window before L3.** Chosen: offer the off-road coordinator the window now (L2 merged), and start L3 if it
+    declines or does not answer within about 30 minutes, as agreed in item 7. Alternatives: (a) start L3 at once —
+    breaks the agreement; (b) wait for the off-road links without a limit — they wait for the developer, maybe until
+    this evening.
 
 ## 4. Link blocks
 
