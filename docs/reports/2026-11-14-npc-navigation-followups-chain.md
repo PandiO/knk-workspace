@@ -61,6 +61,7 @@ the configuration reference § 4.27), then restart. In test order:
 | B5 Group followers under a leader a flight above: shaped path kept on the walk | #699 | In review (PRs open, not merged) | knk-plugin `6b186840`; knk-workspace `33add9f8` | PandiO/knk-plugin#67, PandiO/knk-workspace#716 | `build` and `paper-boot` (50) green on `6b186840` (push and PR runs); docs no CI; Codex at its usage limit | create_session session_01R1w2UvW8pwfjEAwo5hVKp1 (2026-11-17) |
 | C1 Off-road starts and ends with the walk search, walked like the road line | #700 | In review (PRs open, not merged) | knk-plugin `b7608662`; knk-workspace `bafe631f` (`next` `ce0f65ec` merged in) | PandiO/knk-plugin#71, PandiO/knk-workspace#721 | `build` and `paper-boot` (59) green on `b7608662` (runs 44225040650, 44225046762, 44225040520, 44225046831); one red `paper-boot` on `ced61331` fixed (doorway jam); docs no CI; Codex at its usage limit | create_session (2026-11-17) |
 | E1 Exit rules checked while NPCs walk | #701 | In review (PRs open, not merged) | knk-plugin `de1c8a6a`; knk-workspace `a827abc6` | PandiO/knk-plugin#74, PandiO/knk-workspace#725 | `build` and `paper-boot` (61) green on `de1c8a6a` (push and PR runs); both new scenarios fail on `next`'s walking checks, pass with E1; docs no CI; Codex at its usage limit | create_session (2026-11-18) |
+| R1 Fix: held NPCs stay held through `/knk cache refresh` | #724 | In review (PRs open, not merged) | knk-plugin `836ddf62`; knk-workspace `3f1ec0c5` | PandiO/knk-plugin#75, PandiO/knk-workspace#730 | `build` and `paper-boot` (62) green on `836ddf62` (push and PR runs); the new scenario and core test fail on `next`, pass with R1; docs no CI; Codex at its usage limit | create_session (2026-11-18) |
 
 ## 3. Coordinator decisions
 
@@ -1937,3 +1938,102 @@ _(Each link appends its block here when it finishes.)_
     1. Ask `ports.rules().regionRule(subject)` (or `StepCheck`) for a step, not `mayEnter` alone, so exits hold.
     2. A fake `AccessRules` whose `mayEnter` is not a `RegionRule` allows every exit; use `DomainEntryRule.of` or `RegionRule.of(enter, exitDenied)` in tests that need exits.
     3. `ScenarioDomainRules` gives any scenario the realtime and refresh paths over a fake API.
+
+### 4.24 R1 — Held NPCs stay held through `/knk cache refresh`: the last known domain answers while the map is warmed again (#724)
+
+1. **Scope done** (#724, filed by E1; plan Phase 4 known limit 4). Behind `npc.navigation.enabled` (off by default); no new key, no migration.
+    1. **Reproduced first.** knk-core `NavGroupCacheRefreshTest` reads the rules as a server does (the map through `DomainEntryRule`), with followers and a single NPC held at a district edge, for entry and for exit. Then `/knk cache refresh` runs as the plugin does: clear, first event, the API 10 ticks later, the re-warm's event. Against `next`'s code all 6 tests fail: the held NPCs cross (`npc-6 entered the district after the refresh`, `npc-1 left the district …`) and the guard counts 0.
+    2. **The fix: the NPC checks keep the last known answers (option b).**
+        1. `RegionDomainResolver.clearRegionCache()` (the cache refresh and the realtime `EntityChanged` handler) keeps the map as it was. `getLastKnownDomain(world, region)` serves those answers to the NPC checks until `releaseLastKnown(generation)`, or for at most `LAST_KNOWN_HOLD` (1 min).
+        2. While held, a region known before the clear keeps its old answer even after the map learns a new one; a region nobody knew is read from the map. A clear during a hold keeps the answers from before the first clear.
+        3. Players' lookups (`getDomainByRegionIdNoRefresh` and the rest) are unchanged.
+        4. `NavigationAccess.mayEnter(AccessSubject)` reads `getLastKnownDomain` for NPC subjects only.
+    3. **Players unchanged (the off-road chain's acceptance item A16, through the coordinator).** How it is guaranteed and pinned:
+        1. Player navigation never reads the held answers. `mayEnter(Player)` and `mayEnter(Player, regions)` (the trail rule) and `policyFor(Player, …)` (routes) read `getDomainByRegionIdNoRefresh`, unchanged.
+        2. The `AccessSubject` overload is reached only through `NavigationService.accessRules()`, whose only callers are the NPC module's two ports.
+        3. Inside that overload, a subject with a player id (`PlayerAccessSubject`) reads `getDomainByRegionIdNoRefresh` too; only subjects without one (NPCs) read `getLastKnownDomain`.
+        4. `NavigationAccessSubjectTest.onlyNpcSubjectsReadTheHeldDomainAnswersPlayersReadTheMap` pins this; it fails with the guard taken out.
+    4. **The switch.** `DomainCacheRewarm` takes the hold's generation when it starts. Once its answers are in, on the main thread, it does three things in order: the NPC trespass guards look, the hold is released, the availability event is sent. So the NPCs switch to the new answers exactly at the event, as on the realtime path (L6). Without road regions, or with NPC navigation off, it releases at once. Both `KnKPlugin` instances (refresh and realtime) are wired.
+    5. **The guard counts a crossing in the gap.**
+        1. `NpcNavigationService.lookBeforeRulesChange()` and `NavGroupService` / `NavGroup.lookBeforeRulesChange()` judge a region entered or left since the last look under the answers still in force, before the event's fresh look (L6's reset). This includes NPCs waiting at a blocking element, whose rule check never ran the guard.
+        2. `NpcNavigationModule.lookBeforeRulesChange()` (paper) calls both.
+        3. Without the look, the two guard tests fail: the window between the last periodic look and the release was swallowed by the reset.
+    6. **Scenario** `npc-group-cache-refresh-held` (`MIN_SCENARIOS` 61 → 62).
+        1. E1's group exit scene: followers held inside a district they may not leave, then a refresh with the rules unchanged; the fake API answers the re-warm in 2 s (`ScenarioDomainRules.apiTicks`).
+        2. `ScenarioDomainRules`, `NpcGroupRealtimeEntryScenario`, `npc-exit-denied-leader` and `npc-group-exit-denied` now read the rules and run the re-warm (hold, look, release) as the plugin does (`ScenarioNpcs.lookBeforeRulesChange`).
+    7. **knk-workspace.**
+        1. Plan Phase 4 known limit 4.
+        2. The changelog entry.
+        3. The smoke test's "Link R1" section (3 steps, 2 partly automated).
+        4. `ci.md` § 7 and § 7.1, and `plugin-scenarios.md` § 1 item 6 (62).
+        5. `origin/next` merged in (the #729 docs; no conflict).
+    8. **Boundaries.**
+        1. `paper/navigation`: `DomainCacheRewarm` (refresh path) and one line in `NavigationAccess`. The coordinator was told before the push.
+        2. Nothing in `NavigationService`, `TrailRenderer`, the `guidance-v2` sections, `core/roads/walk` or `core/navigation/shape`.
+2. **Commits and heads.**
+    1. knk-plugin `claude/npc-movement-r1` at **`836ddf62`** (3 commits on `next` `7aef3de4`; `origin/next` unchanged at the last merge).
+    2. knk-workspace `claude/npc-movement-r1` at **`3f1ec0c5`** (4 docs commits and a merge of `origin/next` `67596152`).
+3. **PRs** (base `next`, not merged).
+    1. PandiO/knk-plugin#75 (`Closes #724`).
+    2. PandiO/knk-workspace#730 (`Part of #724`).
+4. **Tests, baseline → result.**
+    1. knk-plugin `./gradlew build -x deployToDevServer`.
+        1. Baseline on `next` `7aef3de4`: core 3126, api-client 344 (2 skipped), paper 2948 (18 skipped).
+        2. Result on `836ddf62`: core 3138 (+12), api-client 344 (2 skipped), paper 2953 (+5); 0 failures.
+        3. New tests:
+            1. `NavGroupCacheRefreshTest` 6.
+            2. `RegionDomainLastKnownTest` 6.
+            3. `DomainCacheRewarmTest` +3.
+            4. `NpcExitRuleAccessTest` +1 (a real resolver through `NavigationAccess`).
+            5. `NavigationAccessSubjectTest` +1 (A16: players read the map).
+        4. Changed: `NavigationAccessSubjectTest` and `NpcExitRuleAccessTest` stubs for the new lookup; `PaperScenariosTest` for 62.
+    2. **Before → after.**
+        1. `NavGroupCacheRefreshTest` against `next`'s code: 6 of 6 fail → 6/6 pass.
+        2. Scenario `npc-group-cache-refresh-held`, local (Paper 26.3 b205, pinned WorldEdit and WorldGuard, Citizens b4269, `--npc-navigation`, one scenario per boot):
+            1. On a `next` jar with only the scenario added: FAIL ("knk-sc-4 left the district after the refresh").
+            2. On this branch: PASS (379 ticks).
+            3. With the fake API's usual 10 ticks it passed on `next` as well, so it uses 2 s (decision 5.8).
+        3. Also local on this branch: `npc-group-exit-denied` PASS (239 ticks), `npc-exit-denied-leader` PASS (384), `npc-group-realtime-entry` PASS (265). The log check passed on each.
+    3. CI on `836ddf62`: `build` green (push run 44240404677, PR run 44240410192); `paper-boot` green with 62 scenarios, `npc-group-cache-refresh-held` PASS in 379 ticks (push run 44240404578, PR run 44240410126). On `a45d1a93` `build` was green and `paper-boot` was cancelled by the next push. #586 did not hit.
+    4. Known reds: none. Codex: at its usage limit on both PRs (said on both).
+    5. Local toolchain notes.
+        1. Maven Central answered intermittent 404s through the proxy, as for E1. A local retrying mirror in the scratchpad (`~/.gradle/init.d`) fixed it; nothing in the repos.
+        2. Citizens once failed to enable on a fresh server because its runtime library download failed. Copying the libraries of an earlier boot fixed it, as CI's cache does.
+5. **Decisions (DESIGN § 4.3).**
+    1. *Which fix.* Chosen: (b), the NPC checks keep the last known answers while the map is warmed again. It covers every NPC check: the events, the periodic rechecks and the guard. It covers the realtime clear too, and players are untouched. Alternatives:
+        1. (a) Don't send the first event to NPC navigation. The periodic rechecks and the guard would still read an empty map.
+        2. (c) `RegionDomainResolver` refreshes in place on a cache refresh. This changes KNG-104's semantics for players: a stale answer would be served to them.
+    2. *What a hold serves.* Chosen: a region known before the clear keeps its old answer even after the re-warm's answer is in, until the release; the NPCs switch at the event, all at once, which is what L6's guard reset assumes. Alternative:
+        1. (a) Fill only the misses. The NPCs would mix old and new answers per region during the re-warm, and the guard could not tell under which rules a step was made.
+    3. *Where the hold lives.* Chosen: in `RegionDomainResolver.clearRegionCache`, so both clears (the refresh hook and the realtime `EntityChanged` handler) hold without new wiring. Alternatives:
+        1. (a) A decorator in `core/npc/nav`. It needs a hook before each clear, plus a reordering of the refresh hooks.
+        2. (b) In `NavigationAccess`. That is more code in `paper/navigation`.
+    4. *Ending the hold.* Chosen: by generation, so a clear after a re-warm started keeps the hold for its own re-warm. Alternatives:
+        1. (a) A plain flag. An overlapping re-warm would end another's hold early.
+        2. (b) A counter. The realtime path coalesces several clears into one re-warm, so it would never reach 0.
+    5. *A hold nobody ends.* Chosen: it ends by itself after a minute (the map's TTL). Alternatives:
+        1. (a) No limit. A stale denial would stay forever without a re-warm.
+        2. (b) Hold only while NPC navigation runs. That duplicates the re-warm's checks at the clear.
+    6. *Counting a crossing in the gap.* Chosen: the guards look under the held answers right before the release. Alternatives:
+        1. (a) Look at the event under the new answers. This gives L6's false trespass for a realtime change.
+        2. (b) Rely on the periodic look. Its last window before the event's reset is lost (the two guard tests fail).
+    7. *What the look does.* Chosen: count and log only. Alternative:
+        1. (a) Replan with `stop-on-trespass`. The event that follows rechecks every NPC anyway.
+    8. *The scenario's API delay.* Chosen: 2 s for the refresh's re-warm (a slow API), because with 10 ticks the held Citizens followers did not get going before the re-warm's event and the scenario passed on `next`. Alternatives:
+        1. (a) 10 ticks. It doesn't show the bug on a real server.
+        2. (b) An entry variant. The same timing applies, and the core test covers entry.
+    9. *A player subject (A16).* Chosen: a guard on `playerId()` in `NavigationAccess.mayEnter(AccessSubject)`, so a player subject reads the map even if one ever reaches it. Alternative:
+        1. (a) Rely on the callers alone (today NPC only). That is not pinned against a future player caller.
+    10. *Config.* Chosen: no new key. The hold's minute is a constant. Alternative:
+        1. (a) A key for the hold. Nothing to tune for an admin.
+6. **Out of scope, noted.**
+    1. Regions that no road edge lists are still not re-warmed (L6's note 6.1). After the hold ends they are unknown, so open, as before R1. Not filed: not seen.
+    2. `ScenarioDomainRules`' default 10-tick API is too short for a refresh scenario to show a gap on a real server. Later scenarios of that kind should use `apiTicks`.
+7. **Blockers.** None.
+8. **At merge / what the developer must do.**
+    1. Nothing in `config.yml`, no migration. Deploy and check the startup line `0.1.0+<sha>`.
+    2. The smoke test's "Link R1" section: three `/knk cache refresh` runs with followers held at a real district, and a single NPC. Post the stats and the log on #724.
+    3. For review: decisions 5.1, 5.2 and 5.6.
+9. **Notes for later links.**
+    1. NPC checks read domains through `RegionDomainResolver.getLastKnownDomain`. A new NPC rule check should too, not `getDomainByRegionIdNoRefresh`.
+    2. Any new path that clears the map and re-warms it should take `holdGeneration()` at the start and call `releaseLastKnown` after its answers are in, with the NPC guards' look first (`DomainCacheRewarm` does this).
