@@ -1,7 +1,7 @@
 # Off-road navigation and landmarks — smoke test
 
-**Status:** Draft from the design (2026-11-17); no steps run. Phase 5.1 (§ 6): 21 of 22 steps automated (6 in part); Phase 0 (§ 1): 1 of 9 steps automated; phase 1 (§ 2): 4 of 4 steps automated; phase 6.1 (§ 8): 6 of 8 steps automated (3 of them in part); phase 6.2 (§ 9): 11 of 11 steps automated (3 of them in part); phase 7 step 1 (§ 10.1): 4 of 7 steps automated (3 of them in part), viewed by the developer 2026-11-18; phase 7 step 2 (§ 10.2): 9 of 9 steps automated (3 of them in part); the other phases not yet automated (the links tag them).
-**Last updated:** 2026-11-18 (§ 10 phase 7: step 1 viewed by the developer, O33; § 10.2 step 2 built by link L10, #712: nine steps, all automated, three in part); 2026-11-18 (§ 6.3 phase 5.1 step B, link L8: the in-game steps); 2026-11-18 (§ 6 phase 5.1 updated to what link L8 step A built, #708: API and web steps, plugin steps marked step B); 2026-11-18 (§ 10 phase 7 split into step 1, built by link L10, #712: the staff preview and the developer's viewing steps on Cinix and Brink, and step 2, the trail, not built yet); 2026-11-18 (§ 9 phase 6.2 updated to what link L4 built, #711: eleven steps, all automated, three in part); 2026-11-17 (§ 8 phase 6.1 updated to what link L3 built, #710: eight steps, six automated); 2026-11-17 (§ 2 phase 1 updated to what link L2 built, #704: every step automated); 2026-11-17 (§ 1 phase 0 updated to what link L1 built, #703: the measurement steps and the `/knk road status` lines); 2026-11-17 (draft from the design, phases 0, 1, 2, 3, 4, 5.1, 5.2, 6.1, 6.2, 7)
+**Status:** Draft from the design (2026-11-17); no steps run. Phase 2 (§ 3): 13 of 14 steps automated (5 in part); Phase 5.1 (§ 6): 21 of 22 steps automated (6 in part); Phase 0 (§ 1): 1 of 9 steps automated; phase 1 (§ 2): 4 of 4 steps automated; phase 6.1 (§ 8): 6 of 8 steps automated (3 of them in part); phase 6.2 (§ 9): 11 of 11 steps automated (3 of them in part); phase 7 step 1 (§ 10.1): 4 of 7 steps automated (3 of them in part), viewed by the developer 2026-11-18; phase 7 step 2 (§ 10.2): 9 of 9 steps automated (3 of them in part); the other phases not yet automated (the links tag them).
+**Last updated:** 2026-11-18 (§ 3 phase 2 built by link L5, #705: fourteen steps, thirteen automated, five in part); 2026-11-18 (§ 10 phase 7: step 1 viewed by the developer, O33; § 10.2 step 2 built by link L10, #712: nine steps, all automated, three in part); 2026-11-18 (§ 6.3 phase 5.1 step B, link L8: the in-game steps); 2026-11-18 (§ 6 phase 5.1 updated to what link L8 step A built, #708: API and web steps, plugin steps marked step B); 2026-11-18 (§ 10 phase 7 split into step 1, built by link L10, #712: the staff preview and the developer's viewing steps on Cinix and Brink, and step 2, the trail, not built yet); 2026-11-18 (§ 9 phase 6.2 updated to what link L4 built, #711: eleven steps, all automated, three in part); 2026-11-17 (§ 8 phase 6.1 updated to what link L3 built, #710: eight steps, six automated); 2026-11-17 (§ 2 phase 1 updated to what link L2 built, #704: every step automated); 2026-11-17 (§ 1 phase 0 updated to what link L1 built, #703: the measurement steps and the `/knk road status` lines); 2026-11-17 (draft from the design, phases 0, 1, 2, 3, 4, 5.1, 5.2, 6.1, 6.2, 7)
 **Design:** [specs/navigation-offroad/DESIGN.md](../specs/navigation-offroad/DESIGN.md) · **Issue:**
 [PandiO/knk-workspace#698](https://github.com/PandiO/knk-workspace/issues/698)
 
@@ -134,37 +134,110 @@ is one look at the startup log.*
 
 ## 3. Phase 2: walk links and mixed routes (#705, tier:3)
 
-*Draft from the design (2026-11-17); the link updates it to what was built and tags the automated steps.*
+*Built 2026-11-18 (link L5, knk-plugin `claude/offroad-walk-links`): with `navigation.walk-links` on, the road A* may
+leave the road for a walk link between two road nodes that lie at most `walk-link-range` (40) blocks apart where the
+road between them is more than `walk-link-ratio` (2.0) times the straight distance. Links are searched lazily: the
+first route is today's; the candidates the A* met that could beat it (at most `walk-link-searches-per-route`, 4) are
+searched off the main thread with the player's walk access, one at a time beside the walk legs, and cached for the
+player; when one is found the session asks for a better route ("A shorter route opened - following it now."). The
+route is then a list of legs (road, walk link, road), with the walk to the road and the last walk as before; the walk
+link is drawn in the leg colour, and the instructions say "Leave the road and walk across" where it starts. A link is
+offered only when the access policy lets the player through its regions and gate doors; a block change within a block
+of its path drops it within a second (the block-change hook), otherwise it is kept `walk-link-ttl-seconds` (600); "no
+link" is kept `walk-link-retry-seconds` (600) or until a gate or rule changes. Road-first: a target within
+`max-snap-distance` (unchanged, 48) is reached over the road instead of one walk path when the road carries at least
+`road-first-share` (0.6) of the way and the whole way is at most `road-first-max-ratio` (1.5) times the walk path (the
+developer confirms both defaults). `/knk road status` shows three walk-link lines. With the flag off everything is as
+before. 13 of 14 steps are automated, 5 of them in part; the developer's live test is steps 1, 2, 5 to 9 and 12 on the
+dev world.*
 
 ### 3.0 Preconditions
 
-1. Deployed: plugin build from `next` with phase 2.
-2. Settings: `navigation.walk.enabled: true`, `navigation.walk-links: true`, `walk-link-range: 40`,
-   `walk-link-ratio: 2.0`.
-3. Accounts and data: a player account without staff nodes; a staff account; the courtyard scene; a WorldGuard region
-   on the courtyard that the player account can be denied entry to; a gate on the courtyard's other exit that can be
-   closed.
+1. Deployed: plugin build from `next` with phase 2 (knk-plugin PR for #705 merged).
+2. Settings: under `navigation:` add (the defaults) `walk-links: true`, `walk-link-range: 40`, `walk-link-ratio: 2.0`,
+   `walk-link-ttl-seconds: 600`, `walk-link-retry-seconds: 600`, `walk-link-searches-per-route: 4`,
+   `road-first-share: 0.6`, `road-first-max-ratio: 1.5`; keep `navigation.walk.enabled: true` and
+   `max-snap-distance: 48`. Restart the server (the navigation service reads these at startup; the log says "Walk
+   links on (navigation.walk-links): range 40.0, ratio 2.0, ...").
+3. Accounts and data: a player account without staff rights; a staff account; a courtyard where walking across is
+   much shorter than the road round it (two road junctions at most 40 blocks apart in a straight line, more than twice
+   that by road; the developer picks one in the town or the keep's bailey); a WorldGuard region on the courtyard whose
+   domain can deny the player entry; a gate structure on the courtyard's other exit that can be closed; a field
+   outside the town at least 10 blocks from any road.
+4. Run `/knk road status reset` before each step that reads the counters.
 
 ### 3.1 Steps
 
-1. As the player, stand in the field outside the town and `/navigate` to a building on the far side of the courtyard.
-   **Expected:** one trail: a walk leg to the road, the road, a walk leg across the courtyard, the road again, and a
-   walk leg into the building, in that order. (A02)
-2. Walk the whole route. **Expected:** the HUD shows one route, and no "recalculating" while you stay on the trail.
-   (A02)
-3. Navigate between two road nodes that are close in a straight line and also close by road (for example, along one
-   straight street). **Expected:** no walk link; the route stays on the road. (A03)
-4. Navigate between two road nodes more than 40 blocks apart in a straight line, with a long road between them.
-   **Expected:** no walk link. (A03)
-5. As staff, deny the player entry to the courtyard region; as the player, navigate again as in step 1. **Expected:**
-   the route goes around by road; no walk leg crosses the courtyard. (A04)
-6. As staff, allow entry again and close the gate on the courtyard's exit; as the player, navigate again.
-   **Expected:** no walk link through the closed gate. (A04)
-7. Open the gate. As staff, build a wall across the courtyard shortcut, wait a few seconds, and navigate again as the
-   player. **Expected:** the shortcut is no longer offered; the next route searches again and goes around. (A05)
-8. Remove the wall and navigate again. **Expected:** the shortcut comes back. (A05)
-9. Turn `navigation.walk-links` off, reload as the deploy notes say, and navigate as in step 1. **Expected:** today's
-   route: walk leg, road, walk leg only.
+1. As the player, stand in the field, about 15 blocks off the road, and `/navigate` to a building on the far side of
+   the courtyard (a point at least 5 blocks off the road there). **Expected:** at first today's trail: a light blue walk
+   leg to the road, the gold road trail round the courtyard. Within a few seconds "A shorter route opened - following
+   it now." and the trail changes: the walk to the road, the road, a light blue stretch across the courtyard, the road
+   again, and a light blue walk into the building, in that order; near the courtyard the HUD says "Leave the road and
+   walk across". (A02) [automated in part: knk-paper
+   `NavigationServiceWalkLinksTest.aRouteFromAFieldOverTheShortcutIsWalkRoadWalkRoadWalk`,
+   `NavigationServiceWalkLinksTest.aFoundLinkGivesTheShortcutAcrossTheCourtyard`; knk-core
+   `WalkLinkRoutingTest.aCachedLinkMakesTheRouteRoadWalkRoad`,
+   `WalkLinkRoutingTest.theInstructionsSayWhereTheRouteLeavesTheRoad`; the look of the trail is manual]
+2. Walk the whole route along the trail. **Expected:** one route on the HUD, no "You left the road - recalculating."
+   while you follow the trail, also on the courtyard stretch (it is part of the route); the gold road trail leads until
+   the road's end, and only there does the last light blue walk into the building begin; arrival at the building. Then
+   `/knk road status`: **Expected:** "walk links: … 1 with links (1 links) …", "walk link searches: … 1 found …". (A02)
+   [automated in part: knk-paper `NavigationServiceWalkLinksTest.aFoundLinkGivesTheShortcutAcrossTheCourtyard` (the
+   status lines), `NavigationServiceWalkLinksTest.theRoadTrailKeepsTheLeadUntilTheRoadsEnd`; walking it is manual]
+3. Navigate along one straight street between two junctions that are close by road as well (the road no more than
+   twice the straight distance). **Expected:** no walk link; the route stays on the road; `/knk road status` shows no
+   link search for it. (A03) [automated: knk-core `WalkLinkCandidatesTest.theRatioDecides`,
+   `WalkLinkCandidatesTest.aRoadMoreThanTheRatioTimesTheStraightDistanceWithinRangeIsACandidate`]
+4. Navigate past two junctions more than 40 blocks apart in a straight line with a long road between them.
+   **Expected:** no walk link between them. (A03) [automated: knk-core `WalkLinkCandidatesTest.theRangeDecides`,
+   `WalkLinkCandidatesTest.splitNodesOtherComponentsAndPlumbingTakeNoPart` (gate split nodes and other networks)]
+5. As staff, deny the player entry to the courtyard region (its domain's access rules); as the player, navigate as in
+   step 1. **Expected:** the route goes round by road; no light blue stretch crosses the courtyard. (A04) [automated:
+   knk-core `WalkLinkRoutingTest.aLinkThroughARegionThePlayerMayNotEnterOrAClosedGateIsNotOffered` (the link's
+   regions judged by the access policy), `WalkLinkRoutingTest.aCompositePolicyDoesNotMixALinkUpWithAnEdge`; with the
+   real domain rules manual]
+6. As staff, allow entry again and close the gate on the courtyard's exit; as the player, navigate again. **Expected:**
+   no walk link through the closed gate; the road round it. Open the gate: within a few seconds (or at the next route)
+   the shortcut can come back. (A04) [automated in part: knk-core
+   `WalkLinkRoutingTest.aLinkThroughARegionThePlayerMayNotEnterOrAClosedGateIsNotOffered` (the gate's door on the link,
+   closed and open), `WalkLinkCacheTest.aGateOrRuleChangeDropsTheNonesOnly`; the real gate is manual]
+7. With the shortcut on the route, as staff build a wall of a few blocks across the courtyard on the link's line (or
+   place one block in its way); as the player, navigate again after a second. **Expected:** the shortcut is no longer
+   on the route; the route goes round by road at first; `/knk road status` shows "dropped 1 by block changes" (or
+   more) and a new link search; if the walk search finds a way round the wall the shortcut comes back along it,
+   otherwise not. (A05) [automated: knk-core `WalkLinkCacheTest.aBlockChangeInTheLinksBoxDropsItAndNothingElse`,
+   `WalkLinkRoutingTest.aBlockChangeDropsTheLinkAndTheNextRouteSearchesAgain`; knk-paper
+   `WalkTerrainListenerTest.blockChangesReachTheListenerOncePerChunkWithinASecond`,
+   `NavigationServiceWalkLinksTest.aBlockChangeDropsTheLinkAndTheNextRouteSearchesAgain`; on the dev world manual]
+8. Remove the wall and navigate again. **Expected:** the shortcut comes back (a new search finds it again; a block
+   change dropped the old link). (A05) [automated: the same tests as step 7]
+9. Road-first, scene 7 of the measurements: `/tp 1411 113 -504` (Keep Tower Roof) and `/navigate Keep storage hall`
+   (19 blocks away, so direct mode). **Expected:** first "Keep storage hall is … away - follow the trail."; then either
+   "Following the roads to Keep storage hall - they carry most of the way." and the road trail with walks at both ends
+   (when a road carries at least 60 % of the way at no more than 1.5 times the walk path's length), or the walk path as
+   today. `/knk road status`: "road-first: 1 road, 0 walk" or "0 road, 1 walk". Note which one you saw and whether it
+   matches what you want; the two defaults are for you to confirm. [automated in part: knk-paper
+   `NavigationServiceWalkLinksTest.roadFirstTakesTheRoadThatCarriesMostOfTheWay`,
+   `NavigationServiceWalkLinksTest.roadFirstKeepsTheWalkWhenTheRoadGoesTheLongWayRound`; knk-core `RoadFirstRuleTest`;
+   the scene's answer is manual]
+10. Road-first across the courtyard: stand on one side of the courtyard and navigate to a point on the other side
+    within 48 blocks. **Expected:** the walk path across, as today (the road goes the long way round); `/knk road
+    status` "road-first: 0 road, 1 walk". [automated: knk-paper
+    `NavigationServiceWalkLinksTest.roadFirstKeepsTheWalkWhenTheRoadGoesTheLongWayRound`]
+11. `/knk road status` during steps 1 to 8. **Expected:** three lines "walk links", "walk link searches" (with mean and
+    max search ms, within the 150 ms of the measurements report § 3.3 budget 2), "walk link cache" (links, none,
+    searching, dropped, expired, evicted, road-first), and "walk link queue". [automated: knk-core
+    `WalkLinkCacheTest.theCountersReadAsStatusLines`]
+12. Tick time: with `/spark tps` (or the server's TPS) watch steps 1 and 7. **Expected:** no drop: link searches run
+    off the main thread and their captures within the capture tick budget (budget 1). [manual]
+13. NPCs: let an NPC walk a road route while the player navigates. **Expected:** the NPC moves exactly as before; NPC
+    routes never take walk links. [automated: knk-paper `NavigationServiceWalkLinksTest.anNpcRoadPlanNeverTakesAWalkLink`; the unchanged NPC unit tests and paper-boot NPC scenarios]
+14. Turn `navigation.walk-links` off, restart, and navigate as in step 1 and as in step 9. **Expected:** today's
+    routes: walk leg, road, walk leg only, and direct mode within 48 blocks; `/knk road status` has no walk-link lines;
+    the other walk-link keys change nothing. [automated: knk-paper
+    `NavigationServiceWalkLinksTest.withTheFlagOffNothingChanges` (a transcript of trail, HUD, chat and events with
+    other values of every walk-link key), `NavigationServiceWalkLinksTest.withTheFlagOffDirectModeStaysAsToday`;
+    knk-core `WalkLinkRoutingTest.withoutALinkSourceTheRouterIsTodays`; every test of the suites unchanged]
 
 ## 4. Phase 3: hierarchical walk search (#706, tier:3)
 

@@ -4,6 +4,26 @@ This is a human-readable record of capabilities merged into the V3 default branc
 
 ## Unreleased — on feature branches, not merged
 
+- **Off-road navigation: shortcuts on foot in the middle of a route** ([PandiO/knk-workspace#705](https://github.com/PandiO/knk-workspace/issues/705),
+  link L5 of the off-road navigation chain, phase 2). Where the road goes the long way round (a courtyard, a bailey), the
+  route can now leave the road for a short walk across and join it again: the trail shows the walk in the walk colour
+  and the HUD says "Leave the road and walk across". A target close enough for one walk path is reached over the road
+  when the road carries most of the way. knk-plugin and knk-workspace branches `claude/offroad-walk-links` (PRs into
+  `next`). Behind `navigation.walk-links`, off by default: with it off, routes, trails and sessions are exactly as
+  before. No migration.
+  1. A route is a list of legs: road stretches and walk links in any order, with the walk to the road and the last
+     walk as before (`Route.legs()`). Walk links have their own id space (`WalkLinkId`, at least 2^62).
+  2. Links join road nodes at most `walk-link-range` (40) blocks apart whose road is more than `walk-link-ratio` (2.0)
+     times as long. They are searched lazily, off the main thread, after the first route, and cached per player; the
+     session then takes the better route ("A shorter route opened").
+  3. A link is offered only when the player's gate and region rules let them through; a new block-change hook drops
+     a link within a second of a change near it, with a TTL as the backstop.
+  4. Road-first (direct mode within `max-snap-distance`, which is unchanged): `road-first-share` 0.6 and
+     `road-first-max-ratio` 1.5, defaults for the developer to confirm.
+  5. `/knk road status` shows three walk-link lines (searches, cache, road-first decisions).
+  6. Admin steps (only to try it): under `navigation:` add the keys of the PR's admin steps and set `walk-links: true`;
+     restart.
+
 - **Off-road navigation: the trail rounds plazas** ([PandiO/knk-workspace#712](https://github.com/PandiO/knk-workspace/issues/712),
   link L10 of the off-road navigation chain, phase 7 step 2). Where your route crosses a plaza from one road to
   another, the navigation trail now takes a rounded line across the square instead of a sharp corner at its middle,
