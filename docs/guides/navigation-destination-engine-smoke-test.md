@@ -1,9 +1,9 @@
 # Navigation destination engine — smoke test
 
 **Status:** Draft from the design (2026-11-18); § 1 updated by the P1 link (9 of 11 steps automated, tagged), § 2 by
-the P2 link (12 of 13 steps automated, tagged), § 3 by the P3 link (20 of 22 steps automated, tagged); no manual steps
-run. Later sections are not yet automated (their links tag them).
-**Last updated:** 2026-11-18 (§ 3 updated to the P3 code, steps tagged, #69); 2026-11-18 (§ 2 updated to the P2 code, steps tagged, #103); 2026-11-18 (§ 1 updated to the P1 code, steps tagged, #96); 2026-11-18 (design approved: tiers confirmed, phase 4b is #747); 2026-11-18 (draft from the design refresh, phases 1, 2, 3, 4, 4b and 5)
+the P2 link (12 of 13 steps automated, tagged), § 3 by the P3 link (20 of 22 steps automated, tagged), § 4 by the P4
+link (16 of 18 steps automated, tagged); no manual steps run. Later sections are not yet automated (their links tag them).
+**Last updated:** 2026-11-18 (§ 4 updated to the P4 code, steps tagged, #62); 2026-11-18 (§ 3 updated to the P3 code, steps tagged, #69); 2026-11-18 (§ 2 updated to the P2 code, steps tagged, #103); 2026-11-18 (§ 1 updated to the P1 code, steps tagged, #96); 2026-11-18 (design approved: tiers confirmed, phase 4b is #747); 2026-11-18 (draft from the design refresh, phases 1, 2, 3, 4, 4b and 5)
 **Design:** [specs/navigation-destination-engine/DESIGN.md](../specs/navigation-destination-engine/DESIGN.md) · **Issue:**
 [PandiO/knk-workspace#25](https://github.com/PandiO/knk-workspace/issues/25)
 
@@ -327,41 +327,129 @@ assertions, or do the manual form written in the step.
    `NavigationCompassEngineTest.inTheLobbyItWaitsForTheMatch`, `forTheBypassInTheLobbyItStillWaitsForTheMatch`] As
    Player in the siege lobby before the match, `/navigate <town>` and right-click the compass. **Expected:**
    `/navigate`: "You can't navigate while you are in a siege."; the compass: "The navigation compass works once the
-   siege match has started.". (A06, E15; ending running routes is § 4)
+   siege match has started.". (A06, E15; ending running routes is § 4.2)
 
 ## 4. Phase 4: hard blocks as scopes and live re-validation (#62, tier:3)
 
-*Draft from the design (2026-11-18); the link updates it to what was built and tags the automated steps.*
+*Updated by the P4 link (2026-11-18) to what was built: knk-plugin `claude/navigation-destination-engine`, the
+re-validation in `NavigationService` (`setRevalidator`, `revalidateSoon`, the 2-second re-check),
+`PlayerNavigationEngine.revalidate`, `EndReason.DESTINATION_NOT_ALLOWED`, the mode listener of `ModeService` and the
+triggers wired in `KnKPlugin.startDestinationEngine`. 16 of 18 steps automated in CI (tagged); every step can still be
+run by hand, and the developer runs this section and § 3 live with the flag on before phase 4b (charter gate of L5).
+Full manual run about 45 minutes; the untagged steps (§ 4.1 step 1, § 4.3 step 3) about 10 minutes.*
+
+With `navigation.destination-engine: true` the hard blocks are the engine's scopes: loading (110), frozen (110, also
+for owner/staff mode and `knk.navigate.any`, E9), no permission (80) and the siege lobby (50) refuse with today's
+texts, and the route start no longer asks the old `NavigationEligibility`. A running route keeps the handle it was
+started from and is checked against the player's list again every 2 seconds and at once (on the next server tick)
+when a siege objective is captured, the match ends, the lobby changes, a round is released, the player's owner/staff
+mode changes, a freeze starts or ends, or the navigation model is refreshed with a change. When its destination is no
+longer listed, or the player now falls into a scope that lists nothing, the route ends with that scope's reason as the
+message (end reason `DESTINATION_NOT_ALLOWED`; "you joined a siege" (`SIEGE`) is not used with the flag on). With the
+flag off nothing of this runs: routes end in a siege lobby as before. The tagged steps are knk-paper MockBukkit/Mockito
+tests (`./gradlew test`, part of CI's build) against the real engine with fake providers, and knk-core JUnit tests of
+the scope table; to run one by hand, read the test named in its tag and check the stated result in its assertions, or
+do the manual form written in the step.
 
 ### 4.0 Preconditions
 
-1. Deployed: plugin build from `next` with phases 1 to 4.
-2. Settings: `navigation.destination-engine: true`.
-3. Accounts and data: Player, Staff, Bypass; the siege scenario.
+1. Deployed: plugin build from `next` with phases 1 to 4; knk-web-api from `next` with phase 2.
+2. Settings: `navigation.destination-engine: true` under `navigation:` in `config.yml`, then **restart** (read at
+   start-up only); the start-up log has "[Navigation] Destination engine on (navigation.destination-engine)". For
+   § 4.4 set it back to `false` and restart.
+3. Accounts and data: Player, a second ordinary account (Opponent) for the other siege team, Staff (can switch staff
+   mode and freeze), a second staff account of higher rank (Senior Staff, can freeze Staff), Bypass (granted
+   `knk.navigate.any` through the in-house permission system); the dev world with a town reachable by road; the
+   siege scenario with at least two objectives, the compass switched on for sieges.
+4. The in-house permission system can take `knk.navigate` away from Player's group and give it back.
 
-### 4.1 Steps
+### 4.1 Refusals come from the scopes (A22)
 
-1. As Player right after joining (account still loading), `/navigate <town>`. **Expected:** "Your account is still
-   loading - try again in a moment.". (A22)
-2. As Staff, freeze Player, then as Player `/navigate <town>`. **Expected:** "You can't navigate while frozen.". (A22)
-3. As Staff in staff mode, have another staff member of higher rank freeze you, then `/navigate <town>`. **Expected:**
-   refused while frozen, as for anyone (E9). (A02, A25)
-4. Remove `knk.navigate` from Player, `/navigate <town>`. **Expected:** "You don't have permission to use
-   /navigate.". (A22, A04)
-5. As Player in a siege lobby before the match, `/navigate <town>` and right-click the compass. **Expected:**
-   `/navigate`: "You can't navigate while you are in a siege."; the compass: "The navigation compass works once the
-   siege match has started.". (A22, A06)
-6. As Player, start a route to a town, then join a siege lobby. **Expected:** the route ends at once with "You can't
-   navigate while you are in a siege.". (A23, A24, A26)
-7. As Player in a running match, navigate to a capture objective; let the other team capture it so it is no longer
-   listed for you. **Expected:** the route ends at once with the scope's reason; if it is still listed as "defend",
-   the route keeps going. (A23, A24, A25)
-8. As Player, navigate to an objective, then let the match end. **Expected:** the route ends at once with the reason
-   of the scope you are in now. (A24)
-9. As Staff in staff mode in a match, `/navigate <town>`; then switch staff mode off. **Expected:** the route starts;
-   after switching off it ends at once with the match's reason. (A25)
-10. As Player navigating to a town, have Staff freeze you. **Expected:** the route ends at once with "You can't
-    navigate while frozen.". (A23, A24)
+1. As Player right after joining (while the account is still loading), `/navigate <town>`. **Expected:** "Your
+   account is still loading - try again in a moment.". (A22) (Manual: the loading window is a second or two on a
+   live join; the scope and its text are automated in `InitialScopesTest` and
+   `NavigateCommandEngineTest.aFrozenPlayerOrALobbyMemberGetsTodaysWords` covers the same path for frozen.)
+2. [automated: `NavigateCommandEngineTest.aFrozenPlayerOrALobbyMemberGetsTodaysWords`,
+   `InitialScopesTest.aFrozenPlayerGetsTheFrozenReason`] As Staff, freeze Player; as Player `/navigate <town>`.
+   **Expected:** "You can't navigate while frozen.". (A22)
+3. [automated: `InitialScopesTest.frozenBeatsTheBypass`,
+   `NavigationServiceRevalidationTest.freezeStillEndsAStaffSession`] As Staff in staff mode, have Senior Staff freeze
+   you, then `/navigate <town>`. **Expected:** "You can't navigate while frozen.", as for anyone (E9). (A02, A25)
+4. [automated: `NavigateCommandEngineTest.withoutTheNodeTheNoPermissionScopeRefusesWithTodaysWords`,
+   `NavigationCompassEngineTest.withoutTheNodeTheCompassKeepsItsNoPermissionWords`] Take `knk.navigate` away from
+   Player's group; as Player `/navigate <town>`, press Tab after `/navigate `, and right-click the compass.
+   **Expected:** "You don't have permission to use /navigate."; Tab offers nothing but `stop`; the compass says its
+   own no-permission line as today. Give the node back afterwards. (A22, A04)
+5. [automated: `NavigateCommandEngineTest.theBypassNodeAloneIsEnoughWithTheEngine`,
+   `NavigationCompassEngineTest.theBypassNodeAloneIsEnoughForTheCompass`,
+   `CommandNodesTest.navigateIsOpenToTheDestinationEngineBypassNodeToo`] Take `knk.navigate` away from Bypass too
+   (keep `knk.navigate.any`); as Bypass `/navigate <town>`. **Expected:** the route starts (the bypass sits above
+   the permission scope, E5); `/navigate` is offered in Bypass's "/" suggestions. Give the node back afterwards. (A03)
+6. [automated: `NavigateCommandEngineTest.aFrozenPlayerOrALobbyMemberGetsTodaysWords`,
+   `NavigationCompassEngineTest.inTheLobbyItWaitsForTheMatch`] As Player in a siege lobby before the match,
+   `/navigate <town>` and right-click the compass. **Expected:** `/navigate`: "You can't navigate while you are in a
+   siege."; the compass: "The navigation compass works once the siege match has started.". (A22, A06)
+
+### 4.2 Running routes are re-checked (A23, A24, A26)
+
+1. [automated: `NavigationServiceRevalidationTest.aFreezeChangeEndsTheSessionAtOnceWithTheFrozenReason`] As Player,
+   `/navigate <town>`; while walking, have Staff freeze you. **Expected:** the route ends at once (the trail and the
+   boss bar go) with "You can't navigate while frozen.". Unfreeze afterwards. (A23, A24)
+2. [automated: `NavigationServiceRevalidationTest.joiningALobbyEndsTheSessionWithTheLobbysReasonNeverSiege`,
+   `theRecheckNeverEndsWithSiegeWithTheFlagOn`] As Player, `/navigate <town>`, then join a siege lobby. **Expected:**
+   the route ends at once with "You can't navigate while you are in a siege." (not "Navigation to … ended - you joined
+   a siege."). (A23, A24, A26)
+3. [automated: `NavigationServiceRevalidationTest.theTwoSecondRecheckEndsASessionWhosePermissionWasTakenAway`] As
+   Player, `/navigate <town>`; while walking, take `knk.navigate` away from Player's group. **Expected:** within
+   about 2 seconds the route ends with "You don't have permission to use /navigate.". Give the node back
+   afterwards. (A23)
+4. [automated: `NavigationServiceRevalidationTest.anObjectiveDroppedOnCaptureEndsTheSessionAtOnce`,
+   `aReleasedRoundReChecksAtOnce`] As Player in a running match, select an objective to capture with the compass (or
+   `/navigate objective:<name>`); let Opponent's team capture it for good so it is no longer listed for you.
+   **Expected:** at the capture the route ends at once with "<objective> is no longer part of this match.". (A23,
+   A24)
+5. [automated: `NavigationServiceRevalidationTest.anObjectiveThatChangesKindButStaysListedKeepsTheSession`,
+   `aLobbyChangeDuringTheMatchKeepsTheMatchSession`] As Player, navigate to an objective that stays listed after a
+   capture (it flips from "capture" to "defend" for your team), then let someone in the lobby vote or leave.
+   **Expected:** the route keeps going through the capture and the lobby change. (A25)
+6. [automated: `NavigationServiceRevalidationTest.theMatchEndingEndsTheSessionWithTheScopeThePlayerIsInNow`] As
+   Player, navigate to an objective, then let the match end (time runs out or a team wins). **Expected:** at the end the
+   route ends at once with the reason of the scope you are in now: back at the hub as a lobby member, "You can't
+   navigate while you are in a siege.". (A24)
+7. [automated: `NavigationServiceRevalidationTest.aDomainRemovedByAModelRefreshEndsTheSession`,
+   `aCandidateStillListedKeepsTheSessionAfterATrigger`] As Player, `/navigate <town B>` (a test town); in the web app
+   delete town B (or move it to the other world), then wait about a minute for the model's refresh. **Expected:** at
+   the refresh the route ends with "<town B> is no longer part of the world."; a route to another town that is still
+   listed keeps going. (A23, A24)
+
+### 4.3 Owner/staff mode and freeze (A25, E9)
+
+1. [automated: `NavigationServiceRevalidationTest.switchingStaffModeOffInAMatchEndsATownSessionAtOnce`,
+   `ModeServiceListenerTest.everyChangeIsHeardOnceAndARepeatIsNot`] As Staff in a running match with staff mode on,
+   `/navigate <town>`; then switch staff mode off. **Expected:** the route starts (the bypass lists the world in a
+   match); after switching off it ends at once with "<town> is no longer part of this match.". (A25, A03)
+2. [automated: `NavigationServiceRevalidationTest.switchingStaffModeOnAppliesTheBypassAndTheSessionKeepsGoing`,
+   `freezeStillEndsAStaffSession`, `freezeStillEndsABypassNodeSession`] As Staff with staff mode on, `/navigate
+   <town>`; have Senior Staff freeze you; then unfreeze, `/navigate <town>` again and as Bypass do the same freeze.
+   **Expected:** each frozen route ends at once with "You can't navigate while frozen." (freeze sits above the bypass,
+   E9). (A25)
+3. As Staff with staff mode on, run `/knk road why <town> --as <Player>` while Player is frozen. **Expected:** the
+   explanation as before (the diagnostic path does not go through the list, § 6). (A20) (Manual: `explain` is
+   unchanged and only reads; nothing of P4 runs there.)
+
+### 4.4 Flag off: today's endings (A16)
+
+1. [automated: `NavigationServiceRevalidationTest.withTheFlagOffAJoinedLobbyEndsTheSessionWithSiegeAsToday`,
+   `withTheFlagOffTheRecheckEndsALobbyMemberWithSiegeAsToday`] With `navigation.destination-engine: false` (restart),
+   as Player `/navigate <town>`, then join a siege lobby. **Expected:** the route ends with "Navigation to <town>
+   ended - you joined a siege." as today. (A16)
+2. [automated: `NavigationServiceRevalidationTest.withTheFlagOffAFreezeDoesNotEndARunningSessionAndTriggersDoNothing`,
+   `NavigateCommandEngineTest.withTheFlagOffTheCommandStillChecksTheNodeItself`,
+   `NavigationServiceHandleTest.theRawEntryStillAsksTheOldEligibilityWithTheFlagOff`] With the flag off, as Player
+   `/navigate <town>` and have Staff freeze you while walking; then `/navigate <town>` while frozen; as Bypass without
+   `knk.navigate`, `/navigate <town>`. **Expected:** as today: the running route keeps going after the freeze, the
+   new one is refused with "You can't navigate while frozen.", and Bypass is told "You don't have permission to use
+   /navigate." (the bypass node means nothing without the engine). (A16)
 
 ## 5. Phase 4b: removal of the old paths and the flag (#747, tier:2)
 

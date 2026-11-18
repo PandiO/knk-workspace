@@ -4,6 +4,21 @@ This is a human-readable record of capabilities merged into the V3 default branc
 
 ## Unreleased — on feature branches, not merged
 
+- **Navigation destination engine, phase 4: the hard blocks are scopes and running routes are re-checked, behind the flag** ([PandiO/knk-workspace#62](https://github.com/PandiO/knk-workspace/issues/62),
+  link L4 of the destination engine chain, [#25](https://github.com/PandiO/knk-workspace/issues/25)). knk-plugin and
+  knk-workspace branches `claude/navigation-destination-engine` (PRs into `next`). Only with
+  `navigation.destination-engine: true` (off by default: nothing changes for players).
+  1. With the key on, "still loading", "frozen", "no permission" and "in a siege" come from the engine's list with
+     today's texts; freeze also holds for owner mode, staff mode and `knk.navigate.any`. `knk.navigate.any` alone
+     (without `knk.navigate`) is enough to use `/navigate`.
+  2. A running route is checked against the player's list every 2 seconds and at once when an objective is captured,
+     the match ends, the lobby changes, a round is released, owner/staff mode is switched, a freeze starts or ends, or
+     the list of places is refreshed. A destination that left the list ends the route with the reason as the message,
+     for example "You can't navigate while frozen." or "Keep Gate is no longer part of this match."; an objective that
+     only changed from capture to defend keeps the route.
+  3. Admin steps: none (no new key, no migration, no API change). Steps:
+     [destination engine smoke test § 4](guides/navigation-destination-engine-smoke-test.md#4-phase-4-hard-blocks-as-scopes-and-live-re-validation-62-tier3).
+
 - **Overview map: live players on the map** ([PandiO/knk-workspace#739](https://github.com/PandiO/knk-workspace/issues/739),
   link L5 of the overview map chain, [#732](https://github.com/PandiO/knk-workspace/issues/732)). knk-web-app and
   knk-workspace branches `claude/overview-map-players-page` (PRs into `next`). Behind the API setting
