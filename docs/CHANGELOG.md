@@ -4,6 +4,20 @@ This is a human-readable record of capabilities merged into the V3 default branc
 
 ## Unreleased — on feature branches, not merged
 
+- **Overview map: gate command buttons in the map panel** ([PandiO/knk-workspace#742](https://github.com/PandiO/knk-workspace/issues/742),
+  link L8 of the overview map chain, [#732](https://github.com/PandiO/knk-workspace/issues/732)). knk-web-app and
+  knk-workspace branches `claude/overview-map-gate-buttons` (PRs into `next`). Behind the API setting
+  `Map:GateCommands:Enabled` (phase 6a, off by default: no buttons, no requests).
+  1. A web account holding `knk.gate.admin` sees "Gate commands" when clicking a gate on `/map`: Open, Close, Toggle
+     and Repair for the whole gate and for each door. The door moves in game; the panel shows the result (done, refused
+     with the reason, no game server, timed out) and then reads the gate again.
+  2. During a siege match on the gate the buttons are disabled with "Gate is in a running siege".
+  3. Everyone else sees the panel as before; anonymous viewers make no permission request, and nobody without the node
+     asks for door ids or sends commands.
+  4. Admin steps: none to keep it off. To turn it on, set `Map__GateCommands__Enabled=true` as in phase 6a and reload
+     `/map`. No migration, no plugin setting. Steps:
+     [overview map smoke test § 8](guides/overview-map-smoke-test.md#8-phase-6b-gate-command-buttons-742-tier2).
+
 - **Overview map: gate commands backend** ([PandiO/knk-workspace#741](https://github.com/PandiO/knk-workspace/issues/741),
   link L7 of the overview map chain, [#732](https://github.com/PandiO/knk-workspace/issues/732)). knk-web-api,
   knk-plugin and knk-workspace branches `claude/overview-map-gate-commands` (PRs into `next`). Behind the new API
