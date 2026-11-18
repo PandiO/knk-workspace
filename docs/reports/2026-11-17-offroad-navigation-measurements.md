@@ -30,7 +30,7 @@ This report is dated and is not overwritten: a later measurement run gets a new 
 | Plugin build | knk-plugin `next` `073fa4cf` (`v0.1.0+073fa4cf`, contains #703 `04506d8c`), dev server DEV_SERVER_26.3 (Paper 26.3) |
 | Server | _to fill_ (CPU, memory, players online) |
 | Settings, run 1 | as shipped: `max-snap-distance` 48, `walk.max-expansions` 20000, `walk.max-length` 144, `walk.max-chunks-per-request` 64 |
-| Settings, run 2 (option A) | `max-snap-distance` 600, `walk.max-expansions` 200000, `walk.max-length` 1000, `walk.max-chunks-per-request` 800. Changed from the guide's 450 / 600 / 512 because the dev world's open-country targets are 482 and 569 blocks away (not 200 and 400): the outpost leg's capture box is 24 by 32 = 768 chunks. The keep scenes are short, so the keep rule of § 4 reads the same either way. |
+| Settings, run 2 (option A) | `max-snap-distance` 600, `walk.max-expansions` 200000, `walk.max-length` 1000, `walk.max-chunks-per-request` 800, `walk.detour-allowance` 600. The detour allowance was added after run 1: the length cap is min(`max-length`, max(`max-length-factor` × straight, straight + `detour-allowance`)) + `climb-allowance` × rise, so raising `max-length` alone leaves a 17-block keep leg capped near 65 blocks (scene 1, run 1 ended at that cap). Changed from the guide's 450 / 600 / 512 because the dev world's open-country targets are 482 and 569 blocks away (not 200 and 400): the outpost leg's capture box is 24 by 32 = 768 chunks. The keep scenes are short, so the keep rule of § 4 reads the same either way. |
 | Settings, run 3 (only if needed) | run 2 with `walk.max-expansions` 500000 |
 | Chunks force-loaded | Coal mine: `/forceload add 945 -593 1459 -551` (132 chunks). Outpost, four bands of at most 216 chunks: `/forceload add 1427 -583 1797 -456`, `1427 -455 1797 -328`, `1427 -327 1797 -200`, `1427 -199 1797 -93`. Southern Marshes, destination end only: `/forceload add 1468 1210 1692 1434` (225 chunks). Indoor scenes: none (the player's view distance loads them). Afterwards `/forceload remove all`. |
 
@@ -79,24 +79,24 @@ lines after walking the whole route ("whole walk").
 
 | Scene, run | Outcome (cap) | Path length | Expansions | Cells | Chunks (cached) | Capture µs | Wait ms | Search µs | Queue µs | Length-pruned | Tick time during the capture | Whole walk: searches, search µs p95, capture µs p95 |
 |---|---|---|---|---|---|---|---|---|---|---|---|---|
-| keep, run 1 | _to fill_ | _to fill_ | _to fill_ | _to fill_ | _to fill_ | _to fill_ | _to fill_ | _to fill_ | _to fill_ | _to fill_ | _to fill_ | _to fill_ |
+| keep, run 1 | FALLBACK (max-length), 2 of 2 searches; the player got stuck in the lower flights of the keep stair house | 7 (partial, 17 straight) | 2093 | 2093 | 9 (0) | 10556 | 158 | 19410 | 33 | yes (2 of 2) | not measured | 2 searches; 25.6 ms; 10.6 ms |
 | keep, run 2 | _to fill_ | _to fill_ | _to fill_ | _to fill_ | _to fill_ | _to fill_ | _to fill_ | _to fill_ | _to fill_ | _to fill_ | _to fill_ | _to fill_ |
-| stair house, run 1 | _to fill_ | _to fill_ | _to fill_ | _to fill_ | _to fill_ | _to fill_ | _to fill_ | _to fill_ | _to fill_ | _to fill_ | _to fill_ | _to fill_ |
+| stair house, run 1 | FOUND (scene 2, Keep Tower Roof) | 161 (30 straight) | 4428 | 4439 | 12 (0) | 48404 (first capture after the server start; later cold captures of 12 chunks took 4.7 ms) | ≤ 203 | 127035 | ≤ 1000 | no | not measured | 4 searches; 127.0 ms; 48.4 ms |
 | stair house, run 2 | _to fill_ | _to fill_ | _to fill_ | _to fill_ | _to fill_ | _to fill_ | _to fill_ | _to fill_ | _to fill_ | _to fill_ | _to fill_ | _to fill_ |
-| courtyard, run 1 | _to fill_ | _to fill_ | _to fill_ | _to fill_ | _to fill_ | _to fill_ | _to fill_ | _to fill_ | _to fill_ | _to fill_ | _to fill_ | _to fill_ |
+| courtyard, run 1 | FOUND (scene 3, Garrison Watchtower Roof) | 129 (28 straight) | 2914 | 2932 | 12 (0) | 4984 | ≤ 150 | 40484 | ≤ 31 | no | not measured | 4 searches; 40.5 ms; 5.0 ms |
 | courtyard, run 2 | _to fill_ | _to fill_ | _to fill_ | _to fill_ | _to fill_ | _to fill_ | _to fill_ | _to fill_ | _to fill_ | _to fill_ | _to fill_ | _to fill_ |
 | 200, run 1 | _to fill_ | _to fill_ | _to fill_ | _to fill_ | _to fill_ | _to fill_ | _to fill_ | _to fill_ | _to fill_ | _to fill_ | _to fill_ | _to fill_ |
 | 200, run 2 | _to fill_ | _to fill_ | _to fill_ | _to fill_ | _to fill_ | _to fill_ | _to fill_ | _to fill_ | _to fill_ | _to fill_ | _to fill_ | _to fill_ |
-| 400, run 1 | _to fill_ | _to fill_ | _to fill_ | _to fill_ | _to fill_ | _to fill_ | _to fill_ | _to fill_ | _to fill_ | _to fill_ | _to fill_ | _to fill_ |
+| 400, run 1 | no route: "No road connects you to Coal mine." (scene 4); no walk search ran | — | — | — | — | — | — | — | — | — | — | — |
 | 400, run 2 | _to fill_ | _to fill_ | _to fill_ | _to fill_ | _to fill_ | _to fill_ | _to fill_ | _to fill_ | _to fill_ | _to fill_ | _to fill_ | _to fill_ |
-| 5 outpost, run 1 | _to fill_ | _to fill_ | _to fill_ | _to fill_ | _to fill_ | _to fill_ | _to fill_ | _to fill_ | _to fill_ | _to fill_ | _to fill_ | _to fill_ |
+| 5 outpost, run 1 | no route: "No road connects you to …" (as scene 4); no walk search ran | — | — | — | — | — | — | — | — | — | — | — |
 | 5 outpost, run 2 | _to fill_ | _to fill_ | _to fill_ | _to fill_ | _to fill_ | _to fill_ | _to fill_ | _to fill_ | _to fill_ | _to fill_ | _to fill_ | _to fill_ |
-| 6 marshes, run 1 | _to fill_ | _to fill_ | _to fill_ | _to fill_ | _to fill_ | _to fill_ | _to fill_ | _to fill_ | _to fill_ | _to fill_ | _to fill_ | _to fill_ |
-| 7 tower roof to storage hall, run 1 | _to fill_ | _to fill_ | _to fill_ | _to fill_ | _to fill_ | _to fill_ | _to fill_ | _to fill_ | _to fill_ | _to fill_ | _to fill_ | _to fill_ |
+| 6 marshes, run 1 | no route: "Southern Marshes is too far from any road." | — | — | — | — | — | — | — | — | — | — | — |
+| 7 tower roof to storage hall, run 1 | FOUND, the route worked | 217 (44 straight) | 2958 | 3050 | 12 (12) | 0 (cached) | 0 | 16018 | 14 | no | not measured | 5 searches; 18.2 ms; 6.4 ms |
 | 7 tower roof to storage hall, run 2 | _to fill_ | _to fill_ | _to fill_ | _to fill_ | _to fill_ | _to fill_ | _to fill_ | _to fill_ | _to fill_ | _to fill_ | _to fill_ | _to fill_ |
-| 8 watchtower to tower roof, run 1 | _to fill_ | _to fill_ | _to fill_ | _to fill_ | _to fill_ | _to fill_ | _to fill_ | _to fill_ | _to fill_ | _to fill_ | _to fill_ | _to fill_ |
+| 8 watchtower to tower roof, run 1 | NO_PATH, 5 of 5 ("No conventional path to Keep Tower Roof found.") | 8 (40 straight) | 44 | 44 | 20 (0) | 6583 | 214 | 414 | ≤ 43 | no | not measured | 5 searches; 0.5 ms; 6.6 ms |
 | 8 watchtower to tower roof, run 2 | _to fill_ | _to fill_ | _to fill_ | _to fill_ | _to fill_ | _to fill_ | _to fill_ | _to fill_ | _to fill_ | _to fill_ | _to fill_ | _to fill_ |
-| 9 storage hall to watchtower, run 1 | _to fill_ | _to fill_ | _to fill_ | _to fill_ | _to fill_ | _to fill_ | _to fill_ | _to fill_ | _to fill_ | _to fill_ | _to fill_ | _to fill_ |
+| 9 storage hall to watchtower, run 1 | NO_PATH (37 straight, 44 expansions), then FALLBACK (max-length) 5 of 5 on the walk legs ("guiding you to the nearest road"; stuck after a few blocks) | 25 (25 straight) | 2165 | 2165 | 12 (0) | 3591 | ≤ 93 | 11875 | ≤ 17 | yes (5 of 6) | not measured | 6 searches; 24.8 ms; 4.3 ms |
 | 9 storage hall to watchtower, run 2 | _to fill_ | _to fill_ | _to fill_ | _to fill_ | _to fill_ | _to fill_ | _to fill_ | _to fill_ | _to fill_ | _to fill_ | _to fill_ | _to fill_ |
 | run 3 (if needed) | _to fill_ | _to fill_ | _to fill_ | _to fill_ | _to fill_ | _to fill_ | _to fill_ | _to fill_ | _to fill_ | _to fill_ | _to fill_ | _to fill_ |
 | concurrency (step 8) | _to fill_ | _to fill_ | _to fill_ | _to fill_ | _to fill_ | _to fill_ | _to fill_ | _to fill_ | _to fill_ | _to fill_ | _to fill_ | _to fill_ |
