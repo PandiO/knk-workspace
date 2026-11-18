@@ -4,6 +4,18 @@ This is a human-readable record of capabilities merged into the V3 default branc
 
 ## Unreleased — on feature branches, not merged
 
+- **Off-road navigation: route modes `shortest`, `efficient`, `preferred`** ([PandiO/knk-workspace#707](https://github.com/PandiO/knk-workspace/issues/707),
+  link L7 of the off-road navigation chain, phase 4). `/navigate <place> [shortest|efficient|preferred] [spawn|region]`
+  picks how the route is chosen, on roads and on foot: `shortest` the fewest blocks, `efficient` the cheapest road
+  classes and walking (stairs, ladders, doors, water and drops cost extra), `preferred` also the road weights staff set
+  with `/knk road edge set <id> cost <x>`. Without a word the route is `preferred`, exactly today's route. knk-plugin
+  and knk-workspace branches `claude/offroad-route-modes` (PRs into `next`). No flag, no config key, no migration.
+  1. Each typed word needs its node `knk.navigate.mode.<word>` (declared `default: op`); no word needs none. Tab
+     completion offers only the words a player holds.
+  2. The mode works with the destination engine on and off, and stays for the navigation's re-routes; walk links cost
+     their walked length in `shortest`. NPC routes are unchanged.
+  3. Admin steps: grant the three nodes to the groups that should have them (none by default; staff proposed).
+
 - **Off-road navigation: shortcuts on foot in the middle of a route** ([PandiO/knk-workspace#705](https://github.com/PandiO/knk-workspace/issues/705),
   link L5 of the off-road navigation chain, phase 2). Where the road goes the long way round (a courtyard, a bailey), the
   route can now leave the road for a short walk across and join it again: the trail shows the walk in the walk colour

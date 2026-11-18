@@ -1,7 +1,7 @@
 # Off-road navigation and landmarks — smoke test
 
-**Status:** Draft from the design (2026-11-17); no steps run. Phase 2 (§ 3): 13 of 14 steps automated (5 in part); Phase 5.1 (§ 6): 21 of 22 steps automated (6 in part); Phase 0 (§ 1): 1 of 9 steps automated; phase 1 (§ 2): 4 of 4 steps automated; phase 6.1 (§ 8): 6 of 8 steps automated (3 of them in part); phase 6.2 (§ 9): 11 of 11 steps automated (3 of them in part); phase 7 step 1 (§ 10.1): 4 of 7 steps automated (3 of them in part), viewed by the developer 2026-11-18; phase 7 step 2 (§ 10.2): 9 of 9 steps automated (3 of them in part); the other phases not yet automated (the links tag them).
-**Last updated:** 2026-11-18 (§ 3 phase 2 built by link L5, #705: fourteen steps, thirteen automated, five in part); 2026-11-18 (§ 10 phase 7: step 1 viewed by the developer, O33; § 10.2 step 2 built by link L10, #712: nine steps, all automated, three in part); 2026-11-18 (§ 6.3 phase 5.1 step B, link L8: the in-game steps); 2026-11-18 (§ 6 phase 5.1 updated to what link L8 step A built, #708: API and web steps, plugin steps marked step B); 2026-11-18 (§ 10 phase 7 split into step 1, built by link L10, #712: the staff preview and the developer's viewing steps on Cinix and Brink, and step 2, the trail, not built yet); 2026-11-18 (§ 9 phase 6.2 updated to what link L4 built, #711: eleven steps, all automated, three in part); 2026-11-17 (§ 8 phase 6.1 updated to what link L3 built, #710: eight steps, six automated); 2026-11-17 (§ 2 phase 1 updated to what link L2 built, #704: every step automated); 2026-11-17 (§ 1 phase 0 updated to what link L1 built, #703: the measurement steps and the `/knk road status` lines); 2026-11-17 (draft from the design, phases 0, 1, 2, 3, 4, 5.1, 5.2, 6.1, 6.2, 7)
+**Status:** Draft from the design (2026-11-17); no steps run. Phase 4 (§ 5): 8 of 9 steps automated (2 in part); Phase 2 (§ 3): 13 of 14 steps automated (5 in part); Phase 5.1 (§ 6): 21 of 22 steps automated (6 in part); Phase 0 (§ 1): 1 of 9 steps automated; phase 1 (§ 2): 4 of 4 steps automated; phase 6.1 (§ 8): 6 of 8 steps automated (3 of them in part); phase 6.2 (§ 9): 11 of 11 steps automated (3 of them in part); phase 7 step 1 (§ 10.1): 4 of 7 steps automated (3 of them in part), viewed by the developer 2026-11-18; phase 7 step 2 (§ 10.2): 9 of 9 steps automated (3 of them in part); the other phases not yet automated (the links tag them).
+**Last updated:** 2026-11-18 (§ 5 phase 4 built by link L7, #707: nine steps, eight automated, two in part); 2026-11-18 (§ 3 phase 2 built by link L5, #705: fourteen steps, thirteen automated, five in part); 2026-11-18 (§ 10 phase 7: step 1 viewed by the developer, O33; § 10.2 step 2 built by link L10, #712: nine steps, all automated, three in part); 2026-11-18 (§ 6.3 phase 5.1 step B, link L8: the in-game steps); 2026-11-18 (§ 6 phase 5.1 updated to what link L8 step A built, #708: API and web steps, plugin steps marked step B); 2026-11-18 (§ 10 phase 7 split into step 1, built by link L10, #712: the staff preview and the developer's viewing steps on Cinix and Brink, and step 2, the trail, not built yet); 2026-11-18 (§ 9 phase 6.2 updated to what link L4 built, #711: eleven steps, all automated, three in part); 2026-11-17 (§ 8 phase 6.1 updated to what link L3 built, #710: eight steps, six automated); 2026-11-17 (§ 2 phase 1 updated to what link L2 built, #704: every step automated); 2026-11-17 (§ 1 phase 0 updated to what link L1 built, #703: the measurement steps and the `/knk road status` lines); 2026-11-17 (draft from the design, phases 0, 1, 2, 3, 4, 5.1, 5.2, 6.1, 6.2, 7)
 **Design:** [specs/navigation-offroad/DESIGN.md](../specs/navigation-offroad/DESIGN.md) · **Issue:**
 [PandiO/knk-workspace#698](https://github.com/PandiO/knk-workspace/issues/698)
 
@@ -271,28 +271,74 @@ dev world.*
 
 ## 5. Phase 4: route modes (#707, tier:2)
 
-*Draft from the design (2026-11-17); the link updates it to what was built and tags the automated steps.*
+*Built 2026-11-18 (link L7, knk-plugin `claude/offroad-route-modes`): `/navigate <destination>
+[shortest|efficient|preferred] [spawn|region]`. Without a mode word the route is `preferred`, today's routing exactly
+(O24), and needs no node. A typed word needs its node `knk.navigate.mode.<word>` (O25); a player without it gets "You
+don't have permission to use this command." and no navigation starts; tab completion after a destination offers only
+the words the player holds, after `spawn` and `region`. The mode prices road and walk legs alike: `shortest` length
+only (doors, water, drops and ladders stay passable, with no extra cost); `efficient` the road class cost and the walk
+profile's costs; `preferred` adds the road profile's and the edge's cost multiplier (`/knk road edge set <id> cost
+<x>`). Walk links cost their walked length in `shortest`, their walk cost otherwise. Landmark preference weights are
+phase 5.2 (§ 7). The mode works on both paths (`navigation.destination-engine` on or off) and stays for the
+navigation's re-routes; NPC plans never use a mode. No flag, no config key. 8 of 9 steps are automated, 2 of them in
+part; the developer's live test is steps 2, 3 and 9 (about 15 minutes).*
 
 ### 5.0 Preconditions
 
-1. Deployed: plugin build from `next` with phase 4; the seed with the mode nodes in the default group.
-2. Settings: no new flag.
-3. Accounts and data: a player account with all three `knk.navigate.mode.*` nodes; a second player without
-   `knk.navigate.mode.shortest`; the stair house with a ramp beside the spiral stair; a road edge with a cost
-   multiplier set (`/knk road edge set <id> cost 3`).
+1. Deployed: plugin build from `next` with phase 4 (knk-plugin PR for #707 merged). Restart the server.
+2. Settings: no new flag or config key.
+3. Accounts and data:
+    1. Player A: a player account holding `knk.navigate.mode.shortest`, `knk.navigate.mode.efficient` and
+       `knk.navigate.mode.preferred` (granted through the in-house permissions: the web app's grants, or
+       `/knk user` for a group, see the PR's Admin steps).
+    2. Player B: a player account holding none of the three mode nodes (but `knk.navigate`, as every player).
+    3. A road pair with two ways between them: one shorter, one longer, where you set a cost multiplier on an edge of
+       the shorter way with `/knk road edge set <id> cost 3` (note the edge id from `/knk road edge` at your feet).
+    4. The stair house with a ramp beside the spiral stair, and a destination at the top that both reach.
 
 ### 5.1 Steps
 
-1. As the first player, `/navigate <dest>` with no mode word. **Expected:** the same route as before the phase
-   (`preferred`). (A11)
-2. `/navigate <dest> shortest`, `/navigate <dest> efficient` and `/navigate <dest> preferred` to a place where the
-   spiral stair and the ramp both lead, and past the weighted road edge. **Expected:** `shortest` takes the spiral
-   stair, `efficient` may take the ramp, and `preferred` avoids the weighted edge. (A09)
-3. `/navigate <dest> preferred region`. **Expected:** the mode word and the trailing `region` both work. (A09)
-4. As the second player, `/navigate <dest> shortest`. **Expected:** the no-permission message; no navigation starts.
-   Tab completion after the destination does not offer `shortest`. (A09)
-5. In a world with no road cost multipliers, compare `preferred` and `efficient` for the same pair. **Expected:** the
-   same route. (A11)
+1. As player A, `/navigate <destination>` with no mode word, for the road pair. **Expected:** the same route and trail
+   as before the phase: it avoids the weighted edge (`preferred`). (O24, A11) [automated: knk-core
+   `RouteModeDefaultTranscriptTest.theDefaultModeIsTodaysRoadRouting`,
+   `LinkRouteDefaultTranscriptTest.theDefaultModeIsTodaysRoutingWithWalkLinksOffAndOn`,
+   `WalkLegDefaultTranscriptTest.theDefaultModeIsTodaysWalkLegs` (golden transcripts written on `next` before the
+   phase); knk-paper `NavigateCommandRouteModeTest.withoutAModeWordTheCommandIsTodaysAndAsksForNoModeNode`]
+2. As player A, `/navigate <destination> shortest`, then `/navigate <destination> efficient`, then `/navigate
+   <destination> preferred`, for the road pair. **Expected:** `shortest` takes the shorter way over the weighted edge
+   (its cost multiplier is ignored); `efficient` takes the way with the cheaper road classes and also ignores the
+   multiplier; `preferred` avoids the weighted edge, as in step 1. The trail and the HUD follow each route. (A09)
+   [automated in part: knk-core `RouteModeTest.theThreeModesTakeThreeDifferentRoads`; knk-paper
+   `NavigationServiceRouteModeTest.theRawEntryRoutesInTheModeItIsGiven`,
+   `NavigationServiceRouteModeTest.theEngineHandleRoutesInTheModeItIsGiven`; the routes on the dev world are manual]
+3. As player A, in the stair house, `/navigate <top destination> shortest`, then the same with `efficient`. **Expected:**
+   `shortest` leads up the spiral stair (the shorter climb); `efficient` may lead up the ramp, because the walk
+   profile's wall and step costs make the narrow spiral dearer. (A09) [automated in part: knk-core
+   `WalkRouteModeTest.shortestWalksThroughTheDoorEfficientAndPreferredGoRoundByTheGap` (the same rule on a door and a
+   gap); knk-paper `NavigationServiceRouteModeTest.aWalkLegIsSearchedInTheMode`; the stair house is manual]
+4. As player A, `/navigate <destination> preferred region` (a domain with a region). **Expected:** the navigation goes
+   to the region (the trailing `region` still works after the mode word); `/navigate <destination> region shortest`
+   is read as a destination called "<destination> region". (A09) [automated: knk-paper
+   `NavigateCommandRouteModeTest.theModeWordStandsBeforeTheTrailingSpawnOrRegion`,
+   `NavigateCommandRouteModeTest.aLoneWordIsAlwaysAName`, `NavigateCommandRouteModeTest.aTypedWordNeedsItsNode`]
+5. As player B, `/navigate <destination> shortest`. **Expected:** "You don't have permission to use this command.";
+   no navigation starts. `/navigate <destination>` still works. (O25) [automated: knk-paper
+   `NavigateCommandRouteModeTest.aTypedWordNeedsItsNode`,
+   `NavigateCommandRouteModeTest.withTheInHouseChecksTheTypedWordWaitsForTheirAnswer`,
+   `NavigateCommandRouteModeTest.throughTheEngineTheWordReachesTheHandlesSession`]
+6. As player B, type `/navigate <destination> ` and press Tab. **Expected:** only `spawn` and `region` (as before); as
+   player A the same shows `spawn`, `region`, `shortest`, `efficient`, `preferred`; after a mode word only `spawn` and
+   `region`. (O25) [automated: knk-paper `NavigateCommandRouteModeTest.completionOffersOnlyTheWordsThePlayerHolds`,
+   `NavigateCommandRouteModeTest.throughTheEngineCompletionOffersTheHeldWords`]
+7. As player A, `/navigate <destination> efficient`, then walk off the road a little and back so the navigation
+   re-routes. **Expected:** the new route is still the `efficient` one. [automated: knk-paper
+   `NavigationServiceRouteModeTest.aRerouteKeepsTheMode`]
+8. In a world (or on a road pair) with no road cost multipliers, compare `preferred` and `efficient` for the same
+   pair. **Expected:** the same route. (A11) [automated: knk-core
+   `RouteModeTest.withoutMultipliersPreferredAndEfficientAreTheSameRoute`,
+   `WalkLinkRouteModeTest.shortestTakesASlowShortcutEfficientAndPreferredKeepTheRoad`]
+9. Remove the test multiplier again: `/knk road edge set <id> cost 1`. **Expected:** "/navigate <destination>" takes
+   the shorter way again. (Clean-up; manual)
 
 ## 6. Phase 5.1: landmark entity (#708, tier:3)
 
