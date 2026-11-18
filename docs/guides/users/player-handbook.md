@@ -1,6 +1,6 @@
 # Knights and Kings — Player Handbook
 
-**Status:** Current · **Last updated:** 2026-11-14 (Money, kits and lootboxes: link to the economy player guide, lootbox pickup corrected, PandiO/knk-workspace#300)
+**Status:** Current · **Last updated:** 2026-11-18 (The map: the overview map, in `next`, not released, PandiO/knk-workspace#766)
 **Checked against:** knk-plugin `main` `57884e9`, knk-web-api `master` `f445d21`, knk-web-app `main` `3ba747d`
 **Related:** [commands reference](commands.md), [menus](menus-player-guide.md), [guides index](../README.md)
 
@@ -25,8 +25,9 @@ Everything described here is in the released game unless it says otherwise.
 10. [Custom enchantments](#custom-enchantments)
 11. [Gates](#gates)
 12. [Siege](#siege)
-13. [Building and protection](#building-and-protection)
-14. [Getting help](#getting-help)
+13. [The map](#the-map)
+14. [Building and protection](#building-and-protection)
+15. [Getting help](#getting-help)
 
 ## Getting started
 
@@ -206,6 +207,15 @@ the match page on the website.
 <!-- Guide link (PandiO/knk-workspace#297): add the Siege player guide link on the next line. -->
 > **Full guide:** [Siege player guide](siege-player-guide.md): joining, teams, objectives, gates, rewards and match history.
 
+## The map
+
+Once staff switch it on, the website's **`/map`** shows a 3D map of the world, no login needed: town, district and
+building pins with their names, a town's outline when you click it, gate doors with their health, online players with
+their chat name, and one pin where a siege is fought. Players in staff mode, owner mode or a siege match are not shown
+one by one. Not released yet.
+
+Full guide: [Overview map](overview-map-player-guide.md).
+
 ## Building and protection
 
 Most of the world is protected. Outside towns and other areas you can't break or place blocks, or use crafting
@@ -225,6 +235,7 @@ allowed there.
 
 ## Changes
 
-1. 2026-11-14: Siege: link to the Siege player guide (PandiO/knk-workspace#297)
-2. 2026-11-14: Getting around: link to the navigation and teleports player guide (PandiO/knk-workspace#298)
-3. 2026-11-13: first version, replaces the archived Dutch v1 manual (PandiO/knk-workspace#296)
+1. 2026-11-18: The map: link to the overview map player guide (PandiO/knk-workspace#766)
+2. 2026-11-14: Siege: link to the Siege player guide (PandiO/knk-workspace#297)
+3. 2026-11-14: Getting around: link to the navigation and teleports player guide (PandiO/knk-workspace#298)
+4. 2026-11-13: first version, replaces the archived Dutch v1 manual (PandiO/knk-workspace#296)
