@@ -1,9 +1,10 @@
 # Overview map — smoke test
 
-**Status:** Draft from the design (2026-11-18); no steps run. § 1 updated to what L1 built (7 steps, all partly automated, tagged), § 2 to what L2 built (7 steps: 2 automated, 5 partly automated, tagged), § 3 to what L3 built (11 steps: 1 automated, 9 partly automated, 1 manual only, tagged), § 4 to what L4 built (9 steps: 1 automated, 5 partly automated, 3 manual visibility steps), § 5 to what L5 built (8 steps: 1 automated, 7 partly automated, tagged), § 6 to what L6 built (7 steps: 2 automated, 5 partly automated, tagged), § 7 to what L7 built (10 steps: 4 automated, 6 partly automated), § 8 to what L8 built (9 steps: 3 automated, 6 partly automated), § 9 to what L9 built (8 steps: 3 automated, 4 partly automated, 1 manual only); every section is now updated to what was built.
-**Last updated:** 2026-11-18 (§ 9 to what L9 built, #743); 2026-11-18 (§ 5 to what L5 built, #739); 2026-11-18 (§ 8 to what L8 built, #742); 2026-11-18 (§ 7 to what L7 built, #741); 2026-11-18 (§ 6 to what L6 built, #740); 2026-11-18 (§ 4 to what L4 built, #738); 2026-11-18 (§ 3 to what L3 built, #737); 2026-11-18 (§ 2 to what L2 built, #736); 2026-11-18 (§ 1 to what L1 built, #735); 2026-11-18 (draft from the design, phases 1, 2, 3, 4a, 4b, 5, 6a, 6b, 7)
+**Status:** Draft · **Last updated:** 2026-11-18 (§ 3 step 4: Escape only with the focus on the page, #757; docs #766)
+**Coverage:** Written from the design 2026-11-18; no steps run. § 1 updated to what L1 built (7 steps, all partly automated, tagged), § 2 to what L2 built (7 steps: 2 automated, 5 partly automated, tagged), § 3 to what L3 built (11 steps: 1 automated, 9 partly automated, 1 manual only, tagged), § 4 to what L4 built (9 steps: 1 automated, 5 partly automated, 3 manual visibility steps), § 5 to what L5 built (8 steps: 1 automated, 7 partly automated, tagged), § 6 to what L6 built (7 steps: 2 automated, 5 partly automated, tagged), § 7 to what L7 built (10 steps: 4 automated, 6 partly automated), § 8 to what L8 built (9 steps: 3 automated, 6 partly automated), § 9 to what L9 built (8 steps: 3 automated, 4 partly automated, 1 manual only); every section is now updated to what was built.
 **Design:** [specs/in-game-maps/OVERVIEW_MAP_DESIGN.md](../specs/in-game-maps/OVERVIEW_MAP_DESIGN.md) · **Issue:**
 [PandiO/knk-workspace#732](https://github.com/PandiO/knk-workspace/issues/732)
+**Guides:** [player](users/overview-map-player-guide.md), [admin](admin/overview-map-admin-guide.md)
 
 Accounts used throughout:
 
@@ -192,8 +193,9 @@ Tests named below: knk-web-app `e2e/overview-map.spec.ts` (Playwright, "e2e") an
    shows the town's name, description and number of districts. (A08)
 4. [partly automated: e2e `"Show region" shows the town and all its districts by name, and hides them again (A08)`;
    by hand: the verdict] Turn on "Show region". **Expected:** the town outline and every district of that town stay
-   visible, each district labelled with its name, never a region id (`domain_...`). Close the panel (× or Escape):
-   the regions stay. Click the town again: the switch is on; turn it off: the regions disappear. Judge whether
+   visible, each district labelled with its name, never a region id (`domain_...`). Close the panel (×, or Escape once the keyboard
+   focus is on the page rather than inside the map, [#757](https://github.com/PandiO/knk-workspace/issues/757)): the
+   regions stay. Click the town again: the switch is on; turn it off: the regions disappear. Judge whether
    showing all districts at once works and note your verdict for a follow-up (O30). (A08)
 5. [partly automated: e2e `clicking a gate shows its doors with open/closed, destroyed and a health bar (A09)`, Jest
    `GateDoorsWidget`; by hand: real gate data] Click the gate structure. **Expected:** the panel shows its name,
@@ -640,3 +642,17 @@ Tests named below: knk-web-app `e2e/overview-map-moderation.spec.ts` (Playwright
 8. [automated: e2e `on a phone the panel is a bottom sheet and the page does not scroll sideways`] As the **full
    moderator** on a phone (or a 390 px wide window), click A. **Expected:** the name card and the "Moderation" section
    in the bottom sheet, which scrolls vertically; the buttons wrap; nothing scrolls sideways.
+
+## Changes
+
+1. 2026-11-18: § 3 step 4: Escape only with the focus on the page, #757; docs #766
+2. 2026-11-18: § 9 to what L9 built, #743
+3. 2026-11-18: § 5 to what L5 built, #739
+4. 2026-11-18: § 8 to what L8 built, #742
+5. 2026-11-18: § 7 to what L7 built, #741
+6. 2026-11-18: § 6 to what L6 built, #740
+7. 2026-11-18: § 4 to what L4 built, #738
+8. 2026-11-18: § 3 to what L3 built, #737
+9. 2026-11-18: § 2 to what L2 built, #736
+10. 2026-11-18: § 1 to what L1 built, #735
+11. 2026-11-18: draft from the design, phases 1, 2, 3, 4a, 4b, 5, 6a, 6b, 7
