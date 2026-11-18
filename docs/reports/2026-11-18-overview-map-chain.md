@@ -40,6 +40,10 @@ on `next` (Decided 2026-11-18, O01–O33, O08 superseded by O31); smoke guide
    § 6. Towns and districts have no seeded default display configuration: until one is made in the display builder,
    their "Details" shows a one-line message. Optional: `@codex review` on knk-web-app#51, knk-workspace#755.
 
+6. **L7 (#741) smoke test (tier:3):** L7 is in `next` (knk-web-api `0308377d`, knk-plugin `02aa110e`). Set
+   `Map__GateCommands__Enabled=true`, deploy the plugin from `next` connected to the hub and follow smoke guide § 7
+   (10 steps: 4 automated, 6 partly automated). No migration, no plugin setting.
+
 ## 2. Summary
 
 | Link | Issue | Status | Branch heads | PR | CI | How started |
@@ -50,8 +54,8 @@ on `next` (Decided 2026-11-18, O01–O33, O08 superseded by O31); smoke guide
 | L4 Live players backend | #738 | Merged into `next` 2026-11-18 (knk-web-api `f2f523c3`, knk-plugin `ef4e99d9`, knk-workspace `d9c07b37`); waiting for the developer's live check of smoke § 4.1 steps 2, 3 and 5 on #738 (gates L5's merge) | `claude/overview-map-players-api`: knk-web-api `a9ed3af`, knk-plugin `8b1efdcc`, knk-workspace `09982caa` (from `next`) | [knk-web-api#47](https://github.com/PandiO/knk-web-api/pull/47), [knk-plugin#77](https://github.com/PandiO/knk-plugin/pull/77), [knk-workspace#752](https://github.com/PandiO/knk-workspace/pull/752) | API green (build-and-test, mysql-tests, fresh-database); plugin build and paper-boot green | create_session session_01R1w2UwcYKiPMueCHWqsys4 (2026-11-18) |
 | L5 Live players layer | #739 | Checks passed (coordinator 2026-11-18 12:25), not merged: waits for the developer's L4 live check on #738 (charter gate 4) | `claude/overview-map-players-page`: knk-web-app `bc17a48`, knk-workspace `69244809` (from `next`) | [knk-web-app#52](https://github.com/PandiO/knk-web-app/pull/52), [knk-workspace#756](https://github.com/PandiO/knk-workspace/pull/756) | Web app green on `bc17a48` (build-and-test, e2e); knk-workspace no CI; Codex at its limit | create_session session_01R1w2UwXPWsCYjRUw6RoxVH (2026-11-18) |
 | L6 Staff details | #740 | Merged into `next` 2026-11-18 (knk-web-app `01ad4d9a`, knk-workspace `a130f2d6`); waiting for the developer's smoke test § 6 | `claude/overview-map-staff-details`: knk-web-app `1443cf5`, knk-workspace `fe64919d` (from `next`) | [knk-web-app#51](https://github.com/PandiO/knk-web-app/pull/51), [knk-workspace#755](https://github.com/PandiO/knk-workspace/pull/755) | Web app green (build-and-test, e2e); Codex at its limit | subagent of the coordinator (2026-11-18; the create_session attempt session_01R1w2UuaEs6VbL7BVnR7ZTJ was refused the knk-web-app attach, decision 10) |
-| L7 Gate commands backend | #741 | In review: PRs open into `next`, CI green, Codex at its limit | `claude/overview-map-gate-commands`: knk-web-api `16e4157`, knk-plugin `1f8bb3c7`, knk-workspace `8368b901` (from `next`) | [knk-web-api#48](https://github.com/PandiO/knk-web-api/pull/48), [knk-plugin#79](https://github.com/PandiO/knk-plugin/pull/79), [knk-workspace#758](https://github.com/PandiO/knk-workspace/pull/758) | API green (build-and-test, mysql-tests, fresh-database); plugin build and paper-boot green | create_session session_01R1w2UxDt6K1RcnDPPagNAN (2026-11-18) |
-| L8 Gate command buttons | #742 | Not started (gate: L3 and L7 merged into `next`) | – | – | – | – |
+| L7 Gate commands backend | #741 | Merged into `next` 2026-11-18 (knk-web-api `0308377d`, knk-plugin `02aa110e`, knk-workspace `b7820e99`); waiting for the developer's smoke test § 7 | `claude/overview-map-gate-commands`: knk-web-api `16e4157`, knk-plugin `1f8bb3c7`, knk-workspace `8368b901` (from `next`) | [knk-web-api#48](https://github.com/PandiO/knk-web-api/pull/48), [knk-plugin#79](https://github.com/PandiO/knk-plugin/pull/79), [knk-workspace#758](https://github.com/PandiO/knk-workspace/pull/758) | API green (build-and-test, mysql-tests, fresh-database); plugin build and paper-boot green | create_session session_01R1w2UxDt6K1RcnDPPagNAN (2026-11-18) |
+| L8 Gate command buttons | #742 | Running | `claude/overview-map-gate-buttons`: knk-web-app, knk-workspace (from `next`) | – | – | create_session session_01R1w2UvQqqmQ9NwMTQbq3Cb (2026-11-18) |
 | L9 Player context panel | #743 | Not started (gate: L5 merged into `next`) | – | – | – | – |
 
 ## 3. Coordinator decisions
@@ -160,6 +164,23 @@ on `next` (Decided 2026-11-18, O01–O33, O08 superseded by O31); smoke guide
     (a) merge now behind the flag: the charter makes the developer's check a hard gate for this merge. L8 (#742) waits
     for L7, and starting it before L5 is in `next` would branch both from the same `MapPage` without L5's edits;
     L9 (#743) waits for L5 in `next`.
+
+16. **L7 check and merge (2026-11-18).** Chosen: merge knk-web-api#48, knk-plugin#79 and knk-workspace#758 into `next`
+    with merge commits. Every skill § 6 check held: heads matched; the API branch contained `next`; the plugin branch
+    was 4 commits behind `next` (the destination engine P1 merge #78 from another chain) but merged without conflict
+    (skill § 6.2 allows "the PR shows no conflicts"; `next` CI is checked after the merge); scope limited to #741
+    (new controller, service, hub method, plugin handler and realtime sync; `KnKPlugin` wiring additive; existing
+    gate operations called unchanged); CI green (API build-and-test, mysql-tests, fresh-database; plugin build,
+    paper-boot); tests API 4372 → 4406, plugin core 3161 → 3176, api-client 344 → 347, paper 2963 → 2972, 0 failed;
+    `Map:GateCommands:Enabled` off by default (404); 403 / 400 / 409 / 503 / 504 and the audit log tested; smoke § 7
+    tagged; #741 in review. Codex at its limit on all three. The knk-workspace branch conflicted in one changelog spot
+    with the destination engine's entry; resolved on the branch keeping both (`20ea39fc`). Alternatives: (a) merge
+    `next` into the plugin branch and wait another 25 minutes for paper-boot: no textual conflict, and `next` CI
+    covers the combination.
+17. **L8 started after L7.** Chosen: start L8 (#742, knk-web-app) now: its gate (L3 and L7 merged) is open and no link
+    runs in knk-web-app. L5 is finished but held for gate 4, so L8 is told to keep away from L5's files
+    (`MapPage.tsx`, the bridge) and only add in shared ones, and to merge `next` again before its PRs. Alternatives:
+    (a) wait for the developer's L4 check so L5 lands first: it could take days; the overlap is small and additive.
 
 ## 4. Link blocks
 
