@@ -4,6 +4,18 @@ This is a human-readable record of capabilities merged into the V3 default branc
 
 ## Unreleased — on feature branches, not merged
 
+- **Overview map: moderation from the map** ([PandiO/knk-workspace#743](https://github.com/PandiO/knk-workspace/issues/743),
+  link L9 of the overview map chain, [#732](https://github.com/PandiO/knk-workspace/issues/732)). knk-web-app and
+  knk-workspace branches `claude/overview-map-moderation` (PRs into `next`). No flag of its own: it needs the live
+  players layer (`Map:LivePlayers:Enabled`) and is shown by the viewer's nodes.
+  1. A moderator holding any of `knk.freeze`, `knk.unfreeze`, `knk.kick`, `knk.ban` or `knk.admin.user.manage` who
+     clicks a player on the map gets a "Moderation" section under the name card: Freeze or Unfreeze, Kick and Ban, each
+     only with its own node, with the same dialogs, endpoints and audit entries as the player profile, and
+     "Open profile".
+  2. Everyone else still gets only the name card; anonymous viewers make no extra request.
+  3. Admin steps: none. Steps:
+     [overview map smoke test § 9](guides/overview-map-smoke-test.md#9-phase-7-player-moderation-panel-743-tier2).
+
 - **Overview map: live players on the map** ([PandiO/knk-workspace#739](https://github.com/PandiO/knk-workspace/issues/739),
   link L5 of the overview map chain, [#732](https://github.com/PandiO/knk-workspace/issues/732)). knk-web-app and
   knk-workspace branches `claude/overview-map-players-page` (PRs into `next`). Behind the API setting
