@@ -1,7 +1,7 @@
 # Overview map — BlueMap in the web app for players, staff and moderation
 
 **Status:** **Decided 2026-11-18** (developer). Proposed the same day; no open questions.
-**Last updated:** 2026-11-18 (phase 5, #740, built on `claude/overview-map-staff-details` in knk-web-app and knk-workspace, in review; as built in § 6.3.3); 2026-11-18 (phase 4a, #738, built on `claude/overview-map-players-api` in knk-plugin and knk-web-api, in review; as built in § 6.2.9 and § 7.4); 2026-11-18 (phase 3, #737, built on `claude/overview-map-page` in knk-web-app and knk-workspace, in review; as built in § 6.3.5, deploy notes in the closed-alpha runbook Phase 10); 2026-11-18 (phase 2, #736, built on `claude/overview-map-public-api` in knk-web-api, in review; as built in § 6.2.8); 2026-11-18 (phase 1, #735, built on `claude/overview-map-outlines` in knk-plugin and knk-web-api, in review, not in `next` yet; stored shape in § 6.1.1); 2026-11-18 (§ 3.1.10: existing NAS render container, migration to the alpha stack; Decided; phases filed as #735–#743; first version from the working draft of 2026-11-17 and the design session of 2026-11-18)
+**Last updated:** 2026-11-18 (phase 4b, #739, built on `claude/overview-map-players-page` in knk-web-app and knk-workspace, in review; as built in § 6.3.6); 2026-11-18 (phase 5, #740, built on `claude/overview-map-staff-details` in knk-web-app and knk-workspace, in review; as built in § 6.3.3); 2026-11-18 (phase 4a, #738, built on `claude/overview-map-players-api` in knk-plugin and knk-web-api, in review; as built in § 6.2.9 and § 7.4); 2026-11-18 (phase 3, #737, built on `claude/overview-map-page` in knk-web-app and knk-workspace, in review; as built in § 6.3.5, deploy notes in the closed-alpha runbook Phase 10); 2026-11-18 (phase 2, #736, built on `claude/overview-map-public-api` in knk-web-api, in review; as built in § 6.2.8); 2026-11-18 (phase 1, #735, built on `claude/overview-map-outlines` in knk-plugin and knk-web-api, in review, not in `next` yet; stored shape in § 6.1.1); 2026-11-18 (§ 3.1.10: existing NAS render container, migration to the alpha stack; Decided; phases filed as #735–#743; first version from the working draft of 2026-11-17 and the design session of 2026-11-18)
 **Issue:** [PandiO/knk-workspace#732](https://github.com/PandiO/knk-workspace/issues/732); phases as sub-issues in § 11.
 **Dependencies:** the offline BlueMap tile pipeline ([BLUEMAP_EVALUATION.md](BLUEMAP_EVALUATION.md) § 5–7); the SignalR
 game hub (#66, built); managed WorldGuard regions (`docs/architecture/managed-worldguard-regions.md`, built); gate
@@ -302,6 +302,20 @@ Related: [DESIGN.md](DESIGN.md) (in-game maps, M2–M5), [DECISION-map-data-sour
        #739. The specs run the real bridge in a fake BlueMap web app (`e2e/fixtures/map.ts`). Hosting: nginx serves
        BlueMap's static `web/` with `X-Frame-Options: SAMEORIGIN` on `/bluemap/` only; BlueMap renders as a profile-gated
        Compose job (closed-alpha runbook Phase 10).
+    6. **As built (#739):** `components/map/useLivePlayers.ts` polls `GET api/Map/players` (`mapClient.getPlayers`,
+       the JWT when logged in) only while `config.livePlayers.enabled`: at once, then every `intervalMs` of the last
+       answer (else `pollIntervalMs`), clamped to 0.5–60 s, one request at a time, skipped while the tab is hidden;
+       three failed polls in a row clear the players. `mapPlayers.ts` turns each player into the v1 `setPlayers` entry
+       with two optional fields (O14 unchanged): `parts` (the `ChatLineFormat` line `[RANK]-{braced}- name`, the `&`
+       codes read with the web app's legacy-text parser into `#RRGGBB` and bold/italic/underline/strikethrough) and
+       `tags` (`staff` "Staff mode", `owner` "Owner mode", `hidden` "Hidden mode", `minigame`, `afk` "AFK"); `label`
+       stays the plain text. Arena pins: `mapMarkers.toArenaPins` (kind `arena`, id = position in the list, label
+       distance `labels.arena`), sent with `setMarkers` only when the arenas change. The bridge draws each player as
+       one HTML marker at head height (y + 1.8): label (only `#RRGGBB` colours accepted), tags, head; AFK dims it. The
+       head is `bridge.js?heads=<address with {uuid}>` when set in `webapp.conf`, else BlueMap's `assets/steve.png`.
+       `playerClicked` opens `MapPlayerPanel` with `PlayerCard` (label and tags from the snapshot, no request); it takes
+       `children` for the moderation panel (#743). One panel at a time: a player click closes a place's panel and the
+       other way round. Tests: Jest `mapPlayers`, `useLivePlayers`, `PlayerCard`; e2e `overview-map-players.spec.ts`.
 
 ## 7. Plugin
 

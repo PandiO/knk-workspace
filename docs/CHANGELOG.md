@@ -4,6 +4,21 @@ This is a human-readable record of capabilities merged into the V3 default branc
 
 ## Unreleased — on feature branches, not merged
 
+- **Overview map: live players on the map** ([PandiO/knk-workspace#739](https://github.com/PandiO/knk-workspace/issues/739),
+  link L5 of the overview map chain, [#732](https://github.com/PandiO/knk-workspace/issues/732)). knk-web-app and
+  knk-workspace branches `claude/overview-map-players-page` (PRs into `next`). Behind the API setting
+  `Map:LivePlayers:Enabled` (off by default: the page asks for no players and draws nothing new).
+  1. The map shows online players with a head and their name label as in the in-game chat line, in the same colours,
+     updated about every 2 s. Tags show AFK, and for staff who may see hidden players also "Staff mode", "Owner mode"
+     and the minigame.
+  2. A running siege shows one pin, for example "[Siege] 12 players", instead of its participants.
+  3. Clicking a player opens a name card with the label and tags.
+  4. Admin steps: none to keep it off. With the backend on (§ 4), the layer appears by itself. Optional: player heads
+     from a skin service through `heads=` in BlueMap's `webapp.conf`
+     ([closed-alpha runbook Phase 10](guides/closed-alpha-deployment-runbook.md#phase-10--overview-map-bluemap-in-the-stack-737)
+     step 3); without it everyone has BlueMap's default head. Steps:
+     [overview map smoke test § 5](guides/overview-map-smoke-test.md#5-phase-4b-live-players-layer-739-tier2).
+
 - **Overview map: staff details in the map panel** ([PandiO/knk-workspace#740](https://github.com/PandiO/knk-workspace/issues/740),
   link L6 of the overview map chain, [#732](https://github.com/PandiO/knk-workspace/issues/732)). knk-web-app and
   knk-workspace branches `claude/overview-map-staff-details` (PRs into `next`). No flag: gated by the node
