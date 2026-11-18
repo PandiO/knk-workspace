@@ -1,7 +1,7 @@
 # Overview map — BlueMap in the web app for players, staff and moderation
 
 **Status:** **Decided 2026-11-18** (developer). Proposed the same day; no open questions.
-**Last updated:** 2026-11-18 (Decided; phases filed as #735–#743; first version from the working draft of 2026-11-17 and the design session of 2026-11-18)
+**Last updated:** 2026-11-18 (§ 3.1.10: existing NAS render container, migration to the alpha stack; Decided; phases filed as #735–#743; first version from the working draft of 2026-11-17 and the design session of 2026-11-18)
 **Issue:** [PandiO/knk-workspace#732](https://github.com/PandiO/knk-workspace/issues/732); phases as sub-issues in § 11.
 **Dependencies:** the offline BlueMap tile pipeline ([BLUEMAP_EVALUATION.md](BLUEMAP_EVALUATION.md) § 5–7); the SignalR
 game hub (#66, built); managed WorldGuard regions (`docs/architecture/managed-worldguard-regions.md`, built); gate
@@ -147,6 +147,15 @@ Related: [DESIGN.md](DESIGN.md) (in-game maps, M2–M5), [DECISION-map-data-sour
        plugin as `PlayerKick` / `PlayerBan`. No teleport endpoint.
     9. BlueMap: no code in any component repo. `scripts/bluemap/wg2bluemap.py` builds static town and district
        marker sets from `regions.yml`; the offline render runs on the NAS.
+    10. **A BlueMap render container already exists on the NAS** (developer, 2026-11-18): the standalone
+        `ghcr.io/bluemap-minecraft/bluemap` container `bluemap-test`, started by hand with `docker run` (not part of
+        a Compose stack), with config, data, tiles and a world copy under `/mnt/fast/knk-alpha/bluemap/`
+        (`config/`, `data/`, `web/`, `world/`) and its viewer on port 8100. It holds the test render of a
+        2,000 × 2,000 area ([BLUEMAP_EVALUATION.md](BLUEMAP_EVALUATION.md) § 6–7). Nothing new has to be set up for
+        rendering: it may only need **migrating into the `knk-alpha` stack** as a Compose service (pinned image
+        version instead of `latest`, the same folders mounted, render threads at most 4), with Nginx serving its
+        `web/` folder under `/bluemap/` (O26). The full-world render (about 20 hours, about 40 GB) is an operations
+        step, not a chain link.
 2. **V1/V2:** neither legacy version had a web map (no Dynmap or BlueMap code in `knk-v1-archive` or `knk-v2-archive`).
    Nothing to keep or drop.
 3. **Related open work:** #224 (in-game maps), #613 (siege tactical map, shares the bridge and tiles), #357 (spot
@@ -281,7 +290,11 @@ Related: [DESIGN.md](DESIGN.md) (in-game maps, M2–M5), [DECISION-map-data-sour
 6. **Check before building:** BlueMap's web app lets a script add marker sets and listen to clicks at runtime, and a
    per-player layer can be drawn as HTML markers (phase 3 spike in its first hour; fallback: the bridge draws
    players as POI markers).
-7. **Siege tactical map (#613)** reuses the bridge and must keep its own token and area lock; the overview map never
+7. **Existing NAS render container** (§ 3.1.10): phase 3's deploy notes migrate `bluemap-test` into the
+   `knk-alpha` Compose stack instead of setting up a new renderer. Changes on the NAS go through the developer
+   (`knk-deploy`, ask before each change); the link writes the Compose service and Nginx block as deploy notes and
+   does not run them.
+8. **Siege tactical map (#613)** reuses the bridge and must keep its own token and area lock; the overview map never
    shows team markers.
 
 ## 10. Acceptance checklist
@@ -317,7 +330,7 @@ Related: [DESIGN.md](DESIGN.md) (in-game maps, M2–M5), [DECISION-map-data-sour
 |---|---|---|---|---|---|---|---|
 | 1 | Region outlines: knk-core reporting, WorldGuard adapter, hub method, `map_region_outlines` table | A01–A02 | knk-plugin, knk-web-api | tier:3 | `map.reporting.enabled` | #735 | — |
 | 2 | Public map API: config, markers, panel DTOs, rate limit, access tests | A03–A06 | knk-web-api | tier:3 | `Map:Enabled` | #736 | 1 |
-| 3 | Map page: iframe, bridge script and protocol, pins, labels, flash and toggle, public panels, action registry, Nginx deploy notes | A07–A10, A22 | knk-web-app (deploy notes in knk-workspace) | tier:2 | `Map:Enabled` | #737 | 2 |
+| 3 | Map page: iframe, bridge script and protocol, pins, labels, flash and toggle, public panels, action registry, deploy notes: migrate the existing NAS `bluemap-test` container into the `knk-alpha` stack and serve `/bluemap/` (§ 3.1.10) | A07–A10, A22 | knk-web-app (deploy notes in knk-workspace) | tier:2 | `Map:Enabled` | #737 | 2 |
 | 4a | Live players backend: plugin player reports, registry, per-audience snapshots, arena pins | A11–A16 (API side) | knk-plugin, knk-web-api | tier:3 | `Map:LivePlayers:Enabled` | #738 | 2 |
 | 4b | Live players layer in the page, name labels and tags | A11–A16 (page side) | knk-web-app | tier:2 | `Map:LivePlayers:Enabled` | #739 | 3, 4a |
 | 5 | Staff detail: compact display renderer in the panel | A17 | knk-web-app | tier:2 | none (node-gated) | #740 | 3 |
