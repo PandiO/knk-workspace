@@ -1,7 +1,7 @@
 # Overview map — smoke test
 
-**Status:** Draft from the design (2026-11-18); no steps run. § 1 updated to what L1 built (7 steps, all partly automated, tagged), § 2 to what L2 built (7 steps: 2 automated, 5 partly automated, tagged), § 3 to what L3 built (11 steps: 1 automated, 9 partly automated, 1 manual only, tagged), § 4 to what L4 built (9 steps: 1 automated, 5 partly automated, 3 manual visibility steps), § 5 to what L5 built (8 steps: 1 automated, 7 partly automated, tagged), § 6 to what L6 built (7 steps: 2 automated, 5 partly automated, tagged), § 7 to what L7 built (10 steps: 4 automated, 6 partly automated), § 8 to what L8 built (9 steps: 3 automated, 6 partly automated); the other sections are not automated yet (the links tag them).
-**Last updated:** 2026-11-18 (§ 5 to what L5 built, #739); 2026-11-18 (§ 8 to what L8 built, #742); 2026-11-18 (§ 7 to what L7 built, #741); 2026-11-18 (§ 6 to what L6 built, #740); 2026-11-18 (§ 4 to what L4 built, #738); 2026-11-18 (§ 3 to what L3 built, #737); 2026-11-18 (§ 2 to what L2 built, #736); 2026-11-18 (§ 1 to what L1 built, #735); 2026-11-18 (draft from the design, phases 1, 2, 3, 4a, 4b, 5, 6a, 6b, 7)
+**Status:** Draft from the design (2026-11-18); no steps run. § 1 updated to what L1 built (7 steps, all partly automated, tagged), § 2 to what L2 built (7 steps: 2 automated, 5 partly automated, tagged), § 3 to what L3 built (11 steps: 1 automated, 9 partly automated, 1 manual only, tagged), § 4 to what L4 built (9 steps: 1 automated, 5 partly automated, 3 manual visibility steps), § 5 to what L5 built (8 steps: 1 automated, 7 partly automated, tagged), § 6 to what L6 built (7 steps: 2 automated, 5 partly automated, tagged), § 7 to what L7 built (10 steps: 4 automated, 6 partly automated), § 8 to what L8 built (9 steps: 3 automated, 6 partly automated), § 9 to what L9 built (8 steps: 3 automated, 4 partly automated, 1 manual only); every section is now updated to what was built.
+**Last updated:** 2026-11-18 (§ 9 to what L9 built, #743); 2026-11-18 (§ 5 to what L5 built, #739); 2026-11-18 (§ 8 to what L8 built, #742); 2026-11-18 (§ 7 to what L7 built, #741); 2026-11-18 (§ 6 to what L6 built, #740); 2026-11-18 (§ 4 to what L4 built, #738); 2026-11-18 (§ 3 to what L3 built, #737); 2026-11-18 (§ 2 to what L2 built, #736); 2026-11-18 (§ 1 to what L1 built, #735); 2026-11-18 (draft from the design, phases 1, 2, 3, 4a, 4b, 5, 6a, 6b, 7)
 **Design:** [specs/in-game-maps/OVERVIEW_MAP_DESIGN.md](../specs/in-game-maps/OVERVIEW_MAP_DESIGN.md) · **Issue:**
 [PandiO/knk-workspace#732](https://github.com/PandiO/knk-workspace/issues/732)
 
@@ -586,17 +586,57 @@ Tests named below: knk-web-app `e2e/overview-map-gate-commands.spec.ts` (Playwri
 
 ## 9. Phase 7: player moderation panel (#743, tier:2)
 
-*Draft from the design (2026-11-18); the link updates it to what was built and tags the automated steps.*
+*Built by link L9 (knk-web-app branch `claude/overview-map-moderation`, docs on knk-workspace
+`claude/overview-map-moderation`; PRs into `next`). 8 steps: 3 automated, 4 partly automated, 1 manual only (tagged);
+every step can still be run by hand. The suites run the map page against a mocked API (live players, the account read by UUID and the
+moderation endpoints) and the fake BlueMap web app with the real bridge script; the kick, ban and freeze in game, the
+profile page behind "Open profile" and a real phone are checked by hand. No flag of its own: it needs the live players
+layer (§ 5, `Map:LivePlayers:Enabled`) and is gated by the viewer's nodes. Not run yet. Full manual run about
+15 minutes; the untagged parts about 10.*
+
+Tests named below: knk-web-app `e2e/overview-map-moderation.spec.ts` (Playwright, "e2e") and the Jest suite
+`src/components/map/__tests__/PlayerModerationPanel.test.tsx` ("Jest `PlayerModerationPanel`").
 
 ### 9.0 Preconditions
 
-1. Deployed: phase 4b, the web app from `next`. Player A is online.
-2. Accounts: **kick moderator**, the **player** account, and a staff member holding every moderation node.
+1. Deployed: phases 3, 4a and 4b as in § 5.0 (API `Map__Enabled=true`, `Map__LivePlayers__Enabled=true`; plugin
+   `map.reporting.enabled: true`), the web app from `next`, the game server connected to the game hub (kick, ban and
+   freeze reach the game through it, as from the profile page).
+2. Data: player A online in game, with a web account (the account the map reads by A's Minecraft UUID). A second
+   Minecraft account B to ban, which you can unban afterwards with `/pardon B` in game.
+3. Accounts: the **kick moderator** (`knk.kick` only), the **player** account (no staff nodes), **anonymous**, and a
+   **full moderator** holding `knk.freeze`, `knk.unfreeze`, `knk.kick`, `knk.ban` and `knk.admin.user.manage`.
 
 ### 9.1 Steps
 
-1. As the **kick moderator**, click A on the map. **Expected:** the panel shows only Kick and "Open profile". (A20)
-2. Click Kick. **Expected:** A is kicked in game, the same as from the moderation page. (A20)
-3. As the staff member with every moderation node, click a player. **Expected:** Freeze, Unfreeze, Kick, Ban and
-   "Open profile". Freeze works as on the moderation page. (A20)
-4. As the **player** account, click A. **Expected:** only the name card. (A21)
+1. [partly automated: e2e `a viewer with only knk.kick sees only Kick and "Open profile"; kicking works as on the
+   profile (A20)`, Jest `PlayerModerationPanel` "with only knk.kick: Kick and "Open profile", nothing else; kick sends
+   the reason (A20)"; by hand: the real account] As the **kick moderator**, open `/map` and click A. **Expected:** under
+   A's name card a "Moderation" section with only a "Kick…" button and an "Open profile" link. (A20)
+2. [partly automated: same tests; by hand: the kick in game] Click "Kick…", enter a reason and confirm. **Expected:**
+   the same dialog as on the player profile ("Kick A?", optional reason); a toast "A is being kicked"; A is disconnected
+   in game and sees the reason; A's profile audit log lists the kick with your name, as from the profile page. (A20)
+3. [manual only] Click "Open profile" (as the full moderator; the kick moderator gets the profile page's own "no
+   access" answer, because the page needs `knk.admin.user.manage`). **Expected:** A's player profile page
+   (`/admin/users/<id>`) opens.
+4. [partly automated: e2e `a viewer with every moderation node freezes, unfreezes and bans from the panel`, Jest
+   `PlayerModerationPanel` "freeze posts the reason and reads the account again", "a frozen player shows the reason
+   and Unfreeze for a knk.unfreeze holder"; by hand: the freeze in game] With A back online, as the **full moderator**
+   click A. **Expected:** "Freeze…", "Kick…", "Ban…" and "Open profile". Click "Freeze…", enter a reason and
+   confirm: toast "A is frozen", A can no longer move in game, and the section shows "Frozen. Reason: <reason>" with
+   "Unfreeze" in place of "Freeze…". Click "Unfreeze" and confirm: toast "A is unfrozen", A can move again. (§ 5 rule 12)
+5. [partly automated: e2e same test, Jest `PlayerModerationPanel` "with every node: Freeze, Kick and Ban; ban asks a
+   reason and posts it"; by hand: the ban in game] With B online, click B and "Ban…", enter a reason and confirm.
+   **Expected:** the dialog "Ban B permanently?" with a required reason; toast "B is banned"; B is kicked with the ban
+   screen and cannot rejoin. Lift it with `/pardon B` in game.
+6. [automated: e2e `a logged-in viewer without any moderation node gets only the name card (A21)`, Jest
+   `PlayerModerationPanel` "without any moderation node: nothing beyond the name card, no account read (A21)"] As the
+   **player** account, click A. **Expected:** only the name card (label and tags), no "Moderation" section; in the
+   Network tab only the five `api/Users/<your id>/permissions/check` requests for the moderation nodes, no
+   `api/Users/uuid/...` and no moderation request. (A21)
+7. [automated: e2e `anonymous viewers get only the name card and make no permission or account request (A21)`, Jest
+   `PlayerModerationPanel` "anonymous: renders nothing and reads no account"] As **anonymous**, click A. **Expected:**
+   only the name card; no request to `api/Users/...` at all. (A21)
+8. [automated: e2e `on a phone the panel is a bottom sheet and the page does not scroll sideways`] As the **full
+   moderator** on a phone (or a 390 px wide window), click A. **Expected:** the name card and the "Moderation" section
+   in the bottom sheet, which scrolls vertically; the buttons wrap; nothing scrolls sideways.
