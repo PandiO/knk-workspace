@@ -1,6 +1,6 @@
 # Overview map chain — progress report
 
-**Status:** Running (2026-11-18) · **Last updated:** 2026-11-18
+**Status:** Done, in review (2026-11-18) · **Last updated:** 2026-11-18
 
 **Issue:** [PandiO/knk-workspace#732](https://github.com/PandiO/knk-workspace/issues/732), links
 [#735](https://github.com/PandiO/knk-workspace/issues/735) (L1), [#736](https://github.com/PandiO/knk-workspace/issues/736) (L2),
@@ -42,6 +42,14 @@ on `next` (Decided 2026-11-18, O01–O33, O08 superseded by O31); smoke guide
 7. **L8 (#742) smoke test (tier:2):** L8 is in `next` (knk-web-app `de43f6be`). After § 3 and § 7 are deployed, run
    smoke guide § 8 (9 steps: 3 automated, 6 partly automated) as a `knk.gate.admin` holder.
 
+8. **L9 (#743) smoke test (tier:2):** L9 is in `next` (knk-web-app `eff6ed98`). With the live players layer on (§ 5),
+   run smoke guide § 9 with moderators holding different nodes. Decide whether a kick-only moderator should see
+   "Open profile" (it ends on the profile page's no-access answer; A20 asks for the link).
+9. **Chain finished; promotion of `next` is yours.** All nine links are in `next` (knk-web-api `6094276`, knk-plugin
+   `3e04ba8f`, knk-web-app `eff6ed9`, knk-workspace `8328c9da`). Docs follow-up: #766, docs session
+   `session_01R1w2UuMzfZ1Z1FB7pV7iXR`; its player and admin guide items gate a deploy to knk-alpha. #732 and its
+   sub-issues stay open (`status:in-review`) until you promote `next`.
+
 ## 2. Summary
 
 | Link | Issue | Status | Branch heads | PR | CI | How started |
@@ -54,7 +62,7 @@ on `next` (Decided 2026-11-18, O01–O33, O08 superseded by O31); smoke guide
 | L6 Staff details | #740 | Merged into `next` 2026-11-18 (knk-web-app `01ad4d9a`, knk-workspace `a130f2d6`); waiting for the developer's smoke test § 6 | `claude/overview-map-staff-details`: knk-web-app `1443cf5`, knk-workspace `fe64919d` (from `next`) | [knk-web-app#51](https://github.com/PandiO/knk-web-app/pull/51), [knk-workspace#755](https://github.com/PandiO/knk-workspace/pull/755) | Web app green (build-and-test, e2e); Codex at its limit | subagent of the coordinator (2026-11-18; the create_session attempt session_01R1w2UuaEs6VbL7BVnR7ZTJ was refused the knk-web-app attach, decision 10) |
 | L7 Gate commands backend | #741 | Merged into `next` 2026-11-18 (knk-web-api `0308377d`, knk-plugin `02aa110e`, knk-workspace `b7820e99`); waiting for the developer's smoke test § 7 | `claude/overview-map-gate-commands`: knk-web-api `16e4157`, knk-plugin `1f8bb3c7`, knk-workspace `8368b901` (from `next`) | [knk-web-api#48](https://github.com/PandiO/knk-web-api/pull/48), [knk-plugin#79](https://github.com/PandiO/knk-plugin/pull/79), [knk-workspace#758](https://github.com/PandiO/knk-workspace/pull/758) | API green (build-and-test, mysql-tests, fresh-database); plugin build and paper-boot green | create_session session_01R1w2UxDt6K1RcnDPPagNAN (2026-11-18) |
 | L8 Gate command buttons | #742 | Merged into `next` 2026-11-18 (knk-web-app `de43f6be`, knk-workspace `bf28138d`); waiting for the developer's smoke test § 8 | `claude/overview-map-gate-buttons`: knk-web-app `05a30ea`, knk-workspace `9fad9531` (from `next`) | [knk-web-app#53](https://github.com/PandiO/knk-web-app/pull/53), [knk-workspace#759](https://github.com/PandiO/knk-workspace/pull/759) | Web app build-and-test green on `05a30ea`, e2e running at report time (local full run 176 passed); knk-workspace no CI; Codex at its limit | create_session session_01R1w2UvQqqmQ9NwMTQbq3Cb (2026-11-18) |
-| L9 Player context panel | #743 | In review (PRs into `next`, not merged) | `claude/overview-map-moderation`: knk-web-app `1ff5418`, knk-workspace `553c751b` (from `next`) | [knk-web-app#55](https://github.com/PandiO/knk-web-app/pull/55), [knk-workspace#765](https://github.com/PandiO/knk-workspace/pull/765) | Web app push runs green on `1ff5418` (build-and-test, e2e), pull_request runs running at report time (local full run: Jest 2754, e2e 191 passed); knk-workspace no CI; Codex at its limit | create_session session_01R1w2Uw4EdZTG53RQ7gnyQ3 (2026-11-18) |
+| L9 Player context panel | #743 | Merged into `next` 2026-11-18 (knk-web-app `eff6ed98`, knk-workspace `8328c9da`); waiting for the developer's smoke test § 9 | `claude/overview-map-moderation`: knk-web-app `1ff5418`, knk-workspace `553c751b` (from `next`) | [knk-web-app#55](https://github.com/PandiO/knk-web-app/pull/55), [knk-workspace#765](https://github.com/PandiO/knk-workspace/pull/765) | Web app push runs green on `1ff5418` (build-and-test, e2e), pull_request runs running at report time (local full run: Jest 2754, e2e 191 passed); knk-workspace no CI; Codex at its limit | create_session session_01R1w2Uw4EdZTG53RQ7gnyQ3 (2026-11-18) |
 
 ## 3. Coordinator decisions
 
@@ -201,6 +209,15 @@ on `next` (Decided 2026-11-18, O01–O33, O08 superseded by O31); smoke guide
     (L5 merged) being open and knk-web-app free. Route `create_session` with the subagent fallback (decision 10).
     Alternatives: (a) wait for the `/ownermode` case: the developer explicitly cleared the merge; the case is listed
     in § 1 item 4.
+
+21. **L9 check and merge; end of the chain (2026-11-18).** Chosen: merge knk-web-app#55 (`1ff5418`, CI green on push
+    and PR runs, Jest 2741 → 2754, Playwright 191 passed incl. 5 new) and knk-workspace#765 into `next` with merge
+    commits; every skill § 6 check held (scope: map code plus one `getByUuid` client method and its DTO; existing
+    moderation hooks unchanged; Codex at its limit). Then the "At merge" steps (skill § 7.9): documentation sub-issue
+    #766 with the remaining docs impact items and a docs session started with the docs-session starter
+    (`session_01R1w2UuMzfZ1Z1FB7pV7iXR`). The tracker row stays "In review" until the developer accepts.
+    Alternatives: (a) write the remaining docs in this coordinator: the global instructions keep them in a separate
+    session so merges stay fast.
 
 ## 4. Link blocks
 
