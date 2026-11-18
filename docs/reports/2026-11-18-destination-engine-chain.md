@@ -14,7 +14,7 @@
 
 ## 1. Waiting for the developer
 
-1. Nothing yet. Later: the live test of smoke § 3 and § 4 with `navigation.destination-engine: true` once L3 and L4
+1. Nothing yet. L1–L3 are in `next`; L3's flag `navigation.destination-engine` stays false until your live test. Later: the live test of smoke § 3 and § 4 with `navigation.destination-engine: true` once L3 and L4
    are in `next` (gate of L5), and the timing of L6 (arena duels, asked on #25 before it starts).
 
 ## 2. Summary
@@ -23,7 +23,7 @@
 |---|---|---|---|---|---|---|
 | L1 P1 pure engine in knk-core | #96 | Merged into next (2026-11-18) | `claude/navigation-destination-engine`: knk-plugin `64ca8815`, knk-workspace `7eb86cc3` | [knk-plugin#78](https://github.com/PandiO/knk-plugin/pull/78) (merge `1105ec15`), [knk-workspace#754](https://github.com/PandiO/knk-workspace/pull/754) (merge `732ba191`) | build + paper-boot green on the PR; Codex skipped (usage limit) | create_session session_01R1w2Uw3gPf2REJMYZEGE6a |
 | L2 P2 model, snapshot, domain search Location | #103 | Merged into next (2026-11-18) | `claude/navigation-destination-engine`: knk-web-api `a49fba23`, knk-plugin `61fe656a`, knk-workspace `30894797` | [knk-web-api#49](https://github.com/PandiO/knk-web-api/pull/49) (merge `6094276d`), [knk-plugin#80](https://github.com/PandiO/knk-plugin/pull/80) (merge `2f1c783e`), [knk-workspace#760](https://github.com/PandiO/knk-workspace/pull/760) (merge `560dd839`) | API build-and-test, mysql-tests, fresh-database green; plugin build + paper-boot green; Codex skipped (usage limit) | subagent of the coordinator (two repos besides knk-workspace, SKILL § 4.1.4 item 2) |
-| L3 P3 switch-over behind the flag | #69 | Done, in review (2026-11-18) | `claude/navigation-destination-engine`: knk-plugin `03ec14ce`, knk-workspace `9dda7c92` | [knk-plugin#81](https://github.com/PandiO/knk-plugin/pull/81), [knk-workspace#761](https://github.com/PandiO/knk-workspace/pull/761) | build + paper-boot green on the PR; Codex skipped (usage limit) | create_session session_01R1w2UvmCT8TsW9NNue38Vg |
+| L3 P3 switch-over behind the flag | #69 | Merged into next (2026-11-18) | `claude/navigation-destination-engine`: knk-plugin `03ec14ce`, knk-workspace `9dda7c92` | [knk-plugin#81](https://github.com/PandiO/knk-plugin/pull/81) (merge `073fa4cf`), [knk-workspace#761](https://github.com/PandiO/knk-workspace/pull/761) (merge `d484361e`) | build + paper-boot green on the PR; Codex skipped (usage limit) | create_session session_01R1w2UvmCT8TsW9NNue38Vg |
 | L4 P4 hard blocks as scopes, live re-validation | #62 | Not started | — | — | — | — |
 | L5 phase 4b removal of old paths and the flag | #747 | Not started | — | — | — | — |
 | L6 P5 arena duels provider and scope | #55 | Not started | — | — | — | — |
@@ -89,6 +89,20 @@
     `navigation.destination-engine: false`, and the switch-over keeps out of the off-road guidance-v2 sections of
     `NavigationService`. Alternatives: (a) a subagent — not needed for one repository; (b) wait for `next` CI on the L2
     merge before starting — starting is not a merge; the CI is checked before L3 merges.
+12. **L3 check (2026-11-18).** Chosen: merge knk-plugin#81 and knk-workspace#761 into `next` after the § 6 checks:
+    heads match, 0 behind `next`, no conflicts, PR CI `build` and `paper-boot` green, `next` green before the merge,
+    tier:3 behind `navigation.destination-engine: false`, no file deleted, the only removed lines in main code are the
+    `NavigationService.navigate` eligibility block and tail moved unchanged into `refusedByEligibility`/`begin` and
+    five `KnKPlugin` lines replaced by `RoadAccessAnswers` (same catalogue calls with the flag off); the off-road
+    guidance-v2 sections untouched; 13 existing test verifications only disambiguated (`any(Destination.class)`);
+    knk-core 3 290 → 3 316, knk-paper 2 981 → 3 036, 0 failures; 15 decisions logged; Codex at its usage limit.
+    New node `knk.navigate.any` (`default: false`, E12). Out of scope, for the developer: `/knk road` status showing
+    the model's age, and a knk-web-api rank seed for `knk.navigate.any` (listed on #25). Alternatives: (a) send back
+    for a plugin scenario with the flag on — CI's server runs with the flag off and the link's MockBukkit tests run
+    the real engine; the live form is smoke § 3, the developer's gate before L5.
+13. **L4 vs off-road L8 (2026-11-18).** Proposed to the off-road coordinator: start L4 now, its L8 (#708) after L4 is
+    merged, during the wait for the developer's live test before L5; or it takes the window first. Waiting ~30 minutes
+    for its answer. Alternatives: (a) L8 first — delays L4 and so the developer's live test of § 3 and § 4.
 
 ## 4. Link blocks
 
