@@ -15,7 +15,12 @@ on `next` (Decided 2026-11-18, O01–O33, O08 superseded by O31); smoke guide
 
 ## 1. Waiting for the developer
 
-1. Nothing yet. Known gates ahead (not blockers now):
+1. **L1 (#735) smoke test (tier:3):** L1 is in `next` (knk-web-api `562f504`, knk-plugin `7f4bdd3a`). Deploy the API
+   from `next` and apply the migration `AddMapRegionOutlines` (additive); deploy the plugin from `next`, paste
+   `map:` / `reporting:` / `enabled: true` into `config.yml` (needs `realtime.enabled: true`) and follow smoke guide § 1
+   (manual parts of steps 1–7). Optional: `@codex review` on knk-web-api#45, knk-plugin#76, knk-workspace#749 (Codex
+   was at its usage limit).
+2. Known gates ahead (not blockers now):
    1. L3 (#737): the BlueMap scripting spike (spec § 9.6); if BlueMap's web app does not accept runtime marker sets
       and click listeners from a script, L3 stops and you decide the fallback.
    2. L3: the deploy notes (move the `bluemap-test` container into the `knk-alpha` Compose stack, Nginx `/bluemap/`)
@@ -27,8 +32,8 @@ on `next` (Decided 2026-11-18, O01–O33, O08 superseded by O31); smoke guide
 
 | Link | Issue | Status | Branch heads | PR | CI | How started |
 |---|---|---|---|---|---|---|
-| L1 Region outlines | #735 | In review (PRs open, not merged) | `claude/overview-map-outlines`: knk-web-api `253a6ee`, knk-plugin `cf3a975a`, knk-workspace `e6e815dd` (from `next`) | [knk-web-api#45](https://github.com/PandiO/knk-web-api/pull/45), [knk-plugin#76](https://github.com/PandiO/knk-plugin/pull/76), [knk-workspace#749](https://github.com/PandiO/knk-workspace/pull/749) | API green; plugin build and paper-boot green | create_session session_01R1w2UuqJyStWv2zia5FTQg (2026-11-18, decision 3) |
-| L2 Public map API | #736 | Not started (gate: L1 merged into `next`) | – | – | – | – |
+| L1 Region outlines | #735 | Merged into `next` 2026-11-18 (knk-web-api `562f504`, knk-plugin `7f4bdd3a`, knk-workspace `ac4b620f`); waiting for the developer's smoke test § 1 | `claude/overview-map-outlines`: knk-web-api `253a6ee`, knk-plugin `cf3a975a`, knk-workspace `e6e815dd` (from `next`) | [knk-web-api#45](https://github.com/PandiO/knk-web-api/pull/45), [knk-plugin#76](https://github.com/PandiO/knk-plugin/pull/76), [knk-workspace#749](https://github.com/PandiO/knk-workspace/pull/749) | API green; plugin build and paper-boot green | create_session session_01R1w2UuqJyStWv2zia5FTQg (2026-11-18, decision 3) |
+| L2 Public map API | #736 | Running | `claude/overview-map-public-api`: knk-web-api, knk-workspace (from `next`) | – | – | create_session session_01R1w2UvvpPXaMVExy9eZZpL (2026-11-18) |
 | L3 `/map` page | #737 | Not started (gate: L2 merged into `next`) | – | – | – | – |
 | L4 Live players backend | #738 | Not started (gate: L2 merged into `next`) | – | – | – | – |
 | L5 Live players layer | #739 | Not started (gate: L3 and L4 merged, developer's L4 check) | – | – | – | – |
@@ -62,6 +67,16 @@ on `next` (Decided 2026-11-18, O01–O33, O08 superseded by O31); smoke guide
    from the start, which skill § 4.1.4.2 suggests for links needing two repositories besides knk-workspace: the
    developer's own instruction takes precedence (skill § 1.1); (b) a session without Auto mode: it would ask the
    developer before other tool calls.
+
+4. **L1 check and merge (2026-11-18).** Chosen: merge knk-web-api#45, knk-plugin#76 and knk-workspace#749 into `next`
+   with merge commits (API first, the schema), because every check in skill § 6 held: heads matched, branches
+   contained `next`, scope limited to the sub-issue (new files plus additive hooks), CI green on both code PRs
+   (API build-and-test, mysql-tests, fresh-database; plugin build, paper-boot), tests above baseline, flag off by
+   default, decisions logged, smoke § 1 tagged, #735 `status:in-review`. Codex was at its usage limit on all three PRs
+   (noted on each; developer decision 2026-11-14). Alternatives: (a) wait for a Codex review after the limit resets:
+   the rule says merge without it; (b) merge the API PR alone first: no benefit, the plugin side is off by default.
+5. **Route for L2.** Chosen: `create_session` (one repository besides knk-workspace), as for L1, whose attach
+   worked. Alternatives: (a) a subagent: only the fallback.
 
 ## 4. Link blocks
 
