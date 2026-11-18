@@ -160,6 +160,12 @@ on `next` (Decided 2026-11-17).
     Shared rule from that charter § 2.2: at most one knk-plugin link touching navigation code at a time **across both
     chains**; before a plugin link starts here, check the board and the engine chain for a running link and agree the
     order with its coordinator. L8 (#708) waits for engine L1–L3 in `next` and must not run beside engine L3, L4 or L5.
+22. **Plugin slot order with the destination engine chain (2026-11-18 11:39).** Its coordinator
+    (`session_01R1w2UvZSm3y5hAXB8VfYuv`) started engine L1 (#96, `core/navigation/` destination classes,
+    `ArchitectureGuardTest`). Chosen: engine L1 first; no off-road plugin navigation link starts until it is merged;
+    when the developer's answers open L10 step 2 or L5, this coordinator asks the engine coordinator for the next free
+    window (it offered to hold one). Alternative: claim the slot now for L10 step 2 or L5; rejected, both still wait for
+    the developer, so the slot would sit idle.
 
 ## 4. Link blocks
 
