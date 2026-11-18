@@ -21,7 +21,13 @@ on `next` (Decided 2026-11-17).
 3. **L3 (#710) live test (tier:3):** L3 is in `next` (plugin `54dfe8d7`). Deploy with `navigation.guidance-v2: false`
    and under `navigation.walk:` `clearance-cost: 5`, `wall-clearance: 0.8`, `curve: true`; then set
    `guidance-v2: true`, restart and follow smoke test § 8 (manual steps 1, 3 and 6: the stair house, a keep corner and
-   a 1-wide door, `/knk road status` with the tick time). It can be combined with L4's test once L4 is in `next`.
+   a 1-wide door, `/knk road status` with the tick time).
+4. **L4 (#711) live test (tier:3):** L4 is in `next` (plugin `580aafa1`). Add under `navigation:` `trail-leg-spacing: 3.0`
+   and `cursor-jump: 12`; with `guidance-v2: true` follow smoke test § 9 (particles stay put on the stair house and
+   in the keep; on a road walk 40 forward and 20 back; walk back before a passed turn; step 15 blocks off the road;
+   walk back along a walk leg, then 6+ blocks off it; flag off again). Combine with L3's § 8 in one session.
+5. **L10 (#712) step 1, coming:** you view the plaza lines on Cinix and Brink with a staff preview before the trail
+   uses them (O16). L10 will post the steps on #712.
 2. **Decision to confirm (from the NPC chain's comment on #698, 2026-11-17):** NPC use of the long walks (walk links
    and clusters, O32) moves from "after v1" into v1, as the phase after phase 3. It has no sub-issue or link in this
    chain yet; the spec's § 14 and § 15 need the change in a docs PR. Proposal: a design follow-up (sub-issue of #698)
@@ -34,13 +40,13 @@ on `next` (Decided 2026-11-17).
 | L1 Phase 0 measurements | #703 | Merged into next (2026-11-17); waits for the developer's live measurements and the filled report | knk-plugin `claude/offroad-measurements` `71a43bc1`; knk-workspace `claude/offroad-measurements` `2337d3a4` | [knk-plugin#68](https://github.com/PandiO/knk-plugin/pull/68) → `next` `04506d8c`, [#717](https://github.com/PandiO/knk-workspace/pull/717) → `next` `a6240f5d` | green (build, paper-boot on `71a43bc1`) | create_session `session_01R1w2Uub8CZ7NuvatVUifP7` (2026-11-17) |
 | L2 Phase 1 shared shaping package | #704 | Merged into next (2026-11-17) | knk-plugin `claude/offroad-shape-package` `0d0cff84`; knk-workspace `claude/offroad-shape-package` `ef17bcc3` | [knk-plugin#69](https://github.com/PandiO/knk-plugin/pull/69) → `next` `c45c16bb`, [#718](https://github.com/PandiO/knk-workspace/pull/718) → `next` `d8ebd9f4` | green (build, paper-boot) | create_session `session_01R1w2UwTnENVNKzfaXudBUh` (2026-11-17) |
 | L3 Phase 6.1 trail corners | #710 | Merged into next (2026-11-18); waits for the developer's live test (tier:3, smoke § 8) | knk-plugin `claude/offroad-trail-corners` `9dd3ee5f`; knk-workspace `claude/offroad-trail-corners` `daffbc1d` | [knk-plugin#70](https://github.com/PandiO/knk-plugin/pull/70) → `next` `54dfe8d7`, [#719](https://github.com/PandiO/knk-workspace/pull/719) → `next` `d07deabf` | green (build; paper-boot on re-run, #720) | create_session `session_01R1w2Uv9tRTPyjZsFJNWGec` (2026-11-17) |
-| L4 Phase 6.2 anchored particles, winding back | #711 | In review (2026-11-18); waits for the coordinator's merge, then the developer's live test (tier:3, smoke § 9) | knk-plugin `claude/offroad-trail-cursor` `1925cf73`; knk-workspace `claude/offroad-trail-cursor` `cb7b55f8` | [knk-plugin#72](https://github.com/PandiO/knk-plugin/pull/72), [#722](https://github.com/PandiO/knk-workspace/pull/722) | green (build, paper-boot on `1925cf73`) | create_session `session_01R1w2UwkAiptAq4cPVFVBTS` (2026-11-18) |
-| L5 Phase 2 walk links | #705 | Not started (gate: L1 done, L4 in `next`) | `claude/offroad-walk-links` | — | — | — |
+| L4 Phase 6.2 anchored particles, winding back | #711 | Merged into next (2026-11-18); waits for the developer's live test (tier:3, smoke § 9) | knk-plugin `claude/offroad-trail-cursor` `1925cf73`; knk-workspace `claude/offroad-trail-cursor` `cb7b55f8` | [knk-plugin#72](https://github.com/PandiO/knk-plugin/pull/72) → `next` `580aafa1`, [#722](https://github.com/PandiO/knk-workspace/pull/722) → `next` `ff8cf291` | green (build, paper-boot) | create_session `session_01R1w2UwkAiptAq4cPVFVBTS` (2026-11-18) |
+| L5 Phase 2 walk links | #705 | Not started (L4 in `next`; waits for L1 done: the developer's filled measurements report) | `claude/offroad-walk-links` | — | — | — |
 | L6 Phase 3 hierarchical walk search | #706 | Not started (gate: L5 in `next`; O32 question first if L1 says option A fits) | `claude/offroad-hierarchical` | — | — | — |
 | L7 Phase 4 route modes | #707 | Not started (gate: L5 in `next`) | `claude/offroad-route-modes` | — | — | — |
 | L8 Phase 5.1 landmark entity | #708 | Waiting (destination engine #96, #103, #69 not in `next`, O27) | `claude/offroad-landmarks` | — | — | — |
 | L9 Phase 5.2 landmark weights | #709 | Not started (gate: L7 and L8 in `next`) | `claude/offroad-landmark-weights` | — | — | — |
-| L10 Phase 7 plaza lines | #712 | Not started (gate: L3 and L4 in `next`) | `claude/offroad-plaza-lines` | — | — | — |
+| L10 Phase 7 plaza lines | #712 | Running, step 1 (line + staff preview; the developer views Cinix and Brink before step 2, O16); started 2026-11-18 01:36 from plugin `next` `580aafa1` | `claude/offroad-plaza-lines` | — | — | create_session `session_01R1w2Ussca79jpGCPqzcTf8` (2026-11-18) |
 
 ## 3. Coordinator decisions
 
@@ -108,6 +114,17 @@ on `next` (Decided 2026-11-17).
     Chosen: 3.0, because O20 is a recorded decision and § 7.2.2 states the rule; L4 corrects § 7.6 in its docs PR.
     Alternative: ask the developer; rejected, the decision log already settles it and the value is a config key.
 13. **L4 started (2026-11-18 00:43).** Gate "L3 merged into `next`" checked (merge commit `54dfe8d7`).
+14. **L4 merged into `next` (2026-11-18 01:36).** § 6 checks held: heads matched, branch contained `next`, `build` and
+    `paper-boot` (52 scenarios) green on `1925cf73`, `next` CI green after L3, flag off with transcript tests (A16),
+    § 7.6 corrected to 3.0, public signatures stable for C1, no Codex findings (usage limit).
+15. **Next link after L4: L10, not L5.** Gates checked 2026-11-18 01:36: L5 needs "L1 done", and L1's report is not
+    filled (the developer's live run); L6, L7 and L9 hang on L5; L8 on the destination engine (#96, #103, #69 not in
+    `next`); L10's gate (L3 and L4 in `next`) is open. Chosen: start L10 in two steps: step 1 builds the plaza line
+    and a staff preview with the flag off and ends with the developer's viewing on Cinix and Brink (O16, charter
+    § 2.4); step 2 (trail use, A22–A25) only after the developer's OK, sent to the same session. Alternatives: (a)
+    wait for L1's report and start L5; rejected, it idles the chain on live work; (b) build steps 1 and 2 at once;
+    rejected, O16 says the developer sees the lines before the trail uses them. L10 will hold the one plugin slot
+    while it waits; if L1's report arrives first, L5 waits for L10 (one plugin navigation link at a time).
 
 ## 4. Link blocks
 
