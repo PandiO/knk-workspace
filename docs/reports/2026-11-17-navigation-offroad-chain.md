@@ -1,6 +1,6 @@
 # Off-road navigation and landmarks chain — progress report
 
-**Status:** Running, waiting for the developer (2026-11-18) · **Last updated:** 2026-11-18 (L5 block); 2026-11-18 (L8 step A block)
+**Status:** Running, waiting for the developer (2026-11-18) · **Last updated:** 2026-11-18 (L9 block); 2026-11-18 (L5 block); 2026-11-18 (L8 step A block)
 
 **Issue:** [PandiO/knk-workspace#698](https://github.com/PandiO/knk-workspace/issues/698), links
 [#703](https://github.com/PandiO/knk-workspace/issues/703) (L1), [#704](https://github.com/PandiO/knk-workspace/issues/704) (L2),
@@ -32,7 +32,7 @@ on `next` (Decided 2026-11-17).
 | L6 Phase 3 hierarchical walk search | #706 | Not started (L5 in `next`; waits for the developer's O32 answer: option A fits the keep) | `claude/offroad-hierarchical` | — | — | — |
 | L7 Phase 4 route modes | #707 | Merged into next (2026-11-18); waits for the developer's smoke § 5 (steps 2, 3, 9) and the node grants | knk-plugin `claude/offroad-route-modes` `d374b016`; knk-workspace `ed01ab75` | [knk-plugin#86](https://github.com/PandiO/knk-plugin/pull/86) → `a94332d9`, [#775](https://github.com/PandiO/knk-workspace/pull/775) → `dd09f782` | green (build, paper-boot) | create_session `session_01R1w2UveW7t8KTUAYeD5kAa` (2026-11-18) |
 | L8 Phase 5.1 landmark entity | #708 | Merged into next (2026-11-18); waits for the developer's live test (tier:3, smoke § 6) | knk-web-api `d331bdf4`, knk-web-app `b50c4134`, knk-plugin `be9e3a74`, knk-workspace `eb3321a9` (`claude/offroad-landmarks`) | [knk-web-api#50](https://github.com/PandiO/knk-web-api/pull/50) → `935fe8cc`, [knk-web-app#54](https://github.com/PandiO/knk-web-app/pull/54) → `3432e6ef`, [knk-plugin#83](https://github.com/PandiO/knk-plugin/pull/83) → `5fd81466`, [#763](https://github.com/PandiO/knk-workspace/pull/763) → `7722cc76` | green (all jobs) | subagent of the coordinator (three component repos; resumed once after the usage limit) |
-| L9 Phase 5.2 landmark weights | #709 | Running (started 2026-11-18 22:07 from plugin `next` `a94332d9`) | `claude/offroad-landmark-weights` | — | — | create_session `session_01R1w2Ut1P9c2jGxRYC3weCJ` (2026-11-18) |
+| L9 Phase 5.2 landmark weights | #709 | In review (2026-11-18); waits for the coordinator's checks and merge, then `preference-max` in config.yml and the developer's live test (smoke § 7 steps 1 to 3) | knk-plugin `claude/offroad-landmark-weights` `7c04ed16`; knk-workspace `claude/offroad-landmark-weights` `9d0c926f` | [knk-plugin#87](https://github.com/PandiO/knk-plugin/pull/87), [#776](https://github.com/PandiO/knk-workspace/pull/776) → `next` | build green (push run); paper-boot see the PR | create_session `session_01R1w2Ut1P9c2jGxRYC3weCJ` (2026-11-18) |
 | L10 Phase 7 plaza lines | #712 | Merged into next (step 1 and step 2, 2026-11-18); waits for the developer's smoke § 10.2 | knk-plugin `claude/offroad-plaza-lines` `28ad18c5`; knk-workspace `d7e4e834` | step 1: [knk-plugin#73](https://github.com/PandiO/knk-plugin/pull/73) → `ce0f65ec`, [#723](https://github.com/PandiO/knk-workspace/pull/723) → `c7f61e9e`; step 2: [knk-plugin#84](https://github.com/PandiO/knk-plugin/pull/84) → `4daa0c84`, [#769](https://github.com/PandiO/knk-workspace/pull/769) → `2e0c04d4` | green (build, paper-boot) | create_session `session_01R1w2Ussca79jpGCPqzcTf8` (2026-11-18) |
 
 ## 3. Coordinator decisions
@@ -989,3 +989,43 @@ _(Each link appends its block here when it finishes.)_
 9. **Notes for later links.**
     1. L9 (#709): `RouteMode.usesPreferenceWeights()` is the seam; the mode reaches the walk request in `NavigationService.forMode` (walk thread), where a weight lookup can wrap the request. `RouteMode.PREFERRED` and `EFFICIENT` share the walk profile today, so `forMode` is the place where they part. Keep the default transcripts green: with no preference landmark a `preferred` walk must stay today's.
     2. #747 (engine L5): `navigate(Player, Destination, RouteMode)` goes with `navigate(Player, Destination)`; the command's old path calls it in one place.
+
+### 4.10 L9 — Phase 5.2: landmark preference weights, landmark nodes in the walk planner (#709)
+
+1. **Scope done.** Everything is behind `navigation.landmarks` (off by default). Tier 2, no migration.
+    1. knk-core (Bukkit-free, DESIGN § 11):
+        1. `roads/walk/WalkCellWeights` (port: a multiplier per cell, the heuristic's scale, `NONE`).
+        2. `WalkRequest.weights` (a new last component, default `NONE`, old constructor kept), `withWeights`, `reachBox()` (the box of the length cap's ellipsoid).
+        3. `WalkSearch`: the cost of entering a cell × its multiplier; the heuristic × `minMultiplier()`; with `NONE` the loop is today's.
+        4. `landmarks/LandmarkWeights`: `areas(...)` (main thread, Region extents through a shape lookup), `within(box)` (walk thread), product held between `1 / preference-max` and `preference-max`.
+        5. `landmarks/LandmarkLinkNodes` and `WalkLinkCandidates(snapshot, range, ratio, landmarkNodes, connections)`: landmark nodes as link ends, blocked stored pairs dropped (`LandmarkConnections.INFERRED` in v1, O05).
+        6. The model's `Landmark.preference` (+ `weighted()`, the 5.1 constructor kept), `KnkLandmark.toModel()` carries it, snapshot `LandmarkFile.preference` (schema 1, a missing field reads 1.0).
+    2. knk-paper:
+        1. `NavigationService.Landmarks` port and `setLandmarks`, `walkWeights` (main thread, `preferred` only), `forMode(request, mode, weights)` (walk thread), `candidatesFor` with landmark nodes.
+        2. `navigation/engine/ModelLandmarks` (model landmarks, WorldGuard shapes, link nodes kept per snapshot and landmark list).
+        3. `LandmarksConfig.preferenceMax`, `config.yml` `navigation.preference-max: 4.0`, the `KnKPlugin` wiring (only with the flag on).
+    3. knk-workspace: smoke test § 7 (8 steps, 7 automated, 3 in part), plugin configuration § 4.15 and § 2.1, CHANGELOG (Unreleased), DESIGN § 5.4.8.
+    4. Kept stable: the public signatures of `WalkLegPreparer`, `WalkSearch`/`WalkPathfinder`, `MovementProfile`, the shape package (additions only); `RoadPlanner`'s port and `planRoadFor` untouched; `core/navigation/destinations` and the engine handle untouched; nothing on the old `/navigate`-only path.
+2. **Commits and heads.** knk-plugin `claude/offroad-landmark-weights` at `7c04ed16` (1 commit, base `next` `a94332d9`); knk-workspace `claude/offroad-landmark-weights` at `9d0c926f` (1 commit, base `next`).
+3. **PRs.** [PandiO/knk-plugin#87](https://github.com/PandiO/knk-plugin/pull/87) (`Closes #709`), [PandiO/knk-workspace#776](https://github.com/PandiO/knk-workspace/pull/776) (`Part of`), base `next`. Not merged.
+4. **Tests, baseline → result.**
+    1. knk-plugin `./gradlew build -x deployToDevServer`: baseline on `next` `a94332d9` knk-core 3 399, knk-api-client 358 (2 skipped), knk-paper 3 126 (18 skipped), all green; result knk-core 3 423 (+24), knk-api-client 358 (one assertion now expects the preference in the model), knk-paper 3 137 (+11), 0 failures. CI on `7c04ed16`: see the PR (build green on the push run when this block was written).
+    2. New: knk-core `LandmarkWeightsTest`, `WalkPreferenceWeightsTest` (A10 avoid/attract, admissibility against a Dijkstra, no weights = today cell by cell), `LandmarkLinkNodesTest`, `WalkLinkLandmarkNodesTest`, two `NavigationModelSnapshotTest`; knk-paper `NavigationServiceLandmarkWeightsTest` (7), `ModelLandmarksTest` (3), one `LandmarksConfigTest`. With the multiplier or the heuristic scale removed, `WalkPreferenceWeightsTest` fails.
+    3. L7's golden transcripts and L3/L4/L5/L10's flag-off identity tests unchanged and green. Known reds: none.
+5. **Decisions (DESIGN § 4.3).**
+    1. *What the multiplier multiplies.* Chosen: the whole cost of entering a cell (move, water, door, wall or clearance), not the access verdict. Alternative: (a) the move only; a door in a weighted hall would cost as outside.
+    2. *Lower bound of overlaps.* Chosen: `1 / preference-max` (0.25). Alternative: (a) none; 0.25 × 0.25 = 0.0625 weakens the heuristic for little gain.
+    3. *Heuristic scale.* Chosen: the product of the weights below 1.0 near the leg, at least the floor, at most 1.0. Alternatives: (a) the spec's "above 1.0 when all weights are above 1.0": cells outside every area cost 1.0, so this is admissible only if the extents covered the search area, never known; (b) the smallest single weight: not a bound where weights below 1.0 overlap.
+    4. *Walk links.* Chosen: no weights on link searches; a cached link is shared across modes (L7), a weighted one would leak into `efficient`. Alternative: (a) weighted searches in `preferred` with a cache per mode: twice the cache for a rare case.
+    5. *A landmark not offered as a destination.* Chosen: still weights its area (the weight is about the place). Alternative: (a) ignore it: ties two staff settings together.
+    6. *"On the road".* Chosen: the nearest road node within 4 across and 3 up or down; never a split node (routing time only) or a tombstone; a boundary node takes part when a landmark stands on it. Alternative: (a) every node inside the extent: a plaza of link ends.
+    7. *Per-request lookup.* Chosen: shapes resolved on the main thread per walk request (a few landmarks, `WorldGuardRegionShapes`), cut to the reach box on the walk thread; per cell a box test per kept area. Alternative: (a) a per-request cell grid: memory for every capture where a few box tests suffice.
+    8. *No paper-boot scenario.* Chosen: core search tests and MockBukkit service tests (cheap, deterministic); the keep is the developer's live step. Alternative: (a) a scenario with a fixed model and a built hall: not cheap with the model refresher in the way.
+6. **Out of scope, noted.** None filed. Landmark nodes in the cluster graph (§ 5.3.3) are L6's (#706, not built): the seam is `LandmarkLinkNodes` plus `NavigationService.Landmarks`. The trail's shaping (phase 6.1) can cut a corner of a weighted area; the search path itself respects it.
+7. **Blockers.** None. Codex reached its code-review usage limit on both PRs (its comments of 2026-11-18 22:22 UTC), so the link finished without its review (developer decision 2026-11-14); said on both PRs.
+8. **At merge / what the developer must do.**
+    1. Under `navigation:` in the plugin's `config.yml`, next to `landmarks:`, add `preference-max: 4.0` and restart (no effect while `landmarks` is false).
+    2. Live test (about 15 minutes): smoke test § 7 steps 1 to 3 in the keep (two corridors, the shorter one in a region landmark with `Preference` 2.0 set in the web app), with `landmarks: true` and `destination-engine: true`.
+9. **Notes for later links.**
+    1. L6 (#706): landmark nodes join the abstract graph per § 5.3.3; `LandmarkLinkNodes` finds road nodes only, a cluster node needs the landmark's pin (`ModelLandmarks` has the model). Hierarchical refinement searches should get the request's `weights` (`WalkRequest.withWeights` keeps them through the `with*` methods).
+    2. #747 (engine L5): nothing of L9 is on the old path.
