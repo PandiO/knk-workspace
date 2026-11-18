@@ -4,6 +4,40 @@ This is a human-readable record of capabilities merged into the V3 default branc
 
 ## Unreleased — on feature branches, not merged
 
+- **Overview map: staff details in the map panel** ([PandiO/knk-workspace#740](https://github.com/PandiO/knk-workspace/issues/740),
+  link L6 of the overview map chain, [#732](https://github.com/PandiO/knk-workspace/issues/732)). knk-web-app and
+  knk-workspace branches `claude/overview-map-staff-details` (PRs into `next`). No flag: gated by the node
+  `knk.admin.world`, and shown only where the map is on (`Map:Enabled`).
+  1. World staff who click a town, district or structure on the map see a "Details" section under the public part:
+     the type's default display configuration in a compact form (no header, lists collapsed with their count,
+     related records as links, no buttons or inline edits), with "Open full page" to the record's detail page. A
+     gate shows its gate display (`GateStructure`).
+  2. Everyone else sees the panel as before; their browser asks for no display configuration.
+  3. The detail pages elsewhere in the web app are unchanged (the compact form is a new option of the same
+     renderer).
+  4. Admin steps: none. Steps:
+     [overview map smoke test § 6](guides/overview-map-smoke-test.md#6-phase-5-staff-details-740-tier2).
+
+- **Overview map: live players backend** ([PandiO/knk-workspace#738](https://github.com/PandiO/knk-workspace/issues/738),
+  link L4 of the overview map chain, [#732](https://github.com/PandiO/knk-workspace/issues/732)). knk-plugin,
+  knk-web-api and knk-workspace branches `claude/overview-map-players-api` (PRs into `next`). Behind the new API setting
+  `Map:LivePlayers:Enabled` and the plugin's existing `map.reporting.enabled` (both off by default: nothing is sent,
+  kept or served). Nothing changes for players yet: the map page's player layer (phase 4b) reads this.
+  1. The plugin reports its online players every `map.reporting.interval-ticks` (new key, default 40 = 2 s): world,
+     position, facing, AFK, active mode and running minigame match, over the game hub.
+  2. New anonymous read route `GET api/Map/players` (map rate limit): the live players with their name label as in
+     the in-game chat line, and one pin per running siege match, "[Siege] 12 players". Players in staff or owner mode
+     or in a running match never reach anonymous or plain logged-in viewers, not even in the response; a viewer with
+     `knk.mode.staff` or `knk.mode.owner` sees them with a mode or minigame tag. A player who quits disappears at once,
+     a server that stops reporting within three intervals.
+  3. Admin steps: none to keep it off. To turn it on, set `Map__LivePlayers__Enabled=true` (with `Map__Enabled=true`)
+     in the API's environment file and `map.reporting.enabled: true` in the plugin's `config.yml` (needs
+     `realtime.enabled: true`); `Map__LivePlayers__PollIntervalMs` (2000), `Map__LivePlayers__LabelCacheSeconds` (60)
+     and `map.reporting.interval-ticks` (40) have defaults. No migration. Steps:
+     [overview map smoke test § 4](guides/overview-map-smoke-test.md#4-phase-4a-live-players-backend-738-tier3),
+     [production installation § 4.3](guides/production-installation.md#43-api-configuration-file--etcknkapienv),
+     [plugin configuration § 4.29](guides/admin/plugin-configuration.md#429-map).
+
 - **Overview map: the `/map` page** ([PandiO/knk-workspace#737](https://github.com/PandiO/knk-workspace/issues/737),
   link L3 of the overview map chain, [#732](https://github.com/PandiO/knk-workspace/issues/732)). knk-web-app and
   knk-workspace branches `claude/overview-map-page` (PRs into `next`). Behind the API setting `Map:Enabled` (off by
