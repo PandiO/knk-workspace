@@ -710,6 +710,25 @@ This is a human-readable record of capabilities merged into the V3 default branc
      Steps: [overview map smoke test § 1](guides/overview-map-smoke-test.md#1-phase-1-region-outlines-735-tier3),
      [plugin configuration § 4.29](guides/admin/plugin-configuration.md#429-map).
 
+- **NPC navigation: no jumps toward a waypoint on the stair house; no hop after a stair step** ([PandiO/knk-workspace#695](https://github.com/PandiO/knk-workspace/issues/695),
+  link J1 of the NPC navigation follow-ups chain). NPCs walk up stairs without the small hop after each step, and waiting
+  NPCs no longer jump at the wall beside a flight. knk-plugin and knk-workspace branches `claude/npc-movement-j1` (PRs
+  into `next`). Behind `npc.navigation.enabled` (off by default); no new `config.yml` key, no migration.
+  1. The climb scenario failed CI now and then on "jumps toward a waypoint on the flights". Singles waiting for their
+     turn at flight 1's top had a queue spot on the wall top beside the flight, a block above their feet: the place's
+     queue line ran diagonally back through the wall. A queue spot is now on the way's own level and reached from the
+     NPC's feet without a step of more than 0.6 (knk-core `CrowdControl.onTheWaysLevel`).
+  2. Citizens moved on to the next waypoint once the body was within the list's margin (0.5 or 1.0) of a stair step's
+     waypoint, while the feet were still below it, and the next waypoint a block up drew a jump (the replay's hall
+     entry). Such a jump is now held back when the next cell toward the waypoint is at most a step up: the body steps
+     onto the stair instead. The same holds back the engine's hop on a stair's lower half (the developer's "walked up a
+     stair block and then seemed to jump up a bit"). It works through Citizens' jump power supplier (knk-paper
+     `CitizensNpcRuntime.jumpPower`, `StepHop`), and a full block in the way keeps its jump. The climb and the replay
+     report the jumps held back.
+  3. Local runs of `npc-stairhouse-climb` (12 in a row, half of them the first run after a server start):
+     0 jumps toward a waypoint and 0 engine hops (151 to 166 a run on `next`), the leader up in 57 s (75 to 81 s on
+     `next`), the longest crowd wait 17 to 20 s (28 to 34 s). CI `paper-boot` green. Steps: [plan § 4c.8 item 6](specs/npc-platform/IMPLEMENTATION_PLAN.md#4c8-fix-links-after-the-smoke-tests-of-2026-11-16-and-2026-11-17-b1b5-c1-j1).
+
 - **NPC navigation: held NPCs stay held through `/knk cache refresh`** ([PandiO/knk-workspace#724](https://github.com/PandiO/knk-workspace/issues/724),
   link R1 of the NPC navigation follow-ups chain). knk-plugin and knk-workspace branches `claude/npc-movement-r1` (PRs
   into `next`). Behind `npc.navigation.enabled` (off by default); no new `config.yml` key, no migration.
