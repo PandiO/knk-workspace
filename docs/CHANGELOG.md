@@ -4,6 +4,30 @@ This is a human-readable record of capabilities merged into the V3 default branc
 
 ## Unreleased — on feature branches, not merged
 
+- **Siege weapons: weapon spots are created in game from a WorldEdit selection or WorldGuard region** ([PandiO/knk-workspace#783](https://github.com/PandiO/knk-workspace/issues/783),
+  link L2 of the siege weapons chain, phase 2 of [#354](https://github.com/PandiO/knk-workspace/issues/354)). An admin
+  types `/knk weaponspot <scenario id> <team> <name>`, selects the spot with WorldEdit (`save`) or names a WorldGuard
+  region (`region <id>`), and the plugin stores its bounds and team; the facing is pre-filled from where the admin
+  looks (rounded to north, east, south or west) and can be changed (`facing <direction>`); the size class is worked out
+  as width across × length along the facing × height (the largest class that fits) and again when the facing changes;
+  a selection smaller than the small class (7 × 9 × 5) is refused; a floor that isn't solid or a volume that isn't
+  clear is a warning; `confirm` creates the spot. knk-plugin: `/knk weaponspot` and its chat task (node
+  `knk.siege.admin.manage`), rules in knk-core `core/siege/weapons/`. knk-web-api: with all six bounds the API works the
+  size class out from bounds and facing on save (also in the web app's spot form) and refuses bounds smaller than the
+  small class; no migration, no new endpoint. Branches `claude/siege-weapons-l2` in knk-plugin, knk-web-api and
+  knk-workspace (PRs into `next`). Admin steps:
+  1. Add the new block to the plugin's `config.yml` under the existing `siege:` section (off by default; the plugin
+     never adds keys to an existing file):
+
+     ```yaml
+     siege:
+       weapons:
+         enabled: false
+     ```
+
+  2. To create spots, set `siege.weapons.enabled: true` on a test server and restart; the admin needs
+     `knk.siege.admin.manage`.
+
 - **Siege weapons: templates, ammo types, weapon spots and unlocks can be set up in the web app** ([PandiO/knk-workspace#782](https://github.com/PandiO/knk-workspace/issues/782),
   link L1 of the siege weapons chain, phase 1 of [#354](https://github.com/PandiO/knk-workspace/issues/354)). Staff
   can now describe trebuchets, catapults and ballistas, their ammunition and the places in a siege scenario where a
