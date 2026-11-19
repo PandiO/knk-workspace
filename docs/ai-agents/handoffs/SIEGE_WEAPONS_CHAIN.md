@@ -1,7 +1,7 @@
 # Siege weapons chain — charter
 
 **Status:** Ready to start (2026-11-19) — drafted by the design session; the coordinator completes it at its first run.
-**Last updated:** 2026-11-19
+**Last updated:** 2026-11-19 (L2b #799 added by the coordinator on the developer's decision)
 **Issues:** parent [PandiO/knk-workspace#354](https://github.com/PandiO/knk-workspace/issues/354); sub-issues per
 link below. Reference issues as `PandiO/knk-workspace#n` in component repos.
 **Progress report:** set by the coordinator at its first run (`docs/reports/<date>-siege-weapons-chain.md`).
@@ -24,6 +24,7 @@ link below. Reference issues as `PandiO/knk-workspace#n` in component repos.
 |---|---|---|---|---|---|---|---|---|
 | L1 | #782 | tier:3 | Entities, API, form seeds, unlocks (A01) | knk-web-api, knk-web-app | `claude/siege-weapons-l1` | `next` | none (data only) | now |
 | L2 | #783 | tier:2 | Spots through world tasks, size class relative to facing (A02–A03) | knk-plugin, knk-web-api | `claude/siege-weapons-l2` | `next` | `siege.weapons.enabled`, default `false` | L1 merged into `next` |
+| L2b | #799 | tier:2 | Spots through the web form's world task (developer decision 2026-11-19): form-field task type, plugin handler on L2's rules, web app fan-out; L2's in-game command removed | knk-plugin, knk-web-api, knk-web-app | `claude/siege-weapons-l2b` | `next` | `siege.weapons.enabled`, default `false` | L2 merged into `next` |
 | L3 | #784 | tier:3 | Buying, placement, paste, build phase, crash and match-end restore (A04–A08, A12–A13) | knk-plugin, knk-web-api | `claude/siege-weapons-l3` | `next` | `siege.weapons.enabled` | L2 merged; #356, #611, #614 merged into `next` |
 | L4 | #785 | tier:3 | Weapon damage, cracks, wreck, spot cooldown, info display, statistics (A09–A11, A14, A35) | knk-plugin, knk-web-api | `claude/siege-weapons-l4` | `next` | `siege.weapons.enabled` | L3 merged |
 | L5 | #786 | tier:3 | Ballista direct fire (A15–A22) | knk-plugin | `claude/siege-weapons-l5` | `next` | `siege.weapons.enabled` | L4 merged |

@@ -1,6 +1,6 @@
 # Siege weapons chain — progress report
 
-**Status:** Paused (L3 blocked on #356, #611, #614) (2026-11-19) · **Last updated:** 2026-11-19
+**Status:** Running L2b; L3 blocked on #356, #611, #614 (2026-11-19) · **Last updated:** 2026-11-19
 
 **Issue:** [PandiO/knk-workspace#354](https://github.com/PandiO/knk-workspace/issues/354), links
 [#782](https://github.com/PandiO/knk-workspace/issues/782) (L1), [#783](https://github.com/PandiO/knk-workspace/issues/783) (L2),
@@ -22,8 +22,8 @@
    (docs/guides/siege-weapons-smoke-test.md on `next`). Deploy: API migration `AddSiegeWeapons`, the five form seeds
    in L1's order, `siege.weapons.enabled: false` under `siege:` in the plugin `config.yml` (true only on a test
    server for § 2).
-3. **Decide where two follow-ups go:** #795 (buying a weapon unlock with coins, W32, in no phase) and #799 (spot
-   creation from the web form as a world task).
+3. **Decide where #795 goes** (buying a weapon unlock with coins, W32, in no phase). #799 decided 2026-11-19: it runs
+   as L2b. Smoke § 2 will be rewritten by L2b, so test § 2 after L2b is merged.
 
 ## 2. Summary
 
@@ -31,6 +31,7 @@
 |---|---|---|---|---|---|---|
 | L1 Entities, API, form seeds, unlocks | #782 | Merged into next (2026-11-19: API `e940aef1`, web app `24c8a988`, workspace `80f6ff72`) | API `d65e7c9`, web app `6138dc9`, workspace `f6ce0304` (`claude/siege-weapons-l1`) | [api#52](https://github.com/PandiO/knk-web-api/pull/52), [app#56](https://github.com/PandiO/knk-web-app/pull/56), [ws#794](https://github.com/PandiO/knk-workspace/pull/794) | green | subagent of the coordinator (decision 3: two component repos), started 2026-11-19 |
 | L2 Spots through world tasks | #783 | Merged into next (2026-11-19: plugin `2f970779`, API `7dc10383`, workspace `2f0dc79c`) | plugin `565620ec`, API `7a88f61c`, workspace `e4abab00` (`claude/siege-weapons-l2`) | [plugin#90](https://github.com/PandiO/knk-plugin/pull/90), [api#54](https://github.com/PandiO/knk-web-api/pull/54), [ws#800](https://github.com/PandiO/knk-workspace/pull/800) | green | subagent of the coordinator, started 2026-11-19 |
+| L2b Spots through the web form's world task | #799 | Running | `claude/siege-weapons-l2b`: (not pushed yet) | — | — | subagent of the coordinator (three component repos), started 2026-11-19 |
 | L3 Buying, placement, paste, restore | #784 | Blocked (external gate: #356, #611, #614 not in `next`; report § 1.1) | — | — | — | — |
 | L4 Damage, wreck, cooldown, statistics | #785 | Not started | — | — | — | — |
 | L5 Ballista direct fire | #786 | Not started | — | — | — | — |
@@ -112,6 +113,15 @@
     (a) build siege points, shop or pipeline inside L3, which the developer's prompt and the charter forbid;
     (b) start L5–L7 early on stubs, rejected (charter order, they need L3's placement and L4's damage);
     (c) wait idle in this session, rejected (prompt: stop with the blocker recorded).
+
+12. **Developer decision 2026-11-19: spots through the web form's world tasks (#799).** The developer: "Creating weapon
+    spots: please let it use the normal web app config flow with worldtasks." Chosen: #799 runs now as link L2b
+    (added to the charter and to #354 as a sub-issue, tier:2, subagent route for three component repos), because
+    L3 is blocked and no other active claim covers `FormWizard.tsx`, the world-task files or
+    `WorldTaskHandlerRegistry` (board checked ~12:05). Coordinator default, reversible: L2's in-game
+    `/knk weaponspot` command is removed so there is one way to create a spot; the knk-core rules and the
+    WorldEdit/WorldGuard adapter stay. Alternatives: (a) keep the command as a second path (the developer can still
+    ask); (b) defer #799 until after L3, rejected (the gate for L3 is closed and the decision is clear now).
 
 ## 4. Link blocks
 
