@@ -650,6 +650,18 @@ promotes `next` lists them here with its tag:
    structures admin guide](admin/production-world-admin-guide.md)); with the plugin's `production.enabled` on, run
    `/knk regions repair` once. Its `Down` makes the two columns
    required again and fails while a rural structure exists.
+8. `20261119193750_AddProductionEngine` (#86, production engine P3): additive; thirteen new tables
+   (`production_kinds`, `production_kind_levels`, `production_kind_level_items`, `production_lines`,
+   `production_line_inputs`, `production_modifiers`, `climate_zones`, `climate_zone_weathers`, `climate_zone_towns`,
+   `weather_types`, `weather_type_effects`, `weather_rolls`, `production_cycle_records`) and the foreign key
+   `production_structures.ProductionKindId` → `production_kinds` (Restrict). Data written: the catalogue (eight kinds,
+   ids 1-8, with ten levels each), the climate zone "Default climate" (no odds: clear weather) and the weather types
+   Rain, Storm and Drought with example effects. Check first that no production structure has a kind id outside 1-8
+   (`SELECT Id FROM production_structures WHERE ProductionKindId NOT BETWEEN 1 AND 8;`), or the foreign key can't be
+   added. No `api.env` key: the engine timing is the game setting `production.engine` (`baseCycleMinutes` 10,
+   `catchUpCapHours` 24, `weatherDayMinutes` 20), and the engine runs only with `Production:Enabled` on. Set-up
+   afterwards: import the six production engine form and display seeds and make the v2 seeds of `ProductionStructure`,
+   `ItemBlueprint` (form) and `Storage` (display) the default ([changelog](../CHANGELOG.md) entry of #86).
 
 Earlier: `v0.2` (`58e3218`, 2026-11-14) added `20261109081203_AddTempRegionReleases` (#269), and `v0.1` (`6d5e9c1`,
 2026-11-13) added `20261113161725_SeedStaffFreezeNodes` (gives the Staff group `knk.freeze` and `knk.unfreeze`, #367).

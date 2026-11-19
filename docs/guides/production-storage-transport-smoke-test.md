@@ -10,10 +10,10 @@ every step can still be run by hand; not run. § 2.1 (stock core API, #97): 15 o
 and 3 partly (tagged); every step can still be run by hand; not run. § 3.1 (world API, #91): 14 of 16 steps
 automated in CI and 2 partly (tagged); every step can still be run by hand; not run. § 3.3 (world plugin, #677): 6 of
 11 steps automated (one through a plugin scenario on a real Paper server) and 5 partly (tagged); not run. § 3.2 (world
-web app, #676): 8 of 12 steps automated in CI and 4 partly (tagged); every step can still be run by hand; not run. Other sections
-not yet automated
-(the links tag them).
-**Last updated:** 2026-11-19 (§ 3 intro, § 3.0, § 3.2 and § 3.3 intros: builds from `next`; § 3.3 precondition 4: `/knk regions repair` needs `knk.admin.regions`, `/knk territory rebuild` `knk.admin.world.territory`; docs #830); 2026-11-19 (§ 3.2 world web app, link L7, #676); 2026-11-19 (§ 3.3 world plugin, link L8, #677); 2026-11-19 (§ 3.1 world API, link L6, #91); 2026-11-19 (§ 2.2 stock web app, link L5, #675); 2026-11-19 (§ 2 stock core API, link L4, #97); 2026-11-19 (§ 1.0 and § 1.3 preconditions: builds from `next` instead of the link branches; guides: [territory admin guide](admin/territory-admin-guide.md), docs #806); 2026-11-19 (§ 1.4 territory web app, link L3, #690); 2026-11-19 (§ 1.3 territory plugin, link L2, #689); 2026-11-19 (§ 1 territory API, link L1, #326); 2026-11-19 (§ 0 item identity, link L0, #141); 2026-11-16 (draft from the design, territory and phases P1-P12)
+web app, #676): 8 of 12 steps automated in CI and 4 partly (tagged); every step can still be run by hand; not run. § 4.1 (production
+engine API, #86): 16 of 18 steps automated in CI and 2 partly (tagged); every step can still be run by hand; not
+run. Other sections not yet automated (the links tag them).
+**Last updated:** 2026-11-19 (§ 4.1 production engine API, link L9, #86); 2026-11-19 (§ 3 intro, § 3.0, § 3.2 and § 3.3 intros: builds from `next`; § 3.3 precondition 4: `/knk regions repair` needs `knk.admin.regions`, `/knk territory rebuild` `knk.admin.world.territory`; docs #830); 2026-11-19 (§ 3.2 world web app, link L7, #676); 2026-11-19 (§ 3.3 world plugin, link L8, #677); 2026-11-19 (§ 3.1 world API, link L6, #91); 2026-11-19 (§ 2.2 stock web app, link L5, #675); 2026-11-19 (§ 2 stock core API, link L4, #97); 2026-11-19 (§ 1.0 and § 1.3 preconditions: builds from `next` instead of the link branches; guides: [territory admin guide](admin/territory-admin-guide.md), docs #806); 2026-11-19 (§ 1.4 territory web app, link L3, #690); 2026-11-19 (§ 1.3 territory plugin, link L2, #689); 2026-11-19 (§ 1 territory API, link L1, #326); 2026-11-19 (§ 0 item identity, link L0, #141); 2026-11-16 (draft from the design, territory and phases P1-P12)
 **Design:** [specs/production-storage-transport/DESIGN.md](../specs/production-storage-transport/DESIGN.md) (§17
 acceptance A01-A27, §18 links) · [territory](../specs/territory/DESIGN.md) · [shops](../specs/shops/DESIGN.md) ·
 **Issue:** [PandiO/knk-workspace#22](https://github.com/PandiO/knk-workspace/issues/22)
@@ -906,22 +906,153 @@ Full manual run about 30 minutes; the untagged and partly tagged parts about 15 
 
 ## 4. Phase P3: production engine (#86 API, #678 web app; tier:3)
 
-*Draft from the design (2026-11-16); the links update it to what was built and tag the automated steps.*
+Built so far: link L9, the API (knk-web-api, migration `AddProductionEngine`; branch `claude/production-p3`, PR into
+`next`). The kind, level, line, modifier, climate zone and weather editors, the structure's production view with the
+cycle trace and the upgrade button are link L10 (#678); until then § 4.1 runs with a REST client (or Swagger) against
+the API and the generic forms of the seeds. 18 steps in § 4.1: 16 automated in CI and 2 partly (tagged); every step can
+still be run by hand; manual steps not run. Full manual run about 60 minutes (most of it waiting for cycles; `POST
+api/Production/run-now` settles at once); the untagged parts of the partly tagged steps about 10 minutes. The tests are
+in knk-web-api `Tests/.../Services/Production/ProductionEngineTests.cs`, `ProductionModifierWeatherUpgradeTests.cs`,
+`Api/ProductionEngineControllersTests.cs`, `Migrations/AddProductionEngineTests.cs` and, with `KNK_TEST_MYSQL`,
+`MySql/ProductionEngineMySqlTests.cs` (four sweeps racing on the same lines settle each period once). The developer
+waived the smoke gates of L4 and L6 on 2026-11-19; the coordinator reads that as covering this link too (it builds on L6).
 
 ### 4.0 Preconditions
 
-1. The quarry from § 3 with yield source `Configured`: 60 cobblestone per hour at level 1, output storage capacity 100.
-   Two workers.
+1. knk-web-api with the migrations up to `AddProductionEngine` applied (`dotnet ef database update`). The migration
+   seeds the catalogue: eight kinds (Farm, Logger, Quarry, Mine, Fishery, Flower farm, Florist, Animal farm; Hunter is
+   not in V1) with ten levels each, the climate zone "Default climate" without odds (always clear), and the weather
+   types Rain, Storm and Drought with example effects.
+2. Game setting `production.enabled` on (web app game settings, or `PUT api/GameSettings` section `production`), except
+   in step 18. Engine timing at its defaults (section `production.engine`): `baseCycleMinutes` 10, `catchUpCapHours`
+   24, `weatherDayMinutes` 20 (a vanilla Minecraft day).
+3. Callers: a **Staff** token with `knk.admin.world`, `knk.admin.content` and `knk.economy.admin`; a **Visitor** token
+   (no staff nodes); the plugin key for step 12.
+4. The quarry **Quarry** from § 3.1 step 3 (rural in Phoenix): note its id and the id of its Output storage. Its Output
+   storage capped at 100 units (`PUT api/Storages/<id>` with `maxUnits` 100). Two workers (the default).
+5. Item identity (§ 0) deployed: note the blueprint ids of **Cobblestone** and **Coal**. A player **Steve** with at
+   least 1,000 coins.
 
-### 4.1 Steps
+### 4.1 Steps (API)
 
-1. Wait one sweep interval (or run the sweep from the staff tools). **Expected:** cobblestone accrues at the configured
-   rate; the cycle trace lists the base rate and each modifier (additions first, then multiplications). (A08)
-2. Raise the quarry to level 2. **Expected:** the trace shows the level multiplier; the area cap grows. (A09)
-3. Try to set level 11. **Expected:** refused; levels are 1-10. (A09)
-4. Let the output storage fill to 100. **Expected:** the line stalls without accruing; the dashboard shows "full". (A08)
-5. Empty the storage. **Expected:** production resumes from that moment, with no catch-up for the stalled time. (A08)
-6. Turn `Production:Enabled` off and wait one interval. **Expected:** nothing accrues. (A21)
+1. [partly automated: knk-web-api `FormConfigurationSeedFilesTests`, `DisplayConfigurationSeedFilesTests` (every seed
+   dry-runs and imports); by hand: open the forms and pages in the web app]
+   As Staff, import the form and display seeds `ProductionKind`, `ProductionKindLevel`, `ProductionLine`,
+   `ProductionModifier`, `ClimateZone` and `WeatherType`, and the new versions `ProductionStructure - Default (seed
+   v2)` (form and display), `ItemBlueprint - Default (seed v2)` (form) and `Storage - Default (seed v2)` (display), each
+   with "make default". **Expected:** each imports; the ProductionStructure form's "Production" step has a "Production
+   kind" picker before "Level"; the ItemBlueprint form's "Item in game" step has "Storage weight" after "Max stack
+   size"; a storage's page lists its stock by blueprint name, not id (#819). (A23)
+2. [automated: `ProductionModifierWeatherUpgradeTests.TheSeededCatalogue_HasEightKindsWithTenLevelsEach_AndNoHunter`]
+   `GET api/ProductionKinds`. **Expected:** the eight kinds, each with `levels` 1-10 (level 1 `yieldMultiplier` 1, level
+   2 1.15, … level 10 2.35; `cycleSpeedMultiplier` 1 to 1.45); no Hunter. `GET api/ClimateZones` lists "Default
+   climate" with `isDefault` true and no `weatherOdds`. (A09)
+3. [automated: `ProductionEngineTests.ANewStructure_GetsItsKindsWorkers_StoragesAndLevelCaps`]
+   `PUT api/ProductionStructures/<Quarry>` with the quarry's body and `"productionKindId": 3` (Quarry). **Expected:**
+   204; `GET` shows `productionKind` `{ "id": 3, "name": "Quarry" }`. A `productionKindId` that doesn't exist is 400. A
+   structure created with a kind gets the kind's `defaultWorkers` and the storages in its `defaultStoragesJson` next to
+   its Output storage.
+4. [automated: `ProductionModifierWeatherUpgradeTests.Lines_AreConfiguredOnlyInP3_OnePerBlueprint_AndKeepTheirStructure`]
+   `POST api/ProductionLines` with `{ "productionStructureId": <Quarry>, "itemBlueprintId": <Cobblestone>,
+   "configuredRatePerHour": 60 }`. **Expected:** 201; `rateSource` `Configured`, `status` `Running`, `accrued` 0,
+   `nextSettleAt` 10 minutes after `anchorAt`. A second line for Cobblestone on the quarry is 400; `rateSource`
+   `Derived` is 400 (P4).
+5. [automated: `ProductionEngineTests.Accrual_IsDriftFree_OverSixHoursOfTenMinuteSweeps_EvenWhenTheSweepRunsLate`,
+   `ProductionEngineTests.ASweepOnlySettlesDueLines_AndASecondSettleAtTheSameMoment_ProducesNothingMore`,
+   `ProductionEngineTests.ARunNowSweep_SettlesEveryLine_NotOnlyTheDueOnes`]
+   Wait 10 minutes (the sweep runs every minute), or `POST api/Production/run-now`. Then
+   `GET api/ProductionStructures/<Quarry>/production`. **Expected:** the Output storage holds 10 Cobblestone (1 per
+   minute); the line shows `baseRatePerHour` 60, one modifier "Level 1" (Multiply 1), `workerFactor` 1,
+   `effectiveRatePerHour` 60 and no `notProducingReasons`; `recentCycles` has one record with `elapsedSeconds` 600,
+   `emitted` 10, `accepted` 10 and a `stockTransactionId` whose reason is `Production` (from `SYS_PRODUCTION`). The next
+   `nextSettleAt` is 20 minutes after `anchorAt` even if the sweep ran a few seconds late (no drift). (A08)
+6. [automated: `ProductionModifierWeatherUpgradeTests.Additions_ComeBeforeMultiplications_AndTheTraceListsThemInThatOrder`]
+   `POST api/ProductionModifiers` with `{ "name": "Plus 40", "scope": "Global", "effect": "Add", "value": 40 }` and
+   with `{ "name": "Half", "scope": "Global", "effect": "Multiply", "value": 0.5 }`. Wait an hour (or settle after an
+   hour). **Expected:** 50 more Cobblestone ((60 + 40) × 0.5; multiplying first would give 70); the cycle's `modifiers`
+   list "Plus 40", "Level 1", "Half" in that order. Delete both modifiers. (A08)
+7. [automated: `ProductionModifierWeatherUpgradeTests.Scopes_MatchTheStructuresTownTerritoryItselfOrItsLine`,
+   `…AnotherTownsModifier_DoesNotApply_AndAKingdomModifierFollowsTheTown`,
+   `…Targets_MatchTheBlueprintCategoryOrKind`, `…TheActiveWindow_StartsInclusive_AndEndsExclusive`,
+   `…ModifierValidation_NeedsAnExistingScopeRow_AndTheTargetsField`]
+   Create a modifier Multiply 2 with scope `Town` and `scopeRefId` Rivertown, then one with scope `Town` Phoenix and
+   target `Category` `Stone`, then one with an `activeUntil` in the past. **Expected:** only the Phoenix one doubles the
+   rate (the production view shows it); a `Town` scope without `scopeRefId` or with an unknown town is 400. Delete them.
+8. [automated: `ProductionEngineTests.TheLevelModifier_MultipliesTheRate_AndTheTraceListsIt`,
+   `ProductionEngineTests.ANewStructure_GetsItsKindsWorkers_StoragesAndLevelCaps`]
+   Raise the quarry to level 2 (`PUT api/ProductionStructures/<Quarry>` with `"level": 2`). Wait an hour. **Expected:**
+   the trace shows "Level 2" (Multiply 1.15): 69 Cobblestone per hour. `POST api/ProductionKindLevels/search` with
+   filter `productionKindId` 3: level 2's `maxAreaSize` (327680) is above level 1's (262144). When level 2 has an
+   `outputMaxUnits` or `transportCapacity`, the structure's Output storage and transport capacity take them on the
+   level change (the seeded levels leave them as they are). (A09)
+9. [automated: `ProductionEngineTests.ANewStructure_GetsItsKindsWorkers_StoragesAndLevelCaps`,
+   `ProductionModifierWeatherUpgradeTests.UpgradesStopAtLevel10_AndNeedAKind`]
+   Try to set level 11 (`PUT` with `"level": 11`). **Expected:** 400; levels are 1-10. An upgrade of a level-10
+   structure is 409. (A09)
+10. [automated: `ProductionModifierWeatherUpgradeTests.AnUpgrade_PaysItsResourcesAndCoins_AndRaisesTheLevel`,
+    `…AnUpgradeThatCantBePaid_ChangesNothing`]
+    `PUT api/ProductionKindLevels/<Quarry level 3>` with `{ "upgradeCoins": 1000, "items": [ { "role": "UpgradeCost",
+    "itemBlueprintId": <Cobblestone>, "amount": 20 } ] }`. Then `POST api/ProductionStructures/<Quarry>/upgrade` with
+    `{ "payerUserId": <Steve> }`. **Expected:** 200 with `fromLevel` 2, `toLevel` 3, `coinsPaid` 1000; Steve has 1,000
+    coins fewer (reason `PRODUCTION_UPGRADE`); 20 Cobblestone left the Output storage to `SYS_CONSUMPTION` with reason
+    `Upgrade`. Repeat with too little stock: 409 and nothing changes; without `payerUserId`: 400.
+11. [automated: `ProductionEngineTests.AFullOutputStorage_StallsTheLineWithoutAccruing_AndItResumesWithoutCatchUp`]
+    Let the Output storage fill to 100. **Expected:** the line's `status` is `BlockedFull` and the production view says
+    "The Output storage is full …"; the cycle that filled it shows the units it could not take (`emitted` above
+    `accepted`); more time passes without anything accruing. (A08, D4)
+12. [partly automated: `ProductionEngineTests.AFullOutputStorage_StallsTheLineWithoutAccruing_AndItResumesWithoutCatchUp`,
+    `ProductionEngineTests.BlockedAndResumed_AreQueuedAsNotifications`; by hand: the pending notifications]
+    Empty the storage (`POST api/StockTransactions/adjust` with a negative amount). Wait 10 minutes, then another 10.
+    **Expected:** at the first settle the line is `Running` again with nothing produced for the stalled time; after the
+    next 10 minutes 10 (× the level multiplier) Cobblestone. `GET api/PlayerNotifications/pending` with the plugin key
+    lists a `ProductionLineStatusChanged` for `BlockedFull` and one for `Running`. (A08)
+13. [automated: `ProductionEngineTests.WorkerFactor_IsPresentOverTotal`,
+    `ProductionEngineTests.SetWorkersPresent_SettlesFirst_SoTheTimeBeforeCountsAtTheOldFactor`]
+    `PUT api/ProductionStructures/<Quarry>/workers` with `{ "workersPresent": 1 }`, wait an hour, then `0`, wait an hour.
+    **Expected:** half the rate with one of two workers, nothing with none; the production view says "Only 1 of 2
+    workers present: 50% output" and "All workers are away"; `workersPresent` 3 is 400. Set it back to 2.
+14. [automated: `ProductionEngineTests.Inputs_AreTakenFromTheInputStorage_AndAMissingInputBlocksTheLine`]
+    Give the Mine kind `"defaultStoragesJson": "[{\"purpose\":\"Input\",\"name\":\"inputs\"}]"`, create a rural mine of
+    that kind and a line for Cobblestone at 60 per hour with `"inputs": [ { "itemBlueprintId": <Coal>,
+    "amountPerHour": 30 } ]`. Wait an hour. **Expected:** `BlockedInputs` with "Not enough Coal in the Input storage".
+    Put 100 Coal into its Input storage, wait 10 minutes and then an hour: `Running`, 60 Cobblestone, 70 Coal left, 30
+    Coal moved to `SYS_CONSUMPTION` with reason `ProductionInput`. (V2 defect 12)
+15. [automated: `ProductionModifierWeatherUpgradeTests.TheWeather_IsRolledOncePerZoneAndDay_AndItsEffectIsAModifierInTheTrace`,
+    `…ARoll_IsIdenticalOnReplay_AndTheStoredRowWinsWhenTheOddsChange`,
+    `…ATownInItsOwnZone_GetsThatZonesWeather_AndRollAll_RollsEachZoneOnce`,
+    `…ClimateZones_KeepExactlyOneDefault_AndOddsAtMost100`]
+    `PUT api/WeatherTypes/<Storm>` with `"effects": [ { "category": "Stone", "effect": "Multiply", "value": 0.5 } ]` and
+    `PUT api/ClimateZones/1` with `"weatherOdds": [ { "weatherTypeId": <Storm>, "chancePercent": 100 } ]`. Wait an hour.
+    **Expected:** the quarry produces half; the trace lists "Storm in Default climate (Stone)" (source `Weather`);
+    `GET api/ClimateZones/1` lists `rolls`, one per 20-minute day, all Storm; `POST api/ClimateZones/rolls/search`
+    lists the same. Odds that add up to more than 100 are 400; deleting the default zone is 409. Set the odds back to
+    none.
+16. [automated: `ProductionEngineTests.TheStructureSwitch_AndTheLineSwitch_PauseWithoutAccruing`]
+    `PUT` the quarry with `"productionEnabled": false`, wait an hour, switch it on again. Then `PUT
+    api/ProductionLines/<line>` with `"enabled": false` and back. **Expected:** `Paused` while off, nothing accrues for
+    that time, and production resumes from the moment it is switched on.
+17. [automated: `ProductionEngineTests.CatchUp_IsCapped_AndTheTraceSaysHowMuchWasSkipped`]
+    Stop the API for more than a day (or test on a copy). **Expected:** at the first settle after the restart the line
+    accrues at most 24 hours (`catchUpCapHours`); the cycle record says "Catch-up capped at 24 h" and how many seconds
+    were skipped.
+18. [automated: `ProductionEngineTests.TheFeatureOff_SettlesNothing_AndTheOverviewSaysSo`,
+    `ProductionEngineControllersTests.RunNow_Is409WhileTheFeatureIsOff_And200WhileOn`,
+    `ProductionEngineControllersTests.Settle_Is409WhileOff_ProductionViewIs404ForAMissingStructure_AndWorkersAreChecked`,
+    `ReadAccessRulesTests`, `EndpointAccessRulesTests`, `DashboardChangeAccessRulesTests`, `DeleteAccessRulesTests`]
+    Turn `Production:Enabled` off and wait one interval. **Expected:** nothing accrues and no weather is rolled; `POST
+    api/Production/run-now` and `POST api/ProductionLines/<line>/settle` are 409; the production view says
+    "Production is turned off for the whole server"; the kind, line and modifier CRUD still work. As Visitor, `POST
+    api/ProductionKinds` is 403; as Staff without `knk.economy.admin`, the upgrade is 403. (A21)
+
+### 4.2 Steps (web app #678, draft)
+
+*Draft for link L10; it updates these steps to what it builds and tags the automated ones.*
+
+1. As Staff, edit a kind and one of its levels (multipliers, caps, unlocks and upgrade cost) in the web app.
+2. Add a production line with an input to the quarry; the structure's page shows its production view: each line's rate
+   with its modifiers, the "why not producing" reasons and the cycle trace.
+3. Edit a climate zone's odds and towns and a weather type's effects; the zone's page lists the stored rolls.
+4. Upgrade the quarry from its page; the cost is shown before it is paid.
 
 ## 5. Phase P4: yield areas and surveys (#138 API, #679 plugin, #680 web app; tier:3)
 

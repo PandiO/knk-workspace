@@ -4,6 +4,49 @@ This is a human-readable record of capabilities merged into the V3 default branc
 
 ## Unreleased — on feature branches, not merged
 
+- **Production engine API: kinds, levels, production lines, modifiers, weather and the sweep** ([PandiO/knk-workspace#86](https://github.com/PandiO/knk-workspace/issues/86),
+  link L9 of the production, storage and transport chain; [production kinds](specs/production-storage-transport/PRODUCTION_KINDS.md)
+  § 2-5, [design](specs/production-storage-transport/DESIGN.md) § 9). Production structures now produce. A
+  **production kind** is catalogue data (seeded: Farm, Logger, Quarry, Mine, Fishery, Flower farm, Florist and Animal
+  farm; Hunter later) with ten **levels** each (yield multiplier, cycle speed, area cap for the yield areas, Output
+  storage and transport caps written on level change, an upkeep field without effect, unlocks and an upgrade cost in
+  resources and coins). A structure's **production lines** (one per output) have a configured rate per hour; the
+  engine settles each line on a grid anchored at its creation (no drift): it accrues `rate × elapsed` with fractions
+  kept, moves the whole units from `SYS_PRODUCTION` into the structure's Output storage through the stock ledger, and
+  writes a **cycle record** with the base rate, every modifier, the workers present, what was emitted and accepted, and
+  why anything fell short. The rate runs through a **modifier pipeline** (additions first, then multiplications) with
+  three sources: the structure's level, the **weather** (climate zones with weather odds, assigned per town, rolled once
+  per in-game day and stored) and staff-made modifiers (scope global, kingdom, town, territory, structure or one line;
+  target any output, a blueprint, a category or a kind; an optional active window). Output also scales with the
+  **workers** present (one of two away = 50%). A full Output storage stops the line without accruing and it resumes,
+  without catching up, once there is room; inputs are taken from the structure's Input storage while a line runs;
+  after downtime a line catches up at most 24 hours. Blocked and resumed lines are queued as notifications for the game
+  server. Staff can upgrade a structure by one level, paying the level's resources (to `SYS_CONSUMPTION`) and a
+  player's coins in one transaction. Everything runs only with `Production:Enabled` on; the CRUD works while it is
+  off. Also #819: the ItemBlueprint form gets "Storage weight" and a storage's page lists its stock by blueprint name.
+  knk-web-api: entities `ProductionKind`, `ProductionKindLevel`, `ProductionLine`, `ProductionModifier`,
+  `ClimateZone`, `WeatherType`, `WeatherRoll`, `ProductionCycleRecord` (and their child rows); endpoints
+  `api/ProductionKinds`, `api/ProductionKindLevels` (edit only), `api/ProductionLines` (+ `{id}/settle`),
+  `api/ProductionModifiers`, `api/ClimateZones` (+ `rolls/search`), `api/WeatherTypes`, `api/ProductionCycleRecords`
+  (read only), `POST api/Production/run-now`, and on `api/ProductionStructures` `GET {id}/production` (the production
+  view with "why not producing"), `PUT {id}/workers` and `POST {id}/upgrade`; the `ProductionStructure.ProductionKindId`
+  foreign key; game settings `production.engine` (`baseCycleMinutes` 10, `catchUpCapHours` 24, `weatherDayMinutes`
+  20); form and display seeds for the six major entities, `ProductionStructure` v2 (kind picker), `ItemBlueprint` v2
+  (storage weight) and the `Storage` display v2. Writes need `knk.admin.world` (delete also `knk.admin.delete`, the
+  upgrade also `knk.economy.admin`); reads the World area node or the plugin key. Smoke test:
+  [production smoke test § 4](guides/production-storage-transport-smoke-test.md#4-phase-p3-production-engine-86-api-678-web-app-tier3).
+  Admin steps:
+  1. Apply the migration `AddProductionEngine` (`dotnet ef database update`; additive: thirteen tables, the seeded
+     catalogue, one default climate zone and three weather types, and the foreign key from
+     `production_structures.ProductionKindId` to the kinds). Before it, check that no production structure has a kind id
+     outside 1-8 (`SELECT Id FROM production_structures WHERE ProductionKindId NOT BETWEEN 1 AND 8;` returns nothing);
+     otherwise clear it, or the foreign key can't be added.
+  2. Import the form and display seeds `ProductionKind`, `ProductionKindLevel`, `ProductionLine`,
+     `ProductionModifier`, `ClimateZone` and `WeatherType`, and make the new versions of `ProductionStructure` (form and
+     display), `ItemBlueprint` (form) and `Storage` (display) the default.
+  3. No `api.env` key and no plugin `config.yml` change. The engine timing is a game setting (`production.engine`,
+     defaults above).
+
 - **World web app: warehouses, production structures and rural placement** ([PandiO/knk-workspace#676](https://github.com/PandiO/knk-workspace/issues/676),
   link L7 of the production, storage and transport chain, [production design](specs/production-storage-transport/DESIGN.md)
   § 3.3-3.4, § 11.1). Staff can now create warehouses and production structures in the web app with the seeded forms:
