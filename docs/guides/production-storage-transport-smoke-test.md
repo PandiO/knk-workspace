@@ -1,9 +1,10 @@
 # Production, storage and transport — smoke test
 
 **Status:** Draft from the design (2026-11-16); no steps run. § 0 (item identity, #141): 7 of 14 steps automated
-in CI and 4 partly (tagged); every step can still be run by hand; manual steps not run. Other sections not yet
-automated (the links tag them).
-**Last updated:** 2026-11-19 (§ 0 item identity, link L0, #141); 2026-11-16 (draft from the design, territory and phases P1-P12)
+in CI and 4 partly (tagged); every step can still be run by hand; manual steps not run. § 1.1-1.2 (territory API,
+#326): 19 of 19 steps automated in CI (tagged; step 1.2.6 needs a connected server to check by hand); every step can
+still be run by hand; not run. Other sections not yet automated (the links tag them).
+**Last updated:** 2026-11-19 (§ 1 territory API, link L1, #326); 2026-11-19 (§ 0 item identity, link L0, #141); 2026-11-16 (draft from the design, territory and phases P1-P12)
 **Design:** [specs/production-storage-transport/DESIGN.md](../specs/production-storage-transport/DESIGN.md) (§17
 acceptance A01-A27, §18 links) · [territory](../specs/territory/DESIGN.md) · [shops](../specs/shops/DESIGN.md) ·
 **Issue:** [PandiO/knk-workspace#22](https://github.com/PandiO/knk-workspace/issues/22)
@@ -99,14 +100,112 @@ Full manual run about 45 minutes; the untagged steps only about 25 minutes.
 
 ## 1. Territory V1 (#326 API, #689 plugin, #690 web app; tier:3)
 
-*Draft from the design (2026-11-16); the links update it to what was built and tag the automated steps.*
+Built so far: link L1, the API (knk-web-api branch `claude/production-t-a`, migration `AddTerritory`). The plugin
+(#689: chunk cache, lookup, BlueMap) and the web app (#690: forms and pages) are later links; their steps (1.3) are
+still the design's and those links rewrite them. The API keeps the inputs (holders, regions, power, settings, awards)
+and the results the game server reports (conflicts, structure flags); the game server computes the territory itself.
+Full manual run of 1.2 about 30 minutes with a REST client, the untagged steps only about 5 minutes.
 
 ### 1.0 Preconditions
 
-1. Game settings: base range 100, power factor 2, capital multiplier 1.5. Phoenix power 50, Rivertown power 10.
-2. BlueMap running (in-game maps, #224).
+1. knk-web-api from the branch with migration `AddTerritory` applied (`dotnet ef database update`).
+2. A REST client (or Swagger) with three callers: a **Staff** token (`knk.admin.world` and `knk.admin.content`), a
+   **Visitor** token (no staff nodes), and the **plugin key** (`X-API-Key` = `Security:PluginApiKey`) for the steps
+   that play the game server.
+3. Test data: towns **Phoenix** (two districts, call them Old Town and Market) and **Rivertown** (one district), as in
+   the common preconditions.
+4. For 1.3 only: the plugin and web app builds of #689 and #690, and BlueMap running (in-game maps, #224).
 
-### 1.1 Steps
+### 1.1 Settings
+
+1. [automated: knk-web-api `ProductionSettingsTests.Defaults_FlagOff_AndTheDesignRanges`] As Staff, call
+   `GET api/GameSettings`. **Expected:** `production.enabled` is `false` and `production.territory` is
+   `{ "baseRange": 100, "powerFactor": 2, "capitalMultiplier": 1.5 }` (G16, territory DESIGN § 1).
+2. [automated: `ProductionSettingsTests.Update_StoresTheSection_AndNullKeepsIt`,
+   `ProductionSettingsTests.Update_OutOfBounds_IsRefused`] Send `PUT api/GameSettings` with the body of step 1's
+   answer and `"production": { "enabled": true, "territory": { "baseRange": 100, "powerFactor": 2,
+   "capitalMultiplier": 1.5 } }`. **Expected:** the answer shows `production.enabled: true`. Send it again with
+   `"capitalMultiplier": 0.5`. **Expected:** 400 (`capitalMultiplier must be between 1 and 10`); nothing changes.
+
+### 1.2 Steps (API)
+
+1. [automated: `TerritoryHolderServicesTests.Kingdom_NameIsUniqueIgnoringCase_AndTrimmed`,
+   `TerritoryHolderServicesTests.Province_NeedsAKingdom_AndItsNameIsUniqueThere`] As Staff, `POST api/Kingdoms`
+   `{ "name": "Aurelia" }`, then `POST api/Provinces` `{ "name": "North", "kingdomId": <Aurelia> }`. **Expected:** 201
+   for both; a second kingdom named `aurelia` answers 400.
+2. [automated: `TerritoryHolderServicesTests.Town_ProvinceMustBeInTheTownsKingdom`,
+   `TerritoryHolderServicesTests.Town_TerritoryFields_AreAppliedOnlyWhenPowerIsOnTheForm`] `GET api/Towns/<Phoenix>`,
+   then `PUT api/Towns/<Phoenix>` with that body plus `"power": 50, "kingdomId": <Aurelia>, "provinceId": <North>`; do
+   the same for Rivertown with `"power": 10, "kingdomId": <Aurelia>, "provinceId": null`. **Expected:** 204; a GET shows
+   `power`, `kingdomName` "Aurelia" and Phoenix's `provinceName` "North". A PUT with a `provinceId` of a province in
+   another kingdom answers 400. A PUT without `power` (an older town form) leaves all three as they are.
+3. [automated: `TerritoryServiceTests.TownTerritory_ShowsTheEffectiveRanges`,
+   `TerritoryRulesTests.Range_IsBasePlusPowerTimesFactor_AndTheCapitalIsMultiplied`] `PUT api/Districts/<Old Town>`
+   with its body plus `"isCapital": true`. Call `GET api/Territory/towns/<Phoenix>`. **Expected:** `range` 200
+   (100 + 50 × 2), `capitalRange` 300, Old Town listed with `range` 300 and Market with 200. (A05, G11)
+4. [automated: `TerritoryHolderServicesTests.CrownLand_IsADomainOwnedByAKingdom_WithARange`] `POST api/CrownLands`
+   `{ "name": "Royal forest", "description": "Hunting grounds", "wgRegionId": "<an existing region>", "worldName":
+   "world", "kingdomId": <Aurelia>, "range": 80 }`. **Expected:** 201; the crown land is also a domain
+   (`GET api/Domains/<id>` finds it). A range of -1 or 10001 answers 400. (G10)
+5. [automated: `TerritoryServiceTests.Inputs_HoldEveryRegionWithItsHolderAndComputedRange`,
+   `TerritoryServiceTests.Inputs_CrownLand_IsHeldByItsKingdom_WithItsOwnRange_AndRankTwo`,
+   `TerritoryServiceTests.Inputs_Version_ChangesWithAnInput_AndOnlyThen`] With the plugin key, call
+   `GET api/Territory/inputs`. **Expected:** `productionEnabled: true`; every district with its town as `holder`,
+   `rank` 1 and the ranges of step 3 (sub-regions listed in `subRegionIds`); Royal forest under `crownLands` with
+   holder `Kingdom` Aurelia, `rank` 2 and `range` 80; a `version`. Call it again: the same `version`. Change Phoenix's
+   power to 20 (step 2) and call it again: a new `version` and Market's `range` 140.
+6. [automated: knk-web-api `TerritoryRealtimeEventTests` (all)] With a game server connected to the realtime hub
+   (or the hub log at Debug), change Phoenix's power. **Expected:** one `TerritoryChanged` event with scope
+   `territory`. Changing only Phoenix's description sends none. (Manual check needs a connected server.)
+7. [automated: `TerritoryServiceTests.Report_WithProductionOff_IsRefused_AndWritesNothing`] Turn
+   `production.enabled` off (1.1 step 2). With the plugin key, `PUT api/Territory/report`
+   `{ "world": "world", "overlaps": [ { "holderA": { "kind": "Town", "id": <Phoenix> }, "holderB": { "kind": "Town",
+   "id": <Rivertown> }, "chunks": [[4,2],[5,2]] } ] }`. **Expected:** 409 with `code: "ProductionDisabled"`;
+   `GET api/TerritoryConflicts` is empty. The admin reads of steps 1-5 still work. Turn the flag on again. (A21, G16)
+8. [automated: `TerritoryServiceTests.Report_EqualRankOverlap_CreatesOneConflict_ThenUpdatesIt`] Send the report of
+   step 7 again (flag on), then once more with a third chunk `[6,2]`. **Expected:** the first answer has
+   `conflictsCreated: 1`, the second `conflictsUpdated: 1`; `GET api/TerritoryConflicts` lists one open conflict
+   "Phoenix" / "Rivertown" with `chunkCount` 3. (A05)
+9. [automated: `TerritoryServiceTests.Report_TownAgainstCrownLand_OrUnknownHolders_IsSkipped`] Report an overlap of
+   Phoenix and `{ "kind": "Kingdom", "id": <Aurelia> }`. **Expected:** the answer lists it under `skipped` (crown land
+   outranks towns); no conflict is created. (G10)
+10. [automated: `TerritoryServiceTests.Report_FlagsStructures_ListsContestedOnesOnTheConflict_AndClearsThemLater`]
+    Report step 8's overlap with `"structures": [ { "structureId": <a structure in Market>, "flag": "Contested",
+    "holderA": { "kind": "Town", "id": <Phoenix> }, "holderB": { "kind": "Town", "id": <Rivertown> } } ]`.
+    **Expected:** `GET api/TerritoryConflicts/<id>` lists the structure under `flaggedStructures`;
+    `GET api/Territory/structures/<id>` shows `territoryFlag: "Contested"` and the conflict id; the structure's
+    district (and so its town) is unchanged. Send a report without structures: the flag is cleared. (Territory § 4)
+11. [automated: `TerritoryServiceTests.Report_AnOverlapThatIsGone_StaysOpen_ButIsMarkedNotOverlapping`] Send
+    `{ "world": "world" }` (no overlaps). **Expected:** `conflictsNoLongerOverlapping: 1`; the conflict stays open
+    with `stillOverlapping: false` (nothing is resolved automatically).
+12. [automated: `TerritoryConflictServiceTests.Award_ToOneHolder_ResolvesIt_AndReachesTheInputs`,
+    `TerritoryConflictServiceTests.Award_ToAThirdHolder_IsRefused`] As Staff,
+    `POST api/TerritoryConflicts/<id>/resolve` `{ "resolution": "Awarded", "awardedHolder": { "kind": "Town", "id":
+    <Phoenix> }, "note": "test" }`. **Expected:** status `Resolved`, `awardedHolder` Phoenix;
+    `GET api/Territory/inputs` lists the award with the conflict's chunks; a `TerritoryChanged` event is sent. An award
+    to Aurelia answers 400.
+13. [automated: `TerritoryConflictServiceTests.Reopen_UndoesTheResolution`,
+    `TerritoryConflictServiceTests.Redrawn_ResolvesWithoutAnAward_AndTwiceIsRefused`] `POST .../reopen`, then resolve
+    with `{ "resolution": "Redrawn" }`. **Expected:** reopen clears the award (gone from the inputs); "Redrawn" resolves
+    without an award; resolving again answers 409.
+14. [automated: `TerritoryServiceTests.Loyalty_IsStored_AndClearedWithNull`] `PUT api/Territory/structures/<id>/loyalty`
+    `{ "loyaltyTownId": <Rivertown> }`, then `{ "loyaltyTownId": null }`. **Expected:** the first answer shows
+    `loyaltyTownName` "Rivertown" next to its own `townId` Phoenix; the second clears it. Nothing else happens (stored
+    only in V1).
+15. [automated: knk-web-api `EndpointAccessRulesTests`, `ReadAccessRulesTests`, `DashboardChangeAccessRulesTests`,
+    `DeleteAccessRulesTests`] As Visitor, call `POST api/Kingdoms`, `PUT api/Towns/<Phoenix>` with a new power,
+    `POST api/TerritoryConflicts/<id>/resolve` and `GET api/Territory/inputs`; with the Staff token call
+    `PUT api/Territory/report`. **Expected:** 403 for each; nothing changes. (Smoke 1.3 step 9)
+16. [automated: `TerritoryHolderServicesTests.Kingdom_WithTowns_CannotBeDeleted`,
+    `TerritoryHolderServicesTests.Province_WithTowns_CannotMoveKingdom_OrBeDeleted`] As Staff with `knk.admin.delete`,
+    `DELETE api/Kingdoms/<Aurelia>` and `DELETE api/Provinces/<North>`. **Expected:** 409 naming what still belongs to
+    them; nothing is deleted.
+17. [automated: `FormConfigurationSeedFilesTests`, `DisplayConfigurationSeedFilesTests`] In the web app's form
+    configuration list, Import / seeds: import `Kingdom`, then `Province`, `CrownLand` and `TerritoryConflict` with
+    "make default", and the four display seeds. **Expected:** each imports; `/forms/kingdom` and `/forms/crownland`
+    open their create forms, and the crown land form's Region field offers Send to Minecraft. (A23, G17)
+
+### 1.3 Steps (plugin #689 and web app #690; draft from the design)
 
 1. As Admin, open the web app's Phoenix page. **Expected:** effective range shown as (100 + 50 × 2) = 200 for normal
    districts and 300 for the capital district. (A05)

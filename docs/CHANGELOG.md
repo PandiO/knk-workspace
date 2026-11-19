@@ -4,6 +4,29 @@ This is a human-readable record of capabilities merged into the V3 default branc
 
 ## Unreleased — on feature branches, not merged
 
+- **Territory API: kingdoms, provinces, crown land, town power and contested zones** ([PandiO/knk-workspace#326](https://github.com/PandiO/knk-workspace/issues/326),
+  link L1 of the production, storage and transport chain, [territory design](specs/territory/DESIGN.md)). Staff can now
+  set up who holds land: kingdoms, optional provinces (a town's province must be in its kingdom), crown land (a
+  kingdom-held region with a range, drawn like a district, G10), each town's power and which districts are capitals.
+  The API works out every district's range, base range + power × factor, multiplied for a capital (G11), and hands the
+  game server everything its territory map needs in one read; when the game server reports that two towns' territories
+  overlap, the API records a conflict and flags the structures standing there, and staff resolve it by awarding the
+  area to one town or redrawing the lines. Structures can also be given a loyalty (stored only for now). Nothing in game
+  changes yet: the game server side (#689) and the web pages (#690) are the next links. knk-web-api: entities
+  `Kingdom`, `Province`, `CrownLand`, `TerritoryConflict`; `Town.Power`/`KingdomId`/`ProvinceId`,
+  `District.IsCapital`, `Structure.LoyaltyTownId` and territory flag; the game setting section `production`
+  (`Production:Enabled`, default off, and the territory ranges); endpoints `api/Kingdoms`, `api/Provinces`,
+  `api/CrownLands`, `api/TerritoryConflicts` (with `resolve` and `reopen`), `api/Territory` (`inputs`, `report`,
+  `towns/{id}`, `structures/{id}` with `loyalty` and `flag`); realtime event `TerritoryChanged`; form and display seeds
+  for the four new entities. Writes need `knk.admin.world` (create and edit also `knk.admin.content`, deletes
+  `knk.admin.delete`); the report is the game server's only. Branches `claude/production-t-a` in knk-web-api and
+  knk-workspace (PRs into `next`). Admin steps:
+  1. Apply the migration `AddTerritory` (`dotnet ef database update`; additive: four tables, defaulted columns).
+  2. Import the form seeds `Kingdom`, `Province`, `CrownLand`, `TerritoryConflict` and their display seeds ("make
+     default").
+  3. Leave `production.enabled` off until the plugin link (#689) is deployed; set the ranges under
+     `production.territory` in the game settings (defaults: base 100, factor 2, capital × 1.5).
+
 - **Siege weapons: templates, ammo types, weapon spots and unlocks can be set up in the web app** ([PandiO/knk-workspace#782](https://github.com/PandiO/knk-workspace/issues/782),
   link L1 of the siege weapons chain, phase 1 of [#354](https://github.com/PandiO/knk-workspace/issues/354)). Staff
   can now describe trebuchets, catapults and ballistas, their ammunition and the places in a siege scenario where a
