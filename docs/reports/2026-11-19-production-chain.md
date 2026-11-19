@@ -55,7 +55,7 @@ of what is already in `next`.
 | L8 P2c world plugin: managed-region kinds | #677 | Merged into next (2026-11-19) | plugin `cc563771`, workspace `cb11e03a`; merges: plugin `8ebb30be`, workspace `4654a1ad` | [plugin#96](https://github.com/PandiO/knk-plugin/pull/96), [ws#823](https://github.com/PandiO/knk-workspace/pull/823) | green (plugin build + paper-boot, 64 scenarios) | create_session `session_01R1w2UtzV6puGzautXYEFJA` (one repo besides knk-workspace), started 2026-11-19 |
 | L9 P3 production engine API | #86 | Merged into next (2026-11-19) | api `20dcfb7`, workspace `ea01df32`; merges: api `6c648f60`, workspace `7b1495d0` (after a coordinator merge of `next`, `50497cc8`) | [api#58](https://github.com/PandiO/knk-web-api/pull/58), [ws#827](https://github.com/PandiO/knk-workspace/pull/827) | green (build-and-test, mysql-tests, fresh-database) | create_session `session_01R1w2Uvi8uaBqDwjJDADicL` (one repo besides knk-workspace), started 2026-11-19 |
 | L10 P3b production web app | #678 | Merged into next (2026-11-19) | web-app `9e5a2ca`, workspace `eaf1f1a1`; merges: web app `4e4ca39a`, workspace `9eef39cf` | [web-app#63](https://github.com/PandiO/knk-web-app/pull/63), [ws#834](https://github.com/PandiO/knk-workspace/pull/834) | green (build-and-test, e2e) | create_session `session_01R1w2UvmqQ34HGVHXxDfmwW` (prompt says start without asking), started 2026-11-19 |
-| L11 P4 yield areas API | #138 | In review (2026-11-19) | api `06b11ca`, workspace `b467e15a` | [api#60](https://github.com/PandiO/knk-web-api/pull/60), [ws#837](https://github.com/PandiO/knk-workspace/pull/837) | push run on the migration commit green (build-and-test, mysql-tests, fresh-database); PR run pending | create_session `session_01R1w2UuXh4wtTxPhhZUpLGF` (prompt says start without asking), started 2026-11-19 |
+| L11 P4 yield areas API | #138 | In review (2026-11-19) | api `06b11ca`, workspace `b467e15a` | [api#60](https://github.com/PandiO/knk-web-api/pull/60), [ws#837](https://github.com/PandiO/knk-workspace/pull/837) | green on `06b11ca` (build-and-test, mysql-tests, fresh-database) | create_session `session_01R1w2UuXh4wtTxPhhZUpLGF` (prompt says start without asking), started 2026-11-19 |
 | L12 P4b surveys plugin | #679 | Not started | — | — | — | — |
 | L13 P4c yield areas web app | #680 | Not started | — | — | — | — |
 | L14 P5 transport API (simulated carrying, G14) | #79 | Not started | — | — | — | — |
@@ -1167,7 +1167,7 @@ _(Each link appends its block here when it finishes.)_
     2. MySQL 8.0.46 locally with `KNK_TEST_MYSQL`: 4917 passed, 1 failed = the known red #285.
     3. Migration applied, rolled back to `AddProductionEngine` and re-applied; `has-pending-model-changes` clean.
     4. CI: build-and-test, mysql-tests and fresh-database green on the push of the migration commit; the PR run on
-       `06b11ca` was running when this block was written (the coordinator checks it).
+       `06b11ca` green too (21:27).
     5. Known reds: #285 (MySQL run only).
 5. **Decisions (DESIGN § 4.3).** All 14, each with alternatives, are in knk-web-api#60. The main ones:
     1. *Shared split.* Chosen: the plugin reports `sharedBy` per unit; the API lists overlapping shared areas in the
