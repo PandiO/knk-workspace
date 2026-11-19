@@ -421,9 +421,12 @@ the configuration reference § 4.27), then restart. In test order:
     `.../evidence/2026-11-19/`: run log, a new tower snapshot with the box over the goal and the start). The `ranks`
     group holds formation well on the stair house; the keep tower is reached by one NPC and a group of 20; the off-road
     start joins the road where reachable; exit denials and the refresh hold; `trespasses 0` throughout. The developer
-    marked the E1 refresh step and R1 "accepted". To improve later (developer: not a problem): an NPC looks jittery in
+    accepted the E1 refresh step and R1's steps without testing them (correction, 2026-11-19). To improve later (developer: not a problem): an NPC looks jittery in
     the spiral staircase, the walk path hugging the inner wall. NPC walk legs are not shaped by clearance yet; the
     off-road chain's walk-path shaping (O11, guidance v2) is player-side, and NPC legs could reuse it later.
+52. **Developer decisions, 2026-11-19:** the review decisions of B5 (block 4.21 § 5) and C1 (block 4.22 § 5) are
+    accepted. "Accepted" on a smoke step means accepted without testing (E1 step 3, R1). NPC walk-leg shaping filed as
+    #817 (gated on the off-road chain's #710 live test).
 
 ## 4. Link blocks
 
