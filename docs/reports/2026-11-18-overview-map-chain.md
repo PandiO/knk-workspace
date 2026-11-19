@@ -1,6 +1,6 @@
 # Overview map chain — progress report
 
-**Status:** Done, in review (2026-11-18) · **Last updated:** 2026-11-18
+**Status:** In review; fix links F1 and F2 running (2026-11-19) · **Last updated:** 2026-11-19
 
 **Issue:** [PandiO/knk-workspace#732](https://github.com/PandiO/knk-workspace/issues/732), links
 [#735](https://github.com/PandiO/knk-workspace/issues/735) (L1), [#736](https://github.com/PandiO/knk-workspace/issues/736) (L2),
@@ -54,6 +54,12 @@ on `next` (Decided 2026-11-18, O01–O33, O08 superseded by O31); smoke guide
    `3e04ba8f`, knk-web-app `eff6ed9`, knk-workspace `8328c9da`). Docs follow-up: #766, docs session
    `session_01R1w2UuMzfZ1Z1FB7pV7iXR`; its player and admin guide items gate a deploy to knk-alpha. #732 and its
    sub-issues stay open (`status:in-review`) until you promote `next`.
+10. **Fix links F1 and F2 running (2026-11-19, on your go).** F1 (#750, knk-plugin: sub-region outlines at startup)
+    and F2 (#757 Escape in the map frame, #809 "Open profile" disabled with a tooltip, knk-web-app). The coordinator
+    merges them into `next` after the checks; their smoke steps join §§ 1, 3, 5 and 9. #772 (direct `/bluemap` visits
+    go to `/map`, relative redirects) is merged into `next` (`8487a058`): rebuild the alpha `web` image with its
+    `nginx.conf` together with the promotion, not before.
+11. **Still open for you:** the `/ownermode` case of the L4 check (a second staff account), and when to promote `next`.
 
 ## 2. Summary
 
@@ -68,6 +74,8 @@ on `next` (Decided 2026-11-18, O01–O33, O08 superseded by O31); smoke guide
 | L7 Gate commands backend | #741 | Merged into `next` 2026-11-18 (knk-web-api `0308377d`, knk-plugin `02aa110e`, knk-workspace `b7820e99`); waiting for the developer's smoke test § 7 | `claude/overview-map-gate-commands`: knk-web-api `16e4157`, knk-plugin `1f8bb3c7`, knk-workspace `8368b901` (from `next`) | [knk-web-api#48](https://github.com/PandiO/knk-web-api/pull/48), [knk-plugin#79](https://github.com/PandiO/knk-plugin/pull/79), [knk-workspace#758](https://github.com/PandiO/knk-workspace/pull/758) | API green (build-and-test, mysql-tests, fresh-database); plugin build and paper-boot green | create_session session_01R1w2UxDt6K1RcnDPPagNAN (2026-11-18) |
 | L8 Gate command buttons | #742 | Merged into `next` 2026-11-18 (knk-web-app `de43f6be`, knk-workspace `bf28138d`); waiting for the developer's smoke test § 8 | `claude/overview-map-gate-buttons`: knk-web-app `05a30ea`, knk-workspace `9fad9531` (from `next`) | [knk-web-app#53](https://github.com/PandiO/knk-web-app/pull/53), [knk-workspace#759](https://github.com/PandiO/knk-workspace/pull/759) | Web app build-and-test green on `05a30ea`, e2e running at report time (local full run 176 passed); knk-workspace no CI; Codex at its limit | create_session session_01R1w2UvQqqmQ9NwMTQbq3Cb (2026-11-18) |
 | L9 Player context panel | #743 | Merged into `next` 2026-11-18 (knk-web-app `eff6ed98`, knk-workspace `8328c9da`); waiting for the developer's smoke test § 9 | `claude/overview-map-moderation`: knk-web-app `1ff5418`, knk-workspace `553c751b` (from `next`) | [knk-web-app#55](https://github.com/PandiO/knk-web-app/pull/55), [knk-workspace#765](https://github.com/PandiO/knk-workspace/pull/765) | Web app push runs green on `1ff5418` (build-and-test, e2e), pull_request runs running at report time (local full run: Jest 2754, e2e 191 passed); knk-workspace no CI; Codex at its limit | create_session session_01R1w2Uw4EdZTG53RQ7gnyQ3 (2026-11-18) |
+| F1 Sub-region outlines at startup | #750 | Running (2026-11-19) | `claude/overview-map-f1-subregions` (knk-plugin, knk-workspace, from `next`) | — | — | create_session session_01R1w2Uvrr2qFRCUBSxjXe7Y (2026-11-19) |
+| F2 Escape in the map frame, "Open profile" disabled | #757, #809 | Running (2026-11-19) | `claude/overview-map-f2-panel-fixes` (knk-web-app, knk-workspace, from `next`) | — | — | create_session session_01R1w2UuSPaZGzxZKERwXfh3 (2026-11-19) |
 
 ## 3. Coordinator decisions
 
@@ -223,6 +231,27 @@ on `next` (Decided 2026-11-18, O01–O33, O08 superseded by O31); smoke guide
     (`session_01R1w2UuMzfZ1Z1FB7pV7iXR`). The tracker row stays "In review" until the developer accepts.
     Alternatives: (a) write the remaining docs in this coordinator: the global instructions keep them in a separate
     session so merges stay fast.
+22. **#772 merged; fix links started (2026-11-19, developer's go).** The developer reviewed the status and said:
+    merge #772, start #750 and #757, and for the kick-only moderator make "Open profile" disabled with a tooltip
+    (filed as #809, tier:2, sub-issue of #732). Chosen:
+    1. Merge knk-workspace#772 into `next` with a merge commit (`8487a058`). knk-workspace has no CI; the scratch nginx
+       checks are in the PR; Codex was at its limit (noted on the PR).
+    2. Two fix links in parallel, both with `create_session` (one component repository each, so the classifier route
+       of skill § 4.1.4 applies): **F1** #750 in knk-plugin (session_01R1w2Uvrr2qFRCUBSxjXe7Y, branch
+       `claude/overview-map-f1-subregions`; knk-web-api read only, stop and report if the API must change) and **F2**
+       #757 plus #809 in knk-web-app (session_01R1w2UuSPaZGzxZKERwXfh3, branch `claude/overview-map-f2-panel-fixes`).
+       #757 and #809 share one link because both change the `/map` page code in knk-web-app (one link per component
+       repo).
+    3. Links put their report blocks in their PR bodies and on their issues; the coordinator copies them here, as
+       this session's direct pushes to `main` are refused (HTTP 403 on 2026-11-18, refused again 2026-11-19);
+       bookkeeping goes through PR #773.
+    4. Overlap check (board read from `origin/main`, 2026-11-19): the siege weapons L2b (#799, knk-plugin world-task
+       handlers, knk-web-app `FormWizard`) and the production chain (territory L1–L3 in `next`, which reuse the
+       outline reporting) touch neither `src/pages/map/`, `src/components/map/` nor `public/bluemap-bridge/`; F1 is
+       told to build on the territory changes in `next`. No blocker.
+    Alternatives: (a) one link for all three issues: needs knk-plugin and knk-web-app, so the subagent route, and
+    serialises independent work; (b) #809 hidden instead of disabled, per spec § 5 rule 13: the developer chose
+    disabled with a tooltip, logged by F2 as a spec decision.
 
 ## 4. Link blocks
 
