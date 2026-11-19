@@ -1,11 +1,11 @@
 # Production, storage and transport chain — charter
 
-**Status:** Ready to start (2026-11-16)
-**Last updated:** 2026-11-16 (drafted by the design session; the coordinator completes it at its first run)
+**Status:** Running (2026-11-19; coordinator cloud session `session_01R1w2UtB6J4UtRJL3foJgcj`)
+**Last updated:** 2026-11-19 (coordinator first run: progress report, #141 and #326 added as sub-issues of #22)
 **Issues:** parent [PandiO/knk-workspace#22](https://github.com/PandiO/knk-workspace/issues/22); territory parent
 [PandiO/knk-workspace#326](https://github.com/PandiO/knk-workspace/issues/326); sub-issues per link below. Reference
 issues as `PandiO/knk-workspace#n` in component repos.
-**Progress report:** to be created by the coordinator (`docs/reports/<date>-production-chain.md`).
+**Progress report:** [reports/2026-11-19-production-chain.md](../../reports/2026-11-19-production-chain.md).
 **Skills:** coordinator `.claude/skills/knk-coordinator/`, links `.claude/skills/knk-link/` (knk-workspace).
 
 ## 0. Binding documents
@@ -83,4 +83,4 @@ or plugin link may run alongside the next API link (different repos).
 2. With both flags off, nothing of this feature runs (A21); existing kit, lootbox and region behaviour is unchanged.
 3. Migrations: at most one additive migration per API link.
 4. Every new entity: FormConfiguration and DisplayConfiguration seeds in the same link (G17, A23).
-5. Model for link sessions: set by the coordinator.
+5. Model for link sessions: set by the coordinator; the coordinator's own model (2026-11-19).
