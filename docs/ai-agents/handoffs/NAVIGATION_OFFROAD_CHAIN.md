@@ -1,7 +1,7 @@
 # Off-road navigation and landmarks chain — charter
 
 **Status:** Running (2026-11-17)
-**Last updated:** 2026-11-17 (completed by the coordinator at its first run: progress report, model, gates checked against the branches, status Running); 2026-11-17 (drafted by the design session)
+**Last updated:** 2026-11-19 (O32: L6 on hold as the fallback; fix link F1 #771 added); 2026-11-17 (completed by the coordinator at its first run: progress report, model, gates checked against the branches, status Running); 2026-11-17 (drafted by the design session)
 **Issues:** parent [PandiO/knk-workspace#698](https://github.com/PandiO/knk-workspace/issues/698); sub-issues per
 link below. Reference issues as `PandiO/knk-workspace#n` in component repos.
 **Progress report:** [reports/2026-11-17-navigation-offroad-chain.md](../../reports/2026-11-17-navigation-offroad-chain.md)
@@ -31,11 +31,13 @@ link below. Reference issues as `PandiO/knk-workspace#n` in component repos.
 | L3 | #710 | tier:3 | Phase 6.1: clearance cost, shaping and curve of walk paths off the main thread (`WalkTerrainNavWorld`) | knk-plugin | `claude/offroad-trail-corners` | `next` | `navigation.guidance-v2` (off) | L2 merged into `next` |
 | L4 | #711 | tier:3 | Phase 6.2: anchored walk-trail particles, progress and cursor, winding back | knk-plugin | `claude/offroad-trail-cursor` | `next` | `navigation.guidance-v2` (off) | L3 merged into `next` (same files: `TrailRenderer`, `NavigationService`) |
 | L5 | #705 | tier:3 | Phase 2: route as a leg list, lazy walk links, own id space, block-change hook | knk-plugin | `claude/offroad-walk-links` | `next` | `navigation.walk-links` (off) | L1 done (budgets) and L4 merged into `next` (one plugin link at a time in `navigation/`) |
-| L6 | #706 | tier:3 | Phase 3: lazy hierarchical walk search, clusters in memory, wilderness W1 | knk-plugin | `claude/offroad-hierarchical` | `next` | `navigation.walk.hierarchical` (off) | L5 merged into `next` |
+| L6 | #706 (on hold as the fallback, developer 2026-11-19, O32) | tier:3 | Phase 3: lazy hierarchical walk search, clusters in memory, wilderness W1 | knk-plugin | `claude/offroad-hierarchical` | `next` | `navigation.walk.hierarchical` (off) | L5 merged into `next` |
 | L7 | #707 | tier:2 | Phase 4: route modes with permission nodes, default `preferred` = today | knk-plugin | `claude/offroad-route-modes` | `next` | none | L5 merged into `next` |
 | L8 | #708 | tier:3 | Phase 5.1: landmark entity (API, web app, plugin, `LandmarkProvider`) | knk-web-api, knk-web-app, knk-plugin | `claude/offroad-landmarks` | `next` | `navigation.landmarks` (off) | destination engine #96, #103 and #69 merged into `next` |
 | L9 | #709 | tier:2 | Phase 5.2: landmark preference weights, landmark nodes in the walk planner | knk-plugin | `claude/offroad-landmark-weights` | `next` | `navigation.landmarks` (off) | L7 and L8 merged into `next` (L6 for landmark nodes in clusters) |
 | L10 | #712 | tier:2 | Phase 7: plaza lines for the players' trail; first a check on Cinix and Brink shown to the developer | knk-plugin | `claude/offroad-plaza-lines` | `next` | `navigation.plaza-lines` (off) | L3 and L4 merged into `next` |
+
+| F1 | #771 | tier:2 | Fix link: walk-search fixes from the phase 0 runs (items 1 and 2: the keep storage hall route, a trapdoor over a ladder) | knk-plugin, knk-workspace | `claude/offroad-walk-fixes-771` | `next` | none (bug fixes) | developer's go 2026-11-19 |
 
 Phase 8 (#713, persisted walk tiles) is not a link of this chain: its scope is designed after L1's report and L6.
 
