@@ -31,7 +31,7 @@
 |---|---|---|---|---|---|---|
 | L0 Item identity: every obtainable item is a blueprint; generated "Uncurated" shadow blueprints (G4) | #141 | Merged into next (2026-11-19) | api `5daa3c6`, plugin `a6c5a2bc`, workspace `8ffdbb1a`; merges: api `7d213fd6`, plugin `2ef256e7`, workspace `ca3bcc98` | [api#51](https://github.com/PandiO/knk-web-api/pull/51), [plugin#89](https://github.com/PandiO/knk-plugin/pull/89), [ws#793](https://github.com/PandiO/knk-workspace/pull/793) | green (API PR checks; plugin build + paper-boot) | subagent of the coordinator (two repos besides knk-workspace, SKILL § 4.1.4.2), started 2026-11-19 |
 | L1 Territory API: holders, crown land entity (G10), power, range (G11), conflicts, loyalty | #326 | Merged into next (2026-11-19) | api `ff50ec1`, workspace `c4211d51`; merges: api `0d6e369a`, workspace `4595e6d8` | [api#53](https://github.com/PandiO/knk-web-api/pull/53), [ws#798](https://github.com/PandiO/knk-workspace/pull/798) | green (build-and-test, mysql-tests, fresh-database) | create_session `session_01R1w2Uwo46dJVo6Cpr8LzmG` (one repo besides knk-workspace), started 2026-11-19 |
-| L2 Territory plugin: chunk cache, lookup, BlueMap outlines | #689 | Running | — | — | — | create_session `session_01R1w2Uvhpo37DXAXpm2uqLp` (one repo besides knk-workspace), started 2026-11-19 |
+| L2 Territory plugin: chunk cache, lookup, BlueMap outlines | #689 | In review | plugin `96ef7326`, workspace `14d3efcd` | [plugin#91](https://github.com/PandiO/knk-plugin/pull/91), [ws#804](https://github.com/PandiO/knk-workspace/pull/804) | green (plugin build + paper-boot) | create_session `session_01R1w2Uvhpo37DXAXpm2uqLp` (one repo besides knk-workspace), started 2026-11-19 |
 | L3 Territory web app | #690 | In review (PRs open, not merged) | web app `0531422`, workspace `f3bd8f27` | [web#57](https://github.com/PandiO/knk-web-app/pull/57), [ws#803](https://github.com/PandiO/knk-workspace/pull/803) | web app green (build-and-test, e2e) | create_session `session_01R1w2UuYHneFJFXcn8GSe6F` (one repo besides knk-workspace), started 2026-11-19 |
 | L4 P1 stock core API: storages, ledger, reconciler, capacity, roll-up | #97 | Not started | — | — | — | — |
 | L5 P1b stock web app | #675 | Not started | — | — | — | — |
@@ -298,6 +298,97 @@ _(Each link appends its block here when it finishes.)_
        `reopen`), `api/Territory/towns/{id}` (effective ranges), `api/Territory/structures/{id}` (+ `loyalty`, `flag`);
        game settings section `production`.
     3. L6 (P2): rural `TownId` and `InsideTerritory` are yours; the structure flag and `TerritoryConflictId` exist.
+
+### 4.2 L2 — Territory plugin: chunk cache, lookup, BlueMap outlines (#689)
+
+1. **Scope done** (knk-plugin, plus essential docs in knk-workspace). Everything runs only with the new plugin key
+   `production.enabled: true` (default `false`, A21).
+    1. knk-core `core/territory/` (Bukkit-free): `TerritoryInputs` (the `GET api/Territory/inputs` contract of #326),
+       `TerritoryRules` (the API's `Resolve`: rank, contest, awards), `TerritoryShape` (distance to the nearest region
+       edge, region plus sub-regions, G11), `TerritoryCacheBuilder`/`TerritoryMap`/`TerritoryCache` (whole chunks and
+       split chunks resolved per block column; wilderness not stored), `TerritoryReportBuilder` (equal-rank overlaps
+       per pair with chunks; structures `Contested`/`OutsideTerritory`), `TerritoryOutlines` (rings per area from the
+       cache, block steps, holes), `TerritoryTracker` (lookup on chunk crossings, per column in split chunks),
+       `TerritoryService` (rebuild when the inputs' `version`, the shapes' fingerprint or the API flag change; one
+       full report per world when `report` and the API's `productionEnabled` are on; outlines over the hub only with
+       `map-outlines`); port `TerritoryApi`.
+    2. knk-api-client `TerritoryApiImpl` (`GET api/Territory/inputs`, `PUT api/Territory/report`, 409 kept as status);
+       `ConfigEvents.TERRITORY_CHANGED` (not in `TYPES`).
+    3. knk-paper `territory/`: `TerritoryModule` (first build 5 s after start, periodic check, debounced
+       `TerritoryChanged`, hub reconnect hook), `TerritoryListener` (moves, teleports, respawns, world changes;
+       `PlayerTerritoryChangeEvent`, action bar), `TerritoryConfig`; `/knk territory here|status|rebuild` (node
+       `knk.admin.world.territory`); `config.yml` block `production` (`enabled`, `territory.refresh-minutes`,
+       `notify-players`, `report`, `map-outlines`, `max-chunks-per-world`, `messages.*`).
+    4. Crown land managed-region kind (L1's note on #326): `ManagedRegionKind.CROWN_LAND` (floor 10, no parent, no
+       flags); the repair adds crown land regions from the domain catalog only with `production.enabled`.
+    5. Plugin scenario `territory-border-crossing` (real WorldGuard region, the plugin's cache and listener, a scripted
+       player one block over the border); `MIN_SCENARIOS` 62 → 63.
+    6. knk-workspace (branch from `next`): smoke guide § 1.3 (14 plugin steps, 7 automated, 7 partly; the web app draft
+       moved to § 1.4), plugin configuration reference § 4.31, changelog entry with the YAML, commands guide
+       `/knk territory`, territory DESIGN and implementation plan status.
+2. **Commits and heads.** knk-plugin `claude/production-t-b` at `96ef7326` (2 commits + merge of `origin/next`
+   `2f970779`, siege weapons L2); knk-workspace `claude/production-t-b` at `14d3efcd` (1 commit + merge of `origin/next`
+   `2f0dc79c`; changelog and configuration reference conflicts were both-sides additions). `next` had not moved again
+   at the final fetch.
+3. **PRs.** [knk-plugin#91](https://github.com/PandiO/knk-plugin/pull/91) (Closes #689),
+   [knk-workspace#804](https://github.com/PandiO/knk-workspace/pull/804) (Part of #689); base `next`. Not merged.
+4. **Tests, baseline → result** (`./gradlew build -x deployToDevServer`, Gradle on JDK 21, JDK 25 toolchain).
+    1. Baseline on `next` `2ef256e7`: knk-core 3450, knk-api-client 361 (2 skipped), knk-paper 3172 (18 skipped), 0
+       failures.
+    2. Branch after merging `next` `2f970779`: knk-core 3510, knk-api-client 368 (2 skipped), knk-paper 3200 (18
+       skipped), 0 failures. New: knk-core 41, knk-api-client 3, knk-paper 10; the rest is siege weapons L2 from `next`.
+       A mutation of the range check failed the cache tests.
+    3. CI on `96ef7326`: build green, paper-boot green (63 scenarios, `territory-border-crossing` included).
+    4. Known reds: none.
+5. **Decisions (DESIGN § 4.3).**
+    1. *Where outlines go.* Chosen: built from the cache in the plugin and sent over the game hub
+       (`ReportTerritoryOutlines`), off by default (`map-outlines`), because overview map O15 (2026-11-18) puts no
+       BlueMap plugin on the game server and § 1 item 3.3 sends territory through that path; the API store and bridge
+       layer is #802. Alternatives: (a) BlueMap marker API on the game server: contradicts O15; (b) reuse
+       `ReportRegionOutlines` with synthetic ids: stored and drawn as domain regions; (c) no outlines: in the scope.
+    2. *Split chunks at build time.* Chosen: every column of a partly reached chunk is computed off the main thread at
+       build, because the report and outlines need them and a lookup stays a map read. Alternatives: (a) lazy
+       per-column memo: geometry on the main thread, a mutable cache.
+    3. *Chunk classification.* Chosen: centre distance ± half the chunk diagonal (1-Lipschitz bound), exact per column
+       for the rest. Alternatives: (a) per column everywhere: ~256× the work.
+    4. *Structure position.* Chosen: the region bounding box's centre column. Alternatives: (a) any column of the region:
+       flags structures barely touching a border; (b) the Location: optional, not on the search DTO.
+    5. *OutsideTerritory includes crown land.* Chosen: land the structure's town does not own (wilderness, another
+       town, crown land), literally DESIGN § 4. Alternatives: (a) same-kingdom crown land counts as inside: not in the
+       design.
+    6. *Entry/exit line.* Chosen: action bar, configurable, `notify-players`. Alternatives: (a) chat: noisy; (b) title:
+       intrusive.
+    7. *Realtime handler.* Chosen: `registerTerritorySync` registers `TerritoryChanged` directly, only with the flag,
+       leaving `ConfigRealtimeSync.Targets` and `ConfigEvents.TYPES` untouched (other chains use them). Alternatives:
+       (a) a new `Targets` component: changes a shared constructor.
+    8. *Crown land gating.* Chosen: the repair includes crown land only with `production.enabled`;
+       `fromDomainType("CrownLand")` maps to `CROWN_LAND` always (no domain type is sent today, L1 decision 10).
+       Alternatives: (a) gate the mapping too: a flag check in core code for a type that only exists with the feature.
+    9. *Report trigger.* Chosen: after every rebuild and on a forced rebuild, not on unchanged periodic checks.
+       Alternatives: (a) every periodic check: a paged read of every structure every 10 minutes.
+    10. *Coordinator note on overlaps.* `KnKPlugin` wiring and the `config.yml` `production` block are separate
+        additive blocks; no navigation, NPC or siege code touched; the siege L2 merge was mechanical.
+6. **Out of scope, noted.** [#802](https://github.com/PandiO/knk-workspace/issues/802) (sub-issue of #326): API storage
+   and BlueMap bridge layer for `ReportTerritoryOutlines` (smoke § 1.3 step 14 waits for it). For P2 (#91):
+   `InsideTerritory` needs a plugin lookup endpoint (like `RegionContainment`), and rural structures with `TownId` are
+   not in the report yet (it skips structures without a district). Codex: the connector hit its code-review usage limit
+   on both PRs (review "failed", usage-limit comment); no inline findings; noted on each PR.
+7. **Blockers.** None.
+8. **At merge / what the developer must do.**
+    1. Merge the `production` block into the plugin `config.yml` (YAML in the changelog entry and knk-plugin#91; the
+       switch off = no change), restart.
+    2. To test: plugin `production.enabled: true`, the API's game setting `production.enabled` on, staff with
+       `knk.admin.world.territory` (in `knk.admin.*`); keep `map-outlines: false` until #802.
+    3. Smoke test [§ 1.3](../guides/production-storage-transport-smoke-test.md) (tier:3); the untagged and partly
+       tagged parts about 25 minutes.
+    4. At the end of territory (L2 and L3 merged): the `documentation` sub-issue of #326 (coordinator decision 14):
+       territory architecture page (cache, split chunks, report and outline payloads), plugin scenarios guide
+       (`territory-border-crossing`), territory admin and player guides, feature register row.
+9. **Notes for later links.**
+    1. Placement and entry rules (P2 #91, L6/L8): `KnKPlugin.getTerritoryModule().service().lookup(world, x, z)` gives a
+       `TerritoryVerdict` (owner, contesting); listen to `PlayerTerritoryChangeEvent` for entry and exit. Both are null
+       / never fired while `production.enabled` is off.
+    2. L18 (P6): `/knk territory here` is the staff lookup; reuse `TerritoryCache.describe` for names.
 
 ### 4.3 L3 — Territory web app (#690)
 
