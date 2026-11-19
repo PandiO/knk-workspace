@@ -4,6 +4,36 @@ This is a human-readable record of capabilities merged into the V3 default branc
 
 ## Unreleased — on feature branches, not merged
 
+- **Stock core API: storages, the stock ledger and capacity** ([PandiO/knk-workspace#97](https://github.com/PandiO/knk-workspace/issues/97),
+  link L4 of the production, storage and transport chain, [production design](specs/production-storage-transport/DESIGN.md)
+  § 4). Staff can now create storages for a structure, town or district, a player, a clan or a transport's cargo, and
+  every change of stock is a double-entry move in a ledger: stock never appears or vanishes, it moves from one storage
+  to another, with five system storages (`SYS_PRODUCTION`, `SYS_CONSUMPTION`, `SYS_LOSS`, `SYS_ADJUSTMENT`,
+  `SYS_WORLD`) as the other side of goods entering or leaving. Stackable items are counted per blueprint; unique items
+  (an enchanted sword) keep their identity. A storage can cap raw units (amount × each item's new storage weight,
+  default 1) and distinct items; a move over the cap, without enough stock or into a locked storage is refused or, in
+  partial mode, moves what fits and reports the rest, never as an error. A repeated request with the same
+  idempotency key applies once; concurrent moves never lose an update (row locks in id order, tested on MySQL with
+  1000 parallel moves). Corrections are new compensating transactions, never edits. A reconciler checks that every
+  blueprint sums to zero and every line equals its moves; `Production` moves older than 30 days are rolled up per line
+  per day with totals unchanged (G3). The scheduled reconciler and roll-up run only with `production.enabled` on;
+  storage pages, moves, adjustments and corrections by hand work while it is off. Nothing in game changes yet: the web
+  app screens are the next link (#675). knk-web-api: entities `Storage`, `StockLine`, `StockUnit`,
+  `StockTransaction`, `StockMove`, `StockMoveRollup`, `ItemBlueprint.StorageWeight`; `IStockService`
+  (`Move`/`MoveMany`/`Adjust`/`Reverse`), `StockReconciler`, `StockRollupService`, `StockMaintenanceService`;
+  endpoints `api/Storages` (CRUD, search) and `api/StockTransactions` (search, `{id}`, `moves/search`,
+  `rollups/search`, `reconcile`; move, `adjust`, `{id}/reverse`, `rollup`); form and display seeds `Storage` and
+  `StockTransaction`. Storage writes need `knk.admin.world` (create and edit also `knk.admin.content`, delete
+  `knk.admin.delete`); ledger reads the World area node or `knk.economy.admin`; moving stock the new node
+  `knk.economy.admin` (not under `knk.admin`, so only `*` or an explicit grant). Smoke test:
+  [production smoke test § 2](guides/production-storage-transport-smoke-test.md#2-phase-p1-stock-core-97-api-675-web-app-tier3).
+  Admin steps:
+  1. Apply the migration `AddStockCore` (`dotnet ef database update`; additive: six tables, `item_blueprints.StorageWeight`
+     default 1, the five system storages).
+  2. Import the form seeds `Storage` and `StockTransaction` and their display seeds ("make default").
+  3. Grant `knk.economy.admin` to the staff who may move or adjust stock (nobody has it by default except `*`).
+  4. No `api.env` key and no plugin `config.yml` change; keep the game setting `production.enabled` as it is.
+
 - **Navigation: where a route's road part ends** ([PandiO/knk-workspace#780](https://github.com/PandiO/knk-workspace/issues/780)
   option (b), [#771](https://github.com/PandiO/knk-workspace/issues/771) items 3 to 5, fix link F2 of the off-road
   navigation chain). Three plugin switches, all off by default, so routes, trails and sessions stay exactly as before:

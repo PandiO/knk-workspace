@@ -633,6 +633,12 @@ promotes `next` lists them here with its tag:
    written. No `api.env` key: the production flag and ranges are game settings (web app or `PUT api/GameSettings`,
    section `production`). Set-up afterwards: [territory admin guide](admin/territory-admin-guide.md) (form and display
    seeds `Kingdom`, `Province`, `CrownLand`, `TerritoryConflict`).
+6. `20261119160613_AddStockCore` (#97, stock core P1): additive; new tables `storages` (holder check constraint `CK_storages_Holder`), `stock_lines`,
+   `stock_units`, `stock_transactions`, `stock_moves` and `stock_move_rollups` (every FK Restrict);
+   `item_blueprints` gets `StorageWeight` (decimal, 1 on existing rows); the only data written are the five system
+   storages `SYS_PRODUCTION`, `SYS_CONSUMPTION`, `SYS_LOSS`, `SYS_ADJUSTMENT`, `SYS_WORLD` (ids 1-5). No `api.env` key.
+   Set-up afterwards: import the form and display seeds `Storage` and `StockTransaction`, and grant
+   `knk.economy.admin` to the staff who may move stock ([changelog](../CHANGELOG.md) entry of #97).
 
 Earlier: `v0.2` (`58e3218`, 2026-11-14) added `20261109081203_AddTempRegionReleases` (#269), and `v0.1` (`6d5e9c1`,
 2026-11-13) added `20261113161725_SeedStaffFreezeNodes` (gives the Staff group `knk.freeze` and `knk.unfreeze`, #367).
