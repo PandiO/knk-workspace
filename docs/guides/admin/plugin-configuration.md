@@ -1,6 +1,6 @@
 # Plugin configuration reference (`config.yml`)
 
-**Status:** Current · **Last updated:** 2026-11-19 (§ 4.30 `items.identity`, § 2.1 and § 3 rows, production chain L0, #141); 2026-11-18 (§ 4.15 `navigation.preference-max` and § 2.1 row, off-road L9, #709); 2026-11-18 (§ 4.15: the `/navigate` route mode words add no key, off-road L7, #707); 2026-11-18 (§ 4.15 `navigation.walk-links`, the `walk-link-*` and `road-first-*` keys, and § 2.1, off-road L5, #705); 2026-11-18 (§ 4.15 `navigation.plaza-curve-clearance`, `plaza-lines` draws on the trail, and § 2.1, #712 step 2); 2026-11-18 (§ 4.15 `navigation.landmarks` and § 2.1 row, off-road L8, #708); 2026-11-18 (§ 4.15 `navigation.destination-engine` and § 2.1 row, destination engine L3, #69); 2026-11-18 (§ 4.15 `navigation.destinations.stale-after-days` and § 2.1 row, destination engine L2, #103); 2026-11-18 (§ 4.29 `map.reporting.interval-ticks` and the live player report, § 2.1 row, overview map L4, #738); 2026-11-18 (§ 4.29 `map.reporting.enabled`, § 2.1 and § 3 rows, overview map L1, #735); 2026-11-18 (§ 4.27: every `npc.navigation` key checked against `config.yml` on knk-plugin `next` `7aef3de4`, no key added; texts of `pathfinder`, `hop-blocks`, `recheck-ticks`, `walk-only-blocks` and `stop-on-trespass` for the fix links C1 and E1, region overrides for NPCs since L9, #726); 2026-11-18 (§ 4.15 `navigation.plaza-lines`, `plaza-pull`, `plaza-guide-cost` and § 2.1, #712 step 1); 2026-11-18 (§ 4.15 `navigation.trail-leg-spacing`, `navigation.cursor-jump`, `guidance-v2` text, and § 2.1, #711); 2026-11-17 (§ 4.15 `navigation.guidance-v2`, `walk.clearance-cost`, `walk.wall-clearance`, `walk.curve` and § 2.1, #710); 2026-11-17 (§ 4.15 `navigation.walk.max-chunks-per-request` and § 2.1, #703); 2026-11-16 (§ 4.27 `npc`: the per-NPC table no longer split by the `collidable` note, link to the NPC navigation admin guide, docs #658); 2026-11-16 (§ 4.27 `npc`: push resistance for `collidable` (still false), `players-push-npcs`, `push-return`, `push-exempt-after`, `push-exempt-window-ticks`, `push-exempt-ticks`, `push-teleport-ticks`, #627); 2026-11-16 (§ 4.27 `npc`: `crowd-awareness`, #626); 2026-11-16 (§ 4.27 `npc`: `plaza-lines`, `plaza-corridor-blocks`, #625); 2026-11-15 (§ 4.27 `npc`: `group-formation-keeping`, `group-lateral-spacing-min`, `group-spacing-min`, `group-lookahead-blocks`, #624); 2026-11-15 (§ 4.27 `npc`: `local-legs-clearance`, #623); 2026-11-15 (§ 4.27 `npc`: `corridor-steering`, `corridor-half-width`, `wall-clearance`, #622); 2026-11-15 (§ 4.3 `realtime.moderation` and § 2.1, web kick/ban, #574); 2026-11-15 (§ 2.1: #522 merged into `next` `deb7ff49`, #589); 2026-11-15 (§ 4.27 `npc`: `group-lateral-spacing`, `group-width-hysteresis-blocks`, `group-followers-finish-trip`, `group-spacing` 2.0 → 1.5, `group-formation` and `group-ranks-width` texts, #522); 2026-11-15 (§ 4.27 `npc`: `corner-clearance`, `waypoint-margin`, `recovery-wait-ticks`, `stationary-ticks` and `no-progress-ticks` 40, `max-retries` reworded, #521); 2026-11-14 (§ 4.28 `testing.scenarios`, test servers only, #421); 2026-11-14 (§ 4.18 `messages.web-account-registered`, #485); 2026-11-14 (§ 2.1: the #377 `group-*` keys are in `next` since 2026-11-13, PandiO/knk-workspace#496); 2026-11-13 (§ 4.11 gates are discovered too; § 4.21 realtime push; § 4.26 the kit cache, PandiO/knk-workspace#300)
+**Status:** Current · **Last updated:** 2026-11-19 (§ 4.31 `production` (territory), § 2.1 and § 3 rows, production chain L2, #689); 2026-11-19 (§ 4.30 `items.identity`, § 2.1 and § 3 rows, production chain L0, #141); 2026-11-18 (§ 4.15 `navigation.preference-max` and § 2.1 row, off-road L9, #709); 2026-11-18 (§ 4.15: the `/navigate` route mode words add no key, off-road L7, #707); 2026-11-18 (§ 4.15 `navigation.walk-links`, the `walk-link-*` and `road-first-*` keys, and § 2.1, off-road L5, #705); 2026-11-18 (§ 4.15 `navigation.plaza-curve-clearance`, `plaza-lines` draws on the trail, and § 2.1, #712 step 2); 2026-11-18 (§ 4.15 `navigation.landmarks` and § 2.1 row, off-road L8, #708); 2026-11-18 (§ 4.15 `navigation.destination-engine` and § 2.1 row, destination engine L3, #69); 2026-11-18 (§ 4.15 `navigation.destinations.stale-after-days` and § 2.1 row, destination engine L2, #103); 2026-11-18 (§ 4.29 `map.reporting.interval-ticks` and the live player report, § 2.1 row, overview map L4, #738); 2026-11-18 (§ 4.29 `map.reporting.enabled`, § 2.1 and § 3 rows, overview map L1, #735); 2026-11-18 (§ 4.27: every `npc.navigation` key checked against `config.yml` on knk-plugin `next` `7aef3de4`, no key added; texts of `pathfinder`, `hop-blocks`, `recheck-ticks`, `walk-only-blocks` and `stop-on-trespass` for the fix links C1 and E1, region overrides for NPCs since L9, #726); 2026-11-18 (§ 4.15 `navigation.plaza-lines`, `plaza-pull`, `plaza-guide-cost` and § 2.1, #712 step 1); 2026-11-18 (§ 4.15 `navigation.trail-leg-spacing`, `navigation.cursor-jump`, `guidance-v2` text, and § 2.1, #711); 2026-11-17 (§ 4.15 `navigation.guidance-v2`, `walk.clearance-cost`, `walk.wall-clearance`, `walk.curve` and § 2.1, #710); 2026-11-17 (§ 4.15 `navigation.walk.max-chunks-per-request` and § 2.1, #703); 2026-11-16 (§ 4.27 `npc`: the per-NPC table no longer split by the `collidable` note, link to the NPC navigation admin guide, docs #658); 2026-11-16 (§ 4.27 `npc`: push resistance for `collidable` (still false), `players-push-npcs`, `push-return`, `push-exempt-after`, `push-exempt-window-ticks`, `push-exempt-ticks`, `push-teleport-ticks`, #627); 2026-11-16 (§ 4.27 `npc`: `crowd-awareness`, #626); 2026-11-16 (§ 4.27 `npc`: `plaza-lines`, `plaza-corridor-blocks`, #625); 2026-11-15 (§ 4.27 `npc`: `group-formation-keeping`, `group-lateral-spacing-min`, `group-spacing-min`, `group-lookahead-blocks`, #624); 2026-11-15 (§ 4.27 `npc`: `local-legs-clearance`, #623); 2026-11-15 (§ 4.27 `npc`: `corridor-steering`, `corridor-half-width`, `wall-clearance`, #622); 2026-11-15 (§ 4.3 `realtime.moderation` and § 2.1, web kick/ban, #574); 2026-11-15 (§ 2.1: #522 merged into `next` `deb7ff49`, #589); 2026-11-15 (§ 4.27 `npc`: `group-lateral-spacing`, `group-width-hysteresis-blocks`, `group-followers-finish-trip`, `group-spacing` 2.0 → 1.5, `group-formation` and `group-ranks-width` texts, #522); 2026-11-15 (§ 4.27 `npc`: `corner-clearance`, `waypoint-margin`, `recovery-wait-ticks`, `stationary-ticks` and `no-progress-ticks` 40, `max-retries` reworded, #521); 2026-11-14 (§ 4.28 `testing.scenarios`, test servers only, #421); 2026-11-14 (§ 4.18 `messages.web-account-registered`, #485); 2026-11-14 (§ 2.1: the #377 `group-*` keys are in `next` since 2026-11-13, PandiO/knk-workspace#496); 2026-11-13 (§ 4.11 gates are discovered too; § 4.21 realtime push; § 4.26 the kit cache, PandiO/knk-workspace#300)
 **Checked against:** knk-plugin `main` `121030f`; § 4.11, § 4.21 and § 4.26 against `57884e9`; § 4.27 `npc`, the `realtime.erasure` and `realtime.moderation` blocks and `regions.temp-retention.release-interval-minutes` against knk-plugin `next` (not on trunk yet). Update this page in place whenever a `config.yml` key is added, renamed, removed or gets a new default.
 **Source:** knk-plugin `knk-paper/src/main/resources/config.yml` (1,152 lines at `121030f`), read by
 `knk-paper/.../paper/config/ConfigLoader.java`, `EnchantmentConfigManager.java` and `KnKPlugin.java`
@@ -85,6 +85,7 @@ Newest first. Builds before this list: compare the files with the script.
 
 | Merged | Issue | Added (+), removed (−) or changed | Applies |
 |---|---|---|---|
+| in review, not in `next` yet (`claude/production-t-b`) | [#689](https://github.com/PandiO/knk-workspace/issues/689) | + `production.enabled` (false), + `production.territory.refresh-minutes` (10), + `production.territory.notify-players` (true), + `production.territory.report` (true), + `production.territory.map-outlines` (false), + `production.territory.max-chunks-per-world` (500000), + `production.territory.messages.*` (four lines): the production feature flag (G16) and territory, the chunk cache, the lookup on chunk crossings and the conflict report | Restart |
 | in review, not in `next` yet (`claude/item-identity-141`) | [#141](https://github.com/PandiO/knk-workspace/issues/141) | + `items.identity.enabled` (false), + `items.identity.convert-on-obtain` (false), + `items.identity.map-refresh-minutes` (10), + `items.identity.report-interval-minutes` (10): item identity, every obtained item resolves to a blueprint | Restart |
 | in review, not in `next` yet (`claude/offroad-landmark-weights`) | [#709](https://github.com/PandiO/knk-workspace/issues/709) | + `navigation.preference-max` (4.0): with `navigation.landmarks: true`, the cap of overlapping landmark preference weights on walk cells in the `preferred` route mode (and its inverse the other way); at least 1.0 | Restart |
 | in review, not in `next` yet (`claude/offroad-landmarks`) | [#708](https://github.com/PandiO/knk-workspace/issues/708) | + `navigation.landmarks` (false): `true` loads the landmarks of `api/landmarks` into the navigation model, offers them to `/navigate` through the destination engine (needs `navigation.destination-engine: true` too) and turns `/knk landmark` on | Restart |
@@ -165,6 +166,7 @@ Newest first. Builds before this list: compare the files with the script.
 | 4.28 | `testing` | In-plugin test scenarios, test servers only (off by default) |
 | 4.29 | `map` | Overview map reports to the API (off by default) |
 | 4.30 | `items` | Item identity: blueprint tags and the conversion hooks (off by default) |
+| 4.31 | `production` | Production feature flag; territory chunk cache, lookup and conflict report (off by default) |
 
 ## 4. Key reference
 
@@ -886,6 +888,55 @@ items:
     report-interval-minutes: 10
 ```
 
+### 4.31 `production`
+
+The production, storage and transport feature ([PandiO/knk-workspace#22](https://github.com/PandiO/knk-workspace/issues/22),
+flag G16) and, since [#689](https://github.com/PandiO/knk-workspace/issues/689), territory
+([territory DESIGN § 1-4](../../specs/territory/DESIGN.md)). With `enabled: false` nothing of the feature runs (A21):
+no cache, no listener, no report, no realtime handler, and crown land regions are not managed. `/knk territory` then
+answers that territory is off.
+
+With `enabled: true` the plugin reads `GET api/Territory/inputs` (every district and crown land with its holder, rank
+and range, already computed by the API) a few seconds after start, reads those regions' shapes from WorldGuard, and
+builds the territory chunk cache: a chunk wholly owned by one holder (or contested by two) is one entry, a chunk a
+border crosses is **split** and kept per block column. It rebuilds on the realtime event `TerritoryChanged` (also after
+a hub reconnect), every `refresh-minutes`, and on `/knk territory rebuild`; it skips the rebuild when the inputs'
+`version` and the region shapes are unchanged. Players' territory is looked up on every chunk crossing (per block in a
+split chunk). After a rebuild the plugin sends one full report per world (`PUT api/Territory/report`: equal-rank
+overlaps and flagged structures) when `report` is on and the API's `Production:Enabled` is on.
+
+| Key | Default | What it does, safe values | Applies | Added by |
+|---|---|---|---|---|
+| `enabled` | `false` | The production feature flag (plugin side of G16). Territory, and every later production link, runs only with it on. Also adds crown land regions (domain type `CrownLand`) to the managed-region repair (kind `CROWN_LAND`, no parent, priority 10) | Restart | #689 |
+| `territory.refresh-minutes` | `10` | How often the inputs and region shapes are read again besides the `TerritoryChanged` event, so a region redrawn in place is picked up; `0` = only on the event and `/knk territory rebuild` | Restart | #689 |
+| `territory.notify-players` | `true` | An action bar line when a player enters or leaves territory or contested land (`messages`) | Restart | #689 |
+| `territory.report` | `true` | Send the conflict report after each rebuild. The API also needs `Production:Enabled`, else it refuses (409, logged); `/knk territory status` shows the last result | Restart | #689 |
+| `territory.map-outlines` | `false` | Send territory outlines over the game hub (`ReportTerritoryOutlines`) for the overview map. Leave off until the API and the map bridge accept them ([#802](https://github.com/PandiO/knk-workspace/issues/802)); also needs `realtime.enabled` | Restart | #689 |
+| `territory.max-chunks-per-world` | `500000` | Safety limit of the cache per world; a district or crown land that would pass it is left out and logged. A range of 300 blocks takes about 1,300 chunks | Restart | #689 |
+| `territory.messages.enter-town` | `&7Entering the territory of &f{name}` | Action bar on entering a town's territory; `{name}` the town | Restart | #689 |
+| `territory.messages.enter-crown-land` | `&7Entering the crown land of &f{name}` | On entering crown land; `{name}` the kingdom | Restart | #689 |
+| `territory.messages.enter-contested` | `&6Entering contested land: &f{holders}` | On entering contested land; `{holders}` the contesting towns or kingdoms, `/`-separated | Restart | #689 |
+| `territory.messages.enter-wilderness` | `&7Leaving &f{name}&7: wilderness` | On leaving all territory; `{name}` the holder left (or "contested land") | Restart | #689 |
+
+```yaml
+production:
+  enabled: false
+  territory:
+    refresh-minutes: 10
+    notify-players: true
+    report: true
+    map-outlines: false
+    max-chunks-per-world: 500000
+    messages:
+      enter-town: "&7Entering the territory of &f{name}"
+      enter-crown-land: "&7Entering the crown land of &f{name}"
+      enter-contested: "&6Entering contested land: &f{holders}"
+      enter-wilderness: "&7Leaving &f{name}&7: wilderness"
+```
+
+Command: `/knk territory here|status|rebuild`, node `knk.admin.world.territory` (in `knk.admin.*` and
+`knk.admin.world.*`).
+
 ## 5. Maintaining this page
 
 - A change that adds, renames or removes a key, or changes a default, updates § 2.1 and the section's table in the
@@ -897,6 +948,7 @@ items:
 
 ## Changes
 
+1. 2026-11-19: § 4.31 `production` (`enabled`, `territory.refresh-minutes`, `notify-players`, `report`, `map-outlines`, `max-chunks-per-world`, `messages.*`, #689), § 2.1 and § 3 rows; checked against knk-plugin `claude/production-t-b`, not merged into `next` yet
 1. 2026-11-19: § 4.30 `items.identity` (`enabled`, `convert-on-obtain`, `map-refresh-minutes`, `report-interval-minutes`, #141), § 2.1 and § 3 rows; checked against knk-plugin `claude/item-identity-141` `a6c5a2bc`; unchanged in the merge into `next` `2ef256e7` (checked 2026-11-19, docs #796). Admin guide: [item identity](item-identity-admin-guide.md)
 1. 2026-11-18: § 4.15 `navigation.walk-links`, `walk-link-range`, `walk-link-ratio`, `walk-link-ttl-seconds`, `walk-link-retry-seconds`, `walk-link-searches-per-route`, `road-first-share`, `road-first-max-ratio` (#705), § 2.1 row; checked against knk-plugin `claude/offroad-walk-links` `de44d58b`, not merged into `next` yet
 1. 2026-11-18: § 4.15 `navigation.plaza-curve-clearance`, the `plaza-lines` text (#712 step 2), § 2.1 row; checked against knk-plugin `claude/offroad-plaza-lines` `28ad18c5`, not merged into `next` yet
