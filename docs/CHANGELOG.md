@@ -498,7 +498,11 @@ This is a human-readable record of capabilities merged into the V3 default branc
   1. With reporting on, the plugin sends the outline (2D points, min and max Y) of every Town, District, Structure and
      Gate region to the API over the game hub (`ReportRegionOutlines`): after every managed-region repair (startup,
      `/knk regions repair`), after a world task's region is renamed or redefined (the old name is removed), and again
-     on every hub (re)connect. Large reports are split under the hub's message limit.
+     on every hub (re)connect. Large reports are split under the hub's message limit. Since fix F1
+     ([#750](https://github.com/PandiO/knk-workspace/issues/750), knk-plugin and knk-workspace branches
+     `claude/overview-map-f1-subregions`, PRs into `next`) the domain sub-regions (`domain_<id>_sub_<n>`) are reported
+     too: after every region access sync, the sub-regions it lists that were not reported yet, so a domain's outline is
+     its main region plus its sub-regions, also for sub-regions drawn before reporting was on. No new key.
   2. The API keeps them in the new table `map_region_outlines`, one row per world and region id, linked to the domain
      that names the region (main region or sub-region), so the map keeps its outlines while the game server is down.
      Only a plugin-key game hub connection can write them.

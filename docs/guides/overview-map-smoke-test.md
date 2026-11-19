@@ -1,7 +1,7 @@
 # Overview map — smoke test
 
-**Status:** Draft · **Last updated:** 2026-11-19 (§ 3 step 4, § 5 step 7: Escape also after a click inside the map, #757; § 9 steps 1, 3 and 4: "Open profile" disabled with a tooltip without `knk.admin.user.manage`, #809; fix link F2); 2026-11-18 (§ 3 step 1: opening `/bluemap` itself goes to `/map`, #737); 2026-11-18 (§ 3 step 4: Escape only with the focus on the page, #757; docs #766)
-**Coverage:** Written from the design 2026-11-18; no steps run. § 1 updated to what L1 built (7 steps, all partly automated, tagged), § 2 to what L2 built (7 steps: 2 automated, 5 partly automated, tagged), § 3 to what L3 built (11 steps: 1 automated, 9 partly automated, 1 manual only, tagged), § 4 to what L4 built (9 steps: 1 automated, 5 partly automated, 3 manual visibility steps), § 5 to what L5 built (8 steps: 1 automated, 7 partly automated, tagged), § 6 to what L6 built (7 steps: 2 automated, 5 partly automated, tagged), § 7 to what L7 built (10 steps: 4 automated, 6 partly automated), § 8 to what L8 built (9 steps: 3 automated, 6 partly automated), § 9 to what L9 built (8 steps: 3 automated, 4 partly automated, 1 manual only; since F2, #809: 3 automated, 5 partly automated); every section is now updated to what was built.
+**Status:** Draft · **Last updated:** 2026-11-19 (§ 1 step 8: sub-region outlines at startup, #750; fix link F1); 2026-11-19 (§ 3 step 4, § 5 step 7: Escape also after a click inside the map, #757; § 9 steps 1, 3 and 4: "Open profile" disabled with a tooltip without `knk.admin.user.manage`, #809; fix link F2); 2026-11-18 (§ 3 step 1: opening `/bluemap` itself goes to `/map`, #737); 2026-11-18 (§ 3 step 4: Escape only with the focus on the page, #757; docs #766)
+**Coverage:** Written from the design 2026-11-18; no steps run. § 1 updated to what L1 built (7 steps, all partly automated, tagged) and F1 (#750, step 8, partly automated), § 2 to what L2 built (7 steps: 2 automated, 5 partly automated, tagged), § 3 to what L3 built (11 steps: 1 automated, 9 partly automated, 1 manual only, tagged), § 4 to what L4 built (9 steps: 1 automated, 5 partly automated, 3 manual visibility steps), § 5 to what L5 built (8 steps: 1 automated, 7 partly automated, tagged), § 6 to what L6 built (7 steps: 2 automated, 5 partly automated, tagged), § 7 to what L7 built (10 steps: 4 automated, 6 partly automated), § 8 to what L8 built (9 steps: 3 automated, 6 partly automated), § 9 to what L9 built (8 steps: 3 automated, 4 partly automated, 1 manual only; since F2, #809: 3 automated, 5 partly automated); every section is now updated to what was built.
 **Design:** [specs/in-game-maps/OVERVIEW_MAP_DESIGN.md](../specs/in-game-maps/OVERVIEW_MAP_DESIGN.md) · **Issue:**
 [PandiO/knk-workspace#732](https://github.com/PandiO/knk-workspace/issues/732)
 **Guides:** [player](users/overview-map-player-guide.md), [admin](admin/overview-map-admin-guide.md)
@@ -20,13 +20,15 @@ gate structure with two doors.
 
 ## 1. Phase 1: region outlines (#735, tier:3)
 
-*Built by link L1 (knk-plugin and knk-web-api branches `claude/overview-map-outlines`, PRs into `next`). 7 steps, all
-partly automated (tagged): the suites cover the plugin's reports, the hub method and the table; a real Paper server
+*Built by link L1 (knk-plugin and knk-web-api branches `claude/overview-map-outlines`, PRs into `next`); step 8 by fix
+F1 ([#750](https://github.com/PandiO/knk-workspace/issues/750), knk-plugin branch `claude/overview-map-f1-subregions`,
+PR into `next`). 8 steps, all partly automated (tagged): the suites cover the plugin's reports, the hub method and the table; a real Paper server
 with WorldGuard, the game hub and MySQL is checked by hand. Every step can still be run by hand; not run yet. Full manual
 run about 30 minutes.*
 
-Tests named below: knk-plugin `knk-core` `MapReportingServiceTest`, `ManagedRegionRepairServiceTest`, `knk-paper`
-`RegionOutlineAdapterTest`; knk-web-api `MapRegionOutlineServiceTests`, `RealtimeHubTests`, `AddMapRegionOutlinesTests`.
+Tests named below: knk-plugin `knk-core` `MapReportingServiceTest`, `MapReportingServiceSubRegionsTest`,
+`ManagedRegionRepairServiceTest`, `knk-paper` `RegionOutlineAdapterTest`, `MapReportingSubRegionsTest`,
+`DomainAccessFlagSyncAfterSyncTest`; knk-web-api `MapRegionOutlineServiceTests`, `RealtimeHubTests`, `AddMapRegionOutlinesTests`.
 
 ### 1.0 Preconditions
 
@@ -39,7 +41,8 @@ Tests named below: knk-plugin `knk-core` `MapReportingServiceTest`, `ManagedRegi
        enabled: true
    ```
    Existing servers don't get the block by themselves: paste it (plugin configuration reference § 4.29).
-3. Data: the test town, its districts and the structures above, each with a WorldGuard region.
+3. Data: the test town, its districts and the structures above, each with a WorldGuard region; for step 8 one of them
+   with at least one sub-region (`domain_<id>_sub_<n>`, domain sub-regions admin guide).
 4. To read the table: `SELECT WgRegionId, WorldName, MinY, MaxY, DomainId, UpdatedAt, LEFT(PointsJson, 80) FROM
    map_region_outlines ORDER BY WorldName, WgRegionId;`
 
@@ -79,6 +82,17 @@ Tests named below: knk-plugin `knk-core` `MapReportingServiceTest`, `ManagedRegi
    `map.reporting.enabled: false` and restart. Change a region (step 3 or 5). **Expected:** the server log shows
    `[KnK Map] Map reporting off (map.reporting.enabled=false)`, no `[KnK Map] Region outlines` line, and the row does
    not change. (flag)
+8. [partly automated: `MapReportingServiceSubRegionsTest.firstSync_sendsEverySubRegion_besideTheMainRegions`,
+   `MapReportingServiceSubRegionsTest.laterSyncs_sendOnlyNewSubRegions_andAQuietSyncReadsNothing`,
+   `MapReportingSubRegionsTest.everyListedSubRegion_inItsDomainsWorld`,
+   `DomainAccessFlagSyncAfterSyncTest.theListenerGetsTheRules`; by hand: a real server, WorldGuard and MySQL] With
+   `map.reporting.enabled: true` again, take a domain whose sub-region was drawn before reporting was on (or delete its
+   row: `DELETE FROM map_region_outlines WHERE WgRegionId = 'domain_<id>_sub_<n>';`) and restart the game server. Wait
+   for the access sync (about 5 seconds after startup, `regions.access.sync.delay-ticks`). **Expected:** the server log
+   shows `[KnK Map] Region outlines (sub-regions): <n> outline(s), 0 removed, …` with `<n>` the number of sub-regions
+   the API lists; the table has a row for every `domain_<id>_sub_<n>` with its points, min Y, max Y and the same
+   `DomainId` as the main region's row. Five minutes later (the periodic sync) no new `(sub-regions)` line appears:
+   only new sub-regions are sent. (#750)
 
 ## 2. Phase 2: public map API (#736, tier:3)
 
@@ -660,16 +674,17 @@ Tests named below: knk-web-app `e2e/overview-map-moderation.spec.ts` (Playwright
 
 ## Changes
 
-1. 2026-11-19: § 3 step 4 and § 5 step 7: Escape closes the panel also after a click inside the map, #757; § 9 steps
+1. 2026-11-19: § 1 step 8: sub-region outlines reported after the access sync, #750 (fix link F1)
+2. 2026-11-19: § 3 step 4 and § 5 step 7: Escape closes the panel also after a click inside the map, #757; § 9 steps
    1, 3 and 4: "Open profile" disabled with a tooltip without `knk.admin.user.manage`, #809 (fix link F2)
-2. 2026-11-18: § 3 step 4: Escape only with the focus on the page, #757; docs #766
-3. 2026-11-18: § 9 to what L9 built, #743
-4. 2026-11-18: § 5 to what L5 built, #739
-5. 2026-11-18: § 8 to what L8 built, #742
-6. 2026-11-18: § 7 to what L7 built, #741
-7. 2026-11-18: § 6 to what L6 built, #740
-8. 2026-11-18: § 4 to what L4 built, #738
-9. 2026-11-18: § 3 to what L3 built, #737
-10. 2026-11-18: § 2 to what L2 built, #736
-11. 2026-11-18: § 1 to what L1 built, #735
-12. 2026-11-18: draft from the design, phases 1, 2, 3, 4a, 4b, 5, 6a, 6b, 7
+3. 2026-11-18: § 3 step 4: Escape only with the focus on the page, #757; docs #766
+4. 2026-11-18: § 9 to what L9 built, #743
+5. 2026-11-18: § 5 to what L5 built, #739
+6. 2026-11-18: § 8 to what L8 built, #742
+7. 2026-11-18: § 7 to what L7 built, #741
+8. 2026-11-18: § 6 to what L6 built, #740
+9. 2026-11-18: § 4 to what L4 built, #738
+10. 2026-11-18: § 3 to what L3 built, #737
+11. 2026-11-18: § 2 to what L2 built, #736
+12. 2026-11-18: § 1 to what L1 built, #735
+13. 2026-11-18: draft from the design, phases 1, 2, 3, 4a, 4b, 5, 6a, 6b, 7
