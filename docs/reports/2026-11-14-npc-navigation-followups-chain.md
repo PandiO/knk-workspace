@@ -417,6 +417,13 @@ the configuration reference § 4.27), then restart. In test order:
     started. The off-road (#698) and siege weapons (#354) coordinators were told. Also on 2026-11-19: the developer's
     decision on long walks (O32, L6 on hold; transports ride the extended rural roads with short walk legs); NPC walk
     legs share the players' `navigation.walk` caps (an NPC-only override offered, not scheduled).
+51. **Developer retest of 2026-11-19: B5, C1, E1, R1 passed** (evidence `evidence/smoke-2026-11-16`
+    `.../evidence/2026-11-19/`: run log, a new tower snapshot with the box over the goal and the start). The `ranks`
+    group holds formation well on the stair house; the keep tower is reached by one NPC and a group of 20; the off-road
+    start joins the road where reachable; exit denials and the refresh hold; `trespasses 0` throughout. The developer
+    marked the E1 refresh step and R1 "accepted". To improve later (developer: not a problem): an NPC looks jittery in
+    the spiral staircase, the walk path hugging the inner wall. NPC walk legs are not shaped by clearance yet; the
+    off-road chain's walk-path shaping (O11, guidance v2) is player-side, and NPC legs could reuse it later.
 
 ## 4. Link blocks
 
