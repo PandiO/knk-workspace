@@ -5,8 +5,9 @@ in CI and 4 partly (tagged); every step can still be run by hand; manual steps n
 #326): 19 of 19 steps automated in CI (tagged; step 1.2.6 needs a connected server to check by hand); every step can
 still be run by hand; not run. § 1.3 (territory plugin, #689): 7 of 14 steps automated and 7 partly (tagged; step 14
 waits for #802); not run. § 1.4 (territory web app, #690): 13 of 15 steps automated in CI and 2 partly (tagged);
-every step can still be run by hand; not run. Other sections not yet automated (the links tag them).
-**Last updated:** 2026-11-19 (§ 1.0 and § 1.3 preconditions: builds from `next` instead of the link branches; guides: [territory admin guide](admin/territory-admin-guide.md), docs #806); 2026-11-19 (§ 1.4 territory web app, link L3, #690); 2026-11-19 (§ 1.3 territory plugin, link L2, #689); 2026-11-19 (§ 1 territory API, link L1, #326); 2026-11-19 (§ 0 item identity, link L0, #141); 2026-11-16 (draft from the design, territory and phases P1-P12)
+every step can still be run by hand; not run. § 2 (stock core API, #97): 15 of 17 steps automated in CI and 2 partly
+(tagged); every step can still be run by hand; not run. Other sections not yet automated (the links tag them).
+**Last updated:** 2026-11-19 (§ 2 stock core API, link L4, #97); 2026-11-19 (§ 1.0 and § 1.3 preconditions: builds from `next` instead of the link branches; guides: [territory admin guide](admin/territory-admin-guide.md), docs #806); 2026-11-19 (§ 1.4 territory web app, link L3, #690); 2026-11-19 (§ 1.3 territory plugin, link L2, #689); 2026-11-19 (§ 1 territory API, link L1, #326); 2026-11-19 (§ 0 item identity, link L0, #141); 2026-11-16 (draft from the design, territory and phases P1-P12)
 **Design:** [specs/production-storage-transport/DESIGN.md](../specs/production-storage-transport/DESIGN.md) (§17
 acceptance A01-A27, §18 links) · [territory](../specs/territory/DESIGN.md) · [shops](../specs/shops/DESIGN.md) ·
 **Issue:** [PandiO/knk-workspace#22](https://github.com/PandiO/knk-workspace/issues/22)
@@ -376,30 +377,112 @@ panel); the seeded Town and District forms do not have those fields yet (seed fo
 
 ## 2. Phase P1: stock core (#97 API, #675 web app; tier:3)
 
-*Draft from the design (2026-11-16); the links update it to what was built and tag the automated steps.*
+Built so far: link L4, the API (knk-web-api, migration `AddStockCore`; branch `claude/production-p1`, PR into `next`).
+The web app screens (storage pages, adjust and move dialogs, the ledger explorer) are link L5 (#675); until then every
+step runs with a REST client (or Swagger) against the API. Stock moves only through `api/StockTransactions`; capacity,
+missing stock and locks come back as a result with a status (200), never as an error. 17 steps: 15 automated in CI, 2
+partly (tagged); every step can still be run by hand; manual steps not run. Full manual run about 40 minutes; the
+untagged parts of the partly tagged steps about 10 minutes.
 
 ### 2.0 Preconditions
 
-1. Item identity (#141) deployed; the "Uncurated" category holds the generated vanilla blueprints. (A04)
-2. Two domain storages for Phoenix, **S1** (capacity 100) and **S2** (capacity 50).
+1. knk-web-api from the branch with migration `AddStockCore` applied (`dotnet ef database update`).
+2. Item identity (#141) deployed; the "Uncurated" category holds the generated vanilla blueprints. Note the ids of
+   **Oak log** and **Stone** (`GET api/ItemIdentity/material-map` or the blueprint list). (A04)
+3. One enchanted sword as an item instance (for example from a lootbox claim); note its item instance id.
+4. Callers: a **Staff** token holding `knk.admin.world`, `knk.admin.content` and `knk.economy.admin` (the economy node
+   is not under `knk.admin`, so `knk.admin.*` does not grant it; only `*` or an explicit grant), a **World staff** token
+   with `knk.admin.world` but without `knk.economy.admin`, and a **Visitor** token (no staff nodes).
+5. Town **Phoenix** (common preconditions). The form and display seeds `Storage` and `StockTransaction` are imported
+   (step 1).
 
 ### 2.1 Steps
 
-1. As Staff, open the create form for a storage in the web app on a fresh database. **Expected:** the form comes from
-   the seed and saves. (A23)
-2. Adjust S1 by +64 oak logs with the adjust dialog. **Expected:** S1 shows 64; the ledger explorer shows one
-   `AdminAdjust` move with the staff account. (A01)
-3. Move 30 oak logs S1 → S2. **Expected:** S1 34, S2 30; one ledger transaction with a debit and a credit. (A01)
-4. Repeat the same move request with the same idempotency key (dev tool or retry). **Expected:** applied once only.
-   (A01)
-5. Move 40 oak logs S1 → S2 (S2 has room for 20). **Expected:** refused in strict mode; in `Partial` mode 20 move and
-   20 are reported as rejected. (A02)
-6. Deposit an enchanted sword into S1, move it to S2, withdraw it. **Expected:** the same unit (same id, same
-   enchantments) at every step. (A03)
-7. Run the reconciler. **Expected:** no differences. (A01)
-8. With the clock moved 31 days on a test database, run the roll-up. **Expected:** `Production` moves older than 30
-   days are summed per line per day; storage totals are unchanged; other move kinds keep every row. (A22)
-9. As Visitor, call a stock move endpoint. **Expected:** refused (403).
+1. [partly automated: knk-web-api `FormConfigurationSeedFilesTests`, `DisplayConfigurationSeedFilesTests` (every seed
+   dry-runs, imports and is the default on a fresh database); by hand: open the form in the web app] As Staff, import
+   the form seeds `Storage` and `StockTransaction` and the display seeds `Storage` and `StockTransaction` ("make
+   default"). Open the create form for a storage in the web app. Create **S1**: kind Domain, domain Phoenix, max units
+   100; and **S2**: kind Domain, domain Phoenix, max units 50 (or `POST api/Storages` with
+   `{ "name": "S1", "kind": "Domain", "domainId": <Phoenix>, "maxUnits": 100 }`). **Expected:** the form comes from the
+   seed and both storages save; their pages show holder Phoenix, total 0. (A23)
+2. [automated: `StockLedgerMySqlTests.Migration_SeedsTheFiveSystemStorages`, `StorageServiceTests.SystemStorages_CannotBeEditedOrDeleted`]
+   Call `POST api/Storages/search` with `{ "filters": { "kind": "Virtual" } }`. **Expected:** five storages
+   `SYS_PRODUCTION`, `SYS_CONSUMPTION`, `SYS_LOSS`, `SYS_ADJUSTMENT`, `SYS_WORLD`. `DELETE api/Storages/<SYS_LOSS id>`
+   answers 409.
+3. [automated: `StockServiceTests.Adjust_PutsStockIn_FromSysAdjustment_AsOneAdminAdjustTransaction`, `StockControllersTests.Adjust_RecordsTheWebUserAsActor`]
+   `POST api/StockTransactions/adjust` with `{ "storageId": <S1>, "itemBlueprintId": <Oak log>, "delta": 64, "note":
+   "smoke 2.1.3" }`. **Expected:** status `Applied`; `GET api/Storages/<S1>` lists Oak log 64 and total units 64;
+   `POST api/StockTransactions/search` with `{ "filters": { "reason": "AdminAdjust" } }` lists one transaction with
+   your user id and the note; its one move goes from `SYS_ADJUSTMENT` to S1. (A01)
+4. [automated: `StockServiceTests.Move_DebitsOneStorage_AndCreditsAnother_InOneTransaction`] `POST api/StockTransactions`
+   with `{ "reason": "Distribution", "lines": [ { "fromStorageId": <S1>, "toStorageId": <S2>, "itemBlueprintId": <Oak
+   log>, "amount": 30 } ] }`. **Expected:** `Applied`; S1 34, S2 30; `GET api/StockTransactions/<id>` shows one
+   transaction with one move S1 → S2 of 30. (A01)
+5. [automated: `StockServiceTests.Move_WithTheSameIdempotencyKey_AppliesOnce_AndReplaysTheFirstResult`, `StockServiceTests.Move_WithAKeyUsedForAnotherRequest_IsRefused`, `StockLedgerMySqlTests.TwentyParallelIdenticalRequests_ApplyOnce`, `StockLedgerMySqlTests.OneKeyAcrossDifferentStorages_TheUniqueIndexLetsOneApply`]
+   Send a move of 2 oak logs S1 → S2 with `"idempotencyKey": "smoke-2-1-5"` twice. **Expected:** the second answer has
+   `"replayed": true` and the same transaction id; S1 32, S2 32 (applied once). Send it a third time with amount 3 and
+   the same key. **Expected:** 409 `IdempotencyKeyReuse`; nothing changes. (A01)
+6. [automated: `StockServiceTests.Move_OverCapacity_IsRefusedAllOrNothing_AndPartialAcceptsWhatFits`, `StockLedgerMySqlTests.ParallelMovesIntoACappedStorage_NeverPassTheCap`]
+   Move 40 oak logs S1 → S2 (S2 has room for 18). **Expected:** status `Rejected`, line `rejectReason: CapacityFull`,
+   no transaction, nothing changes. Send it again with `"mode": "Partial"`. **Expected:** `PartiallyApplied`, accepted
+   18, rejected 22 (`CapacityFull`); S2 50, S1 14. (A02)
+7. [automated: `StockServiceTests.Capacity_CountsRawUnitsTimesStorageWeight`, `StorageServiceTests.StorageWeight_IsValidated_AndNullKeeps`]
+   Set Stone's storage weight to 2 (`PUT api/ItemBlueprints/<Stone>` with its current body plus `"storageWeight": 2`).
+   Create **S3** (Domain, Phoenix, max units 50) and send a Partial move of 30 Stone from `SYS_PRODUCTION` to S3 with
+   reason `Production`. **Expected:** 25 accepted, 5 rejected (`CapacityFull`): capacity counts raw units × storage
+   weight. A blueprint saved without `storageWeight` keeps its weight. (A02)
+8. [automated: `StockServiceTests.UniqueItem_KeepsItsIdentity_ThroughDepositMoveAndWithdrawal`, `StockControllersTests.UniqueItem_LineWithoutAmount_MovesOne`]
+   Deposit the enchanted sword: move `{ "fromStorageId": <SYS_WORLD>, "toStorageId": <S1>, "itemInstanceId": <sword> }`
+   with reason `Deposit`; move it S1 → S2 (reason `Distribution`); withdraw it S2 → `SYS_WORLD` (reason `Withdraw`).
+   **Expected:** after each step `GET api/Storages/<id>` lists the same item instance id under unique items in the
+   storage it was moved to, and nowhere else; after the withdrawal no storage lists it; `POST
+   api/StockTransactions/moves/search` with `{ "filters": { "itemInstanceId": "<sword>" } }` shows three moves of the
+   same id; a second withdrawal from S2 is `Rejected` with `NotEnoughStock`. (A03)
+9. [automated: `StockServiceTests.LockedStorage_RefusesMovesInAndOut_UntilTheLockEnds`, `StorageServiceTests.Update_ChangesCapacityAndLock_AndBumpsTheRowVersion`]
+   Lock S2: `PUT api/Storages/<S2>` with its body plus `"lockedUntil": "<one hour from now, UTC>", "lockReason":
+   "smoke"`. Move 1 oak log S2 → S1 (a lock stops moves out as well as in). **Expected:** `Rejected`, `rejectReason:
+   Locked`. Clear the lock (`lockedUntil`
+   null) and move again. **Expected:** `Applied`. An update that sends an old `rowVersion` answers 409.
+10. [automated: `StockServiceTests.Reverse_WritesACompensatingCorrection_Once`, `StockServiceTests.Reverse_WhenTheStockIsGone_IsRejected`]
+    `POST api/StockTransactions/<id of step 4>/reverse` with `{ "note": "smoke undo" }`. **Expected:** `Applied`; a new
+    transaction with reason `Correction` and `reversesTransactionId` = the step 4 id; 30 oak logs move S2 → S1 (if S2
+    still holds them; otherwise `Rejected`, `NotEnoughStock`, and nothing changes); the step 4 transaction is
+    unchanged and its page shows `reversedByTransactionId`. Reversing it again with another `idempotencyKey` answers
+    409.
+11. [automated: `StockControllersTests.LedgerReads_DrillDownFromALineToItsMoves`] Pick S1's Oak log amount and call
+    `POST api/StockTransactions/moves/search` with `{ "filters": { "storageId": "<S1>", "itemBlueprintId": "<Oak
+    log>" } }` (and `rollups/search` with the same filters). **Expected:** the moves into S1 minus the moves out of S1
+    (plus roll-up rows) add up to the amount on S1's page; each row names both storages and the blueprint.
+12. [automated: `StockReconcilerAndRollupTests.Reconciler_IsClean_AfterEveryKindOfPath`, `StockReconcilerAndRollupTests.Reconciler_FindsALineThatWasChangedOutsideTheLedger`, `StockLedgerMySqlTests.AThousandConcurrentMoves_LoseNoUpdate_AndTheReconcilerIsClean`]
+    `GET api/StockTransactions/reconcile`. **Expected:** `"clean": true` and every difference count 0: for every
+    blueprint the amounts over all storages, system storages included, sum to zero, and every line equals the net of
+    its moves. (A01)
+13. [automated: `StockReconcilerAndRollupTests.Rollup_SumsOldProductionMovesPerLinePerDay_AndKeepsTotals`, `StockReconcilerAndRollupTests.Rollup_AddsToTheSameDaysRow_AndSkipsReversedTransactions`, `StockLedgerMySqlTests.Rollup_ReplacesOldProductionMoves_AndKeepsTheReconcilerClean`]
+    On a test database only: move 5 oak logs `SYS_PRODUCTION` → S1 three times (reason `Production`) and once S1 → S2
+    (reason `Distribution`), then date them 31 days back in SQL: `UPDATE stock_transactions SET CreatedAt =
+    CreatedAt - INTERVAL 31 DAY WHERE Id IN (…); UPDATE stock_moves SET CreatedAt = CreatedAt - INTERVAL 31 DAY WHERE
+    TransactionId IN (…);`. Note S1's total. `POST api/StockTransactions/rollup`. **Expected:** the three `Production`
+    transactions are rolled up into one row per day and line (`rollups/search` shows amount 15, move count 3); their
+    transactions and moves are gone; the `Distribution` transaction keeps its row; S1's total is unchanged; the
+    reconciler stays clean. (A22)
+14. [partly automated: `StockReconcilerAndRollupTests.MaintenanceJob_RunsOnlyWithProductionEnabled`; by hand: the log]
+    With the game setting `production.enabled` off, leave the API running for more than an hour. **Expected:** no
+    "Stock reconciler" or "Stock roll-up" log line; storages, adjust, move, reverse, reconcile and roll-up by hand
+    still work. Turn it on: within the hour the reconciler runs (a warning only when it finds a difference) and the
+    roll-up runs once a day. (A21, G16)
+15. [automated: `StockControllersTests.AVisitor_CannotMoveStock_ButTheSearchIsLeftToTheReadRule`, `StockControllersTests.Ledger_WritesNeedTheEconomyNode_ReadsFollowTheStockTransactionType`, `ReadAccessRulesTests.EveryReadEndpoint_HasItsPinnedCategory`]
+    As Visitor, call `POST api/StockTransactions` (step 4's body) and `POST api/StockTransactions/adjust`.
+    **Expected:** 403. As World staff, the ledger reads (`search`, `moves/search`, `GET <id>`, `reconcile`) answer
+    200 and the move, adjust, reverse and roll-up answer 403.
+16. [automated: `StorageServiceTests.Delete_OnlyAnEmptyStorageWithoutHistory`, `StorageServiceTests.Update_KindOrHolder_OnlyWithoutStockOrHistory`, `StorageServiceTests.Create_WithAHolderThatDoesNotMatchTheKind_IsRefused`]
+    `DELETE api/Storages/<S1>`. **Expected:** 409 (it has stock or history). Create an empty storage for a player and
+    one for a clan (kind Player with `userId`, kind Clan with `clanId`) and delete the player one. **Expected:** 204. A
+    storage with a holder field that doesn't match its kind (kind Domain with `userId`) answers 400; changing S1's kind
+    answers 409.
+17. [automated: `StockLedgerMySqlTests.AThousandConcurrentMoves_LoseNoUpdate_AndTheReconcilerIsClean`, `StockLedgerMySqlTests.FiftyParallelMovesOfTen_FromOneHundred_ExactlyTenSucceed`, `StockLedgerMySqlTests.AMoveInsideTheCallersTransaction_IsRolledBackWithIt`]
+    Optional by hand: with S1 at 100 oak logs, send 50 moves of 10 S1 → S2 at the same time (a REST runner with
+    parallel requests). **Expected:** exactly 10 are `Applied`, 40 `Rejected` with `NotEnoughStock`; S1 0, S2 +100;
+    the reconciler is clean. (A01)
 
 ## 3. Phase P2: world: rural structures, warehouse, production structure (#91 API, #676 web app, #677 plugin; tier:3)
 
