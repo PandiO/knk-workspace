@@ -9,15 +9,22 @@
 
 ## 1. Waiting for the developer
 
-1. Nothing yet. Later: the developer's smoke test of each tier:3 link's guide section before the next tier:3 link in
-   the same repo builds on it (charter § 2.3), and the shop menu templates for L26 (#687).
+1. **Smoke test of L0 (item identity, tier:3):** guide `docs/guides/production-storage-transport-smoke-test.md` § 0 on
+   `next` (14 steps, about 25 minutes for the untagged ones). Before it: apply migration `AddItemIdentity`, run a
+   catalogue scan (or `POST api/ItemIdentity/shadows/generate`), merge the `items.identity` block into the plugin
+   `config.yml` (both switches off by default). L4 (#97 stock core) builds on L0 and waits for this (charter § 2.3).
+2. **Decision:** L0 stores conversion counts in `item_conversion_stats` without form/display seeds, an exception to
+   G17 (L0 block, decision 7). Confirm or ask for seeds.
+3. **Review:** L0 agent decisions (block 4.0 § 5), mainly the retag rule (plain vanilla items are never tagged) and
+   the two plugin switches `items.identity.enabled` / `convert-on-obtain`.
+4. Later: the shop menu templates for L26 (#687).
 
 ## 2. Summary
 
 | Link | Issue | Status | Branch heads | PR | CI | How started |
 |---|---|---|---|---|---|---|
-| L0 Item identity: every obtainable item is a blueprint; generated "Uncurated" shadow blueprints (G4) | #141 | In review (PRs open, not merged) | api `5daa3c6`, plugin `a6c5a2bc`, workspace `8ffdbb1a` | [api#51](https://github.com/PandiO/knk-web-api/pull/51), [plugin#89](https://github.com/PandiO/knk-plugin/pull/89), [ws#793](https://github.com/PandiO/knk-workspace/pull/793) | api green; plugin build green, paper-boot running | subagent of the coordinator (two repos besides knk-workspace, SKILL § 4.1.4.2), started 2026-11-19 |
-| L1 Territory API: holders, crown land entity (G10), power, range (G11), conflicts, loyalty | #326 | Not started | — | — | — | — |
+| L0 Item identity: every obtainable item is a blueprint; generated "Uncurated" shadow blueprints (G4) | #141 | Merged into next (2026-11-19) | api `5daa3c6`, plugin `a6c5a2bc`, workspace `8ffdbb1a`; merges: api `7d213fd6`, plugin `2ef256e7`, workspace `ca3bcc98` | [api#51](https://github.com/PandiO/knk-web-api/pull/51), [plugin#89](https://github.com/PandiO/knk-plugin/pull/89), [ws#793](https://github.com/PandiO/knk-workspace/pull/793) | green (API PR checks; plugin build + paper-boot) | subagent of the coordinator (two repos besides knk-workspace, SKILL § 4.1.4.2), started 2026-11-19 |
+| L1 Territory API: holders, crown land entity (G10), power, range (G11), conflicts, loyalty | #326 | Running | — | — | — | create_session `session_01R1w2Uwo46dJVo6Cpr8LzmG` (one repo besides knk-workspace), started 2026-11-19 |
 | L2 Territory plugin: chunk cache, lookup, BlueMap outlines | #689 | Not started | — | — | — | — |
 | L3 Territory web app | #690 | Not started | — | — | — | — |
 | L4 P1 stock core API: storages, ledger, reconciler, capacity, roll-up | #97 | Not started | — | — | — | — |
@@ -76,6 +83,18 @@
    link merges second merges `origin/next` again and regenerates its migration instead of hand-editing the model
    snapshot. L0 was told this. Alternatives: (a) hold L0 until #782 merges: would idle the chain for a mechanical
    conflict; (b) one side hand-merges the snapshot: error-prone.
+
+8. **L0 merge (2026-11-19).** All § 6 checks held: heads matched, branches contained `next`, scope matched #141, CI green
+   (the plugin PR's own paper-boot run was required by the branch rule, so the plugin merged about 8 minutes after the
+   API and workspace PRs), Codex at its usage limit on all three PRs (no findings; noted on each PR). Merged with merge
+   commits: API #51 `7d213fd6`, workspace #793 `ca3bcc98`, plugin #89 `2ef256e7`.
+9. **Docs for L0 now, not at the end of the chain.** Chosen: #141 is a feature issue of its own (a prerequisite that
+   other features use too), so its `documentation` sub-issue #796 and docs session `session_01R1w2UwRChdpz3Hwn16udNZ`
+   start at its merge into `next`. Alternatives: (a) one docs issue at the end of the 30-link chain: L0's docs would
+   wait weeks and pile up with the rest.
+10. **L1 started right after L0's API merge.** L1 (#326) needs only knk-web-api, L0 no longer ran there, and L1 does not
+   build on L0, so the tier:3 smoke gate does not hold it. Alternatives: (a) wait for the developer's L0 smoke test:
+   not required by charter § 2.3 for an unrelated link.
 
 ## 4. Link blocks
 
