@@ -34,7 +34,7 @@ on `next` (Decided 2026-11-17).
 | L8 Phase 5.1 landmark entity | #708 | Merged into next (2026-11-18); waits for the developer's live test (tier:3, smoke § 6) | knk-web-api `d331bdf4`, knk-web-app `b50c4134`, knk-plugin `be9e3a74`, knk-workspace `eb3321a9` (`claude/offroad-landmarks`) | [knk-web-api#50](https://github.com/PandiO/knk-web-api/pull/50) → `935fe8cc`, [knk-web-app#54](https://github.com/PandiO/knk-web-app/pull/54) → `3432e6ef`, [knk-plugin#83](https://github.com/PandiO/knk-plugin/pull/83) → `5fd81466`, [#763](https://github.com/PandiO/knk-workspace/pull/763) → `7722cc76` | green (all jobs) | subagent of the coordinator (three component repos; resumed once after the usage limit) |
 | L9 Phase 5.2 landmark weights | #709 | Merged into next (2026-11-18); waits for the developer's smoke § 7 steps 1–3 | knk-plugin `claude/offroad-landmark-weights` `636c9f32`; knk-workspace `9d0c926f` | [knk-plugin#87](https://github.com/PandiO/knk-plugin/pull/87) → `c7be34fb`, [#776](https://github.com/PandiO/knk-workspace/pull/776) → `99fef23d` | green (build; paper-boot after one #695 flake on the PR run) | create_session `session_01R1w2Ut1P9c2jGxRYC3weCJ` (2026-11-18) |
 | L10 Phase 7 plaza lines | #712 | Merged into next (step 1 and step 2, 2026-11-18); waits for the developer's smoke § 10.2 | knk-plugin `claude/offroad-plaza-lines` `28ad18c5`; knk-workspace `d7e4e834` | step 1: [knk-plugin#73](https://github.com/PandiO/knk-plugin/pull/73) → `ce0f65ec`, [#723](https://github.com/PandiO/knk-workspace/pull/723) → `c7f61e9e`; step 2: [knk-plugin#84](https://github.com/PandiO/knk-plugin/pull/84) → `4daa0c84`, [#769](https://github.com/PandiO/knk-workspace/pull/769) → `2e0c04d4` | green (build, paper-boot) | create_session `session_01R1w2Ussca79jpGCPqzcTf8` (2026-11-18) |
-| F1 walk-search fixes (#771 items 1, 2) | #771 | Running (started 2026-11-19 06:12 from plugin `next` `c7be34fb`) | `claude/offroad-walk-fixes-771` | — | — | create_session `session_01R1w2Ut7LKtBrvQw9bA3mVQ` (2026-11-19) |
+| F1 walk-search fixes (#771 items 1, 2) | #771 | Done, in review (2026-11-19): PRs into `next`, not merged; waits for the developer's smoke § 12 steps 1 and 3 | knk-plugin `claude/offroad-walk-fixes-771` `321daf6b`; knk-workspace `f2c94b7e` | [knk-plugin#88](https://github.com/PandiO/knk-plugin/pull/88), [#778](https://github.com/PandiO/knk-workspace/pull/778) | green (build, paper-boot) | create_session `session_01R1w2Ut7LKtBrvQw9bA3mVQ` (2026-11-19) |
 
 ## 3. Coordinator decisions
 
@@ -1050,3 +1050,61 @@ _(Each link appends its block here when it finishes.)_
 9. **Notes for later links.**
     1. L6 (#706): landmark nodes join the abstract graph per § 5.3.3; `LandmarkLinkNodes` finds road nodes only, a cluster node needs the landmark's pin (`ModelLandmarks` has the model). Hierarchical refinement searches should get the request's `weights` (`WalkRequest.withWeights` keeps them through the `with*` methods).
     2. #747 (engine L5): nothing of L9 is on the old path.
+
+### 4.11 F1 — walk-search fixes (#771)
+
+1. **Scope done.** #771 items 1 and 2, tier:2, no flag (they make valid routes work), no config key, no migration. Items 3 to 5 stay open on #771.
+    1. **Item 1, scene 1 stuck at 1417 59 -489.** The hypothesis was **wrong**: the storage hall is a point Location (L1's run 2 note 5), so no region target was re-derived. The real cause, reproduced on the keep snapshot `quarry-to-keep-stairhouse.zip`:
+        1. The first search (from the snapshot's edge on the way from spawn) finds the way: up the keep stair house's lower flights, passing 3 to 4 blocks from the stuck spot, out south to about z -551, round through the courtyard and back to the hall. It is about 410 blocks; the runs had 371 to 416.
+        2. A recompute happens when the player is more than `recompute-distance` off the path, or the path is `chunk-ttl-seconds` old. Run from inside the keep, it captured only the box round the player and the hall, and capped the length for a 17-block leg. The way runs about 60 blocks south of that box and is much longer than the cap.
+        3. The result: NO_PATH with run 2's limits and FALLBACK (length) with the shipped ones, at margin 16 and at margin 48, from the stuck spot and from on the first path alike. This matches the runs' "the search area closes inside the capture box". The player was on or next to the first path, so the answer to the run's open question is "on the first path".
+        4. **Fix:** a walk leg keeps its last found path (`DirectLeg.foundPath`, kept after a failed search too). Its next request carries a `WalkRecomputeHint` (knk-core):
+            1. The rest of the path, from the player's nearest point on it, stays in the capture: `WalkBox.including`, with `WalkLegPreparer.HINT_MARGIN` 3, unless that goes over `max-chunks-per-request`.
+            2. Its length stays in the cap: `WalkBudget.withLengthAtLeast`, set to the remaining length plus twice the player's distance from the path plus 8.
+            3. On the snapshot the box grows from 9 to 18 chunks (margin 16) or from 49 to 56 (margin 48), and the recompute finds the way again (290 blocks).
+            4. Both `guidance-v2` paths go through `requestWalk`, so flag off and flag on are both fixed. The first search of a leg has no hint and is exactly as before.
+    2. **Item 2, open trapdoor over a ladder.** At the watchtower the hatch is an open spruce trapdoor at 1400 107 -540, with a ladder at 1400 99..106 -540 below it; the roof floor is at 106. Passability is by material name (`Material.isCollidable`), so the open trapdoor was a solid block and the roof was shut in. On the `keep-tower.zip` snapshot that gives exactly the runs' 44 cells.
+        1. **Fix:** an open trapdoor directly above a climbable is climbable (`WalkCells.isClimbableHatch`, `PassabilityRules.isTrapdoor`): passable and never a floor.
+        2. The capture reads the open state from the chunk snapshot through `SpanExtractor.BlockSource.isOpen`, a default method (`Openable.isOpen()` on the server). It is asked for trapdoors only.
+        3. A closed trapdoor stays solid: it can be stood on and is never passed. There is no door-like access rule for trapdoors today (`isHandOpenableDoor` excludes them), so "otherwise blocked" applies. An open trapdoor with no climbable below is unchanged.
+        4. Both layouts pass, up and down: the hatch in the roof above the ladder, and the hatch at feet level above a ladder that reaches the roof (the watchtower).
+    3. **NPC walk legs.** The trapdoor rule reaches their captures (the same `WalkChunkExtractor`), as wanted. The recompute hint does not: NPC legs use `WalkLegPreparer.capture`, not `prepare`. The NPC body check (`NpcWalkPlanner.BodyCheck`) still treats an open trapdoor's panel as blocking, so an NPC plan through a hatch is still checked as before. paper-boot `npc-*` outcomes: see item 4.
+    4. Kept stable (additions only): the public signatures of `WalkLegPreparer` (new 6-argument `prepare`, the 5-argument one delegates), `NavigationService.WalkPreparer` (a default 6-argument `prepare`), `WalkSearch`/`WalkPathfinder` (untouched), `MovementProfile` (untouched) and the shape package (untouched). `core/navigation/destinations`, the engine handle, `core/npc` and `paper/npc` are untouched.
+2. **Commits and heads.**
+    1. knk-plugin `claude/offroad-walk-fixes-771` at `321daf6b` (2 commits, base `next` `c7be34fb`).
+    2. knk-workspace `claude/offroad-walk-fixes-771` at `f2c94b7e` (1 commit, base `next`).
+3. **PRs.** [PandiO/knk-plugin#88](https://github.com/PandiO/knk-plugin/pull/88) and [PandiO/knk-workspace#778](https://github.com/PandiO/knk-workspace/pull/778), both `Part of #771`, base `next`. Not merged.
+4. **Tests, baseline → result.**
+    1. knk-plugin `./gradlew build -x deployToDevServer`, baseline on `next` `c7be34fb`:
+        1. knk-core 3 423 → 3 435 (+12).
+        2. knk-paper 3 138 → 3 147 (+9, 18 skipped as before).
+        3. knk-api-client 358 → 358.
+        4. 0 failures; known reds: none.
+    2. New tests:
+        1. knk-core `WalkTrapdoorHatchTest` (8): up, down, closed, closed still a floor, no ladder below, hatch at feet level, the rule's truth table, material names alone unchanged.
+        2. knk-core `WalkRecomputeHintTest` (4).
+        3. knk-paper `WalkDevWorldFixesTest` (3, on the two dev-world snapshots: scene 1's recompute today versus with the hint, at both margins and with the shipped limits; scene 8 at 44 cells before and found down and up after).
+        4. knk-paper `WalkLegPreparerTest` +3, `NavigationServiceTest` +2 (the hint on recompute, kept after a failed search, `guidance-v2` on), `WalkSnapshotServiceTest` +1 (the open state from the snapshot).
+    3. Unchanged and green: L7's golden transcripts (`WalkLegDefaultTranscriptTest`), L3/L4/L5/L9/L10's flag-off identity tests, the engine's handle tests and the NPC unit tests. No golden transcript changed.
+    4. CI on `321daf6b`: green: build and paper-boot (both the push and the PR runs, every `npc-*` scenario included), no re-run needed. No `npc-*` scenario outcome changed.
+5. **Decisions (DESIGN § 4.3).**
+    1. *How the recompute keeps the way.* Chosen: carry the last found path into the next request (box and length cap), so the search can still find a better way. Alternatives: (a) keep drawing the old path when a recompute fails: the player's drift is not followed, and a stale path survives terrain changes; (b) the coordinator's "pick the region point reachable": not the cause, since the target is a point.
+    2. *Which part of the found path.* Chosen: from the player's nearest point on it to its end. Alternative: (a) the whole path: the box would reach back to spawn for nothing.
+    3. *Box margin round the hint's path.* Chosen: 3 blocks (headroom 2 plus a step aside); the chunks are captured whole anyway. Alternative: (a) the full `capture-margin`: more chunks for no gain on the known way.
+    4. *Over `max-chunks-per-request`.* Chosen: the leg's own box, as before (the cap stays a hard limit). Alternative: (a) a TOO_LARGE capture: a straight line instead of a search.
+    5. *Length floor.* Chosen: remaining length + 2 × the player's distance from the path + 8, through `maxLength`/`detourAllowance` raised just enough. Alternative: (a) only the box: with the shipped limits (`max-length` 144) the 17-block leg's cap (about 130) still cuts the 290-block way.
+    6. *Hatch facing.* Chosen: the trapdoor's facing is not asked (vanilla climbs it only when it faces like the ladder, but a player passes an open hatch either way). Alternative: (a) require matching facing: needs another block-state read for a case the dev world does not have.
+    7. *Iron trapdoors.* Chosen: an open one over a ladder counts too (open is open, however it was opened). Alternative: (a) wooden only: an open iron hatch would block a path a player can take.
+    8. *Where the open state comes from.* Chosen: the chunk snapshot at capture time, trapdoors only. Alternative: (a) a material-name convention: the open state is not a material.
+6. **Out of scope, noted.**
+    1. Toggling a trapdoor fires no block event that `WalkTerrainListener` sees, and the chunk cache does not hear of it either. A walk capture keeps the state it read for up to `chunk-ttl-seconds` (10 s). This is the same as doors today and is not filed.
+    2. With the shipped limits, scene 1's first search and scenes 8 and 9 are budget questions (O32: option A on walk legs), not this link's.
+7. **Blockers.** None. Codex reached its code-review usage limit on both PRs (its comments of 2026-11-19 06:31 and 06:32 UTC), so the link finished without its review (developer decision 2026-11-14); said on both PRs.
+8. **At merge / what the developer must do.**
+    1. Nothing to configure.
+    2. Live test, about 15 minutes: smoke test § 12 steps 1 and 3, with run 2's walk limits and `max-snap-distance` 600. Restore the limits afterwards.
+        1. Scene 1 from spawn to "Keep storage hall": not stuck at 1417 59 -489.
+        2. Garrison Watchtower Roof to Keep Tower Roof and back, through the open hatch.
+9. **Notes for later links.**
+    1. A future walk change that clears `DirectLeg` state must keep `foundPath` across failed searches. It is the only memory of a way that runs outside the leg's box.
+    2. #771 items 3 to 5 (trail spacing, road overshoot, road-to-walk handover) are untouched.
