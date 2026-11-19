@@ -3,9 +3,10 @@
 **Status:** Draft from the design (2026-11-16); no steps run. § 0 (item identity, #141): 7 of 14 steps automated
 in CI and 4 partly (tagged); every step can still be run by hand; manual steps not run. § 1.1-1.2 (territory API,
 #326): 19 of 19 steps automated in CI (tagged; step 1.2.6 needs a connected server to check by hand); every step can
-still be run by hand; not run. § 1.4 (territory web app, #690): 13 of 15 steps automated in CI and 2 partly (tagged);
+still be run by hand; not run. § 1.3 (territory plugin, #689): 7 of 14 steps automated and 7 partly (tagged; step 14
+waits for #802); not run. § 1.4 (territory web app, #690): 13 of 15 steps automated in CI and 2 partly (tagged);
 every step can still be run by hand; not run. Other sections not yet automated (the links tag them).
-**Last updated:** 2026-11-19 (§ 1.4 territory web app, link L3, #690); 2026-11-19 (§ 1 territory API, link L1, #326); 2026-11-19 (§ 0 item identity, link L0, #141); 2026-11-16 (draft from the design, territory and phases P1-P12)
+**Last updated:** 2026-11-19 (§ 1.4 territory web app, link L3, #690); 2026-11-19 (§ 1.3 territory plugin, link L2, #689); 2026-11-19 (§ 1 territory API, link L1, #326); 2026-11-19 (§ 0 item identity, link L0, #141); 2026-11-16 (draft from the design, territory and phases P1-P12)
 **Design:** [specs/production-storage-transport/DESIGN.md](../specs/production-storage-transport/DESIGN.md) (§17
 acceptance A01-A27, §18 links) · [territory](../specs/territory/DESIGN.md) · [shops](../specs/shops/DESIGN.md) ·
 **Issue:** [PandiO/knk-workspace#22](https://github.com/PandiO/knk-workspace/issues/22)
@@ -101,10 +102,10 @@ Full manual run about 45 minutes; the untagged steps only about 25 minutes.
 
 ## 1. Territory V1 (#326 API, #689 plugin, #690 web app; tier:3)
 
-Built so far: link L1, the API (knk-web-api branch `claude/production-t-a`, migration `AddTerritory`), and link L3,
-the web app (knk-web-app branch `claude/production-t-c`: the territory dashboards and forms, the town, conflict and
-structure pages, the production settings; steps 1.4). The plugin (#689: chunk cache, lookup, BlueMap) is a later link;
-its steps (1.3) are still the design's and that link rewrites them. The API keeps the inputs (holders, regions, power, settings, awards)
+Built so far: link L1, the API (knk-web-api, migration `AddTerritory`, in `next`), link L2, the plugin (#689:
+chunk cache, lookup, report; in `next`, steps 1.3), and link L3, the web app (#690: the territory dashboards and
+forms, the town, conflict and structure pages, the production settings; steps 1.4). Map outlines wait for
+[#802](https://github.com/PandiO/knk-workspace/issues/802). The API keeps the inputs (holders, regions, power, settings, awards)
 and the results the game server reports (conflicts, structure flags); the game server computes the territory itself.
 Full manual run of 1.2 about 30 minutes with a REST client, the untagged steps only about 5 minutes.
 
@@ -116,7 +117,7 @@ Full manual run of 1.2 about 30 minutes with a REST client, the untagged steps o
    that play the game server.
 3. Test data: towns **Phoenix** (two districts, call them Old Town and Market) and **Rivertown** (one district), as in
    the common preconditions.
-4. For 1.3 only: the plugin and web app builds of #689 and #690, and BlueMap running (in-game maps, #224).
+4. For 1.3: the plugin build of #689 (its own preconditions in 1.3).
 5. For 1.4: the web app build of #690 against that API, the form and display seeds imported (1.2 step 17), and two
    web app accounts: **Admin** (holds `*`) and **Content staff** (`knk.admin.content` without `knk.admin.world`).
 
@@ -209,27 +210,92 @@ Full manual run of 1.2 about 30 minutes with a REST client, the untagged steps o
     "make default", and the four display seeds. **Expected:** each imports; `/forms/kingdom` and `/forms/crownland`
     open their create forms, and the crown land form's Region field offers Send to Minecraft. (A23, G17)
 
-### 1.3 Steps (plugin #689 and web app #690; draft from the design)
+### 1.3 Steps (plugin #689)
 
-1. As Admin, open the web app's Phoenix page. **Expected:** effective range shown as (100 + 50 × 2) = 200 for normal
-   districts and 300 for the capital district. (A05)
-2. Stand 150 blocks outside the nearest edge of a normal Phoenix district region, then cross a chunk border.
-   **Expected:** the territory lookup (`/knk territory here`, or the debug line) says Phoenix. At 250 blocks from a
-   normal district but 250 from the capital's edge: Phoenix (capital range). At 350 blocks from every district: no
-   holder. (A05, G11)
-3. Walk along a border that runs diagonally. **Expected:** the holder changes per block column inside the split
-   chunk, not at the 16-block chunk edge. (A05)
-4. As Admin, create crown land for the kingdom: region captured with the world task, range 80. Stand inside its range
-   where Phoenix territory also reaches. **Expected:** the lookup says crown land, and no conflict is created. (G10)
-5. Raise Rivertown's power until its territory overlaps Phoenix's (both towns, equal rank). **Expected:** the overlap
-   has no holder (contested); one `TerritoryConflict` lists Phoenix, Rivertown and the area. (A05)
-6. As Admin, resolve the conflict by awarding the area to Phoenix. **Expected:** the conflict is resolved; the lookup in
-   the area says Phoenix.
-7. Open BlueMap. **Expected:** outlines for Phoenix, Rivertown and the crown land match the lookup; contested land is
-   shown as contested.
-8. As Admin, change Phoenix's power to 20. **Expected:** the cache rebuilds (log line); BlueMap and the lookup show the
-   smaller territory within a minute.
-9. As Visitor, try to change town power or crown land in the web app. **Expected:** refused (403); nothing changes.
+Built by link L2 (knk-plugin branch `claude/production-t-b`). Extra preconditions:
+
+1. The plugin build from that branch on a test server with WorldGuard, connected to the API of 1.0 (realtime on:
+   `realtime.enabled: true`, for steps 9 and 12).
+2. The test data of 1.2 steps 1-5: Phoenix power 50 (Market range 200, Old Town capital range 300), Rivertown power 10
+   (range 120), crown land Royal forest (Aurelia, range 80); the regions exist in the world. API game setting
+   `production.enabled` on.
+3. In game: **Staff** holds `knk.admin.world.territory` (or `knk.admin.*`); **Visitor** holds no staff node.
+4. `production` block merged into `plugins/KnightsAndKings/config.yml` (plugin configuration § 4.31), `enabled: false`
+   at first.
+
+Full manual run about 40 minutes; the untagged and partly tagged parts about 25 minutes.
+
+1. [partly automated: knk-plugin `TerritoryConfigTest.theBundledConfig_hasTheFeatureOff_withTheDocumentedDefaults`,
+   `TerritoryAdminCommandTest.withProductionOff_everyFormSaysSo`,
+   `CrownLandManagedRegionTest.withProductionOff_crownLandRegionsAreLeftAlone`; by hand: the log of a real start]
+   Start the server with `production.enabled: false`. As Staff, type `/knk territory here` and `/knk regions repair`.
+   **Expected:** no `[KnK Territory]` line in the log; `/knk territory here` answers "Territory is off on this server
+   (production.enabled: false)."; the repair does not list the Royal forest region. (A21)
+2. [partly automated: `TerritoryServiceTest.theFirstRefresh_buildsTheCache_warnsAboutAMissingRegion_andReports`,
+   `TerritoryConfigTest.theValuesAreRead`; by hand: the log lines on a real server] Set `production.enabled: true`,
+   restart. **Expected:** the log shows `[KnK Territory] On (production.enabled): first build in 5 s, ...`, then within
+   about 10 s `[KnK Territory] Cache rebuilt (startup): <n> chunks (<s> split) in 1 world(s), version ...`. As Staff,
+   `/knk territory status`. **Expected:** sources = the districts and crown lands with a region, `API
+   Production:Enabled: true`; a district whose region does not exist is named in a warning line.
+3. [automated: `TerritoryCacheBuilderTest.aColumnWithinRangeOfTheNearestEdge_belongsToTheTown_theNextOneIsWilderness`,
+   `TerritoryCacheBuilderTest.theCapitalsLargerRange_reachesFurther`,
+   `TerritoryShapeTest.insideAndOnTheEdge_isZero_outsideIsTheDistanceToTheNearestEdge`] As Staff, stand 150 blocks
+   outside the nearest edge of Market's region and type `/knk territory here`. **Expected:** Phoenix. Stand 250 blocks
+   from Old Town's edge and more than 200 from every other Phoenix district. **Expected:** Phoenix (capital range).
+   Stand 350 blocks from every district. **Expected:** wilderness. (A05, G11)
+4. [automated: `TerritoryCacheBuilderTest.aDiagonalBorder_changesPerBlockColumnInsideTheSplitChunk`,
+   `TerritoryTrackerTest.insideASplitChunk_everyColumnIsLookedUp`, plugin scenario `territory-border-crossing`]
+   Find Phoenix's border where it runs diagonally (near a slanted district edge or a corner) and type
+   `/knk territory here` on both sides of it. **Expected:** the answer says `split` for that chunk, and the holder
+   changes from one block column to the next, not at the 16-block chunk edge. (A05)
+5. [automated: plugin scenario `territory-border-crossing`,
+   `TerritoryListenerTest.crossingTheBorder_firesTheEvent_andShowsTheLine_movesInsideDoNot`,
+   `TerritoryTrackerTest.leavingAndEntering_areChanges_movesInsideTheAreaAreNot`] As Visitor, walk out of Phoenix's
+   territory into the wilderness, then back in; walk around inside it. **Expected:** leaving shows the action bar
+   "Leaving Phoenix: wilderness", coming back "Entering the territory of Phoenix"; walking inside shows nothing.
+6. [automated: `TerritoryCacheBuilderTest.crownLand_outranksTheTown_withoutAContest`,
+   `TerritoryReportBuilderTest.townAgainstCrownLand_isNoOverlap`] Walk into the part of Royal forest's range that
+   Phoenix's territory also reaches. **Expected:** the action bar "Entering the crown land of Aurelia";
+   `/knk territory here` says "crown land of Aurelia"; after a `/knk territory rebuild`,
+   `GET api/TerritoryConflicts` lists no conflict for it. (G10)
+7. [automated: `CrownLandManagedRegionTest.withProductionEnabled_theRepairManagesCrownLandRegions_topLevel`,
+   `CrownLandManagedRegionTest.crownLand_isItsOwnKind_atTheTownsFloor_withoutFlags`] As Staff, `/knk regions repair`,
+   then `/rg info <Royal forest's region>`. **Expected:** priority 10, no parent, no flags added by the repair.
+8. [partly automated: `TerritoryReportBuilderTest.anEqualRankOverlap_isReportedOnceWithEveryChunkItTouches`,
+   `TerritoryServiceTest.theFirstRefresh_buildsTheCache_warnsAboutAMissingRegion_andReports`,
+   `TerritoryApiImplTest.report_putsTheSnapshotWithTheKey_andReadsTheResult`; by hand: the conflict from a real server]
+   Raise Rivertown's power (1.2 step 2) until its territory overlaps Phoenix's. **Expected:** within a few seconds the
+   log shows `Cache rebuilt (TerritoryChanged)` and `Report for world: 1 overlap(s), ...; conflicts created 1`;
+   `/knk territory here` in the overlap says "contested: Phoenix / Rivertown" and walking in shows "Entering contested
+   land: Phoenix / Rivertown"; `GET api/TerritoryConflicts` lists one open conflict Phoenix / Rivertown whose chunks
+   cover the overlap. (A05)
+9. [partly automated: `TerritoryReportBuilderTest.structures_areFlaggedContestedOrOutside_andLeftAloneInTheirOwnTerritory`;
+   by hand: the flags in the API] Have a Phoenix structure (with a region) standing in the overlap and one standing
+   outside every territory, then `/knk territory rebuild`. **Expected:** `GET api/Territory/structures/<id>` shows
+   `Contested` (with the conflict id) for the first and `OutsideTerritory` for the second; a structure in Phoenix's own
+   land has no flag. Their districts and towns are unchanged. (Territory § 4)
+10. [partly automated: `TerritoryCacheBuilderTest.twoTownsOverlapping_isContested_andAnAwardGivesItsChunksToOne`; by
+    hand: the realtime path] Resolve the conflict by awarding it to Phoenix (1.2 step 12). **Expected:** within a few
+    seconds the cache rebuilds; `/knk territory here` in the awarded chunks says Phoenix ("Awarded by an admin; also
+    reached by 2 holders."); walking in shows "Entering the territory of Phoenix".
+11. [automated: `TerritoryServiceTest.withTheApiFlagOff_nothingIsReported`,
+    `TerritoryAdminCommandTest.status_showsTheCacheAndThatTheReportWasNotSent`,
+    `TerritoryServiceTest.aRefusedReport_isLoggedAndNamed_notThrown`] Turn the API's `production.enabled` off (1.1
+    step 2), then `/knk territory rebuild` and `/knk territory status`. **Expected:** the lookup still works; status
+    shows `Last report: not sent: the API's Production:Enabled is off`; nothing is written to the conflicts. Turn it on
+    again.
+12. [partly automated: `TerritoryServiceTest.unchangedInputsAndShapes_skipTheRebuild_aNewVersionOrShapeOrForceDoesNot`;
+    by hand: the event on a connected server] Change Phoenix's power to 20. **Expected:** within a few seconds the log
+    shows `Cache rebuilt (TerritoryChanged)` with a new version; 150 blocks from Market is now wilderness (range 140).
+    Change only Phoenix's description: no rebuild line.
+13. [automated: knk-plugin `CommandRegistryPermissionsTest` (the `/knk` node check),
+    `TerritoryAdminCommandTest.completesTheActions_andShowsUsageOtherwise`] As Visitor, type `/knk territory here`.
+    **Expected:** "You don't have permission to use this command."; nothing else happens.
+14. Not testable until [#802](https://github.com/PandiO/knk-workspace/issues/802) (API and map bridge): with
+    `production.territory.map-outlines: true` and the overview map open, Phoenix, Rivertown and the crown land are
+    outlined as the lookup says, contested land shown as contested; a power change redraws them within a minute. Keep
+    `map-outlines: false` until then. [partly automated: `TerritoryOutlinesTest` (all),
+    `TerritoryServiceTest.mapOutlines_areSentPerWorld_onlyWhenSwitchedOn`]
 
 ### 1.4 Steps (web app #690)
 

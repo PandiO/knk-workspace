@@ -4,6 +4,41 @@ This is a human-readable record of capabilities merged into the V3 default branc
 
 ## Unreleased — on feature branches, not merged
 
+- **Territory in game: who holds the land where you stand** ([PandiO/knk-workspace#689](https://github.com/PandiO/knk-workspace/issues/689),
+  link L2 of the production, storage and transport chain, [territory design](specs/territory/DESIGN.md) § 1-4). With
+  the new plugin switch `production.enabled` on, the game server works out each town's and kingdom's territory from the
+  API's districts, crown land and ranges, measured from the nearest edge of each region, and keeps it per chunk; where a
+  border runs through a chunk it is kept per block column, so borders can run diagonally. Players see an action bar line
+  when they enter a town's territory, crown land or contested land, or leave into the wilderness. When two towns'
+  territories overlap the server reports it to the API, which records the conflict and flags the structures standing
+  there; staff check any spot with `/knk territory here`. Crown land regions get their own managed-region kind (top
+  level, priority 10). With the switch off (the default) nothing of this runs. knk-plugin: knk-core `core/territory/`
+  (chunk cache, rules, report, outlines, player tracker, `TerritoryService`), knk-api-client `TerritoryApiImpl`
+  (`GET api/Territory/inputs`, `PUT api/Territory/report`), knk-paper `territory/` (listener,
+  `PlayerTerritoryChangeEvent`, realtime `TerritoryChanged`), `/knk territory here|status|rebuild` (node
+  `knk.admin.world.territory`), managed-region kind `CROWN_LAND`, plugin scenario `territory-border-crossing`. Map
+  outlines are built and can be sent over the game hub, but the API and the map do not take them yet
+  ([#802](https://github.com/PandiO/knk-workspace/issues/802)). Branch `claude/production-t-b` in knk-plugin and
+  knk-workspace (PRs into `next`). Admin steps:
+  1. Merge into the plugin `config.yml` (the switch off = no change), restart:
+     ```yaml
+     production:
+       enabled: false
+       territory:
+         refresh-minutes: 10
+         notify-players: true
+         report: true
+         map-outlines: false
+         max-chunks-per-world: 500000
+         messages:
+           enter-town: "&7Entering the territory of &f{name}"
+           enter-crown-land: "&7Entering the crown land of &f{name}"
+           enter-contested: "&6Entering contested land: &f{holders}"
+           enter-wilderness: "&7Leaving &f{name}&7: wilderness"
+     ```
+  2. To test: `production.enabled: true` in the plugin and the API's game setting `production.enabled` on, then smoke
+     test § 1.3; grant staff `knk.admin.world.territory` (included in `knk.admin.*`). Keep `map-outlines: false`
+     until #802.
 - **Territory in the web app: kingdoms, provinces, crown land, town power, contested zones and structure loyalty** ([PandiO/knk-workspace#690](https://github.com/PandiO/knk-workspace/issues/690),
   link L3 of the production, storage and transport chain, [territory design](specs/territory/DESIGN.md)). Staff can now
   do the territory set-up in the web app instead of with a REST client: kingdoms, provinces and crown land have
