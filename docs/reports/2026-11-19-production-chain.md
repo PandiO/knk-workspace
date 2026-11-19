@@ -47,7 +47,7 @@ of what is already in `next`.
 | L6 P2 world API: structure subtypes, TownId, placement rules | #91 | Merged into next (2026-11-19) | api `303b6ab`, workspace `9ab62ab1`; merges: api `fcfced27`, workspace `c7fe8996` (after a coordinator merge of `next`, `15e3011e`) | [api#57](https://github.com/PandiO/knk-web-api/pull/57), [ws#822](https://github.com/PandiO/knk-workspace/pull/822) | green (build-and-test, mysql-tests, fresh-database) | create_session `session_01R1w2UscSGsG34qwc8vtEQj` (one repo besides knk-workspace), started 2026-11-19 |
 | L7 P2b world web app | #676 | In review (PRs open, 2026-11-19) | web app `f5ea646`, workspace `9d578854` | [web#61](https://github.com/PandiO/knk-web-app/pull/61), [ws#829](https://github.com/PandiO/knk-workspace/pull/829) | web app green (build-and-test, e2e) | subagent of the coordinator (19:37; the create_session `session_01R1w2UwqC5tNA7JBrnf61ko` refused to start, decision 34) |
 | L8 P2c world plugin: managed-region kinds | #677 | Merged into next (2026-11-19) | plugin `cc563771`, workspace `cb11e03a`; merges: plugin `8ebb30be`, workspace `4654a1ad` | [plugin#96](https://github.com/PandiO/knk-plugin/pull/96), [ws#823](https://github.com/PandiO/knk-workspace/pull/823) | green (plugin build + paper-boot, 64 scenarios) | create_session `session_01R1w2UtzV6puGzautXYEFJA` (one repo besides knk-workspace), started 2026-11-19 |
-| L9 P3 production engine API | #86 | Running | — | — | — | create_session `session_01R1w2Uvi8uaBqDwjJDADicL` (one repo besides knk-workspace), started 2026-11-19 |
+| L9 P3 production engine API | #86 | In review (2026-11-19) | api `20dcfb7`, workspace `ea01df32` | [api#58](https://github.com/PandiO/knk-web-api/pull/58), [ws#827](https://github.com/PandiO/knk-workspace/pull/827) | green (build-and-test, mysql-tests, fresh-database) | create_session `session_01R1w2Uvi8uaBqDwjJDADicL` (one repo besides knk-workspace), started 2026-11-19 |
 | L10 P3b production web app | #678 | Not started | — | — | — | — |
 | L11 P4 yield areas API | #138 | Not started | — | — | — | — |
 | L12 P4b surveys plugin | #679 | Not started | — | — | — | — |
@@ -936,3 +936,97 @@ _(Each link appends its block here when it finishes.)_
     2. L12 (P4b surveys) and L22 (P8 harvest): rural production regions are `RESOURCE_PRODUCTION` at priority 30 with no
        parent. `ManagedRegionPolicy.Options.resourceProductionBlockBreak` is still off.
     3. P-3 (production areas, P4): the same lookup answers `contains-region` for an area's region.
+
+### 4.9 L9 — P3 production engine API (#86)
+
+1. **Scope done** (knk-web-api, plus essential docs in knk-workspace).
+    1. Catalogue: `ProductionKind` (area model, allowed yield sources, resource category, default workers, cycle
+       variation flag, `DefaultStoragesJson`) with exactly ten `ProductionKindLevel`s per kind (G8: yield multiplier,
+       cycle speed, `MaxAreaSize`, Output/units-per-slot/transport caps written on level change, `UpkeepReduction`
+       without effect, upgrade coins and duration) and level items (`Unlock`, `UpgradeCost`). Seeded by the migration:
+       Farm, Logger, Quarry, Mine, Fishery, Flower farm, Florist, Animal farm (Hunter deferred, P-D10), 80 levels.
+    2. `ProductionLine` (Configured rate, decimal `Accrued`, inputs per hour, status Running/Paused/BlockedFull/
+       BlockedInputs/Error, anchored grid with indexed `NextSettleAt`). `ProductionEngine` settles each line in its own
+       transaction with the line row locked: accrual, emit the floor `SYS_PRODUCTION → Output` through `IStockService`
+       (idempotency key per line and settle), catch-up cap, stall when full without accruing (D4), resume without
+       catch-up, inputs `Input → SYS_CONSUMPTION`.
+    3. Modifier pipeline with pluggable `IProductionModifierSource` (Level, Weather, Stored) and
+       `IProductionBaseRateProvider` (Configured; P4 adds Derived/Hybrid, P-D2); additions, then multiplications (F8),
+       then unlock and workers (present/total). `ProductionModifier` rows with scope, target, effect and window.
+    4. Weather: `ClimateZone` (one default, towns via `climate_zone_towns`, odds), `WeatherType` with effects per
+       category, `WeatherRoll` stored once per zone and in-game day, deterministic on replay.
+    5. `ProductionCycleRecord` per settle that accrued or changed status (each modifier, workers, emitted, accepted,
+       inputs, shortfall reason). `ProductionSweepService` every 60 s; everything off while `Production:Enabled` is off
+       (A21), CRUD always on. Game settings `production.engine` (base cycle 10 min, catch-up 24 h, weather day 20 min).
+    6. Endpoints `api/ProductionKinds`, `api/ProductionKindLevels` (edit only), `api/ProductionLines` (+ settle),
+       `api/ProductionModifiers`, `api/ClimateZones` (+ rolls), `api/WeatherTypes`, `api/ProductionCycleRecords`,
+       `POST api/Production/run-now`; on `api/ProductionStructures` `GET {id}/production` ("why not producing", lazy
+       settle), `PUT {id}/workers` (writes `WorkersPresent`), `POST {id}/upgrade` (stock + coins in one transaction).
+       World area registry, lookups, pinned access tests. `ProductionStructure.ProductionKindId` FK (Restrict); kind
+       default workers and storages on create; level caps on level change. Notification `ProductionLineStatusChanged`.
+    7. Seeds (G17): form and display seeds for `ProductionKind`, `ProductionKindLevel`, `ProductionLine`,
+       `ProductionModifier`, `ClimateZone`, `WeatherType`; `ProductionStructure` v2 (kind). #819 done: `ItemBlueprint`
+       form v2 with `StorageWeight`, `Storage` display v2 shows the blueprint name. One additive migration
+       `AddProductionEngine`; `KnKDbContext` edits in one contiguous block.
+    8. knk-workspace (branch from `next`): smoke guide § 4 (18 steps, 16 automated, 2 partly; § 4.2 draft for L10),
+       changelog entry, production installation § 5.3 item 8, implementation plan status.
+2. **Commits and heads.** knk-web-api `claude/production-p3` at `20dcfb7` (7 commits, base `next` `fcfced2`, which had
+   not moved at the last fetch, so the migration was generated last on it); knk-workspace `claude/production-p3` at
+   `ea01df32` (1 commit, base `next` `c7fe8996`).
+3. **PRs.** [knk-web-api#58](https://github.com/PandiO/knk-web-api/pull/58) (Closes #86, Closes #819) and
+   [knk-workspace#827](https://github.com/PandiO/knk-workspace/pull/827) (Part of #86, #819), base `next`. Not merged.
+4. **Tests, baseline → result.**
+    1. knk-web-api: baseline on `next` `fcfced2` 4723 passed / 114 skipped / 0 failed; branch 4774 passed / 116
+       skipped / 0 failed. New: `ProductionEngineTests` (18), `ProductionModifierWeatherUpgradeTests` (27),
+       `ProductionEngineControllersTests` (2), `AddProductionEngineTests` (4), `ProductionEngineMySqlTests` (2,
+       requires-mysql).
+    2. MySQL 8.0.46 locally with `KNK_TEST_MYSQL`: 4889 passed, 1 failed = the known red #285. The concurrency test
+       (four sweeps racing) failed with the line lock removed (20 cycle records instead of 5) and passes with it.
+    3. Migration applied, rolled back to `AddProductionWorld` and re-applied; `has-pending-model-changes` clean.
+    4. CI on `20dcfb7`: build-and-test, mysql-tests and fresh-database green.
+    5. Known reds: #285 (MySQL run only).
+5. **Decisions (DESIGN § 4.3).** All 17, each with alternatives, are in knk-web-api#58. The main ones:
+    1. *Cycle speed.* Chosen: shortens the cycle; the rate per hour is unchanged. Alternatives: (a) also multiply the
+       output: would duplicate the yield multiplier.
+    2. *Timing.* Chosen: game settings `production.engine` (10 min cycle, 24 h catch-up, 20-minute weather day = a
+       vanilla day). Alternatives: (a) constants; (b) a real-day weather roll.
+    3. *Full storage (D4).* Chosen: units that don't fit stay in `SYS_PRODUCTION`; `BlockedFull` accrues nothing and
+       resumes at the first settle with room. Alternatives: (a) keep them in `Accrued`: a hidden catch-up.
+    4. *Inputs.* Chosen: per hour of running time from the first Input storage, all or nothing per settle.
+       Alternatives: (a) per unit of output; (b) from the Output storage.
+    5. *Zone per town.* Chosen: join table `climate_zone_towns`. Alternatives: (a) `Town.ClimateZoneId`: changes the
+       towns table and Town seeds (decision 15).
+    6. *Seeded weather.* Chosen: default zone without odds (clear) plus example types. Alternatives: (a) seeded odds.
+    7. *Upgrade.* Chosen: area node and `knk.economy.admin`; coins from a named player (new currency reason
+       `PRODUCTION_UPGRADE`), resources from a storage (reason `Upgrade`, new `StockReason` member). Alternatives:
+       (a) the town account (P10).
+    8. *Manual runs while off.* Chosen: `run-now` and settle are 409 (A21). Alternatives: (a) allow them.
+    9. *Seeds.* Chosen: six major entities; child lists are API lists, edited by L10; cycle records view-only without
+       seeds. Alternatives: (a) join seeds for every child row.
+    10. *Smoke gate.* The developer's 2026-11-19 waiver of the L4 and L6 smoke gates, read by the coordinator as
+        covering this link (it builds on L6).
+6. **Out of scope, noted.** #828 filed (retention or roll-up of production cycle records). Comment on #678 (endpoints,
+   DTOs, child-list editors, the `production.engine` settings must be sent back on save, the new notification).
+   Codex: the connector hit its code-review usage limit on both PRs (review "failed", usage-limit comment); no inline
+   findings; noted on each PR.
+7. **Blockers.** None.
+8. **At merge / what the developer must do.**
+    1. Check `SELECT Id FROM production_structures WHERE ProductionKindId NOT BETWEEN 1 AND 8;` returns nothing, then
+       apply migration `AddProductionEngine` (additive).
+    2. Import the form and display seeds `ProductionKind`, `ProductionKindLevel`, `ProductionLine`,
+       `ProductionModifier`, `ClimateZone`, `WeatherType`; make `ProductionStructure` v2 (form, display),
+       `ItemBlueprint` v2 (form) and `Storage` v2 (display) the default.
+    3. No `api.env` key, no plugin `config.yml` change.
+    4. Smoke test [§ 4](../guides/production-storage-transport-smoke-test.md) (tier:3): 16 of 18 steps automated,
+       about 10 minutes for the untagged parts.
+    5. At merge into `next`: the `documentation` sub-issue (production engine architecture page and API contract, admin
+       guide for kinds, levels, lines, modifiers, weather and upgrades, feature register row).
+9. **Notes for later links.**
+    1. L10 (#678): see the comment on #678.
+    2. L11 (P4): add `IProductionBaseRateProvider`s for `Derived` and `Hybrid` (DI); `ProductionLineService` refuses
+       other rate sources until then. Add the yield table, survey profile and primary outputs to `ProductionKind`;
+       `MaxAreaSize` per level is in place (area model decides blocks, volume or radius).
+    3. L14 (P5): send workers away with `PUT api/ProductionStructures/{id}/workers` (it settles first); the engine
+       applies present/total. A level's `TransportCapacity` is written to the structure on level change.
+    4. L21 (P8a): the pool factor and harvest moves are not in the engine yet; add the pool as a built-in step next to
+       unlock and workers.
