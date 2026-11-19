@@ -4,6 +4,33 @@ This is a human-readable record of capabilities merged into the V3 default branc
 
 ## Unreleased — on feature branches, not merged
 
+- **World API: rural structures, warehouses and production structures** ([PandiO/knk-workspace#91](https://github.com/PandiO/knk-workspace/issues/91),
+  link L6 of the production, storage and transport chain, [production design](specs/production-storage-transport/DESIGN.md)
+  § 3.3-3.4). A structure can now stand in a district (as before) or be **rural**: it belongs to a town by its
+  `townId`, with no district and no street, as most farms, quarries and mines will. Exactly one of district and town is
+  set (refused otherwise, also by the database); its effective town is the district's town or its own. Two new
+  structure types: **warehouses** (take deliveries, priority, a delivery storage created with them) and **production
+  structures** (level 1-10, production on/off, transport settings, preferred warehouse, road connection, workers; an
+  output storage created with them; the production kind and production itself come with P3). The placement rules of
+  the design are seeded on both forms as **warnings** an admin can switch to blocking: P-1, the region lies inside the
+  district's region, and P-2, a rural structure lies inside its town's territory (new validation type
+  `InsideTerritory`, a lookup on the game server, answered once the plugin link #677 is deployed; until then it says
+  "not checked"). The same rules now run when the API saves a structure, so a blocking rule refuses the save there too;
+  a rule that can't be checked never blocks. A rural structure on contested land keeps its town, keeps producing and
+  shows a warning. With `production.enabled` off the territory rule is skipped; warehouses and production structures can
+  still be created, edited and deleted. Rural structure regions have no parent (PvP stays allowed). knk-web-api:
+  `Structure.TownId` (and nullable `DistrictId`/`StreetId`), entities `Warehouse` and `ProductionStructure`; endpoints
+  `api/Warehouses` and `api/ProductionStructures` (CRUD, search, `PUT {id}/road-connection`); `api/Structures` accepts
+  `townId` and lists `townId`, `isRural` and `territoryFlag`; form and display seeds `Warehouse` and
+  `ProductionStructure`. Writes need `knk.admin.world` (delete also `knk.admin.delete`); reads the World area node or
+  the plugin key. Smoke test:
+  [production smoke test § 3](guides/production-storage-transport-smoke-test.md#3-phase-p2-world-rural-structures-warehouse-production-structure-91-api-676-web-app-677-plugin-tier3).
+  Admin steps:
+  1. Apply the migration `AddProductionWorld` (`dotnet ef database update`; additive: two nullable columns widened, a
+     nullable `TownId`, a check constraint, two tables; existing structures keep their district and street).
+  2. Import the form seeds `Warehouse` and `ProductionStructure` and their display seeds ("make default").
+  3. No `api.env` key and no plugin `config.yml` change.
+
 - **Stock core API: storages, the stock ledger and capacity** ([PandiO/knk-workspace#97](https://github.com/PandiO/knk-workspace/issues/97),
   link L4 of the production, storage and transport chain, [production design](specs/production-storage-transport/DESIGN.md)
   § 4). Staff can now create storages for a structure, town or district, a player, a clan or a transport's cargo, and
