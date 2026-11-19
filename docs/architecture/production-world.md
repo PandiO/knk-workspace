@@ -1,6 +1,6 @@
 # Production world: structure subtypes and placement (knk-web-api, knk-web-app and knk-plugin)
 
-**Status:** Current · **Last updated:** 2026-11-19 (first version, production P2 #91/#676/#677, docs PandiO/knk-workspace#830)
+**Status:** Current · **Last updated:** 2026-11-19 (P3 pointers: kind foreign key, workers, kind storages; docs #839); 2026-11-19 (first version, production P2 #91/#676/#677, docs PandiO/knk-workspace#830)
 **Checked against:** knk-web-api `next` `fcfced27` (PR PandiO/knk-web-api#57), knk-web-app `next` `18385344` (PR
 PandiO/knk-web-app#61), knk-plugin `next` `8ebb30be` (PR PandiO/knk-plugin#96). Not released; the manual steps of the
 [smoke test § 3](../guides/production-storage-transport-smoke-test.md#3-phase-p2-world-rural-structures-warehouse-production-structure-91-api-676-web-app-677-plugin-tier3)
@@ -14,9 +14,10 @@ rules), [API contract](../specs/api/API_CONTRACT_PRODUCTION_WORLD.md) (`api/Ware
 Phase P2 of the production feature puts its buildings in the world. A structure now stands either **in a district** (as
 before, with a street and house number) or **rural**, out in its town's territory with only a town. Two new structure
 subtypes carry production: the **warehouse** (a town's storage hub) and the **production structure** (a farm, logger,
-quarry …; the kind is data and comes with P3). Each gets its default storages from the [stock core](stock-core.md) when
+quarry …; the kind is data, see [production engine](production-engine.md)). Each gets its default storages from the [stock core](stock-core.md) when
 it is created. Placement rules check, as warnings by default, that a structure's region lies in its district or in its
-town's territory; the territory check asks the game server. Nothing produces yet: production lines and cycles are P3.
+town's territory; the territory check asks the game server. Production lines, cycles, levels and upgrades are P3: see
+[production engine](production-engine.md).
 
 ## 1. Ownership
 
@@ -80,7 +81,7 @@ Deleting a warehouse resets every production structure that preferred it to `Nea
 
 | Field | Default | Rule |
 |---|---|---|
-| `ProductionKindId` | null | a plain indexed id until P3 adds the kind catalogue and the foreign key |
+| `ProductionKindId` | null | foreign key to `production_kinds` (Restrict) since P3 ([production engine § 2](production-engine.md#2-kinds-and-levels)) |
 | `Level` | 1 | 1–10 (G8) |
 | `ProductionEnabled` | true | the structure's own switch |
 | `AutomaticTransport` | true | held while `RoadConnection` is not `Connected` for a rural structure (D5) |
@@ -88,7 +89,7 @@ Deleting a warehouse resets every production structure that preferred it to `Nea
 | `WarehousePreference` | `Nearest` | `Nearest` or `Preferred`; `Preferred` needs `PreferredWarehouseId` (an existing warehouse; 0 clears it) |
 | `RoadConnection` | `Unmeasured` | `Unmeasured`, `Connected`, `Unconnected`; written only through `PUT …/road-connection` (the game server's measurement, P5b), which also sets `RoadConnectionMeasuredAt` |
 | `WorkersTotal` | 2 | 0–100 |
-| `WorkersPresent` | 2 | read only; P3/P5 write it |
+| `WorkersPresent` | 2 | read only here; `PUT …/workers` (P3) and P5 write it ([production engine § 4.2](production-engine.md#42-workers)) |
 
 `warnings` on a read (`ProductionStructureService.Warnings`, DESIGN § 3.4 R3 and § 7.6 D5):
 
@@ -108,7 +109,7 @@ structure as holder (`DomainId`), uncapped:
 | Warehouse | "<name> - deliveries" (becomes `DefaultStorageId`) | `Delivery` |
 | Production structure | "<name> - output" | `Output` |
 
-Names are cut at the storage name limit (100). P3 adds the kind's own storages next to the output storage. Deleting
+Names are cut at the storage name limit (100). Since P3 the kind's own storages (`DefaultStoragesJson`) are created next to the output storage, and the level's caps apply ([production engine § 2](production-engine.md#2-kinds-and-levels)). Deleting
 the structure deletes its domain storages first; a storage that holds stock or has ledger history refuses with 409 and
 the whole delete is rolled back. Storages added by hand to the structure (kind `Domain`, same `DomainId`) are listed
 with it (`storages`) and deleted with it too.
@@ -280,8 +281,10 @@ key; after turning `production.enabled` on in the plugin, run `/knk regions repa
 3. The generic `Structure` form seed has no Town field yet, so a rural plain structure (not a warehouse or production
    structure) can only be created through `api/Structures` with `townId` ([#831](https://github.com/PandiO/knk-workspace/issues/831)).
 4. A stale WorldGuard parent after a move to rural is not cleared ([#824](https://github.com/PandiO/knk-workspace/issues/824)).
-5. No production kinds, lines, cycles or workers yet (P3, P5); `RoadConnection` is measured from P5b on.
+5. Production kinds, lines and cycles are P3 ([production engine](production-engine.md)); workers are sent away from P5 on;
+   `RoadConnection` is measured from P5b on.
 
 ## Changes
 
 1. 2026-11-19: first version (docs PandiO/knk-workspace#830).
+2. 2026-11-19: pointers to the production engine (P3) where P2 said "comes with P3" (docs PandiO/knk-workspace#839).

@@ -1,6 +1,6 @@
 # Warehouses and Production Structures — Admin Guide
 
-**Status:** Current · **Last updated:** 2026-11-19 (first version, production P2 #91/#676/#677, docs PandiO/knk-workspace#830)
+**Status:** Current · **Last updated:** 2026-11-19 (P3 pointers to the production engine admin guide; docs #839); 2026-11-19 (first version, production P2 #91/#676/#677, docs PandiO/knk-workspace#830)
 **Checked against:** knk-web-api `next` `fcfced27`, knk-web-app `next` `18385344`, knk-plugin `next` `8ebb30be` (not
 released; the game side is off until `production.enabled` is on; the manual steps of the
 [smoke test § 3](../production-storage-transport-smoke-test.md#3-phase-p2-world-rural-structures-warehouse-production-structure-91-api-676-web-app-677-plugin-tier3)
@@ -17,8 +17,8 @@ types belong to production:
 
 1. A **warehouse** is a town's storage hub. It gets a delivery storage when it is created.
 2. A **production structure** is a farm, logger, quarry or other producer. It gets an output storage when it is
-   created. Its kind, production lines and cycles come with phase P3; for now it holds its settings (level, transport,
-   delivery preference, workers) and its storages.
+   created. Its kind, production lines, cycles and upgrades are phase P3: see the [production engine admin
+   guide](production-engine-admin-guide.md).
 
 **Placement rules** warn when a structure's region sticks out of its district (P-1) or lies outside its town's
 territory (P-2). They never refuse a save unless you make them blocking. Nothing produces yet, and players see nothing
@@ -197,7 +197,8 @@ The full checks are the [smoke test § 3](../production-storage-transport-smoke-
    create one.
 2. Existing structure regions are not touched until `production.enabled` is on and the repair runs; then only regions
    of production structures get the `entry` flag.
-3. Nothing in game uses the warehouses' or production structures' settings yet (P3, P5).
+3. Nothing in game uses the warehouses' or production structures' settings yet (P5); the API's production engine uses
+   the level, workers and Production switch ([production engine admin guide](production-engine-admin-guide.md)).
 
 ## 9. Troubleshooting
 
@@ -217,3 +218,4 @@ The full checks are the [smoke test § 3](../production-storage-transport-smoke-
 ## Changes
 
 1. 2026-11-19: first version (docs PandiO/knk-workspace#830).
+2. 2026-11-19: pointers to the [production engine admin guide](production-engine-admin-guide.md) (docs PandiO/knk-workspace#839).

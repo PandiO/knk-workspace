@@ -1,6 +1,6 @@
 # API Contract: Production world (`api/Warehouses`, `api/ProductionStructures`, structure placement)
 
-**Status:** Current · **Last updated:** 2026-11-19 (first version, production P2 #91, docs PandiO/knk-workspace#830)
+**Status:** Current · **Last updated:** 2026-11-19 (P3 fields `productionKindId`, `workersPresent` point to the engine contract; docs #839); 2026-11-19 (first version, production P2 #91, docs PandiO/knk-workspace#830)
 **Checked against:** knk-web-api `next` `fcfced27` (PR PandiO/knk-web-api#57; `Controllers/WarehousesController.cs`,
 `Controllers/ProductionStructuresController.cs`, `Dtos/ProductionWorldDtos.cs`, `Dtos/StructureDtos.cs`,
 `Services/Production/`), knk-plugin `next` `8ebb30be` (PR PandiO/knk-plugin#96; the territory lookup, § 6). Not released.
@@ -111,7 +111,7 @@ be a storage this warehouse holds.". Placement warnings are not returned.
 
 | Field | Type | Notes |
 |---|---|---|
-| `productionKindId` | int? | plain id until P3's kind catalogue |
+| `productionKindId` | int? | the kind (P3: must exist, 0 clears; the read adds `productionKind` `{ id, name }`; [engine contract § 9.5](API_CONTRACT_PRODUCTION_ENGINE.md#95-changes-on-apiproductionstructures-crud-p3)) |
 | `level` | int? | 1–10, default 1 |
 | `productionEnabled` | bool? | default true |
 | `automaticTransport` | bool? | default true |
@@ -122,7 +122,7 @@ be a storage this warehouse holds.". Placement warnings are not returned.
 | `roadConnection` | `Unmeasured` \| `Connected` \| `Unconnected` | read only here (§ 4.6) |
 | `roadConnectionMeasuredAt` | UTC date? | read only |
 | `workersTotal` | int? | 0–100, default 2 |
-| `workersPresent` | int? | read only (P3/P5 write it) |
+| `workersPresent` | int? | read only here; `PUT …/workers` writes it ([engine contract § 9.3](API_CONTRACT_PRODUCTION_ENGINE.md#93-put-apiproductionstructuresidworkers)) |
 | `warnings` | string[] | read only (single read): "Not connected to its town's road network: automatic transport is held.", "Its land is contested: it keeps its town and keeps producing.", "Outside its town's territory: it keeps its town and keeps producing." |
 | `storages` | `{ id, name, purpose }[]` | read only (single read) |
 
@@ -195,3 +195,4 @@ key>`. Holder parameters: `holderKind` (`Town` or `Kingdom`) and `holderId`; `wo
 ## Changes
 
 1. 2026-11-19: first version (docs PandiO/knk-workspace#830).
+2. 2026-11-19: `productionKindId` and `workersPresent` point to the [production engine contract](API_CONTRACT_PRODUCTION_ENGINE.md) (docs PandiO/knk-workspace#839).

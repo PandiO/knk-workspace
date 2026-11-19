@@ -1,6 +1,6 @@
 # Stock — Admin Guide
 
-**Status:** Current · **Last updated:** 2026-11-19 (§ 2.2: the default storages of warehouses and production structures, P2 #91, docs #830); 2026-11-19 (first version, stock core P1 #97/#675, docs PandiO/knk-workspace#820)
+**Status:** Current · **Last updated:** 2026-11-19 (Storage weight on the ItemBlueprint form seed v2, #819; docs #839); 2026-11-19 (§ 2.2: the default storages of warehouses and production structures, P2 #91, docs #830); 2026-11-19 (first version, stock core P1 #97/#675, docs PandiO/knk-workspace#820)
 **Checked against:** knk-web-api `next` `2e7d4e81`, knk-web-app `next` `9f46cb49` (not released; the manual steps of the
 [smoke test § 2](../production-storage-transport-smoke-test.md#2-phase-p1-stock-core-97-api-675-web-app-tier3) have
 not been run live yet)
@@ -97,8 +97,9 @@ Without `knk.economy.admin` you see the same page, but Adjust stock, Move stock 
 out are off, with the title "Requires knk.economy.admin".
 
 **Storage weight.** Every item blueprint has a storage weight (default 1); the blueprint list on the dashboard shows it
-in a Storage weight column. The seeded ItemBlueprint form has no field for it yet: set it through the API
-(`PUT api/ItemBlueprints/<id>` with the blueprint's current body plus `"storageWeight": 2`). Changing a weight changes
+in a Storage weight column. Set it on the ItemBlueprint form (`ItemBlueprint - Default (seed v2)`, step **Item in
+game**, **Storage weight** after Max stack size; #819), or through the API (`PUT api/ItemBlueprints/<id>` with
+`"storageWeight": 2`). Changing a weight changes
 the capacity use of every storage holding that blueprint at once; a storage that ends up over its cap takes removals
 only.
 
@@ -264,3 +265,4 @@ The full check, every step tagged with its automated test, is [smoke test § 2](
 ## Changes
 
 1. 2026-11-19: first version (docs PandiO/knk-workspace#820).
+2. 2026-11-19: Storage weight on the ItemBlueprint form seed v2 (#819, docs PandiO/knk-workspace#839).
