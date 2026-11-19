@@ -89,6 +89,13 @@
    2026-11-19: no active claim on the plugin's `tasks/` handlers or `siege/` packages; Siege Survival's unmerged
    plugin branch and the shared plugin files handled as in decision 7. Alternatives: as decision 3.
 
+10. **knk-web-api `next` CI after the L1 merge.** `e940aef1` first went red on one MySQL test unrelated to siege
+    weapons (`DiscoveryLedgerMySqlTests.TitleCrossing_PostsTheXpOnceAndAppliesTheBonusOnce`, `Assert.NotNull`), which
+    passed twice on the same code in the PR; Production's merge `7d213fd6` just before had one red in the unit job.
+    Chosen: rerun the failed job once (run 44503774980, attempt 2: green 2026-11-19 10:46) and record the test as
+    flaky, not a blocker. Alternatives: (a) treat `next` as red and revert, rejected (green on rerun, test outside
+    this chain); (b) file an issue for the flaky test, left to the manager's health section.
+
 ## 4. Link blocks
 
 _(Each link appends its block here when it finishes.)_
