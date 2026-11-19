@@ -121,6 +121,21 @@ Scope: the Siege minigame (PvP). Siege Survival may get siege weapons later; not
 | W56 | **Spawn safe zones are fully protected.** A player inside their own team's spawn safe zone takes **no damage, poison, fire or knockback** from siege weapons. Firing at a spawn zone is **allowed**; protection is checked **per player at impact**, which is correct in 3D: a shot landing on a tower's upper floor hurts the players there, even with a spawn room directly below. The targeting map **shades spawn zones** and, when the target circle overlaps one, shows "Be advised: projectiles don't harm players inside their spawn zone." |
 | W57 | **Balancing statistics:** siege weapon stats per match (shots, hits, damage and kills per weapon and ammo type) are logged, as part of general Siege balancing statistics for player kills, deaths and more (#651), recorded per alpha test run (#652). |
 
+### 2.6 Review gaps closed (design run 2026-11-19)
+
+A design run (`knk-design` skill) closed the gaps a review of this spec found on 2026-11-19. From here the log has
+date and author columns; agent decisions list their alternatives in § 2.7 and are open to review until the design is
+Decided.
+
+| ID | Date | Who | Decision |
+|---|---|---|---|
+| W58 | 2026-11-19 | developer | **Spread by ranging in.** Each indirect template has a **start spread radius** and a **minimum spread radius**. Every consecutive shot by the same operator at about the same target (aim point within the current radius of the previous one) shrinks the radius by a template **ranging step** down to the minimum. It resets to the start radius when the aim point moves further, the operator changes or the lease ends. The impact point stays random inside the current circle (W16). |
+| W59 | 2026-11-19 | developer | **Impact height and cover by line of sight.** An indirect shot lands on the **highest solid (motion-blocking) block** at the chosen x/z. A player inside the radius is affected (damage, knockback, fire, poison) only when a ray from just above the impact point to their body is not blocked by solid blocks; roofs and walls give cover. Structures (gates, weapons) use the same check against their nearest block. Ground fire from fire bombs is placed only where it has the same line of sight. |
+| W60 | 2026-11-19 | developer | **Weapon kills pay full siege points,** streak and multiplier included, like any kill (W34). The snowball risk is accepted and watched in the alpha balance runs (#651, W57), using the per-match weapon kill statistics. |
+| W61 | 2026-11-19 | developer | **No buyer privileges and no refunds.** W31 stands: the weapon is the team's from the moment it is placed; the buyer gets no lease priority, and a weapon destroyed during its build (or later) refunds nothing. Losing it in the build window is the risk W7 intends. (A placement the paste check refuses is never charged: W67.) |
+| W62 | 2026-11-19 | developer | **In-game aiming fallback for indirect weapons in V1,** next to the browser page (W26 stays the main way). Right-clicking a trebuchet or catapult gives the operator two clickable choices in chat: the page link (W29) and **"aim in game"**. In game, they look at a block (a ray up to the template's max range) and fire with a click; ammo is chosen with the scroll wheel as for the ballista (W51). The same lease, server checks, spread (W58), costs and min/max range apply. There is no map, so blind shots over walls stay a browser advantage. |
+| W63 | 2026-11-19 | developer | **The plugin owns weapon match state; the API relays page commands.** HP, build progress, reload timers, operator leases, spread (W58) and siege-point balances live in the plugin's match state (with its local checkpoint, W41). The page talks only to knk-web-api, which checks the page credential (W64) and forwards lease, heartbeat and fire commands to the plugin over the existing SignalR hub as request/response messages with a correlation id and a timeout; the plugin decides on the main thread and the API passes results and state changes back to the page. In-game actions (ballista, W62) never leave the plugin. Decision matrix: [DECISION-weapon-state.md](DECISION-weapon-state.md) (option 1, 92 of 100). |
+
 ## 3. Weapon templates, ammo types and size classes
 
 A **weapon template** defines one weapon type:
