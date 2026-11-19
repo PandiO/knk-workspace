@@ -1,9 +1,10 @@
 # Siege weapons — smoke test
 
 **Status:** § 1 updated to phase 1 as built (link L1, #782): 2 of its 11 steps automated, 8 partly, not run live yet;
-§ 2 updated to phase 2 as built (link L2, #783): 3 of its 10 steps automated, 7 partly, not run live yet; § 3–9 draft
+§ 2 updated to phase 2 as built (links L2, #783, and L2b, #799: spots through the web form's world task): 2 of its 10
+steps automated, 8 partly, not run live yet; § 3–9 draft
 from the design (2026-11-19), no steps run. Every step can still be run by hand.
-**Last updated:** 2026-11-19 (§ 2 updated to what link L2 built, steps tagged); 2026-11-19 (§ 1 updated to what link L1 built, steps tagged); 2026-11-19 (draft from the design,
+**Last updated:** 2026-11-19 (§ 2 rewritten to the web-form world task of link L2b, #799, steps tagged); 2026-11-19 (§ 2 updated to what link L2 built, steps tagged); 2026-11-19 (§ 1 updated to what link L1 built, steps tagged); 2026-11-19 (draft from the design,
 phases 1–9)
 **Design:** [specs/siege-minigame/SIEGE_WEAPONS.md](../specs/siege-minigame/SIEGE_WEAPONS.md) · **Issue:**
 [PandiO/knk-workspace#354](https://github.com/PandiO/knk-workspace/issues/354)
@@ -83,73 +84,94 @@ named here are in knk-web-api `Tests/knkwebapi_v2.Tests/` and knk-web-app `e2e/`
     scenario that was Ready before the migration and press Re-check on "Readiness". **Expected:** still Ready; existing
     scenarios have Friendly fire off, no cooldown override and 0 active weapon spots, so their matches play as before.
 
-## 2. Phase 2: spots through world tasks (#783, tier:2)
+## 2. Phase 2: spots through world tasks (#783, #799, tier:2)
 
-*Updated to what was built (link L2, 2026-11-19): 3 of 10 steps automated in CI, 7 partly (tagged); every step can
-still be run by hand; not run live yet. A full manual run takes about 20 minutes. The tests named here are in
-knk-plugin `knk-core/src/test/.../core/siege/weapons/`, `knk-api-client/src/test/.../api/impl/` and
-`knk-paper/src/test/.../paper/siege/weapons/`, and in knk-web-api `Tests/knkwebapi_v2.Tests/Services/`.*
+*Updated to what was built (link L2, then link L2b, #799, 2026-11-19): 2 of 10 steps automated in CI, 8 partly
+(tagged); every step can still be run by hand; not run live yet. A full manual run takes about 20 minutes. The tests
+named here are in knk-plugin `knk-core/src/test/.../core/siege/weapons/` and `knk-paper/src/test/.../paper/siege/weapons/`,
+knk-web-api `Tests/knkwebapi_v2.Tests/Services/`, and knk-web-app `e2e/siege-weapons.spec.ts` and
+`src/components/Workflow/__tests__/`.*
 
-The spot task is an in-game command that writes through the API, like the gate door region capture: `/knk weaponspot
-<scenario id> <team> <name>`, then in chat `save` (WorldEdit selection) or `region <id>` (WorldGuard region),
-`facing <north|east|south|west>`, `confirm` and `cancel`. The team is its id, its name or `attackers`/`defenders`.
+A spot is created in the web app's weapon spot form with a world task, like the other world tasks (developer decision
+2026-11-19 on #799): "Send to Minecraft" on the form's **Min X** field creates a `SiegeWeaponSpot` task; the admin
+claims it in game with `/knk task <code>` and works in chat: `save` (WorldEdit selection) or `region <id>` (WorldGuard
+region), `facing <north|east|south|west>`, `confirm` (completes the task), `cancel` (hands it back) and `discard`
+(cancels it). The completed task fills the form's six bounds, Facing, Size class and WorldGuard region and shows the
+warnings; the form's Submit saves the spot. L2's `/knk weaponspot` command is gone.
 
 ### 2.0 Preconditions
 
-1. Deployed: phase 1; knk-web-api and knk-plugin from `next` with link L2 (no migration in this phase).
+1. Deployed: phase 1; knk-web-api, knk-web-app and knk-plugin from `next` with links L2 and L2b (no migration in this
+   phase).
 2. Settings: `siege.weapons.enabled: true` under `siege:` in the plugin's `config.yml`, then a restart (step 1 starts
    with it `false`).
-3. Accounts and data: Admin in game with `knk.siege.admin.manage` and WorldEdit; the scenario from § 1 with an
-   attacker and a defender team (note its id); flat open ground with a solid floor; a WorldGuard cuboid region of
-   7 × 5 × 9 blocks on open ground named `siegespot_test`.
+3. Accounts and data: Admin in the web app and in game with `knk.siege.admin.manage` and WorldEdit; the scenario from
+   § 1 with an attacker and a defender team; the `SiegeWeaponSpot` form seed imported (a database that imported it
+   before #799: turn on "Requires in-game action" on Min X with type `SiegeWeaponSpot` in the form designer); flat open
+   ground with a solid floor; a WorldGuard cuboid region of 7 × 5 × 9 blocks on open ground named `siegespot_test`.
 
 ### 2.1 Steps
 
-1. [partly automated: SiegeWeaponsSettingsTest `flagOff_RegistersNoCommandNoListenerAndCallsNoApi`,
-   `theBundledConfig_HasTheFlag_Off`; by hand: the live command list] With `siege.weapons.enabled: false` (the
-   default), type `/knk help` and `/knk weaponspot`. **Expected:** `weaponspot` is not listed and is an unknown
-   subcommand; the startup log has no "Siege weapons are on" line. Set the flag to `true` and restart. **Expected:** the
-   log says "Siege weapons are on (siege.weapons.enabled): /knk weaponspot is registered." (A04 for this phase)
-2. [partly automated: WeaponSpotTaskTest `save_StoresBoundsTeamAndTheLookDirection_SizeClassSmall_AndConfirmCreatesTheSpot`,
-   SpotFacingTest, SpotSizingTest `sevenWideNineDeep_FacingNorth_IsSmall`; by hand: the WorldEdit selection] As Admin,
-   select an area 7 blocks along x (east-west), 5 high and 9 along z (north-south) on open ground with the WorldEdit
-   wand, type `/knk weaponspot <scenario id> attackers Test north`, look north and type `save`. **Expected:** the task
-   shows the bounds, "Facing: North (your look direction)", "Footprint: 7 wide × 9 long × 5 high" and "Size class: Small",
-   no warnings, and asks for `confirm`. (A02)
-3. [partly automated: WeaponSpotTaskTest `overridingTheFacing_WorksTheClassOutAgain_EastIsRefused_SouthFitsAgain`,
-   SpotDraftTest; by hand: the chat lines] Type `facing east`. **Expected:** "Facing: East (set by you)", footprint
-   9 wide × 7 long × 5 high, and a refusal "Too small for a weapon facing east … It fits facing north or south"; `confirm`
-   is refused. Type `facing south`. **Expected:** size class Small again. (A02)
-4. [partly automated: WeaponSpotTaskTest (the created spot), SiegeWeaponSpotsApiImplTest
-   `createSpot_PostsBoundsFacingAndClass_UnderTheScenario`, SiegeWeaponServiceTests
-   `Spot_SizeClass_IsWorkedOutFromTheBoundsAndFacing_NotTheTypedValue`; by hand: the API write] Type `confirm`.
-   **Expected:** "Created spot <id> 'Test north' for <attacker team>: facing South, size class Small."; the task ends.
-   (A02)
-5. [automated: WeaponSpotTaskTest `aSelectionSmallerThanTheSmallClass_IsRefused_AndNothingIsSaved`, SpotSizingTest
-   `smallerThanTheSmallClass_IsRefusedInEveryFacing`, SiegeWeaponServiceTests
-   `Spot_BoundsSmallerThanTheSmallClass_AreRefused`] Start a task (`/knk weaponspot <scenario id> attackers Tiny`), select
-   5 × 5 × 5 blocks and type `save`, then `confirm`. **Expected:** "Too small for a weapon facing … the small class needs
-   at least 7 wide × 9 long × 5 high"; nothing is created; `cancel` ends the task. (A03)
-6. [partly automated: WeaponSpotTaskTest `aFloorPartlyAirAndABlockInside_Warn_ButTheAdminCanStillConfirm`,
-   SpotSiteCheckTest; by hand: real terrain] Start a task for the defenders (`/knk weaponspot <scenario id> defenders
-   Edge`), select a 7 × 5 × 9 area that hangs partly over a drop and has one block inside, and type `save`.
-   **Expected:** a warning that the floor isn't solid (n of 63 blocks) and that the volume isn't clear (1 block); the
-   prompt says "Type 'confirm' to create the spot anyway"; `confirm` creates it. (A02)
-7. [partly automated: WeaponSpotTaskTest `regionId_UsesTheWorldGuardRegionsBounds`; by hand: the WorldGuard lookup]
-   Start a task and type `region siegespot_test`, look north, then `confirm`. **Expected:** the summary shows the
-   region's bounds with "(region siegespot_test)"; the created spot has the region id. A region that doesn't exist
-   says "No WorldGuard region …". (A02)
-8. [partly automated: SiegeWeaponServiceTests `Spot_ChangingTheFacing_WorksTheClassOutAgain`,
-   `Spot_BoundsSmallerThanTheSmallClass_AreRefused`; by hand: the web app form] In the web app, open the scenario's
-   "Siege weapons" step. **Expected:** the spots from steps 4, 6 and 7 are listed with team, facing and size class.
-   Open "Test north" (7 along x, 9 along z), set the facing to West and save. **Expected:** refused: "The bounds are too
-   small for a weapon facing West: 9 wide x 7 long x 5 high …"; set it back to South and save: size class Small. (A02)
-9. [automated: WeaponSpotCommandTest] Type `/knk weaponspot <scenario id> green X`, then claim a world task with
-   `/knk task <code>` and type `/knk weaponspot <scenario id> attackers X`. **Expected:** the first lists the scenario's
-   teams ("No team green in this scenario. Teams: …"); the second is refused until the world task is finished or
-   handed back; the console gets "Only a player in game can select a weapon spot."
-10. [automated: WeaponSpotTaskTest `cancel_EndsTheTask_WithoutSaving`] Start a task, `save` a valid selection and type
-    `cancel`. **Expected:** "Stopped; no spot was created."; chat works normally again.
+1. [partly automated: SiegeWeaponsSettingsTest `flagOff_RegistersNoHandlerAndCallsNoApi`,
+   `theBundledConfig_HasTheFlag_Off`; by hand: the live claim] With `siege.weapons.enabled: false` (the default), open
+   the scenario in the web app, go to its "Siege weapons" step, create a spot, choose the attacker team, name it
+   `Test north`, go to "Place and size" and click **Send to Minecraft** on Min X. In game, type `/knk task <code>` with
+   the code the web app shows. **Expected:** the game says "This game server has no handler for task type
+   'SiegeWeaponSpot' (field MinX). The task was marked as failed."; the web app shows the task as failed with "Start
+   again"; the startup log has no "Siege weapons are on" line; `/knk weaponspot` is an unknown subcommand. Set the flag
+   to `true` and restart. **Expected:** the log says "Siege weapons are on (siege.weapons.enabled): the SiegeWeaponSpot
+   world task is registered." (A04 for this phase)
+2. [partly automated: e2e `the weapon spot world task (#799)` (the task is created for Min X with type
+   SiegeWeaponSpot), FormConfigurationSeedFilesTests `SiegeWeaponSpotSeed_StartsTheSpotWorldTaskFromMinX`,
+   SiegeWeaponsSettingsTest `flagOn_RegistersTheSpotHandlerByTaskTypeOnly`; by hand: the claim in game] In the form
+   from step 1, click **Start again** (or **Send to Minecraft**) on Min X and claim the new code with `/knk task <code>`.
+   **Expected:** the game says "Weapon spot task #<id>." and explains `save`, `region <id>`, `facing`, the size classes
+   and `cancel`/`discard`; the web app shows the task as in progress, claimed by you.
+3. [partly automated: WeaponSpotTaskHandlerTest
+   `save_TakesBoundsAndTheLookDirection_SizeClassSmall_AndConfirmCompletesTheTaskWithTheResult`, SpotFacingTest,
+   SpotSizingTest `sevenWideNineDeep_FacingNorth_IsSmall`; by hand: the WorldEdit selection] Select an area 7 blocks
+   along x (east-west), 5 high and 9 along z (north-south) on open ground with the WorldEdit wand, look north and type
+   `save`. **Expected:** the task shows the bounds, "Facing: North (your look direction)", "Footprint: 7 wide × 9 long ×
+   5 high" and "Size class: Small", no warnings, and asks for `confirm`. (A02)
+4. [partly automated: WeaponSpotTaskHandlerTest `overridingTheFacing_WorksTheClassOutAgain_EastIsRefused_SouthFitsAgain`,
+   SpotDraftTest, SpotTaskOutputTest `aRefusedSpot_HasNoResult`; by hand: the chat lines] Type `facing east`.
+   **Expected:** "Facing: East (set by you)", footprint 9 wide × 7 long × 5 high, and a refusal "Too small for a weapon
+   facing east … It fits facing north or south"; `confirm` is refused and the web app still shows the task in
+   progress. Type `facing south`. **Expected:** size class Small again. (A02)
+5. [partly automated: WeaponSpotTaskHandlerTest (the completed result), SpotTaskOutputTest
+   `aClearSpot_CarriesBoundsFacingSizeClassAndNoWarnings`, e2e `fills bounds, facing, size class and region from the
+   completed task, shows its warning and saves the spot`, Jest `WorldBoundFieldRenderer.siegeWeaponSpot.test.ts`,
+   SiegeWeaponServiceTests `Spot_SizeClass_IsWorkedOutFromTheBoundsAndFacing_NotTheTypedValue`; by hand: the live
+   round trip] Type `confirm`. **Expected:** the game says "✓ Spot sent to the web form: facing South, size class
+   Small. Save the form there to create the spot."; within a few seconds the web form shows the six bounds of your
+   selection, Facing South, Size class Small and an empty WorldGuard region, and the task panel lists the bounds,
+   facing, size class and world. Click **Submit**. **Expected:** the spot "Test north" is listed on the scenario's
+   "Siege weapons" step with the attacker team, facing South and size class Small. (A02)
+6. [automated: WeaponSpotTaskHandlerTest `aSelectionSmallerThanTheSmallClass_IsRefused_AndTheTaskIsNotCompleted`,
+   SpotSizingTest `smallerThanTheSmallClass_IsRefusedInEveryFacing`, SiegeWeaponServiceTests
+   `Spot_BoundsSmallerThanTheSmallClass_AreRefused`] Create a second spot `Tiny`, send its task and claim it, select
+   5 × 5 × 5 blocks, type `save`, then `confirm`. **Expected:** "Too small for a weapon facing … the small class needs
+   at least 7 wide × 9 long × 5 high"; the task is not completed (the web form's bounds stay empty); `cancel` hands it
+   back ("Task <id> handed back; its task code works again.") and the web app shows it pending with its code. (A03)
+7. [partly automated: WeaponSpotTaskHandlerTest `aFloorPartlyAirAndABlockInside_Warn_AndTheWarningsGoWithTheResult`,
+   SpotSiteCheckTest, e2e (the warning in the task panel); by hand: real terrain] Create a spot `Edge` for the
+   defenders, send and claim its task, select a 7 × 5 × 9 area that hangs partly over a drop and has one block inside,
+   and type `save`. **Expected:** a warning that the floor isn't solid (n of 63 blocks) and that the volume isn't clear
+   (1 block); the prompt says "Type 'confirm' to send the spot to the web form anyway". Type `confirm`. **Expected:** the
+   web form's task panel lists both warnings under the result; Submit saves the spot. (A02)
+8. [partly automated: WeaponSpotTaskHandlerTest `regionId_UsesTheWorldGuardRegionsBounds_AndSendsItsId`, e2e (the
+   region field); by hand: the WorldGuard lookup] Create a spot `Region`, send and claim its task, look north and type
+   `region siegespot_test`, then `confirm`. **Expected:** the summary shows the region's bounds with "(region
+   siegespot_test)"; the web form's WorldGuard region field says `siegespot_test`; Submit saves it. A region that
+   doesn't exist says "No WorldGuard region …" and the task stays open. (A02)
+9. [partly automated: SiegeWeaponServiceTests `Spot_ChangingTheFacing_WorksTheClassOutAgain`,
+   `Spot_BoundsSmallerThanTheSmallClass_AreRefused`; by hand: the web app form] Open "Test north" (7 along x, 9 along z)
+   in the web app, set the facing to West and save. **Expected:** refused: "The bounds are too small for a weapon facing
+   West: 9 wide x 7 long x 5 high …"; set it back to South and save: size class Small. (A02)
+10. [automated: WeaponSpotTaskHandlerTest `cancel_HandsTheTaskBack_AndDiscardCancelsIt_WithoutCompleting`,
+    `noSelection_SaysHow_AndOtherChatIsNotTaken`] Send and claim a task for a new spot, type `hello` and then `discard`.
+    **Expected:** `hello` goes to public chat; `discard` ends the task ("Task <id> discarded; the web app shows it as
+    cancelled.") and the web app shows it cancelled; chat works normally again.
 
 ## 3. Phase 3: buying, placement, paste, build phase and restore (#784, tier:3)
 
