@@ -6,11 +6,12 @@
 (#689, link L2) and web app (#690, link L3) are merged into `next` (knk-web-api `0d6e369a`, knk-plugin `55804b11`,
 knk-web-app `89751315`, 2026-11-19). P1 stock core (#97 API, link L4; #675 web app, link L5) is merged into `next`
 (knk-web-api `2e7d4e81`, knk-web-app `9f46cb49`, migration `AddStockCore`, 2026-11-19). P2 world API (#91, link L6) is
-merged into `next` (knk-web-api `fcfced27`, migration `AddProductionWorld`, 2026-11-19). Decisions are in
+merged into `next` (knk-web-api `fcfced27`, migration `AddProductionWorld`, 2026-11-19). P3 production engine API (#86, link L9) is in review (knk-web-api branch `claude/production-p3`, migration
+`AddProductionEngine`, 2026-11-19). Decisions are in
 [DESIGN §14](DESIGN.md#14-decisions), [PRODUCTION_KINDS §9](PRODUCTION_KINDS.md#9-decisions) and
 [TOWN_LOGISTICS §8](TOWN_LOGISTICS.md#8-decisions); the few still open are listed there. Every item is marked
 **V1** or **Later**. The production structures work and the garrison/guard NPC work ship in the **same test phase**.
-**Last updated:** 2026-11-19 (P2 world API #91 merged into `next`); 2026-11-19 (P1b stock web app #675 in review; P1 API #97 merged into `next`); 2026-11-19 (P1 stock core API #97 in review); 2026-11-19 (territory plugin #689 and web app #690 merged into `next`); 2026-11-19 (territory API #326 in review); 2026-11-19 (item identity #141 merged into `next`, docs #796); 2026-11-19 (item identity #141 in review); 2026-11-11 (open questions answered, [decision record §11](DECISIONS_2026-11-05.md#11-follow-up-decisions-2026-11-11); issues #324, #325)
+**Last updated:** 2026-11-19 (P3 production engine API #86 in review); 2026-11-19 (P2 world API #91 merged into `next`); 2026-11-19 (P1b stock web app #675 in review; P1 API #97 merged into `next`); 2026-11-19 (P1 stock core API #97 in review); 2026-11-19 (territory plugin #689 and web app #690 merged into `next`); 2026-11-19 (territory API #326 in review); 2026-11-19 (item identity #141 merged into `next`, docs #796); 2026-11-19 (item identity #141 in review); 2026-11-11 (open questions answered, [decision record §11](DECISIONS_2026-11-05.md#11-follow-up-decisions-2026-11-11); issues #324, #325)
 **Design:** [DESIGN.md](DESIGN.md), [PRODUCTION_KINDS.md](PRODUCTION_KINDS.md), [TOWN_LOGISTICS.md](TOWN_LOGISTICS.md),
 [shops DESIGN](../shops/DESIGN.md), [NPC platform](../npc-platform/DESIGN.md) (lifecycle).
 **Evidence:** [V2 scan](../../reports/2026-10-09-v2-production-storage-transport-scan.md).
@@ -146,6 +147,11 @@ district; tests in `ManagedRegionPolicyTest`.
 contested keeps its town and is flagged; rural structures through navigation, discovery and domain access.
 
 ## P3 — Production engine · [#86](https://github.com/PandiO/knk-workspace/issues/86) (`[KNG-86]`)
+
+**Status (2026-11-19):** API built in link L9 (in review): everything in the API list below except the "Later" items.
+Agent decisions on knk-web-api PR `claude/production-p3` (e.g. cycle speed shortens the cycle without raising the
+rate per hour; weather days of 20 real minutes; inputs consumed per hour of running time; child lists edited through
+the API until the web app editors of #678). Web app: #678.
 
 **API**
 
