@@ -1,6 +1,6 @@
 # Production, storage and transport chain — progress report
 
-**Status:** Running (2026-11-19) · **Last updated:** 2026-11-19
+**Status:** Waiting for the developer (2026-11-19: L0–L3 in `next`; L4 waits for the smoke test of L0) · **Last updated:** 2026-11-19
 
 **Issue:** [PandiO/knk-workspace#22](https://github.com/PandiO/knk-workspace/issues/22), links
 [#141](https://github.com/PandiO/knk-workspace/issues/141) (L0), [#326](https://github.com/PandiO/knk-workspace/issues/326) (L1), [#689](https://github.com/PandiO/knk-workspace/issues/689) (L2), [#690](https://github.com/PandiO/knk-workspace/issues/690) (L3), [#97](https://github.com/PandiO/knk-workspace/issues/97) (L4), [#675](https://github.com/PandiO/knk-workspace/issues/675) (L5), [#91](https://github.com/PandiO/knk-workspace/issues/91) (L6), [#676](https://github.com/PandiO/knk-workspace/issues/676) (L7), [#677](https://github.com/PandiO/knk-workspace/issues/677) (L8), [#86](https://github.com/PandiO/knk-workspace/issues/86) (L9), [#678](https://github.com/PandiO/knk-workspace/issues/678) (L10), [#138](https://github.com/PandiO/knk-workspace/issues/138) (L11), [#679](https://github.com/PandiO/knk-workspace/issues/679) (L12), [#680](https://github.com/PandiO/knk-workspace/issues/680) (L13), [#79](https://github.com/PandiO/knk-workspace/issues/79) (L14), [#681](https://github.com/PandiO/knk-workspace/issues/681) (L15), [#682](https://github.com/PandiO/knk-workspace/issues/682) (L16), [#683](https://github.com/PandiO/knk-workspace/issues/683) (L17), [#74](https://github.com/PandiO/knk-workspace/issues/74) (L18), [#60](https://github.com/PandiO/knk-workspace/issues/60) (L19), [#684](https://github.com/PandiO/knk-workspace/issues/684) (L20), [#685](https://github.com/PandiO/knk-workspace/issues/685) (L21), [#134](https://github.com/PandiO/knk-workspace/issues/134) (L22), [#127](https://github.com/PandiO/knk-workspace/issues/127) (L23), [#686](https://github.com/PandiO/knk-workspace/issues/686) (L24), [#248](https://github.com/PandiO/knk-workspace/issues/248) (L25), [#687](https://github.com/PandiO/knk-workspace/issues/687) (L26), [#688](https://github.com/PandiO/knk-workspace/issues/688) (L27), [#249](https://github.com/PandiO/knk-workspace/issues/249) (L28), [#250](https://github.com/PandiO/knk-workspace/issues/250) (L29).
@@ -9,21 +9,30 @@
 
 ## 1. Waiting for the developer
 
-1. **Smoke test of L0 (item identity, tier:3):** guide `docs/guides/production-storage-transport-smoke-test.md` § 0 on
-   `next` (14 steps, about 25 minutes for the untagged ones). Before it: apply migration `AddItemIdentity`, run a
-   catalogue scan (or `POST api/ItemIdentity/shadows/generate`), merge the `items.identity` block into the plugin
-   `config.yml` (both switches off by default). L4 (#97 stock core) builds on L0 and waits for this (charter § 2.3).
-2. **Decision:** L0 stores conversion counts in `item_conversion_stats` without form/display seeds, an exception to
-   G17 (L0 block, decision 7). Confirm or ask for seeds.
-3. **Review:** L0 agent decisions (block 4.0 § 5), mainly the retag rule (plain vanilla items are never tagged) and
-   the two plugin switches `items.identity.enabled` / `convert-on-obtain`.
-4. **Smoke test of L1 (territory API, tier:3):** guide § 1.1–1.2 on `next`. Before it: apply migration `AddTerritory`,
-   import the form seeds `Kingdom`, `Province`, `CrownLand`, `TerritoryConflict` and their display seeds (`Kingdom`
-   first, "make default"). Keep `production.enabled` off until L2 is deployed. L6 (#91 P2 world API) builds on L1 and
-   waits for this.
-5. **Review:** L1 agent decisions (block 4.1), mainly: the game server computes territory and reports it; loyalty is a
-   town id; the Town and District form seeds were not bumped (L3 adds the new fields to those forms).
-6. Later: the shop menu templates for L26 (#687).
+Every link L0–L3 is in `next`. No link can start until item 1 is done: every remaining link depends on L4.
+
+1. **Smoke test of L0 (item identity, tier:3), unblocks L4 (#97) and so the rest of the chain:** guide
+   `docs/guides/production-storage-transport-smoke-test.md` § 0 on `next` (14 steps, about 25 minutes for the untagged
+   ones).
+   1. Apply migration `AddItemIdentity`.
+   2. Run a catalogue scan (or `POST api/ItemIdentity/shadows/generate`).
+   3. Merge the `items.identity` block into the plugin `config.yml` (both switches off by default).
+   Or say "start L4 without it" (charter § 2.3 allows the developer to waive the gate).
+2. **Smoke test of territory, tier:3 (L1 API § 1.1–1.2, L2 plugin § 1.3, L3 web app § 1.4), unblocks L6 (#91) later.**
+   1. Apply migration `AddTerritory`.
+   2. Import the form seeds `Kingdom`, `Province`, `CrownLand`, `TerritoryConflict` and their display seeds (`Kingdom`
+      first, "make default").
+   3. Merge the plugin `production` block into `config.yml`. The YAML is in the changelog. The switch is off by default.
+   4. To test, turn on plugin `production.enabled` and the API game setting `production.enabled`, and give staff
+      `knk.admin.world.territory`. Keep `map-outlines: false` until #802.
+3. **Decision:** L0 stores conversion counts in `item_conversion_stats` without form/display seeds, an exception to
+   G17 (block 4.0, decision 7). Confirm or ask for seeds.
+4. **Review:** the agent decisions in blocks 4.0–4.3, mainly:
+   1. L0's retag rule (plain vanilla items are never tagged).
+   2. L1: the game server computes territory; loyalty is a town id.
+   3. L2's crown land region kind.
+   4. Coordinator decision 15 (Town/District seed fields).
+5. Later: the shop menu templates for L26 (#687).
 
 ## 2. Summary
 
@@ -31,8 +40,8 @@
 |---|---|---|---|---|---|---|
 | L0 Item identity: every obtainable item is a blueprint; generated "Uncurated" shadow blueprints (G4) | #141 | Merged into next (2026-11-19) | api `5daa3c6`, plugin `a6c5a2bc`, workspace `8ffdbb1a`; merges: api `7d213fd6`, plugin `2ef256e7`, workspace `ca3bcc98` | [api#51](https://github.com/PandiO/knk-web-api/pull/51), [plugin#89](https://github.com/PandiO/knk-plugin/pull/89), [ws#793](https://github.com/PandiO/knk-workspace/pull/793) | green (API PR checks; plugin build + paper-boot) | subagent of the coordinator (two repos besides knk-workspace, SKILL § 4.1.4.2), started 2026-11-19 |
 | L1 Territory API: holders, crown land entity (G10), power, range (G11), conflicts, loyalty | #326 | Merged into next (2026-11-19) | api `ff50ec1`, workspace `c4211d51`; merges: api `0d6e369a`, workspace `4595e6d8` | [api#53](https://github.com/PandiO/knk-web-api/pull/53), [ws#798](https://github.com/PandiO/knk-workspace/pull/798) | green (build-and-test, mysql-tests, fresh-database) | create_session `session_01R1w2Uwo46dJVo6Cpr8LzmG` (one repo besides knk-workspace), started 2026-11-19 |
-| L2 Territory plugin: chunk cache, lookup, BlueMap outlines | #689 | In review | plugin `96ef7326`, workspace `14d3efcd` | [plugin#91](https://github.com/PandiO/knk-plugin/pull/91), [ws#804](https://github.com/PandiO/knk-workspace/pull/804) | green (plugin build + paper-boot) | create_session `session_01R1w2Uvhpo37DXAXpm2uqLp` (one repo besides knk-workspace), started 2026-11-19 |
-| L3 Territory web app | #690 | In review (PRs open, not merged) | web app `0531422`, workspace `f3bd8f27` | [web#57](https://github.com/PandiO/knk-web-app/pull/57), [ws#803](https://github.com/PandiO/knk-workspace/pull/803) | web app green (build-and-test, e2e) | create_session `session_01R1w2UuYHneFJFXcn8GSe6F` (one repo besides knk-workspace), started 2026-11-19 |
+| L2 Territory plugin: chunk cache, lookup, BlueMap outlines | #689 | Merged into next (2026-11-19) | plugin `96ef7326`, workspace `14d3efcd`; merges: plugin `55804b11`, workspace `66d35872` | [plugin#91](https://github.com/PandiO/knk-plugin/pull/91), [ws#804](https://github.com/PandiO/knk-workspace/pull/804) | green (plugin build + paper-boot) | create_session `session_01R1w2Uvhpo37DXAXpm2uqLp` (one repo besides knk-workspace), started 2026-11-19 |
+| L3 Territory web app | #690 | Merged into next (2026-11-19) | web app `0531422`, workspace `f3bd8f27`; merges: web app `89751315`, workspace `54bdc830` (after a coordinator merge of `next`, `e4f2276d`) | [web#57](https://github.com/PandiO/knk-web-app/pull/57), [ws#803](https://github.com/PandiO/knk-workspace/pull/803) | web app green (build-and-test, e2e) | create_session `session_01R1w2UuYHneFJFXcn8GSe6F` (one repo besides knk-workspace), started 2026-11-19 |
 | L4 P1 stock core API: storages, ledger, reconciler, capacity, roll-up | #97 | Not started | — | — | — | — |
 | L5 P1b stock web app | #675 | Not started | — | — | — | — |
 | L6 P2 world API: structure subtypes, TownId, placement rules | #91 | Not started | — | — | — | — |
@@ -116,6 +125,29 @@
    the developer says otherwise; (b) run an API link out of order: every other API link depends on L4 or later.
 14. **Territory docs at the end of territory.** #326 is the parent of L1–L3, so its `documentation` sub-issue starts
    once L2 and L3 are merged, not now. Alternatives: (a) a docs issue per link: three docs sessions on one feature.
+
+15. **Town/District form seed fields (L3's question on #690).** Chosen: no seed change in V1. The town page's
+   Territory panel sets power, kingdom, province and capital districts, and bumping the Town and District form seeds
+   would change field ids that other seeds' rules depend on (L1 decision). Alternatives: (a) a small API link to add the
+   fields to the seeds: risk to other seeds' rules for no V1 gain. The developer can still ask for it (§ 1.4).
+16. **L2 and L3 merge (2026-11-19).** § 6 checks held for both (heads matched, branches contained `next`, CI green:
+   plugin build and paper-boot, web app build-and-test and e2e; Codex at its usage limit, no findings; scope matched
+   #689 and #690). Merged plugin #91 `55804b11`, web app #57 `89751315` and workspace #804 `66d35872`. Workspace #803
+   conflicted with #804 in the shared docs (changelog, smoke guide header and § 1 preconditions, plan and design status).
+   Both sides only added text, so the coordinator merged `origin/next` into `claude/production-t-c` (`e4f2276d`). It kept
+   both changelog entries, combined the headers and dropped the § 1.4 design draft that L3's § 1.4 replaces, then merged
+   #803 `54bdc830`. Alternatives: (a) send it back to L3: a mechanical merge (SKILL § 7.3).
+17. **Territory docs.** `documentation` sub-issue #806 under #326 and docs session `session_01R1w2UxD7Cb4e7GcQtEs8z1`
+   (decision 14).
+18. **Notes for P2 (L6 #91, L8 #677), from L2.**
+   1. `InsideTerritory` needs a plugin lookup endpoint (like `RegionContainment`).
+   2. Rural structures with a `TownId` are not in the territory report yet, because it skips structures without a
+      district.
+   The L6 and L8 prompts must carry both.
+19. **No gate open (2026-11-19 12:00).** Every remaining link depends on L4 (#97). L4 builds on L0 and is tier:3, so it
+   waits for the developer's smoke test of L0 (§ 1.1). The coordinator stops the loop and checks #22 and the digest
+   issue for the developer's reply. Alternatives: (a) start L4 anyway: charter § 2.3 says no unless the developer
+   waives it.
 
 ## 4. Link blocks
 
