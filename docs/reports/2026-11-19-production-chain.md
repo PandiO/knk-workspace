@@ -16,7 +16,7 @@
 
 | Link | Issue | Status | Branch heads | PR | CI | How started |
 |---|---|---|---|---|---|---|
-| L0 Item identity: every obtainable item is a blueprint; generated "Uncurated" shadow blueprints (G4) | #141 | Running | — | — | — | subagent of the coordinator (two repos besides knk-workspace, SKILL § 4.1.4.2), started 2026-11-19 |
+| L0 Item identity: every obtainable item is a blueprint; generated "Uncurated" shadow blueprints (G4) | #141 | In review (PRs open, not merged) | api , plugin , workspace  | [api#51](https://github.com/PandiO/knk-web-api/pull/51), [plugin#89](https://github.com/PandiO/knk-plugin/pull/89), [ws#793](https://github.com/PandiO/knk-workspace/pull/793) | api green; plugin build green, paper-boot running | subagent of the coordinator (two repos besides knk-workspace, SKILL § 4.1.4.2), started 2026-11-19 |
 | L1 Territory API: holders, crown land entity (G10), power, range (G11), conflicts, loyalty | #326 | Not started | — | — | — | — |
 | L2 Territory plugin: chunk cache, lookup, BlueMap outlines | #689 | Not started | — | — | — | — |
 | L3 Territory web app | #690 | Not started | — | — | — | — |
@@ -80,3 +80,94 @@
 ## 4. Link blocks
 
 _(Each link appends its block here when it finishes.)_
+
+### 4.0 L0 — Item identity: every obtainable item is a blueprint; generated "Uncurated" shadow blueprints (#141)
+
+1. **Scope done.**
+    1. knk-web-api: `ItemBlueprint.VanillaMaterialMatchRefId` (unique FK to the material catalogue; read/list DTOs);
+       `Services/ItemIdentity/VanillaShadowBlueprints` (plain shadows in a top-level "Uncurated" category for every
+       obtainable material without a match, after every applied catalogue scan and on demand); `api/ItemIdentity`
+       (`GET material-map`, `GET report`, `POST shadows/generate`, `PUT matches/{materialRefId}`,
+       `POST conversion-counts`); `item_conversion_stats` count rows; catalogue merges keep one match per material;
+       one additive migration `AddItemIdentity`.
+    2. knk-plugin: knk-core `core/items/identity/` (map, resolver instance tag → blueprint tag → vanilla match, retag
+       rule, conversion log) and port `ItemIdentityApi`; knk-api-client `ItemIdentityApiImpl`; knk-paper
+       `mapper/BlueprintTag` (stamped by `BlueprintItemAssembler`), `items/identity/ItemIdentityService` and
+       `ItemConversionListener` (pickup, block drops, death drops, fishing, craft, trades, first container open);
+       `config.yml` `items.identity` (`enabled`, `convert-on-obtain` both false, `map-refresh-minutes`,
+       `report-interval-minutes`).
+    3. knk-workspace (branch from `next`): smoke guide § 0 (14 steps, 7 automated, 4 partly), plugin configuration
+       reference § 4.30, changelog entry, implementation plan status.
+2. **Commits and heads.** knk-web-api `claude/item-identity-141` at `5daa3c6` (1 commit, base `next` at `935fe8c`);
+   knk-plugin `claude/item-identity-141` at `a6c5a2bc` (1 commit, base `next` at `cee53213`); knk-workspace
+   `claude/item-identity-141` at `8ffdbb1a` (1 commit, base `next`). `origin/next` had not moved in any repo when the
+   PRs were opened, so no merge was needed.
+3. **PRs.** [knk-web-api#51](https://github.com/PandiO/knk-web-api/pull/51) (Closes #141),
+   [knk-plugin#89](https://github.com/PandiO/knk-plugin/pull/89),
+   [knk-workspace#793](https://github.com/PandiO/knk-workspace/pull/793); base `next`. Not merged.
+4. **Tests, baseline → result.**
+    1. knk-web-api: baseline on `next` 4452 passed / 100 skipped; branch 4485 passed / 103 skipped, 0 failed. New
+       MySQL tests (`ItemIdentityMySqlTests`, 3) run locally on MySQL 8.0.46: green. Migration applied, rolled back
+       and re-applied locally; `has-pending-model-changes` clean. CI on : push run 44496069809/44496069771 green (build-and-test, mysql-tests, fresh-database); the PR runs 44497990049/44497990070 were still running when this block was written.
+    2. knk-plugin (`./gradlew build -x deployToDevServer`, JDK 21 + JDK 25 toolchain): knk-core 3435 → 3450,
+       knk-api-client 358 → 361 (2 skipped), knk-paper 3147 → 3172 (18 skipped), 0 failures. CI on : build green (push run 44497524668); paper-boot (44497524587, 44498035485) and the PR build (44498035568) still running when this block was written.
+    3. Known reds (also red on the base): none in the default run; `MinecraftCatalogMySqlTests.UpgradePath_…` is the
+       known failure #285 (tagged `KnownFailure`) when the MySQL tests run.
+5. **Decisions (DESIGN § 4.3).**
+    1. *Retag/merge rule.* Chosen: the plain vanilla item is the canonical form: `knk_blueprint` only on items that
+       differ from the plain vanilla item, a plain item resolves through its vanilla match, a plain item that carries a
+       tag is normalised by the hooks; the tag is never the only difference between two stacks, so stacking is
+       vanilla's. Alternatives: (a) stamp every obtained item: untagged items still enter from paths without a hook
+       and stop stacking; (b) stamp everything and merge on inventory events: misses pickup auto-merge, hoppers and
+       shift-click.
+    2. *Switch.* Chosen: `items.identity.enabled` and `items.identity.convert-on-obtain`, both false (tier:3, every
+       item path). Alternatives: (a) one key: no stamping without hooks while testing; (b) none (charter): unreviewed
+       item handling would run in `next`.
+    3. *Match storage.* Chosen: unique nullable FK, set only by generation and `PUT api/ItemIdentity/matches/{id}`,
+       not in create/update DTOs. Alternatives: (a) a key string: no catalogue integrity or merge handling; (b) in the
+       update DTO: today's form would null it on every save.
+    4. *Generation trigger.* Chosen: after every applied scan and on demand (additive, idempotent). Alternatives:
+       (a) at startup: ~1,400 rows on every fresh DB and in tests; (b) on demand only: not "automatic" (D11).
+    5. *Obtainable.* Chosen: item + Active in the latest scan, minus a short operator/technical list and spawn eggs.
+       Alternatives: (a) every item; (b) a full survival table (version-dependent).
+    6. *Existing data / merges.* The migration writes nothing (column NULL), so no duplicates can exist; a merge of
+       two matched materials keeps the target's match and clears the other. Alternatives: (a) refuse such merges:
+       blocks the scan's notation clean-up.
+    7. *Conversion counts.* Chosen: aggregate rows `item_conversion_stats`, not a form/dashboard type, so no G17
+       seeds (like `MinecraftCatalogScan`). Alternatives: (a) full entity with dashboard registry and seeds; (b) plugin
+       log only: no API admin read.
+    8. *First container open.* Chosen: remembered in memory per server run. Alternatives: (a) a PDC flag on the
+       block: a world write plus a snapshot `update()` on a live inventory.
+    9. *Craft/trade results* are counted, not rewritten (vanilla results are plain); the craft preview is normalised.
+    10. *DbContext layout* (coordinator note, siege chain #354 / #782 overlap): the item identity model configuration
+        is one contiguous block plus one `DbSet` line. If another migration lands in `next` before this merges: merge
+        `origin/next` into the branch and regenerate `AddItemIdentity` with `dotnet ef migrations add` (delete the old
+        files first) instead of hand-editing the snapshot.
+6. **Out of scope, noted.** [#791](https://github.com/PandiO/knk-workspace/issues/791) (retag blueprint items handed
+   out before the switch; they don't stack with new tagged ones),
+   [#792](https://github.com/PandiO/knk-workspace/issues/792) (web app admin view, retention of the count rows).
+   Codex: the connector hit its code-review usage limit on all three PRs (review "failed", usage-limit comment); no
+   findings to handle; skipped per the 2026-11-14 decision and noted on each PR.
+7. **Blockers.** None.
+8. **At merge / what the developer must do.**
+    1. Apply migration `AddItemIdentity` (additive), then run a Minecraft catalogue scan or
+       `POST api/ItemIdentity/shadows/generate` to create the shadows.
+    2. Merge into the plugin `config.yml` (both switches off = no change), restart:
+       ```yaml
+       items:
+         identity:
+           enabled: false
+           convert-on-obtain: false
+           map-refresh-minutes: 10
+           report-interval-minutes: 10
+       ```
+    3. Smoke test [§ 0](../guides/production-storage-transport-smoke-test.md#0-item-identity-141-api-and-plugin-tier3)
+       (tier:3 gate before L4 builds on it); untagged steps about 25 minutes.
+    4. At merge into `next`: the `documentation` sub-issue for the follow-up docs impact lines (API docs, content admin
+       guide, feature register row, DESIGN § 8 retag rule).
+9. **Notes for later links.**
+    1. L4 (P1 stock) and later: resolve items with `KnKPlugin.getItemIdentityService().resolve(stack)` (null while
+       `items.identity.enabled` is off); `ItemIdentityResolution.blueprintId()` is the stock key; unresolved items
+       are refused per DESIGN § 8.
+    2. API side: a material's blueprint is the `ItemBlueprint` with `VanillaMaterialMatchRefId` = the material's id;
+       shadows are the blueprints in the top-level "Uncurated" category.
