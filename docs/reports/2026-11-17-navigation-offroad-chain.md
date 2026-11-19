@@ -35,8 +35,8 @@ on `next` (Decided 2026-11-17).
 | L9 Phase 5.2 landmark weights | #709 | Merged into next (2026-11-18); waits for the developer's smoke § 7 steps 1–3 | knk-plugin `claude/offroad-landmark-weights` `636c9f32`; knk-workspace `9d0c926f` | [knk-plugin#87](https://github.com/PandiO/knk-plugin/pull/87) → `c7be34fb`, [#776](https://github.com/PandiO/knk-workspace/pull/776) → `99fef23d` | green (build; paper-boot after one #695 flake on the PR run) | create_session `session_01R1w2Ut1P9c2jGxRYC3weCJ` (2026-11-18) |
 | L10 Phase 7 plaza lines | #712 | Merged into next (step 1 and step 2, 2026-11-18); waits for the developer's smoke § 10.2 | knk-plugin `claude/offroad-plaza-lines` `28ad18c5`; knk-workspace `d7e4e834` | step 1: [knk-plugin#73](https://github.com/PandiO/knk-plugin/pull/73) → `ce0f65ec`, [#723](https://github.com/PandiO/knk-workspace/pull/723) → `c7f61e9e`; step 2: [knk-plugin#84](https://github.com/PandiO/knk-plugin/pull/84) → `4daa0c84`, [#769](https://github.com/PandiO/knk-workspace/pull/769) → `2e0c04d4` | green (build, paper-boot) | create_session `session_01R1w2Ussca79jpGCPqzcTf8` (2026-11-18) |
 | F1 walk-search fixes (#771 items 1, 2) | #771 | Merged into next (2026-11-19); waits for the developer's smoke § 12; the storage hall by road stays open (#780) | knk-plugin `claude/offroad-walk-fixes-771` `321daf6b`; knk-workspace `8fdfe392` | [knk-plugin#88](https://github.com/PandiO/knk-plugin/pull/88) → `cee53213`, [#778](https://github.com/PandiO/knk-workspace/pull/778) → `d1850c7a` | green (build, paper-boot) | create_session `session_01R1w2Ut7LKtBrvQw9bA3mVQ` (2026-11-19) |
-| F2 road goal and route ends (#780, #771 items 3–5) | #780, #771 | In review (2026-11-19): PRs open into `next`, not merged; waits for the developer's smoke § 13 | knk-plugin `claude/offroad-route-ends-f2` `ebc63265`; knk-workspace `441dd7cc` | [knk-plugin#94](https://github.com/PandiO/knk-plugin/pull/94), [#813](https://github.com/PandiO/knk-workspace/pull/813) | green (build, paper-boot on `ebc63265`, push and PR runs, every `npc-*` scenario included; no re-run) | create_session `session_01R1w2UtLzNFzgycUAEB8mVd` (2026-11-19) |
-| F2 road goal and route ends (#780 b, #771 items 3–5) | #780, #771 | Running (started 2026-11-19 12:26 from plugin `next` `55804b11`) | `claude/offroad-route-ends-f2` | — | — | create_session `session_01R1w2UtLzNFzgycUAEB8mVd` (2026-11-19) |
+| F2 road goal and route ends (#780 b, #771 items 3–5) | #780, #771 | Merged into next (2026-11-19); waits for the developer's smoke § 13 | knk-plugin `claude/offroad-route-ends-f2` `ebc63265`; knk-workspace `441dd7cc` | [knk-plugin#94](https://github.com/PandiO/knk-plugin/pull/94) → `6311de11`, [#813](https://github.com/PandiO/knk-workspace/pull/813) → `05b8edc3` | green (build, paper-boot) | create_session `session_01R1w2UtLzNFzgycUAEB8mVd` (2026-11-19; resumed once after the usage limit) |
+| F2 road goal and route ends (#780 b, #771 items 3–5) | #780, #771 | Merged into next (2026-11-19); waits for the developer's smoke § 13 | knk-plugin `claude/offroad-route-ends-f2` `ebc63265`; knk-workspace `441dd7cc` | [knk-plugin#94](https://github.com/PandiO/knk-plugin/pull/94) → `6311de11`, [#813](https://github.com/PandiO/knk-workspace/pull/813) → `05b8edc3` | green (build, paper-boot) | create_session `session_01R1w2UtLzNFzgycUAEB8mVd` (2026-11-19; resumed once after the usage limit) |
 
 ## 3. Coordinator decisions
 
@@ -245,6 +245,13 @@ on `next` (Decided 2026-11-17).
     fixes; rejected, the road-goal change alters many routes and the chain's rule 1 keeps new behaviour behind keys;
     (b) separate links for #780 and #771; rejected, items 4 and 5 sit in the same route-end code. Engine, NPC and
     siege weapons coordinators told; F2 holds the plugin navigation slot.
+38. **F2 merged into `next` (2026-11-19 14:33).** § 6 checks held: heads matched, branches contained `next`, `build`
+    and `paper-boot` green on both runs of `ebc63265`, every change behind keys off by default
+    (`road-goal-reachable`, `road-goal-candidates`, `road-to-its-end`) and `trail-leg-spacing` 3.0, no NPC,
+    destinations or shape file, golden transcripts and flag-off tests unchanged, smoke § 13 at shipped settings, no
+    Codex findings (usage limit). C1's NPC join is private and could not leave the dead end; F2 applies the same
+    principle for players (NPC coordinator told; a shared rule is their call). #780 closes on promotion; #771 stays
+    open until the developer's test tells which cause of item 5 they saw. The plugin slot is free.
 
 ## 4. Link blocks
 
