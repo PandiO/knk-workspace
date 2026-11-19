@@ -17,14 +17,18 @@ of what is already in `next`.
    1. Apply migration `AddItemIdentity`.
    2. Run a catalogue scan (or `POST api/ItemIdentity/shadows/generate`).
    3. Merge the `items.identity` block into the plugin `config.yml`.
-2. **Smoke test of territory (L1 § 1.1–1.2, L2 § 1.3, L3 § 1.4).**
+2. **Smoke test of L4 (stock core, tier:3):** guide § 2 (15 of 17 steps automated).
+   1. Apply migration `AddStockCore`.
+   2. Import the form and display seeds `Storage` and `StockTransaction`.
+   3. Grant `knk.economy.admin` to the staff who may move or adjust stock.
+3. **Smoke test of territory (L1 § 1.1–1.2, L2 § 1.3, L3 § 1.4).**
    1. Apply migration `AddTerritory`.
    2. Import the four territory form and display seeds (`Kingdom` first).
    3. Merge the plugin `production` block into `config.yml`.
    4. To test, turn on `production.enabled` in the plugin and in the API game settings.
-3. **Review:** the agent decisions in blocks 4.0–4.3 (L0's retag rule; L1 server-side territory and loyalty as a town
+4. **Review:** the agent decisions in blocks 4.0–4.4 (L0's retag rule; L1 server-side territory and loyalty as a town
    id; L2's crown land region kind) and coordinator decision 15 (Town/District seed fields).
-4. Later: the shop menu templates for L26 (#687).
+5. Later: the shop menu templates for L26 (#687).
 
 ## 2. Summary
 
@@ -34,9 +38,9 @@ of what is already in `next`.
 | L1 Territory API: holders, crown land entity (G10), power, range (G11), conflicts, loyalty | #326 | Merged into next (2026-11-19) | api `ff50ec1`, workspace `c4211d51`; merges: api `0d6e369a`, workspace `4595e6d8` | [api#53](https://github.com/PandiO/knk-web-api/pull/53), [ws#798](https://github.com/PandiO/knk-workspace/pull/798) | green (build-and-test, mysql-tests, fresh-database) | create_session `session_01R1w2Uwo46dJVo6Cpr8LzmG` (one repo besides knk-workspace), started 2026-11-19 |
 | L2 Territory plugin: chunk cache, lookup, BlueMap outlines | #689 | Merged into next (2026-11-19) | plugin `96ef7326`, workspace `14d3efcd`; merges: plugin `55804b11`, workspace `66d35872` | [plugin#91](https://github.com/PandiO/knk-plugin/pull/91), [ws#804](https://github.com/PandiO/knk-workspace/pull/804) | green (plugin build + paper-boot) | create_session `session_01R1w2Uvhpo37DXAXpm2uqLp` (one repo besides knk-workspace), started 2026-11-19 |
 | L3 Territory web app | #690 | Merged into next (2026-11-19) | web app `0531422`, workspace `f3bd8f27`; merges: web app `89751315`, workspace `54bdc830` (after a coordinator merge of `next`, `e4f2276d`) | [web#57](https://github.com/PandiO/knk-web-app/pull/57), [ws#803](https://github.com/PandiO/knk-workspace/pull/803) | web app green (build-and-test, e2e) | create_session `session_01R1w2UuYHneFJFXcn8GSe6F` (one repo besides knk-workspace), started 2026-11-19 |
-| L4 P1 stock core API: storages, ledger, reconciler, capacity, roll-up | #97 | In review (2026-11-19; block 4.4) | api `e524721`, workspace `abef76fc` | [api#56](https://github.com/PandiO/knk-web-api/pull/56), [ws#816](https://github.com/PandiO/knk-workspace/pull/816) | green (build-and-test, mysql-tests, fresh-database) | create_session `session_01R1w2Uwv8FBnKCUoeZauzVt` (one repo besides knk-workspace), started 2026-11-19 |
-| L5 P1b stock web app | #675 | Not started | — | — | — | — |
-| L6 P2 world API: structure subtypes, TownId, placement rules | #91 | Not started | — | — | — | — |
+| L4 P1 stock core API: storages, ledger, reconciler, capacity, roll-up | #97 | Merged into next (2026-11-19) | api `e524721`, workspace `abef76fc`; coordinator merge of `next` `06fee906`; merges: api `2e7d4e81`, workspace `1bbdd69f` | [api#56](https://github.com/PandiO/knk-web-api/pull/56), [ws#816](https://github.com/PandiO/knk-workspace/pull/816) | green (build-and-test, mysql-tests, fresh-database) | create_session `session_01R1w2Uwv8FBnKCUoeZauzVt` (one repo besides knk-workspace), started 2026-11-19 |
+| L5 P1b stock web app | #675 | Running | — | — | — | create_session `session_01R1w2UuKsus7BT7DcXyL4jr` (one repo besides knk-workspace), started 2026-11-19 |
+| L6 P2 world API: structure subtypes, TownId, placement rules | #91 | Running | — | — | — | create_session `session_01R1w2UscSGsG34qwc8vtEQj` (one repo besides knk-workspace), started 2026-11-19 |
 | L7 P2b world web app | #676 | Not started | — | — | — | — |
 | L8 P2c world plugin: managed-region kinds | #677 | Not started | — | — | — | — |
 | L9 P3 production engine API | #86 | Not started | — | — | — | — |
@@ -158,6 +162,18 @@ of what is already in `next`.
    survived, pushes work in progress at once, and pushes regularly from now on. Alternatives: (a) a fresh L4 session:
    would lose any surviving local work; (b) a subagent: the same usage limit applies.
 22. **Territory docs #806:** done by its docs session (bug #807 filed: a conflict page's Edit has no update endpoint).
+
+23. **L4 merge (2026-11-19).** Knk-web-api `next` moved while L4 finished: siege #799 changed the form seed README
+   and `FormConfigurationSeedFilesTests`, with no migration. The merge was clean, but the change touched the same test
+   file, so the coordinator merged `origin/next` into `claude/production-p1` (`06fee906`) and waited for CI on the
+   combined code (all green) before merging. Merged: API #56 `2e7d4e81`, workspace #816 `1bbdd69f` (that branch merged
+   cleanly with `next`). Alternatives: (a) merge on the clean-merge check alone: the shared test file could fail only
+   in combination.
+24. **After L4: L6 (#91) and L5 (#675) started.** Both gates are open (L6: L1, L4 merged, smoke gates waived by the
+   developer; L5: L4 merged) and they use different repos. Both prompts now ask for a work-in-progress push at least
+   every hour (lesson from decision 21).
+25. **P1 docs at the end of P1.** The `documentation` sub-issue for stock core (#97, #675) starts when L5 is merged,
+   like territory (decision 14).
 
 ## 4. Link blocks
 
