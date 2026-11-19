@@ -410,6 +410,13 @@ the configuration reference § 4.27), then restart. In test order:
     knk-plugin#75 → `1f414d08`, knk-workspace#730 → `f82b5975`. Held NPCs no longer cross after a cache refresh
     (6 unit tests and a scenario fail before, pass after). For the developer's review: R1 decisions 5.1, 5.2, 5.6.
     No NPC link running; the chain waits for the developer's retest.
+50. **Developer go for #695, #779 and #814** (2026-11-19). Run one at a time as links J1 (the stair-climb jump flake,
+    knk-plugin Actions run 44411540731 attempt 1; the check stays), H1 (NPC checks agree with `WalkCells.isClimbableHatch`
+    from the off-road chain's #771) and G1 (F2's road-goal rule shared with NPC plans, for transports to building
+    destinations such as the keep storage hall; where the shared rule lives agreed with the off-road chain first). J1
+    started. The off-road (#698) and siege weapons (#354) coordinators were told. Also on 2026-11-19: the developer's
+    decision on long walks (O32, L6 on hold; transports ride the extended rural roads with short walk legs); NPC walk
+    legs share the players' `navigation.walk` caps (an NPC-only override offered, not scheduled).
 
 ## 4. Link blocks
 

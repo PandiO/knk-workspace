@@ -1,6 +1,6 @@
 # Overview map chain — progress report
 
-**Status:** In review; fix links F1 and F2 running (2026-11-19) · **Last updated:** 2026-11-19
+**Status:** In review; fix links F1 and F2 merged into `next` (2026-11-19) · **Last updated:** 2026-11-19
 
 **Issue:** [PandiO/knk-workspace#732](https://github.com/PandiO/knk-workspace/issues/732), links
 [#735](https://github.com/PandiO/knk-workspace/issues/735) (L1), [#736](https://github.com/PandiO/knk-workspace/issues/736) (L2),
@@ -54,9 +54,11 @@ on `next` (Decided 2026-11-18, O01–O33, O08 superseded by O31); smoke guide
    `3e04ba8f`, knk-web-app `eff6ed9`, knk-workspace `8328c9da`). Docs follow-up: #766, docs session
    `session_01R1w2UuMzfZ1Z1FB7pV7iXR`; its player and admin guide items gate a deploy to knk-alpha. #732 and its
    sub-issues stay open (`status:in-review`) until you promote `next`.
-10. **Fix links F1 and F2 running (2026-11-19, on your go).** F1 (#750, knk-plugin: sub-region outlines at startup)
-    and F2 (#757 Escape in the map frame, #809 "Open profile" disabled with a tooltip, knk-web-app). The coordinator
-    merges them into `next` after the checks; their smoke steps join §§ 1, 3, 5 and 9. #772 (direct `/bluemap` visits
+10. **Fix links F1 and F2 merged into `next` (2026-11-19, on your go).** F1 (#750, knk-plugin `c0ca56e4`: sub-region
+    outlines reported after the access sync) and F2 (#757 Escape in the map frame, #809 "Open profile" disabled with a
+    tooltip; knk-web-app `ee73be3f`). Your smoke steps: § 1 step 8, § 3 step 4, § 5 step 7, § 9 steps 1, 3 and 4. No
+    config key, setting or migration. Known limit (F1): a sub-region that is deleted is not reported as removed, so
+    its outline stays on the map until the next full outline report of that domain. #772 (direct `/bluemap` visits
     go to `/map`, relative redirects) is merged into `next` (`8487a058`): rebuild the alpha `web` image with its
     `nginx.conf` together with the promotion, not before.
 11. **Still open for you:** the `/ownermode` case of the L4 check (a second staff account), and when to promote `next`.
@@ -74,8 +76,8 @@ on `next` (Decided 2026-11-18, O01–O33, O08 superseded by O31); smoke guide
 | L7 Gate commands backend | #741 | Merged into `next` 2026-11-18 (knk-web-api `0308377d`, knk-plugin `02aa110e`, knk-workspace `b7820e99`); waiting for the developer's smoke test § 7 | `claude/overview-map-gate-commands`: knk-web-api `16e4157`, knk-plugin `1f8bb3c7`, knk-workspace `8368b901` (from `next`) | [knk-web-api#48](https://github.com/PandiO/knk-web-api/pull/48), [knk-plugin#79](https://github.com/PandiO/knk-plugin/pull/79), [knk-workspace#758](https://github.com/PandiO/knk-workspace/pull/758) | API green (build-and-test, mysql-tests, fresh-database); plugin build and paper-boot green | create_session session_01R1w2UxDt6K1RcnDPPagNAN (2026-11-18) |
 | L8 Gate command buttons | #742 | Merged into `next` 2026-11-18 (knk-web-app `de43f6be`, knk-workspace `bf28138d`); waiting for the developer's smoke test § 8 | `claude/overview-map-gate-buttons`: knk-web-app `05a30ea`, knk-workspace `9fad9531` (from `next`) | [knk-web-app#53](https://github.com/PandiO/knk-web-app/pull/53), [knk-workspace#759](https://github.com/PandiO/knk-workspace/pull/759) | Web app build-and-test green on `05a30ea`, e2e running at report time (local full run 176 passed); knk-workspace no CI; Codex at its limit | create_session session_01R1w2UvQqqmQ9NwMTQbq3Cb (2026-11-18) |
 | L9 Player context panel | #743 | Merged into `next` 2026-11-18 (knk-web-app `eff6ed98`, knk-workspace `8328c9da`); waiting for the developer's smoke test § 9 | `claude/overview-map-moderation`: knk-web-app `1ff5418`, knk-workspace `553c751b` (from `next`) | [knk-web-app#55](https://github.com/PandiO/knk-web-app/pull/55), [knk-workspace#765](https://github.com/PandiO/knk-workspace/pull/765) | Web app push runs green on `1ff5418` (build-and-test, e2e), pull_request runs running at report time (local full run: Jest 2754, e2e 191 passed); knk-workspace no CI; Codex at its limit | create_session session_01R1w2Uw4EdZTG53RQ7gnyQ3 (2026-11-18) |
-| F1 Sub-region outlines at startup | #750 | Running (2026-11-19) | `claude/overview-map-f1-subregions` (knk-plugin, knk-workspace, from `next`) | — | — | create_session session_01R1w2Uvrr2qFRCUBSxjXe7Y (2026-11-19) |
-| F2 Escape in the map frame, "Open profile" disabled | #757, #809 | Running (2026-11-19) | `claude/overview-map-f2-panel-fixes` (knk-web-app, knk-workspace, from `next`) | — | — | create_session session_01R1w2UuSPaZGzxZKERwXfh3 (2026-11-19) |
+| F1 Sub-region outlines at startup | #750 | Merged into `next` 2026-11-19 (knk-plugin `c0ca56e4`, knk-workspace `7330f0b6`); waiting for smoke § 1 step 8 | `claude/overview-map-f1-subregions`: knk-plugin `23e71315`, knk-workspace `90c4eabb` (from `next`) | [knk-plugin#93](https://github.com/PandiO/knk-plugin/pull/93), [knk-workspace#811](https://github.com/PandiO/knk-workspace/pull/811) | build and paper-boot green on `23e71315`; tests 7078 → 7106 (14 new), 0 failed; Codex at its limit | create_session session_01R1w2Uvrr2qFRCUBSxjXe7Y (2026-11-19) |
+| F2 Escape in the map frame, "Open profile" disabled | #757, #809 | Merged into `next` 2026-11-19 (knk-web-app `ee73be3f`, knk-workspace `ac437102`); waiting for smoke § 3 step 4, § 5 step 7, § 9 | `claude/overview-map-f2-panel-fixes`: knk-web-app `c1e4dc9`, knk-workspace `72714c17` (from `next`) | [knk-web-app#59](https://github.com/PandiO/knk-web-app/pull/59), [knk-workspace#812](https://github.com/PandiO/knk-workspace/pull/812) | build-and-test and e2e green on `c1e4dc9`; Jest 2787 → 2791, 44 map e2e specs pass; Codex at its limit | create_session session_01R1w2UuSPaZGzxZKERwXfh3 (2026-11-19) |
 
 ## 3. Coordinator decisions
 
@@ -252,6 +254,27 @@ on `next` (Decided 2026-11-18, O01–O33, O08 superseded by O31); smoke guide
     Alternatives: (a) one link for all three issues: needs knk-plugin and knk-web-app, so the subagent route, and
     serialises independent work; (b) #809 hidden instead of disabled, per spec § 5 rule 13: the developer chose
     disabled with a tooltip, logged by F2 as a spec decision.
+
+23. **F2 and F1 checks and merges (2026-11-19).** Both links stopped on the account's 5-hour usage limit at about
+    12:45 UTC and were resumed at 16:05 on the developer's "try again". Chosen:
+    1. Merge knk-web-app#59 and knk-workspace#812 (F2) into `next` with merge commits: every skill § 6 check held
+       (web app branch contained `next`; scope 9 map files; CI green; Jest 2787 → 2791; the new Escape e2e tests fail
+       without the bridge listener; Codex at its limit). Before the merge I added `72714c17` to the docs branch: O34
+       and § 5 item 12 now cite the hidden-not-disabled rule in § 6.3.5 / § 6.3.8 instead of § 5 rule 13 (F2's
+       finding; my issue #809 had cited the wrong rule).
+    2. F2's agent decisions: Escape from the frame as the new additive v1 type `escapePressed` (O35) rather than moving
+       focus to the panel; a panel-local tooltip (the web app has no shared one), shown on tap, hidden on blur.
+    3. Merge knk-plugin#93 and knk-workspace#811 (F1) into `next` with merge commits: build and paper-boot green on
+       `23e71315`; plugin tests 7078 → 7106 (14 new), 0 failed; scope 7 files (`MapReportingService`, `MapReporting`,
+       `DomainAccessFlagSync`, `KnKPlugin` wiring, tests); API untouched; Codex at its limit. Plugin `next` had moved
+       by the siege weapons L2b merge (other files); the test merge was clean. The F1 docs branch conflicted with
+       F2's smoke guide header and change list: I merged `next` into it (`90c4eabb`), keeping both.
+    4. F1's agent decisions: a separate `reportSubRegions` with its own remembered set (also resent by `resendAll`);
+       later syncs send only new sub-regions; the hook sits on the access sync, after the mirror. **Known limit:** a
+       sub-region that disappears is not sent as removed (block item 5.3); recorded in § 1 item 10, not filed.
+    Alternatives: (a) send F1 back to merge `next` again itself: the conflict was in docs header lines only, so
+    resolving it here kept the merge mechanical and saved a round trip; (b) wait for Codex: skipped under the usage
+    limit rule.
 
 ## 4. Link blocks
 
