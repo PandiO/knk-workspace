@@ -1,6 +1,6 @@
 # Knights and Kings — production installation guide (admin)
 
-**Status:** Draft · **Last updated:** 2026-11-19 (§ 5.3: `AddSiegeWeapons` and `AddTerritory` both in `next` `0d6e369a`, in order; link to the territory admin guide, docs #806); 2026-11-19 (§ 5.3: `AddTerritory` of #326 on its branch); 2026-11-19 (§ 5.3: the migrations waiting in `next`, with `AddItemIdentity`, docs PandiO/knk-workspace#796); 2026-11-18 (§ 4.3: the `Map__GateCommands__*` keys, PandiO/knk-workspace#741); 2026-11-18 (§ 4.3: the `Map__LivePlayers__*` keys, PandiO/knk-workspace#738); 2026-11-18 (§ 4.3: `Map__Enabled` also shows the web map, #737; the `Map__*` and `RateLimiting__Map__*` keys, PandiO/knk-workspace#736); 2026-11-16 (§ 10.4: `actions/checkout@v7` in the release plan, #426); 2026-11-15 (header and § 5.3: the migrations of releases v0.1 to v0.3 on knk-web-api `main` `2cc8254`, PandiO/knk-workspace#577)
+**Status:** Draft · **Last updated:** 2026-11-19 (§ 5.3 item 7: link to the warehouses and production structures admin guide, `/knk regions repair` once, docs #830); 2026-11-19 (§ 5.3: `AddSiegeWeapons` and `AddTerritory` both in `next` `0d6e369a`, in order; link to the territory admin guide, docs #806); 2026-11-19 (§ 5.3: `AddTerritory` of #326 on its branch); 2026-11-19 (§ 5.3: the migrations waiting in `next`, with `AddItemIdentity`, docs PandiO/knk-workspace#796); 2026-11-18 (§ 4.3: the `Map__GateCommands__*` keys, PandiO/knk-workspace#741); 2026-11-18 (§ 4.3: the `Map__LivePlayers__*` keys, PandiO/knk-workspace#738); 2026-11-18 (§ 4.3: `Map__Enabled` also shows the web map, #737; the `Map__*` and `RateLimiting__Map__*` keys, PandiO/knk-workspace#736); 2026-11-16 (§ 10.4: `actions/checkout@v7` in the release plan, #426); 2026-11-15 (header and § 5.3: the migrations of releases v0.1 to v0.3 on knk-web-api `main` `2cc8254`, PandiO/knk-workspace#577)
 **State:** Draft v1 — written for review. Not yet followed on a real production host. The database, API, seed and
 web-server steps were rehearsed in a scratch environment on 2026-10-07 (see [Appendix A](#appendix-a--what-was-verified-and-how)).
 The Paper server steps and the release and deploy workflows are untested drafts; the CI workflows (§ 10.3) run on GitHub.
@@ -646,7 +646,9 @@ promotes `next` lists them here with its tag:
    districts, streets and towns are re-created without a delete action, so deleting a street, district or town a
    structure uses is still refused. No data written, no `api.env` key; the plugin keeps reading `MinecraftPlugin:BaseUrl`
    and `Security:PluginApiKey` for the new territory lookup. Set-up afterwards: import the form and display seeds
-   `Warehouse` and `ProductionStructure` ([changelog](../CHANGELOG.md) entry of #91). Its `Down` makes the two columns
+   `Warehouse` and `ProductionStructure` ([changelog](../CHANGELOG.md) entry of #91, [warehouses and production
+   structures admin guide](admin/production-world-admin-guide.md)); with the plugin's `production.enabled` on, run
+   `/knk regions repair` once. Its `Down` makes the two columns
    required again and fails while a rural structure exists.
 
 Earlier: `v0.2` (`58e3218`, 2026-11-14) added `20261109081203_AddTempRegionReleases` (#269), and `v0.1` (`6d5e9c1`,

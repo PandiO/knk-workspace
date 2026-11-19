@@ -1,6 +1,6 @@
 # Managed WorldGuard regions — hierarchy, priority, flags and startup repair
 
-**Status:** Current · **Last updated:** 2026-11-19 (§7 "Domain sub-regions", "Overview map outlines": sub-region outlines reported after every access sync with `map.reporting.enabled`, PandiO/knk-workspace#750, branch `claude/overview-map-f1-subregions`); 2026-11-19 (§3, §4, §5: kind `CROWN_LAND` for crown land of territory V1, knk-plugin `next` `55804b11`, PandiO/knk-workspace#689, docs #806); 2026-11-18 (§7 "Overview map outlines": the repair and rename also report outlines with `map.reporting.enabled`, PandiO/knk-workspace#735, docs #766)
+**Status:** Current · **Last updated:** 2026-11-19 (§3, §4, §5, §6, §7: production P2c region kinds `ProductionStructure` → `RESOURCE_PRODUCTION`, `Warehouse` → `STRUCTURE`, rural structures without a parent, with `production.enabled`; knk-plugin `next` `8ebb30be`, PandiO/knk-workspace#677, docs #830); 2026-11-19 (§7 "Domain sub-regions", "Overview map outlines": sub-region outlines reported after every access sync with `map.reporting.enabled`, PandiO/knk-workspace#750, branch `claude/overview-map-f1-subregions`); 2026-11-19 (§3, §4, §5: kind `CROWN_LAND` for crown land of territory V1, knk-plugin `next` `55804b11`, PandiO/knk-workspace#689, docs #806); 2026-11-18 (§7 "Overview map outlines": the repair and rename also report outlines with `map.reporting.enabled`, PandiO/knk-workspace#735, docs #766)
 **Implementation:** Implemented, merged to trunk (2026-09-29, [knk-plugin#6](https://github.com/PandiO/knk-plugin/pull/6), [knk-web-api#3](https://github.com/PandiO/knk-web-api/pull/3); KNG-43 follow-up 2026-10-04) and **smoke-tested in game and accepted 2026-10-05** — Linear KNG-46, §9. Region-step re-run replacement (KNG-103) merged 2026-10-18 after its in-game check ([knk-plugin#12](https://github.com/PandiO/knk-plugin/pull/12), [knk-web-api#10](https://github.com/PandiO/knk-web-api/pull/10)). Lootbox spawn areas' drawn regions renamed to `lootbox_area_<id>` (PandiO/knk-workspace#34, §7): **in the PR into `next` from `claude/plugin-chains-into-next`, not merged, not live-tested**. Temp regions of abandoned drafts removed early (PandiO/knk-workspace#269, §7 "Abandoned drafts"): **in the PR into `next` from `claude/plugin-chains-into-next`, not merged, not live-tested**
 **Supersedes:** Linear KNG-12 ("no WG flags on town/district regions"), the assumption noted in `CombatSafezone`'s Javadoc
 **Evidence:** [`reports/2026-09-28-v1-permissions-worldguard-inventory.md`](../reports/2026-09-28-v1-permissions-worldguard-inventory.md) (categorized v1 inventory), the v3 domain model (`Town → District → Structure`, `GateStructure : Structure`), `vision.md` §2
@@ -31,6 +31,8 @@ The v1 `regions.yml` was **not available** to this work — only the categorized
 | House base (29) / children (61) | `Structure` (House subtype, not yet in the API) | `HOUSE` | Children are v1 sub-regions of one house, not v3 domains — not modelled. **Opt-in per region** via `overrides.<region>.kind: house`, because the API has no structure subtype yet and `entry deny` on a region with no owners would lock everyone out. |
 | Property base (36) / children (17) | `Structure` (Resource-Property subtype, `vision.md` §2.5) | `PROPERTY` | As House: opt-in via override. |
 | `property_47` (wood-farm resource production) | a Resource-Property `Structure` | `RESOURCE_PRODUCTION` | Documented exception, §5. |
+| — | `ProductionStructure` (production P2, #91/#677) | `RESOURCE_PRODUCTION` | The v3 Resource-Property. Mapped only while `production.enabled` is on (`ManagedRegionKind.fromDomainType(type, production)`); with it off it stays `STRUCTURE`, because the kind seeds `entry` flags. In a district: parent its District; **rural** (a town, no district): no parent (§4). See [production world § 6](production-world.md#6-game-server-region-kinds-and-rural-regions). |
+| — | `Warehouse` (production P2) | `STRUCTURE` | Hierarchy only, no flags; rural warehouses have no parent either (with `production.enabled`). |
 | Room base (22) / children (8) | none (v3 has no Room; v1 rooms were rentable units inside houses) | `ROOM` | Opt-in via override only. Sits above the structure tier. |
 | Arena base `arena_2` (1) | none | `ARENA` | No v3 entity. Managed only if listed in `regions.managed.extra-regions`. |
 | Arena children `…-battleground` (8 flagged, 42 unflagged) | none | `BATTLEGROUND` (the 8) | Only the 8 flagged ones are battlegrounds; the other 42 are plain children (no flags) and need no management. Via `extra-regions`. |
@@ -39,7 +41,7 @@ The v1 `regions.yml` was **not available** to this work — only the categorized
 | Global `__global__` | — | `GLOBAL` | **Off by default** (`manage-global-region`): `build deny` changes what is buildable across the whole world. |
 | Street | `Street` | — | No region (`vision.md` §2.4). |
 
-Any other v3 `Structure` subtype (Shop, Warehouse, Keep, …) is `STRUCTURE`: hierarchy only, no flags.
+Any other v3 `Structure` subtype (Shop, Keep, …) is `STRUCTURE`: hierarchy only, no flags.
 
 ## 4. Parent and priority
 
@@ -56,6 +58,13 @@ priority = max(kind floor, parent priority + 10)      (just the floor when there
 | `ROOM` | its House/Structure region | 40 | 40 |
 | `ARENA` | config-declared (a District/Town) | 40 | 40 |
 | `BATTLEGROUND` | its Arena | 50 | 50 |
+
+**Rural structures** (production P2, a `TownId` and no district; with `production.enabled` on): no parent on purpose,
+the kind's floor (30), in their town's world, and no "unknown district" warning. So PvP stays allowed around them (the
+world default) and no town flags are inherited (production DESIGN § 3.4, confirmed 2026-11-11). A structure moved from
+a district to rural keeps its old parent, because the repair never clears one (§6): clear it with `/rg setparent
+<region>` ([#824](https://github.com/PandiO/knk-workspace/issues/824)). With `production.enabled` off a rural structure
+gets the old warning "its District (id null) is unknown or has no region; no parent set" and its floor.
 
 Priority therefore **depends on the region's chain, not only its category**: a Room under a House ranks above it; a House whose District is missing degrades to its floor; a deeper chain ranks above a shallower one. An override can pin any region's priority (and children then build on it).
 
@@ -86,7 +95,7 @@ Setting a **parent** also makes the child inherit the parent's *owners and membe
 | `DISTRICT`, `STRUCTURE`, `GATE`, `CROWN_LAND` | none | Inherit through the parent link (v1 children had no flags). |
 | `HOUSE`, `ROOM` | `entry deny`, `entry-deny-message ""`, `feed-amount 20`, `feed-delay 1` (SEED) | Shared base flags of v1 houses and rooms. |
 | `PROPERTY` | `entry allow`, `entry-deny-message ""` (SEED) | Shared base flags of v1 properties. |
-| `RESOURCE_PRODUCTION` | as `PROPERTY`; `block-break allow` **only** with `resource-production-block-break: true` | Exception, below. |
+| `RESOURCE_PRODUCTION` | as `PROPERTY`; `block-break allow` **only** with `resource-production-block-break: true` | Exception, below. Since P2c (#677) also every `ProductionStructure` region while `production.enabled` is on. |
 | `ARENA` | `entry allow`, `entry-deny-message ""` (SEED) | `arena_2`. |
 | `BATTLEGROUND` | `entry deny`, `pvp allow` (**ENFORCE**) | The 8 flagged battleground children; this is what makes them battlegrounds. |
 | `GLOBAL` | `build deny`, `damage-animals allow`, `pvp allow`, `deny-message ""` — only if enabled | v1 `__global__`. |
@@ -111,13 +120,13 @@ Setting a **parent** also makes the child inherit the parent's *owners and membe
 
 Outcome rules: **checked** = distinct regions considered; **skipped** = domain without a region id, region not in WorldGuard (stale domain record — never recreated), or one region claimed by two domains with different kind/parent (ambiguous — left alone); **failed** = read/apply error for that region; **unchanged** = already correct. A missing parent keeps the current parent (never cleared) and the region falls back to its floor priority; a parent cycle is cut with a warning. Running again on the result changes nothing (`aSecondRunChangesNothingAndDoesNotSave`).
 
-`/knk regions repair` (permission `knk.admin.regions`, child of `knk.admin`) runs the same pass on demand — needed after creating a Town or Structure in the web app (§8).
+`/knk regions repair` (permission `knk.admin.regions`, child of `knk.admin`) runs the same pass on demand — needed after creating a Town or Structure in the web app (§8), and once after turning `production.enabled` on, so existing production structures get their kind (P2c, #677).
 
 With `map.reporting.enabled: true` every run also reports the domain regions' outlines to the API for the overview map (§7 "Overview map outlines").
 
 ## 7. Creation path and config
 
-`POST /Regions/rename` (API → plugin) now accepts optional `domainType` and `parentRegionId`. Every domain service — `TownService`, `DistrictService`, `StructureService`, `GateStructureService`, `DomainService` — calls the shared `IDomainRegionNameFinalizer` after create/update (KNG-43): a region still named `tempregion_worldtask_<n>` becomes `domain_<id>`, with the concrete type and the parent's region (District → its Town, Structure/Gate → its District). A failed rename never fails the save; the region keeps its temp name. The plugin renames the temp region — **copying owners and members**, and (KNG-43) keeping the region's own parent and re-linking regions whose parent it was — then runs `reconcileOne` for the new name. Without a type the rename behaves as before and the next repair sets the region up.
+`POST /Regions/rename` (API → plugin) now accepts optional `domainType` and `parentRegionId`. Every domain service — `TownService`, `DistrictService`, `StructureService`, `GateStructureService`, `DomainService` — calls the shared `IDomainRegionNameFinalizer` after create/update (KNG-43): a region still named `tempregion_worldtask_<n>` becomes `domain_<id>`, with the concrete type and the parent's region (District → its Town, Structure/Gate → its District). A failed rename never fails the save; the region keeps its temp name. The plugin renames the temp region — **copying owners and members**, and (KNG-43) keeping the region's own parent and re-linking regions whose parent it was — then runs `reconcileOne` for the new name. Without a type the rename behaves as before and the next repair sets the region up. A rural structure (production P2, a town and no district) is renamed with no parent region (territory is not a region), and with `production.enabled` on the plugin's creation hook (`ManagedRegionsBootstrap.finalizeNewRegion`) gives a `ProductionStructure` region the kind `RESOURCE_PRODUCTION` (log line `[KnK Regions] New region <id> as RESOURCE_PRODUCTION: ...`).
 
 ### Re-running a domain's region step (KNG-103)
 

@@ -1,6 +1,6 @@
 # Territory — Admin Guide
 
-**Status:** Current · **Last updated:** 2026-11-19 (first version, territory V1 #326/#689/#690, docs PandiO/knk-workspace#806)
+**Status:** Current · **Last updated:** 2026-11-19 (§ 7: rural structures are checked since P2 #91/#677, docs #830); 2026-11-19 (first version, territory V1 #326/#689/#690, docs PandiO/knk-workspace#806)
 **Checked against:** knk-web-api `next` `0d6e369a`, knk-plugin `next` `55804b11`, knk-web-app `next` `89751315` (not
 released; off in game until both switches are on; the manual steps of the
 [smoke test § 1](../production-storage-transport-smoke-test.md#1-territory-v1-326-api-689-plugin-690-web-app-tier3)
@@ -158,8 +158,10 @@ Open a structure's page (Dashboard, type **Structure**, **View**); the **Territo
    Loyalty is stored only in V1; it has no effect in game yet.
 3. **Clear flag** removes the flag by hand. The next report sets it again while it still applies.
 
-Only structures inside a district are checked; rural structures come with production phase P2
-([#91](https://github.com/PandiO/knk-workspace/issues/91)). A structure's position is the centre of its region.
+Since production phase P2 ([#91](https://github.com/PandiO/knk-workspace/issues/91), in `next`) rural structures
+(a town and no district) are checked too, against their own town; their Own town is that town. Warehouses and
+production structures show the same panel; see the [warehouses and production structures admin
+guide](production-world-admin-guide.md). A structure's position is the centre of its region.
 
 ## 8. Safe test procedure
 

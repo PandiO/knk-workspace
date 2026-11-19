@@ -1,6 +1,6 @@
 # Stock — Admin Guide
 
-**Status:** Current · **Last updated:** 2026-11-19 (first version, stock core P1 #97/#675, docs PandiO/knk-workspace#820)
+**Status:** Current · **Last updated:** 2026-11-19 (§ 2.2: the default storages of warehouses and production structures, P2 #91, docs #830); 2026-11-19 (first version, stock core P1 #97/#675, docs PandiO/knk-workspace#820)
 **Checked against:** knk-web-api `next` `2e7d4e81`, knk-web-app `next` `9f46cb49` (not released; the manual steps of the
 [smoke test § 2](../production-storage-transport-smoke-test.md#2-phase-p1-stock-core-97-api-675-web-app-tier3) have
 not been run live yet)
@@ -65,6 +65,11 @@ On the Storage dashboard press **Create** (the seeded form, two steps):
    items it may hold, empty = no cap), **Units per container slot** (stored for later; no effect yet), **Locked
    until** and **Lock reason**. Transit storages take no cap.
 3. **Submit.**
+
+Warehouses and production structures (production P2, in `next`) get their storages without this form: a warehouse
+its "<name> - deliveries" storage, a production structure its "<name> - output" storage, both Domain storages held by
+the structure; their pages list every storage they hold. See the [warehouses and production structures admin
+guide](production-world-admin-guide.md).
 
 A storage's kind and holder can only change while it has no stock and no ledger history. A storage with stock or
 history can't be deleted either: the ledger keeps every storage it names. If someone else saved the storage (or stock
