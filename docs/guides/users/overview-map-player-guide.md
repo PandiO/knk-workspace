@@ -1,6 +1,6 @@
 # Overview map — Player Guide
 
-**Status:** Current · **Last updated:** 2026-11-18 (first version, the overview map chain #732, docs PandiO/knk-workspace#766)
+**Status:** Current · **Last updated:** 2026-11-19 (§ 3 item 7: Escape also works right after a click inside the map, #757, fix link F2, in review for `next`); 2026-11-18 (first version, the overview map chain #732, docs PandiO/knk-workspace#766)
 **Checked against:** knk-web-app `next` `eff6ed9`, knk-web-api `next` `6094276`, knk-plugin `next` `3e04ba8f` (not
 released; the map is off until staff turn it on, and no step has been run on a live server yet)
 **Related:** [player handbook](player-handbook.md), [overview map admin guide](../admin/overview-map-admin-guide.md),
@@ -45,9 +45,8 @@ names and players on top of it are current.
 6. **Gates.** A gate's panel also lists its **Doors**: each door is Open, Closed, Opening, Closing or Jammed, says
    "Destroyed" when it is, and has a health bar ("Health current / max"). During a siege on that gate the panel says
    **Under siege**.
-7. **Closing the panel:** the × at its top. Escape also closes it, but only after you click somewhere on the page
-   outside the map: right after a click inside the map, Escape doesn't reach the page (known issue
-   [#757](https://github.com/PandiO/knk-workspace/issues/757)). Clicking another pin replaces the panel.
+7. **Closing the panel:** the × at its top, or Escape, also right after a click inside the map. Clicking another pin
+   replaces the panel.
 
 ## 4. Players on the map
 
@@ -88,4 +87,5 @@ Staff can switch this part on separately; without it the map shows places only.
 
 ## Changes
 
-1. 2026-11-18: first version (the overview map chain #732, links L1–L9; docs PandiO/knk-workspace#766)
+1. 2026-11-19: § 3 item 7: Escape closes the panel also right after a click inside the map (fix link F2, #757)
+2. 2026-11-18: first version (the overview map chain #732, links L1–L9; docs PandiO/knk-workspace#766)
