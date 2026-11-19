@@ -639,6 +639,15 @@ promotes `next` lists them here with its tag:
    storages `SYS_PRODUCTION`, `SYS_CONSUMPTION`, `SYS_LOSS`, `SYS_ADJUSTMENT`, `SYS_WORLD` (ids 1-5). No `api.env` key.
    Set-up afterwards: import the form and display seeds `Storage` and `StockTransaction`, and grant
    `knk.economy.admin` to the staff who may move stock ([changelog](../CHANGELOG.md) entry of #97).
+7. `20261119180109_AddProductionWorld` (#91, production world P2): additive; `structures.DistrictId` and `StreetId`
+   become nullable (existing rows keep their values), new nullable `structures.TownId` (FK to `towns`) and the check
+   constraint `CK_structures_DistrictXorTown` (exactly one of district and town; every existing structure has a
+   district); new tables `warehouses` and `production_structures` (subtypes of `structures`). The structure FKs to
+   districts, streets and towns are re-created without a delete action, so deleting a street, district or town a
+   structure uses is still refused. No data written, no `api.env` key; the plugin keeps reading `MinecraftPlugin:BaseUrl`
+   and `Security:PluginApiKey` for the new territory lookup. Set-up afterwards: import the form and display seeds
+   `Warehouse` and `ProductionStructure` ([changelog](../CHANGELOG.md) entry of #91). Its `Down` makes the two columns
+   required again and fails while a rural structure exists.
 
 Earlier: `v0.2` (`58e3218`, 2026-11-14) added `20261109081203_AddTempRegionReleases` (#269), and `v0.1` (`6d5e9c1`,
 2026-11-13) added `20261113161725_SeedStaffFreezeNodes` (gives the Staff group `knk.freeze` and `knk.unfreeze`, #367).
