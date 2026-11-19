@@ -1,8 +1,8 @@
 # Public overview map (BlueMap in the web app) — working draft
 
-**Status:** Working draft (not a design, nothing decided in detail, no code). Written from the developer's voice discussion of 2026-11-17. Several positions are the developer's first visualisation and are to be revisited after the first test. Input for a design session (`knk-design` skill).
-**Last updated:** 2026-11-17
-**Issue:** none yet (related: [#224](https://github.com/PandiO/knk-workspace/issues/224) in-game maps, #613 siege tactical map, #689 / #690 territory)
+**Status:** Superseded by [OVERVIEW_MAP_DESIGN.md](OVERVIEW_MAP_DESIGN.md) (design session 2026-11-18, #732); kept as the developer's original input. Working draft (not a design, nothing decided in detail, no code). Written from the developer's voice discussion of 2026-11-17. Several positions are the developer's first visualisation and are to be revisited after the first test. Input for a design session (`knk-design` skill).
+**Last updated:** 2026-11-18 (pointer to the design); 2026-11-17
+**Issue:** [#732](https://github.com/PandiO/knk-workspace/issues/732) (related: [#224](https://github.com/PandiO/knk-workspace/issues/224) in-game maps, #613 siege tactical map, #689 / #690 territory)
 **Related:** [DESIGN.md](DESIGN.md) (in-game maps, BlueMap decision M2–M4), [BLUEMAP_EVALUATION.md](BLUEMAP_EVALUATION.md), [../siege-minigame/SIEGE_WEAPONS.md](../siege-minigame/SIEGE_WEAPONS.md) §8, [../territory/DESIGN.md](../territory/DESIGN.md), `scripts/bluemap/wg2bluemap.py`
 
 ## 1. Goal

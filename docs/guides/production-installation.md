@@ -1,6 +1,6 @@
 # Knights and Kings — production installation guide (admin)
 
-**Status:** Draft · **Last updated:** 2026-11-15 (header and § 5.3: the migrations of releases v0.1 to v0.3 on knk-web-api `main` `2cc8254`, PandiO/knk-workspace#577)
+**Status:** Draft · **Last updated:** 2026-11-19 (§ 5.3: `AddSiegeWeapons` and `AddTerritory` both in `next` `0d6e369a`, in order; link to the territory admin guide, docs #806); 2026-11-19 (§ 5.3: `AddTerritory` of #326 on its branch); 2026-11-19 (§ 5.3: the migrations waiting in `next`, with `AddItemIdentity`, docs PandiO/knk-workspace#796); 2026-11-18 (§ 4.3: the `Map__GateCommands__*` keys, PandiO/knk-workspace#741); 2026-11-18 (§ 4.3: the `Map__LivePlayers__*` keys, PandiO/knk-workspace#738); 2026-11-18 (§ 4.3: `Map__Enabled` also shows the web map, #737; the `Map__*` and `RateLimiting__Map__*` keys, PandiO/knk-workspace#736); 2026-11-16 (§ 10.4: `actions/checkout@v7` in the release plan, #426); 2026-11-15 (header and § 5.3: the migrations of releases v0.1 to v0.3 on knk-web-api `main` `2cc8254`, PandiO/knk-workspace#577)
 **State:** Draft v1 — written for review. Not yet followed on a real production host. The database, API, seed and
 web-server steps were rehearsed in a scratch environment on 2026-10-07 (see [Appendix A](#appendix-a--what-was-verified-and-how)).
 The Paper server steps and the release and deploy workflows are untested drafts; the CI workflows (§ 10.3) run on GitHub.
@@ -414,6 +414,24 @@ Logging__LogLevel__Microsoft.AspNetCore=Warning
 # --- realtime: optional, the defaults are right for most hosts (#183, merged 2026-11-12) ---
 # Realtime__WebLiveUpdatesEnabled=true      # false: no live table/detail/online-badge updates in the web app
 # Realtime__WebPermissionCacheSeconds=30    # how long a staff member's node check for live updates is cached
+
+# --- overview map: off until the map page is deployed (#736; spec docs/specs/in-game-maps/OVERVIEW_MAP_DESIGN.md) ---
+# Map__Enabled=false                        # true: the anonymous api/Map routes answer; false: they answer 404
+#   [#737] true also shows the web app's "Map" entry and /map; serve BlueMap under /bluemap/ first
+#   (closed-alpha runbook Phase 10). With false the web app shows no map anywhere.
+# RateLimiting__Map__PermitPerMinute=120    # per client IP, every api/Map route together
+# Map__Labels__Town__MaxDistance=0          # BlueMap camera distance for labels; 0 = shown at every zoom
+# Map__Labels__District__MaxDistance=1500
+# Map__Labels__Structure__MaxDistance=600
+# Map__Labels__Arena__MaxDistance=1500
+# Map__Flash__Count=3  Map__Flash__DurationMs=400   # how a clicked town's outline flashes
+# Map__Markers__CacheSeconds=30             # how long the marker set is reused; changes show within this time
+# Map__LivePlayers__Enabled=false          # true: GET api/Map/players answers and the plugin's player reports are kept (#738)
+# Map__LivePlayers__PollIntervalMs=2000     # the page's polling interval and the snapshot tick (500..60000)
+# Map__LivePlayers__LabelCacheSeconds=60    # how long a player's name label (rank, title, colours) is reused
+# Map__GateCommands__Enabled=false         # true: POST api/GateStructures/{id}/commands runs gate commands in game (#741)
+#   (knk.gate.admin only; refused during a siege on the gate; every command audit-logged). false: 404, nothing sent.
+# Map__GateCommands__TimeoutSeconds=5       # how long the endpoint waits for the game server's answer (1..30)
 ```
 
 Notes:
@@ -593,6 +611,28 @@ API, run the migrator (`dotnet ef database update`; the API does not migrate on 
 needs the new endpoints. No settings and no plugin `config.yml` keys change; kick and ban reach the game with knk-plugin `v0.2`
 (#574) or later, running with `realtime.enabled: true`. Details per change: the
 [v0.3 changelog section](../CHANGELOG.md#v03--2026-11-15).
+
+**Waiting in `next` (not released; knk-web-api `next` `0d6e369a`, 2026-11-19)**, in this order. The release that
+promotes `next` lists them here with its tag:
+
+1. `20261118095421_AddMapRegionOutlines` (#735, overview map): additive, one new table.
+2. `20261118152046_AddLandmarks` (#708, navigation landmarks): additive, one new table `landmarks`.
+3. `20261119090845_AddItemIdentity` (#141, item identity): additive; `item_blueprints` gets a nullable
+   `VanillaMaterialMatchRefId` with a unique index and a foreign key to `minecraftmaterialrefs`, and the new table
+   `item_conversion_stats`; no data written. After migrating, run a Minecraft catalogue scan (or
+   `POST api/ItemIdentity/shadows/generate`) to create the "Uncurated" shadow blueprints. The plugin keys
+   `items.identity.*` are off by default ([item identity admin guide](admin/item-identity-admin-guide.md)).
+4. `20261119100022_AddSiegeWeapons` (#782, siege weapons L1): additive; five new tables and three defaulted columns
+   for weapon templates, ammo types, weapon spots and unlocks; import the siege weapon form seeds afterwards (see the
+   [changelog](../CHANGELOG.md) entry of #782).
+5. `20261119102500_AddTerritory` (#326, territory API):
+   additive; new tables `kingdoms`, `provinces`, `crown_lands` (a domain subtype) and `territory_conflicts`; `towns`
+   gets `Power` (0), `KingdomId` and `ProvinceId` (null), `districts` gets `IsCapital` (false), `structures` gets
+   `LoyaltyTownId`, `TerritoryFlag` (`None`), `TerritoryFlaggedAt` and `TerritoryConflictId`, and `game_settings`
+   gets `ProductionSettingsJson` (null = `Production:Enabled` off, base range 100, factor 2, capital × 1.5); no data
+   written. No `api.env` key: the production flag and ranges are game settings (web app or `PUT api/GameSettings`,
+   section `production`). Set-up afterwards: [territory admin guide](admin/territory-admin-guide.md) (form and display
+   seeds `Kingdom`, `Province`, `CrownLand`, `TerritoryConflict`).
 
 Earlier: `v0.2` (`58e3218`, 2026-11-14) added `20261109081203_AddTempRegionReleases` (#269), and `v0.1` (`6d5e9c1`,
 2026-11-13) added `20261113161725_SeedStaffFreezeNodes` (gives the Staff group `knk.freeze` and `knk.unfreeze`, #367).
@@ -1356,7 +1396,7 @@ jobs:
   images:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - id: v
         run: echo "version=${GITHUB_REF_NAME#v}" >> "$GITHUB_OUTPUT"
       - uses: docker/login-action@v3
