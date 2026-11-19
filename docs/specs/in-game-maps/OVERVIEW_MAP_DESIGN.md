@@ -1,7 +1,7 @@
 # Overview map — BlueMap in the web app for players, staff and moderation
 
 **Status:** **Decided 2026-11-18** (developer). Proposed the same day; no open questions.
-**Last updated:** 2026-11-18 (phase 7, #743, built on `claude/overview-map-moderation` in knk-web-app and knk-workspace, in review; as built in § 6.3.8); 2026-11-18 (phase 6b, #742, built on `claude/overview-map-gate-buttons` in knk-web-app and knk-workspace, in review; as built in § 6.3.6); 2026-11-18 (phase 6a, #741, built on `claude/overview-map-gate-commands` in knk-web-api and knk-plugin, in review; as built in § 6.2.10 and § 7.5); 2026-11-18 (phase 4b, #739, built on `claude/overview-map-players-page` in knk-web-app and knk-workspace, in review; as built in § 6.3.6); 2026-11-18 (phase 5, #740, built on `claude/overview-map-staff-details` in knk-web-app and knk-workspace, in review; as built in § 6.3.3); 2026-11-18 (phase 4a, #738, built on `claude/overview-map-players-api` in knk-plugin and knk-web-api, in review; as built in § 6.2.9 and § 7.4); 2026-11-18 (phase 3, #737, built on `claude/overview-map-page` in knk-web-app and knk-workspace, in review; as built in § 6.3.5, deploy notes in the closed-alpha runbook Phase 10); 2026-11-18 (phase 2, #736, built on `claude/overview-map-public-api` in knk-web-api, in review; as built in § 6.2.8); 2026-11-18 (phase 1, #735, built on `claude/overview-map-outlines` in knk-plugin and knk-web-api, in review, not in `next` yet; stored shape in § 6.1.1); 2026-11-18 (§ 3.1.10: existing NAS render container, migration to the alpha stack; Decided; phases filed as #735–#743; first version from the working draft of 2026-11-17 and the design session of 2026-11-18)
+**Last updated:** 2026-11-19 (fix link F2, #757 and #809, built on `claude/overview-map-f2-panel-fixes` in knk-web-app and knk-workspace, in review: O34, O35, § 5 rules 12 and 14, as built in § 6.3.5 and § 6.3.8); 2026-11-18 (phase 7, #743, built on `claude/overview-map-moderation` in knk-web-app and knk-workspace, in review; as built in § 6.3.8); 2026-11-18 (phase 6b, #742, built on `claude/overview-map-gate-buttons` in knk-web-app and knk-workspace, in review; as built in § 6.3.6); 2026-11-18 (phase 6a, #741, built on `claude/overview-map-gate-commands` in knk-web-api and knk-plugin, in review; as built in § 6.2.10 and § 7.5); 2026-11-18 (phase 4b, #739, built on `claude/overview-map-players-page` in knk-web-app and knk-workspace, in review; as built in § 6.3.6); 2026-11-18 (phase 5, #740, built on `claude/overview-map-staff-details` in knk-web-app and knk-workspace, in review; as built in § 6.3.3); 2026-11-18 (phase 4a, #738, built on `claude/overview-map-players-api` in knk-plugin and knk-web-api, in review; as built in § 6.2.9 and § 7.4); 2026-11-18 (phase 3, #737, built on `claude/overview-map-page` in knk-web-app and knk-workspace, in review; as built in § 6.3.5, deploy notes in the closed-alpha runbook Phase 10); 2026-11-18 (phase 2, #736, built on `claude/overview-map-public-api` in knk-web-api, in review; as built in § 6.2.8); 2026-11-18 (phase 1, #735, built on `claude/overview-map-outlines` in knk-plugin and knk-web-api, in review, not in `next` yet; stored shape in § 6.1.1); 2026-11-18 (§ 3.1.10: existing NAS render container, migration to the alpha stack; Decided; phases filed as #735–#743; first version from the working draft of 2026-11-17 and the design session of 2026-11-18)
 **Issue:** [PandiO/knk-workspace#732](https://github.com/PandiO/knk-workspace/issues/732); phases as sub-issues in § 11.
 **Dependencies:** the offline BlueMap tile pipeline ([BLUEMAP_EVALUATION.md](BLUEMAP_EVALUATION.md) § 5–7); the SignalR
 game hub (#66, built); managed WorldGuard regions (`docs/architecture/managed-worldguard-regions.md`, built); gate
@@ -73,6 +73,8 @@ Related: [DESIGN.md](DESIGN.md) (in-game maps, M2–M5), [DECISION-map-data-sour
 | O31 | 2026-11-18 | developer | Everyone, anonymous viewers included, sees the in-game minigame tag on an arena pin, for example "[Siege] 12 players". No team or match detail is public. Supersedes O08. |
 | O32 | 2026-11-18 | developer | Public panel fields (draft 6.1): town: name, description, number of districts; district: name, description, town; structure: name, description, type and subtype, district and town, street and house number; gate: plus per door name, open/closed, destroyed, health bar, and "under siege" while a match runs. Door health is shown always, also during a siege. |
 | O33 | 2026-11-18 | developer | Teleport from the map is filed as idea #733 for its own design pass. |
+| O34 | 2026-11-19 | developer | "Open profile" in the player context panel stays visible for every viewer of the panel, but is **disabled, with a tooltip** that says why ("You need access to player profiles (knk.admin.user.manage) to open this.") for a viewer without the profile page's node `knk.admin.user.manage`; viewers with it keep the working link. A deliberate exception to § 5 rule 13 (actions a viewer may not take are hidden, not disabled), because a kick-only moderator otherwise lands on a no-access page (#809). |
+| O35 | 2026-11-19 | agent | Escape inside BlueMap's iframe: the bridge reports it to the page as the new v1 map → page type `escapePressed` (empty payload; additive under O14, no v1 meaning changed), and the page closes the open panel on it, the same as its own Escape listener (#757). (alternatives in 2.1) |
 
 ### 2.1 Agent decisions: alternatives
 
@@ -119,6 +121,14 @@ Related: [DESIGN.md](DESIGN.md) (in-game maps, M2–M5), [DECISION-map-data-sour
 13. **O30 districts.** Chosen: show all at once in v1, because the developer marked it for review after the first
     test (draft 3.6).
     1. (a) Build a fade-in now: work that the review may drop.
+14. **O35 Escape in the iframe.** Chosen: the bridge reports Escape as a new message type, because it works wherever
+    the focus is inside the map (after a click on a pin, a player or the map itself while a panel is open), leaves
+    the focus where the viewer put it, and is additive to the frozen v1 protocol (an older page ignores it, an older
+    bridge never sends it).
+    1. (a) The page moves focus to the panel when it opens: a later click on the map (to pan with the panel open, or
+       on another pin of the same panel) puts the focus back in the iframe and Escape stops working again; it would
+       also take the keyboard away from BlueMap's own controls on every open.
+    2. (b) A new protocol version for it: v2 for one additive type breaks the older side for nothing.
 
 ## 3. Current state and legacy behaviour
 
@@ -172,7 +182,9 @@ Related: [DESIGN.md](DESIGN.md) (in-game maps, M2–M5), [DECISION-map-data-sour
 3. **Clicking a structure.** The panel shows name, description, type and subtype; for a gate, each door with
    open/closed, destroyed and a health bar.
 4. **Clicking a player.** Anonymous and ordinary viewers get the name card (label and tags). A moderator gets the
-   player context panel: freeze, unfreeze, kick, ban as their nodes allow, and "Open profile".
+   player context panel: freeze, unfreeze, kick, ban as their nodes allow, and "Open profile" (disabled, with a tooltip
+   saying why, without the profile page's node, O34). Escape or × closes the panel, also when the keyboard focus is
+   inside the map after a click there (O35).
 5. **Staff with the type's read node** (for example `knk.admin.world`) see an "Details" section under the public part,
    rendered from the type's default display configuration in compact form, with "Open full page" to
    `/display/<type>/<id>`.
@@ -208,13 +220,16 @@ Related: [DESIGN.md](DESIGN.md) (in-game maps, M2–M5), [DECISION-map-data-sour
 11. **Gate commands (O17).** `knk.gate.admin` (or the plugin key); refused with 409 while a siege match runs on the gate,
     with 503 when no game server is connected, with 400 for a door of another gate. Each command is audit-logged
     with the user. The panel shows the plugin's result (done, refused with reason, timed out after 5 s).
-12. **Moderation (O11, O25).** Panel opens with any moderation node; each action under its own node and the existing
-    endpoint; the API's own rules still decide.
+12. **Moderation (O11, O25, O34).** Panel opens with any moderation node; each action under its own node and the
+    existing endpoint; the API's own rules still decide. "Open profile" is the one exception to rule 13's hiding: it
+    is disabled, with a tooltip, without `knk.admin.user.manage` (O34).
 13. **Action registry (O14).** Each entity type registers public widgets, staff widgets and actions (label, node,
     handler). The bridge never knows about actions.
 14. **Bridge protocol (O14).** Messages are versioned (`{v: 1, type, payload}`), accepted only from the page's own
     origin (O26). Page → map: `setMarkers`, `flashRegion`, `showRegions`, `hideRegions`, `setPlayers`, `focus`. Map →
-    page: `ready`, `markerClicked {kind, id}`, `playerClicked {uuid}`, `cameraChanged`.
+    page: `ready`, `markerClicked {kind, id}`, `playerClicked {uuid}`, `cameraChanged`, `escapePressed {}` (added to v1
+    on 2026-11-19 as a new type, O35: Escape while the focus is inside the iframe). New types may be added to v1;
+    an existing type's meaning never changes, and each side ignores types it does not know.
 15. **Flags (O27).** With `Map:Enabled` off the public map endpoints answer 404 and the nav entry is hidden.
 
 ## 6. Data and API
@@ -320,6 +335,11 @@ Related: [DESIGN.md](DESIGN.md) (in-game maps, M2–M5), [DECISION-map-data-sour
        #739. The specs run the real bridge in a fake BlueMap web app (`e2e/fixtures/map.ts`). Hosting: nginx serves
        BlueMap's static `web/` with `X-Frame-Options: SAMEORIGIN` on `/bluemap/` only; BlueMap renders as a profile-gated
        Compose job (closed-alpha runbook Phase 10).
+       **Escape in the iframe (#757, O35):** the bridge listens for `keydown` on its own window (capture phase, key
+       repeats ignored, the key still reaches BlueMap) and posts `escapePressed {}`; `parseBridgeMessage` accepts it
+       and `MapPage` closes the open panel on it, as its own `window` Escape listener does while the focus is on the
+       page. Tests: Jest `bridgeProtocol`; e2e `overview-map.spec.ts` (place panel) and `overview-map-players.spec.ts`
+       (name card), both pressing Escape after a click inside the map frame.
     6. **As built (#739):** `components/map/useLivePlayers.ts` polls `GET api/Map/players` (`mapClient.getPlayers`,
        the JWT when logged in) only while `config.livePlayers.enabled`: at once, then every `intervalMs` of the last
        answer (else `pollIntervalMs`), clamped to 0.5–60 s, one request at a time, skipped while the tab is hidden;
@@ -359,6 +379,12 @@ Related: [DESIGN.md](DESIGN.md) (in-game maps, M2–M5), [DECISION-map-data-sour
        `usePlayerFreeze` and `usePlayerKickBan` (same dialogs, endpoints and toasts; a freeze change re-reads the
        account), and "Open profile" to `/admin/users/<id>` (the profile page keeps its own `knk.admin.user.manage`
        gate). No API change. Tests: Jest `PlayerModerationPanel`, e2e `overview-map-moderation.spec.ts` (A20, A21).
+       **"Open profile" without the profile node (#809, O34):** the panel reads `knk.admin.user.manage` from the same
+       `usePermissions` statuses it already asks (no extra request). Allowed: the link, unchanged. Otherwise a button
+       with `aria-disabled="true"` (not a link, goes nowhere) described by a `role="tooltip"` text "You need access to
+       player profiles (knk.admin.user.manage) to open this." (`PROFILE_DENIED_TOOLTIP`), shown on hover, keyboard
+       focus and tap (a tap keeps it until the focus leaves); Escape hides the tooltip first, a second Escape closes
+       the panel.
 
 ## 7. Plugin
 
@@ -444,7 +470,7 @@ Related: [DESIGN.md](DESIGN.md) (in-game maps, M2–M5), [DECISION-map-data-sour
 | A17 | A viewer with `knk.admin.world` sees the compact "Details" section of a structure; a viewer without it doesn't, and no display configuration request is made. | 5 |
 | A18 | A `knk.gate.admin` holder opens, closes, toggles and repairs a door from the panel; the door animates in game and the panel shows the new state. | 6 |
 | A19 | The command endpoint refuses without `knk.gate.admin` (403), during a running siege on the gate (409) and without a connected game server (503); each command is audit-logged. | 6 |
-| A20 | A viewer with only `knk.kick` clicks a player and sees only Kick and "Open profile"; kicking works as on the moderation page. | 7 |
+| A20 | A viewer with only `knk.kick` clicks a player and sees only Kick and a disabled "Open profile" with its tooltip (O34); kicking works as on the moderation page. | 7 |
 | A21 | A viewer without any moderation node gets only the name card. | 7 |
 | A22 | Registering a new action for a type in `mapActionRegistry` shows it in the panel under its node with no change to the bridge script. | 3 |
 

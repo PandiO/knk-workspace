@@ -264,7 +264,9 @@ This is a human-readable record of capabilities merged into the V3 default branc
   1. A moderator holding any of `knk.freeze`, `knk.unfreeze`, `knk.kick`, `knk.ban` or `knk.admin.user.manage` who
      clicks a player on the map gets a "Moderation" section under the name card: Freeze or Unfreeze, Kick and Ban, each
      only with its own node, with the same dialogs, endpoints and audit entries as the player profile, and
-     "Open profile".
+     "Open profile". Without `knk.admin.user.manage` (the profile page's node) "Open profile" is greyed out with a
+     tooltip that says why, instead of a link to a no-access page (fix link F2,
+     [#809](https://github.com/PandiO/knk-workspace/issues/809), branches `claude/overview-map-f2-panel-fixes`).
   2. Everyone else still gets only the name card; anonymous viewers make no extra request.
   3. Admin steps: none. Steps:
      [overview map smoke test § 9](guides/overview-map-smoke-test.md#9-phase-7-player-moderation-panel-743-tier2).
@@ -430,7 +432,9 @@ This is a human-readable record of capabilities merged into the V3 default branc
      town and all its districts visible with their names. Districts and structures open their own panels; a gate lists
      its doors with open/closed, destroyed and a health bar, and "Under siege" during a match.
   4. The panel works on phones as a bottom sheet. A "Map" entry in the top bar (signed in) and a map link on the start
-     page (signed out) appear only while the map is on.
+     page (signed out) appear only while the map is on. Escape closes the panel, also right after a click inside the
+     map: the bridge reports the key with the new message type `escapePressed` (fix link F2,
+     [#757](https://github.com/PandiO/knk-workspace/issues/757), branches `claude/overview-map-f2-panel-fixes`).
   5. Panels come from a map action registry, so later features (staff details, gate buttons, the player panel) add
      their widgets and actions without touching the map side.
   6. Admin steps: none to keep it off. To use it, move the existing BlueMap test container into the `knk-alpha` stack
