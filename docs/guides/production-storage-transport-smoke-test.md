@@ -12,8 +12,9 @@ automated in CI and 2 partly (tagged); every step can still be run by hand; not 
 11 steps automated (one through a plugin scenario on a real Paper server) and 5 partly (tagged); not run. § 3.2 (world
 web app, #676): 8 of 12 steps automated in CI and 4 partly (tagged); every step can still be run by hand; not run. § 4.1 (production
 engine API, #86): 16 of 18 steps automated in CI and 2 partly (tagged); every step can still be run by hand; not
-run. Other sections not yet automated (the links tag them).
-**Last updated:** 2026-11-19 (§ 4.1 production engine API, link L9, #86); 2026-11-19 (§ 3 intro, § 3.0, § 3.2 and § 3.3 intros: builds from `next`; § 3.3 precondition 4: `/knk regions repair` needs `knk.admin.regions`, `/knk territory rebuild` `knk.admin.world.territory`; docs #830); 2026-11-19 (§ 3.2 world web app, link L7, #676); 2026-11-19 (§ 3.3 world plugin, link L8, #677); 2026-11-19 (§ 3.1 world API, link L6, #91); 2026-11-19 (§ 2.2 stock web app, link L5, #675); 2026-11-19 (§ 2 stock core API, link L4, #97); 2026-11-19 (§ 1.0 and § 1.3 preconditions: builds from `next` instead of the link branches; guides: [territory admin guide](admin/territory-admin-guide.md), docs #806); 2026-11-19 (§ 1.4 territory web app, link L3, #690); 2026-11-19 (§ 1.3 territory plugin, link L2, #689); 2026-11-19 (§ 1 territory API, link L1, #326); 2026-11-19 (§ 0 item identity, link L0, #141); 2026-11-16 (draft from the design, territory and phases P1-P12)
+run. § 4.2 (production engine web app, #678): 13 of 16 steps automated in CI and 3 partly (tagged); every step can
+still be run by hand; not run. Other sections not yet automated (the links tag them).
+**Last updated:** 2026-11-19 (§ 4.2 production engine web app, link L10, #678); 2026-11-19 (§ 4.1 production engine API, link L9, #86); 2026-11-19 (§ 3 intro, § 3.0, § 3.2 and § 3.3 intros: builds from `next`; § 3.3 precondition 4: `/knk regions repair` needs `knk.admin.regions`, `/knk territory rebuild` `knk.admin.world.territory`; docs #830); 2026-11-19 (§ 3.2 world web app, link L7, #676); 2026-11-19 (§ 3.3 world plugin, link L8, #677); 2026-11-19 (§ 3.1 world API, link L6, #91); 2026-11-19 (§ 2.2 stock web app, link L5, #675); 2026-11-19 (§ 2 stock core API, link L4, #97); 2026-11-19 (§ 1.0 and § 1.3 preconditions: builds from `next` instead of the link branches; guides: [territory admin guide](admin/territory-admin-guide.md), docs #806); 2026-11-19 (§ 1.4 territory web app, link L3, #690); 2026-11-19 (§ 1.3 territory plugin, link L2, #689); 2026-11-19 (§ 1 territory API, link L1, #326); 2026-11-19 (§ 0 item identity, link L0, #141); 2026-11-16 (draft from the design, territory and phases P1-P12)
 **Design:** [specs/production-storage-transport/DESIGN.md](../specs/production-storage-transport/DESIGN.md) (§17
 acceptance A01-A27, §18 links) · [territory](../specs/territory/DESIGN.md) · [shops](../specs/shops/DESIGN.md) ·
 **Issue:** [PandiO/knk-workspace#22](https://github.com/PandiO/knk-workspace/issues/22)
@@ -908,7 +909,7 @@ Full manual run about 30 minutes; the untagged and partly tagged parts about 15 
 
 Built so far: link L9, the API (knk-web-api, migration `AddProductionEngine`; branch `claude/production-p3`, PR into
 `next`). The kind, level, line, modifier, climate zone and weather editors, the structure's production view with the
-cycle trace and the upgrade button are link L10 (#678); until then § 4.1 runs with a REST client (or Swagger) against
+cycle trace and the upgrade button are link L10 (#678, § 4.2); § 4.1 runs with a REST client (or Swagger) against
 the API and the generic forms of the seeds. 18 steps in § 4.1: 16 automated in CI and 2 partly (tagged); every step can
 still be run by hand; manual steps not run. Full manual run about 60 minutes (most of it waiting for cycles; `POST
 api/Production/run-now` settles at once); the untagged parts of the partly tagged steps about 10 minutes. The tests are
@@ -1044,15 +1045,99 @@ waived the smoke gates of L4 and L6 on 2026-11-19; the coordinator reads that as
     "Production is turned off for the whole server"; the kind, line and modifier CRUD still work. As Visitor, `POST
     api/ProductionKinds` is 403; as Staff without `knk.economy.admin`, the upgrade is 403. (A21)
 
-### 4.2 Steps (web app #678, draft)
+### 4.2 Steps (web app #678)
 
-*Draft for link L10; it updates these steps to what it builds and tags the automated ones.*
+Built in link L10 (knk-web-app, branch `claude/production-p3b`, PR into `next`). The tags name tests in knk-web-app
+`e2e/production-engine.spec.ts` (Playwright, mocked API; the mocks use the same names with other numbers: a 10/h
+Cobblestone line, a Festival of +2/h, Rain × 0.5, one of two workers present) and the Jest tests next to the code
+(`src/utils/__tests__/productionEngine.test.ts`, `src/apiClients/__tests__/productionEngineClients.test.ts`). Extra
+preconditions: § 4.0 and § 4.1 step 1 (the production form and display seeds imported, "make default"); the quarry has
+the kind Quarry (§ 4.1 step 3). Log in to the web app as **Staff** (holds `knk.admin.world`, `knk.admin.content` and
+`knk.economy.admin`) unless a step says otherwise. 16 steps: 13 automated, 3 partly (tagged); every step can still be
+run by hand; not run. Full manual run about 45 minutes; the untagged parts about 10 minutes.
 
-1. As Staff, edit a kind and one of its levels (multipliers, caps, unlocks and upgrade cost) in the web app.
-2. Add a production line with an input to the quarry; the structure's page shows its production view: each line's rate
-   with its modifiers, the "why not producing" reasons and the cycle trace.
-3. Edit a climate zone's odds and towns and a weather type's effects; the zone's page lists the stored rolls.
-4. Upgrade the quarry from its page; the cost is shown before it is paid.
+1. [automated: `dashboard › lists the kinds with their area model, category, default workers and structures`] Open the
+   dashboard and type **ProductionKind**. **Expected:** columns Name, Area model, Resource category, Default workers,
+   Structures and Active; eight kinds, Quarry with `ExclusiveVolume`, Stone, 2 and 1 structure (the quarry).
+2. [automated: `kinds and levels › a kind's page lists its levels with multipliers, caps, upgrade cost and unlocks
+   (A09)`] View the kind **Quarry**. **Expected:** below the details a **Levels** panel with levels 1 to 10, each with
+   its yield (level 2 "× 1.15"), cycle speed, max area ("No cap" when 0), output cap, upgrade coins, upgrade cost and
+   unlocks; each "Level n" links to the level's page. (A09)
+3. [partly automated: `kinds and levels › edits a level's unlocks and upgrade cost; the list replaces the stored one (G8,
+   G17)`; by hand: the level's own values with its seeded form] Open Quarry's **Level 2**. Press Edit and set Yield
+   multiplier 1.2 and Upgrade coins 500; save. **Expected:** the details show 1.2 and 500. In the **Unlocks and upgrade
+   cost** panel press **Add item**, keep Role "Upgrade cost", search "Cobble" under Blueprint and pick Cobblestone; with
+   Amount empty the panel says "An upgrade cost needs a whole amount above 0." and **Save items** stays off. Enter 64.
+   Press **Add item** again, pick Role "Unlock" (Amount turns off) and Blueprint Coal. Press **Save items**.
+   **Expected:** "Level 2 items saved."; the list shows both rows after the reload and the kind's Levels panel shows
+   "64 × Cobblestone" and "Coal" on level 2. (G8, A09)
+4. [partly automated: `dashboard › lists the lines with their rate and state, a blocked one in words (D4)`; by hand:
+   creating the line with the seeded ProductionLine form] On the quarry's page press **Add a production line** in the
+   Production panel; the ProductionLine form opens. Pick the quarry, Output Coal, Rate 30; submit. **Expected:** back on
+   the quarry's page; on the dashboard type **ProductionLine**: the Coal line with Structure "Quarry", Output "Coal",
+   Rate "30/h", Status "Running" (a line whose storage is full shows "Blocked: output storage full").
+5. [automated: `a line › shows its state and adds an input taken per hour; the list replaces the stored one`] Open the
+   Coal line. **Expected:** a **Production line** panel with the structure (linked), the output and rate, State
+   "Running", Accrued, Last settled and Next settle. Press **Add input**, pick Cobblestone and Per hour 0.5, press
+   **Save inputs**. **Expected:** "Inputs saved."; the input stays after the reload and Save inputs turns off.
+6. [automated: `a line › Settle now settles the line; while production is off the API's reason is shown (A21)`] Press
+   **Settle now**. **Expected:** "Settled: <accepted> of <emitted> accepted." (or "Settled: nothing was due."), and the
+   Latest cycles table gets a row when anything accrued. Turn `production.enabled` off in the game settings and press
+   Settle now again. **Expected:** "Production is turned off (Production:Enabled)." in the panel. Turn it back on.
+   (A21)
+7. [partly automated: `dashboard › lists the modifiers with their scope, effect and window`; by hand: creating the
+   modifier with the seeded ProductionModifier form] Create a **ProductionModifier** "Festival": Scope Town, Scope ref
+   the id of Phoenix, Target Any, Effect Add, Value 2, Active from today. **Expected:** on the dashboard (type
+   ProductionModifier) the row shows Scope "Town #<Phoenix id>", Effect "+2/h", Active "From <date>" and Enabled "Yes".
+8. [automated: `weather › a climate zone: odds at most 100% with the rest clear, a town added, the stored rolls`] Open
+   the climate zone **Default climate**. **Expected:** a **Weather** panel: "The default zone: towns in no other zone
+   use it.", "No weather types: always clear." and the stored rolls (Day, From, Until, Weather, Roll; "Clear" when no
+   type was rolled). Press **Add weather type**, pick Rain, Chance 80; press it again, pick Storm, Chance 30.
+   **Expected:** "The chances add up to 110%: at most 100%." and **Save odds** is off. Set Storm to 10. **Expected:**
+   "Together 90%; clear 10%."; Save odds saves both. Under Towns search "Phoenix", press **Add town** and **Save
+   towns**. **Expected:** "Towns saved."; Phoenix is listed and linked.
+9. [automated: `weather › a weather type's effects per category`] Open the weather type **Rain**. **Expected:** an
+   **Effects** panel with its seeded effects. Press **Add effect**: a second row with the same category and effect says
+   "A category has the same effect twice."; pick Category Stone, Effect Multiply, Value 0.5 (the row shows "× 0.5") and
+   press **Save effects**. **Expected:** "Effects saved."
+10. [automated: `the production structure page › shows each line's rate with its modifiers in order and why the blocked
+    one is not producing (A08, D4)`] Open the quarry's page (with Rain rolled today, or roll it with step 15's Run
+    production now after setting Rain to 100% for the test). **Expected:** a **Production** panel: Kind "Quarry"
+    (linked), Level "1 of 10", the climate zone and Weather today. Under Lines, the Cobblestone line with its state and
+    rate and a table: Base rate 60/h, "Admin: Festival +2/h" = 62/h, "Weather: Rain" for Stone "× 0.5" = 31/h,
+    Workers present "× 100%" (or 50% with one away), and the Effective rate. Fill the Output storage to its cap (100);
+    after the next settle the line shows "Blocked: output storage full" with the reason under it. (A08, D4)
+11. [automated: `the production structure page › the cycle trace lists each applied modifier, the workers and the ledger
+    transaction (A08, #65)`] In the Production panel's **Latest cycles** table press **Trace** on a Cobblestone cycle.
+    **Expected:** the cycle's period, rate, "accepted of emitted", state after and shortfall; the trace lists the base
+    rate, each modifier in the order applied, the workers present ("2 of 2"), the accrual before and after, the inputs
+    taken and a link to the ledger transaction. A blocked cycle shows "0 of n" with the reason. (A08)
+12. [automated: `the production structure page › the structure-wide reasons when production is off`] Turn
+    `production.enabled` off and reload the quarry's page. **Expected:** "Not producing" with "Production is turned off
+    for the whole server" (the API's wording); turn it back on. (A21)
+13. [automated: `the production structure page › sets the workers present within the structure's total`] Under
+    **Workers** enter 3. **Expected:** "A whole number from 0 to 2." and Save workers is off. Enter 1 and press **Save
+    workers**. **Expected:** "Workers present: 1."; the Workers present column of the Placement panel shows "1 of 2" and
+    the Workers present step of each line's rate shows "× 50%".
+14. [automated: `the production structure page › upgrades with the cost shown first; a refused upgrade shows the API's
+    reason (A09)`, `the production structure page › staff without knk.economy.admin see the cost but cannot upgrade`]
+    Under **Upgrade** the panel shows "Level 2 costs 500 coins and 64 × Cobblestone." (step 3). **Upgrade to level 2**
+    is off until a payer is picked: search "Steve" under "Paid by (coins)" and pick him; leave "Resources from" empty
+    (the Output storage). Press **Upgrade to level 2**, then **Pay and upgrade**. With fewer than 64 Cobblestone in the
+    Output storage **Expected:** the API's reason (409) in the panel and nothing paid. Fill it to 64 or more and press
+    Pay and upgrade again. **Expected:** "Upgraded from level 1 to 2, 500 coins paid, resources: transaction #<id>." with
+    the transaction linked; Level "2 of 10"; Steve has 500 coins less. As a staff member without `knk.economy.admin`
+    the cost is shown but the button is off with "Requires knk.economy.admin". (A09)
+15. [automated: `game settings › Run production now reports what the sweep did`] As Admin open **Game settings**.
+    **Expected:** a **Production engine** card with Base cycle 10, Catch-up cap 24 and Weather day 20. Press **Run
+    production now**. **Expected:** "<n> lines settled, <a> of <e> units accepted, <w> weather rolls." (With production
+    off the button is off: "Production is off: nothing runs".)
+16. [automated: `game settings › keeps the engine timing on a save of another section, and saves a changed one`, Jest
+    `territory helpers › keeps the production engine timing, so a save does not reset it (#678)`] Set Base cycle 5 and
+    save; then change only "Blocks per power point" in the Production and territory card and save. **Expected:** after a
+    reload Base cycle is still 5 (`GET api/GameSettings` shows `production.engine.baseCycleMinutes` 5). Weather day 0
+    shows "production.engine.weatherDayMinutes must be a whole number between 1 and 10080." and Save is off. Set Base
+    cycle back to 10 and save.
 
 ## 5. Phase P4: yield areas and surveys (#138 API, #679 plugin, #680 web app; tier:3)
 
