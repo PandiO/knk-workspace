@@ -61,6 +61,32 @@ This is a human-readable record of capabilities merged into the V3 default branc
   3. Grant `knk.economy.admin` to the staff who may move or adjust stock (nobody has it by default except `*`).
   4. No `api.env` key and no plugin `config.yml` change; keep the game setting `production.enabled` as it is.
 
+- **Stock in the web app: storage pages, the adjust and move dialogs and the ledger explorer** ([PandiO/knk-workspace#675](https://github.com/PandiO/knk-workspace/issues/675),
+  link L5 of the production, storage and transport chain, [production design](specs/production-storage-transport/DESIGN.md)
+  § 4 and § 11.1). Staff now work with the stock core in the web app instead of a REST client: storages have a
+  dashboard table (kind, holder, fill against the cap, lock) and the seeded form; a storage's page shows its capacity
+  in raw units × storage weight against the cap (and when it is over its cap), its lock, its stock lines and its unique
+  items; each line's amount opens the moves that made it in the new **Stock ledger** (Admin → Economy,
+  `/admin/stock/ledger`), which lists transactions, moves and the 30-day roll-ups with filters for storage, blueprint,
+  unique item, reason, actor, reference and dates, and puts the line's amount next to the net of its moves (A01, A22).
+  The **Adjust stock** dialog (note required) and the **Move stock** dialog (several lines, a reason, all or nothing or
+  partial) show the result per line: what moved and, for the rest, why (capacity full, distinct cap, not enough stock,
+  locked, another line refused); a retry after a lost answer sends the same idempotency key, so it applies once. A
+  ledger transaction's page lists its moves and writes a compensating correction with **Reverse**. The ledger page's
+  health card runs the reconciler and the roll-up by hand (the stock part of #65). The blueprint list shows each
+  blueprint's storage weight. knk-web-app: clients and types for `api/Storages` and `api/StockTransactions`, dashboard
+  columns, `StoragePanel`, `StockTransactionPanel`, the two dialogs, `StockLedgerPage`, Playwright `e2e/stock.spec.ts`.
+  Adjusting, moving, reversing and rolling up need `knk.economy.admin` (shown off with "Requires knk.economy.admin"
+  without it); the ledger reads need `knk.admin.world` or `knk.economy.admin`. Smoke test
+  [§ 2.2](guides/production-storage-transport-smoke-test.md#22-steps-web-app-675). No migration, no setting, no plugin
+  change. Admin steps:
+  1. Deploy the web app with (or after) the stock core API (#97) and import its form and display seeds (see that
+     entry).
+  2. Grant `knk.economy.admin` to the staff who adjust or move stock; staff with `knk.admin.world` only can read the
+     ledger.
+  3. A blueprint's storage weight is set through the API for now: the seeded ItemBlueprint form has no Storage weight
+     field yet (seed follow-up on #675).
+
 - **Navigation: where a route's road part ends** ([PandiO/knk-workspace#780](https://github.com/PandiO/knk-workspace/issues/780)
   option (b), [#771](https://github.com/PandiO/knk-workspace/issues/771) items 3 to 5, fix link F2 of the off-road
   navigation chain). Three plugin switches, all off by default, so routes, trails and sessions stay exactly as before:

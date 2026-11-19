@@ -638,7 +638,7 @@ promotes `next` lists them here with its tag:
    `item_blueprints` gets `StorageWeight` (decimal, 1 on existing rows); the only data written are the five system
    storages `SYS_PRODUCTION`, `SYS_CONSUMPTION`, `SYS_LOSS`, `SYS_ADJUSTMENT`, `SYS_WORLD` (ids 1-5). No `api.env` key.
    Set-up afterwards: import the form and display seeds `Storage` and `StockTransaction`, and grant
-   `knk.economy.admin` to the staff who may move stock ([changelog](../CHANGELOG.md) entry of #97).
+   `knk.economy.admin` to the staff who may move stock ([changelog](../CHANGELOG.md) entry of #97, [stock admin guide](admin/stock-admin-guide.md)).
 7. `20261119180109_AddProductionWorld` (#91, production world P2): additive; `structures.DistrictId` and `StreetId`
    become nullable (existing rows keep their values), new nullable `structures.TownId` (FK to `towns`) and the check
    constraint `CK_structures_DistrictXorTown` (exactly one of district and town; every existing structure has a

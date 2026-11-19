@@ -5,10 +5,12 @@ in CI and 4 partly (tagged); every step can still be run by hand; manual steps n
 #326): 19 of 19 steps automated in CI (tagged; step 1.2.6 needs a connected server to check by hand); every step can
 still be run by hand; not run. § 1.3 (territory plugin, #689): 7 of 14 steps automated and 7 partly (tagged; step 14
 waits for #802); not run. § 1.4 (territory web app, #690): 13 of 15 steps automated in CI and 2 partly (tagged);
-every step can still be run by hand; not run. § 2 (stock core API, #97): 15 of 17 steps automated in CI and 2 partly
-(tagged); every step can still be run by hand; not run. § 3.1 (world API, #91): 14 of 16 steps automated in CI and 2
-partly (tagged); every step can still be run by hand; not run. Other sections not yet automated (the links tag them).
-**Last updated:** 2026-11-19 (§ 3.1 world API, link L6, #91); 2026-11-19 (§ 2 stock core API, link L4, #97); 2026-11-19 (§ 1.0 and § 1.3 preconditions: builds from `next` instead of the link branches; guides: [territory admin guide](admin/territory-admin-guide.md), docs #806); 2026-11-19 (§ 1.4 territory web app, link L3, #690); 2026-11-19 (§ 1.3 territory plugin, link L2, #689); 2026-11-19 (§ 1 territory API, link L1, #326); 2026-11-19 (§ 0 item identity, link L0, #141); 2026-11-16 (draft from the design, territory and phases P1-P12)
+every step can still be run by hand; not run. § 2.1 (stock core API, #97): 15 of 17 steps automated in CI and 2 partly
+(tagged); every step can still be run by hand; not run. § 2.2 (stock web app, #675): 14 of 17 steps automated in CI
+and 3 partly (tagged); every step can still be run by hand; not run. § 3.1 (world API, #91): 14 of 16 steps
+automated in CI and 2 partly (tagged); every step can still be run by hand; not run. Other sections not yet automated
+(the links tag them).
+**Last updated:** 2026-11-19 (§ 3.1 world API, link L6, #91); 2026-11-19 (§ 2.2 stock web app, link L5, #675); 2026-11-19 (§ 2 stock core API, link L4, #97); 2026-11-19 (§ 1.0 and § 1.3 preconditions: builds from `next` instead of the link branches; guides: [territory admin guide](admin/territory-admin-guide.md), docs #806); 2026-11-19 (§ 1.4 territory web app, link L3, #690); 2026-11-19 (§ 1.3 territory plugin, link L2, #689); 2026-11-19 (§ 1 territory API, link L1, #326); 2026-11-19 (§ 0 item identity, link L0, #141); 2026-11-16 (draft from the design, territory and phases P1-P12)
 **Design:** [specs/production-storage-transport/DESIGN.md](../specs/production-storage-transport/DESIGN.md) (§17
 acceptance A01-A27, §18 links) · [territory](../specs/territory/DESIGN.md) · [shops](../specs/shops/DESIGN.md) ·
 **Issue:** [PandiO/knk-workspace#22](https://github.com/PandiO/knk-workspace/issues/22)
@@ -379,8 +381,8 @@ panel); the seeded Town and District forms do not have those fields yet (seed fo
 ## 2. Phase P1: stock core (#97 API, #675 web app; tier:3)
 
 Built so far: link L4, the API (knk-web-api, migration `AddStockCore`; branch `claude/production-p1`, PR into `next`).
-The web app screens (storage pages, adjust and move dialogs, the ledger explorer) are link L5 (#675); until then every
-step runs with a REST client (or Swagger) against the API. Stock moves only through `api/StockTransactions`; capacity,
+The web app screens (storage pages, adjust and move dialogs, the ledger explorer) are link L5 (#675), § 2.2; the § 2.1
+steps run with a REST client (or Swagger) against the API. Stock moves only through `api/StockTransactions`; capacity,
 missing stock and locks come back as a result with a status (200), never as an error. 17 steps: 15 automated in CI, 2
 partly (tagged); every step can still be run by hand; manual steps not run. Full manual run about 40 minutes; the
 untagged parts of the partly tagged steps about 10 minutes.
@@ -484,6 +486,110 @@ untagged parts of the partly tagged steps about 10 minutes.
     Optional by hand: with S1 at 100 oak logs, send 50 moves of 10 S1 → S2 at the same time (a REST runner with
     parallel requests). **Expected:** exactly 10 are `Applied`, 40 `Rejected` with `NotEnoughStock`; S1 0, S2 +100;
     the reconciler is clean. (A01)
+
+### 2.2 Steps (web app #675)
+
+Built in link L5 (knk-web-app, branch `claude/production-p1b`). The tags name tests in knk-web-app
+`e2e/stock.spec.ts` (Playwright, mocked API; the mocks use the same data with other numbers where noted). Run § 2.1
+steps 1-2 first (seeds imported, the five system storages), or start from a fresh test database; the numbers below
+assume S1 and S2 are created here. Log in to the web app as **Staff** (holds `knk.admin.world`, `knk.admin.content`
+and `knk.economy.admin`) unless a step says otherwise. 17 steps: 14 automated, 3 partly (tagged); every step can still
+be run by hand; not run. Full manual run about 35 minutes; the untagged parts about 10 minutes.
+
+1. [automated: `the storage form › saves a storage from the seeded form through POST api/Storages (A23)`] Open the
+   dashboard, type **Storage**, press Create (the form comes from the `Storage` seed). Step **Storage**: Name "S1",
+   Kind Domain, Purpose General, Domain "Phoenix" (picked from the list); press Next; step **Capacity and lock**: Max
+   units 100; Submit. Create **S2** the same way with Purpose Output, Max units 50 and Max distinct items 4.
+   **Expected:** both storages save. (A23)
+2. [automated: `dashboard › lists the storages with their kind, holder, fill against the cap and lock`] On the
+   dashboard type **Storage**. **Expected:** columns Kind, Purpose, Holder, Total units, Distinct items and Locked; S1
+   shows Domain, General, Phoenix and Total units "0 / 100"; the five system storages show Kind Virtual and their key
+   as holder.
+3. [automated: `the storage page › shows capacity in raw units × storage weight, the lock, the lines and the unique
+   items (A02, A03)`] View S1. **Expected:** below the details a **Stock** panel: Holder "Phoenix (Domain, General)"
+   with Phoenix as a link, Capacity used "0 of 100 raw units (0 %)", Total units 0, Distinct items 0, Lock "Not
+   locked", "No stackable stock." and "No unique items.", and the buttons Ledger, Adjust stock and Move stock.
+4. [automated: `the storage page › adjusts a line with a required note and re-reads the storage (A01)`] Press
+   **Adjust stock**. In the dialog keep "Stackable item (blueprint)", search "oak" under Blueprint and pick **Oak
+   log**, type 64 as Change (raw units). **Expected:** Adjust stays off while Note is empty. Type the note "smoke
+   2.2.4" and press **Adjust**. **Expected:** "Applied (transaction #…): 64 moved." with "Line 1: … → S1: requested
+   64, accepted 64"; Close; the panel lists Oak log 64 (storage weight 1, capacity used 64) and Capacity used "64 of
+   100 raw units (64 %)". (A01) The test also checks that a second press after a lost answer sends the same
+   idempotency key, so the adjustment applies once (`the storage page › sends the same idempotency key again when the
+   first answer was lost (A01)`); a browser cannot drop an answer by hand.
+5. [automated: `the storage page › a partial move over capacity accepts what fits and gives the reason per line
+   (A02)`] On the Oak log line press **Move**. **Expected:** the dialog's line 1 has From storage S1 and Blueprint Oak
+   log filled in. Search "S2" under To storage and pick it, Amount 30, keep Reason Distribution and Mode All or
+   nothing, press **Move**. **Expected:** "Applied (transaction #…): 30 moved."; after Close, S1 lists Oak log 34.
+6. [automated: `the storage page › a partial move over capacity accepts what fits and gives the reason per line
+   (A02)`] Move again from the Oak log line: To storage S2, Amount 40, All or nothing. **Expected:** "Rejected:
+   nothing moved and no transaction was written." and under line 1 "Capacity full: the storage is full (capacity in
+   raw units × storage weight)" (S2 holds 30 of 50). Set Mode to **Partial** and press Move. **Expected:** "Partially
+   applied (transaction #…): 20 moved, the rest refused." and "requested 40, accepted 20, refused 20" with Capacity
+   full (the test's mock answers 18 and 22). S1 Oak log 14; S2 "50 of 50 raw units (100 %)". (A02)
+7. [partly automated: `dashboard › the blueprint list shows each blueprint's storage weight (DESIGN § 4.4)`, `the
+   storage page › shows capacity in raw units × storage weight, the lock, the lines and the unique items (A02, A03)`;
+   by hand: setting the weight, because the seeded ItemBlueprint form has no Storage weight field yet (seed follow-up
+   on #675)] Set Stone's storage weight to 2 (§ 2.1 step 7, `PUT api/ItemBlueprints/<Stone>`). Dashboard type
+   **ItemBlueprint**. **Expected:** a Storage weight column with 1 for Oak log and 2 for Stone. On S1's page adjust +5
+   Stone (note "smoke 2.2.7"). **Expected:** the Stone line shows Amount 5, Storage weight 2, Capacity used 10;
+   Capacity used "24 of 100 raw units (24 %)" while Total units is 19. (A02)
+8. [automated: `the storage page › takes a unique item out by its item instance id (A03)`, `the ledger explorer ›
+   shows a unique item's moves by its item instance id (A03)`] On S1's page press **Adjust stock**, choose "Unique
+   item (item instance)", type the enchanted sword's item instance id (§ 2.0 item 3), Change +1, note "smoke 2.2.8",
+   Adjust. **Expected:** Applied; the **Unique items** table lists "#<id>" with its blueprint and name. Click "#<id>".
+   **Expected:** the ledger explorer opens on Moves filtered by that item instance id, with one Admin adjust move
+   SYS_ADJUSTMENT → S1 "Item #<id> (…)". Back on S1, press **Take out** on the sword. **Expected:** the dialog has the
+   item instance id and Change -1 filled in; with a note, Adjust gives Applied and "No unique items." (A03)
+9. [partly automated: `the storage page › a locked storage over its cap says so`, `the storage page › a move into a
+   locked storage is refused with the reason Locked`; by hand: setting the lock in the seeded form] Edit S2 (dashboard,
+   Edit): on **Capacity and lock** set Locked until to an hour from now and Lock reason "smoke"; save. View S2.
+   **Expected:** Lock "Locked until <time>: smoke" and the line "A locked storage refuses moves in and out (result
+   Locked) until the lock ends." Press Move stock, line 1 From S2 (filled in), To storage S1, Blueprint Oak log,
+   Amount 1, Move. **Expected:** Rejected with "Locked: a storage is locked" under line 1 (the test also checks the
+   second line of an all-or-nothing request: "Other line rejected: …"). Clear Locked until in the edit form and move
+   again. **Expected:** Applied; S2 "49 of 50", S1 Oak log 15.
+10. [automated: `the storage page › a locked storage over its cap says so`] Edit S2: Max units 40; save. **Expected:**
+    S2's Capacity used reads "49 of 40 raw units (123 %) (over its cap: removals only)". Set Max units back to 50.
+11. [automated: `the ledger explorer › drills down from a line to the moves that made it, with the net next to the line
+    (A01)`] On S1's page click the Oak log amount **15**. **Expected:** Admin → Economy → **Stock ledger**
+    (`/admin/stock/ledger?view=moves&storageId=<S1>&itemBlueprintId=<Oak log>`) on the Moves view; above the table
+    "Oak log in S1: line amount 15" and "Moves in 65 − moves out 50 = 15 (matches the line)"; the column "Amount (±
+    this storage)" shows +64 (Admin adjust), −30, −20 (Distribution) and +1; every row links its transaction and both
+    storages. (A01)
+12. [automated: `the ledger explorer › filters the transactions by reason and keeps the filter in the address`] Press
+    **Transactions**, press Clear, pick Reason "Admin adjust" and press **Apply filters**. **Expected:** the address
+    ends in `?reason=AdminAdjust`; only the adjustments of steps 4, 7 and 8 are listed, each with "User #<your id>
+    (web)", its move count, amount and note. Reload: the filter stays.
+13. [automated: `the transaction page › shows the moves with both storages and reverses it with a correction`] Clear
+    the filter and open the step 5 transaction (Distribution, amount 30) by its "#" link. **Expected:** the detail page
+    has a **Ledger entry** panel: Reason Distribution, Mode All or nothing, your name as actor, a Moves table "S1 → S2,
+    Oak log, 30" with both storages as links, Reversed by "Not reversed". Press **Reverse**, type the note "smoke
+    undo", press **Write the correction**. **Expected:** Reversed by "Transaction #<new>", no Reverse button any more;
+    the new transaction's page shows Reason Correction and "Reverses Transaction #<step 5>"; S1 Oak log 45, S2 19.
+14. [automated: `the transaction page › a correction that finds the stock gone is rejected and changes nothing`] Open
+    the step 6 transaction (Partial, 20) and press Reverse, Write the correction. **Expected:** "Rejected: nothing moved
+    …" with "Not enough stock: not enough stock in the source" (S2 holds 19); Reversed by stays "Not reversed".
+15. [partly automated: `the ledger explorer › lists the roll-ups of old production moves with the same filters
+    (A22)`; by hand: the dated moves, test database only] After § 2.1 step 13 (three Production moves of 5 oak logs
+    into S1, dated 31 days back and rolled up), open the Stock ledger, press **Roll-ups**, type S1's id as Storage id
+    and Oak log's as Blueprint id, Apply filters. **Expected:** one row: the day, Production, SYS_PRODUCTION → S1, Oak
+    log, Amount 15, Moves 3, when it was rolled up; the line summary adds "+ roll-ups 15" and still matches S1's Oak
+    log amount. (A22)
+16. [automated: `the ledger explorer › runs the reconciler and the roll-up (#65 health)`] At the bottom of the Stock
+    ledger, **Ledger health**: press **Run the reconciler**. **Expected:** "Clean: <n> lines and <m> unique items
+    match the ledger." and the time it checked. Press **Roll up old production moves now**. **Expected:** "Roll-up
+    done: <x> transactions and <y> moves from before <cutoff> became <z> roll-up rows. Totals are unchanged." (0s on
+    a fresh database). Run the reconciler again: still clean. (A01, A22)
+17. [automated: `the storage page › staff without knk.economy.admin see the stock but cannot adjust or move it`, `the
+    transaction page › staff without knk.economy.admin cannot reverse`, `the ledger explorer › World staff without the
+    economy node read the ledger but cannot roll up`, `the ledger explorer › economy staff without an area node open
+    it from the admin sidebar`] Log in as **World staff** (`knk.admin.world`, no `knk.economy.admin`). **Expected:**
+    S1's page shows the stock with Adjust stock, Move stock and each line's Adjust, Move and Take out off, titled
+    "Requires knk.economy.admin"; a transaction's Reverse is off the same way; the Stock ledger lists transactions
+    and runs the reconciler, but "Roll up old production moves now" is off. Log in as a member holding only
+    `knk.economy.admin`: Admin → Economy lists **Stock ledger** and it opens. (The API refuses the writes on its own,
+    § 2.1 step 15.)
 
 ## 3. Phase P2: world: rural structures, warehouse, production structure (#91 API, #676 web app, #677 plugin; tier:3)
 
