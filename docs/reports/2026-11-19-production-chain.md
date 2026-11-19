@@ -16,7 +16,7 @@
 
 | Link | Issue | Status | Branch heads | PR | CI | How started |
 |---|---|---|---|---|---|---|
-| L0 Item identity: every obtainable item is a blueprint; generated "Uncurated" shadow blueprints (G4) | #141 | Not started | — | — | — | — |
+| L0 Item identity: every obtainable item is a blueprint; generated "Uncurated" shadow blueprints (G4) | #141 | Running | — | — | — | subagent of the coordinator (two repos besides knk-workspace, SKILL § 4.1.4.2), started 2026-11-19 |
 | L1 Territory API: holders, crown land entity (G10), power, range (G11), conflicts, loyalty | #326 | Not started | — | — | — | — |
 | L2 Territory plugin: chunk cache, lookup, BlueMap outlines | #689 | Not started | — | — | — | — |
 | L3 Territory web app | #690 | Not started | — | — | — | — |
