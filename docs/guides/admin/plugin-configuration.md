@@ -1,6 +1,6 @@
 # Plugin configuration reference (`config.yml`)
 
-**Status:** Current · **Last updated:** 2026-11-18 (§ 4.15 `navigation.preference-max` and § 2.1 row, off-road L9, #709); 2026-11-18 (§ 4.15: the `/navigate` route mode words add no key, off-road L7, #707); 2026-11-18 (§ 4.15 `navigation.walk-links`, the `walk-link-*` and `road-first-*` keys, and § 2.1, off-road L5, #705); 2026-11-18 (§ 4.15 `navigation.plaza-curve-clearance`, `plaza-lines` draws on the trail, and § 2.1, #712 step 2); 2026-11-18 (§ 4.15 `navigation.landmarks` and § 2.1 row, off-road L8, #708); 2026-11-18 (§ 4.15 `navigation.destination-engine` and § 2.1 row, destination engine L3, #69); 2026-11-18 (§ 4.15 `navigation.destinations.stale-after-days` and § 2.1 row, destination engine L2, #103); 2026-11-18 (§ 4.29 `map.reporting.interval-ticks` and the live player report, § 2.1 row, overview map L4, #738); 2026-11-18 (§ 4.29 `map.reporting.enabled`, § 2.1 and § 3 rows, overview map L1, #735); 2026-11-18 (§ 4.27: every `npc.navigation` key checked against `config.yml` on knk-plugin `next` `7aef3de4`, no key added; texts of `pathfinder`, `hop-blocks`, `recheck-ticks`, `walk-only-blocks` and `stop-on-trespass` for the fix links C1 and E1, region overrides for NPCs since L9, #726); 2026-11-18 (§ 4.15 `navigation.plaza-lines`, `plaza-pull`, `plaza-guide-cost` and § 2.1, #712 step 1); 2026-11-18 (§ 4.15 `navigation.trail-leg-spacing`, `navigation.cursor-jump`, `guidance-v2` text, and § 2.1, #711); 2026-11-17 (§ 4.15 `navigation.guidance-v2`, `walk.clearance-cost`, `walk.wall-clearance`, `walk.curve` and § 2.1, #710); 2026-11-17 (§ 4.15 `navigation.walk.max-chunks-per-request` and § 2.1, #703); 2026-11-16 (§ 4.27 `npc`: the per-NPC table no longer split by the `collidable` note, link to the NPC navigation admin guide, docs #658); 2026-11-16 (§ 4.27 `npc`: push resistance for `collidable` (still false), `players-push-npcs`, `push-return`, `push-exempt-after`, `push-exempt-window-ticks`, `push-exempt-ticks`, `push-teleport-ticks`, #627); 2026-11-16 (§ 4.27 `npc`: `crowd-awareness`, #626); 2026-11-16 (§ 4.27 `npc`: `plaza-lines`, `plaza-corridor-blocks`, #625); 2026-11-15 (§ 4.27 `npc`: `group-formation-keeping`, `group-lateral-spacing-min`, `group-spacing-min`, `group-lookahead-blocks`, #624); 2026-11-15 (§ 4.27 `npc`: `local-legs-clearance`, #623); 2026-11-15 (§ 4.27 `npc`: `corridor-steering`, `corridor-half-width`, `wall-clearance`, #622); 2026-11-15 (§ 4.3 `realtime.moderation` and § 2.1, web kick/ban, #574); 2026-11-15 (§ 2.1: #522 merged into `next` `deb7ff49`, #589); 2026-11-15 (§ 4.27 `npc`: `group-lateral-spacing`, `group-width-hysteresis-blocks`, `group-followers-finish-trip`, `group-spacing` 2.0 → 1.5, `group-formation` and `group-ranks-width` texts, #522); 2026-11-15 (§ 4.27 `npc`: `corner-clearance`, `waypoint-margin`, `recovery-wait-ticks`, `stationary-ticks` and `no-progress-ticks` 40, `max-retries` reworded, #521); 2026-11-14 (§ 4.28 `testing.scenarios`, test servers only, #421); 2026-11-14 (§ 4.18 `messages.web-account-registered`, #485); 2026-11-14 (§ 2.1: the #377 `group-*` keys are in `next` since 2026-11-13, PandiO/knk-workspace#496); 2026-11-13 (§ 4.11 gates are discovered too; § 4.21 realtime push; § 4.26 the kit cache, PandiO/knk-workspace#300)
+**Status:** Current · **Last updated:** 2026-11-19 (§ 4.30 `items.identity`, § 2.1 and § 3 rows, production chain L0, #141); 2026-11-18 (§ 4.15 `navigation.preference-max` and § 2.1 row, off-road L9, #709); 2026-11-18 (§ 4.15: the `/navigate` route mode words add no key, off-road L7, #707); 2026-11-18 (§ 4.15 `navigation.walk-links`, the `walk-link-*` and `road-first-*` keys, and § 2.1, off-road L5, #705); 2026-11-18 (§ 4.15 `navigation.plaza-curve-clearance`, `plaza-lines` draws on the trail, and § 2.1, #712 step 2); 2026-11-18 (§ 4.15 `navigation.landmarks` and § 2.1 row, off-road L8, #708); 2026-11-18 (§ 4.15 `navigation.destination-engine` and § 2.1 row, destination engine L3, #69); 2026-11-18 (§ 4.15 `navigation.destinations.stale-after-days` and § 2.1 row, destination engine L2, #103); 2026-11-18 (§ 4.29 `map.reporting.interval-ticks` and the live player report, § 2.1 row, overview map L4, #738); 2026-11-18 (§ 4.29 `map.reporting.enabled`, § 2.1 and § 3 rows, overview map L1, #735); 2026-11-18 (§ 4.27: every `npc.navigation` key checked against `config.yml` on knk-plugin `next` `7aef3de4`, no key added; texts of `pathfinder`, `hop-blocks`, `recheck-ticks`, `walk-only-blocks` and `stop-on-trespass` for the fix links C1 and E1, region overrides for NPCs since L9, #726); 2026-11-18 (§ 4.15 `navigation.plaza-lines`, `plaza-pull`, `plaza-guide-cost` and § 2.1, #712 step 1); 2026-11-18 (§ 4.15 `navigation.trail-leg-spacing`, `navigation.cursor-jump`, `guidance-v2` text, and § 2.1, #711); 2026-11-17 (§ 4.15 `navigation.guidance-v2`, `walk.clearance-cost`, `walk.wall-clearance`, `walk.curve` and § 2.1, #710); 2026-11-17 (§ 4.15 `navigation.walk.max-chunks-per-request` and § 2.1, #703); 2026-11-16 (§ 4.27 `npc`: the per-NPC table no longer split by the `collidable` note, link to the NPC navigation admin guide, docs #658); 2026-11-16 (§ 4.27 `npc`: push resistance for `collidable` (still false), `players-push-npcs`, `push-return`, `push-exempt-after`, `push-exempt-window-ticks`, `push-exempt-ticks`, `push-teleport-ticks`, #627); 2026-11-16 (§ 4.27 `npc`: `crowd-awareness`, #626); 2026-11-16 (§ 4.27 `npc`: `plaza-lines`, `plaza-corridor-blocks`, #625); 2026-11-15 (§ 4.27 `npc`: `group-formation-keeping`, `group-lateral-spacing-min`, `group-spacing-min`, `group-lookahead-blocks`, #624); 2026-11-15 (§ 4.27 `npc`: `local-legs-clearance`, #623); 2026-11-15 (§ 4.27 `npc`: `corridor-steering`, `corridor-half-width`, `wall-clearance`, #622); 2026-11-15 (§ 4.3 `realtime.moderation` and § 2.1, web kick/ban, #574); 2026-11-15 (§ 2.1: #522 merged into `next` `deb7ff49`, #589); 2026-11-15 (§ 4.27 `npc`: `group-lateral-spacing`, `group-width-hysteresis-blocks`, `group-followers-finish-trip`, `group-spacing` 2.0 → 1.5, `group-formation` and `group-ranks-width` texts, #522); 2026-11-15 (§ 4.27 `npc`: `corner-clearance`, `waypoint-margin`, `recovery-wait-ticks`, `stationary-ticks` and `no-progress-ticks` 40, `max-retries` reworded, #521); 2026-11-14 (§ 4.28 `testing.scenarios`, test servers only, #421); 2026-11-14 (§ 4.18 `messages.web-account-registered`, #485); 2026-11-14 (§ 2.1: the #377 `group-*` keys are in `next` since 2026-11-13, PandiO/knk-workspace#496); 2026-11-13 (§ 4.11 gates are discovered too; § 4.21 realtime push; § 4.26 the kit cache, PandiO/knk-workspace#300)
 **Checked against:** knk-plugin `main` `121030f`; § 4.11, § 4.21 and § 4.26 against `57884e9`; § 4.27 `npc`, the `realtime.erasure` and `realtime.moderation` blocks and `regions.temp-retention.release-interval-minutes` against knk-plugin `next` (not on trunk yet). Update this page in place whenever a `config.yml` key is added, renamed, removed or gets a new default.
 **Source:** knk-plugin `knk-paper/src/main/resources/config.yml` (1,152 lines at `121030f`), read by
 `knk-paper/.../paper/config/ConfigLoader.java`, `EnchantmentConfigManager.java` and `KnKPlugin.java`
@@ -85,6 +85,7 @@ Newest first. Builds before this list: compare the files with the script.
 
 | Merged | Issue | Added (+), removed (−) or changed | Applies |
 |---|---|---|---|
+| in review, not in `next` yet (`claude/item-identity-141`) | [#141](https://github.com/PandiO/knk-workspace/issues/141) | + `items.identity.enabled` (false), + `items.identity.convert-on-obtain` (false), + `items.identity.map-refresh-minutes` (10), + `items.identity.report-interval-minutes` (10): item identity, every obtained item resolves to a blueprint | Restart |
 | in review, not in `next` yet (`claude/offroad-landmark-weights`) | [#709](https://github.com/PandiO/knk-workspace/issues/709) | + `navigation.preference-max` (4.0): with `navigation.landmarks: true`, the cap of overlapping landmark preference weights on walk cells in the `preferred` route mode (and its inverse the other way); at least 1.0 | Restart |
 | in review, not in `next` yet (`claude/offroad-landmarks`) | [#708](https://github.com/PandiO/knk-workspace/issues/708) | + `navigation.landmarks` (false): `true` loads the landmarks of `api/landmarks` into the navigation model, offers them to `/navigate` through the destination engine (needs `navigation.destination-engine: true` too) and turns `/knk landmark` on | Restart |
 | in review, not in `next` yet (`claude/navigation-destination-engine`) | [#69](https://github.com/PandiO/knk-workspace/issues/69) | + `navigation.destination-engine` (false): `true` switches `/navigate`, its tab completion, the navigation compass and the route start to the destination engine and the road-access answers to the navigation model; removed again in phase 4b (#747) | Restart |
@@ -163,6 +164,7 @@ Newest first. Builds before this list: compare the files with the script.
 | 4.27 | `npc` | NPC navigation on Citizens (off by default) |
 | 4.28 | `testing` | In-plugin test scenarios, test servers only (off by default) |
 | 4.29 | `map` | Overview map reports to the API (off by default) |
+| 4.30 | `items` | Item identity: blueprint tags and the conversion hooks (off by default) |
 
 ## 4. Key reference
 
@@ -858,6 +860,32 @@ map:
     interval-ticks: 40       # live player report interval (40 ticks = 2 s; 10..1200)
 ```
 
+### 4.30 `items`
+
+Item identity ([PandiO/knk-workspace#141](https://github.com/PandiO/knk-workspace/issues/141),
+[production DESIGN § 8](../../specs/production-storage-transport/DESIGN.md#8-item-identity-note-9)): every item a
+player obtains resolves to one item blueprint, in this order: the `knightsandkings:knk_item_instance` tag (unique
+items), the `knightsandkings:knk_blueprint` tag, the material's vanilla match from knk-web-api
+(`GET api/ItemIdentity/material-map`, generated "Uncurated" shadows until curated). Items that don't resolve
+(custom-named, custom-lored, another plugin's data) are logged once and left alone. A plain vanilla item never carries
+a blueprint tag, so stacking stays exactly vanilla's. With both switches `false` nothing of this runs.
+
+| Key | Default | What it does, safe values | Applies | Added by |
+|---|---|---|---|---|
+| `identity.enabled` | `false` | Load the material map, stamp `knk_blueprint` on blueprint items that differ from the plain vanilla item (kits, lootboxes, `/knk itemblueprints give`), send the conversion counts | Restart | #141 |
+| `identity.convert-on-obtain` | `false` | The conversion hooks: pickup, block and mob drops, fishing, crafting, trades, the first open of a container block since the start. Resolve, count, remove a stale blueprint tag from an otherwise plain item. Needs `identity.enabled` | Restart | #141 |
+| `identity.map-refresh-minutes` | `10` | How often the material map is fetched again (never per event); at least 1 | Restart | #141 |
+| `identity.report-interval-minutes` | `10` | How often the counts go to `POST api/ItemIdentity/conversion-counts` and a summary line to the log; at least 1 | Restart | #141 |
+
+```yaml
+items:
+  identity:
+    enabled: false
+    convert-on-obtain: false
+    map-refresh-minutes: 10
+    report-interval-minutes: 10
+```
+
 ## 5. Maintaining this page
 
 - A change that adds, renames or removes a key, or changes a default, updates § 2.1 and the section's table in the
@@ -869,6 +897,7 @@ map:
 
 ## Changes
 
+1. 2026-11-19: § 4.30 `items.identity` (`enabled`, `convert-on-obtain`, `map-refresh-minutes`, `report-interval-minutes`, #141), § 2.1 and § 3 rows; checked against knk-plugin `claude/item-identity-141` `a6c5a2bc`, not merged into `next` yet
 1. 2026-11-18: § 4.15 `navigation.walk-links`, `walk-link-range`, `walk-link-ratio`, `walk-link-ttl-seconds`, `walk-link-retry-seconds`, `walk-link-searches-per-route`, `road-first-share`, `road-first-max-ratio` (#705), § 2.1 row; checked against knk-plugin `claude/offroad-walk-links` `de44d58b`, not merged into `next` yet
 1. 2026-11-18: § 4.15 `navigation.plaza-curve-clearance`, the `plaza-lines` text (#712 step 2), § 2.1 row; checked against knk-plugin `claude/offroad-plaza-lines` `28ad18c5`, not merged into `next` yet
 1. 2026-11-18: § 4.29 `map.reporting.interval-ticks` and the live player report (#738), § 2.1 row; checked against knk-plugin `claude/overview-map-players-api`, not merged into `next` yet
