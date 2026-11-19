@@ -1,6 +1,6 @@
 # Dashboard access, staff ranks and area nodes — admin guide
 
-**Status:** Current · **Last updated:** 2026-11-19 (§ 2: siege weapon types in the Siege area, on `next`, #782); 2026-11-18 (§ 2: Landmark in the World area, node `knk.admin.world.landmark`, on `next`, #708); 2026-11-15 (release v0.3: a group's nodes in its Permissions panel (#50) and read-only town Streets (#409) are released; PandiO/knk-workspace#577)
+**Status:** Current · **Last updated:** 2026-11-19 (§ 2: Storage and Stock transaction in the World area, `knk.economy.admin`, on `next`, #97, docs #820); 2026-11-19 (§ 2: siege weapon types in the Siege area, on `next`, #782); 2026-11-18 (§ 2: Landmark in the World area, node `knk.admin.world.landmark`, on `next`, #708); 2026-11-15 (release v0.3: a group's nodes in its Permissions panel (#50) and read-only town Streets (#409) are released; PandiO/knk-workspace#577)
 **Checked against:** knk-web-api `master` `45043a7` and knk-web-app `next` `e6ba115`
 (the dashboard access model, [#280](https://github.com/PandiO/knk-workspace/issues/280) AM1–AM3, and bulk delete,
 [#205](https://github.com/PandiO/knk-workspace/issues/205), merged 2026-11-12/13 on `main`; create and edit back on
@@ -43,7 +43,7 @@ so a direct API call without `knk.admin.content` is refused as well (§ 4).
 | Area | Area node | Types on the dashboard | Bulk delete possible |
 |---|---|---|---|
 | Content | `knk.admin.content` | Category, Tag, Grade, Item blueprint, Enchantment definition, Banner design, Banner layer, Clan, Minecraft block/material/enchantment references | yes |
-| World | `knk.admin.world` | Domain, Town, District, Structure, Street, Location, Gate structure, Gate door, Domain sub-region, Landmark (on `next`, not released: create, edit and delete need `knk.admin.world.landmark` instead of `knk.admin.world`, see below) | yes |
+| World | `knk.admin.world` | Domain, Town, District, Structure, Street, Location, Gate structure, Gate door, Domain sub-region, Landmark (on `next`, not released: create, edit and delete need `knk.admin.world.landmark` instead of `knk.admin.world`, see below); on `next`, not released: Storage, and the view-only Stock transaction (#97, see below) | yes |
 | Kits | `knk.kit.manage` | Kit | yes |
 | Lootboxes | `knk.admin.lootbox.manage` | Lootbox type, special entry, spawn area | yes |
 | Siege | `knk.siege.admin.manage` | Siege scenario, team, lobby, objective, spawnpoint; on `next`, not released: siege weapon template, ammo type, weapon spot, user siege weapon unlock (#782) | yes |
@@ -55,6 +55,12 @@ with `knk.admin.world` or `knk.admin.world.landmark`; created and edited with `k
 `knk.admin.content`; deleted with `knk.admin.world.landmark` and `knk.admin.delete`. The node is matched by
 `knk.admin.world.*`, `knk.admin.*` and `*`, **not** by a bare `knk.admin.world` grant, so a world-staff rank needs it
 granted separately (§ 6). Reading a landmark by world or id (`GET api/landmarks`) needs no login at all.
+
+**Storages and the stock ledger** (stock core, [#97](https://github.com/PandiO/knk-workspace/issues/97), on `next`):
+viewed with `knk.admin.world` **or** `knk.economy.admin`; storages are created and edited with `knk.admin.world` and
+`knk.admin.content` and deleted with `knk.admin.world` and `knk.admin.delete`. Stock transactions are view-only on the
+dashboard; adjusting, moving and reversing stock needs `knk.economy.admin`, which `knk.admin.*` does not match (only
+`*` or an explicit grant). See the [stock admin guide](stock-admin-guide.md).
 
 Link rows, snapshots and similar records are listed under their area but are view-only. The registry that decides all
 this is `Attributes/DashboardAccess.cs` in knk-web-api; the web app reads it from the metadata, so nothing is

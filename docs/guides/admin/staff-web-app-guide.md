@@ -1,6 +1,6 @@
 # Staff web app — admin guide
 
-**Status:** Current · **Last updated:** 2026-11-15 (release v0.3: the features of § 3–§ 7 below are released; § 3 row
+**Status:** Current · **Last updated:** 2026-11-19 (§ 2 sidebar: Stock ledger under Economy, on `next`, #675, docs #820); 2026-11-15 (release v0.3: the features of § 3–§ 7 below are released; § 3 row
 actions scroll with the table again and Export as CSV downloads at once, #606, #607; PandiO/knk-workspace#577)
 **Checked against:** knk-web-app `main` `3ba747d` and knk-web-api `master` `f445d21` (AM3 of #280 merged 2026-11-13 as
 `e02ee79` / `45043a7`; #371, #374 and #383, create, edit and link changes on `knk.admin.content`, reached the default
@@ -71,6 +71,7 @@ closes it).
 | Economy | Balance event log (and transaction details) | `knk.admin.currency.history` |
 | Economy | Currency policy | `knk.admin.currency.policy` |
 | Economy | Currency alerts | `knk.admin.currency.alerts` |
+| Economy | Stock ledger (on `next`, not released; [stock admin guide](stock-admin-guide.md)) | `knk.admin.world` or `knk.economy.admin` |
 | Settings | Game settings | `knk.admin.config` |
 | Settings | Siege settings | `knk.siege.admin.manage` |
 | Settings | Mail log | `knk.admin.config` |

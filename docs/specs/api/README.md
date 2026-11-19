@@ -8,6 +8,7 @@ Define public API contracts (domain ports, DTOs, endpoints) that abstract the im
 ## Contents
 - `swagger.json`: OpenAPI 3.0 spec for Web API endpoints (if backend service exists).
 - `health.yaml` / `health.json`: Per-endpoint OpenAPI schemas.
+- `API_CONTRACT_STOCK.md`: stock core (`api/Storages`, `api/StockTransactions`), current for knk-web-api `next`.
 - Port contracts: Interfaces in `knk-core` defining service boundaries.
 - DTO schemas: Request/response shapes for each endpoint.
 
