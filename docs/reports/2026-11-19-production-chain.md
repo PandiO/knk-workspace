@@ -54,7 +54,7 @@ of what is already in `next`.
 | L7 P2b world web app | #676 | Merged into next (2026-11-19) | web app `f5ea646`, workspace `9d578854`; merges: web app `18385344`, workspace `a5c05901` | [web#61](https://github.com/PandiO/knk-web-app/pull/61), [ws#829](https://github.com/PandiO/knk-workspace/pull/829) | web app green (build-and-test, e2e) | subagent of the coordinator (19:37; the create_session `session_01R1w2UwqC5tNA7JBrnf61ko` refused to start, decision 34) |
 | L8 P2c world plugin: managed-region kinds | #677 | Merged into next (2026-11-19) | plugin `cc563771`, workspace `cb11e03a`; merges: plugin `8ebb30be`, workspace `4654a1ad` | [plugin#96](https://github.com/PandiO/knk-plugin/pull/96), [ws#823](https://github.com/PandiO/knk-workspace/pull/823) | green (plugin build + paper-boot, 64 scenarios) | create_session `session_01R1w2UtzV6puGzautXYEFJA` (one repo besides knk-workspace), started 2026-11-19 |
 | L9 P3 production engine API | #86 | Merged into next (2026-11-19) | api `20dcfb7`, workspace `ea01df32`; merges: api `6c648f60`, workspace `7b1495d0` (after a coordinator merge of `next`, `50497cc8`) | [api#58](https://github.com/PandiO/knk-web-api/pull/58), [ws#827](https://github.com/PandiO/knk-workspace/pull/827) | green (build-and-test, mysql-tests, fresh-database) | create_session `session_01R1w2Uvi8uaBqDwjJDADicL` (one repo besides knk-workspace), started 2026-11-19 |
-| L10 P3b production web app | #678 | In review (2026-11-19) | web-app `9e5a2ca`, workspace `eaf1f1a1` | [web-app#63](https://github.com/PandiO/knk-web-app/pull/63), [ws#834](https://github.com/PandiO/knk-workspace/pull/834) | green (build-and-test, e2e) | create_session `session_01R1w2UvmqQ34HGVHXxDfmwW` (prompt says start without asking), started 2026-11-19 |
+| L10 P3b production web app | #678 | Merged into next (2026-11-19) | web-app `9e5a2ca`, workspace `eaf1f1a1`; merges: web app `4e4ca39a`, workspace `9eef39cf` | [web-app#63](https://github.com/PandiO/knk-web-app/pull/63), [ws#834](https://github.com/PandiO/knk-workspace/pull/834) | green (build-and-test, e2e) | create_session `session_01R1w2UvmqQ34HGVHXxDfmwW` (prompt says start without asking), started 2026-11-19 |
 | L11 P4 yield areas API | #138 | Running | — | — | — | create_session `session_01R1w2UuXh4wtTxPhhZUpLGF` (prompt says start without asking), started 2026-11-19 |
 | L12 P4b surveys plugin | #679 | Not started | — | — | — | — |
 | L13 P4c yield areas web app | #680 | Not started | — | — | — | — |
@@ -261,6 +261,17 @@ of what is already in `next`.
    once, don't ask" (lesson of decision 34). L12 (#679) and L13 (#680) wait for L11. The plugin is idle until then.
    The account showed a weekly usage-limit warning (`seven_day`, `allowed_warning`), so both prompts stress frequent
    pushes.
+
+40. **L10 merge (2026-11-19).** § 6 checks held:
+   1. Heads matched, and both branches contained `next` (clean).
+   2. CI was green (build-and-test, e2e). Codex was at its usage limit, so there were no findings.
+   3. The scope matched #678.
+   Merged web app #63 `4e4ca39a` and workspace #834 `9eef39cf`. P3 (L9–L10) is complete: `documentation` sub-issue
+   #839 under #86, with a docs session.
+41. **P3 API follow-ups found by L10 (#838, tier:1).** Three knk-web-api reads: the kind name on the structure list,
+   the blueprint name on consumed inputs, and a cycle-record list. Chosen: fold them into the next free knk-web-api
+   link, L14 (#79), as an additive extra (L11 already carries #831). Alternatives: (a) add them to the running L11: it
+   is close to its PRs.
 
 ## 4. Link blocks
 
