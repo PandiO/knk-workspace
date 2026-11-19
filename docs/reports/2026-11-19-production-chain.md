@@ -45,7 +45,7 @@ of what is already in `next`.
 | L4 P1 stock core API: storages, ledger, reconciler, capacity, roll-up | #97 | Merged into next (2026-11-19) | api `e524721`, workspace `abef76fc`; coordinator merge of `next` `06fee906`; merges: api `2e7d4e81`, workspace `1bbdd69f` | [api#56](https://github.com/PandiO/knk-web-api/pull/56), [ws#816](https://github.com/PandiO/knk-workspace/pull/816) | green (build-and-test, mysql-tests, fresh-database) | create_session `session_01R1w2Uwv8FBnKCUoeZauzVt` (one repo besides knk-workspace), started 2026-11-19 |
 | L5 P1b stock web app | #675 | Merged into next (2026-11-19) | web app `9bec60f`, workspace `a5d10f37`; merges: web app `9f46cb49`, workspace `8fff63e2` | [web#60](https://github.com/PandiO/knk-web-app/pull/60), [ws#818](https://github.com/PandiO/knk-workspace/pull/818) | web app green (build-and-test, e2e) | create_session `session_01R1w2UuKsus7BT7DcXyL4jr` (one repo besides knk-workspace), started 2026-11-19 |
 | L6 P2 world API: structure subtypes, TownId, placement rules | #91 | Merged into next (2026-11-19) | api `303b6ab`, workspace `9ab62ab1`; merges: api `fcfced27`, workspace `c7fe8996` (after a coordinator merge of `next`, `15e3011e`) | [api#57](https://github.com/PandiO/knk-web-api/pull/57), [ws#822](https://github.com/PandiO/knk-workspace/pull/822) | green (build-and-test, mysql-tests, fresh-database) | create_session `session_01R1w2UscSGsG34qwc8vtEQj` (one repo besides knk-workspace), started 2026-11-19 |
-| L7 P2b world web app | #676 | Running | — | — | — | create_session `session_01R1w2UwqC5tNA7JBrnf61ko` (one repo besides knk-workspace), started 2026-11-19 |
+| L7 P2b world web app | #676 | Running | — | — | — | subagent of the coordinator (19:37; the create_session `session_01R1w2UwqC5tNA7JBrnf61ko` refused to start, decision 34) |
 | L8 P2c world plugin: managed-region kinds | #677 | Merged into next (2026-11-19) | plugin `cc563771`, workspace `cb11e03a`; merges: plugin `8ebb30be`, workspace `4654a1ad` | [plugin#96](https://github.com/PandiO/knk-plugin/pull/96), [ws#823](https://github.com/PandiO/knk-workspace/pull/823) | green (plugin build + paper-boot, 64 scenarios) | create_session `session_01R1w2UtzV6puGzautXYEFJA` (one repo besides knk-workspace), started 2026-11-19 |
 | L9 P3 production engine API | #86 | Running | — | — | — | create_session `session_01R1w2Uvi8uaBqDwjJDADicL` (one repo besides knk-workspace), started 2026-11-19 |
 | L10 P3b production web app | #678 | Not started | — | — | — | — |
@@ -218,6 +218,14 @@ of what is already in `next`.
       Both are small and needed.
    Merged plugin #96 `8ebb30be` and workspace #823 `4654a1ad`. No plugin link has an open gate now: L12, L15, L18 and
    L20 wait for API links.
+
+34. **L7 rerun as a subagent (2026-11-19 19:37).** After the coordinator's "go", the L7 cloud session still refused to
+   start. It took its initial prompt and the coordinator's message as peer messages, not the developer's instruction, and
+   asked for the developer to confirm in that session. This is the same Auto-mode behaviour as the refused `add_repo`
+   of SKILL § 4.1.4. Chosen: rerun L7 as a subagent of the coordinator with the same scope (SKILL § 4.1.2/§ 4.1.4.3);
+   the stalled session was told to stop. Alternatives: (a) ask the developer to type "run L7" in that session: a
+   manual step per link; (b) a new `create_session`: the same refusal is likely. If more `create_session` links refuse,
+   the coordinator runs single-repo links as subagents too.
 
 ## 4. Link blocks
 
