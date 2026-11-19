@@ -427,6 +427,12 @@ the configuration reference § 4.27), then restart. In test order:
 52. **Developer decisions, 2026-11-19:** the review decisions of B5 (block 4.21 § 5) and C1 (block 4.22 § 5) are
     accepted. "Accepted" on a smoke step means accepted without testing (E1 step 3, R1). NPC walk-leg shaping filed as
     #817 (gated on the off-road chain's #710 live test).
+53. **Developer decisions, 2026-11-19:** the review decisions of E1 (block 4.23 § 5) and R1 (block 4.24 § 5) are
+    accepted. **Option B (a short-horizon steering layer, plan 4c.4 item 8) is postponed**, not dropped: no dynamic case
+    is left that A, D and M4 do not handle in the tests so far, but two cases are untested. It is looked at again (1)
+    when a test route with a real narrow place (a one-block door or narrow gate where groups queue) is added and (2)
+    when `collidable: true` is tested. If NPCs then get in each other's way where crowd awareness does not help, B gets
+    its own link.
 
 ## 4. Link blocks
 
