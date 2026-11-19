@@ -123,6 +123,10 @@
     WorldEdit/WorldGuard adapter stay. Alternatives: (a) keep the command as a second path (the developer can still
     ask); (b) defer #799 until after L3, rejected (the gate for L3 is closed and the decision is clear now).
 
+13. **knk-web-api `next` CI after the L2 merge.** `7dc10383` went red on the same flaky MySQL test as after L1
+    (`DiscoveryLedgerMySqlTests.TitleCrossing_...`); filed as #805 (not this chain's area); rerun of run 44512749267
+    green 2026-11-19 12:00. knk-plugin `next` `2f970779` green (build, paper-boot). Not a blocker.
+
 ## 4. Link blocks
 
 _(Each link appends its block here when it finishes.)_
