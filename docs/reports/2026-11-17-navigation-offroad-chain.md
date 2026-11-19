@@ -35,7 +35,7 @@ on `next` (Decided 2026-11-17).
 | L9 Phase 5.2 landmark weights | #709 | Merged into next (2026-11-18); waits for the developer's smoke § 7 steps 1–3 | knk-plugin `claude/offroad-landmark-weights` `636c9f32`; knk-workspace `9d0c926f` | [knk-plugin#87](https://github.com/PandiO/knk-plugin/pull/87) → `c7be34fb`, [#776](https://github.com/PandiO/knk-workspace/pull/776) → `99fef23d` | green (build; paper-boot after one #695 flake on the PR run) | create_session `session_01R1w2Ut1P9c2jGxRYC3weCJ` (2026-11-18) |
 | L10 Phase 7 plaza lines | #712 | Merged into next (step 1 and step 2, 2026-11-18); waits for the developer's smoke § 10.2 | knk-plugin `claude/offroad-plaza-lines` `28ad18c5`; knk-workspace `d7e4e834` | step 1: [knk-plugin#73](https://github.com/PandiO/knk-plugin/pull/73) → `ce0f65ec`, [#723](https://github.com/PandiO/knk-workspace/pull/723) → `c7f61e9e`; step 2: [knk-plugin#84](https://github.com/PandiO/knk-plugin/pull/84) → `4daa0c84`, [#769](https://github.com/PandiO/knk-workspace/pull/769) → `2e0c04d4` | green (build, paper-boot) | create_session `session_01R1w2Ussca79jpGCPqzcTf8` (2026-11-18) |
 | F1 walk-search fixes (#771 items 1, 2) | #771 | Merged into next (2026-11-19); waits for the developer's smoke § 12; the storage hall by road stays open (#780) | knk-plugin `claude/offroad-walk-fixes-771` `321daf6b`; knk-workspace `8fdfe392` | [knk-plugin#88](https://github.com/PandiO/knk-plugin/pull/88) → `cee53213`, [#778](https://github.com/PandiO/knk-workspace/pull/778) → `d1850c7a` | green (build, paper-boot) | create_session `session_01R1w2Ut7LKtBrvQw9bA3mVQ` (2026-11-19) |
-| F2 road goal and route ends (#780, #771 items 3–5) | #780, #771 | In review (2026-11-19): PRs open into `next`, not merged; waits for the developer's smoke § 13 | knk-plugin `claude/offroad-route-ends-f2` `ebc63265`; knk-workspace `441dd7cc` | [knk-plugin#94](https://github.com/PandiO/knk-plugin/pull/94), [#813](https://github.com/PandiO/knk-workspace/pull/813) | running at the block's commit (build, paper-boot) | create_session `session_01R1w2UtLzNFzgycUAEB8mVd` (2026-11-19) |
+| F2 road goal and route ends (#780, #771 items 3–5) | #780, #771 | In review (2026-11-19): PRs open into `next`, not merged; waits for the developer's smoke § 13 | knk-plugin `claude/offroad-route-ends-f2` `ebc63265`; knk-workspace `441dd7cc` | [knk-plugin#94](https://github.com/PandiO/knk-plugin/pull/94), [#813](https://github.com/PandiO/knk-workspace/pull/813) | green (build, paper-boot on `ebc63265`, push and PR runs, every `npc-*` scenario included; no re-run) | create_session `session_01R1w2UtLzNFzgycUAEB8mVd` (2026-11-19) |
 | F2 road goal and route ends (#780 b, #771 items 3–5) | #780, #771 | Running (started 2026-11-19 12:26 from plugin `next` `55804b11`) | `claude/offroad-route-ends-f2` | — | — | create_session `session_01R1w2UtLzNFzgycUAEB8mVd` (2026-11-19) |
 
 ## 3. Coordinator decisions
@@ -1171,7 +1171,7 @@ _(Each link appends its block here when it finishes.)_
         2. knk-paper `NavigationServiceRouteEndsTest` (9, on both dev-world snapshots with the real walk search and the shipped limits; test fixture `DevWorldSnapshot`).
         3. knk-paper `TrailRendererTest` +1.
     3. Unchanged and green: L7's golden transcripts, the L3/L4/L5/L9/L10 flag-off identity tests, F1's tests, the engine's handle tests and the NPC unit tests.
-    4. CI: build and paper-boot were running at the time of this block. The final message reports the outcome.
+    4. CI on `ebc63265`: green. Build and paper-boot passed on both the push run and the PR run, every `npc-*` scenario included. No re-run was needed, and no `npc-*` outcome changed.
 5. **Decisions (DESIGN § 4.3).**
     1. *When the choice is made.* Chosen: today's route first; the chosen goal replaces it when the searches answer, as walk links do (L5 decision 1). Alternatives:
         1. (a) Hold the session until the searches return: a second or more with no trail at every start.
@@ -1190,7 +1190,7 @@ _(Each link appends its block here when it finishes.)_
 6. **Out of scope, noted.**
     1. The choice has no `/knk road status` line; it logs at FINE only.
     2. The snapshots' road graphs hold only the edges through their box. The live route from spawn differs (the snapshot routes the long way round), so the live numbers are for § 13.
-7. **Blockers.** None. Codex: see the final message.
+7. **Blockers.** None. Codex reached its code-review usage limit on both PRs (its comments of 2026-11-19 13:49 UTC), so the link finished without its review (developer decision 2026-11-14). This is said on both PRs.
 8. **At merge / what the developer must do.**
     1. Merge the three keys into `config.yml` (all off = no change); YAML in the PR.
     2. Live test, about 25 minutes: smoke § 13 steps 1, 3, 4 and 5.
