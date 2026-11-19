@@ -4,6 +4,13 @@ This is a human-readable record of capabilities merged into the V3 default branc
 
 ## Unreleased — on feature branches, not merged
 
+- **Navigation: walk trails reach the keep storage hall and pass roof hatches** ([PandiO/knk-workspace#771](https://github.com/PandiO/knk-workspace/issues/771)
+  items 1 and 2, fix link F1 of the off-road navigation chain). A walking route that once found its way no longer
+  loses it when the trail is recalculated inside a building: the recalculation keeps the area and length of the way
+  already found (the keep's storage hall from spawn used to get stuck in the stair house's lower flights). An open
+  trapdoor over a ladder, such as the Garrison Watchtower Roof's hatch, is now climbed through up and down; a closed
+  one is still never passed. Also for NPC walk legs. No flag, no config key, no migration. knk-plugin and
+  knk-workspace branches `claude/offroad-walk-fixes-771` (PRs into `next`).
 - **Off-road navigation: landmark preference weights** ([PandiO/knk-workspace#709](https://github.com/PandiO/knk-workspace/issues/709),
   link L9 of the off-road navigation chain, phase 5.2). Behind `navigation.landmarks` (off by default). A landmark
   with an area (a region or a radius) and a `Preference` above 1.0 makes walking routes avoid that area in the default

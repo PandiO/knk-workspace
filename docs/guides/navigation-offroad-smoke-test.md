@@ -1,7 +1,7 @@
 # Off-road navigation and landmarks — smoke test
 
-**Status:** Draft from the design (2026-11-17); no steps run. Phase 5.2 (§ 7): 7 of 8 steps automated (3 in part); Phase 4 (§ 5): 8 of 9 steps automated (2 in part); Phase 2 (§ 3): 13 of 14 steps automated (5 in part); Phase 5.1 (§ 6): 21 of 22 steps automated (6 in part); Phase 0 (§ 1): 1 of 9 steps automated; phase 1 (§ 2): 4 of 4 steps automated; phase 6.1 (§ 8): 6 of 8 steps automated (3 of them in part); phase 6.2 (§ 9): 11 of 11 steps automated (3 of them in part); phase 7 step 1 (§ 10.1): 4 of 7 steps automated (3 of them in part), viewed by the developer 2026-11-18; phase 7 step 2 (§ 10.2): 9 of 9 steps automated (3 of them in part); the other phases not yet automated (the links tag them).
-**Last updated:** 2026-11-18 (§ 7 phase 5.2 built by link L9, #709: eight steps, seven automated, three in part); 2026-11-18 (§ 5 phase 4 built by link L7, #707: nine steps, eight automated, two in part); 2026-11-18 (§ 3 phase 2 built by link L5, #705: fourteen steps, thirteen automated, five in part); 2026-11-18 (§ 10 phase 7: step 1 viewed by the developer, O33; § 10.2 step 2 built by link L10, #712: nine steps, all automated, three in part); 2026-11-18 (§ 6.3 phase 5.1 step B, link L8: the in-game steps); 2026-11-18 (§ 6 phase 5.1 updated to what link L8 step A built, #708: API and web steps, plugin steps marked step B); 2026-11-18 (§ 10 phase 7 split into step 1, built by link L10, #712: the staff preview and the developer's viewing steps on Cinix and Brink, and step 2, the trail, not built yet); 2026-11-18 (§ 9 phase 6.2 updated to what link L4 built, #711: eleven steps, all automated, three in part); 2026-11-17 (§ 8 phase 6.1 updated to what link L3 built, #710: eight steps, six automated); 2026-11-17 (§ 2 phase 1 updated to what link L2 built, #704: every step automated); 2026-11-17 (§ 1 phase 0 updated to what link L1 built, #703: the measurement steps and the `/knk road status` lines); 2026-11-17 (draft from the design, phases 0, 1, 2, 3, 4, 5.1, 5.2, 6.1, 6.2, 7)
+**Status:** Draft from the design (2026-11-17); no steps run. F1 (§ 12): 4 of 6 steps automated (2 in part); Phase 5.2 (§ 7): 7 of 8 steps automated (3 in part); Phase 4 (§ 5): 8 of 9 steps automated (2 in part); Phase 2 (§ 3): 13 of 14 steps automated (5 in part); Phase 5.1 (§ 6): 21 of 22 steps automated (6 in part); Phase 0 (§ 1): 1 of 9 steps automated; phase 1 (§ 2): 4 of 4 steps automated; phase 6.1 (§ 8): 6 of 8 steps automated (3 of them in part); phase 6.2 (§ 9): 11 of 11 steps automated (3 of them in part); phase 7 step 1 (§ 10.1): 4 of 7 steps automated (3 of them in part), viewed by the developer 2026-11-18; phase 7 step 2 (§ 10.2): 9 of 9 steps automated (3 of them in part); the other phases not yet automated (the links tag them).
+**Last updated:** 2026-11-19 (§ 12 F1, the walk-search fixes of #771 items 1 and 2: six steps, four automated, two in part); 2026-11-18 (§ 7 phase 5.2 built by link L9, #709: eight steps, seven automated, three in part); 2026-11-18 (§ 5 phase 4 built by link L7, #707: nine steps, eight automated, two in part); 2026-11-18 (§ 3 phase 2 built by link L5, #705: fourteen steps, thirteen automated, five in part); 2026-11-18 (§ 10 phase 7: step 1 viewed by the developer, O33; § 10.2 step 2 built by link L10, #712: nine steps, all automated, three in part); 2026-11-18 (§ 6.3 phase 5.1 step B, link L8: the in-game steps); 2026-11-18 (§ 6 phase 5.1 updated to what link L8 step A built, #708: API and web steps, plugin steps marked step B); 2026-11-18 (§ 10 phase 7 split into step 1, built by link L10, #712: the staff preview and the developer's viewing steps on Cinix and Brink, and step 2, the trail, not built yet); 2026-11-18 (§ 9 phase 6.2 updated to what link L4 built, #711: eleven steps, all automated, three in part); 2026-11-17 (§ 8 phase 6.1 updated to what link L3 built, #710: eight steps, six automated); 2026-11-17 (§ 2 phase 1 updated to what link L2 built, #704: every step automated); 2026-11-17 (§ 1 phase 0 updated to what link L1 built, #703: the measurement steps and the `/knk road status` lines); 2026-11-17 (draft from the design, phases 0, 1, 2, 3, 4, 5.1, 5.2, 6.1, 6.2, 7)
 **Design:** [specs/navigation-offroad/DESIGN.md](../specs/navigation-offroad/DESIGN.md) · **Issue:**
 [PandiO/knk-workspace#698](https://github.com/PandiO/knk-workspace/issues/698)
 
@@ -811,3 +811,54 @@ without staff rights; a staff account with `knk.admin.road` for step 8.
 ## 11. Phase 8: persisted walk tiles (#713)
 
 Written when phase 8's scope is designed, after the phase 0 report and phase 3.
+
+## 12. F1: walk-search fixes from the phase 0 runs (#771 items 1 and 2, tier:2)
+
+*Built 2026-11-19 (fix link F1, knk-plugin `claude/offroad-walk-fixes-771`). No flag: both fixes make valid routes
+work, with `guidance-v2` on and off. (1) A walk leg keeps its last found path: a recompute (after drifting more than
+`recompute-distance` off the trail, or once the path is `chunk-ttl-seconds` old) captures the rest of that path too and
+allows at least its length, so it can take the same way again. Scene 1 used to get stuck in the keep stair house's lower
+flights at 1417 59 -489 because every recompute from inside the keep searched only the box round the player and the
+hall. (2) An open trapdoor directly above a ladder is climbed like the ladder, so roof hatches are passed up and down. A
+closed trapdoor stays solid: it can be stood on and is never passed. 4 of 6 steps automated (2 in part); the
+developer's live test is steps 1 and 3 (about 15 minutes).*
+
+### 12.0 Preconditions
+
+1. Deployed: plugin build from `next` with the knk-plugin PR for #771 (F1) merged. No config change.
+2. Settings: `navigation.walk.enabled: true` (the shipped default). Steps 1 and 3 need walk limits that reach the keep
+   scenes: run 2's settings of the measurements report (`walk.max-length` 1000, `walk.detour-allowance` 600,
+   `walk.max-expansions` 200000, `walk.max-chunks-per-request` 800) and `max-snap-distance` 600, so the scenes run in
+   direct mode as in the runs. Restore the settings after the test (O32: raised limits belong on walk legs only).
+3. Accounts: player A, and staff A with `knk.admin.road` (for `/knk road status`).
+4. The dev world: the keep, the storage hall (Location 56), the Garrison Watchtower Roof (Location 53) with its hatch
+   open (the spruce trapdoor at 1400 107 -540 over the ladder below it), the Keep Tower Roof (Location 52).
+
+### 12.1 Steps
+
+1. As player A at spawn (1443 43 -567), run `/navigate Keep storage hall` and follow the walk trail all the way.
+   **Expected:** the trail leads up the keep stair house's lower flights, out and round, and into the storage hall. You
+   do not get stuck at 1417 59 -489, and "No conventional path" is not shown. Leave the trail on purpose for a few blocks
+   in the lower flights and wait 5 s. **Expected:** the trail is redrawn from where you stand, back onto the way.
+   [automated in part: knk-paper `WalkDevWorldFixesTest.scene1ARecomputeFromTheStuckSpotRefindsTheWayWithTheFoundPathsHint`
+   and `scene1WithTheShippedLimitsTheHintAlsoLiftsTheLengthCap` (the keep snapshot `quarry-to-keep-stairhouse.zip`);
+   `NavigationServiceTest.aRecomputeCarriesTheFoundPathsHintAlsoAfterAFailedSearch` and
+   `withGuidanceV2ARecomputeCarriesTheFoundPathsHintToo`; the walk in the world is manual]
+2. Repeat step 1 with `navigation.guidance-v2: true` (restart). **Expected:** the same: the storage hall is reached.
+   [automated in part: as step 1; the flag-on recompute is `withGuidanceV2ARecomputeCarriesTheFoundPathsHintToo`]
+3. Stand on the Garrison Watchtower Roof and run `/navigate Keep Tower Roof`. **Expected:** a walk trail down through
+   the open hatch and the ladder, across, and up the keep tower; no "No conventional path". Then from the Keep Tower
+   Roof run `/navigate Garrison Watchtower Roof`. **Expected:** the trail ends on the watchtower roof, up the ladder and
+   through the hatch. As staff A, `/knk road status`: the `walk recent:` lines show FOUND, not 44 cells.
+   [automated in part: knk-paper `WalkDevWorldFixesTest.scene8TheWatchtowerHatchIsPassedDownAndUp` (the snapshot
+   `keep-tower.zip`: 44 cells without the open state, found down and up with it); knk-core `WalkTrapdoorHatchTest`]
+4. Close the watchtower hatch and run `/navigate Keep Tower Roof` on the roof again (wait 10 s for the cached chunks to
+   expire). **Expected:** "No conventional path to Keep Tower Roof found.": a closed trapdoor is never passed.
+   [automated: knk-core `WalkTrapdoorHatchTest.aClosedHatchIsNotPassedEitherWay` and
+   `aClosedHatchIsStillAFloorOnTheRoof`]
+5. An open trapdoor with no ladder below is not a way up or down. [automated: knk-core
+   `WalkTrapdoorHatchTest.anOpenTrapdoorWithNoLadderBelowIsNotAWayUp`]
+6. The first search of every walk leg is unchanged: L7's golden walk transcripts, the flag-off identity tests and the
+   NPC unit tests stay green. NPC walk legs pass open hatches over ladders too; the NPC body check still treats the
+   panel as blocking, as before. [automated: knk-core `WalkLegDefaultTranscriptTest`; knk-paper
+   `WalkLegPreparerTest.withoutAHintTheBoxAndBudgetAreAsBefore`; the paper-boot `npc-*` scenarios]
