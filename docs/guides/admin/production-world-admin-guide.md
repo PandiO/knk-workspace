@@ -86,7 +86,8 @@ you want one ([stock admin guide § 2](stock-admin-guide.md#2-storages)).
 **Editing:** **Edit** on the structure's page opens the same form. To move a structure out of its district, clear
 District, Street and House number and pick a town under Town (rural); to move it in, the other way round. The
 storages stay. In game the moved region keeps its old parent: see § 6 item 3. An edit shows "… updated." but no
-placement warnings; view the page or re-run validation in the form to see them.
+placement warnings ([#831](https://github.com/PandiO/knk-workspace/issues/831)); view the page or re-run validation in the
+form to see them.
 
 ## 3. Placement rules (P-1, P-2)
 
@@ -143,7 +144,7 @@ The seeded forms carry two rules on the **Region** field, both **warnings** (the
    shows "Not measured yet" for rural structures.
 5. **The generic Structure page** shows only the new columns and the filter; the placement panel is on the warehouse
    and production structure pages. The Structure form has no Town field yet, so a plain rural structure can only be made
-   through the API.
+   through the API ([#831](https://github.com/PandiO/knk-workspace/issues/831)).
 
 ## 5. Deleting
 

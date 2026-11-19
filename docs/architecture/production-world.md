@@ -276,9 +276,9 @@ key; after turning `production.enabled` on in the plugin, run `/knk regions repa
 
 1. P-3 waits for P4's production areas; the validation types are ready.
 2. An update drops the placement warnings (204), and the subtype endpoints' error body carries the .NET parameter
-   suffix (the web app cuts it); noted on [#676](https://github.com/PandiO/knk-workspace/issues/676#issuecomment-7020712503).
+   suffix (the web app cuts it); [#831](https://github.com/PandiO/knk-workspace/issues/831).
 3. The generic `Structure` form seed has no Town field yet, so a rural plain structure (not a warehouse or production
-   structure) can only be created through `api/Structures` with `townId`.
+   structure) can only be created through `api/Structures` with `townId` ([#831](https://github.com/PandiO/knk-workspace/issues/831)).
 4. A stale WorldGuard parent after a move to rural is not cleared ([#824](https://github.com/PandiO/knk-workspace/issues/824)).
 5. No production kinds, lines, cycles or workers yet (P3, P5); `RoadConnection` is measured from P5b on.
 
