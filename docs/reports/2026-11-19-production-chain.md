@@ -70,6 +70,13 @@
 6. **CI on `next` before L0:** green (knk-web-api `935fe8c` Build and test + Migrations; knk-plugin `cee53213` Build +
    Paper boot test).
 
+7. **Overlap with the siege weapons chain (#354), 2026-11-19.** Its coordinator reported that its L1 #782 adds a
+   knk-web-api migration and a `KnKDbContext` block, and later links L3/L4/L8 may add more. Chosen: both chains keep
+   `KnKDbContext` edits in their own block and generate their migration last, after merging `origin/next`. Whichever
+   link merges second merges `origin/next` again and regenerates its migration instead of hand-editing the model
+   snapshot. L0 was told this. Alternatives: (a) hold L0 until #782 merges: would idle the chain for a mechanical
+   conflict; (b) one side hand-merges the snapshot: error-prone.
+
 ## 4. Link blocks
 
 _(Each link appends its block here when it finishes.)_
