@@ -17,16 +17,22 @@
    G17 (L0 block, decision 7). Confirm or ask for seeds.
 3. **Review:** L0 agent decisions (block 4.0 § 5), mainly the retag rule (plain vanilla items are never tagged) and
    the two plugin switches `items.identity.enabled` / `convert-on-obtain`.
-4. Later: the shop menu templates for L26 (#687).
+4. **Smoke test of L1 (territory API, tier:3):** guide § 1.1–1.2 on `next`. Before it: apply migration `AddTerritory`,
+   import the form seeds `Kingdom`, `Province`, `CrownLand`, `TerritoryConflict` and their display seeds (`Kingdom`
+   first, "make default"). Keep `production.enabled` off until L2 is deployed. L6 (#91 P2 world API) builds on L1 and
+   waits for this.
+5. **Review:** L1 agent decisions (block 4.1), mainly: the game server computes territory and reports it; loyalty is a
+   town id; the Town and District form seeds were not bumped (L3 adds the new fields to those forms).
+6. Later: the shop menu templates for L26 (#687).
 
 ## 2. Summary
 
 | Link | Issue | Status | Branch heads | PR | CI | How started |
 |---|---|---|---|---|---|---|
 | L0 Item identity: every obtainable item is a blueprint; generated "Uncurated" shadow blueprints (G4) | #141 | Merged into next (2026-11-19) | api `5daa3c6`, plugin `a6c5a2bc`, workspace `8ffdbb1a`; merges: api `7d213fd6`, plugin `2ef256e7`, workspace `ca3bcc98` | [api#51](https://github.com/PandiO/knk-web-api/pull/51), [plugin#89](https://github.com/PandiO/knk-plugin/pull/89), [ws#793](https://github.com/PandiO/knk-workspace/pull/793) | green (API PR checks; plugin build + paper-boot) | subagent of the coordinator (two repos besides knk-workspace, SKILL § 4.1.4.2), started 2026-11-19 |
-| L1 Territory API: holders, crown land entity (G10), power, range (G11), conflicts, loyalty | #326 | In review (PRs open, not merged) | api `ff50ec1`, workspace `c4211d51` | [api#53](https://github.com/PandiO/knk-web-api/pull/53), [ws#798](https://github.com/PandiO/knk-workspace/pull/798) | api green (build-and-test, mysql-tests, fresh-database) | create_session `session_01R1w2Uwo46dJVo6Cpr8LzmG` (one repo besides knk-workspace), started 2026-11-19 |
-| L2 Territory plugin: chunk cache, lookup, BlueMap outlines | #689 | Not started | — | — | — | — |
-| L3 Territory web app | #690 | Not started | — | — | — | — |
+| L1 Territory API: holders, crown land entity (G10), power, range (G11), conflicts, loyalty | #326 | Merged into next (2026-11-19) | api `ff50ec1`, workspace `c4211d51`; merges: api `0d6e369a`, workspace `4595e6d8` | [api#53](https://github.com/PandiO/knk-web-api/pull/53), [ws#798](https://github.com/PandiO/knk-workspace/pull/798) | green (build-and-test, mysql-tests, fresh-database) | create_session `session_01R1w2Uwo46dJVo6Cpr8LzmG` (one repo besides knk-workspace), started 2026-11-19 |
+| L2 Territory plugin: chunk cache, lookup, BlueMap outlines | #689 | Running | — | — | — | create_session `session_01R1w2Uvhpo37DXAXpm2uqLp` (one repo besides knk-workspace), started 2026-11-19 |
+| L3 Territory web app | #690 | Running | — | — | — | create_session `session_01R1w2UuYHneFJFXcn8GSe6F` (one repo besides knk-workspace), started 2026-11-19 |
 | L4 P1 stock core API: storages, ledger, reconciler, capacity, roll-up | #97 | Not started | — | — | — | — |
 | L5 P1b stock web app | #675 | Not started | — | — | — | — |
 | L6 P2 world API: structure subtypes, TownId, placement rules | #91 | Not started | — | — | — | — |
@@ -95,6 +101,21 @@
 10. **L1 started right after L0's API merge.** L1 (#326) needs only knk-web-api, L0 no longer ran there, and L1 does not
    build on L0, so the tier:3 smoke gate does not hold it. Alternatives: (a) wait for the developer's L0 smoke test:
    not required by charter § 2.3 for an unrelated link.
+
+11. **`next` CI after L0 (2026-11-19).** The `next` run for `7d213fd6` failed one test,
+   `RealtimeHubTests.UserStateEvent_FromAServiceScope_ReachesTheGameServer` (Expected 2, Actual 1), unrelated to L0.
+   It passed on both PR runs and on the next `next` head `e940aef1`, which contains L0. Treated as flaky and filed as
+   #801, not a blocker. Alternatives: (a) revert L0: the failure is not L0's; (b) stop merging until it is fixed: the
+   current `next` head is green.
+12. **L1 merge (2026-11-19).** § 6 checks held (branch contained `next` `e940aef1` with the siege migration; L1's
+   migration was generated on top of it; CI green; Codex at its usage limit, no findings; scope matched #326). Merged:
+   API #53 `0d6e369a`, workspace #798 `4595e6d8`.
+13. **After L1: L2 and L3 in parallel; the API idles.** L2 (plugin) and L3 (web app) have open gates and use different
+   repos. The next API link, L4 (#97), builds on L0 and is tier:3, so it waits for the developer's smoke test of L0
+   (charter § 2.3). L6 needs L4. Alternatives: (a) start L4 without the smoke test: charter § 2.3 forbids it unless
+   the developer says otherwise; (b) run an API link out of order: every other API link depends on L4 or later.
+14. **Territory docs at the end of territory.** #326 is the parent of L1–L3, so its `documentation` sub-issue starts
+   once L2 and L3 are merged, not now. Alternatives: (a) a docs issue per link: three docs sessions on one feature.
 
 ## 4. Link blocks
 
