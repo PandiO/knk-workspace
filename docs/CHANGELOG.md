@@ -4,6 +4,45 @@ This is a human-readable record of capabilities merged into the V3 default branc
 
 ## Unreleased — on feature branches, not merged
 
+- **Yield areas API: areas, surveys, yield tables and Derived/Hybrid yields** ([PandiO/knk-workspace#138](https://github.com/PandiO/knk-workspace/issues/138),
+  link L11 of the production, storage and transport chain; [production kinds](specs/production-storage-transport/PRODUCTION_KINDS.md)
+  § 2-4). Production structures can now produce what their land holds. A structure has **yield areas** (a WorldGuard
+  region, a cuboid, a polygon or a radius around it); the API keeps each area's bounding box and size and refuses an
+  area over its level's cap (blocks for fields and pastures, volume for quarries and mines, radius for loggers,
+  fisheries and florists) or an exclusive area (fields, quarries, mines, pastures) that overlaps another exclusive area
+  of the same model. The game server **surveys** the areas (the plugin link #679) and reports what it counted, such as
+  `TREE:OAK:LARGE ×12` or `BLOCK:COAL_ORE ×340`; the API keeps every survey as history (with a trend per unit) and
+  queues areas for the next survey: on creation, on a staff request ("survey now"), and once a day. A structure's
+  **yield source** is `Hybrid` by default (the survey with staff pins, exclusions and scales per output), `Derived`
+  (the survey only) or `Configured` (rates staff enter, never surveyed); structures that existed before stay
+  `Configured`. Each production kind has a **yield table** (survey unit → output, rate per unit per hour, byproduct
+  share, from which level), a survey profile and **primary outputs** that get a multiplier (a coal mine's coal). After
+  every survey or override change the structure gets a production line for each output it yields; the engine computes
+  the base rate from the latest surveys, and units in overlapping shared areas (two loggers in one forest) count an
+  equal part for each structure. An optional ±10% variation per kind (P-D9) and the primary multiplier show in the cycle
+  trace. Background work (the survey queue and survey reports) runs only with `Production:Enabled` on; the CRUD works
+  while it is off. Also #831: a warehouse or production structure update answers 200 with the placement warnings, error
+  messages lose the " (Parameter 'dto')" suffix, and the Structure form can make a rural structure.
+  knk-web-api: entities `ProductionArea`, `AreaSurvey` (with units), `ProductionYieldRow`, `ProductionKindPrimaryOutput`,
+  `ProductionYieldOverride`; `ProductionStructure.YieldSource`; `ProductionKind.SurveyProfileJson`,
+  `SurveyProfileVersion`, `PrimaryMultiplier`, `yieldTable` and `primaryOutputs`; endpoints `api/ProductionAreas`
+  (+ `{id}/overlaps`, `survey-due`, `POST {id}/surveys`), `api/AreaSurveys` (read only, + `trend`),
+  `api/ProductionYieldOverrides`, and on `api/ProductionStructures` `GET {id}/yield` (the rate explanation),
+  `POST {id}/survey` and `POST {id}/materialize`; form and display seeds `ProductionArea`, `ProductionYieldOverride`, the
+  display seed `AreaSurvey`, and new versions `ProductionKind` v2, `ProductionStructure` v3 and `Structure` v3 (form).
+  Writes need `knk.admin.world` (delete also `knk.admin.delete`; survey reports the plugin key or `knk.admin.world`);
+  reads the World area node or the plugin key. Smoke test:
+  [production smoke test § 5](guides/production-storage-transport-smoke-test.md#5-phase-p4-yield-areas-and-surveys-138-api-679-plugin-680-web-app-tier3).
+  Admin steps:
+  1. Apply the migration `AddProductionYieldAreas` (`dotnet ef database update`; additive: six tables, three kind
+     columns with each kind's survey profile, and `production_structures.YieldSource`, `Configured` for existing rows).
+  2. Import the form and display seeds `ProductionArea` and `ProductionYieldOverride` and the display seed `AreaSurvey`,
+     and make the new versions of `ProductionKind` (v2, form and display), `ProductionStructure` (v3, form and display)
+     and `Structure` (v3, form) the default.
+  3. Fill each kind's yield table (`PUT api/ProductionKinds/<id>` with `yieldTable`; the web app editor comes with
+     #680): no table rows are seeded, so a survey yields nothing until they exist.
+  4. No `api.env` key and no plugin `config.yml` change.
+
 - **Production engine API: kinds, levels, production lines, modifiers, weather and the sweep** ([PandiO/knk-workspace#86](https://github.com/PandiO/knk-workspace/issues/86),
   link L9 of the production, storage and transport chain; [production kinds](specs/production-storage-transport/PRODUCTION_KINDS.md)
   § 2-5, [design](specs/production-storage-transport/DESIGN.md) § 9). Production structures now produce. A

@@ -662,6 +662,15 @@ promotes `next` lists them here with its tag:
    `catchUpCapHours` 24, `weatherDayMinutes` 20), and the engine runs only with `Production:Enabled` on. Set-up
    afterwards: import the six production engine form and display seeds and make the v2 seeds of `ProductionStructure`,
    `ItemBlueprint` (form) and `Storage` (display) the default ([changelog](../CHANGELOG.md) entry of #86).
+9. `20261119205631_AddProductionYieldAreas` (#138, yield areas P4): additive; six new tables (`production_areas`,
+   `area_surveys`, `area_survey_units`, `production_yield_rows`, `production_kind_primary_outputs`,
+   `production_yield_overrides`), the columns `production_kinds.SurveyProfileJson`, `SurveyProfileVersion` (1) and
+   `PrimaryMultiplier` (1.5), and `production_structures.YieldSource` (`Configured` for every existing structure, so
+   their P3 lines keep their rates; new structures default to `Hybrid`). Data written: a survey profile for each of the
+   eight seeded kinds. No yield table rows are seeded: fill them per kind before surveys can yield. No `api.env` key;
+   the survey queue and reports run only with `Production:Enabled` on. Set-up afterwards: import the P4 form and display
+   seeds and make `ProductionKind` v2, `ProductionStructure` v3 and `Structure` v3 the default ([changelog](../CHANGELOG.md)
+   entry of #138).
 
 Earlier: `v0.2` (`58e3218`, 2026-11-14) added `20261109081203_AddTempRegionReleases` (#269), and `v0.1` (`6d5e9c1`,
 2026-11-13) added `20261113161725_SeedStaffFreezeNodes` (gives the Staff group `knk.freeze` and `knk.unfreeze`, #367).

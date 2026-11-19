@@ -12,8 +12,9 @@ automated in CI and 2 partly (tagged); every step can still be run by hand; not 
 11 steps automated (one through a plugin scenario on a real Paper server) and 5 partly (tagged); not run. § 3.2 (world
 web app, #676): 8 of 12 steps automated in CI and 4 partly (tagged); every step can still be run by hand; not run. § 4.1 (production
 engine API, #86): 16 of 18 steps automated in CI and 2 partly (tagged); every step can still be run by hand; not
-run. Other sections not yet automated (the links tag them).
-**Last updated:** 2026-11-19 (§ 4.1 production engine API, link L9, #86); 2026-11-19 (§ 3 intro, § 3.0, § 3.2 and § 3.3 intros: builds from `next`; § 3.3 precondition 4: `/knk regions repair` needs `knk.admin.regions`, `/knk territory rebuild` `knk.admin.world.territory`; docs #830); 2026-11-19 (§ 3.2 world web app, link L7, #676); 2026-11-19 (§ 3.3 world plugin, link L8, #677); 2026-11-19 (§ 3.1 world API, link L6, #91); 2026-11-19 (§ 2.2 stock web app, link L5, #675); 2026-11-19 (§ 2 stock core API, link L4, #97); 2026-11-19 (§ 1.0 and § 1.3 preconditions: builds from `next` instead of the link branches; guides: [territory admin guide](admin/territory-admin-guide.md), docs #806); 2026-11-19 (§ 1.4 territory web app, link L3, #690); 2026-11-19 (§ 1.3 territory plugin, link L2, #689); 2026-11-19 (§ 1 territory API, link L1, #326); 2026-11-19 (§ 0 item identity, link L0, #141); 2026-11-16 (draft from the design, territory and phases P1-P12)
+run. § 5.1 (yield areas API, #138): 17 of 18 steps automated in CI and 1 partly (tagged); every step can still be run by
+hand; not run. Other sections not yet automated (the links tag them).
+**Last updated:** 2026-11-19 (§ 5 yield areas API, link L11, #138; § 5.1 step 18: #831); 2026-11-19 (§ 4.1 production engine API, link L9, #86); 2026-11-19 (§ 3 intro, § 3.0, § 3.2 and § 3.3 intros: builds from `next`; § 3.3 precondition 4: `/knk regions repair` needs `knk.admin.regions`, `/knk territory rebuild` `knk.admin.world.territory`; docs #830); 2026-11-19 (§ 3.2 world web app, link L7, #676); 2026-11-19 (§ 3.3 world plugin, link L8, #677); 2026-11-19 (§ 3.1 world API, link L6, #91); 2026-11-19 (§ 2.2 stock web app, link L5, #675); 2026-11-19 (§ 2 stock core API, link L4, #97); 2026-11-19 (§ 1.0 and § 1.3 preconditions: builds from `next` instead of the link branches; guides: [territory admin guide](admin/territory-admin-guide.md), docs #806); 2026-11-19 (§ 1.4 territory web app, link L3, #690); 2026-11-19 (§ 1.3 territory plugin, link L2, #689); 2026-11-19 (§ 1 territory API, link L1, #326); 2026-11-19 (§ 0 item identity, link L0, #141); 2026-11-16 (draft from the design, territory and phases P1-P12)
 **Design:** [specs/production-storage-transport/DESIGN.md](../specs/production-storage-transport/DESIGN.md) (§17
 acceptance A01-A27, §18 links) · [territory](../specs/territory/DESIGN.md) · [shops](../specs/shops/DESIGN.md) ·
 **Issue:** [PandiO/knk-workspace#22](https://github.com/PandiO/knk-workspace/issues/22)
@@ -1056,28 +1057,164 @@ waived the smoke gates of L4 and L6 on 2026-11-19; the coordinator reads that as
 
 ## 5. Phase P4: yield areas and surveys (#138 API, #679 plugin, #680 web app; tier:3)
 
-*Draft from the design (2026-11-16); the links update it to what was built and tag the automated steps.*
+Built so far: link L11, the API (knk-web-api, migration `AddProductionYieldAreas`; branch `claude/production-p4`, PR into
+`next`). The survey runner, `/knk production survey|area show` and the `CaptureRadius` world task are link L12 (#679);
+the area capture, survey viewer and Hybrid override editor are link L13 (#680). Until then § 5.1 runs with a REST client
+(or Swagger) against the API, the plugin's part played by `POST api/ProductionAreas/<id>/surveys` with the plugin key.
+18 steps in § 5.1: 17 automated in CI and 1 partly (tagged); every step can still be run by hand; manual steps not run.
+Full manual run about 45 minutes (an hour of it waiting, or `POST api/Production/run-now`); the untagged part of the
+partly tagged step about 5 minutes. The tests are in knk-web-api `Tests/.../Services/Production/ProductionYieldTests.cs`,
+`Api/ProductionYieldControllersTests.cs`, `Services/Production/PlacementRulesTests.cs` (#831),
+`Migrations/AddProductionYieldAreasTests.cs` and, with `KNK_TEST_MYSQL`, `MySql/ProductionYieldMySqlTests.cs`. The
+developer waived the smoke gates of L4 and L6 on 2026-11-19; the coordinator reads that as covering this link too (it
+builds on L9, whose smoke test is open).
 
 ### 5.0 Preconditions
 
-1. A logger with a captured radius area over a forest, yield source `Hybrid`; a second logger whose area overlaps the
-   first one's; the quarry from § 4 left on `Configured`.
+1. knk-web-api with the migrations up to `AddProductionYieldAreas` applied. The migration gives every production kind
+   a survey profile (version 1: Farm `CROP`, Logger `TREE` and `SAPLING`, Quarry and Mine `BLOCK`, Fishery `WATER`,
+   Flower farm and Florist `FLOWER`, Animal farm `ENTITY`) and a primary multiplier of 1.5. Production structures that
+   existed before keep yield source `Configured`; new ones are `Hybrid` (P-D1).
+2. Everything of § 4.0, with `Production:Enabled` on except in step 17: the quarry **Quarry** from § 4 (Configured,
+   its Cobblestone line), a **Staff** token (`knk.admin.world`, `knk.admin.content`), a **Visitor** token and the plugin
+   key.
+3. Blueprints **Oak log**, **Birch log**, **Stick** and **Apple** (shadow blueprints from § 0 or made by hand); note
+   their ids.
+4. The level caps seeded by `AddProductionEngine`: Logger level 1 radius 32 (level 2: 36), Quarry and Mine level 1
+   volume 262,144 (64 × 64 × 64).
 
-### 5.1 Steps
+### 5.1 Steps (API)
 
-1. Create the logger. **Expected:** a survey runs on creation; the survey viewer lists trees by species and size; the
-   production lines come from the survey. (A10)
-2. As Staff, run `/knk production survey <logger>` and the web app "survey now" button. **Expected:** a new survey row
-   each time. (A10)
-3. Check the quarry (`Configured`). **Expected:** no survey has ever run for it. (A10, G5)
-4. Leave the server running over the daily survey time with the logger's chunks loaded. **Expected:** one scheduled
+1. [partly automated: knk-web-api `FormConfigurationSeedFilesTests`, `DisplayConfigurationSeedFilesTests` (every seed
+   dry-runs and imports); by hand: open the forms and pages in the web app]
+   As Staff, import the form and display seeds `ProductionArea` and `ProductionYieldOverride`, the display seed
+   `AreaSurvey`, and the new versions `ProductionKind - Default (seed v2)` (form and display), `ProductionStructure -
+   Default (seed v3)` (form and display) and `Structure - Default (seed v3)` (form), each with "make default".
+   **Expected:** each imports; the ProductionKind form has a "Yield" step (survey profile, primary multiplier); the
+   ProductionStructure form has "Yield source" after "Production kind"; the Structure form's "Placement" step has
+   "Town (rural)" and no required district fields (#831). (A23)
+2. [automated: `AddProductionYieldAreasTests.Up_AddsColumnsWithDefaults_ExistingStructuresStayConfigured`,
+   `Up_SeedsASurveyProfilePerKind_AndChangesNothingElse`]
+   `GET api/ProductionStructures/<Quarry>` and `GET api/ProductionKinds/2`. **Expected:** the quarry's `yieldSource` is
+   `Configured` and it still produces its Cobblestone; the Logger kind has `surveyProfileJson`
+   `{"unitTypes":["TREE","SAPLING"]}`, `surveyProfileVersion` 1, `primaryMultiplier` 1.5, an empty `yieldTable`.
+3. [automated: `ProductionYieldTests.TheKindsYieldTableAndProfile_AreChecked_AndAProfileChangeRaisesItsVersion`]
+   `PUT api/ProductionKinds/2` with `"yieldTable": [ { "unitKey": "TREE:OAK:LARGE", "itemBlueprintId": <Oak log>,
+   "ratePerUnitPerHour": 2 }, { "unitKey": "TREE:OAK:*", "itemBlueprintId": <Oak log>, "ratePerUnitPerHour": 1 },
+   { "unitKey": "TREE:BIRCH:*", "itemBlueprintId": <Birch log>, "ratePerUnitPerHour": 1 }, { "unitKey": "TREE:OAK:*",
+   "itemBlueprintId": <Stick>, "ratePerUnitPerHour": 0.5, "byproductChance": 0.2 } ]`. **Expected:** 204; `GET` lists
+   the four rows. A unit key `TREE:*:LARGE` or a `byproductChance` of 2 is 400; a changed `surveyProfileJson` raises
+   `surveyProfileVersion` to 2, the same profile again doesn't.
+4. [automated: `ProductionYieldTests.AnArea_OverTheLevelsCap_IsRefusedWithTheMaximum_AndALevelUpAllowsMore`,
+   `…Shapes_ComputeTheirBoundingBoxAndSize_AndNeedTheirFields`, `…ARadius_CentresOnTheStructuresLocation_AndAStructureWithoutKindHasNoArea`]
+   Create the rural logger **Logger A** in Phoenix with `"productionKindId": 2` (no yield source). Then `POST
+   api/ProductionAreas` with `{ "productionStructureId": <Logger A>, "name": "Forest", "shape": "Radius", "radius": 33,
+   "centerX": 0, "centerY": 64, "centerZ": 0 }`. **Expected:** the logger's `yieldSource` is `Hybrid`; the area is 400
+   "The area is 33 (radius); level 1 of Logger allows at most 32." With `"radius": 20` it is 201 with `size` 20,
+   `sizeUnit` `radius`, `maxSize` 32, `exclusive` false and the bounding box −20..20; without a centre it centres on
+   the structure's Location. (A11, G6)
+5. [automated: `ProductionYieldTests.ANewArea_IsDueOnCreation_ThenOnceADay_AndOnRequestFirst`]
+   `GET api/ProductionAreas/survey-due` with the plugin key. **Expected:** the Forest area with `trigger` `Creation`,
+   the Logger kind's `surveyProfileJson` and `surveyProfileVersion`, and `overlappingSharedAreas` empty. (A10)
+6. [automated: `ProductionYieldTests.Derived_MaterializesALinePerYieldedOutput_AndProducesWhatTheForestHolds`,
+   `…ASurveyReport_ChecksItsUnits_AndALateOlderSurveyStaysInTheHistoryOnly`]
+   `POST api/ProductionAreas/<Forest>/surveys` with the plugin key and `{ "contentHash": "abc", "units": [ { "unitKey":
+   "TREE:OAK:LARGE", "count": 10 }, { "unitKey": "TREE:OAK:SMALL", "count": 4 }, { "unitKey": "TREE:BIRCH:MEDIUM",
+   "count": 6 }, { "unitKey": "TREE:SPRUCE:LARGE", "count": 3 } ] }`. **Expected:** 200 with `trigger` `Creation` and
+   `materialization.linesCreated` three lines (Oak log, Birch log, Stick) with `rateSource` `Hybrid`; survey-due no longer
+   lists the area. `GET api/ProductionStructures/<Logger A>/yield`: Oak log 24 per hour (10 large × 2, exact row beats
+   the prefix, + 4 small × 1), Birch log 6, Stick 1.4 (14 oaks × 0.5 × 0.2, a share, not a roll), each with its
+   contributions (area, unit, count, share, row, rate); `unmatchedUnitKeys` `TREE:SPRUCE:LARGE`. A unit key with a space,
+   a negative count, `sharedBy` 0 or a key listed twice is 400. (A10)
+7. [automated: `ProductionYieldTests.Derived_MaterializesALinePerYieldedOutput_AndProducesWhatTheForestHolds`]
+   Wait an hour, or `POST api/Production/run-now` an hour later. **Expected:** the Output storage holds 24 Oak log,
+   6 Birch log and 1 Stick; the cycle records show `rateSource` `Hybrid` and `baseRatePerHour` from the survey.
+8. [automated: `ProductionYieldTests.ATreeInTwoLoggersAreas_YieldsHalfToEach`]
+   Create **Logger B** with a radius area centred 10 blocks east. `GET api/ProductionAreas/<Forest>/overlaps` and
+   survey-due. **Expected:** each lists the other's area (B's due entry under `overlappingSharedAreas`). Report A's
+   survey with 6 `TREE:OAK:LARGE` (`sharedBy` 1) and 4 `TREE:OAK:LARGE` with `"sharedBy": 2`, B's with the same 4 shared
+   trees. **Expected:** A's Oak log base is 16 (6 × 2 + 4 × 2 ÷ 2), B's 4, each shared contribution with `share` 0.5:
+   the shared trees yield 8 per hour in total, however many loggers crowd them. (A11, G7)
+9. [automated: `ProductionYieldTests.Hybrid_PinsExclusionsAndScales_ApplyAfterTheSurvey`]
+   `POST api/ProductionYieldOverrides` with `{ "productionStructureId": <Logger A>, "itemBlueprintId": <Apple>, "kind":
+   "Pin", "value": 5 }`, then an `Exclude` of Birch log and a `Scale` 0.5 of Oak log. **Expected:** the Apple line exists
+   at once with `rateSource` `Hybrid`, whatever the survey says; the yield view shows Oak log derived 16 → base 8
+   (Scale), Birch log Exclude → 0, Apple Pin 5. A second override for the same blueprint or a pin of 0 is 400. Delete
+   the pin: the Apple line stays with a base of 0. (A10)
+10. [automated: `ProductionYieldTests.ANewArea_IsDueOnCreation_ThenOnceADay_AndOnRequestFirst`,
+    `Api/ProductionYieldControllersTests.AreasSurveysAndTheYieldView_AnswerWithTheRightStatus`]
+    "Survey now": `POST api/ProductionStructures/<Logger A>/survey` (optionally `{ "productionAreaId": <Forest> }`).
+    **Expected:** 200 with the area, `surveyRequestedAt` set and `surveyRequestTrigger` `Admin`; survey-due lists it
+    with `trigger` `Admin`; the next report has `trigger` `Admin` and is a new row in `POST api/AreaSurveys/search`
+    (filter `productionAreaId`), which lists every survey of the area, newest first. (A10)
+11. [automated: `ProductionYieldTests.AConfiguredStructure_IsNeverSurveyed`]
+    Give the Quarry an area (`"shape": "Cuboid"`, two corners). **Expected:** no `surveyRequestedAt`; the quarry never
+    appears in survey-due; `POST api/ProductionStructures/<Quarry>/survey` and a survey report for its area are 409
+    "The structure is Configured: it is never surveyed (G5)". (A10, G5)
+12. [automated: `ProductionYieldTests.ANewArea_IsDueOnCreation_ThenOnceADay_AndOnRequestFirst`]
+    Leave Logger A's area for a day after its last survey. **Expected:** survey-due lists it with `trigger`
+    `Scheduled` after 24 hours, not before. (A10)
+13. [automated: `ProductionYieldTests.TheTrend_ListsEachUnitKeyPerSurvey_OldestFirst`]
+    Report a second survey with fewer oaks (the forest cut down), then `GET api/AreaSurveys/trend?productionAreaId=<Forest>`.
+    **Expected:** the surveys oldest first and per unit key a count per survey (0 where a key is missing); the next
+    settle runs at the lower rate, and an output the survey no longer yields keeps its line at base 0
+    (`materialization.linesWithoutYield`).
+14. [automated: `ProductionYieldTests.ExclusiveAreasOfTheSameModel_MayNotOverlap_SharedOnesMay`,
+    `MySql/ProductionYieldMySqlTests`]
+    Give the Quarry a pit (cuboid 0..20) and create a Mine with a shaft that cuts into it. **Expected:** 409 "The area
+    overlaps the exclusive area 'Pit' of Quarry: exclusive ExclusiveVolume areas may not overlap."; next to it or in
+    another world it is 201; the two loggers' radii overlap without complaint.
+15. [automated: `ProductionYieldTests.MinLevelRows_StartAtTheirLevel_AndPrimaryOutputs_GetTheKindsMultiplierInTheTrace`]
+    `PUT api/ProductionKinds/2` with `"primaryMultiplier": 2, "primaryOutputs": [ { "itemBlueprintId": <Oak log> } ]`
+    and a row `TREE:OAK:*` → Apple with `"minLevel": 3`; raise a Derived logger to level 3. **Expected:** the Apple line
+    appears only at level 3; the Oak log trace lists "Primary output of Logger" (source `Primary`, Multiply 2), other
+    outputs and Configured lines don't get it.
+16. [automated: `ProductionYieldTests.DerivedIgnoresOverrides_AndSwitchingToConfigured_TurnsSurveyLinesIntoConfiguredOnes`,
+    `…AConfiguredLine_OnAHybridStructure_KeepsItsRate`]
+    Switch Logger A to `"yieldSource": "Derived"`, then `"Configured"`. **Expected:** as Derived the yield view notes
+    that the Hybrid overrides are ignored; as Configured its lines become `Configured` (rate kept, 0 unless staff set
+    one) and the yield view says it is never surveyed. A source the kind doesn't allow is 400; a `Derived` line on a
+    Hybrid structure is 400; a Configured line staff made on a Hybrid structure keeps its rate
+    (`materialization.skippedConfigured`).
+17. [automated: `ProductionYieldTests.WhileTheFeatureIsOff_NothingIsDue_AndReportsAreRefused_ButAreasCanBeEdited`,
+    `Api/ProductionYieldControllersTests.WhileTheFeatureIsOff_TheQueueIsEmpty_AndReportsAre409`, `ReadAccessRulesTests`,
+    `EndpointAccessRulesTests`, `DashboardChangeAccessRulesTests`, `DeleteAccessRulesTests`]
+    Turn `Production:Enabled` off. **Expected:** survey-due is an empty list and a survey report is 409; areas,
+    overrides and kinds can still be edited. As Visitor, `POST api/ProductionAreas` is 403. (A21)
+18. [automated: `PlacementRulesTests.AnUpdate_ReturnsThePlacementWarnings_AsCreateDoes`,
+    `…PlainMessage_DropsTheParameterSuffix_OnlyWhenThereIsOne`, `…TheStructureSeedV3_HasATownField_SoARuralStructureCanBeMadeFromIt`,
+    `Api/ProductionYieldControllersTests.AreasSurveysAndTheYieldView_AnswerWithTheRightStatus`]
+    #831: `PUT api/ProductionStructures/<Quarry>` (or a warehouse) with its body. **Expected:** 200 with the saved
+    structure and its `placementWarnings` (it was 204); with `"level": 42` the 400 body is `{ "error": "level must be 1
+    to 10." }` without " (Parameter 'dto')"; a rural plain structure can be made from the Structure form v3.
+
+### 5.2 Steps (plugin #679, draft)
+
+*Draft for link L12; it updates these steps to what it builds and tags the automated ones.*
+
+1. Create a logger with a captured radius area (the `CaptureRadius` world task). **Expected:** a survey runs on
+   creation; the survey lists trees by species and size; the production lines come from the survey. (A10)
+2. As Staff, run `/knk production survey <logger>`. **Expected:** a new survey row. (A10)
+3. Leave the server running over the daily survey time with the logger's chunks loaded. **Expected:** one scheduled
    survey that day. (A10)
-5. Cut down a large part of the forest. **Expected:** a resurvey after the notable-change threshold; lower rates. (A10)
-6. Check a tree inside both loggers' areas. **Expected:** each logger counts half of it. (A11)
-7. Try to capture an area larger than the level 1 maximum for the kind. **Expected:** refused with the maximum. (A11)
-8. Add a Hybrid pin (always produce apples at 5 per hour). **Expected:** the line exists after the next materialization
-   whatever the survey says. (A10)
-9. Watch the tick metrics during a survey. **Expected:** no main-thread spike from block reads.
+4. Cut down a large part of the forest. **Expected:** a resurvey after the notable-change threshold; lower rates. (A10)
+5. Check a tree inside both loggers' areas. **Expected:** the survey reports it with `sharedBy` 2; each logger counts
+   half of it. (A11)
+6. `/knk production area show <logger>`. **Expected:** the outline is drawn with particles.
+7. Watch the tick metrics during a survey. **Expected:** no main-thread spike from block reads.
+
+### 5.3 Steps (web app #680, draft)
+
+*Draft for link L13; it updates these steps to what it builds and tags the automated ones.*
+
+1. Capture an area larger than the level 1 maximum for the kind. **Expected:** refused with the maximum. (A11)
+2. Open the logger's survey viewer. **Expected:** the composition table, the 2D plot and the trend; each rate explained
+   from its units, shares and yield rows. (A10)
+3. Add a Hybrid pin (always produce apples at 5 per hour) in the override editor. **Expected:** the line exists after
+   the save whatever the survey says. (A10)
+4. Check the quarry (`Configured`). **Expected:** the yield source is shown and no survey has ever run for it; the
+   "survey now" button is off. (A10, G5)
+5. Press "survey now" on the logger. **Expected:** a new survey row once the game server has run it. (A10)
 
 ## 6. Phase P5: transport core, simulated (#79 API, #681 plugin, #682 web app; tier:3)
 

@@ -6,11 +6,12 @@
 (#689, link L2) and web app (#690, link L3) are merged into `next` (knk-web-api `0d6e369a`, knk-plugin `55804b11`,
 knk-web-app `89751315`, 2026-11-19). P1 stock core (#97 API, link L4; #675 web app, link L5) is merged into `next`
 (knk-web-api `2e7d4e81`, knk-web-app `9f46cb49`, migration `AddStockCore`, 2026-11-19). P2 world API (#91, link L6) is
-merged into `next` (knk-web-api `fcfced27`, migration `AddProductionWorld`, 2026-11-19). P3 production engine API (#86, link L9) is merged into `next` (knk-web-api `6c648f60`, migration `AddProductionEngine`, 2026-11-19). Decisions are in
+merged into `next` (knk-web-api `fcfced27`, migration `AddProductionWorld`, 2026-11-19). P3 production engine API (#86, link L9) is merged into `next` (knk-web-api `6c648f60`, migration `AddProductionEngine`, 2026-11-19). P4 yield areas API (#138, link L11) is in review (knk-web-api branch `claude/production-p4`, migration
+`AddProductionYieldAreas`, 2026-11-19). Decisions are in
 [DESIGN §14](DESIGN.md#14-decisions), [PRODUCTION_KINDS §9](PRODUCTION_KINDS.md#9-decisions) and
 [TOWN_LOGISTICS §8](TOWN_LOGISTICS.md#8-decisions); the few still open are listed there. Every item is marked
 **V1** or **Later**. The production structures work and the garrison/guard NPC work ship in the **same test phase**.
-**Last updated:** 2026-11-19 (P3 production engine API #86 merged into `next`); 2026-11-19 (P2c world plugin #677 in review); 2026-11-19 (P2 world API #91 merged into `next`); 2026-11-19 (P1b stock web app #675 in review; P1 API #97 merged into `next`); 2026-11-19 (P1 stock core API #97 in review); 2026-11-19 (territory plugin #689 and web app #690 merged into `next`); 2026-11-19 (territory API #326 in review); 2026-11-19 (item identity #141 merged into `next`, docs #796); 2026-11-19 (item identity #141 in review); 2026-11-11 (open questions answered, [decision record §11](DECISIONS_2026-11-05.md#11-follow-up-decisions-2026-11-11); issues #324, #325)
+**Last updated:** 2026-11-19 (P4 yield areas API #138 in review); 2026-11-19 (P3 production engine API #86 merged into `next`); 2026-11-19 (P2c world plugin #677 in review); 2026-11-19 (P2 world API #91 merged into `next`); 2026-11-19 (P1b stock web app #675 in review; P1 API #97 merged into `next`); 2026-11-19 (P1 stock core API #97 in review); 2026-11-19 (territory plugin #689 and web app #690 merged into `next`); 2026-11-19 (territory API #326 in review); 2026-11-19 (item identity #141 merged into `next`, docs #796); 2026-11-19 (item identity #141 in review); 2026-11-11 (open questions answered, [decision record §11](DECISIONS_2026-11-05.md#11-follow-up-decisions-2026-11-11); issues #324, #325)
 **Design:** [DESIGN.md](DESIGN.md), [PRODUCTION_KINDS.md](PRODUCTION_KINDS.md), [TOWN_LOGISTICS.md](TOWN_LOGISTICS.md),
 [shops DESIGN](../shops/DESIGN.md), [NPC platform](../npc-platform/DESIGN.md) (lifecycle).
 **Evidence:** [V2 scan](../../reports/2026-10-09-v2-production-storage-transport-scan.md).
@@ -191,6 +192,13 @@ zone per day, identical on replay; worker factor 100/50/0%; upgrade costs (stock
 ## P4 — Yield areas and surveys · [#138](https://github.com/PandiO/knk-workspace/issues/138) (`[KNG-96]`)
 
 All **V1** (unchanged in rev. 3; Hybrid default confirmed, P-D1).
+
+**Status (2026-11-19):** API built in link L11 (in review, knk-web-api branch `claude/production-p4`, migration
+`AddProductionYieldAreas`): everything in the API list below. The survey runs in the plugin and reports unit counts per
+area, with `sharedBy` for units in overlapping shared areas (the API lists those areas in its survey queue), so the
+equal split is computed from what the plugin counted; exclusive overlaps are checked from bounding boxes. Agent
+decisions on knk-web-api PR `claude/production-p4` (e.g. a pin replaces the survey's rate; lines whose output
+disappears stay with base 0; no yield table rows seeded). Plugin: #679. Web app: #680.
 
 **API:**
 
