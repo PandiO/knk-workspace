@@ -1,9 +1,9 @@
 # Territory, grasp and public safety — Design
 
-**Status:** **Decided 2026-11-16** (developer, with the production design, #22). Before: draft. Written from the developer's voice design session of 2026-11-11. Nothing is implemented. Items
+**Status:** **Decided 2026-11-16** (developer, with the production design, #22). Before: draft. Written from the developer's voice design session of 2026-11-11. The API part (link a, #326) is in review on knk-web-api `claude/production-t-a` (2026-11-19); the plugin (#689) and web app (#690) are not started. Items
 are tagged **[V1]**, **[Later]** or **[Parked]** (as in the production [DESIGN](../production-storage-transport/DESIGN.md)
 header).
-**Last updated:** 2026-11-16 (§2 crown land anchor, §10; #22 design pass); 2026-11-11 (§10: production reconciled; issue #326)
+**Last updated:** 2026-11-19 (status: API in review, #326); 2026-11-16 (§2 crown land anchor, §10; #22 design pass); 2026-11-11 (§10: production reconciled; issue #326)
 **Supersedes:** the region-based parts of production [DESIGN §3.4](../production-storage-transport/DESIGN.md#34-territory-and-region-rules-v1-2026-11-11)
 (a required `WgRegionId`, region rules T1, T3, T4 and T7 as WorldGuard checks, the `TERRITORY` managed region kind).
 See [decision record §13](../production-storage-transport/DECISIONS_2026-11-05.md#13-territory-is-computed-not-a-worldguard-region-2026-11-11).
