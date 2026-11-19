@@ -32,7 +32,7 @@
 | L2 P2 model, snapshot, domain search Location | #103 | Merged into next (2026-11-18) | `claude/navigation-destination-engine`: knk-web-api `a49fba23`, knk-plugin `61fe656a`, knk-workspace `30894797` | [knk-web-api#49](https://github.com/PandiO/knk-web-api/pull/49) (merge `6094276d`), [knk-plugin#80](https://github.com/PandiO/knk-plugin/pull/80) (merge `2f1c783e`), [knk-workspace#760](https://github.com/PandiO/knk-workspace/pull/760) (merge `560dd839`) | API build-and-test, mysql-tests, fresh-database green; plugin build + paper-boot green; Codex skipped (usage limit) | subagent of the coordinator (two repos besides knk-workspace, SKILL § 4.1.4 item 2) |
 | L3 P3 switch-over behind the flag | #69 | Merged into next (2026-11-18) | `claude/navigation-destination-engine`: knk-plugin `03ec14ce`, knk-workspace `9dda7c92` | [knk-plugin#81](https://github.com/PandiO/knk-plugin/pull/81) (merge `073fa4cf`), [knk-workspace#761](https://github.com/PandiO/knk-workspace/pull/761) (merge `d484361e`) | build + paper-boot green on the PR; Codex skipped (usage limit) | create_session session_01R1w2UvmCT8TsW9NNue38Vg |
 | L4 P4 hard blocks as scopes, live re-validation | #62 | Merged into next (2026-11-18) | `claude/navigation-destination-engine`: knk-plugin `d38fb46c`, knk-workspace `0b1274d4` | [knk-plugin#82](https://github.com/PandiO/knk-plugin/pull/82) (merge `3e04ba8f`), [knk-workspace#762](https://github.com/PandiO/knk-workspace/pull/762) (merge `9db3df91`) | build + paper-boot green on the PR; Codex skipped (usage limit) | create_session session_01R1w2Ux1p4b4KMqSayuzntM |
-| L5 phase 4b removal of old paths and the flag | #747 | Waiting: developer's live test of smoke § 3 and § 4 with the flag on (gate); plugin navigation slot free since off-road L9 #709 merged 23:28 (plugin `c7be34fb`) | — | — | — | — |
+| L5 phase 4b removal of old paths and the flag | #747 | Waiting: developer's live test of smoke § 3 and § 4 with the flag on (gate); off-road fix link #771 holds the plugin navigation slot since 2026-11-19 06:12 | — | — | — | — |
 | L6 P5 arena duels provider and scope | #55 | Not started | — | — | — | — |
 
 ## 3. Coordinator decisions
@@ -165,6 +165,10 @@
     `Landmarks` port in `NavigationService` behind `navigation.landmarks`. The off-road chain's last link L6 (#706) waits
     for the developer, so L5 can start as soon as the live test passes (tell that coordinator when it starts).
     Alternatives: none.
+23. **Off-road fix link #771 takes the slot (2026-11-19 06:12).** A small tier:2 fix in `core/roads/walk` and the walk-leg
+    recompute in `NavigationService`, outside `core/navigation/destinations` and the engine handle. Agreed: my L5 still
+    waits for the live test. The off-road L6 (#706) is on hold by the developer, so after #771 no off-road plugin link is
+    queued. Alternatives: none.
 
 ## 4. Link blocks
 
