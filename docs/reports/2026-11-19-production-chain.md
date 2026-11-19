@@ -32,7 +32,7 @@
 | L0 Item identity: every obtainable item is a blueprint; generated "Uncurated" shadow blueprints (G4) | #141 | Merged into next (2026-11-19) | api `5daa3c6`, plugin `a6c5a2bc`, workspace `8ffdbb1a`; merges: api `7d213fd6`, plugin `2ef256e7`, workspace `ca3bcc98` | [api#51](https://github.com/PandiO/knk-web-api/pull/51), [plugin#89](https://github.com/PandiO/knk-plugin/pull/89), [ws#793](https://github.com/PandiO/knk-workspace/pull/793) | green (API PR checks; plugin build + paper-boot) | subagent of the coordinator (two repos besides knk-workspace, SKILL § 4.1.4.2), started 2026-11-19 |
 | L1 Territory API: holders, crown land entity (G10), power, range (G11), conflicts, loyalty | #326 | Merged into next (2026-11-19) | api `ff50ec1`, workspace `c4211d51`; merges: api `0d6e369a`, workspace `4595e6d8` | [api#53](https://github.com/PandiO/knk-web-api/pull/53), [ws#798](https://github.com/PandiO/knk-workspace/pull/798) | green (build-and-test, mysql-tests, fresh-database) | create_session `session_01R1w2Uwo46dJVo6Cpr8LzmG` (one repo besides knk-workspace), started 2026-11-19 |
 | L2 Territory plugin: chunk cache, lookup, BlueMap outlines | #689 | Running | — | — | — | create_session `session_01R1w2Uvhpo37DXAXpm2uqLp` (one repo besides knk-workspace), started 2026-11-19 |
-| L3 Territory web app | #690 | Running | — | — | — | create_session `session_01R1w2UuYHneFJFXcn8GSe6F` (one repo besides knk-workspace), started 2026-11-19 |
+| L3 Territory web app | #690 | In review (PRs open, not merged) | web app `0531422`, workspace `f3bd8f27` | [web#57](https://github.com/PandiO/knk-web-app/pull/57), [ws#803](https://github.com/PandiO/knk-workspace/pull/803) | web app green (build-and-test, e2e) | create_session `session_01R1w2UuYHneFJFXcn8GSe6F` (one repo besides knk-workspace), started 2026-11-19 |
 | L4 P1 stock core API: storages, ledger, reconciler, capacity, roll-up | #97 | Not started | — | — | — | — |
 | L5 P1b stock web app | #675 | Not started | — | — | — | — |
 | L6 P2 world API: structure subtypes, TownId, placement rules | #91 | Not started | — | — | — | — |
@@ -298,3 +298,79 @@ _(Each link appends its block here when it finishes.)_
        `reopen`), `api/Territory/towns/{id}` (effective ranges), `api/Territory/structures/{id}` (+ `loyalty`, `flag`);
        game settings section `production`.
     3. L6 (P2): rural `TownId` and `InsideTerritory` are yours; the structure flag and `TerritoryConflictId` exist.
+
+### 4.3 L3 — Territory web app (#690)
+
+1. **Scope done** (knk-web-app, plus essential docs in knk-workspace).
+    1. Holders and crown land: DTO types `src/types/dtos/territory/TerritoryDtos.ts`; clients `kingdomClient`,
+       `provinceClient`, `crownLandClient`, `territoryConflictClient` (search, fetch, `resolve`, `reopen`, delete; no
+       create/update), `territoryClient` (`towns/{id}`, `structures/{id}`, `loyalty`, `flag`, territory-only saves of
+       towns and districts); `Controllers` enum, `entityApiMapping` and `objectConfigs` columns (grouped, additive). The
+       dashboard, detail pages and the seeded Kingdom/Province/CrownLand forms work through the metadata framework;
+       crown land's region step is the same world task field as a district's (G10).
+    2. Town page: Territory panel (`src/components/territory/TownTerritoryPanel.tsx`): power, kingdom, province, range
+       and capital range, district list with ranges; edit power / kingdom / province (provinces of the kingdom only);
+       capital toggle per district (G11).
+    3. Conflict page: Contested zone panel (`TerritoryConflictPanel.tsx`): holders, area, overlap, detected / last
+       reported, flagged structures; award to either holder or mark redrawn with a note after a confirmation; reopen
+       (A05).
+    4. Structure page: Territory and loyalty panel (`StructureTerritoryPanel.tsx`): flag, conflict, own town, loyalty
+       (stored only), clear flag (A07).
+    5. Game settings: "Production and territory" card (`TerritorySettingsCard.tsx`): `production.enabled` and the range
+       settings with a worked example; Save off while a value is out of the API's bounds; `production` sent on save.
+    6. Helpers `src/utils/territory.ts` (range rule matching `TerritoryRules`, partial-save payloads, labels).
+    7. knk-workspace (branch from `next`): smoke guide § 1.4 (15 web app steps in full: 13 automated, 2 partly),
+       § 1 intro and preconditions, changelog entry, territory DESIGN and implementation plan status.
+2. **Commits and heads.** knk-web-app `claude/production-t-c` at `0531422` (3 commits, base `next` at `24c8a98`;
+   `next` had not moved at PR time or at the end); knk-workspace `claude/production-t-c` at `f3bd8f27` (1 commit + merge of
+   `origin/next` `2f0dc79c`, siege weapons L2 docs; CHANGELOG: both new entries kept).
+3. **PRs.** [knk-web-app#57](https://github.com/PandiO/knk-web-app/pull/57) (Closes #690),
+   [knk-workspace#803](https://github.com/PandiO/knk-workspace/pull/803) (Part of #690); base `next`. Not merged.
+4. **Tests, baseline → result.**
+    1. knk-web-app: baseline on `next` `24c8a98`: Jest 2773 passed (324 suites), Playwright 204 passed, `tsc` clean,
+       build OK. Branch: Jest 2787 passed (326 suites; new `territory.test.ts`, `territoryClients.test.ts`), Playwright
+       227 passed (new `e2e/territory.spec.ts`, 23 tests, DTO-typed fixtures `e2e/fixtures/territory.ts`; strict
+       `town-detail` and `landmarks` specs mock the new town reads), `tsc` and `typecheck:e2e` clean, build OK.
+       CI on `0531422`: PR runs 44514993187 (e2e) and 44514993520 (build-and-test), push runs 44514987012 and
+       44514986946, all green. The first push's e2e (run 44514077192, `3bf52f3`) failed: the strict
+       `entity-setup-delete-details` spec opens a structure page and the new panel's reads were unmocked (locally the
+       test ended first); fixed in `0531422` (`mockNoStructureTerritory`).
+    2. Known reds: none.
+5. **Decisions (DESIGN § 4.3).**
+    1. *Town and District territory fields.* Chosen: a Territory panel on the town page, because the Town/District
+       form seeds L1 left for #690 are in knk-web-api, outside this link (prompt § 2). Alternatives: (a) change the
+       seeds: not this link's repo (filed on #690); (b) wait for seeds: no way to set power in the web app meanwhile.
+    2. *Partial save of towns and districts.* Chosen: read the record, `PUT` back its identity fields plus the
+       territory change, with every "not on this form" group null (teleport, navigation, inline location, streets), the
+       API's own convention. Alternatives: (a) send the whole GET body back: rewrites the inline location; (b) a new
+       territory write endpoint: knk-web-api.
+    3. *Where the screens live.* Chosen: panels below the generic detail pages of Town, TerritoryConflict and
+       Structure (the landmark panel pattern) plus a Game settings card. Alternatives: (a) a separate territory admin
+       page: duplicates the dashboard; (b) the capital toggle on the district page: the town panel shows every
+       district's range in one place.
+    4. *Conflict actions.* Chosen: award to either holder / mark redrawn / reopen, each behind a confirmation, note
+       optional. Alternatives: (a) no confirmation: an award changes the game server's inputs; (b) required note: the
+       API does not require one.
+    5. *Structure types with the panel.* Chosen: `Structure` only. Alternatives: (a) also `GateStructure`: the API's
+       structure flag and loyalty are about production structures; easy to add later.
+    6. *#65 insight.* Nothing added: #65 lists logistics surfaces (warehouses, producers, orders, simulator, health),
+       none territorial, and #690 does not ask for one. Alternatives: (a) a territory overview page: not asked for.
+6. **Out of scope, noted.** Comment on [#690](https://github.com/PandiO/knk-workspace/issues/690#issuecomment-7007691107):
+   the Town/District form seed fields (knk-web-api) with a proposal, and that a `TerritoryConflict` detail page's Edit
+   opens a form whose save has no update endpoint. No new issues.
+   Codex: the connector hit its code-review usage limit on both PRs (review "failed"), again after `@codex review` on
+   `0531422`; no findings or review threads to handle; noted on each PR.
+7. **Blockers.** None.
+8. **At merge / what the developer must do.**
+    1. Deploy the web app with the territory API (#326, in `next`); the four territory form and display seeds must be
+       imported (L1 block, at merge 1). No migration, setting or plugin change.
+    2. Coordinator: decide on the Town/District seed fields (comment on #690): not needed for V1 since the town page
+       panel sets them.
+    3. Smoke test [§ 1.4](../guides/production-storage-transport-smoke-test.md#14-steps-web-app-690) (tier:2): about
+       25 minutes in full, about 5 minutes for the untagged parts (province form, crown land region drawn in game).
+    4. At merge into `next`: the `documentation` sub-issue (territory admin guide, feature register row).
+9. **Notes for later links.**
+    1. L2 (#689): smoke § 1.3 is still the design's draft; § 1.4 covers the web app half of its steps 1 and 9.
+       Crown land created in the web app has no domain type sent to the plugin (L1 decision 10).
+    2. Web app links: the territory panels mount in `DisplayWizardPage.tsx` next to the landmark panel; strict
+       e2e specs that open a town page need `mockNoTownTerritory(api, id)` from `e2e/fixtures/territory.ts`.
