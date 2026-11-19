@@ -13,7 +13,7 @@ automated in CI and 2 partly (tagged); every step can still be run by hand; not 
 web app, #676): 8 of 12 steps automated in CI and 4 partly (tagged); every step can still be run by hand; not run. Other sections
 not yet automated
 (the links tag them).
-**Last updated:** 2026-11-19 (§ 3.2 world web app, link L7, #676); 2026-11-19 (§ 3.3 world plugin, link L8, #677); 2026-11-19 (§ 3.1 world API, link L6, #91); 2026-11-19 (§ 2.2 stock web app, link L5, #675); 2026-11-19 (§ 2 stock core API, link L4, #97); 2026-11-19 (§ 1.0 and § 1.3 preconditions: builds from `next` instead of the link branches; guides: [territory admin guide](admin/territory-admin-guide.md), docs #806); 2026-11-19 (§ 1.4 territory web app, link L3, #690); 2026-11-19 (§ 1.3 territory plugin, link L2, #689); 2026-11-19 (§ 1 territory API, link L1, #326); 2026-11-19 (§ 0 item identity, link L0, #141); 2026-11-16 (draft from the design, territory and phases P1-P12)
+**Last updated:** 2026-11-19 (§ 3 intro, § 3.0, § 3.2 and § 3.3 intros: builds from `next`; § 3.3 precondition 4: `/knk regions repair` needs `knk.admin.regions`, `/knk territory rebuild` `knk.admin.world.territory`; docs #830); 2026-11-19 (§ 3.2 world web app, link L7, #676); 2026-11-19 (§ 3.3 world plugin, link L8, #677); 2026-11-19 (§ 3.1 world API, link L6, #91); 2026-11-19 (§ 2.2 stock web app, link L5, #675); 2026-11-19 (§ 2 stock core API, link L4, #97); 2026-11-19 (§ 1.0 and § 1.3 preconditions: builds from `next` instead of the link branches; guides: [territory admin guide](admin/territory-admin-guide.md), docs #806); 2026-11-19 (§ 1.4 territory web app, link L3, #690); 2026-11-19 (§ 1.3 territory plugin, link L2, #689); 2026-11-19 (§ 1 territory API, link L1, #326); 2026-11-19 (§ 0 item identity, link L0, #141); 2026-11-16 (draft from the design, territory and phases P1-P12)
 **Design:** [specs/production-storage-transport/DESIGN.md](../specs/production-storage-transport/DESIGN.md) (§17
 acceptance A01-A27, §18 links) · [territory](../specs/territory/DESIGN.md) · [shops](../specs/shops/DESIGN.md) ·
 **Issue:** [PandiO/knk-workspace#22](https://github.com/PandiO/knk-workspace/issues/22)
@@ -596,10 +596,11 @@ be run by hand; not run. Full manual run about 35 minutes; the untagged parts ab
 
 ## 3. Phase P2: world: rural structures, warehouse, production structure (#91 API, #676 web app, #677 plugin; tier:3)
 
-Built so far: link L6, the API (knk-web-api, migration `AddProductionWorld`; branch `claude/production-p2`, PR into
-`next`). The web app forms with region capture and the town picker, the structure pages and the flagged-structure filter
-are link L7 (#676, knk-web-app `claude/production-p2b`, § 3.2); the managed-region kinds and the
-territory lookup the placement rule P-2 asks are link L8 (#677, knk-plugin `claude/production-p2c`, § 3.3). § 3.1 runs
+All three links are merged into `next` (2026-11-19): L6, the API (knk-web-api `next` `fcfced27`, migration
+`AddProductionWorld`, § 3.1); L7, the web app forms with region capture and the town picker, the structure pages and
+the flagged-structure filter (#676, knk-web-app `next` `18385344`, § 3.2); L8, the managed-region kinds and the
+territory lookup the placement rule P-2 asks (#677, knk-plugin `next` `8ebb30be`, § 3.3). Use builds from `next`. How
+staff use it: [warehouses and production structures admin guide](admin/production-world-admin-guide.md). § 3.1 runs
 with a REST client (or Swagger) against the API; P-2 reports "not checked" until a game server with the L8 build and
 `production.enabled` answers the lookup. 16 steps in § 3.1: 14
 automated in CI and 2 partly (tagged); every step can still be run by hand; manual steps not run. Full manual run about
@@ -608,7 +609,7 @@ automated, 4 partly); § 3.3 is L8's (11 steps, 6 automated, 5 partly).
 
 ### 3.0 Preconditions
 
-1. knk-web-api from the branch with migrations `AddStockCore` and `AddProductionWorld` applied
+1. knk-web-api from `next` with migrations `AddStockCore` and `AddProductionWorld` applied
    (`dotnet ef database update`).
 2. Game setting `production.enabled` on (web app game settings, or `PUT api/GameSettings` section `production`), except
    in step 7.
@@ -718,7 +719,7 @@ automated, 4 partly); § 3.3 is L8's (11 steps, 6 automated, 5 partly).
 
 ### 3.2 Steps (web app #676)
 
-Built in link L7 (knk-web-app, branch `claude/production-p2b`). The tags name tests in knk-web-app
+Built in link L7 (knk-web-app, merged into `next` `18385344`). The tags name tests in knk-web-app
 `e2e/production-world.spec.ts` (Playwright, mocked API; the mocks use the same data, with other numbers where noted),
 `e2e/form-builder-draft-rules.spec.ts` and the Jest tests next to the code. Extra preconditions: § 3.0, and § 3.1
 step 1 (the `Warehouse` and `ProductionStructure` form and display seeds imported, "make default"); for the region
@@ -814,10 +815,10 @@ run by hand; not run. Full manual run about 40 minutes; the untagged parts about
 
 ### 3.3 Steps (plugin #677)
 
-Built by link L8 (knk-plugin `claude/production-p2c`, PR into `next`). No new `config.yml` key: everything below runs
+Built by link L8 (knk-plugin, merged into `next` `8ebb30be`). No new `config.yml` key: everything below runs
 with the existing switch `production.enabled` (plugin configuration § 4.31). Extra preconditions:
 
-1. The plugin build from that branch on a test server with WorldGuard, connected to the API of 3.0: the API's
+1. The plugin build from `next` on a test server with WorldGuard, connected to the API of 3.0: the API's
    `MinecraftPlugin:BaseUrl` points at the plugin's region HTTP server (`region-http.bind-address`/`port`, default
    `127.0.0.1:8081`) and both share the plugin key (`api.auth.api-key` = the API's `Security:PluginApiKey`).
 2. Territory set up as in § 1.3 preconditions 2-4 (Phoenix with Market, range 200; Rivertown), the plugin `production`
@@ -825,7 +826,8 @@ with the existing switch `production.enabled` (plugin configuration § 4.31). Ex
 3. The § 3.1 objects with regions drawn in game: **Market warehouse** (inside Market), **Quarry** (rural, Phoenix,
    within 200 blocks of Market's edge), **Outpost** (rural, Phoenix, more than 200 blocks from every Phoenix district).
    Note their `wgRegionId`s and Phoenix's and Rivertown's ids.
-4. In game: **Staff** with `knk.admin.world` (for `/knk regions repair`) and WorldGuard's `/rg info`; **Member** and
+4. In game: **Staff** with `knk.admin.world`, `knk.admin.world.territory` (for `/knk territory rebuild`) and
+   `knk.admin.regions` (for `/knk regions repair`), and WorldGuard's `/rg info`; **Member** and
    **Visitor** for the PvP check. For steps 5-7 a shell on the game server host (`curl`).
 
 Full manual run about 30 minutes; the untagged and partly tagged parts about 15 minutes.
