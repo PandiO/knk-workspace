@@ -1,6 +1,6 @@
 # Off-road navigation and landmarks chain — progress report
 
-**Status:** Running, waiting for the developer (2026-11-18) · **Last updated:** 2026-11-18 (L9 block); 2026-11-18 (L5 block); 2026-11-18 (L8 step A block)
+**Status:** Running, waiting for the developer (2026-11-18) · **Last updated:** 2026-11-19 (F2 block); 2026-11-18 (L9 block); 2026-11-18 (L5 block); 2026-11-18 (L8 step A block)
 
 **Issue:** [PandiO/knk-workspace#698](https://github.com/PandiO/knk-workspace/issues/698), links
 [#703](https://github.com/PandiO/knk-workspace/issues/703) (L1), [#704](https://github.com/PandiO/knk-workspace/issues/704) (L2),
@@ -35,6 +35,7 @@ on `next` (Decided 2026-11-17).
 | L9 Phase 5.2 landmark weights | #709 | Merged into next (2026-11-18); waits for the developer's smoke § 7 steps 1–3 | knk-plugin `claude/offroad-landmark-weights` `636c9f32`; knk-workspace `9d0c926f` | [knk-plugin#87](https://github.com/PandiO/knk-plugin/pull/87) → `c7be34fb`, [#776](https://github.com/PandiO/knk-workspace/pull/776) → `99fef23d` | green (build; paper-boot after one #695 flake on the PR run) | create_session `session_01R1w2Ut1P9c2jGxRYC3weCJ` (2026-11-18) |
 | L10 Phase 7 plaza lines | #712 | Merged into next (step 1 and step 2, 2026-11-18); waits for the developer's smoke § 10.2 | knk-plugin `claude/offroad-plaza-lines` `28ad18c5`; knk-workspace `d7e4e834` | step 1: [knk-plugin#73](https://github.com/PandiO/knk-plugin/pull/73) → `ce0f65ec`, [#723](https://github.com/PandiO/knk-workspace/pull/723) → `c7f61e9e`; step 2: [knk-plugin#84](https://github.com/PandiO/knk-plugin/pull/84) → `4daa0c84`, [#769](https://github.com/PandiO/knk-workspace/pull/769) → `2e0c04d4` | green (build, paper-boot) | create_session `session_01R1w2Ussca79jpGCPqzcTf8` (2026-11-18) |
 | F1 walk-search fixes (#771 items 1, 2) | #771 | Merged into next (2026-11-19); waits for the developer's smoke § 12; the storage hall by road stays open (#780) | knk-plugin `claude/offroad-walk-fixes-771` `321daf6b`; knk-workspace `8fdfe392` | [knk-plugin#88](https://github.com/PandiO/knk-plugin/pull/88) → `cee53213`, [#778](https://github.com/PandiO/knk-workspace/pull/778) → `d1850c7a` | green (build, paper-boot) | create_session `session_01R1w2Ut7LKtBrvQw9bA3mVQ` (2026-11-19) |
+| F2 road goal and route ends (#780, #771 items 3–5) | #780, #771 | In review (2026-11-19): PRs open into `next`, not merged; waits for the developer's smoke § 13 | knk-plugin `claude/offroad-route-ends-f2` `ebc63265`; knk-workspace `441dd7cc` | [knk-plugin#94](https://github.com/PandiO/knk-plugin/pull/94), [#813](https://github.com/PandiO/knk-workspace/pull/813) | running at the block's commit (build, paper-boot) | create_session `session_01R1w2UtLzNFzgycUAEB8mVd` (2026-11-19) |
 | F2 road goal and route ends (#780 b, #771 items 3–5) | #780, #771 | Running (started 2026-11-19 12:26 from plugin `next` `55804b11`) | `claude/offroad-route-ends-f2` | — | — | create_session `session_01R1w2UtLzNFzgycUAEB8mVd` (2026-11-19) |
 
 ## 3. Coordinator decisions
@@ -1124,3 +1125,80 @@ _(Each link appends its block here when it finishes.)_
 9. **Notes for later links.**
     1. A future walk change that clears `DirectLeg` state must keep `foundPath` across failed searches. It is the only memory of a way that runs outside the leg's box.
     2. #771 items 3 to 5 (trail spacing, road overshoot, road-to-walk handover) are untouched.
+
+### 4.12 F2 — road goal and route ends (#780, #771 items 3–5)
+
+1. **Scope done.** #780 option (b) and #771 items 3, 4 and 5; tier:2. Every behaviour change is behind a key that is off by default, or has a default equal to today's. No migration.
+    1. **#780 (b), `navigation.road-goal-reachable` (false), `road-goal-candidates` (12).**
+        1. The candidates are today's straight-line goal plus the nearest point of each road edge within `max-snap-distance` (plain 3D), nearest first. Points within 1 block of an earlier one are skipped. At most 12 (knk-core `RoadGoalChoice`).
+        2. Each candidate gets one walk search to the destination, with the shipped `walk:` limits and the normal walk capture. The searches run one at a time per navigation on the walk executor.
+        3. The reached candidates are routed to from the player on the routing thread. The least road length plus walk length wins.
+        4. The first route is today's. A different goal replaces it through `NavigationSession.onNetworkChanged`, taken as it is (silent).
+        5. If no candidate is reached, today's goal stays.
+        6. The last walk leg starts with the chosen walk path as its `foundPath`, so the first search carries F1's `WalkRecomputeHint`.
+        7. Point destinations only. It hangs off `begin` and `onNetworkChanged`, the shared path; nothing is on the raw `/navigate` entry. It reads only the session's `Destination` (kind, target), as `HandleDestinations` builds it.
+    2. **Reproduced on `quarry-to-keep-stairhouse.zip`** (its `roads.json` loaded as the road graph):
+        1. Today's goal is edge 2000000033 at 1415 58 -490. The walk from there ends in FALLBACK at the shipped limits.
+        2. With the key on, the goal is the end of edge 2000000017 (1421 84 -521): 347 blocks by road plus 97 on foot, and the last leg is found.
+        3. 7 of the 34 per-edge candidates within 48 blocks are reached at the shipped limits. All of them are in the keep's courtyard (y 80 to 84).
+    3. **#771 item 4 (scene 2) has the same cause, under the same key.** The straight-line goal for the tower roof (edge 2000000019 at 1411.5 84 -516) lies about 10 blocks past the end of edge 2000000017, where the walk to the stair leaves the road. On `keep-tower.zip` the chosen goal makes the road part 72 blocks shorter and road plus walk 38 blocks shorter. The snapshot's graph routes from spawn the long way round, so the chosen point there is earlier on that route.
+    4. **#771 item 5: two causes in the code, neither depends on `guidance-v2`.**
+        1. The road goal: the road part ends at a straight-line point while the road goes on. The #780 key fixes this.
+        2. `onNetworkChanged` (called on every live-edge-tag swap) re-resolves goals. Within `max-snap-distance` it switched a running road session to direct mode, so a walk leg started from mid-road. New key `navigation.road-to-its-end` (false): `resolveGoals(..., keepRoad)` keeps road goals instead.
+        3. Checked and ruled out on the snapshot: the session's 3D `isAtEnd` firing early. No point of the scene 3 route comes within 9 blocks of its end before the end.
+        4. Which cause the developer saw is for smoke § 13 step 4. So the plugin PR says `Part of #771`.
+    5. **#771 item 3.** `TrailRenderer.drawPath` (the flag-off walk trail) uses `trail-leg-spacing`. The default stays 3.0 (`LEG_SPACING`); 1.5 to 2.0 is suggested in the deploy notes.
+    6. **NPC.** `planRoadFor` and `NpcWalkPlanner` are unchanged (tested). No NPC, shape or destinations file was touched. The `WalkLegPreparer`, `WalkSearch`/`WalkPathfinder`, `MovementProfile` and `RoadPlanner` signatures are untouched.
+    7. **How the rule relates to the NPC chain's C1 road join** (coordinator note):
+        1. C1 (`NpcNavigationService`, its decision 5.3) starts the NPC's walk to the goal at the road's end, then retries from up to 3 points further back along the same route. It takes the first reachable point.
+        2. That code is private and NPC-specific, so there is no core class to reuse. Stepping back along the stair-house route could not leave #780's dead end either.
+        3. F2 applies the same principle (the goal chosen by walk reachability) to players. Its candidates come from all edges near the destination, and the least total length wins, not the first reached.
+2. **Commits and heads.**
+    1. knk-plugin `claude/offroad-route-ends-f2` at `ebc63265` (2 commits, base `next` `55804b11`).
+    2. knk-workspace `claude/offroad-route-ends-f2` at `441dd7cc` (1 commit, base `next` `8487a058`).
+3. **PRs.**
+    1. [PandiO/knk-plugin#94](https://github.com/PandiO/knk-plugin/pull/94): `Closes #780`, `Part of #771`.
+    2. [PandiO/knk-workspace#813](https://github.com/PandiO/knk-workspace/pull/813): `Part of`.
+    3. Both have base `next`; neither is merged.
+4. **Tests, baseline → result.**
+    1. knk-plugin `./gradlew build -x deployToDevServer`, baseline on `next` `55804b11`:
+        1. knk-core 3510 → 3514 (+4).
+        2. knk-paper 3200 → 3210 (+10, 18 skipped, as before).
+        3. knk-api-client 368 → 368.
+        4. 0 failures; no known reds.
+    2. New tests:
+        1. knk-core `RoadGoalChoiceTest` (4).
+        2. knk-paper `NavigationServiceRouteEndsTest` (9, on both dev-world snapshots with the real walk search and the shipped limits; test fixture `DevWorldSnapshot`).
+        3. knk-paper `TrailRendererTest` +1.
+    3. Unchanged and green: L7's golden transcripts, the L3/L4/L5/L9/L10 flag-off identity tests, F1's tests, the engine's handle tests and the NPC unit tests.
+    4. CI: build and paper-boot were running at the time of this block. The final message reports the outcome.
+5. **Decisions (DESIGN § 4.3).**
+    1. *When the choice is made.* Chosen: today's route first; the chosen goal replaces it when the searches answer, as walk links do (L5 decision 1). Alternatives:
+        1. (a) Hold the session until the searches return: a second or more with no trail at every start.
+        2. (b) Choose at the road's end: by then the road part has been driven to the wrong place.
+    2. *Candidates.* Chosen: the nearest point per road edge within `max-snap-distance`, today's point first, at most 12. Alternatives:
+        1. (a) Within `max-destination-distance` (256): many more far edges for no gain.
+        2. (b) Polyline vertices too: more searches for points the per-edge nearest point usually matches.
+        3. (c) One multi-goal walk search back from the destination: walk moves are not reversible (drops), as C1 found.
+    3. *Cost to compare.* Chosen: route length plus walk length, in walked blocks, as L5's road-first rule does. Alternatives:
+        1. (a) Routing cost plus walk cost: class factors and walk penalties make the totals hard to read.
+        2. (b) A goal-cost offset inside the A* (`RouteRequest` addition): changes the shared router for one caller.
+    4. *Search pacing.* Chosen: one candidate search at a time per navigation, so a walk leg always finds a walk thread. Alternative: (a) all at once on the pool: up to 12 searches ahead of a player's walk leg.
+    5. *Re-routing to the new goal.* Chosen: `onNetworkChanged` (a silent route, taken as it is; its `NavigationRerouteEvent` carries reason NETWORK_CHANGED). Alternative: (a) a new `RouteReason`: every switch over the enum would need a case, for the same behaviour.
+    6. *Item 5's network-swap cause.* Chosen: its own key, because it is a different cause from the road goal. Alternative: (a) fold it into `road-goal-reachable`: one switch for two unrelated changes.
+    7. *Region destinations under `road-to-its-end`.* Chosen: the region's crossings when the region would switch to direct mode. Alternative: (a) leave regions out: the same mid-road switch happens for regions.
+6. **Out of scope, noted.**
+    1. The choice has no `/knk road status` line; it logs at FINE only.
+    2. The snapshots' road graphs hold only the edges through their box. The live route from spawn differs (the snapshot routes the long way round), so the live numbers are for § 13.
+7. **Blockers.** None. Codex: see the final message.
+8. **At merge / what the developer must do.**
+    1. Merge the three keys into `config.yml` (all off = no change); YAML in the PR.
+    2. Live test, about 25 minutes: smoke § 13 steps 1, 3, 4 and 5.
+        1. Shipped settings, with `road-goal-reachable` and `road-to-its-end` set to true.
+        2. `trail-leg-spacing` 1.5 or 2.0 for step 5.
+        3. Never raise `max-snap-distance`.
+    3. Decide whether to keep the two keys on and which spacing to use.
+9. **Notes for later links.**
+    1. The engine chain's removal of the raw entry (#747) is not affected: F2 uses `begin` and `onNetworkChanged` only.
+    2. NPC long walks (#698's NPC phase) could reuse `RoadGoalChoice.candidates`/`best` for an NPC's road goal; that is the NPC chain's call.
+
