@@ -73,7 +73,7 @@ Related: [DESIGN.md](DESIGN.md) (in-game maps, M2–M5), [DECISION-map-data-sour
 | O31 | 2026-11-18 | developer | Everyone, anonymous viewers included, sees the in-game minigame tag on an arena pin, for example "[Siege] 12 players". No team or match detail is public. Supersedes O08. |
 | O32 | 2026-11-18 | developer | Public panel fields (draft 6.1): town: name, description, number of districts; district: name, description, town; structure: name, description, type and subtype, district and town, street and house number; gate: plus per door name, open/closed, destroyed, health bar, and "under siege" while a match runs. Door health is shown always, also during a siege. |
 | O33 | 2026-11-18 | developer | Teleport from the map is filed as idea #733 for its own design pass. |
-| O34 | 2026-11-19 | developer | "Open profile" in the player context panel stays visible for every viewer of the panel, but is **disabled, with a tooltip** that says why ("You need access to player profiles (knk.admin.user.manage) to open this.") for a viewer without the profile page's node `knk.admin.user.manage`; viewers with it keep the working link. A deliberate exception to § 5 rule 13 (actions a viewer may not take are hidden, not disabled), because a kick-only moderator otherwise lands on a no-access page (#809). |
+| O34 | 2026-11-19 | developer | "Open profile" in the player context panel stays visible for every viewer of the panel, but is **disabled, with a tooltip** that says why ("You need access to player profiles (knk.admin.user.manage) to open this.") for a viewer without the profile page's node `knk.admin.user.manage`; viewers with it keep the working link. A deliberate exception to the map's staff-action rule (actions a viewer may not take are hidden, not disabled: § 6.3.5, § 6.3.8), because a kick-only moderator otherwise lands on a no-access page (#809). |
 | O35 | 2026-11-19 | agent | Escape inside BlueMap's iframe: the bridge reports it to the page as the new v1 map → page type `escapePressed` (empty payload; additive under O14, no v1 meaning changed), and the page closes the open panel on it, the same as its own Escape listener (#757). (alternatives in 2.1) |
 
 ### 2.1 Agent decisions: alternatives
@@ -221,7 +221,7 @@ Related: [DESIGN.md](DESIGN.md) (in-game maps, M2–M5), [DECISION-map-data-sour
     with 503 when no game server is connected, with 400 for a door of another gate. Each command is audit-logged
     with the user. The panel shows the plugin's result (done, refused with reason, timed out after 5 s).
 12. **Moderation (O11, O25, O34).** Panel opens with any moderation node; each action under its own node and the
-    existing endpoint; the API's own rules still decide. "Open profile" is the one exception to rule 13's hiding: it
+    existing endpoint; the API's own rules still decide. "Open profile" is the one exception to hiding staff actions (§ 6.3.5, § 6.3.8): it
     is disabled, with a tooltip, without `knk.admin.user.manage` (O34).
 13. **Action registry (O14).** Each entity type registers public widgets, staff widgets and actions (label, node,
     handler). The bridge never knows about actions.
