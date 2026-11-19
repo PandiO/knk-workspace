@@ -39,7 +39,7 @@ of what is already in `next`.
 | L2 Territory plugin: chunk cache, lookup, BlueMap outlines | #689 | Merged into next (2026-11-19) | plugin `96ef7326`, workspace `14d3efcd`; merges: plugin `55804b11`, workspace `66d35872` | [plugin#91](https://github.com/PandiO/knk-plugin/pull/91), [ws#804](https://github.com/PandiO/knk-workspace/pull/804) | green (plugin build + paper-boot) | create_session `session_01R1w2Uvhpo37DXAXpm2uqLp` (one repo besides knk-workspace), started 2026-11-19 |
 | L3 Territory web app | #690 | Merged into next (2026-11-19) | web app `0531422`, workspace `f3bd8f27`; merges: web app `89751315`, workspace `54bdc830` (after a coordinator merge of `next`, `e4f2276d`) | [web#57](https://github.com/PandiO/knk-web-app/pull/57), [ws#803](https://github.com/PandiO/knk-workspace/pull/803) | web app green (build-and-test, e2e) | create_session `session_01R1w2UuYHneFJFXcn8GSe6F` (one repo besides knk-workspace), started 2026-11-19 |
 | L4 P1 stock core API: storages, ledger, reconciler, capacity, roll-up | #97 | Merged into next (2026-11-19) | api `e524721`, workspace `abef76fc`; coordinator merge of `next` `06fee906`; merges: api `2e7d4e81`, workspace `1bbdd69f` | [api#56](https://github.com/PandiO/knk-web-api/pull/56), [ws#816](https://github.com/PandiO/knk-workspace/pull/816) | green (build-and-test, mysql-tests, fresh-database) | create_session `session_01R1w2Uwv8FBnKCUoeZauzVt` (one repo besides knk-workspace), started 2026-11-19 |
-| L5 P1b stock web app | #675 | In review (2026-11-19; block 4.5) | web app `9bec60f`, workspace `a5d10f37` | [web#60](https://github.com/PandiO/knk-web-app/pull/60), [ws#818](https://github.com/PandiO/knk-workspace/pull/818) | web app green (build-and-test, e2e) | create_session `session_01R1w2UuKsus7BT7DcXyL4jr` (one repo besides knk-workspace), started 2026-11-19 |
+| L5 P1b stock web app | #675 | Merged into next (2026-11-19) | web app `9bec60f`, workspace `a5d10f37`; merges: web app `9f46cb49`, workspace `8fff63e2` | [web#60](https://github.com/PandiO/knk-web-app/pull/60), [ws#818](https://github.com/PandiO/knk-workspace/pull/818) | web app green (build-and-test, e2e) | create_session `session_01R1w2UuKsus7BT7DcXyL4jr` (one repo besides knk-workspace), started 2026-11-19 |
 | L6 P2 world API: structure subtypes, TownId, placement rules | #91 | Running | — | — | — | create_session `session_01R1w2UscSGsG34qwc8vtEQj` (one repo besides knk-workspace), started 2026-11-19 |
 | L7 P2b world web app | #676 | Not started | — | — | — | — |
 | L8 P2c world plugin: managed-region kinds | #677 | Not started | — | — | — | — |
@@ -174,6 +174,15 @@ of what is already in `next`.
    every hour (lesson from decision 21).
 25. **P1 docs at the end of P1.** The `documentation` sub-issue for stock core (#97, #675) starts when L5 is merged,
    like territory (decision 14).
+
+26. **L5 merge (2026-11-19).** § 6 checks held: heads matched, both branches contained `next` (clean), CI was green
+   (build-and-test, e2e), Codex was at its usage limit (no findings) and the scope matched #675. Merged: web app #60
+   `9f46cb49`, workspace #818 `8fff63e2`.
+27. **ItemBlueprint `StorageWeight` seed field and Storage display names (L5's question on #675).** Chosen: ItemBlueprint
+   is a major entity, so its form gets the field. Filed as #819 (tier:1, under #97) and folded into the next
+   knk-web-api link, L9 (#86), as an additive extra. Alternatives: (a) add it to L6, which is already in CI: it would
+   widen a finished link; (b) a separate one-file link: overhead for a seed bump.
+28. **P1 docs.** `documentation` sub-issue #820 under #97, docs session started (decision 25).
 
 ## 4. Link blocks
 
