@@ -39,7 +39,7 @@ of what is already in `next`.
 | L2 Territory plugin: chunk cache, lookup, BlueMap outlines | #689 | Merged into next (2026-11-19) | plugin `96ef7326`, workspace `14d3efcd`; merges: plugin `55804b11`, workspace `66d35872` | [plugin#91](https://github.com/PandiO/knk-plugin/pull/91), [ws#804](https://github.com/PandiO/knk-workspace/pull/804) | green (plugin build + paper-boot) | create_session `session_01R1w2Uvhpo37DXAXpm2uqLp` (one repo besides knk-workspace), started 2026-11-19 |
 | L3 Territory web app | #690 | Merged into next (2026-11-19) | web app `0531422`, workspace `f3bd8f27`; merges: web app `89751315`, workspace `54bdc830` (after a coordinator merge of `next`, `e4f2276d`) | [web#57](https://github.com/PandiO/knk-web-app/pull/57), [ws#803](https://github.com/PandiO/knk-workspace/pull/803) | web app green (build-and-test, e2e) | create_session `session_01R1w2UuYHneFJFXcn8GSe6F` (one repo besides knk-workspace), started 2026-11-19 |
 | L4 P1 stock core API: storages, ledger, reconciler, capacity, roll-up | #97 | Merged into next (2026-11-19) | api `e524721`, workspace `abef76fc`; coordinator merge of `next` `06fee906`; merges: api `2e7d4e81`, workspace `1bbdd69f` | [api#56](https://github.com/PandiO/knk-web-api/pull/56), [ws#816](https://github.com/PandiO/knk-workspace/pull/816) | green (build-and-test, mysql-tests, fresh-database) | create_session `session_01R1w2Uwv8FBnKCUoeZauzVt` (one repo besides knk-workspace), started 2026-11-19 |
-| L5 P1b stock web app | #675 | Running | — | — | — | create_session `session_01R1w2UuKsus7BT7DcXyL4jr` (one repo besides knk-workspace), started 2026-11-19 |
+| L5 P1b stock web app | #675 | In review (2026-11-19; block 4.5) | web app `9bec60f`, workspace `a5d10f37` | [web#60](https://github.com/PandiO/knk-web-app/pull/60), [ws#818](https://github.com/PandiO/knk-workspace/pull/818) | web app green (build-and-test, e2e) | create_session `session_01R1w2UuKsus7BT7DcXyL4jr` (one repo besides knk-workspace), started 2026-11-19 |
 | L6 P2 world API: structure subtypes, TownId, placement rules | #91 | Running | — | — | — | create_session `session_01R1w2UscSGsG34qwc8vtEQj` (one repo besides knk-workspace), started 2026-11-19 |
 | L7 P2b world web app | #676 | Not started | — | — | — | — |
 | L8 P2c world plugin: managed-region kinds | #677 | Not started | — | — | — | — |
@@ -613,3 +613,56 @@ _(Each link appends its block here when it finishes.)_
     3. Later links: P5 creates `Transit` storages per order (no holder, uncapped); P7 uses Player storages with
        `Purpose = Inbox` or `Stash` and `SYS_LOSS`; every caller that may retry sends an idempotency key.
 
+### 4.5 L5 — P1b stock web app (#675)
+
+1. **Scope done** (knk-web-app, plus the essential docs in knk-workspace).
+    1. Types and clients: `src/types/dtos/stock/StockDtos.ts` (mirrors knk-web-api `StockDtos.cs` and the stock enums), `storageClient` (`api/Storages` CRUD and search), `stockTransactionClient` (search, `{id}`, `moves/search`, `rollups/search`, `reconcile`, move, `adjust`, `{id}/reverse`, `rollup`). Registry additions, additive and grouped: `Controllers`, `entityApiMapping` (`storage`: all five; `stocktransaction`: search and fetch only) and `objectConfigs` columns. ItemBlueprint DTOs carry `storageWeight`, and the blueprint list has a Storage weight column.
+    2. Storage page: `StoragePanel` (mounted in `DisplayWizardPage`):
+        1. Holder, and capacity used in raw units × storage weight against the cap, with "over its cap: removals only".
+        2. Totals, distinct items and the lock.
+        3. Stock lines, each amount linking to the ledger drill-down (storage + blueprint).
+        4. Unique items, each linking to its moves (A03).
+        5. Adjust stock, Move stock, and per row Adjust, Move and Take out.
+    3. `StockAdjustDialog` (blueprint or item instance, signed change, required note) and `StockMoveDialog` (a reason, all or nothing or partial, several lines). Both show the 200 result per line through `StockResultView`: status, then requested, accepted and refused with the `rejectReason` in words. The idempotency key stays the same until the request changes, and a 409 `IdempotencyKeyReuse` is explained.
+    4. Transaction page: `StockTransactionPanel`: the moves with both storages linked, "Reverses" and "Reversed by", and Reverse (a compensating correction with a note).
+    5. Ledger explorer `StockLedgerPage` at `/admin/stock/ledger` (Economy group, `staffAny(knk.admin.world, knk.economy.admin)`):
+        1. Three views: transactions, moves and roll-ups (A22).
+        2. Filters in the address: storage, blueprint, item instance, transaction, reason, actor, source type and reference, from and until.
+        3. The drill-down shows the line's amount next to "moves in − moves out (+ roll-ups) = net" (A01).
+        4. `StockLedgerHealthCard` (the stock part of #65): run the reconciler and run the roll-up.
+    6. Gates: adjust, move, reverse and roll-up are shown off with "Requires knk.economy.admin" for staff without the node.
+    7. knk-workspace (branch from `next`): smoke guide § 2.2 (17 web app steps in full: 14 automated, 3 partly), § 2 intro and status header, changelog entry, implementation plan status.
+2. **Commits and heads.**
+    1. knk-web-app `claude/production-p1b` at `9bec60f`: 2 commits, base `next` at `aaf7066`. `next` had not moved at PR time or at the last fetch.
+    2. knk-workspace `claude/production-p1b` at `a5d10f37`: 1 commit, base `next` at `1bbdd69f`, which includes L4's docs PR #816.
+3. **PRs.** [knk-web-app#60](https://github.com/PandiO/knk-web-app/pull/60) (Closes #675) and [knk-workspace#818](https://github.com/PandiO/knk-workspace/pull/818) (Part of #675), both into `next`. Not merged.
+4. **Tests, baseline → result.**
+    1. knk-web-app baseline on `next` `aaf7066`: Jest 2795 passed (327 suites), Playwright 230 passed, `tsc` clean, build OK.
+    2. Branch: Jest 2808 passed (329 suites). New: `src/utils/__tests__/stock.test.ts` and `src/apiClients/__tests__/stockClients.test.ts`. The pinned route-gate list (`routeTable.test.ts`) and blueprint-column list (`minecraftColumns.test.tsx`) were updated for the new route and column.
+    3. Branch: Playwright 253 passed. New: `e2e/stock.spec.ts`, 23 tests, with DTO-typed fixtures in `e2e/fixtures/stock.ts` and a strict API on the storage, transaction and ledger pages. `tsc` and `typecheck:e2e` are clean and the build is OK.
+    4. The idempotency retry test was seen failing with the key renewed on every press.
+    5. `login.spec.ts › a refused refresh ends the session…` failed once in a full local run under load. It passed alone and in the next full run, and it does not touch this change.
+    6. CI on `9bec60f`: PR runs 44581116557 (build-and-test) and 44581116570 (e2e) and push runs 44579818960 and 44579819367, all green.
+    7. Known reds: none.
+5. **Decisions (DESIGN § 4.3).**
+    1. *Where the screens live.* Chosen: panels below the generic Storage and StockTransaction detail pages (the L3 pattern) plus one explorer page. Alternatives: (a) a custom storage page replacing the display configuration: duplicates the seed; (b) the explorer on the dashboard's StockTransaction table: no storage, blueprint or date filters and no drill-down.
+    2. *Explorer route and access.* Chosen: `/admin/stock/ledger`, Economy group, World area or `knk.economy.admin`, the API's read rule. Alternatives: (a) World only: economy-only staff are locked out; (b) economy only: World staff can read the ledger in the API.
+    3. *Idempotency keys.* Chosen: one key per request content, renewed when a field changes. Alternatives: (a) no key: a retry after a lost answer applies twice; (b) one key per dialog opening: changing the amount after a refusal hits `IdempotencyKeyReuse`.
+    4. *Drill-down sum.* Chosen: the newest 200 moves and roll-ups (the API's page cap), with a note when there are more. Alternatives: (a) page through everything: slow; (b) rows only: staff add up by hand.
+    5. *Manual move reasons.* Chosen: every reason except Correction and AdminAdjust (those have their own actions). Alternatives: (a) all: staff could fake corrections; (b) a short list: too narrow for booking losses by hand.
+    6. *Unique items in the adjust dialog.* Chosen: ±1 only, with Take out prefilled. Alternatives: (a) any delta: the API moves one unit anyway.
+    7. *#65.* Chosen: the reconciler and roll-up card plus "over its cap" on the storage page. Alternatives: (a) a list of every storage over cap: `capacityUsed` is on detail reads only (N reads or an API change).
+    8. *Storage weight on the blueprint form.* Chosen: DTO field plus a list column (before Category, which stays last next to its filter); the form seed field is filed on #675. Alternatives: (a) a weight editor with a partial blueprint PUT: rewrites other fields; (b) nothing until the seed changes.
+6. **Out of scope, noted.**
+    1. [#675 comment](https://github.com/PandiO/knk-workspace/issues/675#issuecomment-7017085116): the ItemBlueprint form seed needs a `StorageWeight` field (knk-web-api seed v-next), and the Storage display seed's Stock section shows the blueprint id instead of its name (minor). No new issues.
+    2. Codex: the connector hit its code-review usage limit on both PRs (review "failed", usage-limit comment). There were no inline findings or threads. Noted on each PR.
+7. **Blockers.** None.
+8. **At merge / what the developer must do.**
+    1. Deploy the web app with the stock core API (#97, in `next`) and its imported `Storage` and `StockTransaction` form and display seeds. No migration, setting or plugin change.
+    2. Grant `knk.economy.admin` to the staff who adjust or move stock.
+    3. Coordinator: decide on the ItemBlueprint `StorageWeight` seed field (comment on #675). Until then the weight is set through the API.
+    4. Smoke test [§ 2.2](../guides/production-storage-transport-smoke-test.md#22-steps-web-app-675) (tier:2): about 35 minutes in full, about 10 minutes for the untagged parts (setting a weight and a lock, roll-up data on a test database).
+    5. At merge into `next`: the `documentation` sub-issue (stock admin guide covering the storage page, dialogs and ledger explorer; feature register row).
+9. **Notes for later links.**
+    1. Web app links (L7, L10, L16 and on): `StoragePanel` takes a storage id. A structure page can list its storages (`POST api/Storages/search` with `domainId`) and link each to `/display/Storage/<id>`. `lineMovesPath`, `storageLedgerPath` and `itemInstanceMovesPath` in `src/utils/stock.ts` build the explorer links.
+    2. The stock result view (`StockResultView`) and `stockRefusalReason` work for any endpoint that answers a `StockResultDto` or `{ error }`.
