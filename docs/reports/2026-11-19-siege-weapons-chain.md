@@ -21,7 +21,7 @@
 
 | Link | Issue | Status | Branch heads | PR | CI | How started |
 |---|---|---|---|---|---|---|
-| L1 Entities, API, form seeds, unlocks | #782 | Running | `claude/siege-weapons-l1`: (not pushed yet) | — | — | subagent of the coordinator (decision 3: two component repos), started 2026-11-19 |
+| L1 Entities, API, form seeds, unlocks | #782 | In review (PRs open, not merged) | API `d65e7c9`, web app `6138dc9`, workspace `f6ce0304` (`claude/siege-weapons-l1`) | [api#52](https://github.com/PandiO/knk-web-api/pull/52), [app#56](https://github.com/PandiO/knk-web-app/pull/56), [ws#794](https://github.com/PandiO/knk-workspace/pull/794) | green (API, web app); Codex at usage limit | subagent of the coordinator (decision 3: two component repos), started 2026-11-19 |
 | L2 Spots through world tasks | #783 | Not started (gate: L1 merged into `next`) | — | — | — | — |
 | L3 Buying, placement, paste, restore | #784 | Not started (gates: L2; #356, #611, #614) | — | — | — | — |
 | L4 Damage, wreck, cooldown, statistics | #785 | Not started | — | — | — | — |
@@ -82,3 +82,41 @@
 ## 4. Link blocks
 
 _(Each link appends its block here when it finishes.)_
+
+### 4.1 L1 — Entities, API, form seeds, unlocks (#782)
+
+1. **Scope done.**
+    1. knk-web-api: entities `SiegeWeaponTemplate`, `SiegeAmmoType`, join `SiegeWeaponTemplateAmmoType`, `SiegeWeaponSpot` (owned by scenario and team), `UserSiegeWeaponUnlock` in `Models/Siege/Weapons/`; `SiegeTeam.ActiveWeaponSpots`, `SiegeScenario.FriendlyFire`, `SiegeScenario.WeaponSpotCooldownOverrideSeconds` (own line groups); `SiegeWeaponService`/`SiegeWeaponRepository` with the save rules; controllers `SiegeWeaponTemplates`, `SiegeAmmoTypes`, `SiegeWeaponSpots` (incl. `GET/POST api/SiegeScenarios/{id}/weapon-spots`), `UserSiegeWeaponUnlocks` (incl. `by-user/{userId}`), writes on `knk.siege.admin.manage` (+ `knk.admin.content` via the change rule, deletes + `knk.admin.delete`); dashboard registry and lookups; own `KnKDbContext` block; additive migration `AddSiegeWeapons`; form seeds for the four entities and the join, in-place step/field in `SiegeScenario.json`/`SiegeTeam.json`.
+    2. knk-web-app: DTO types, four clients, `Controllers` enums, `entityApiMapping` cases, dashboard columns (no `objectConfigs` entries; #608's permissiongrant entry untouched).
+    3. knk-workspace (`next`): smoke-test § 1 updated and tagged (2 of 11 automated, 8 partly), changelog "Unreleased" entry, spec status, dashboard access guide Siege row.
+2. **Commits and heads.** knk-web-api `claude/siege-weapons-l1` at `d65e7c9` (5 commits incl. a merge of `origin/next` `7d213fd` (AddItemIdentity, #141) and the regenerated migration `20261119100022_AddSiegeWeapons` on top of it); knk-web-app at `6138dc9` (2 commits, base `next` at `3432e6e`); knk-workspace at `f6ce0304` (2 commits incl. a merge of `origin/next`; CHANGELOG conflict resolved by keeping both entries).
+3. **PRs.** https://github.com/PandiO/knk-web-api/pull/52 (Closes #782), https://github.com/PandiO/knk-web-app/pull/56, https://github.com/PandiO/knk-workspace/pull/794, base `next`. Not merged.
+4. **Tests, baseline → result.**
+    1. knk-web-api: baseline on `next` 4451 passed, 1 failed, 100 skipped (MySQL, no `KNK_TEST_MYSQL`); result 4499 passed, 0 failed, 100 skipped (47 new); after merging `next` 7d213fd: 4532 passed, 0 failed, 103 skipped. CI green on `d65e7c9` (build-and-test, mysql-tests, fresh-database: runs 44501976157, 44501976137).
+    2. knk-web-app: Jest 2767 → 2773; Playwright 198 → 204; `tsc --noEmit`, `typecheck:e2e`, `CI=true npm run build` clean before and after. CI green on `6138dc9` (build-and-test, e2e: runs 44500790545, 44500790451).
+    3. Known reds (also red on the base): `RealtimeHubTests.WebHub_AcceptsTheAccessTokenQueryString` failed once in the baseline and passed on the branch: flaky, not caused by this link.
+    4. Codex: at its usage limit (also on the `@codex review` after the merge pushes) for code reviews on all three PRs (its review "failed", then the usage-limit comment); continued without it, noted on each PR. No inline findings.
+5. **Decisions (DESIGN § 4.3).**
+    1. *Active weapon spots default.* Chosen: `SiegeTeam.ActiveWeaponSpots` is an int, default 0 (none), because existing scenarios then have no usable spot and play exactly as before. Alternatives: (a) nullable with null = all spots active, an extra meaning for the plugin to handle; (b) default 1, which would switch spots on for every existing team.
+    2. *Schematic references.* Chosen: `ArmedSchematicId`, `FiredSchematicId`, `WreckSchematicId` as nullable ints without a foreign key and not on the form, because the #614 pipeline has no table yet and its metadata entity will have an int id. Alternatives: (a) string file keys, which would need a conversion when #614 lands; (b) leave them out, which the sub-issue asks to keep nullable instead.
+    3. *Kind-specific fields.* Chosen: the indirect-only fields (spread, ranging step, flight time, arc height) and the direct-only cone are non-null with the spec's proposal defaults, checked only for their kind, and the seeded form shows them per kind, because the plugin then never handles nulls. Alternatives: (a) nullable per kind, more null handling for every later link.
+    4. *Defaults the spec leaves open.* Chosen: max health 300, build 60 s, reload 20 s, max range 100, arc height 20, match price 200, unlock price 1000, spot cooldown 120; ammo damage 10, structure damage 100, radius 2, knockback 1, price 10; all configuration tuned in the alpha (§ 15.2). Alternatives: (a) no defaults (required fields), more typing for every row.
+    5. *Spot ownership and deletes.* Chosen: a spot cascades from its scenario and from its team (deleting a team removes its spots), because W44 gives every spot an owning team. Alternatives: (a) SetNull on the team, which leaves ownerless spots; (b) Restrict, which blocks deleting a team.
+    6. *Size class in phase 1.* Chosen: bounds, facing and size class are typed in the form (bounds all six or none, min ≤ max); the derivation from the footprint and facing (W70) stays with the phase 2 world task (#783). Alternatives: (a) derive in the API now, which would put the facing rule in two places before L2 designs it.
+    7. *Who grants unlocks.* Chosen: staff with `knk.siege.admin.manage` grant and revoke them in the web app, and the plugin key may write them, because buying an unlock with coins is in no phase's scope; filed as #795. Alternatives: (a) build the coin purchase here, which touches the currency ledger and goes beyond L1's data-only scope.
+    8. *Delete protections.* Chosen: users (soft-deleted) and templates a player unlocked are Restrict (409 "players have unlocked"), and an ammo type a template allows can't be deleted (409 naming the templates), because unlocks were paid with coins and removing ammo should be a deliberate step. Alternatives: (a) cascade, which silently removes paid unlocks or template ammo.
+    9. *Unique names.* Chosen: template and ammo type names are unique (case-insensitive check, unique index), because players pick them by name in the shop and on the page. Alternatives: (a) no uniqueness.
+    10. *Scenario and team seeds.* Chosen: the new step and fields were added to `SiegeScenario.json` and `SiegeTeam.json` in place, without a new configuration GUID (the NavigationItem precedent), because the objective and spawnpoint seeds' rules depend on the scenario configuration's Town field GUID. Alternatives: (a) new seed versions with new GUIDs, which would break those rule dependencies.
+    11. *Spot routes.* Chosen: `GET/POST api/SiegeScenarios/{id}/weapon-spots` are served by `SiegeWeaponSpotsController` with absolute routes, so `SiegeScenariosController` stays untouched (Siege Survival overlap). Alternatives: (a) add them to `SiegeScenariosController` next to objectives.
+    12. *Field names.* Chosen: `ArmorPiercing` (Minecraft API spelling), `EffectLevel` for the poison level, `ProjectileBlock` and `ParticleTrail` as material and particle names, `ArcHeight` in blocks. Alternatives: (a) one JSON "look" field, harder to validate and edit in the form.
+6. **Out of scope, noted.** #795 filed: buying a weapon type unlock with coins (W32) is in no phase's scope; staff grants and plugin-key writes exist.
+7. **Blockers.** None. Note: the two `origin/next` merge commits carry git's default message without the co-author/session trailers; they are pushed and not rewritten (no force-push).
+8. **At merge / what the developer must do.**
+    1. Apply the migration `AddSiegeWeapons` (additive: five tables, three defaulted columns).
+    2. Import the seeds `SiegeAmmoType`, `SiegeWeaponTemplateAmmoType.join`, `SiegeWeaponTemplate`, `SiegeWeaponSpot`, `UserSiegeWeaponUnlock` (make default); on a DB that imported `SiegeScenario`/`SiegeTeam` before, add the "Siege weapons" step and "Active weapon spots" field by hand in the form designer.
+    3. Run smoke-test § 1 (tier:3); decide where #795 goes.
+    4. At the merge into `next`: move the changelog entry; the docs follow-ups (API notes, production installation migration list, register row, admin guide) go into the `Docs:` sub-issue.
+9. **Notes for later links.**
+    1. L2: spots are created through `POST api/SiegeScenarios/{id}/weapon-spots` (`siegeTeamId`, `name`, `facing` North/East/South/West, `sizeClass`, `minX..maxZ` all six or none, `wgRegionId`); the API does not derive the size class yet (W70 is L2's); the seeded `SiegeWeaponSpot` form has no world task field yet.
+    2. L3: unlock check via `GET api/UserSiegeWeaponUnlocks/by-user/{userId}` (plugin key passes `[DashboardReads]`); the runtime-config payload (`api/siege-lobbies/runtime-config`) does not carry templates, spots, `ActiveWeaponSpots` or `FriendlyFire` yet; add them there. Schematic ids are plain nullable ints without a foreign key; #614 adds the key.
+    3. Any API link with a migration: merge `origin/next` and regenerate on top of `AddSiegeWeapons` (generated with `Database__MySqlServerVersion=8.0.36` and a dummy connection string, no MySQL needed).
