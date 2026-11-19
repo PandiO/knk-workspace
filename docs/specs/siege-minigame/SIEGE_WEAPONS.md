@@ -1,9 +1,10 @@
 # Siege Minigame — Siege Weapons
 
-**Status:** **Proposed** (2026-11-19) — the review gaps are closed (W58–W74, § 2.6); 3 open questions in § 15 and
-10 agent decisions (§ 2.7) to review. Before: V1 gameplay decided by the developer 2026-11-12 to 2026-11-16 (W1–W57).
-No implementation plan, no code.
-**Last updated:** 2026-11-19 (design run, `knk-design` skill: spread by ranging in, impact height and cover, weapon
+**Status:** **Decided 2026-11-19** (developer), with one change on approval (W75). Open questions answered (§ 15);
+agent decisions W64–W73 accepted with the approval. Earlier: V1 gameplay decided 2026-11-12 to 2026-11-16 (W1–W57),
+review gaps closed 2026-11-19 (W58–W74). Phases and sub-issues in § 14.2; no code yet.
+**Last updated:** 2026-11-19 (Decided: W75 aiming preview arc, open questions answered, phases split to 9 with
+sub-issues, smoke-test guide); 2026-11-19 (design run, `knk-design` skill: spread by ranging in, impact height and cover, weapon
 kill points, no buyer privileges, in-game aiming fallback, plugin-owned state with the API as relay
 ([DECISION-weapon-state.md](DECISION-weapon-state.md)), page credential, structure damage, flight time, check before
 charging, player damage to weapons, kill credit, size class relative to facing, idle lease, bolt damage, map snapshot
@@ -15,7 +16,7 @@ siege fire, tactical/targeting map, entities and forms, siege shop, schematic st
 firing and damage design (recorded here), #356 siege points, #357 spot picker on the web map, #613 tactical map and
 targeting page, #616 turning ballista research. Related issues from the same sessions: #611 siege shop, #612 notable
 events, #614 schematic and snapshot pipeline, #615 siege fire, #651 balancing statistics, #652 test-run recording,
-#653 usability testing. Phases become sub-issues on approval (§ 14).
+#653 usability testing. Phases are sub-issues (§ 14.2).
 **Dependencies:** siege points (#356), siege shop (#611), schematic and snapshot pipeline (#614), tactical and
 targeting map (#613), realtime channel (SignalR hub, built); siege fire (#615) only for incendiary ammo.
 **Related:**
@@ -29,7 +30,7 @@ targeting map (#613), realtime channel (SignalR hub, built); siege fire (#615) o
 
 **Authority:** the developer's design conversations of 2026-11-12 (text) and the voice design sessions recorded on
 2026-11-15 and 2026-11-16, and the design run of 2026-11-19 (questions answered by the developer in the session; agent
-decisions marked "agent" in § 2.6 until approval). Items marked *proposal* are suggestions the developer has not explicitly confirmed; treat them as defaults
+decisions marked "agent" in § 2.6, accepted with the approval of 2026-11-19). Items marked *proposal* are suggestions the developer has not explicitly confirmed; treat them as defaults
 for the implementation plan, not as decisions.
 
 ## 1. Goal
@@ -133,8 +134,8 @@ Scope: the Siege minigame (PvP). Siege Survival may get siege weapons later; not
 ### 2.6 Review gaps closed (design run 2026-11-19)
 
 A design run (`knk-design` skill) closed the gaps a review of this spec found on 2026-11-19. From here the log has
-date and author columns; agent decisions list their alternatives in § 2.7 and are open to review until the design is
-Decided.
+date and author columns; agent decisions list their alternatives in § 2.7 and were accepted when the developer approved the
+design on 2026-11-19.
 
 | ID | Date | Who | Decision |
 |---|---|---|---|
@@ -155,6 +156,7 @@ Decided.
 | W72 | 2026-11-19 | agent | **Bolts do only ammo damage.** The ballista bolt is a real arrow entity (W54), but its vanilla damage is cancelled; on hit the plugin applies the ammo type's damage, effect, knockback and structure damage instead. The arrow can't be picked up and is removed on impact. (Alternatives in § 2.7.) |
 | W73 | 2026-11-19 | agent | **Map snapshot and tile access.** Each scenario's snapshot tiles are rendered offline by the BlueMap container (in-game-maps § 7) when an admin asks for it (*proposal:* a "render map snapshot" action on the scenario), not at match start. Tiles are served through a small reverse proxy that only serves the scenario's area and needs a valid page credential (W64); BlueMap's public live-player layer stays off (§ 8). Details are #613's. (Alternatives in § 2.7.) |
 | W74 | 2026-11-19 | developer | **Coin unlocks now, Engineer profession later.** V1 keeps W32's coin unlocks. When professions are designed (vision § 4.2, open), the Engineer profession may become an extra or alternative unlock path (for example cheaper unlocks or a faster build). Nothing changes now; listed under "After v1" in § 15. |
+| W75 | 2026-11-19 | developer | **Aiming preview arc for the in-game fallback** (approval change, extends W62). While a trebuchet or catapult operator aims in game, the plugin draws a **particle trail arc** from the weapon to the looked-at point and the **targeting circle** at its current spread (W58) on the highest solid block there (W59), refreshed a few times a second (*proposal:* every 5 ticks) and visible **only to the operator**. The arc follows the projectile's path for that distance (W66). Out of range, under the minimum range or with no solid block, the arc and circle switch to a warning colour and firing is refused. The page (W26) stays the main way; this is its preferred in-game backup, together with look-to-target aiming. |
 
 ### 2.7 Agent decisions: alternatives
 
@@ -315,8 +317,9 @@ fixed direction (for example north) so they can be rotated in 90° steps to the 
 2. **Page:** the link opens the targeting page (§8), which redeems the token for a page credential (W64). It shows the
    scenario map with range rings, the targeting circle at its current spread (W58) and the allowed ammo types with
    their prices.
-3. **In game (W62):** the operator looks at a block within range; the action bar shows the ammo type and price
-   (scroll wheel to change, as W51) and whether the block is in range. A click fires.
+3. **In game (W62, W75):** the operator looks at a block within range; a particle arc runs from the weapon to the
+   targeting circle at that point, shown only to them, in a warning colour when the point is out of range. The
+   action bar shows the ammo type and price (scroll wheel to change, as W51). A click fires.
 4. On fire, the plugin, which owns the weapon's state (W63; page commands arrive through the API relay), checks the
    lease, range, reload and the shooter's siege points, charges the shot and starts the reload (W21, W67).
 5. The weapon swaps to its **fired** schematic (W55) and the plugin launches one visible projectile on an arc to a
@@ -488,7 +491,7 @@ facing (W70).
 |---|---|---|---|
 | Schematic paste, rotation, area snapshot and restore | WorldEdit and Paper block API | `knk-paper` siege weapons package | `WeaponStructurePort` (paste, swap armed/fired/wreck, snapshot, restore) |
 | Line of sight and highest solid block (W59) | Paper ray tracing | `knk-paper` | `ImpactGeometryPort` |
-| Projectile flight: block display entity, particles, whistle (W53, W54, W66) | Paper entities, sounds, particles | `knk-paper` | `ProjectileViewPort` (no game logic) |
+| Projectile flight: block display entity, particles, whistle (W53, W54, W66); aiming preview arc and circle (W75) | Paper entities, sounds, particles | `knk-paper` | `ProjectileViewPort` (no game logic; the arc's points come from the core trajectory) |
 | Applying damage with vanilla damage types, effects, knockback (W47, W49) | Bukkit damage sources and potion effects | `knk-paper` | `ImpactEffectsPort` |
 | Ballista mount, scroll-wheel cycling, in-game aiming (W51, W62) | Bukkit input events | `knk-paper` listeners | none: input adapter calling core commands |
 | Weapon block hits (W68) | Bukkit events, gate hit model | `knk-paper`, beside `GateDoorHitService` | none beyond the core damage rule |
@@ -500,7 +503,8 @@ facing (W70).
 1. **Weapon blocks vs gate doors:** weapon hits must not reach `GateDoorHitService`'s spatial index and the other way
    round; a ballista bolt hitting a gate must apply structure damage once (W72), not also as a vanilla projectile hit.
    Check before building P4.
-2. **Projectile cost:** a block display moved every tick per projectile; measure with several weapons firing
+2. **Projectile and preview cost:** a block display moved every tick per projectile, and the operator's preview arc
+   every few ticks; measure with several weapons firing
    (`PluginMetrics.timed`, KNG-232).
 3. **Relay latency and outages (W63):** a page shot crosses page → API → plugin and back; measure, and show
    "server unreachable" on the page when the plugin is disconnected.
@@ -525,63 +529,66 @@ facing (W70).
 | A06 | A refused placement (blocked area, no points, no fitting spot) charges nothing and names the reason | 3 |
 | A07 | Players inside the spot are pushed to the edge before the paste; the paste is rotated to the facing | 3 |
 | A08 | HP rises evenly from 0 over the build time; the weapon can be damaged and can't fire while building | 3 |
-| A09 | Enemies damage the weapon by melee, projectiles and fire like a gate; allies don't unless friendly fire is on | 3 |
-| A10 | Cracks show as HP drops; at 0 HP the wreck replaces the weapon, the lease ends, and only that spot locks for the cooldown (template or scenario override) | 3 |
-| A11 | No refund when a weapon is destroyed, also during its build; the buyer has no lease priority | 3 |
+| A09 | Enemies damage the weapon by melee, projectiles and fire like a gate; allies don't unless friendly fire is on | 4 |
+| A10 | Cracks show as HP drops; at 0 HP the wreck replaces the weapon, the lease ends, and only that spot locks for the cooldown (template or scenario override) | 4 |
+| A11 | No refund when a weapon is destroyed, also during its build; the buyer has no lease priority | 4 |
 | A12 | After a restart mid-match (also with the API down) every spot is restored from its local snapshot | 3 |
 | A13 | At match end every weapon and wreck is removed and every spot restored | 3 |
-| A14 | The team info display shows state, HP and reload to the owning team only | 3 |
-| A15 | Mounting the ballista takes the lease; a second player can't take it | 4 |
-| A16 | The scroll wheel cycles bolt types without changing the hotbar; the action bar shows bolt and price | 4 |
-| A17 | Shots outside the template's cone are refused | 4 |
-| A18 | A bolt deals only its ammo damage (no vanilla arrow damage), knocks back along its flight, and applies structure damage × gate or weapon multiplier | 4 |
-| A19 | The shooter pays per shot; at most one shot per reload; armed → fired → armed shows the state | 4, 5 |
-| A20 | The lease ends after the idle timeout without a shot, on death, on leaving the match and on walking away | 4, 5 |
-| A21 | Kills, assists and fire or poison deaths from a shot credit the shooter with full siege points and streak | 4, 5 |
-| A22 | Enemies can damage but never operate a weapon | 4, 5 |
-| A23 | Right-clicking a trebuchet or catapult gives the page link and "aim in game" | 5 |
-| A24 | In-game aiming fires at the looked-at block within min/max range, with scroll-wheel ammo choice | 5 |
-| A25 | The projectile is visible along its arc and lands after the template's flight time; a whistle sounds on the way down | 5 |
-| A26 | The spread starts at the start radius, narrows by the ranging step on consecutive shots at about the same point, and resets when the point moves, the operator changes or the lease ends | 5 |
-| A27 | The impact is on the highest solid block; players and structures without line of sight to it take nothing | 5 |
-| A28 | Damage, knockback, fire and poison follow the ammo's effect curve and vanilla damage types, so armour and shields count | 5 |
-| A29 | Players in their own spawn safe zone take nothing; players above it on another floor do | 5 |
-| A30 | The link token works once and is exchanged for a page credential; a reused or expired token is refused | 6 |
-| A31 | A page shot reaches the plugin through the API relay; the plugin re-checks lease, range, reload and points; a race fires at most once | 6 |
-| A32 | The page shows range rings, the current spread, ammo with prices, siege points, the reload, and shaded spawn zones with the advisory note | 6 |
-| A33 | Tiles outside the scenario area and requests without a valid credential are refused; only own-team markers show | 6 |
-| A34 | With the plugin disconnected the page says the server is unreachable and fires nothing | 6 |
-| A35 | Siege weapon statistics (shots, hits, damage, kills per weapon and ammo type) are recorded per match | 3–5 |
+| A14 | The team info display shows state, HP and reload to the owning team only | 4 |
+| A15 | Mounting the ballista takes the lease; a second player can't take it | 5 |
+| A16 | The scroll wheel cycles bolt types without changing the hotbar; the action bar shows bolt and price | 5 |
+| A17 | Shots outside the template's cone are refused | 5 |
+| A18 | A bolt deals only its ammo damage (no vanilla arrow damage), knocks back along its flight, and applies structure damage × gate or weapon multiplier | 5 |
+| A19 | The shooter pays per shot; at most one shot per reload; armed → fired → armed shows the state | 5, 6 |
+| A20 | The lease ends after the idle timeout without a shot, on death, on leaving the match and on walking away | 5, 6 |
+| A21 | Kills, assists and fire or poison deaths from a shot credit the shooter with full siege points and streak | 5, 6 |
+| A22 | Enemies can damage but never operate a weapon | 5, 6 |
+| A23 | Right-clicking a trebuchet or catapult gives the page link and "aim in game" | 6 |
+| A24 | In-game aiming fires at the looked-at block within min/max range, with scroll-wheel ammo choice | 6 |
+| A25 | The projectile is visible along its arc and lands after the template's flight time; a whistle sounds on the way down | 6 |
+| A26 | The spread starts at the start radius, narrows by the ranging step on consecutive shots at about the same point, and resets when the point moves, the operator changes or the lease ends | 6 |
+| A27 | The impact is on the highest solid block; players and structures without line of sight to it take nothing | 6 |
+| A28 | Damage, knockback, fire and poison follow the ammo's effect curve and vanilla damage types, so armour and shields count | 7 |
+| A29 | Players in their own spawn safe zone take nothing; players above it on another floor do | 7 |
+| A30 | The link token works once and is exchanged for a page credential; a reused or expired token is refused | 8 |
+| A31 | A page shot reaches the plugin through the API relay; the plugin re-checks lease, range, reload and points; a race fires at most once | 8 |
+| A32 | The page shows range rings, the current spread, ammo with prices, siege points, the reload, and shaded spawn zones with the advisory note | 9 |
+| A33 | Tiles outside the scenario area and requests without a valid credential are refused; only own-team markers show | 9 |
+| A34 | With the plugin disconnected the page says the server is unreachable and fires nothing | 8 |
+| A35 | Siege weapon statistics (shots, hits, damage, kills per weapon and ammo type) are recorded per match | 4 |
+| A36 | While aiming in game, only the operator sees a particle arc from the weapon to the targeting circle at the looked-at point, at the current spread; it turns to the warning colour out of range, under min range or with no block, and firing is then refused | 6 |
 
-### 14.2 Phases (draft until approval)
+### 14.2 Phases
 
-The feature is `tier:3` (new entities, schema, game feel). Proposed phases; sub-issues are created on approval.
+The feature is `tier:3` (new entities, schema, game feel). Each phase merges into `next` on its own; every plugin
+phase stays behind `siege.weapons.enabled` (default `false`). The draft's six phases were split to nine on approval so
+each fits one link. Sub-issue numbers: see the table.
 
 | Phase | Scope | Acceptance | Repos | Tier | Flag | Sub-issue | Depends on |
 |---|---|---|---|---|---|---|---|
-| 1 | Entities, API, form seeds, unlocks | A01 | knk-web-api, knk-web-app | tier:3 | none (data only) | on approval | #614 (schematic references, nullable until then) |
-| 2 | Spots through world tasks | A02–A03 | knk-plugin, knk-web-api | tier:2 | `siege.weapons.enabled` | on approval | 1 |
-| 3 | Placement, build, HP, player damage, wreck, cooldown, restore, info display, statistics | A04–A14, A35 | knk-plugin, knk-web-api | tier:3 | `siege.weapons.enabled` | on approval | 2, #356, #611, #614 |
-| 4 | Ballista direct fire | A15–A22 | knk-plugin | tier:3 | `siege.weapons.enabled` | on approval | 3 |
-| 5 | Trebuchet and catapult in game: projectiles, spread, impact, effects, in-game aiming | A19–A29 | knk-plugin | tier:3 | `siege.weapons.enabled` | on approval | 3; #615 for ground fire |
-| 6 | Browser targeting: credential, API relay, targeting mode, tiles | A30–A34 | knk-web-api, knk-web-app, knk-plugin | tier:3 | `siege.weapons.enabled` | on approval | 5, #613 |
+| 1 | Entities, API, form seeds, unlocks | A01 | knk-web-api, knk-web-app | tier:3 | none (data only) | P1 | #614 (schematic references, nullable until then) |
+| 2 | Spots through world tasks | A02–A03 | knk-plugin, knk-web-api | tier:2 | `siege.weapons.enabled` | P2 | 1 |
+| 3 | Buying, placement, paste, build phase, crash and match-end restore | A04–A08, A12–A13 | knk-plugin, knk-web-api | tier:3 | `siege.weapons.enabled` | P3 | 2, #356, #611, #614 |
+| 4 | Weapon damage by players, cracks, wreck, spot cooldown, team info display, statistics | A09–A11, A14, A35 | knk-plugin, knk-web-api | tier:3 | `siege.weapons.enabled` | P4 | 3 |
+| 5 | Ballista direct fire | A15–A22 | knk-plugin | tier:3 | `siege.weapons.enabled` | P5 | 4 |
+| 6 | Trebuchet and catapult in game: lease, look-to-target aiming with preview arc, projectile, spread, impact and line of sight | A19–A27, A36 | knk-plugin | tier:3 | `siege.weapons.enabled` | P6 | 4 |
+| 7 | Ammo effects: vanilla damage types, fall-off, knockback, fire, poison, spawn protection | A28–A29 | knk-plugin | tier:3 | `siege.weapons.enabled` | P7 | 5 or 6; #615 for ground fire |
+| 8 | Page credential and API relay over SignalR | A30–A31, A34 | knk-web-api, knk-plugin | tier:3 | `siege.weapons.enabled` | P8 | 6 |
+| 9 | Targeting mode on the map page, snapshot tiles and proxy | A32–A33 | knk-web-app, knk-web-api | tier:3 | `siege.weapons.enabled` | P9 | 8, #613 |
 
-Smoke test: `docs/guides/siege-weapons-smoke-test.md`, written on approval.
+Smoke test: [guides/siege-weapons-smoke-test.md](../../guides/siege-weapons-smoke-test.md).
 
 ## 15. Open questions
 
-Resolved earlier: Q1 (right-click, W45), Q3 (objectives, W46), Q6 (cone and bolt choice, W51, W52).
+None open. Answered on approval (2026-11-19, developer, recommended options):
 
-1. **Size classes (was Q2).** Confirm the § 3 sizes once our own schematics are built. Options: (a) confirm them in
-   phase 3 when the first armed/fired/wreck schematics exist, and change the classes then if needed; (b) build the
-   schematics before phase 1. Recommendation: (a), because the size classes are configuration, not schema.
-2. **Balance numbers (was Q4, Q5).** Siege-point amounts per action (#356) and per-ammo damage, structure damage,
-   radius, knockback, armour piercing, spread, flight time and idle timeout. Options: (a) ship with the *proposal*
-   defaults in this spec and tune them in the alpha balance runs (#651); (b) settle them in a balancing session before
-   phase 3. Recommendation: (a), because only real matches show the right values.
-3. **Object store (was Q7).** Which S3-compatible store runs on the NAS (Garage, MinIO or SeaweedFS). Options:
-   (a) decide it in #614 with its own decision matrix; (b) decide here. Recommendation: (a), because the pipeline is
-   shared infrastructure.
+1. **Size classes (was Q2):** (a) confirmed in phase 3 once the first armed, fired and wreck schematics exist; the
+   classes are configuration and change then if needed.
+2. **Balance numbers (was Q4, Q5):** (a) ship with the *proposal* defaults in this spec and tune them in the alpha
+   balance runs (#651).
+3. **Object store (was Q7):** (a) decided in #614 with its own decision matrix.
+
+Resolved earlier: Q1 (right-click, W45), Q3 (objectives, W46), Q6 (cone and bolt choice, W51, W52).
 
 ### After v1
 
