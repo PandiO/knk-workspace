@@ -566,15 +566,15 @@ each fits one link. Sub-issue numbers: see the table.
 
 | Phase | Scope | Acceptance | Repos | Tier | Flag | Sub-issue | Depends on |
 |---|---|---|---|---|---|---|---|
-| 1 | Entities, API, form seeds, unlocks | A01 | knk-web-api, knk-web-app | tier:3 | none (data only) | P1 | #614 (schematic references, nullable until then) |
-| 2 | Spots through world tasks | A02–A03 | knk-plugin, knk-web-api | tier:2 | `siege.weapons.enabled` | P2 | 1 |
-| 3 | Buying, placement, paste, build phase, crash and match-end restore | A04–A08, A12–A13 | knk-plugin, knk-web-api | tier:3 | `siege.weapons.enabled` | P3 | 2, #356, #611, #614 |
-| 4 | Weapon damage by players, cracks, wreck, spot cooldown, team info display, statistics | A09–A11, A14, A35 | knk-plugin, knk-web-api | tier:3 | `siege.weapons.enabled` | P4 | 3 |
-| 5 | Ballista direct fire | A15–A22 | knk-plugin | tier:3 | `siege.weapons.enabled` | P5 | 4 |
-| 6 | Trebuchet and catapult in game: lease, look-to-target aiming with preview arc, projectile, spread, impact and line of sight | A19–A27, A36 | knk-plugin | tier:3 | `siege.weapons.enabled` | P6 | 4 |
-| 7 | Ammo effects: vanilla damage types, fall-off, knockback, fire, poison, spawn protection | A28–A29 | knk-plugin | tier:3 | `siege.weapons.enabled` | P7 | 5 or 6; #615 for ground fire |
-| 8 | Page credential and API relay over SignalR | A30–A31, A34 | knk-web-api, knk-plugin | tier:3 | `siege.weapons.enabled` | P8 | 6 |
-| 9 | Targeting mode on the map page, snapshot tiles and proxy | A32–A33 | knk-web-app, knk-web-api | tier:3 | `siege.weapons.enabled` | P9 | 8, #613 |
+| 1 | Entities, API, form seeds, unlocks | A01 | knk-web-api, knk-web-app | tier:3 | none (data only) | #782 | #614 (schematic references, nullable until then) |
+| 2 | Spots through world tasks | A02–A03 | knk-plugin, knk-web-api | tier:2 | `siege.weapons.enabled` | #783 | 1 |
+| 3 | Buying, placement, paste, build phase, crash and match-end restore | A04–A08, A12–A13 | knk-plugin, knk-web-api | tier:3 | `siege.weapons.enabled` | #784 | 2, #356, #611, #614 |
+| 4 | Weapon damage by players, cracks, wreck, spot cooldown, team info display, statistics | A09–A11, A14, A35 | knk-plugin, knk-web-api | tier:3 | `siege.weapons.enabled` | #785 | 3 |
+| 5 | Ballista direct fire | A15–A22 | knk-plugin | tier:3 | `siege.weapons.enabled` | #786 | 4 |
+| 6 | Trebuchet and catapult in game: lease, look-to-target aiming with preview arc, projectile, spread, impact and line of sight | A19–A27, A36 | knk-plugin | tier:3 | `siege.weapons.enabled` | #787 | 4 |
+| 7 | Ammo effects: vanilla damage types, fall-off, knockback, fire, poison, spawn protection | A28–A29 | knk-plugin | tier:3 | `siege.weapons.enabled` | #788 | 5 or 6; #615 for ground fire |
+| 8 | Page credential and API relay over SignalR | A30–A31, A34 | knk-web-api, knk-plugin | tier:3 | `siege.weapons.enabled` | #789 | 6 |
+| 9 | Targeting mode on the map page, snapshot tiles and proxy | A32–A33 | knk-web-app, knk-web-api | tier:3 | `siege.weapons.enabled` | #790 | 8, #613 |
 
 Smoke test: [guides/siege-weapons-smoke-test.md](../../guides/siege-weapons-smoke-test.md).
 
