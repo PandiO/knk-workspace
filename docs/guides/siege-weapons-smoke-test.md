@@ -1,42 +1,86 @@
 # Siege weapons — smoke test
 
-**Status:** Draft from the design (2026-11-19); no steps run. Steps not yet automated (the links tag them).
-**Last updated:** 2026-11-19 (draft from the design, phases 1–9)
+**Status:** § 1 updated to phase 1 as built (link L1, #782): 2 of its 11 steps automated, 8 partly, not run live yet;
+§ 2–9 draft from the design (2026-11-19), no steps run. Every step can still be run by hand.
+**Last updated:** 2026-11-19 (§ 1 updated to what link L1 built, steps tagged); 2026-11-19 (draft from the design,
+phases 1–9)
 **Design:** [specs/siege-minigame/SIEGE_WEAPONS.md](../specs/siege-minigame/SIEGE_WEAPONS.md) · **Issue:**
 [PandiO/knk-workspace#354](https://github.com/PandiO/knk-workspace/issues/354)
 
-Accounts used throughout: **Admin** (web app staff with `knk.admin.content` and `knk.admin.world`, op in game),
+Accounts used throughout: **Admin** (web app staff with `knk.admin.content`, `knk.admin.world` and
+`knk.siege.admin.manage`, op in game),
 **A1** and **A2** (two players on the attacking team), **D1** (a player on the defending team). Write down any step
 that fails, with the server log lines.
 
 ## 1. Phase 1: entities, API, form seeds and unlocks (#782, tier:3)
 
-*Draft from the design (2026-11-19); the link updates it to what was built and tags the automated steps.*
+*Updated to what was built (link L1, 2026-11-19): 2 of 11 steps automated in CI, 8 partly (tagged); every step can
+still be run by hand; not run live yet. A full manual run takes about 25 minutes, the untagged step about 5. The tests
+named here are in knk-web-api `Tests/knkwebapi_v2.Tests/` and knk-web-app `e2e/` and `src/`.*
 
 ### 1.0 Preconditions
 
-1. Deployed: knk-web-api from `next` with the phase 1 migration applied (`dotnet ef database update`); knk-web-app from
-   `next`.
-2. Settings: none.
-3. Accounts and data: Admin; one Siege scenario with two teams.
+1. Deployed: knk-web-api from `next` with the phase 1 migration `AddSiegeWeapons` applied (`dotnet ef database
+   update`); knk-web-app from `next`.
+2. Settings: none (no flag, no config key: phase 1 is data only).
+3. Accounts and data: Admin with `knk.siege.admin.manage` and `knk.admin.content` (create and edit need both; deleting
+   also needs `knk.admin.delete`); a second staff account with `knk.admin.content` only; players A1 and A2 with web
+   accounts; one Siege scenario with two teams (attackers and defenders) that was Ready before the migration.
 
 ### 1.1 Steps
 
-1. As Admin, import the default form seeds for siege weapon templates, ammo types and weapon spots (Form
-   configurations → Import / seeds) and make them the defaults. **Expected:** the three forms are listed as defaults.
-   (A01)
-2. As Admin, create the ammo type "Heavy boulder": effect Impact, damage 12, structure damage 120, blast radius 2,
-   knockback 1, price 20. **Expected:** it saves and shows in the ammo type list with every field. (A01)
-3. As Admin, create a template "Trebuchet": kind Indirect, size Large, max health 400, build time 60 s, reload 20 s,
-   max range 120, min range 20, start spread 8, minimum spread 3, ranging step 1.5, flight time 4 s, gate multiplier
-   1, weapon multiplier 1, spot cooldown 120 s, match price 800, unlock price 5000, allowed ammo "Heavy boulder".
-   **Expected:** it saves; reopening shows the same values and the ammo link. (A01)
-4. As Admin, try to save a template with a minimum spread larger than its start spread, and one with a min range
-   above its max range. **Expected:** each is refused with a field message; nothing is saved. (A01)
-5. As Admin, open the scenario and set Active weapon spots to 2 for the attackers, the cooldown override to empty
-   and Friendly fire off. **Expected:** the values save. (A01)
-6. As Admin, add an unlock of "Trebuchet" for A1 (or let A1 buy it, if the unlock purchase is built in this phase).
-   **Expected:** A1's unlocks list "Trebuchet"; A2's don't. (A01)
+1. [partly automated: FormConfigurationSeedFilesTests (every seed dry-runs and imports in dependency order); by hand:
+   the import panel] As Admin, open Form configurations → Import / seeds and import, in this order, `SiegeAmmoType`,
+   `SiegeWeaponTemplateAmmoType.join`, `SiegeWeaponTemplate`, `SiegeWeaponSpot` and `UserSiegeWeaponUnlock`, each with
+   "make default". If the database imported `SiegeScenario` and `SiegeTeam` before this phase, add by hand in the form
+   designer what their seed files gained (import never overwrites): the scenario's "Siege weapons" step before
+   "Readiness" (Friendly fire, Spot cooldown override, the owned Weapon spots list) and the team's "Active weapon spots"
+   field at the end of "Role and alliance". **Expected:** the five new forms are listed as defaults; the scenario and
+   team forms show the new step and field. (A01)
+2. [partly automated: e2e/siege-weapons.spec.ts "saves an ammo type with its structure damage", SiegeWeaponServiceTests
+   `AmmoType_SavesEveryField_IncludingStructureDamage`; by hand: the seeded four-step form] As Admin, open the dashboard
+   → Siege ammo type → Create and make "Heavy boulder": effect Impact, player damage 12, structure damage 120, blast
+   radius 2, knockback 1, armour piercing 0, projectile block STONE, price per shot 20. **Expected:** it saves and the
+   ammo type list shows it with effect, damage, structure damage, radius and price. (A01)
+3. [partly automated: e2e/siege-weapons.spec.ts "saves a weapon template", SiegeWeaponServiceTests
+   `Template_SavesEveryField_AndTheAmmoLink`; by hand: the seeded form's steps and its Ammo join step] As Admin, create
+   the template "Trebuchet": kind Indirect, size Large, max health 400, build time 60 s, reload 20 s, max range 120, min
+   range 20, start spread 8, minimum spread 3, ranging step 1.5, flight time 4 s, arc height 30, gate multiplier 1,
+   weapon multiplier 1, spot cooldown 120 s, match price 800, unlock price 5000, and on the Ammo step add a join entry
+   for "Heavy boulder". **Expected:** it saves; reopening shows the same values and the ammo link; the template list
+   shows kind, size, prices and 1 ammo type. (A01)
+4. As Admin, start a template "Ballista" and switch the kind between Indirect and Direct (manual: display conditions
+   of the seeded form). **Expected:** "Spread and flight" shows only for Indirect, "Firing cone" (default 60) only for
+   Direct; a Direct template with gate multiplier 3 saves. (A01)
+5. [partly automated: SiegeWeaponServiceTests `Template_RefusesBadValues`; by hand: the message in the wizard] As Admin,
+   try to save a template with a minimum spread larger than its start spread, and one with a min range above its max
+   range. **Expected:** each is refused with a message naming the field (`minSpreadRadius can't be larger than
+   startSpreadRadius`, `minRange must be below maxRange`); nothing is saved. (A01)
+6. [partly automated: SiegeWeaponServiceTests `Scenario_FriendlyFireAndCooldownOverride_TeamActiveSpots_Save`; by hand:
+   the scenario and team forms] As Admin, open the scenario: on "Siege weapons" leave Friendly fire off and the spot
+   cooldown override empty; open the attacker team and set Active weapon spots to 2. **Expected:** the values save;
+   the defender team still shows 0. (A01)
+7. [partly automated: SiegeWeaponServiceTests `Spot_IsCreatedUnderItsScenario_AndShowsOnTheScenario`,
+   `Spot_TeamMustBelongToTheScenario`, src/apiClients/__tests__/siegeWeaponClients.test.ts; by hand: the owned list in
+   the wizard] As Admin, on the scenario's "Siege weapons" step use Create New: team = the attackers (the picker lists
+   only this scenario's teams), name "North wall", facing East, size class Large, bounds 0 64 0 to 8 80 14.
+   **Expected:** the spot saves (`POST api/SiegeScenarios/{id}/weapon-spots`) and shows in the step's list; leaving one
+   bound coordinate empty is refused ("all six bound coordinates … or none"). (A01)
+8. [partly automated: SiegeWeaponServiceTests `Unlock_IsListedForThatPlayerOnly_AndOncePerType`; by hand: the form]
+   As Admin, open the dashboard → User siege weapon unlock → Create: player A1, weapon type "Trebuchet", unlocked at
+   empty. (Players buying an unlock with coins is not built in this phase.) **Expected:** A1's unlocks list
+   "Trebuchet" with today's date (`GET api/UserSiegeWeaponUnlocks/by-user/<A1 id>`); A2's don't; a second unlock of
+   Trebuchet for A1 is refused with "already unlocked". (A01)
+9. [partly automated: SiegeWeaponServiceTests `AmmoType_AllowedOnATemplate_CantBeDeleted`,
+   `Template_WithUnlocks_CantBeDeleted_WithoutItCascadesItsAmmoLinks`; by hand: the dashboard message] As Admin (with
+   `knk.admin.delete`), try to delete "Heavy boulder" and then "Trebuchet". **Expected:** both are refused: the ammo
+   type names the Trebuchet that allows it, the template says players have unlocked it. (A01)
+10. [automated: e2e/siege-weapons.spec.ts "content-only staff do not get the siege weapon types"] Log in as the staff
+    account with `knk.admin.content` only and open the dashboard. **Expected:** no Siege weapon template, ammo type or
+    unlock type in the list. (A01)
+11. [automated: AddSiegeWeaponsTests `Up_NewColumns_DefaultToTheOldBehaviour`, the existing Siege suites] Open the
+    scenario that was Ready before the migration and press Re-check on "Readiness". **Expected:** still Ready; existing
+    scenarios have Friendly fire off, no cooldown override and 0 active weapon spots, so their matches play as before.
 
 ## 2. Phase 2: spots through world tasks (#783, tier:2)
 

@@ -4,6 +4,28 @@ This is a human-readable record of capabilities merged into the V3 default branc
 
 ## Unreleased — on feature branches, not merged
 
+- **Siege weapons: templates, ammo types, weapon spots and unlocks can be set up in the web app** ([PandiO/knk-workspace#782](https://github.com/PandiO/knk-workspace/issues/782),
+  link L1 of the siege weapons chain, phase 1 of [#354](https://github.com/PandiO/knk-workspace/issues/354)). Staff
+  can now describe trebuchets, catapults and ballistas, their ammunition and the places in a siege scenario where a
+  team may put one; nothing changes in a match yet. knk-web-api: new entities `SiegeWeaponTemplate` (range, spread by
+  ranging in, flight time, cone, gate and weapon damage multipliers, spot cooldown, match and unlock prices; schematic
+  references stay nullable until #614), `SiegeAmmoType` (effect, player and structure damage, radius, knockback, armour
+  piercing, effect area, price per shot; many-to-many with templates), `SiegeWeaponSpot` (owned by a scenario and one of
+  its teams: bounds, facing, size class) and `UserSiegeWeaponUnlock` (one per player and type), plus
+  `SiegeTeam.ActiveWeaponSpots` (0), `SiegeScenario.FriendlyFire` (off) and
+  `SiegeScenario.WeaponSpotCooldownOverrideSeconds` (empty). Endpoints `api/SiegeWeaponTemplates`, `api/SiegeAmmoTypes`,
+  `api/SiegeScenarios/{id}/weapon-spots` with `api/SiegeWeaponSpots/{id}`, and `api/UserSiegeWeaponUnlocks` (with
+  `by-user/{userId}`); writes need `knk.siege.admin.manage` (or the plugin key), create and edit also
+  `knk.admin.content`, deletes `knk.admin.delete`. knk-web-app: clients, dashboard columns and form wizard support.
+  Branches `claude/siege-weapons-l1` in knk-web-api, knk-web-app and knk-workspace (PRs into `next`). No flag (data
+  only). Admin steps:
+  1. Apply the migration `AddSiegeWeapons` (`dotnet ef database update`; additive: five tables, three defaulted
+     columns).
+  2. Import the form seeds `SiegeAmmoType`, `SiegeWeaponTemplateAmmoType.join`, `SiegeWeaponTemplate`,
+     `SiegeWeaponSpot`, `UserSiegeWeaponUnlock` (in that order, "make default").
+  3. On a database that imported `SiegeScenario` and `SiegeTeam` before, add the scenario's "Siege weapons" step and
+     the team's "Active weapon spots" field in the form designer (the seed files have them; import never overwrites).
+
 - **Navigation: walk trails reach the keep storage hall and pass roof hatches** ([PandiO/knk-workspace#771](https://github.com/PandiO/knk-workspace/issues/771)
   items 1 and 2, fix link F1 of the off-road navigation chain). A walking route that once found its way no longer
   loses it when the trail is recalculated inside a building: the recalculation keeps the area and length of the way
