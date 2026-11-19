@@ -46,7 +46,7 @@ of what is already in `next`.
 | L5 P1b stock web app | #675 | Merged into next (2026-11-19) | web app `9bec60f`, workspace `a5d10f37`; merges: web app `9f46cb49`, workspace `8fff63e2` | [web#60](https://github.com/PandiO/knk-web-app/pull/60), [ws#818](https://github.com/PandiO/knk-workspace/pull/818) | web app green (build-and-test, e2e) | create_session `session_01R1w2UuKsus7BT7DcXyL4jr` (one repo besides knk-workspace), started 2026-11-19 |
 | L6 P2 world API: structure subtypes, TownId, placement rules | #91 | Merged into next (2026-11-19) | api `303b6ab`, workspace `9ab62ab1`; merges: api `fcfced27`, workspace `c7fe8996` (after a coordinator merge of `next`, `15e3011e`) | [api#57](https://github.com/PandiO/knk-web-api/pull/57), [ws#822](https://github.com/PandiO/knk-workspace/pull/822) | green (build-and-test, mysql-tests, fresh-database) | create_session `session_01R1w2UscSGsG34qwc8vtEQj` (one repo besides knk-workspace), started 2026-11-19 |
 | L7 P2b world web app | #676 | Running | — | — | — | create_session `session_01R1w2UwqC5tNA7JBrnf61ko` (one repo besides knk-workspace), started 2026-11-19 |
-| L8 P2c world plugin: managed-region kinds | #677 | In review (2026-11-19) | plugin `cc563771`, workspace `cb11e03a` | [plugin#96](https://github.com/PandiO/knk-plugin/pull/96), [ws#823](https://github.com/PandiO/knk-workspace/pull/823) | green (plugin build + paper-boot, 64 scenarios) | create_session `session_01R1w2UtzV6puGzautXYEFJA` (one repo besides knk-workspace), started 2026-11-19 |
+| L8 P2c world plugin: managed-region kinds | #677 | Merged into next (2026-11-19) | plugin `cc563771`, workspace `cb11e03a`; merges: plugin `8ebb30be`, workspace `4654a1ad` | [plugin#96](https://github.com/PandiO/knk-plugin/pull/96), [ws#823](https://github.com/PandiO/knk-workspace/pull/823) | green (plugin build + paper-boot, 64 scenarios) | create_session `session_01R1w2UtzV6puGzautXYEFJA` (one repo besides knk-workspace), started 2026-11-19 |
 | L9 P3 production engine API | #86 | Running | — | — | — | create_session `session_01R1w2Uvi8uaBqDwjJDADicL` (one repo besides knk-workspace), started 2026-11-19 |
 | L10 P3b production web app | #678 | Not started | — | — | — | — |
 | L11 P4 yield areas API | #138 | Not started | — | — | — | — |
@@ -205,6 +205,19 @@ of what is already in `next`.
    nullable `Structure.DistrictId` and L9's coming migration.
 31. **P2 docs at the end of P2.** The `documentation` sub-issue for P2 (#91, #676, #677) starts when L7 and L8 are
    merged.
+
+32. **L7 waited for a "go" (2026-11-19).** The L7 session asked "run L7 as described?" at 18:43 and sat idle until the
+   19:34 check-in. The coordinator answered yes within its scope (SKILL § 5.2). Lesson for later prompts: say at the
+   top that the link starts at once without asking. Alternatives: (a) restart it: would lose nothing but time.
+33. **L8 merge (2026-11-19).** § 6 checks held:
+   1. Heads matched, and both branches contained `next`.
+   2. CI was green: plugin build and paper-boot, with 64 scenarios.
+   3. Codex was at its usage limit, so there were no findings.
+   4. The scope matched #677. It also raised `MIN_SCENARIOS` in `paper-boot.yml` from 63 to 64 for its new
+      `rural-structure-region` scenario, and made `RegionOutlineAdapter.outlineOf` public for rural region outlines.
+      Both are small and needed.
+   Merged plugin #96 `8ebb30be` and workspace #823 `4654a1ad`. No plugin link has an open gate now: L12, L15, L18 and
+   L20 wait for API links.
 
 ## 4. Link blocks
 
