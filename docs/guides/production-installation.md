@@ -638,7 +638,7 @@ promotes `next` lists them here with its tag:
    `item_blueprints` gets `StorageWeight` (decimal, 1 on existing rows); the only data written are the five system
    storages `SYS_PRODUCTION`, `SYS_CONSUMPTION`, `SYS_LOSS`, `SYS_ADJUSTMENT`, `SYS_WORLD` (ids 1-5). No `api.env` key.
    Set-up afterwards: import the form and display seeds `Storage` and `StockTransaction`, and grant
-   `knk.economy.admin` to the staff who may move stock ([changelog](../CHANGELOG.md) entry of #97).
+   `knk.economy.admin` to the staff who may move stock ([changelog](../CHANGELOG.md) entry of #97, [stock admin guide](admin/stock-admin-guide.md)).
 
 Earlier: `v0.2` (`58e3218`, 2026-11-14) added `20261109081203_AddTempRegionReleases` (#269), and `v0.1` (`6d5e9c1`,
 2026-11-13) added `20261113161725_SeedStaffFreezeNodes` (gives the Staff group `knk.freeze` and `knk.unfreeze`, #367).
