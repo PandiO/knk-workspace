@@ -45,7 +45,7 @@ of what is already in `next`.
 | L4 P1 stock core API: storages, ledger, reconciler, capacity, roll-up | #97 | Merged into next (2026-11-19) | api `e524721`, workspace `abef76fc`; coordinator merge of `next` `06fee906`; merges: api `2e7d4e81`, workspace `1bbdd69f` | [api#56](https://github.com/PandiO/knk-web-api/pull/56), [ws#816](https://github.com/PandiO/knk-workspace/pull/816) | green (build-and-test, mysql-tests, fresh-database) | create_session `session_01R1w2Uwv8FBnKCUoeZauzVt` (one repo besides knk-workspace), started 2026-11-19 |
 | L5 P1b stock web app | #675 | Merged into next (2026-11-19) | web app `9bec60f`, workspace `a5d10f37`; merges: web app `9f46cb49`, workspace `8fff63e2` | [web#60](https://github.com/PandiO/knk-web-app/pull/60), [ws#818](https://github.com/PandiO/knk-workspace/pull/818) | web app green (build-and-test, e2e) | create_session `session_01R1w2UuKsus7BT7DcXyL4jr` (one repo besides knk-workspace), started 2026-11-19 |
 | L6 P2 world API: structure subtypes, TownId, placement rules | #91 | Merged into next (2026-11-19) | api `303b6ab`, workspace `9ab62ab1`; merges: api `fcfced27`, workspace `c7fe8996` (after a coordinator merge of `next`, `15e3011e`) | [api#57](https://github.com/PandiO/knk-web-api/pull/57), [ws#822](https://github.com/PandiO/knk-workspace/pull/822) | green (build-and-test, mysql-tests, fresh-database) | create_session `session_01R1w2UscSGsG34qwc8vtEQj` (one repo besides knk-workspace), started 2026-11-19 |
-| L7 P2b world web app | #676 | In review (PRs open, 2026-11-19) | web app `f5ea646`, workspace `9d578854` | [web#61](https://github.com/PandiO/knk-web-app/pull/61), [ws#829](https://github.com/PandiO/knk-workspace/pull/829) | web app green (build-and-test, e2e) | subagent of the coordinator (19:37; the create_session `session_01R1w2UwqC5tNA7JBrnf61ko` refused to start, decision 34) |
+| L7 P2b world web app | #676 | Merged into next (2026-11-19) | web app `f5ea646`, workspace `9d578854`; merges: web app `18385344`, workspace `a5c05901` | [web#61](https://github.com/PandiO/knk-web-app/pull/61), [ws#829](https://github.com/PandiO/knk-workspace/pull/829) | web app green (build-and-test, e2e) | subagent of the coordinator (19:37; the create_session `session_01R1w2UwqC5tNA7JBrnf61ko` refused to start, decision 34) |
 | L8 P2c world plugin: managed-region kinds | #677 | Merged into next (2026-11-19) | plugin `cc563771`, workspace `cb11e03a`; merges: plugin `8ebb30be`, workspace `4654a1ad` | [plugin#96](https://github.com/PandiO/knk-plugin/pull/96), [ws#823](https://github.com/PandiO/knk-workspace/pull/823) | green (plugin build + paper-boot, 64 scenarios) | create_session `session_01R1w2UtzV6puGzautXYEFJA` (one repo besides knk-workspace), started 2026-11-19 |
 | L9 P3 production engine API | #86 | In review (2026-11-19) | api `20dcfb7`, workspace `ea01df32` | [api#58](https://github.com/PandiO/knk-web-api/pull/58), [ws#827](https://github.com/PandiO/knk-workspace/pull/827) | green (build-and-test, mysql-tests, fresh-database) | create_session `session_01R1w2Uvi8uaBqDwjJDADicL` (one repo besides knk-workspace), started 2026-11-19 |
 | L10 P3b production web app | #678 | Not started | — | — | — | — |
@@ -226,6 +226,19 @@ of what is already in `next`.
    the stalled session was told to stop. Alternatives: (a) ask the developer to type "run L7" in that session: a
    manual step per link; (b) a new `create_session`: the same refusal is likely. If more `create_session` links refuse,
    the coordinator runs single-repo links as subagents too.
+
+35. **L7 merge (2026-11-19).** § 6 checks held:
+   1. Heads matched, and both branches contained `next`.
+   2. CI was green (build-and-test, e2e: 263 Playwright tests).
+   3. Codex was at its usage limit, so there were no findings.
+   4. The scope matched #676. Its edits outside the new pages (the rule builder, `PagedEntityTable` flag filter,
+      `StoragePanel` title, `FormWizardPage` warnings) are its own scope items.
+   Merged web app #61 `18385344` and workspace #829 `a5c05901`. P2 (L6–L8) is complete: `documentation` sub-issue #830
+   under #91, with docs session `session_01R1w2UvVrxn9QYLtB8CBthh`.
+36. **P2 API follow-ups found by L7 (#831, tier:1).** Three knk-web-api items: an update drops the placement warnings;
+   the error messages carry a .NET parameter suffix; the Structure form seed lacks Town. Chosen: fold them into the
+   next free knk-web-api link (L11 #138) as an additive extra, like #819 in L9. Alternatives: (a) a separate link:
+   overhead for three small fixes.
 
 ## 4. Link blocks
 
