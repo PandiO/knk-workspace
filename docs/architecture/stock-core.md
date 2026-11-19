@@ -1,6 +1,6 @@
 # Stock core (knk-web-api and knk-web-app)
 
-**Status:** Current · **Last updated:** 2026-11-19 (first version, stock core P1 #97/#675, docs PandiO/knk-workspace#820)
+**Status:** Current · **Last updated:** 2026-11-19 (§ 2: default storages of the P2 structure subtypes, docs #830); 2026-11-19 (first version, stock core P1 #97/#675, docs PandiO/knk-workspace#820)
 **Checked against:** knk-web-api `next` `2e7d4e81` (PR PandiO/knk-web-api#56), knk-web-app `next` `9f46cb49` (PR
 PandiO/knk-web-app#60). Not released; no plugin part yet (nothing in game changes).
 **Related:** [production DESIGN § 4](../specs/production-storage-transport/DESIGN.md#4-stock-model) (the rules),
@@ -52,7 +52,9 @@ A `Storage` has a **kind** and at most one **holder** column, enforced by the ch
 | `Virtual` | `SystemKey` | no | the five system storages, below |
 
 **Purpose** (`General`, `Output`, `Input`, `Delivery`, `Merchandise`, `Inbox`, `Stash`, `Vault`) says what the storage
-is for; P1 only stores it.
+is for; P1 only stores it. Since P2 ([#91](https://github.com/PandiO/knk-workspace/issues/91), in `next`) warehouses and production
+structures create their default `Domain` storages (`Delivery`, `Output`) through `IStorageService.CreateAsync` in the
+structure's create transaction and delete them with the structure ([production world § 3.3](production-world.md#33-default-storages)).
 
 The five **system storages** are seeded by the migration with ids 1-5 and are the other side of stock entering or
 leaving the system: `SYS_PRODUCTION` (made), `SYS_CONSUMPTION` (used up), `SYS_LOSS` (lost, robbed, spoiled),
