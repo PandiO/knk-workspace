@@ -2,13 +2,13 @@
 
 **Status:** **Decided 2026-11-16** (developer, with [DESIGN.md](DESIGN.md) §18 for tiers and flags). Draft **rev. 3** (after the developer's voice design review of 2026-11-05,
 [decision record](DECISIONS_2026-11-05.md) §10). Prerequisite item identity (#141, chain link L0) is merged into `next` (knk-web-api `7d213fd6`, knk-plugin
-`2ef256e7`, 2026-11-19; [architecture](../../architecture/item-identity.md)). The territory API (#326, chain link L1) is merged into `next`
-(knk-web-api `0d6e369a`, 2026-11-19); the territory plugin (#689, chain link L2) is in review on `claude/production-t-b`
-(knk-plugin, 2026-11-19); no phase has started. Decisions are in
+`2ef256e7`, 2026-11-19; [architecture](../../architecture/item-identity.md)). The territory API (#326, chain link L1), plugin
+(#689, link L2) and web app (#690, link L3) are merged into `next` (knk-web-api `0d6e369a`, knk-plugin `55804b11`,
+knk-web-app `89751315`, 2026-11-19); no phase has started. Decisions are in
 [DESIGN §14](DESIGN.md#14-decisions), [PRODUCTION_KINDS §9](PRODUCTION_KINDS.md#9-decisions) and
 [TOWN_LOGISTICS §8](TOWN_LOGISTICS.md#8-decisions); the few still open are listed there. Every item is marked
 **V1** or **Later**. The production structures work and the garrison/guard NPC work ship in the **same test phase**.
-**Last updated:** 2026-11-19 (territory plugin #689 in review); 2026-11-19 (territory API #326 in review); 2026-11-19 (item identity #141 merged into `next`, docs #796); 2026-11-19 (item identity #141 in review); 2026-11-11 (open questions answered, [decision record §11](DECISIONS_2026-11-05.md#11-follow-up-decisions-2026-11-11); issues #324, #325)
+**Last updated:** 2026-11-19 (territory plugin #689 and web app #690 merged into `next`); 2026-11-19 (territory API #326 in review); 2026-11-19 (item identity #141 merged into `next`, docs #796); 2026-11-19 (item identity #141 in review); 2026-11-11 (open questions answered, [decision record §11](DECISIONS_2026-11-05.md#11-follow-up-decisions-2026-11-11); issues #324, #325)
 **Design:** [DESIGN.md](DESIGN.md), [PRODUCTION_KINDS.md](PRODUCTION_KINDS.md), [TOWN_LOGISTICS.md](TOWN_LOGISTICS.md),
 [shops DESIGN](../shops/DESIGN.md), [NPC platform](../npc-platform/DESIGN.md) (lifecycle).
 **Evidence:** [V2 scan](../../reports/2026-10-09-v2-production-storage-transport-scan.md).

@@ -39,6 +39,24 @@ This is a human-readable record of capabilities merged into the V3 default branc
   2. To test: `production.enabled: true` in the plugin and the API's game setting `production.enabled` on, then smoke
      test § 1.3; grant staff `knk.admin.world.territory` (included in `knk.admin.*`). Keep `map-outlines: false`
      until #802.
+- **Territory in the web app: kingdoms, provinces, crown land, town power, contested zones and structure loyalty** ([PandiO/knk-workspace#690](https://github.com/PandiO/knk-workspace/issues/690),
+  link L3 of the production, storage and transport chain, [territory design](specs/territory/DESIGN.md)). Staff can now
+  do the territory set-up in the web app instead of with a REST client: kingdoms, provinces and crown land have
+  dashboard tables and forms (crown land's region is drawn in game with Send to Minecraft, like a district's, G10); a
+  town's page has a Territory panel with its power, kingdom, province and effective ranges, where staff set those and
+  mark capital districts (G11); a conflict's page shows the two holders, the contested area and the structures standing
+  in it, and staff award the area to one holder, mark the lines redrawn or reopen it (A05); a structure's page shows its
+  territory flag and its conflict and sets its loyalty (A07); Game settings has a "Production and territory" card with
+  the production switch and the range settings, with a worked example. knk-web-app: clients and types for
+  `api/Kingdoms`, `api/Provinces`, `api/CrownLands`, `api/TerritoryConflicts`, `api/Territory`; dashboard columns; the
+  three page panels and the settings card; Playwright `e2e/territory.spec.ts`. Every change needs `knk.admin.world`.
+  Branches `claude/production-t-c` in knk-web-app and knk-workspace (PRs into `next`). Smoke test
+  [§ 1.4](guides/production-storage-transport-smoke-test.md#14-steps-web-app-690). No migration, no setting, no plugin
+  change. Admin steps:
+  1. Deploy the web app with (or after) the territory API (#326) and import its form and display seeds (see that
+     entry).
+  2. Set power, kingdom, province and capital districts on each town's page (Territory panel); the seeded Town and
+     District forms do not have those fields yet (seed follow-up on #690).
 
 - **Siege weapons: weapon spots are created in game from a WorldEdit selection or WorldGuard region** ([PandiO/knk-workspace#783](https://github.com/PandiO/knk-workspace/issues/783),
   link L2 of the siege weapons chain, phase 2 of [#354](https://github.com/PandiO/knk-workspace/issues/354)). An admin

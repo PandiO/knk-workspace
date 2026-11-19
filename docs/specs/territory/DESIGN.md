@@ -1,9 +1,9 @@
 # Territory, grasp and public safety — Design
 
-**Status:** **Decided 2026-11-16** (developer, with the production design, #22). Before: draft. Written from the developer's voice design session of 2026-11-11. The API part (link a, #326) is merged into `next` (knk-web-api `0d6e369a`, 2026-11-19); the plugin (#689) is in review on knk-plugin `claude/production-t-b` (2026-11-19); the web app (#690) is running. BlueMap outlines (§ 1): the plugin builds them from the chunk cache and sends them over the game hub (overview map O15, no BlueMap plugin on the game server); storing and drawing them is [#802](https://github.com/PandiO/knk-workspace/issues/802). Items
+**Status:** **Decided 2026-11-16** (developer, with the production design, #22). Before: draft. Written from the developer's voice design session of 2026-11-11. V1 is merged into `next`: the API (link a, #326; knk-web-api `0d6e369a`), the plugin (link b, #689; knk-plugin `55804b11`) and the web app (link c, #690; knk-web-app `89751315`), 2026-11-19. BlueMap outlines (§ 1): the plugin builds them from the chunk cache and sends them over the game hub (overview map O15, no BlueMap plugin on the game server); storing and drawing them is [#802](https://github.com/PandiO/knk-workspace/issues/802). Items
 are tagged **[V1]**, **[Later]** or **[Parked]** (as in the production [DESIGN](../production-storage-transport/DESIGN.md)
 header).
-**Last updated:** 2026-11-19 (status: plugin in review, #689; outlines path, #802); 2026-11-19 (status: API in review, #326); 2026-11-16 (§2 crown land anchor, §10; #22 design pass); 2026-11-11 (§10: production reconciled; issue #326)
+**Last updated:** 2026-11-19 (status: plugin #689 and web app #690 merged into `next`; outlines path, #802); 2026-11-19 (status: API in review, #326); 2026-11-16 (§2 crown land anchor, §10; #22 design pass); 2026-11-11 (§10: production reconciled; issue #326)
 **Supersedes:** the region-based parts of production [DESIGN §3.4](../production-storage-transport/DESIGN.md#34-territory-and-region-rules-v1-2026-11-11)
 (a required `WgRegionId`, region rules T1, T3, T4 and T7 as WorldGuard checks, the `TERRITORY` managed region kind).
 See [decision record §13](../production-storage-transport/DECISIONS_2026-11-05.md#13-territory-is-computed-not-a-worldguard-region-2026-11-11).

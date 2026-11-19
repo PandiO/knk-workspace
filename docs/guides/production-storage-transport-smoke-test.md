@@ -4,8 +4,9 @@
 in CI and 4 partly (tagged); every step can still be run by hand; manual steps not run. § 1.1-1.2 (territory API,
 #326): 19 of 19 steps automated in CI (tagged; step 1.2.6 needs a connected server to check by hand); every step can
 still be run by hand; not run. § 1.3 (territory plugin, #689): 7 of 14 steps automated and 7 partly (tagged; step 14
-waits for #802); not run. Other sections not yet automated (the links tag them).
-**Last updated:** 2026-11-19 (§ 1.3 territory plugin, link L2, #689; web app draft moved to § 1.4); 2026-11-19 (§ 1 territory API, link L1, #326); 2026-11-19 (§ 0 item identity, link L0, #141); 2026-11-16 (draft from the design, territory and phases P1-P12)
+waits for #802); not run. § 1.4 (territory web app, #690): 13 of 15 steps automated in CI and 2 partly (tagged);
+every step can still be run by hand; not run. Other sections not yet automated (the links tag them).
+**Last updated:** 2026-11-19 (§ 1.4 territory web app, link L3, #690); 2026-11-19 (§ 1.3 territory plugin, link L2, #689); 2026-11-19 (§ 1 territory API, link L1, #326); 2026-11-19 (§ 0 item identity, link L0, #141); 2026-11-16 (draft from the design, territory and phases P1-P12)
 **Design:** [specs/production-storage-transport/DESIGN.md](../specs/production-storage-transport/DESIGN.md) (§17
 acceptance A01-A27, §18 links) · [territory](../specs/territory/DESIGN.md) · [shops](../specs/shops/DESIGN.md) ·
 **Issue:** [PandiO/knk-workspace#22](https://github.com/PandiO/knk-workspace/issues/22)
@@ -101,9 +102,10 @@ Full manual run about 45 minutes; the untagged steps only about 25 minutes.
 
 ## 1. Territory V1 (#326 API, #689 plugin, #690 web app; tier:3)
 
-Built so far: link L1, the API (knk-web-api, migration `AddTerritory`, in `next`), and link L2, the plugin (#689:
-chunk cache, lookup, report; knk-plugin branch `claude/production-t-b`, steps 1.3). The web app (#690) is a later link;
-its steps (1.4) are still the design's. Map outlines wait for [#802](https://github.com/PandiO/knk-workspace/issues/802). The API keeps the inputs (holders, regions, power, settings, awards)
+Built so far: link L1, the API (knk-web-api, migration `AddTerritory`, in `next`), link L2, the plugin (#689:
+chunk cache, lookup, report; in `next`, steps 1.3), and link L3, the web app (#690: the territory dashboards and
+forms, the town, conflict and structure pages, the production settings; steps 1.4). Map outlines wait for
+[#802](https://github.com/PandiO/knk-workspace/issues/802). The API keeps the inputs (holders, regions, power, settings, awards)
 and the results the game server reports (conflicts, structure flags); the game server computes the territory itself.
 Full manual run of 1.2 about 30 minutes with a REST client, the untagged steps only about 5 minutes.
 
@@ -115,7 +117,9 @@ Full manual run of 1.2 about 30 minutes with a REST client, the untagged steps o
    that play the game server.
 3. Test data: towns **Phoenix** (two districts, call them Old Town and Market) and **Rivertown** (one district), as in
    the common preconditions.
-4. For 1.3: the plugin build of #689 (its own preconditions in 1.3); for 1.4: the web app build of #690.
+4. For 1.3: the plugin build of #689 (its own preconditions in 1.3).
+5. For 1.4: the web app build of #690 against that API, the form and display seeds imported (1.2 step 17), and two
+   web app accounts: **Admin** (holds `*`) and **Content staff** (`knk.admin.content` without `knk.admin.world`).
 
 ### 1.1 Settings
 
@@ -293,16 +297,82 @@ Full manual run about 40 minutes; the untagged and partly tagged parts about 25 
     `map-outlines: false` until then. [partly automated: `TerritoryOutlinesTest` (all),
     `TerritoryServiceTest.mapOutlines_areSentPerWorld_onlyWhenSwitchedOn`]
 
-### 1.4 Steps (web app #690; draft from the design)
+### 1.4 Steps (web app #690)
 
-1. As Admin, open the web app's Phoenix page. **Expected:** effective range shown as (100 + 50 × 2) = 200 for normal
-   districts and 300 for the capital district. (A05)
-2. As Admin, create crown land for the kingdom with the form: region captured with the world task, range 80.
-   **Expected:** saved; after the plugin's next rebuild `/knk territory here` inside its range says "crown land of
-   Aurelia". (G10)
-3. As Admin, open the conflict of 1.3 step 8 and award it to Phoenix. **Expected:** the conflict is resolved; the
-   lookup in the area says Phoenix (1.3 step 10).
-4. As Visitor, try to change town power or crown land in the web app. **Expected:** refused (403); nothing changes.
+The tags name tests in knk-web-app `e2e/territory.spec.ts` (Playwright, mocked API). A full manual run takes about 25
+minutes; the untagged parts of the two partly automated steps (the province form and the crown land region drawn in
+game) about 5 minutes. The town's power, kingdom, province and capital districts are set on the town's page (Territory
+panel); the seeded Town and District forms do not have those fields yet (seed follow-up on #690).
+
+1. [automated: `game settings › shows the production flag and the range settings with an example (G11)`] As Admin,
+   open **Game settings** (`/admin/game-settings`). **Expected:** a "Production and territory" card with "Production
+   enabled" unticked, Base range (blocks) 100, Blocks per power point 2, Capital multiplier 1.5, and the line "A town
+   of power 50: (100 + 50 × 2) = 200 blocks; its capital (100 + 50 × 2) × 1.5 = 300 blocks." (G11, G16)
+2. [automated: `game settings › says which value the API would refuse`, `game settings › saves the flag and the
+   ranges in the production section`] Type 0.5 as Capital multiplier. **Expected:** a red line
+   "production.territory.capitalMultiplier must be between 1 and 10." and Save is off. Type 1.5 again, tick
+   "Production enabled" and press Save. **Expected:** "Game settings saved."; after Reload the box is still ticked.
+   (Untick it again at the end if the plugin #689 is not deployed, A21.)
+3. [automated: `the form wizard › saves a kingdom through POST api/Kingdoms`, `dashboard › lists the kingdoms with
+   their town and crown land counts`] Open the dashboard, type **Kingdom**, press Create; fill Name "Aurelia" and
+   Description "The northern crown" and submit. **Expected:** the kingdom is saved; the Kingdom table lists Aurelia
+   with columns Towns 0 and Crown land 0.
+4. [partly automated: `dashboard › lists provinces with their kingdom and crown land with its kingdom and range`; by
+   hand: the seeded Province form, the same form wizard path as step 3] Dashboard type **Province**, Create: Name
+   "North", Kingdom "Aurelia" (picked from the list), submit. **Expected:** the Province table lists North with Kingdom
+   Aurelia and Towns 0.
+5. [automated: `the town page › saves power, kingdom and province with every other town setting left alone`, `the
+   town page › shows the town's power, kingdom, province and effective ranges (A05, G11)`] Open Phoenix's page
+   (dashboard Town, View). Below the details, the **Territory** panel shows Power 0, Kingdom None, Province None. Press
+   **Edit territory**, set Power 50, Kingdom Aurelia, Province North (the list shows only Aurelia's provinces; changing
+   the kingdom empties it), press **Save territory**. **Expected:** "Territory of Phoenix saved."; Power 50, Kingdom and
+   Province link to Aurelia and North; Range "200 blocks; capital districts 300 blocks". Open Phoenix's edit form:
+   its warp (teleport) and /navigate settings are unchanged. Do the same for Rivertown with Power 10, Kingdom Aurelia,
+   Province None.
+6. [automated: `the town page › marks a district as capital through its own save`] On Phoenix's Territory panel, under
+   Districts, press **Make Old Town a capital**. **Expected:** "Old Town is now a capital district."; Old Town shows
+   "Capital" and 300 blocks, Market 200 blocks. Opening Old Town's edit form shows its streets unchanged. (A05, G11;
+   1.3 step 1)
+7. [automated: `the town page › refuses a power out of range before saving`] Edit territory again and type -5 as
+   Power. **Expected:** the hint under Power turns red and **Save territory** is off; Cancel leaves Power 50.
+8. [partly automated: `the form wizard › saves crown land with its kingdom (picked from api/Kingdoms) and range
+   (G10)`; by hand: the region step, which needs a connected game server] Dashboard type **CrownLand**, Create: Name
+   "Royal forest", Description "Hunting grounds", Kingdom Aurelia (picker), Range (blocks) 80; next step **Region and
+   access**: press Send to Minecraft, select the area in game with WorldEdit and confirm, keep Allow entry and Allow
+   exit ticked, submit. **Expected:** the CrownLand table lists Royal forest with Kingdom Aurelia, Range (blocks) 80 and
+   its world; in game the region is named `domain_<id>`. (G10)
+9. [automated: `dashboard › lists the conflicts with their state, area size and flagged structures (A05)`, `the
+   conflict page › shows the holders, the area and the flagged structures (A05)`] Needs an open conflict between
+   Phoenix and Rivertown with a structure in it (1.2 steps 8 and 10 with the plugin key, or 1.3 step 5 in game).
+   Dashboard type **TerritoryConflict**. **Expected:** a row "Phoenix vs Rivertown" with Status Open, Still overlapping
+   Yes, the chunk count and Flagged structures 1. View it: the **Contested zone** panel shows the holders "Phoenix
+   (town)" and "Rivertown (town)" as links, State Open, the world, the area as chunk and block ranges, when it was
+   detected and last reported, and the flagged structure as a link. (A05)
+10. [automated: `the conflict page › awards the area to one holder with a note, then reopens it`, `the conflict page
+    › cancelling the question resolves nothing`] Type the note "Phoenix was there first", press **Award to Phoenix**
+    and confirm in the question. **Expected:** "Conflict resolved."; State "Resolved: awarded to Phoenix (town)" and
+    the resolved time with the note; `GET api/Territory/inputs` lists the award. Press **Reopen** and confirm.
+    **Expected:** State Open; the award is gone from the inputs. Press Award to Rivertown and Cancel: nothing changes.
+11. [automated: `the conflict page › marks the lines redrawn without an award`] Press **Mark the lines redrawn** and
+    confirm. **Expected:** State "Resolved: lines redrawn"; no award in the inputs.
+12. [automated: `the structure page › shows the flag with its conflict and the own town (A07)`] Open the flagged
+    structure's page. **Expected:** a **Territory and loyalty** panel: Territory "In a contested zone (since …)",
+    Conflict "Conflict #<id>" linking to the conflict, Own town Phoenix, Loyal to "Its own town". (A07)
+13. [automated: `the structure page › sets and clears the loyalty (stored only)`] Pick Loyalty "Rivertown" (Phoenix,
+    its own town, is not in the list) and press **Save loyalty**. **Expected:** "Loyalty saved."; Loyal to Rivertown.
+    Pick "Its own town" and save: Loyal to "Its own town". Nothing else changes (stored only in V1).
+14. [automated: `the structure page › clears the flag by hand`] Press **Clear flag**. **Expected:** "Flag cleared.";
+    Territory "Inside its town's territory" and no Clear flag button. The game server's next report sets the flag
+    again while it still applies.
+15. [automated: `dashboard › content-only staff do not get the territory types`, `the town page › staff without
+    knk.admin.world see the territory but cannot change it`, `the conflict page › staff without knk.admin.world cannot
+    resolve`, `the structure page › staff without knk.admin.world see the flag but cannot change the loyalty`] Log in
+    as **Content staff** (no `knk.admin.world`). **Expected:** the dashboard offers no Kingdom, Province, CrownLand or
+    TerritoryConflict. Open Phoenix's page by its address: the API refuses the reads without `knk.admin.world`, so
+    the Territory panel shows the refusal instead of values and offers no Edit territory or capital buttons; a
+    conflict's and a structure's page likewise offer no award, redrawn, loyalty or Clear flag action. The API refuses
+    the writes too (1.2 step 15). (1.3 step 9. The tests also check that with the reads allowed but no
+    `knk.admin.world`, those buttons are shown off with "Requires knk.admin.world".)
 
 ## 2. Phase P1: stock core (#97 API, #675 web app; tier:3)
 
