@@ -1,11 +1,11 @@
 # Production, storage and transport chain — charter
 
-**Status:** Ready to start (2026-11-16)
-**Last updated:** 2026-11-16 (drafted by the design session; the coordinator completes it at its first run)
+**Status:** Running (2026-11-19; coordinator cloud session `session_01R1w2UtB6J4UtRJL3foJgcj`)
+**Last updated:** 2026-11-19 (developer: smoke gates waived for L4 and L6, G17 scope; coordinator first run: progress report, #141 and #326 added as sub-issues of #22)
 **Issues:** parent [PandiO/knk-workspace#22](https://github.com/PandiO/knk-workspace/issues/22); territory parent
 [PandiO/knk-workspace#326](https://github.com/PandiO/knk-workspace/issues/326); sub-issues per link below. Reference
 issues as `PandiO/knk-workspace#n` in component repos.
-**Progress report:** to be created by the coordinator (`docs/reports/<date>-production-chain.md`).
+**Progress report:** [reports/2026-11-19-production-chain.md](../../reports/2026-11-19-production-chain.md).
 **Skills:** coordinator `.claude/skills/knk-coordinator/`, links `.claude/skills/knk-link/` (knk-workspace).
 
 ## 0. Binding documents
@@ -70,7 +70,7 @@ Web-app insight (#65, tier:2) is not a link of its own: each web app link adds i
 2. "L<n> done": L<n>'s block is in the progress report, its heads match `git ls-remote`, its checks passed.
 3. Developer gates: the shop menu templates (L26, ask on #687); tier:3 links wait for the developer's smoke test of
    their guide section before the next tier:3 link in the same repo builds on them, unless the developer says
-   otherwise.
+   otherwise. Waived by the developer on 2026-11-19 for L4 (L0's test) and L6 (the territory and L4 tests).
 
 Order and parallelism: at most one link per component repo at a time. API links run in the order above; a web app
 or plugin link may run alongside the next API link (different repos).
@@ -82,5 +82,7 @@ or plugin link may run alongside the next API link (different repos).
    with `production.enabled: false`. Currency `AccountKind` (L25) — coordinate with the currency owner.
 2. With both flags off, nothing of this feature runs (A21); existing kit, lootbox and region behaviour is unchanged.
 3. Migrations: at most one additive migration per API link.
-4. Every new entity: FormConfiguration and DisplayConfiguration seeds in the same link (G17, A23).
-5. Model for link sessions: set by the coordinator.
+4. Every new major entity: FormConfiguration and DisplayConfiguration seeds in the same link (G17, A23). Developer
+   clarification 2026-11-19: conversion/count tables and many-to-many join tables are lower priority and may ship
+   without seeds at first.
+5. Model for link sessions: set by the coordinator; the coordinator's own model (2026-11-19).
