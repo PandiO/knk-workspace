@@ -1,7 +1,7 @@
 # Off-road navigation and landmarks — smoke test
 
-**Status:** Draft from the design (2026-11-17); no steps run. F1 (§ 12): 5 of 7 steps automated (3 in part); Phase 5.2 (§ 7): 7 of 8 steps automated (3 in part); Phase 4 (§ 5): 8 of 9 steps automated (2 in part); Phase 2 (§ 3): 13 of 14 steps automated (5 in part); Phase 5.1 (§ 6): 21 of 22 steps automated (6 in part); Phase 0 (§ 1): 1 of 9 steps automated; phase 1 (§ 2): 4 of 4 steps automated; phase 6.1 (§ 8): 6 of 8 steps automated (3 of them in part); phase 6.2 (§ 9): 11 of 11 steps automated (3 of them in part); phase 7 step 1 (§ 10.1): 4 of 7 steps automated (3 of them in part), viewed by the developer 2026-11-18; phase 7 step 2 (§ 10.2): 9 of 9 steps automated (3 of them in part); the other phases not yet automated (the links tag them).
-**Last updated:** 2026-11-19 (§ 12 F1, the walk-search fixes of #771 items 1 and 2: seven steps, five automated, three in part; shipped settings first, scene 1 by road recorded as known); 2026-11-18 (§ 7 phase 5.2 built by link L9, #709: eight steps, seven automated, three in part); 2026-11-18 (§ 5 phase 4 built by link L7, #707: nine steps, eight automated, two in part); 2026-11-18 (§ 3 phase 2 built by link L5, #705: fourteen steps, thirteen automated, five in part); 2026-11-18 (§ 10 phase 7: step 1 viewed by the developer, O33; § 10.2 step 2 built by link L10, #712: nine steps, all automated, three in part); 2026-11-18 (§ 6.3 phase 5.1 step B, link L8: the in-game steps); 2026-11-18 (§ 6 phase 5.1 updated to what link L8 step A built, #708: API and web steps, plugin steps marked step B); 2026-11-18 (§ 10 phase 7 split into step 1, built by link L10, #712: the staff preview and the developer's viewing steps on Cinix and Brink, and step 2, the trail, not built yet); 2026-11-18 (§ 9 phase 6.2 updated to what link L4 built, #711: eleven steps, all automated, three in part); 2026-11-17 (§ 8 phase 6.1 updated to what link L3 built, #710: eight steps, six automated); 2026-11-17 (§ 2 phase 1 updated to what link L2 built, #704: every step automated); 2026-11-17 (§ 1 phase 0 updated to what link L1 built, #703: the measurement steps and the `/knk road status` lines); 2026-11-17 (draft from the design, phases 0, 1, 2, 3, 4, 5.1, 5.2, 6.1, 6.2, 7)
+**Status:** Draft from the design (2026-11-17); no steps run. F2 (§ 13): 7 of 9 steps automated (4 in part); F1 (§ 12): 5 of 7 steps automated (3 in part); Phase 5.2 (§ 7): 7 of 8 steps automated (3 in part); Phase 4 (§ 5): 8 of 9 steps automated (2 in part); Phase 2 (§ 3): 13 of 14 steps automated (5 in part); Phase 5.1 (§ 6): 21 of 22 steps automated (6 in part); Phase 0 (§ 1): 1 of 9 steps automated; phase 1 (§ 2): 4 of 4 steps automated; phase 6.1 (§ 8): 6 of 8 steps automated (3 of them in part); phase 6.2 (§ 9): 11 of 11 steps automated (3 of them in part); phase 7 step 1 (§ 10.1): 4 of 7 steps automated (3 of them in part), viewed by the developer 2026-11-18; phase 7 step 2 (§ 10.2): 9 of 9 steps automated (3 of them in part); the other phases not yet automated (the links tag them).
+**Last updated:** 2026-11-19 (§ 13 F2, road goal by walk reachability, the road kept to its end and the flag-off walk-trail spacing, #780 and #771 items 3 to 5: nine steps, seven automated, four in part; shipped settings); 2026-11-19 (§ 12 F1, the walk-search fixes of #771 items 1 and 2: seven steps, five automated, three in part; shipped settings first, scene 1 by road recorded as known); 2026-11-18 (§ 7 phase 5.2 built by link L9, #709: eight steps, seven automated, three in part); 2026-11-18 (§ 5 phase 4 built by link L7, #707: nine steps, eight automated, two in part); 2026-11-18 (§ 3 phase 2 built by link L5, #705: fourteen steps, thirteen automated, five in part); 2026-11-18 (§ 10 phase 7: step 1 viewed by the developer, O33; § 10.2 step 2 built by link L10, #712: nine steps, all automated, three in part); 2026-11-18 (§ 6.3 phase 5.1 step B, link L8: the in-game steps); 2026-11-18 (§ 6 phase 5.1 updated to what link L8 step A built, #708: API and web steps, plugin steps marked step B); 2026-11-18 (§ 10 phase 7 split into step 1, built by link L10, #712: the staff preview and the developer's viewing steps on Cinix and Brink, and step 2, the trail, not built yet); 2026-11-18 (§ 9 phase 6.2 updated to what link L4 built, #711: eleven steps, all automated, three in part); 2026-11-17 (§ 8 phase 6.1 updated to what link L3 built, #710: eight steps, six automated); 2026-11-17 (§ 2 phase 1 updated to what link L2 built, #704: every step automated); 2026-11-17 (§ 1 phase 0 updated to what link L1 built, #703: the measurement steps and the `/knk road status` lines); 2026-11-17 (draft from the design, phases 0, 1, 2, 3, 4, 5.1, 5.2, 6.1, 6.2, 7)
 **Design:** [specs/navigation-offroad/DESIGN.md](../specs/navigation-offroad/DESIGN.md) · **Issue:**
 [PandiO/knk-workspace#698](https://github.com/PandiO/knk-workspace/issues/698)
 
@@ -832,7 +832,8 @@ there, and the last walk leg starts in that dead end with no earlier found path 
 hall is about 290 blocks (out south and round through the courtyard). That is outside the leg's capture box and over
 its length cap: FALLBACK at the shipped walk limits, and NO_PATH even with run 2's walk limits (the box closes). Reached
 by the road, the hall stays unreachable until a road reaches the hall's floor, or the road goal of a point destination
-is chosen among road points the destination can be walked to from (follow-up on #771). Step 1 records this.
+is chosen among road points the destination can be walked to from (follow-up on #771). Step 1 records this. Fix link F2
+(§ 13, #780) adds that choice behind `navigation.road-goal-reachable`.
 
 5 of 7 steps automated (3 in part). The developer's live test is steps 1, 3 and 5 (about 20 minutes).
 
@@ -888,3 +889,83 @@ is chosen among road points the destination can be walked to from (follow-up on 
    NPC unit tests stay green. NPC walk legs pass open hatches over ladders too; the NPC body check still treats the
    panel as blocking, as before. [automated: knk-core `WalkLegDefaultTranscriptTest`; knk-paper
    `WalkLegPreparerTest.withoutAHintTheBoxAndBudgetAreAsBefore`; the paper-boot `npc-*` scenarios]
+
+## 13. F2: road goal and route ends (#780, #771 items 3 to 5, tier:2)
+
+*Built 2026-11-19 (fix link F2, knk-plugin `claude/offroad-route-ends-f2`, in review). Every change is behind a key off
+by default, or a default equal to today's: with the keys as shipped, routes, trails, sessions and NPC movement are as
+before.*
+
+1. *`navigation.road-goal-reachable` (#780 option (b), #771 item 4).* A point destination's road goal (where the road
+   part ends and the last walk leg starts) is chosen by walk reachability. Up to `road-goal-candidates` (12) road
+   points, one per road edge within `max-snap-distance` of the destination, today's nearest point among them, are each
+   searched on foot to the destination within the shipped `walk:` limits, one search at a time off the main thread.
+   Among the reached ones, the least road length plus walk length wins. The first route is today's; the chosen one
+   replaces it silently once the searches answer. None reached: today's point. The last walk leg then starts with the
+   chosen walk path as its hint (F1's `WalkRecomputeHint`).
+    1. On the keep snapshot the hall's goal moves from the stair house's lower landing (edge 2000000033, 1415 58 -490;
+       FALLBACK on foot) to the end of edge 2000000017 in the keep's courtyard (1421 84 -521): 347 blocks by road plus
+       97 on foot.
+    2. Scene 2 (#771 item 4) has the same cause: the straight-line goal lies past the point where the walk leaves the
+       road. On the tower snapshot the road part gets 72 blocks shorter and road plus walk 38 blocks shorter.
+2. *`navigation.road-to-its-end` (#771 item 5).* When the road network is swapped (live edge tags, a rebuild) while the
+   player follows a road route within `max-snap-distance` of the destination, today's code switches to direct mode: a
+   walk leg from where the player stands, partway along the road. With the key on the road route is kept, re-routed on
+   the new network, and the last walk leg starts at the road's end. Scene 3's road goal itself is the first key's
+   business (the straight-line goal on the road under the watchtower, from which the walk is longer than from the
+   road by the garrison).
+3. *`navigation.trail-leg-spacing` with `guidance-v2` off (#771 item 3).* The flag-off walk trail now uses the key's
+   spacing too. The default stays 3.0 (today's); 1.5 to 2.0 is the suggested range for a trail that reads as a line in
+   grass.
+
+The developer's live test is steps 1, 3, 4 and 5 (about 25 minutes).
+
+### 13.0 Preconditions
+
+1. Deployed: plugin build from `next` with the F2 PR merged; `config.yml` with the keys of the deploy notes merged.
+2. Settings: **shipped**: `max-snap-distance: 48` and the shipped walk limits (`walk.max-length` 144,
+   `walk.detour-allowance` 48, `walk.max-expansions` 20000, `walk.max-chunks-per-request` 64), `walk.enabled: true`,
+   `guidance-v2: false`. Never raise `max-snap-distance` for these steps (developer decision on #698). For steps 1 to 4:
+   `road-goal-reachable: true` and `road-to-its-end: true` (restart). Restore `false` afterwards if they are not kept.
+3. Accounts: player A.
+4. The dev world: spawn (1443 43 -567), "Keep storage hall" (Location 56), "Keep Tower Roof" (Location 52), "Garrison
+   Watchtower Roof" (Location 53, its hatch open).
+
+### 13.1 Steps
+
+1. As player A at spawn, `/navigate Keep storage hall` and follow the trail. **Expected:** for a second or two the trail
+   of today's route shows (into the keep stair house); then the road trail leads up into the keep's courtyard instead,
+   and ends there (about 1421 84 -521). The last walk leg finds the way down into the hall (about 100 blocks) and you
+   arrive; no "No conventional path to Keep storage hall found." [automated in part: knk-paper
+   `NavigationServiceRouteEndsTest.withTheKeyOnTheHallsRoadGoalIsOneTheHallIsReachedFrom` and
+   `theLastLegFromTheChosenGoalStartsWithItsWalkPathAndReachesTheHall` (the keep snapshot, the real walk search with the
+   shipped limits); following the trail is manual]
+2. With `road-goal-reachable: false` the hall's road goal is today's dead end on the stair house's lower landing (§ 12
+   step 1). [automated: knk-paper `NavigationServiceRouteEndsTest.withTheKeyOffTheHallsRoadGoalIsTodaysDeadEnd`]
+3. From spawn, `/navigate Keep Tower Roof` (scene 2). **Expected:** the road trail ends where the walk trail starts up
+   the stair; the road trail does not run on about 10 blocks past it with the walk trail coming back. [automated in part:
+   knk-paper `NavigationServiceRouteEndsTest.scene2WithTheKeyOnTheRoadNoLongerRunsPastTheWalksStart` (the tower
+   snapshot); what the trail looks like is manual]
+4. From spawn, `/navigate Garrison Watchtower Roof` (scene 3) and follow the road trail to its end. **Expected:** the
+   road trail leads all the way to the road's end; the walk trail starts only there, never while you still follow the
+   road. Note where the road part ends (by the garrison or on the road under the watchtower): that is the evidence
+   for #771 item 5. [automated in part: knk-paper
+   `NavigationServiceRouteEndsTest.withRoadToItsEndTheRoadRouteIsKeptToItsEnd` and
+   `withTheKeyOffANetworkSwapInsideMaxSnapSwitchesToDirectModeAsToday` (a network swap within 48 blocks); the trail in
+   the world is manual]
+5. Set `trail-leg-spacing: 1.5` (restart; `guidance-v2` stays `false`). Navigate to any destination with a walk leg in
+   open grass (a target within 48 blocks across a field). **Expected:** the walk trail's particles are about 1.5 blocks
+   apart and read as a line. Try 2.0, keep the value you prefer or set 3.0 back. [automated in part: knk-paper
+   `TrailRendererTest.theFlagOffWalkTrailTakesTheLegSpacingAndItsDefaultIsTodays`; the look is manual]
+6. With every F2 key as shipped (`false`, `false`, spacing 3.0) routes, trails, chat, walk searches and events are
+   today's, call for call, whatever `road-goal-candidates` is. [automated: knk-paper
+   `NavigationServiceRouteEndsTest.withTheKeysOffEverythingIsAsToday`; knk-core `WalkLegDefaultTranscriptTest` and the
+   earlier links' flag-off identity tests, unchanged]
+7. NPC road plans (`planRoadFor`) and the NPC walk planner keep today's road ends with the keys on; no walk search runs
+   for them. [automated: knk-paper `NavigationServiceRouteEndsTest.anNpcRoadPlanKeepsTodaysEnds`; the paper-boot `npc-*`
+   scenarios and both replays]
+8. The candidate set and the choice: today's point first, one per road edge within reach, nearest first, the same place
+   once, at most `road-goal-candidates`; the least road plus walk wins, a tie goes to the nearer point. [automated:
+   knk-core `RoadGoalChoiceTest`]
+9. `road-goal-candidates` outside 1 to 32 stops the plugin's config load with a message. [automated: knk-paper
+   `NavigationServiceRouteEndsTest.theKeysAreReadAndValidated`]

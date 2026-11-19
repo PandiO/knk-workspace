@@ -4,6 +4,28 @@ This is a human-readable record of capabilities merged into the V3 default branc
 
 ## Unreleased — on feature branches, not merged
 
+- **Navigation: where a route's road part ends** ([PandiO/knk-workspace#780](https://github.com/PandiO/knk-workspace/issues/780)
+  option (b), [#771](https://github.com/PandiO/knk-workspace/issues/771) items 3 to 5, fix link F2 of the off-road
+  navigation chain). Three plugin switches, all off by default, so routes, trails and sessions stay exactly as before:
+  `navigation.road-goal-reachable` chooses a point destination's road goal by walk reachability (the road point from
+  which the destination is reached on foot within the walk limits, with the least road plus walk length) instead of the
+  straight-line nearest road point; this makes "Keep storage hall" reachable over the road with the shipped settings
+  and removes scene 2's road overshoot. `navigation.road-to-its-end` keeps a road route to its end when the road network
+  is swapped near the destination, instead of a walk leg from partway along the road. `navigation.trail-leg-spacing`
+  now also spaces the walk trail with `guidance-v2` off (default 3.0, today's). NPC road plans are not affected.
+  knk-plugin: knk-core `RoadGoalChoice`; knk-paper `NavigationService`, `NavigationConfig`, `TrailRenderer`. Smoke test:
+  [off-road smoke test § 13](guides/navigation-offroad-smoke-test.md#13-f2-road-goal-and-route-ends-780-771-items-3-to-5-tier2).
+  Admin steps:
+  1. Merge into the plugin `config.yml` under `navigation:` (the switches off = no change), restart:
+     ```yaml
+     road-goal-reachable: false
+     road-goal-candidates: 12
+     road-to-its-end: false
+     ```
+  2. Optional, for the live test: `road-goal-reachable: true`, `road-to-its-end: true`, and a denser walk trail with
+     `trail-leg-spacing: 1.5` to `2.0` (the developer's choice; the default stays 3.0). Never raise
+     `max-snap-distance` for it.
+
 - **Territory in game: who holds the land where you stand** ([PandiO/knk-workspace#689](https://github.com/PandiO/knk-workspace/issues/689),
   link L2 of the production, storage and transport chain, [territory design](specs/territory/DESIGN.md) § 1-4). With
   the new plugin switch `production.enabled` on, the game server works out each town's and kingdom's territory from the
