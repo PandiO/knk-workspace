@@ -1,6 +1,6 @@
 # Off-road navigation and landmarks chain — progress report
 
-**Status:** Running, waiting for the developer (2026-11-18) · **Last updated:** 2026-11-18 (L9 block); 2026-11-18 (L5 block); 2026-11-18 (L8 step A block)
+**Status:** Running, waiting for the developer (2026-11-18) · **Last updated:** 2026-11-19 (F2 block); 2026-11-18 (L9 block); 2026-11-18 (L5 block); 2026-11-18 (L8 step A block)
 
 **Issue:** [PandiO/knk-workspace#698](https://github.com/PandiO/knk-workspace/issues/698), links
 [#703](https://github.com/PandiO/knk-workspace/issues/703) (L1), [#704](https://github.com/PandiO/knk-workspace/issues/704) (L2),
@@ -29,11 +29,14 @@ on `next` (Decided 2026-11-17).
 | L3 Phase 6.1 trail corners | #710 | Merged into next (2026-11-18); waits for the developer's live test (tier:3, smoke § 8) | knk-plugin `claude/offroad-trail-corners` `9dd3ee5f`; knk-workspace `claude/offroad-trail-corners` `daffbc1d` | [knk-plugin#70](https://github.com/PandiO/knk-plugin/pull/70) → `next` `54dfe8d7`, [#719](https://github.com/PandiO/knk-workspace/pull/719) → `next` `d07deabf` | green (build; paper-boot on re-run, #720) | create_session `session_01R1w2Uv9tRTPyjZsFJNWGec` (2026-11-17) |
 | L4 Phase 6.2 anchored particles, winding back | #711 | Merged into next (2026-11-18); waits for the developer's live test (tier:3, smoke § 9) | knk-plugin `claude/offroad-trail-cursor` `1925cf73`; knk-workspace `claude/offroad-trail-cursor` `cb7b55f8` | [knk-plugin#72](https://github.com/PandiO/knk-plugin/pull/72) → `next` `580aafa1`, [#722](https://github.com/PandiO/knk-workspace/pull/722) → `next` `ff8cf291` | green (build, paper-boot) | create_session `session_01R1w2UwkAiptAq4cPVFVBTS` (2026-11-18) |
 | L5 Phase 2 walk links | #705 | Merged into next (2026-11-18); waits for the developer's live test (tier:3, smoke § 3) and confirmation of the road-first defaults | knk-plugin `claude/offroad-walk-links` `5b4f666d`; knk-workspace `06b3f92a` | [knk-plugin#85](https://github.com/PandiO/knk-plugin/pull/85) → `3977329c`, [#774](https://github.com/PandiO/knk-workspace/pull/774) → `e2cac646` | green (build, paper-boot) | create_session `session_01R1w2UsbXwf6jzEc33aVwLL` (2026-11-18) |
-| L6 Phase 3 hierarchical walk search | #706 | Not started (L5 in `next`; waits for the developer's O32 answer: option A fits the keep) | `claude/offroad-hierarchical` | — | — | — |
+| L6 Phase 3 hierarchical walk search | #706 | On hold as the fallback (developer, 2026-11-19, O32: option A and a better rural road network) | `claude/offroad-hierarchical` | — | — | — |
 | L7 Phase 4 route modes | #707 | Merged into next (2026-11-18); waits for the developer's smoke § 5 (steps 2, 3, 9) and the node grants | knk-plugin `claude/offroad-route-modes` `d374b016`; knk-workspace `ed01ab75` | [knk-plugin#86](https://github.com/PandiO/knk-plugin/pull/86) → `a94332d9`, [#775](https://github.com/PandiO/knk-workspace/pull/775) → `dd09f782` | green (build, paper-boot) | create_session `session_01R1w2UveW7t8KTUAYeD5kAa` (2026-11-18) |
 | L8 Phase 5.1 landmark entity | #708 | Merged into next (2026-11-18); waits for the developer's live test (tier:3, smoke § 6) | knk-web-api `d331bdf4`, knk-web-app `b50c4134`, knk-plugin `be9e3a74`, knk-workspace `eb3321a9` (`claude/offroad-landmarks`) | [knk-web-api#50](https://github.com/PandiO/knk-web-api/pull/50) → `935fe8cc`, [knk-web-app#54](https://github.com/PandiO/knk-web-app/pull/54) → `3432e6ef`, [knk-plugin#83](https://github.com/PandiO/knk-plugin/pull/83) → `5fd81466`, [#763](https://github.com/PandiO/knk-workspace/pull/763) → `7722cc76` | green (all jobs) | subagent of the coordinator (three component repos; resumed once after the usage limit) |
 | L9 Phase 5.2 landmark weights | #709 | Merged into next (2026-11-18); waits for the developer's smoke § 7 steps 1–3 | knk-plugin `claude/offroad-landmark-weights` `636c9f32`; knk-workspace `9d0c926f` | [knk-plugin#87](https://github.com/PandiO/knk-plugin/pull/87) → `c7be34fb`, [#776](https://github.com/PandiO/knk-workspace/pull/776) → `99fef23d` | green (build; paper-boot after one #695 flake on the PR run) | create_session `session_01R1w2Ut1P9c2jGxRYC3weCJ` (2026-11-18) |
 | L10 Phase 7 plaza lines | #712 | Merged into next (step 1 and step 2, 2026-11-18); waits for the developer's smoke § 10.2 | knk-plugin `claude/offroad-plaza-lines` `28ad18c5`; knk-workspace `d7e4e834` | step 1: [knk-plugin#73](https://github.com/PandiO/knk-plugin/pull/73) → `ce0f65ec`, [#723](https://github.com/PandiO/knk-workspace/pull/723) → `c7f61e9e`; step 2: [knk-plugin#84](https://github.com/PandiO/knk-plugin/pull/84) → `4daa0c84`, [#769](https://github.com/PandiO/knk-workspace/pull/769) → `2e0c04d4` | green (build, paper-boot) | create_session `session_01R1w2Ussca79jpGCPqzcTf8` (2026-11-18) |
+| F1 walk-search fixes (#771 items 1, 2) | #771 | Merged into next (2026-11-19); waits for the developer's smoke § 12; the storage hall by road stays open (#780) | knk-plugin `claude/offroad-walk-fixes-771` `321daf6b`; knk-workspace `8fdfe392` | [knk-plugin#88](https://github.com/PandiO/knk-plugin/pull/88) → `cee53213`, [#778](https://github.com/PandiO/knk-workspace/pull/778) → `d1850c7a` | green (build, paper-boot) | create_session `session_01R1w2Ut7LKtBrvQw9bA3mVQ` (2026-11-19) |
+| F2 road goal and route ends (#780 b, #771 items 3–5) | #780, #771 | Merged into next (2026-11-19); waits for the developer's smoke § 13 | knk-plugin `claude/offroad-route-ends-f2` `ebc63265`; knk-workspace `441dd7cc` | [knk-plugin#94](https://github.com/PandiO/knk-plugin/pull/94) → `6311de11`, [#813](https://github.com/PandiO/knk-workspace/pull/813) → `05b8edc3` | green (build, paper-boot) | create_session `session_01R1w2UtLzNFzgycUAEB8mVd` (2026-11-19; resumed once after the usage limit) |
+| F2 road goal and route ends (#780 b, #771 items 3–5) | #780, #771 | Merged into next (2026-11-19); waits for the developer's smoke § 13 | knk-plugin `claude/offroad-route-ends-f2` `ebc63265`; knk-workspace `441dd7cc` | [knk-plugin#94](https://github.com/PandiO/knk-plugin/pull/94) → `6311de11`, [#813](https://github.com/PandiO/knk-workspace/pull/813) → `05b8edc3` | green (build, paper-boot) | create_session `session_01R1w2UtLzNFzgycUAEB8mVd` (2026-11-19; resumed once after the usage limit) |
 
 ## 3. Coordinator decisions
 
@@ -218,6 +221,37 @@ on `next` (Decided 2026-11-17).
 33. **The chain waits for the developer (2026-11-18 23:30).** In `next`: L1–L5 and L7–L10. Only L6 (#706) is left; it
     waits for the developer's O32 answer. No link is running; the shared plugin slot is free (told the engine and NPC
     coordinators).
+34. **O32 answered by the developer (2026-11-19): option A, L6 on hold as the fallback.** Reason: the resource
+    production feature needs NPC transports from wilderness structures (mines, lumberjacks) to storage in Cinix (keep
+    storage hall; one near the Merchants district / spawn). The developer extends the rural road network so these
+    routes ride roads with short walk legs at the ends (players and NPCs, C1). L6 starts only if a transport route
+    still fails with the roads in. NPC use of long walks waits with L6 (NPC coordinator told).
+35. **Fix link F1 started (2026-11-19 06:12, developer's go):** #771 items 1 (scene 1 stuck at 1417 59 -489 on the
+    way to the keep storage hall, a transport destination) and 2 (open trapdoor over a ladder). Tier:2, no flag
+    (bug fixes); #771 added as a sub-issue of #698. The trapdoor fix also reaches NPC walk legs (wanted; NPC scenarios
+    are the guard). Items 3–5 stay open. Engine and NPC coordinators told.
+36. **F1 merged into `next` (2026-11-19 07:10).** § 6 checks held for the plugin PR (heads matched, branch contained
+    `next`, `build` and `paper-boot` green on both runs, no NPC/destinations/shape file, golden transcripts and flag-off
+    tests unchanged, no Codex findings). The docs PR was sent back once: its smoke steps used `max-snap-distance` 600,
+    which the developer ruled out for real routes; the shipped-settings run then showed that scene 1 by road still ends
+    on the stair house's lower landing (straight-line road goal), which F1 does not fix. Filed as #780 (sub-issue of
+    #698) with two options for the developer: (a) a road to the hall (data, fits the road-network plan), (b) choose
+    the road goal by walk reachability (code). The watchtower roof works at shipped limits. Engine and NPC coordinators
+    told; the NPC chain files its own follow-up for the hatch in the NPC body check.
+37. **Fix link F2 started (2026-11-19 12:26, developer's go).** Developer decisions: #780 both (a: a road to the
+    keep storage hall, the developer's; b: road goal by walk reachability, F2) and #771 items 3–5 into F2. Every
+    behaviour change sits behind a key off by default (item 3: `trail-leg-spacing` also with `guidance-v2` off,
+    default 3.0), so today's routes and L7's golden transcripts stay as they are. Alternatives: (a) unflagged bug
+    fixes; rejected, the road-goal change alters many routes and the chain's rule 1 keeps new behaviour behind keys;
+    (b) separate links for #780 and #771; rejected, items 4 and 5 sit in the same route-end code. Engine, NPC and
+    siege weapons coordinators told; F2 holds the plugin navigation slot.
+38. **F2 merged into `next` (2026-11-19 14:33).** § 6 checks held: heads matched, branches contained `next`, `build`
+    and `paper-boot` green on both runs of `ebc63265`, every change behind keys off by default
+    (`road-goal-reachable`, `road-goal-candidates`, `road-to-its-end`) and `trail-leg-spacing` 3.0, no NPC,
+    destinations or shape file, golden transcripts and flag-off tests unchanged, smoke § 13 at shipped settings, no
+    Codex findings (usage limit). C1's NPC join is private and could not leave the dead end; F2 applies the same
+    principle for players (NPC coordinator told; a shared rule is their call). #780 closes on promotion; #771 stays
+    open until the developer's test tells which cause of item 5 they saw. The plugin slot is free.
 
 ## 4. Link blocks
 
@@ -1040,3 +1074,138 @@ _(Each link appends its block here when it finishes.)_
 9. **Notes for later links.**
     1. L6 (#706): landmark nodes join the abstract graph per § 5.3.3; `LandmarkLinkNodes` finds road nodes only, a cluster node needs the landmark's pin (`ModelLandmarks` has the model). Hierarchical refinement searches should get the request's `weights` (`WalkRequest.withWeights` keeps them through the `with*` methods).
     2. #747 (engine L5): nothing of L9 is on the old path.
+
+### 4.11 F1 — walk-search fixes (#771)
+
+1. **Scope done.** #771 items 1 and 2, tier:2, no flag (they make valid routes work), no config key, no migration. Items 3 to 5 stay open on #771.
+    1. **Item 1, scene 1 stuck at 1417 59 -489.** The hypothesis was **wrong**: the storage hall is a point Location (L1's run 2 note 5), so no region target was re-derived. The real cause, reproduced on the keep snapshot `quarry-to-keep-stairhouse.zip`:
+        1. The first search (from the snapshot's edge on the way from spawn) finds the way: up the keep stair house's lower flights, passing 3 to 4 blocks from the stuck spot, out south to about z -551, round through the courtyard and back to the hall. It is about 410 blocks; the runs had 371 to 416.
+        2. A recompute happens when the player is more than `recompute-distance` off the path, or the path is `chunk-ttl-seconds` old. Run from inside the keep, it captured only the box round the player and the hall, and capped the length for a 17-block leg. The way runs about 60 blocks south of that box and is much longer than the cap.
+        3. The result: NO_PATH with run 2's limits and FALLBACK (length) with the shipped ones, at margin 16 and at margin 48, from the stuck spot and from on the first path alike. This matches the runs' "the search area closes inside the capture box". The player was on or next to the first path, so the answer to the run's open question is "on the first path".
+        4. **Fix:** a walk leg keeps its last found path (`DirectLeg.foundPath`, kept after a failed search too). Its next request carries a `WalkRecomputeHint` (knk-core):
+            1. The rest of the path, from the player's nearest point on it, stays in the capture: `WalkBox.including`, with `WalkLegPreparer.HINT_MARGIN` 3, unless that goes over `max-chunks-per-request`.
+            2. Its length stays in the cap: `WalkBudget.withLengthAtLeast`, set to the remaining length plus twice the player's distance from the path plus 8.
+            3. On the snapshot the box grows from 9 to 18 chunks (margin 16) or from 49 to 56 (margin 48), and the recompute finds the way again (290 blocks).
+            4. Both `guidance-v2` paths go through `requestWalk`, so flag off and flag on are both fixed. The first search of a leg has no hint and is exactly as before.
+    2. **Item 2, open trapdoor over a ladder.** At the watchtower the hatch is an open spruce trapdoor at 1400 107 -540, with a ladder at 1400 99..106 -540 below it; the roof floor is at 106. Passability is by material name (`Material.isCollidable`), so the open trapdoor was a solid block and the roof was shut in. On the `keep-tower.zip` snapshot that gives exactly the runs' 44 cells.
+        1. **Fix:** an open trapdoor directly above a climbable is climbable (`WalkCells.isClimbableHatch`, `PassabilityRules.isTrapdoor`): passable and never a floor.
+        2. The capture reads the open state from the chunk snapshot through `SpanExtractor.BlockSource.isOpen`, a default method (`Openable.isOpen()` on the server). It is asked for trapdoors only.
+        3. A closed trapdoor stays solid: it can be stood on and is never passed. There is no door-like access rule for trapdoors today (`isHandOpenableDoor` excludes them), so "otherwise blocked" applies. An open trapdoor with no climbable below is unchanged.
+        4. Both layouts pass, up and down: the hatch in the roof above the ladder, and the hatch at feet level above a ladder that reaches the roof (the watchtower).
+    3. **NPC walk legs.** The trapdoor rule reaches their captures (the same `WalkChunkExtractor`), as wanted. The recompute hint does not: NPC legs use `WalkLegPreparer.capture`, not `prepare`. The NPC body check (`NpcWalkPlanner.BodyCheck`) still treats an open trapdoor's panel as blocking, so an NPC plan through a hatch is still checked as before. paper-boot `npc-*` outcomes: see item 4.
+    4. Kept stable (additions only): the public signatures of `WalkLegPreparer` (new 6-argument `prepare`, the 5-argument one delegates), `NavigationService.WalkPreparer` (a default 6-argument `prepare`), `WalkSearch`/`WalkPathfinder` (untouched), `MovementProfile` (untouched) and the shape package (untouched). `core/navigation/destinations`, the engine handle, `core/npc` and `paper/npc` are untouched.
+2. **Commits and heads.**
+    1. knk-plugin `claude/offroad-walk-fixes-771` at `321daf6b` (2 commits, base `next` `c7be34fb`).
+    2. knk-workspace `claude/offroad-walk-fixes-771` at `f2c94b7e` (1 commit, base `next`).
+3. **PRs.** [PandiO/knk-plugin#88](https://github.com/PandiO/knk-plugin/pull/88) and [PandiO/knk-workspace#778](https://github.com/PandiO/knk-workspace/pull/778), both `Part of #771`, base `next`. Not merged.
+4. **Tests, baseline → result.**
+    1. knk-plugin `./gradlew build -x deployToDevServer`, baseline on `next` `c7be34fb`:
+        1. knk-core 3 423 → 3 435 (+12).
+        2. knk-paper 3 138 → 3 147 (+9, 18 skipped as before).
+        3. knk-api-client 358 → 358.
+        4. 0 failures; known reds: none.
+    2. New tests:
+        1. knk-core `WalkTrapdoorHatchTest` (8): up, down, closed, closed still a floor, no ladder below, hatch at feet level, the rule's truth table, material names alone unchanged.
+        2. knk-core `WalkRecomputeHintTest` (4).
+        3. knk-paper `WalkDevWorldFixesTest` (3, on the two dev-world snapshots: scene 1's recompute today versus with the hint, at both margins and with the shipped limits; scene 8 at 44 cells before and found down and up after).
+        4. knk-paper `WalkLegPreparerTest` +3, `NavigationServiceTest` +2 (the hint on recompute, kept after a failed search, `guidance-v2` on), `WalkSnapshotServiceTest` +1 (the open state from the snapshot).
+    3. Unchanged and green: L7's golden transcripts (`WalkLegDefaultTranscriptTest`), L3/L4/L5/L9/L10's flag-off identity tests, the engine's handle tests and the NPC unit tests. No golden transcript changed.
+    4. CI on `321daf6b`: green: build and paper-boot (both the push and the PR runs, every `npc-*` scenario included), no re-run needed. No `npc-*` scenario outcome changed.
+5. **Decisions (DESIGN § 4.3).**
+    1. *How the recompute keeps the way.* Chosen: carry the last found path into the next request (box and length cap), so the search can still find a better way. Alternatives: (a) keep drawing the old path when a recompute fails: the player's drift is not followed, and a stale path survives terrain changes; (b) the coordinator's "pick the region point reachable": not the cause, since the target is a point.
+    2. *Which part of the found path.* Chosen: from the player's nearest point on it to its end. Alternative: (a) the whole path: the box would reach back to spawn for nothing.
+    3. *Box margin round the hint's path.* Chosen: 3 blocks (headroom 2 plus a step aside); the chunks are captured whole anyway. Alternative: (a) the full `capture-margin`: more chunks for no gain on the known way.
+    4. *Over `max-chunks-per-request`.* Chosen: the leg's own box, as before (the cap stays a hard limit). Alternative: (a) a TOO_LARGE capture: a straight line instead of a search.
+    5. *Length floor.* Chosen: remaining length + 2 × the player's distance from the path + 8, through `maxLength`/`detourAllowance` raised just enough. Alternative: (a) only the box: with the shipped limits (`max-length` 144) the 17-block leg's cap (about 130) still cuts the 290-block way.
+    6. *Hatch facing.* Chosen: the trapdoor's facing is not asked (vanilla climbs it only when it faces like the ladder, but a player passes an open hatch either way). Alternative: (a) require matching facing: needs another block-state read for a case the dev world does not have.
+    7. *Iron trapdoors.* Chosen: an open one over a ladder counts too (open is open, however it was opened). Alternative: (a) wooden only: an open iron hatch would block a path a player can take.
+    8. *Where the open state comes from.* Chosen: the chunk snapshot at capture time, trapdoors only. Alternative: (a) a material-name convention: the open state is not a material.
+6. **Out of scope, noted.**
+    1. Toggling a trapdoor fires no block event that `WalkTerrainListener` sees, and the chunk cache does not hear of it either. A walk capture keeps the state it read for up to `chunk-ttl-seconds` (10 s). This is the same as doors today and is not filed.
+    2. With the shipped limits, scene 1's first search and scenes 8 and 9 are budget questions (O32: option A on walk legs), not this link's.
+7. **Blockers.** None. Codex reached its code-review usage limit on both PRs (its comments of 2026-11-19 06:31 and 06:32 UTC), so the link finished without its review (developer decision 2026-11-14); said on both PRs.
+8. **At merge / what the developer must do.**
+    1. Nothing to configure.
+    2. Live test, about 15 minutes: smoke test § 12 steps 1 and 3, with run 2's walk limits and `max-snap-distance` 600. Restore the limits afterwards.
+        1. Scene 1 from spawn to "Keep storage hall": not stuck at 1417 59 -489.
+        2. Garrison Watchtower Roof to Keep Tower Roof and back, through the open hatch.
+9. **Notes for later links.**
+    1. A future walk change that clears `DirectLeg` state must keep `foundPath` across failed searches. It is the only memory of a way that runs outside the leg's box.
+    2. #771 items 3 to 5 (trail spacing, road overshoot, road-to-walk handover) are untouched.
+
+### 4.12 F2 — road goal and route ends (#780, #771 items 3–5)
+
+1. **Scope done.** #780 option (b) and #771 items 3, 4 and 5; tier:2. Every behaviour change is behind a key that is off by default, or has a default equal to today's. No migration.
+    1. **#780 (b), `navigation.road-goal-reachable` (false), `road-goal-candidates` (12).**
+        1. The candidates are today's straight-line goal plus the nearest point of each road edge within `max-snap-distance` (plain 3D), nearest first. Points within 1 block of an earlier one are skipped. At most 12 (knk-core `RoadGoalChoice`).
+        2. Each candidate gets one walk search to the destination, with the shipped `walk:` limits and the normal walk capture. The searches run one at a time per navigation on the walk executor.
+        3. The reached candidates are routed to from the player on the routing thread. The least road length plus walk length wins.
+        4. The first route is today's. A different goal replaces it through `NavigationSession.onNetworkChanged`, taken as it is (silent).
+        5. If no candidate is reached, today's goal stays.
+        6. The last walk leg starts with the chosen walk path as its `foundPath`, so the first search carries F1's `WalkRecomputeHint`.
+        7. Point destinations only. It hangs off `begin` and `onNetworkChanged`, the shared path; nothing is on the raw `/navigate` entry. It reads only the session's `Destination` (kind, target), as `HandleDestinations` builds it.
+    2. **Reproduced on `quarry-to-keep-stairhouse.zip`** (its `roads.json` loaded as the road graph):
+        1. Today's goal is edge 2000000033 at 1415 58 -490. The walk from there ends in FALLBACK at the shipped limits.
+        2. With the key on, the goal is the end of edge 2000000017 (1421 84 -521): 347 blocks by road plus 97 on foot, and the last leg is found.
+        3. 6 of the about 30 per-edge candidates within 48 blocks are reached at the shipped limits. All of them are in the keep's courtyard (y 80 to 84).
+    3. **#771 item 4 (scene 2) has the same cause, under the same key.** The straight-line goal for the tower roof (edge 2000000019 at 1411.5 84 -516) lies about 10 blocks past the end of edge 2000000017, where the walk to the stair leaves the road. On `keep-tower.zip` the chosen goal makes the road part 72 blocks shorter and road plus walk 38 blocks shorter. The snapshot's graph routes from spawn the long way round, so the chosen point there is earlier on that route.
+    4. **#771 item 5: two causes in the code, neither depends on `guidance-v2`.**
+        1. The road goal: the road part ends at a straight-line point while the road goes on. The #780 key fixes this.
+        2. `onNetworkChanged` (called on every live-edge-tag swap) re-resolves goals. Within `max-snap-distance` it switched a running road session to direct mode, so a walk leg started from mid-road. New key `navigation.road-to-its-end` (false): `resolveGoals(..., keepRoad)` keeps road goals instead.
+        3. Checked and ruled out on the snapshot: the session's 3D `isAtEnd` firing early. No point of the scene 3 route comes within 9 blocks of its end before the end.
+        4. Which cause the developer saw is for smoke § 13 step 4. So the plugin PR says `Part of #771`.
+    5. **#771 item 3.** `TrailRenderer.drawPath` (the flag-off walk trail) uses `trail-leg-spacing`. The default stays 3.0 (`LEG_SPACING`); 1.5 to 2.0 is suggested in the deploy notes.
+    6. **NPC.** `planRoadFor` and `NpcWalkPlanner` are unchanged (tested). No NPC, shape or destinations file was touched. The `WalkLegPreparer`, `WalkSearch`/`WalkPathfinder`, `MovementProfile` and `RoadPlanner` signatures are untouched.
+    7. **How the rule relates to the NPC chain's C1 road join** (coordinator note):
+        1. C1 (`NpcNavigationService`, its decision 5.3) starts the NPC's walk to the goal at the road's end, then retries from up to 3 points further back along the same route. It takes the first reachable point.
+        2. That code is private and NPC-specific, so there is no core class to reuse. Stepping back along the stair-house route could not leave #780's dead end either.
+        3. F2 applies the same principle (the goal chosen by walk reachability) to players. Its candidates come from all edges near the destination, and the least total length wins, not the first reached.
+2. **Commits and heads.**
+    1. knk-plugin `claude/offroad-route-ends-f2` at `ebc63265` (2 commits, base `next` `55804b11`).
+    2. knk-workspace `claude/offroad-route-ends-f2` at `441dd7cc` (1 commit, base `next` `8487a058`).
+3. **PRs.**
+    1. [PandiO/knk-plugin#94](https://github.com/PandiO/knk-plugin/pull/94): `Closes #780`, `Part of #771`.
+    2. [PandiO/knk-workspace#813](https://github.com/PandiO/knk-workspace/pull/813): `Part of`.
+    3. Both have base `next`; neither is merged.
+4. **Tests, baseline → result.**
+    1. knk-plugin `./gradlew build -x deployToDevServer`, baseline on `next` `55804b11`:
+        1. knk-core 3510 → 3514 (+4).
+        2. knk-paper 3200 → 3210 (+10, 18 skipped, as before).
+        3. knk-api-client 368 → 368.
+        4. 0 failures; no known reds.
+    2. New tests:
+        1. knk-core `RoadGoalChoiceTest` (4).
+        2. knk-paper `NavigationServiceRouteEndsTest` (9, on both dev-world snapshots with the real walk search and the shipped limits; test fixture `DevWorldSnapshot`).
+        3. knk-paper `TrailRendererTest` +1.
+    3. Unchanged and green: L7's golden transcripts, the L3/L4/L5/L9/L10 flag-off identity tests, F1's tests, the engine's handle tests and the NPC unit tests.
+    4. CI on `ebc63265`: green. Build and paper-boot passed on both the push run and the PR run, every `npc-*` scenario included. No re-run was needed, and no `npc-*` outcome changed.
+5. **Decisions (DESIGN § 4.3).**
+    1. *When the choice is made.* Chosen: today's route first; the chosen goal replaces it when the searches answer, as walk links do (L5 decision 1). Alternatives:
+        1. (a) Hold the session until the searches return: a second or more with no trail at every start.
+        2. (b) Choose at the road's end: by then the road part has been driven to the wrong place.
+    2. *Candidates.* Chosen: the nearest point per road edge within `max-snap-distance`, today's point first, at most 12. Alternatives:
+        1. (a) Within `max-destination-distance` (256): many more far edges for no gain.
+        2. (b) Polyline vertices too: more searches for points the per-edge nearest point usually matches.
+        3. (c) One multi-goal walk search back from the destination: walk moves are not reversible (drops), as C1 found.
+    3. *Cost to compare.* Chosen: route length plus walk length, in walked blocks, as L5's road-first rule does. Alternatives:
+        1. (a) Routing cost plus walk cost: class factors and walk penalties make the totals hard to read.
+        2. (b) A goal-cost offset inside the A* (`RouteRequest` addition): changes the shared router for one caller.
+    4. *Search pacing.* Chosen: one candidate search at a time per navigation, so a walk leg always finds a walk thread. Alternative: (a) all at once on the pool: up to 12 searches ahead of a player's walk leg.
+    5. *Re-routing to the new goal.* Chosen: `onNetworkChanged` (a silent route, taken as it is; its `NavigationRerouteEvent` carries reason NETWORK_CHANGED). Alternative: (a) a new `RouteReason`: every switch over the enum would need a case, for the same behaviour.
+    6. *Item 5's network-swap cause.* Chosen: its own key, because it is a different cause from the road goal. Alternative: (a) fold it into `road-goal-reachable`: one switch for two unrelated changes.
+    7. *Region destinations under `road-to-its-end`.* Chosen: the region's crossings when the region would switch to direct mode. Alternative: (a) leave regions out: the same mid-road switch happens for regions.
+6. **Out of scope, noted.**
+    1. The choice has no `/knk road status` line; it logs at FINE only.
+    2. The snapshots' road graphs hold only the edges through their box. The live route from spawn differs (the snapshot routes the long way round), so the live numbers are for § 13.
+7. **Blockers.** None. Codex reached its code-review usage limit on both PRs (its comments of 2026-11-19 13:49 UTC), so the link finished without its review (developer decision 2026-11-14). This is said on both PRs.
+8. **At merge / what the developer must do.**
+    1. Merge the three keys into `config.yml` (all off = no change); YAML in the PR.
+    2. Live test, about 25 minutes: smoke § 13 steps 1, 3, 4 and 5.
+        1. Shipped settings, with `road-goal-reachable` and `road-to-its-end` set to true.
+        2. `trail-leg-spacing` 1.5 or 2.0 for step 5.
+        3. Never raise `max-snap-distance`.
+    3. Decide whether to keep the two keys on and which spacing to use.
+9. **Notes for later links.**
+    1. The engine chain's removal of the raw entry (#747) is not affected: F2 uses `begin` and `onNetworkChanged` only.
+    2. NPC long walks (#698's NPC phase) could reuse `RoadGoalChoice.candidates`/`best` for an NPC's road goal; that is the NPC chain's call.
+

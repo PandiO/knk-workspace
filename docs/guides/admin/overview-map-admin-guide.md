@@ -1,6 +1,6 @@
 # Overview map — Admin and Staff Guide
 
-**Status:** Current · **Last updated:** 2026-11-18 (first version, the overview map chain #732, docs PandiO/knk-workspace#766)
+**Status:** Current · **Last updated:** 2026-11-19 (§ 6: "Open profile" disabled with a tooltip without `knk.admin.user.manage`, #809; troubleshooting: Escape inside the map, #757; fix link F2, in review for `next`); 2026-11-18 (first version, the overview map chain #732, docs PandiO/knk-workspace#766)
 **Checked against:** knk-web-api `next` `6094276`, knk-plugin `next` `3e04ba8f`, knk-web-app `next` `eff6ed9` (not
 released; every part is off by default; the [smoke test](../overview-map-smoke-test.md) has not been run live yet)
 **Related:** [player guide](../users/overview-map-player-guide.md) (what everyone sees),
@@ -128,15 +128,16 @@ map:
    | `knk.unfreeze` | **Unfreeze**, in place of Freeze, while the player is frozen ("Frozen. Reason: …") |
    | `knk.kick` | **Kick…** (optional reason) |
    | `knk.ban` | **Ban…** (required reason; permanent, lift with `/pardon <name>` in game) |
-   | any of them | **Open profile** (`/admin/users/<id>`) |
+   | any of them | **Open profile** (`/admin/users/<id>`): a link with `knk.admin.user.manage`, otherwise greyed out with a tooltip |
 
 2. The dialogs, endpoints, toasts, rules and audit entries are the player profile's own
    ([ranks, permissions and moderation § 5](ranks-permissions-moderation-admin-guide.md#5-moderation-tools)). The API's
    own rules still decide, for example the escalation guard on a kick or ban of a player who ranks at or above you;
    kick and ban need the game server on the hub.
-3. **"Open profile" needs `knk.admin.user.manage` to get further.** The link is there for every moderation node, but
-   the profile page itself needs `knk.admin.user.manage`: a kick-only moderator ends on the profile page's no-access
-   answer.
+3. **"Open profile" needs `knk.admin.user.manage`.** The profile page itself needs that node. A moderator without it
+   (for example kick-only) sees "Open profile" greyed out, with a tooltip on hover, keyboard focus or tap: "You need
+   access to player profiles (knk.admin.user.manage) to open this." It goes nowhere; grant the node to make it a
+   link ([#809](https://github.com/PandiO/knk-workspace/issues/809)).
 4. A player without a web account shows "<name> has no account in the web app yet, so there is nothing to moderate
    here."
 5. Everyone else gets only the name card; anonymous viewers make no extra request at all.
@@ -172,10 +173,11 @@ data; the only new table is `map_region_outlines`, which the plugin refills by i
 | Gate buttons answer "no game server connected" | The plugin isn't connected to the hub | Check `realtime.enabled` and the API log; restart the game server |
 | Gate buttons time out | The game server didn't answer within 5 s | Look at the door in game before repeating |
 | "Details" shows a one-line message | The type has no default display configuration | Create one in the display builder (§ 4 item 3) |
-| "Open profile" ends on no access | The viewer lacks `knk.admin.user.manage` | Grant it, or use the map's own buttons |
-| Escape doesn't close the panel | Focus is inside the map frame ([#757](https://github.com/PandiO/knk-workspace/issues/757)) | Use the ×, or click the page first |
+| "Open profile" is greyed out | The viewer lacks `knk.admin.user.manage` (the tooltip says so) | Grant it, or use the map's own buttons |
+| Escape doesn't close the panel right after a click in the map | The browser still has the old bridge script (before #757) | Reload the page without cache; check that `/bluemap-bridge/bridge.js` sends `escapePressed` |
 | 429 answers | More than 120 map requests a minute from one IP | Raise `RateLimiting__Map__PermitPerMinute` if real users share an IP |
 
 ## Changes
 
-1. 2026-11-18: first version (the overview map chain #732, links L1–L9; docs PandiO/knk-workspace#766)
+1. 2026-11-19: § 6: "Open profile" disabled with a tooltip without `knk.admin.user.manage` (#809); § 9: the Escape row (#757); fix link F2
+2. 2026-11-18: first version (the overview map chain #732, links L1–L9; docs PandiO/knk-workspace#766)

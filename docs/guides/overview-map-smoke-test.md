@@ -1,7 +1,7 @@
 # Overview map — smoke test
 
-**Status:** Draft · **Last updated:** 2026-11-19 (§ 1 step 8: sub-region outlines at startup, #750); 2026-11-18 (§ 3 step 1: opening `/bluemap` itself goes to `/map`, #737); 2026-11-18 (§ 3 step 4: Escape only with the focus on the page, #757; docs #766)
-**Coverage:** Written from the design 2026-11-18; no steps run. § 1 updated to what L1 built (7 steps, all partly automated, tagged) and F1 (#750, step 8, partly automated), § 2 to what L2 built (7 steps: 2 automated, 5 partly automated, tagged), § 3 to what L3 built (11 steps: 1 automated, 9 partly automated, 1 manual only, tagged), § 4 to what L4 built (9 steps: 1 automated, 5 partly automated, 3 manual visibility steps), § 5 to what L5 built (8 steps: 1 automated, 7 partly automated, tagged), § 6 to what L6 built (7 steps: 2 automated, 5 partly automated, tagged), § 7 to what L7 built (10 steps: 4 automated, 6 partly automated), § 8 to what L8 built (9 steps: 3 automated, 6 partly automated), § 9 to what L9 built (8 steps: 3 automated, 4 partly automated, 1 manual only); every section is now updated to what was built.
+**Status:** Draft · **Last updated:** 2026-11-19 (§ 1 step 8: sub-region outlines at startup, #750; fix link F1); 2026-11-19 (§ 3 step 4, § 5 step 7: Escape also after a click inside the map, #757; § 9 steps 1, 3 and 4: "Open profile" disabled with a tooltip without `knk.admin.user.manage`, #809; fix link F2); 2026-11-18 (§ 3 step 1: opening `/bluemap` itself goes to `/map`, #737); 2026-11-18 (§ 3 step 4: Escape only with the focus on the page, #757; docs #766)
+**Coverage:** Written from the design 2026-11-18; no steps run. § 1 updated to what L1 built (7 steps, all partly automated, tagged) and F1 (#750, step 8, partly automated), § 2 to what L2 built (7 steps: 2 automated, 5 partly automated, tagged), § 3 to what L3 built (11 steps: 1 automated, 9 partly automated, 1 manual only, tagged), § 4 to what L4 built (9 steps: 1 automated, 5 partly automated, 3 manual visibility steps), § 5 to what L5 built (8 steps: 1 automated, 7 partly automated, tagged), § 6 to what L6 built (7 steps: 2 automated, 5 partly automated, tagged), § 7 to what L7 built (10 steps: 4 automated, 6 partly automated), § 8 to what L8 built (9 steps: 3 automated, 6 partly automated), § 9 to what L9 built (8 steps: 3 automated, 4 partly automated, 1 manual only; since F2, #809: 3 automated, 5 partly automated); every section is now updated to what was built.
 **Design:** [specs/in-game-maps/OVERVIEW_MAP_DESIGN.md](../specs/in-game-maps/OVERVIEW_MAP_DESIGN.md) · **Issue:**
 [PandiO/knk-workspace#732](https://github.com/PandiO/knk-workspace/issues/732)
 **Guides:** [player](users/overview-map-player-guide.md), [admin](admin/overview-map-admin-guide.md)
@@ -206,12 +206,15 @@ Tests named below: knk-web-app `e2e/overview-map.spec.ts` (Playwright, "e2e") an
    Jest `mapActionRegistry` "shows the town panel ..."; by hand: the real flash] Click the town pin (or its label).
    **Expected:** the town's outline flashes three times (about 0.4 s each) and disappears. The panel on the right
    shows the town's name, description and number of districts. (A08)
-4. [partly automated: e2e `"Show region" shows the town and all its districts by name, and hides them again (A08)`;
-   by hand: the verdict] Turn on "Show region". **Expected:** the town outline and every district of that town stay
-   visible, each district labelled with its name, never a region id (`domain_...`). Close the panel (×, or Escape once the keyboard
-   focus is on the page rather than inside the map, [#757](https://github.com/PandiO/knk-workspace/issues/757)): the
-   regions stay. Click the town again: the switch is on; turn it off: the regions disappear. Judge whether
-   showing all districts at once works and note your verdict for a follow-up (O30). (A08)
+4. [partly automated: e2e `"Show region" shows the town and all its districts by name, and hides them again (A08)`,
+   `Escape closes the panel after a click inside the map frame (#757)`, Jest `bridgeProtocol` "accepts escapePressed
+   ..."; by hand: the verdict, Escape on the real BlueMap viewer] Turn on "Show region". **Expected:** the town outline
+   and every district of that town stay visible, each district labelled with its name, never a region id
+   (`domain_...`). Close the panel with the ×: the regions stay. Click the town again: the switch is on. Click once on
+   the map itself (inside the map, not on the panel) and press Escape: the panel closes, also with the keyboard focus
+   inside the map ([#757](https://github.com/PandiO/knk-workspace/issues/757), O35); the regions stay. Click the town
+   again and turn the switch off: the regions disappear. Judge whether showing all districts at once works and note
+   your verdict for a follow-up (O30). (A08)
 5. [partly automated: e2e `clicking a gate shows its doors with open/closed, destroyed and a health bar (A09)`, Jest
    `GateDoorsWidget`; by hand: real gate data] Click the gate structure. **Expected:** the panel shows its name,
    "Structure, Gate", district, town and address, and a "Doors" list: each door with Open/Closed (or Opening,
@@ -384,11 +387,13 @@ Tests named below: knk-web-app `e2e/overview-map-players.spec.ts` (Playwright, "
    tag and the same arena pin. After the match the pin is gone and A is back. (A14)
 6. [partly automated: e2e `a player who quits disappears with the next poll (A16)`; by hand: a real quit] A quits.
    **Expected:** A's head and label are gone within about 6 s (normally at the next poll). (A16)
-7. [partly automated: e2e `clicking a player opens the name card with the label and tags only (§ 4.4)`, `on a phone
-   the name card is a bottom sheet and the page does not scroll sideways`, Jest `PlayerCard`; by hand: the real
-   viewer and a phone] Click D's head or label as **anonymous**. **Expected:** a panel "Player details" with D's name,
+7. [partly automated: e2e `clicking a player opens the name card with the label and tags only (§ 4.4)`, `Escape closes
+   the name card after the click on the player inside the map frame (#757)`, `on a phone the name card is a bottom
+   sheet and the page does not scroll sideways`, Jest `PlayerCard`; by hand: the real viewer and a phone] Click D's head or label as **anonymous**. **Expected:** a panel "Player details" with D's name,
    the coloured label and the tags (for example "AFK"), and nothing else (no position, no buttons). Clicking a town
-   replaces it with the town's panel; the × closes it (Escape too, once the keyboard focus is on the page rather than inside the map). On a phone it opens as a bottom sheet. (A11)
+   replaces it with the town's panel; the × closes it. Click D again (the keyboard focus is now inside the map) and
+   press Escape: the card closes as well ([#757](https://github.com/PandiO/knk-workspace/issues/757), O35). On a phone
+   it opens as a bottom sheet. (A11)
 8. [automated: e2e `live players off (Map:LivePlayers:Enabled false): no players request and no player layer (O27)`,
    Jest `useLivePlayers` "makes no request and returns null while the flag is off"] With
    `Map__LivePlayers__Enabled=false` the map shows no players and no arena pins, and the browser's network tab shows
@@ -604,7 +609,8 @@ Tests named below: knk-web-app `e2e/overview-map-gate-commands.spec.ts` (Playwri
 ## 9. Phase 7: player moderation panel (#743, tier:2)
 
 *Built by link L9 (knk-web-app branch `claude/overview-map-moderation`, docs on knk-workspace
-`claude/overview-map-moderation`; PRs into `next`). 8 steps: 3 automated, 4 partly automated, 1 manual only (tagged);
+`claude/overview-map-moderation`; PRs into `next`; step 3 and "Open profile" since fix link F2, #809). 8 steps: 3
+automated, 5 partly automated (tagged);
 every step can still be run by hand. The suites run the map page against a mocked API (live players, the account read by UUID and the
 moderation endpoints) and the fake BlueMap web app with the real bridge script; the kick, ban and freeze in game, the
 profile page behind "Open profile" and a real phone are checked by hand. No flag of its own: it needs the live players
@@ -626,20 +632,28 @@ Tests named below: knk-web-app `e2e/overview-map-moderation.spec.ts` (Playwright
 
 ### 9.1 Steps
 
-1. [partly automated: e2e `a viewer with only knk.kick sees only Kick and "Open profile"; kicking works as on the
-   profile (A20)`, Jest `PlayerModerationPanel` "with only knk.kick: Kick and "Open profile", nothing else; kick sends
-   the reason (A20)"; by hand: the real account] As the **kick moderator**, open `/map` and click A. **Expected:** under
-   A's name card a "Moderation" section with only a "Kick…" button and an "Open profile" link. (A20)
+1. [partly automated: e2e `a viewer with only knk.kick sees only Kick and a disabled "Open profile"; kicking works as
+   on the profile (A20, #809)`, Jest `PlayerModerationPanel` "with only knk.kick: Kick and a disabled "Open profile"
+   with its tooltip; kick sends the reason (A20, #809)"; by hand: the real account] As the **kick moderator**, open
+   `/map` and click A. **Expected:** under A's name card a "Moderation" section with only a "Kick…" button, and
+   "Open profile" shown greyed out (disabled, not a link). (A20, O34)
 2. [partly automated: same tests; by hand: the kick in game] Click "Kick…", enter a reason and confirm. **Expected:**
    the same dialog as on the player profile ("Kick A?", optional reason); a toast "A is being kicked"; A is disconnected
    in game and sees the reason; A's profile audit log lists the kick with your name, as from the profile page. (A20)
-3. [manual only] Click "Open profile" (as the full moderator; the kick moderator gets the profile page's own "no
-   access" answer, because the page needs `knk.admin.user.manage`). **Expected:** A's player profile page
-   (`/admin/users/<id>`) opens.
+3. [partly automated: e2e `a viewer with only knk.kick sees only Kick and a disabled "Open profile"; kicking works as
+   on the profile (A20, #809)` (hover, focus, click), Jest `"Open profile" without the profile node (#809)` (hover,
+   focus, tap, Escape); by hand: a real phone, a screen reader if you have one, the profile page for the full
+   moderator] As the **kick moderator**, point at the greyed-out "Open profile", then reach it with Tab, then tap it
+   on a phone. **Expected:** each time a tooltip "You need access to player profiles (knk.admin.user.manage) to open
+   this."; nothing opens and the address stays `/map`; with the focus on it, Escape hides the tooltip and a second
+   Escape closes the panel. Then, as the **full moderator**, click A and "Open profile". **Expected:** a normal link;
+   A's player profile page (`/admin/users/<id>`) opens. (O34,
+   [#809](https://github.com/PandiO/knk-workspace/issues/809))
 4. [partly automated: e2e `a viewer with every moderation node freezes, unfreezes and bans from the panel`, Jest
-   `PlayerModerationPanel` "freeze posts the reason and reads the account again", "a frozen player shows the reason
+   `PlayerModerationPanel` "with knk.admin.user.manage: the working link, no tooltip (unchanged)", "freeze posts the
+   reason and reads the account again", "a frozen player shows the reason
    and Unfreeze for a knk.unfreeze holder"; by hand: the freeze in game] With A back online, as the **full moderator**
-   click A. **Expected:** "Freeze…", "Kick…", "Ban…" and "Open profile". Click "Freeze…", enter a reason and
+   click A. **Expected:** "Freeze…", "Kick…", "Ban…" and a working "Open profile" link. Click "Freeze…", enter a reason and
    confirm: toast "A is frozen", A can no longer move in game, and the section shows "Frozen. Reason: <reason>" with
    "Unfreeze" in place of "Freeze…". Click "Unfreeze" and confirm: toast "A is unfrozen", A can move again. (§ 5 rule 12)
 5. [partly automated: e2e same test, Jest `PlayerModerationPanel` "with every node: Freeze, Kick and Ban; ban asks a
@@ -660,15 +674,17 @@ Tests named below: knk-web-app `e2e/overview-map-moderation.spec.ts` (Playwright
 
 ## Changes
 
-1. 2026-11-19: § 1 step 8: sub-region outlines reported after the access sync, #750
-2. 2026-11-18: § 3 step 4: Escape only with the focus on the page, #757; docs #766
-3. 2026-11-18: § 9 to what L9 built, #743
-4. 2026-11-18: § 5 to what L5 built, #739
-5. 2026-11-18: § 8 to what L8 built, #742
-6. 2026-11-18: § 7 to what L7 built, #741
-7. 2026-11-18: § 6 to what L6 built, #740
-8. 2026-11-18: § 4 to what L4 built, #738
-9. 2026-11-18: § 3 to what L3 built, #737
-10. 2026-11-18: § 2 to what L2 built, #736
-11. 2026-11-18: § 1 to what L1 built, #735
-12. 2026-11-18: draft from the design, phases 1, 2, 3, 4a, 4b, 5, 6a, 6b, 7
+1. 2026-11-19: § 1 step 8: sub-region outlines reported after the access sync, #750 (fix link F1)
+2. 2026-11-19: § 3 step 4 and § 5 step 7: Escape closes the panel also after a click inside the map, #757; § 9 steps
+   1, 3 and 4: "Open profile" disabled with a tooltip without `knk.admin.user.manage`, #809 (fix link F2)
+3. 2026-11-18: § 3 step 4: Escape only with the focus on the page, #757; docs #766
+4. 2026-11-18: § 9 to what L9 built, #743
+5. 2026-11-18: § 5 to what L5 built, #739
+6. 2026-11-18: § 8 to what L8 built, #742
+7. 2026-11-18: § 7 to what L7 built, #741
+8. 2026-11-18: § 6 to what L6 built, #740
+9. 2026-11-18: § 4 to what L4 built, #738
+10. 2026-11-18: § 3 to what L3 built, #737
+11. 2026-11-18: § 2 to what L2 built, #736
+12. 2026-11-18: § 1 to what L1 built, #735
+13. 2026-11-18: draft from the design, phases 1, 2, 3, 4a, 4b, 5, 6a, 6b, 7

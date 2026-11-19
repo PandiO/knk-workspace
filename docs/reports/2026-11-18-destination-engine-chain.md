@@ -32,7 +32,7 @@
 | L2 P2 model, snapshot, domain search Location | #103 | Merged into next (2026-11-18) | `claude/navigation-destination-engine`: knk-web-api `a49fba23`, knk-plugin `61fe656a`, knk-workspace `30894797` | [knk-web-api#49](https://github.com/PandiO/knk-web-api/pull/49) (merge `6094276d`), [knk-plugin#80](https://github.com/PandiO/knk-plugin/pull/80) (merge `2f1c783e`), [knk-workspace#760](https://github.com/PandiO/knk-workspace/pull/760) (merge `560dd839`) | API build-and-test, mysql-tests, fresh-database green; plugin build + paper-boot green; Codex skipped (usage limit) | subagent of the coordinator (two repos besides knk-workspace, SKILL § 4.1.4 item 2) |
 | L3 P3 switch-over behind the flag | #69 | Merged into next (2026-11-18) | `claude/navigation-destination-engine`: knk-plugin `03ec14ce`, knk-workspace `9dda7c92` | [knk-plugin#81](https://github.com/PandiO/knk-plugin/pull/81) (merge `073fa4cf`), [knk-workspace#761](https://github.com/PandiO/knk-workspace/pull/761) (merge `d484361e`) | build + paper-boot green on the PR; Codex skipped (usage limit) | create_session session_01R1w2UvmCT8TsW9NNue38Vg |
 | L4 P4 hard blocks as scopes, live re-validation | #62 | Merged into next (2026-11-18) | `claude/navigation-destination-engine`: knk-plugin `d38fb46c`, knk-workspace `0b1274d4` | [knk-plugin#82](https://github.com/PandiO/knk-plugin/pull/82) (merge `3e04ba8f`), [knk-workspace#762](https://github.com/PandiO/knk-workspace/pull/762) (merge `9db3df91`) | build + paper-boot green on the PR; Codex skipped (usage limit) | create_session session_01R1w2Ux1p4b4KMqSayuzntM |
-| L5 phase 4b removal of old paths and the flag | #747 | Waiting: developer's live test of smoke § 3 and § 4 with the flag on (gate); plugin navigation slot free since off-road L9 #709 merged 23:28 (plugin `c7be34fb`) | — | — | — | — |
+| L5 phase 4b removal of old paths and the flag | #747 | Waiting: developer's live test of smoke § 3 and § 4 with the flag on (gate); plugin navigation slot free since off-road F2 merged 2026-11-19 14:31 (knk-plugin#94) | — | — | — | — |
 | L6 P5 arena duels provider and scope | #55 | Not started | — | — | — | — |
 
 ## 3. Coordinator decisions
@@ -165,6 +165,26 @@
     `Landmarks` port in `NavigationService` behind `navigation.landmarks`. The off-road chain's last link L6 (#706) waits
     for the developer, so L5 can start as soon as the live test passes (tell that coordinator when it starts).
     Alternatives: none.
+23. **Off-road fix link #771 takes the slot (2026-11-19 06:12).** A small tier:2 fix in `core/roads/walk` and the walk-leg
+    recompute in `NavigationService`, outside `core/navigation/destinations` and the engine handle. Agreed: my L5 still
+    waits for the live test. The off-road L6 (#706) is on hold by the developer, so after #771 no off-road plugin link is
+    queued. Alternatives: none.
+24. **Off-road #771 merged, slot free (2026-11-19 07:03).** knk-plugin#88 `cee53213`: walk cell access, the walk-leg
+    recompute in `NavigationService`, a 6-argument `WalkPreparer.prepare` default method; destinations and the engine
+    handle untouched. No off-road plugin link is queued (L6 on hold). L5 waits only for the developer's live test.
+    Alternatives: none.
+25. **Siege weapons chain and off-road F2 (2026-11-19).** 09:20: the siege weapons coordinator (#354,
+    session_01R1w2UuyXat2GBcJjHG3RRV) introduced its chain; it meets us only in additive blocks of `config.yml`,
+    `plugin.yml`, `KnKPlugin` and paper-boot scenarios. I told it L5 deletes the `navigation.destination-engine` key, the
+    flag-off `KnKPlugin` branches, `MatchNavigationScope`, `NavigationEligibility`, `EndReason.SIEGE` and the siege-lobby
+    ending, and to use the engine's siege scopes if it needs them. 12:25: the off-road chain took the plugin navigation
+    slot for fix link F2 (#780 + #771 items 3–5: road goal by walk reachability, overshoot/handover fixes, walk-trail
+    spacing; `Snapper`, `NavigationService` route/last-leg, `TrailRenderer`, config; behind off keys), reading the
+    handle's place read-only. Agreed; asked it to read places through `HandleDestinations`. No live-test result at 10:11.
+    Alternatives: none.
+26. **Off-road F2 merged, slot free (2026-11-19 14:31).** knk-plugin#94: reads only the session's `Destination`; new keys
+    `navigation.road-goal-reachable`, `road-goal-candidates`, `road-to-its-end` (all off). No off-road link queued. No
+    live-test result at 13:13 or 14:31. L5 waits only for the developer's live test. Alternatives: none.
 
 ## 4. Link blocks
 
