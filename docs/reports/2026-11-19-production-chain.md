@@ -46,7 +46,7 @@ of what is already in `next`.
 | L5 P1b stock web app | #675 | Merged into next (2026-11-19) | web app `9bec60f`, workspace `a5d10f37`; merges: web app `9f46cb49`, workspace `8fff63e2` | [web#60](https://github.com/PandiO/knk-web-app/pull/60), [ws#818](https://github.com/PandiO/knk-workspace/pull/818) | web app green (build-and-test, e2e) | create_session `session_01R1w2UuKsus7BT7DcXyL4jr` (one repo besides knk-workspace), started 2026-11-19 |
 | L6 P2 world API: structure subtypes, TownId, placement rules | #91 | Merged into next (2026-11-19) | api `303b6ab`, workspace `9ab62ab1`; merges: api `fcfced27`, workspace `c7fe8996` (after a coordinator merge of `next`, `15e3011e`) | [api#57](https://github.com/PandiO/knk-web-api/pull/57), [ws#822](https://github.com/PandiO/knk-workspace/pull/822) | green (build-and-test, mysql-tests, fresh-database) | create_session `session_01R1w2UscSGsG34qwc8vtEQj` (one repo besides knk-workspace), started 2026-11-19 |
 | L7 P2b world web app | #676 | Running | — | — | — | create_session `session_01R1w2UwqC5tNA7JBrnf61ko` (one repo besides knk-workspace), started 2026-11-19 |
-| L8 P2c world plugin: managed-region kinds | #677 | Running | — | — | — | create_session `session_01R1w2UtzV6puGzautXYEFJA` (one repo besides knk-workspace), started 2026-11-19 |
+| L8 P2c world plugin: managed-region kinds | #677 | In review (2026-11-19) | plugin `cc563771`, workspace `cb11e03a` | [plugin#96](https://github.com/PandiO/knk-plugin/pull/96), [ws#823](https://github.com/PandiO/knk-workspace/pull/823) | green (plugin build + paper-boot, 64 scenarios) | create_session `session_01R1w2UtzV6puGzautXYEFJA` (one repo besides knk-workspace), started 2026-11-19 |
 | L9 P3 production engine API | #86 | Running | — | — | — | create_session `session_01R1w2Uvi8uaBqDwjJDADicL` (one repo besides knk-workspace), started 2026-11-19 |
 | L10 P3b production web app | #678 | Not started | — | — | — | — |
 | L11 P4 yield areas API | #138 | Not started | — | — | — | — |
@@ -786,3 +786,90 @@ _(Each link appends its block here when it finishes.)_
        `DomainId`). `ProductionEnabled` is the structure's own switch; `WorkersPresent` is yours to write.
     4. L14 (P5) / L15 (P5b): `RoadConnection` is written through `PUT api/ProductionStructures/{id}/road-connection`;
        automatic transport is held unless `Connected` for rural structures (D5).
+
+### 4.8 L8 — P2c world plugin: managed-region kinds (#677)
+
+1. **Scope done** (knk-plugin, plus essential docs in knk-workspace). Everything new runs only with `production.enabled:
+   true` (A21); with it off, region behaviour is unchanged.
+    1. Region kinds: `ManagedRegionKind.fromDomainType(type, production)`: `ProductionStructure` → `RESOURCE_PRODUCTION`,
+       `Warehouse` → `STRUCTURE`. The repair uses it (`DomainRegionSpecs.build(..., production)`, `ManagedRegionSpecSource`),
+       and so does the creation hook (`ManagedRegionsBootstrap.finalizeNewRegion`).
+    2. Rural structures (a town, no district): top level on purpose. No parent, kind floor priority 30, in their town's
+       world, and no "unknown district" warning. PvP stays allowed and no town flags are inherited.
+    3. Territory lookup (L6 contract, knk-web-api `TerritoryLookupClient`): `GET /api/territory/contains-region/{regionId}`
+       and `/contains-location` with `holderKind`/`holderId` on the region HTTP server, behind the plugin key.
+        1. `contains-region` needs every block column of the region and its sub-regions to be owned by the holder;
+           contested columns count as not owned.
+        2. Answers: 200 `{"inside": bool, ...}`; 503 "territory unavailable" while `production.enabled` is off or before
+           the first cache build; 400 or 404 with the reason.
+        3. Code: knk-core `TerritoryLookup`, knk-paper `TerritoryLookupHandler` and `RegionUnionOutlines`, wired in one
+           `KnKPlugin` block.
+    4. Territory report: `StructureListDto`/`StructureSummary.townId`; `TerritoryService.StructureRef` uses it, so rural
+       structures are flagged (coordinator decision 18.2).
+    5. Plugin scenario `rural-structure-region` (real WorldGuard regions: the repair's kinds and parents, the PvP query at
+       a warehouse and a rural quarry, the lookup through the real region union). `MIN_SCENARIOS` 63 → 64.
+    6. knk-workspace (branch from `next`):
+        1. Smoke guide § 3.3: 11 steps, 6 automated and 5 partly.
+        2. Changelog entry.
+        3. Plugin configuration § 4.31: `production.enabled` also covers P2c; no new key.
+        4. Implementation plan P2 status.
+2. **Commits and heads.** knk-plugin `claude/production-p2c` at `cc563771` (2 commits, base `next` `c0ca56e4`);
+   knk-workspace `claude/production-p2c` at `cb11e03a` (1 commit, base `next` `c7fe8996`). `next` had not moved in either
+   repo at the final fetch, so no merge was needed.
+3. **PRs.** [knk-plugin#96](https://github.com/PandiO/knk-plugin/pull/96) (Closes #677) and
+   [knk-workspace#823](https://github.com/PandiO/knk-workspace/pull/823) (Part of #677), base `next`. Not merged.
+4. **Tests, baseline → result** (`./gradlew build -x deployToDevServer`, Gradle on JDK 21, JDK 25 toolchain).
+    1. Baseline on `next` `c0ca56e4`: knk-core 3523, knk-api-client 364 (2 skipped), knk-paper 3212 (18 skipped), 0
+       failures.
+    2. Branch: knk-core 3538, knk-api-client 366 (2 skipped), knk-paper 3217 (18 skipped), 0 failures.
+    3. New tests: `ProductionManagedRegionTest` (6), `TerritoryLookupTest` (8), one new `TerritoryServiceTest` case,
+       `StructuresMapperTest` (2) and `TerritoryLookupHandlerTest` (5, a real `RegionHttpServer`).
+       `PaperScenariosTest` was updated for the new scenario.
+    4. The scenario `rural-structure-region` passed locally on Paper 26.3-205 with WorldGuard 7.0.20.
+    5. CI on `cc563771`: build green, paper-boot green (64 scenarios).
+    6. Known reds: none. The first baseline run hit a Maven Central 429 while downloading; the rerun was green.
+5. **Decisions (DESIGN § 4.3).**
+    1. *Gating the new kinds.* Chosen: with `production.enabled` off a `ProductionStructure` stays `STRUCTURE`, because
+       `RESOURCE_PRODUCTION` seeds `entry` flags and A21 allows no change while off. Alternatives: (a) map it always, like
+       L2's crown land mapping: existing regions would get flags with the switch off.
+    2. *Stale parent after moving a structure to rural.* Chosen: keep the reconciler's "never clear a parent" rule;
+       staff clear it with `/rg setparent` (smoke § 3.3 step 10, pinned by a test, follow-up #824). Alternatives:
+       (a) clear parents in `RegionChange` and the store now: changes a safety rule other chains rely on.
+    3. *Endpoint while off.* Chosen: always registered, answering 503 with the reason (the agreed contract).
+       Alternatives: (a) register it only with the flag: the 404 gives the API no reason.
+    4. *Location without `world`.* Chosen: the server's first (default) world. Alternatives: (a) every cached world: the
+       answer would be ambiguous; (b) 400: the API sends no world when the structure has none.
+    5. *Unknown region.* Chosen: 404 with the reason, which the API shows as "not checked". Alternatives: (a) `false`:
+       would claim "outside territory" for a typo.
+    6. *Large regions.* Chosen: exact per column up to 1024 columns per side; beyond that, sampled, always including the
+       outline points and the last column. Alternatives: (a) always exact: unbounded work on an HTTP thread.
+    7. *Structure NPCs invulnerable* (plan § P2 "Plugin"). Chosen: left to P5 (workers) and P11 (shopkeepers), because no
+       structure NPCs exist yet. Alternatives: (a) a listener now: nothing to protect, and the coordinator asked not to
+       touch NPC code.
+    8. *Coordinator overlap note.* `KnKPlugin` wiring is one additive block next to the region HTTP server. There is no
+       `config.yml` change. The managed-region additions are one new overload and one branch. No navigation, NPC or
+       siege code was touched.
+6. **Out of scope, noted.**
+    1. [#824](https://github.com/PandiO/knk-workspace/issues/824) (tier:1, under #22): clear the stale WorldGuard parent
+       of a structure moved to rural.
+    2. Codex reached its usage limit on both PRs (review "failed", usage-limit comment); there were no inline findings.
+       Noted on each PR.
+7. **Blockers.** None.
+8. **At merge / what the developer must do.**
+    1. No new `config.yml` key. After turning `production.enabled` on, run `/knk regions repair` once (or restart).
+    2. The API must reach the region HTTP server (`MinecraftPlugin:BaseUrl`, shared plugin key), as for region checks
+       today.
+    3. Smoke test [§ 3.3](../guides/production-storage-transport-smoke-test.md) (tier:2): about 15 minutes for the
+       untagged and partly tagged parts.
+    4. At the end of P2 (L7 and L8 merged, coordinator decision 31): the `documentation` sub-issue covers:
+        1. The managed regions page: kinds of the subtypes and the rural rule.
+        2. The territory page: the lookup endpoints.
+        3. The plugin scenarios guide: `rural-structure-region`.
+        4. The admin guide for warehouses and production structures.
+9. **Notes for later links.**
+    1. L18 (P6) and later plugin links: `StructureSummary.townId` is the effective town.
+       `ManagedRegionKind.fromDomainType(type, production)` is where new structure subtypes get their kind (Shop:
+       `STRUCTURE`, P10).
+    2. L12 (P4b surveys) and L22 (P8 harvest): rural production regions are `RESOURCE_PRODUCTION` at priority 30 with no
+       parent. `ManagedRegionPolicy.Options.resourceProductionBlockBreak` is still off.
+    3. P-3 (production areas, P4): the same lookup answers `contains-region` for an area's region.
