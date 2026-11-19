@@ -6,7 +6,7 @@ in CI and 4 partly (tagged); every step can still be run by hand; manual steps n
 still be run by hand; not run. § 1.3 (territory plugin, #689): 7 of 14 steps automated and 7 partly (tagged; step 14
 waits for #802); not run. § 1.4 (territory web app, #690): 13 of 15 steps automated in CI and 2 partly (tagged);
 every step can still be run by hand; not run. Other sections not yet automated (the links tag them).
-**Last updated:** 2026-11-19 (§ 1.4 territory web app, link L3, #690); 2026-11-19 (§ 1.3 territory plugin, link L2, #689); 2026-11-19 (§ 1 territory API, link L1, #326); 2026-11-19 (§ 0 item identity, link L0, #141); 2026-11-16 (draft from the design, territory and phases P1-P12)
+**Last updated:** 2026-11-19 (§ 1.0 and § 1.3 preconditions: builds from `next` instead of the link branches; guides: [territory admin guide](admin/territory-admin-guide.md), docs #806); 2026-11-19 (§ 1.4 territory web app, link L3, #690); 2026-11-19 (§ 1.3 territory plugin, link L2, #689); 2026-11-19 (§ 1 territory API, link L1, #326); 2026-11-19 (§ 0 item identity, link L0, #141); 2026-11-16 (draft from the design, territory and phases P1-P12)
 **Design:** [specs/production-storage-transport/DESIGN.md](../specs/production-storage-transport/DESIGN.md) (§17
 acceptance A01-A27, §18 links) · [territory](../specs/territory/DESIGN.md) · [shops](../specs/shops/DESIGN.md) ·
 **Issue:** [PandiO/knk-workspace#22](https://github.com/PandiO/knk-workspace/issues/22)
@@ -111,7 +111,7 @@ Full manual run of 1.2 about 30 minutes with a REST client, the untagged steps o
 
 ### 1.0 Preconditions
 
-1. knk-web-api from the branch with migration `AddTerritory` applied (`dotnet ef database update`).
+1. knk-web-api from `next` (`0d6e369a` or later) with migration `AddTerritory` applied (`dotnet ef database update`).
 2. A REST client (or Swagger) with three callers: a **Staff** token (`knk.admin.world` and `knk.admin.content`), a
    **Visitor** token (no staff nodes), and the **plugin key** (`X-API-Key` = `Security:PluginApiKey`) for the steps
    that play the game server.
@@ -212,9 +212,9 @@ Full manual run of 1.2 about 30 minutes with a REST client, the untagged steps o
 
 ### 1.3 Steps (plugin #689)
 
-Built by link L2 (knk-plugin branch `claude/production-t-b`). Extra preconditions:
+Built by link L2 (knk-plugin `next` `55804b11`). Extra preconditions:
 
-1. The plugin build from that branch on a test server with WorldGuard, connected to the API of 1.0 (realtime on:
+1. The plugin build from knk-plugin `next` on a test server with WorldGuard, connected to the API of 1.0 (realtime on:
    `realtime.enabled: true`, for steps 9 and 12).
 2. The test data of 1.2 steps 1-5: Phoenix power 50 (Market range 200, Old Town capital range 300), Rivertown power 10
    (range 120), crown land Royal forest (Aurelia, range 80); the regions exist in the world. API game setting

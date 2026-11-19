@@ -1,7 +1,7 @@
 # Game Settings — admin guide
 
 **Status:** Current. Describes trunk since the KNG-52 merge of 2026-10-10 (see the [plan](../specs/game-settings/IMPLEMENTATION_PLAN.md)); the page header, units and help (§ Before you start, § Hub) describe knk-web-app `main` `1371951` (merged 2026-11-12, not live-tested).
-**Last updated:** 2026-11-12 (settings header with unsaved changes, Discard and Save (n); units and one line of help per field; Hub section; reached through Admin → Settings — #339, #342, #340); 2026-10-26 (route gated on `knk.admin.config`, #185, branch `claude/route-gates-185`, not merged); 2026-10-15 (`game-settings.server-id`, KNG-118, branch `wt/kng-118`, not merged)
+**Last updated:** 2026-11-19 (Production and territory card, knk-web-app `next` `89751315`, docs PandiO/knk-workspace#806); 2026-11-12 (settings header with unsaved changes, Discard and Save (n); units and one line of help per field; Hub section; reached through Admin → Settings — #339, #342, #340); 2026-10-26 (route gated on `knk.admin.config`, #185, branch `claude/route-gates-185`, not merged); 2026-10-15 (`game-settings.server-id`, KNG-118, branch `wt/kng-118`, not merged)
 
 The Game Settings page sets server-wide rules for joining, respawning, each world's game mode, time,
 weather and spawn point, and the server-list MOTD. It also sets exceptions per permission group. The plugin picks up a saved change within about 30 seconds. To apply it at once, run
@@ -56,6 +56,14 @@ the API is down, and the hub's rules apply inside its region. Without a hub, pla
   keep their own inventory. **Healing**, **Feeding** and **Saturation** are an amount every *n* **ticks**, with the
   interval in seconds next to it (20 ticks = 1 s). The defaults match vanilla Peaceful (1 health and 1 saturation every
   20 ticks, 1 food every 10 ticks); 0 turns one off, and they are skipped in a world that is already Peaceful.
+
+## Production and territory
+
+The **Production and territory** card (knk-web-app `next`, not released; [#690](https://github.com/PandiO/knk-workspace/issues/690))
+holds the API's production switch (**Production enabled**, off by default) and the territory ranges: **Base range
+(blocks)** (100), **Blocks per power point** (2) and **Capital multiplier** (1.5), with a worked example. A value
+outside the allowed range turns red and Save stays off. What they do and how to switch territory on in game:
+[territory admin guide § 3–4](admin/territory-admin-guide.md#3-range-settings).
 
 ## Picking a spawn point
 
