@@ -21,8 +21,8 @@
 
 | Link | Issue | Status | Branch heads | PR | CI | How started |
 |---|---|---|---|---|---|---|
-| L1 Entities, API, form seeds, unlocks | #782 | In review (PRs open, not merged) | API `d65e7c9`, web app `6138dc9`, workspace `f6ce0304` (`claude/siege-weapons-l1`) | [api#52](https://github.com/PandiO/knk-web-api/pull/52), [app#56](https://github.com/PandiO/knk-web-app/pull/56), [ws#794](https://github.com/PandiO/knk-workspace/pull/794) | green (API, web app); Codex at usage limit | subagent of the coordinator (decision 3: two component repos), started 2026-11-19 |
-| L2 Spots through world tasks | #783 | Not started (gate: L1 merged into `next`) | — | — | — | — |
+| L1 Entities, API, form seeds, unlocks | #782 | Merged into next (2026-11-19: API `e940aef1`, web app `24c8a988`, workspace `80f6ff72`) | API `d65e7c9`, web app `6138dc9`, workspace `f6ce0304` (`claude/siege-weapons-l1`) | [api#52](https://github.com/PandiO/knk-web-api/pull/52), [app#56](https://github.com/PandiO/knk-web-app/pull/56), [ws#794](https://github.com/PandiO/knk-workspace/pull/794) | green | subagent of the coordinator (decision 3: two component repos), started 2026-11-19 |
+| L2 Spots through world tasks | #783 | Running | `claude/siege-weapons-l2`: (not pushed yet) | — | — | subagent of the coordinator (two component repos, as decision 3), started 2026-11-19 |
 | L3 Buying, placement, paste, restore | #784 | Not started (gates: L2; #356, #611, #614) | — | — | — | — |
 | L4 Damage, wreck, cooldown, statistics | #785 | Not started | — | — | — | — |
 | L5 Ballista direct fire | #786 | Not started | — | — | — | — |
@@ -78,6 +78,16 @@
    4. Off-road (#698): no shared tick-budget convention; keep per-tick work bounded and wrap it in
       `PluginMetrics.timed(name, ...)` (L6 projectiles and preview arcs). Budgets in `specs/navigation-offroad/DESIGN.md`
       § 9.3.
+
+8. **L1 merged into `next` without a Codex review.** Chosen: merge, because every other check of skill § 6 held
+   (heads match, branches contain `next`, CI green on API and web app, scope matches #782, 47 new API tests, a new
+   Playwright spec) and the Codex connector said on all three PRs, also after a fresh `@codex review`, that its
+   usage limit is reached (developer decision 2026-11-14). Alternatives: (a) wait for the limit to reset, which holds
+   up L2 for an unknown time; (b) rerun the review later on `next`, still possible. Two `origin/next` merge commits
+   of L1 (API `0a4d7eb`, workspace `f6ce0304`) lack the trailers; left as they are (no force-push).
+9. **L2 route.** Chosen: subagent (knk-plugin and knk-web-api, two component repos; as decision 3). Board checked
+   2026-11-19: no active claim on the plugin's `tasks/` handlers or `siege/` packages; Siege Survival's unmerged
+   plugin branch and the shared plugin files handled as in decision 7. Alternatives: as decision 3.
 
 ## 4. Link blocks
 
