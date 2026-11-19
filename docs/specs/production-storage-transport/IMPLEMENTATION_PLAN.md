@@ -10,7 +10,7 @@ merged into `next` (knk-web-api `fcfced27`, migration `AddProductionWorld`, 2026
 [DESIGN §14](DESIGN.md#14-decisions), [PRODUCTION_KINDS §9](PRODUCTION_KINDS.md#9-decisions) and
 [TOWN_LOGISTICS §8](TOWN_LOGISTICS.md#8-decisions); the few still open are listed there. Every item is marked
 **V1** or **Later**. The production structures work and the garrison/guard NPC work ship in the **same test phase**.
-**Last updated:** 2026-11-19 (P2 world API #91 merged into `next`); 2026-11-19 (P1b stock web app #675 in review; P1 API #97 merged into `next`); 2026-11-19 (P1 stock core API #97 in review); 2026-11-19 (territory plugin #689 and web app #690 merged into `next`); 2026-11-19 (territory API #326 in review); 2026-11-19 (item identity #141 merged into `next`, docs #796); 2026-11-19 (item identity #141 in review); 2026-11-11 (open questions answered, [decision record §11](DECISIONS_2026-11-05.md#11-follow-up-decisions-2026-11-11); issues #324, #325)
+**Last updated:** 2026-11-19 (P2c world plugin #677 in review); 2026-11-19 (P2 world API #91 merged into `next`); 2026-11-19 (P1b stock web app #675 in review; P1 API #97 merged into `next`); 2026-11-19 (P1 stock core API #97 in review); 2026-11-19 (territory plugin #689 and web app #690 merged into `next`); 2026-11-19 (territory API #326 in review); 2026-11-19 (item identity #141 merged into `next`, docs #796); 2026-11-19 (item identity #141 in review); 2026-11-11 (open questions answered, [decision record §11](DECISIONS_2026-11-05.md#11-follow-up-decisions-2026-11-11); issues #324, #325)
 **Design:** [DESIGN.md](DESIGN.md), [PRODUCTION_KINDS.md](PRODUCTION_KINDS.md), [TOWN_LOGISTICS.md](TOWN_LOGISTICS.md),
 [shops DESIGN](../shops/DESIGN.md), [NPC platform](../npc-platform/DESIGN.md) (lifecycle).
 **Evidence:** [V2 scan](../../reports/2026-10-09-v2-production-storage-transport-scan.md).
@@ -116,7 +116,11 @@ Built: `Structure.TownId` with District-xor-Town, `Warehouse` and `ProductionStr
 lookup `InsideTerritory` asks is answered by the plugin (P2c, #677): `GET /api/territory/contains-region/{regionId}`
 and `GET /api/territory/contains-location` on the plugin's HTTP server (contract in knk-web-api
 `Services/Production/TerritoryLookupClient.cs`). The structure search lists every structure's town (`townId`), so the
-territory report can flag rural structures. P-3 (production areas) uses the same validation types once P4 adds areas.
+territory report can flag rural structures. P-3 (production areas) uses the same validation types once P4 adds areas. Plugin
+(P2c, #677) in review (link L8, knk-plugin `claude/production-p2c`, behind `production.enabled`): region kinds
+`RESOURCE_PRODUCTION` (production structures) and `STRUCTURE` (warehouses), rural structure regions with no parent at
+the kind's floor, the two territory lookup endpoints, rural structures in the territory report. Structure NPCs do not
+exist yet (they come with P5's workers and P11's shopkeepers), so "structure NPCs invulnerable" is left to those phases.
 
 **API**
 

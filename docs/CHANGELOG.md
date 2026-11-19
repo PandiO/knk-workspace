@@ -4,6 +4,30 @@ This is a human-readable record of capabilities merged into the V3 default branc
 
 ## Unreleased — on feature branches, not merged
 
+- **World plugin: production region kinds, rural structure regions and the territory lookup** ([PandiO/knk-workspace#677](https://github.com/PandiO/knk-workspace/issues/677),
+  link L8 of the production, storage and transport chain, [production design](specs/production-storage-transport/DESIGN.md)
+  § 3.4). With the plugin switch `production.enabled` on, the managed-region repair (and a freshly finished region)
+  gives a production structure's region the kind `RESOURCE_PRODUCTION` and a warehouse's the kind `STRUCTURE`. A rural
+  structure (a town, no district) gets a region with no parent at its kind's floor priority (30), so no town flags are
+  inherited and PvP stays allowed around it; the repair no longer warns about its missing district. The game server now
+  answers the territory lookup the API's placement rule P-2 (`InsideTerritory`) asks, so a rural structure outside its
+  town's territory gets a real warning instead of "not checked": `GET /api/territory/contains-region/{regionId}` (every
+  block column of the region and its sub-regions owned by the holder; contested land counts as not owned) and `GET
+  /api/territory/contains-location`, both with `holderKind`/`holderId`, on the region HTTP server behind the plugin key;
+  HTTP 503 while `production.enabled` is off or the territory cache is not built yet, which the API shows as "not
+  checked". The territory report now flags rural structures too (it reads each structure's town from the structure
+  search). A structure moved from a district to rural keeps its old WorldGuard parent until staff remove it
+  (`/rg setparent <region>`): the repair never clears a parent. With the switch off nothing changes. knk-plugin:
+  `ManagedRegionKind.fromDomainType(type, production)`, `DomainRegionSpecs` rural rule, knk-core `TerritoryLookup`,
+  knk-paper `TerritoryLookupHandler` and `RegionUnionOutlines`, `StructureListDto.townId`; plugin scenario
+  `rural-structure-region`. Smoke test:
+  [production smoke test § 3.3](guides/production-storage-transport-smoke-test.md#33-steps-plugin-677). Admin steps:
+  1. No new `config.yml` key: the existing `production.enabled` switches it (plugin configuration § 4.31).
+  2. For the lookup the API needs to reach the plugin's region HTTP server, as for region checks today
+     (`MinecraftPlugin:BaseUrl`, the shared plugin key).
+  3. After turning `production.enabled` on, run `/knk regions repair` once (or restart) so existing production
+     structures and rural structures get their kind.
+
 - **World API: rural structures, warehouses and production structures** ([PandiO/knk-workspace#91](https://github.com/PandiO/knk-workspace/issues/91),
   link L6 of the production, storage and transport chain, [production design](specs/production-storage-transport/DESIGN.md)
   § 3.3-3.4). A structure can now stand in a district (as before) or be **rural**: it belongs to a town by its
