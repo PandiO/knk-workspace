@@ -11,7 +11,7 @@ merged into `next` (knk-web-api `fcfced27`, migration `AddProductionWorld`, 2026
 [DESIGN §14](DESIGN.md#14-decisions), [PRODUCTION_KINDS §9](PRODUCTION_KINDS.md#9-decisions) and
 [TOWN_LOGISTICS §8](TOWN_LOGISTICS.md#8-decisions); the few still open are listed there. Every item is marked
 **V1** or **Later**. The production structures work and the garrison/guard NPC work ship in the **same test phase**.
-**Last updated:** 2026-11-19 (P4 yield areas API #138 in review); 2026-11-19 (P3 production engine API #86 merged into `next`); 2026-11-19 (P2c world plugin #677 in review); 2026-11-19 (P2 world API #91 merged into `next`); 2026-11-19 (P1b stock web app #675 in review; P1 API #97 merged into `next`); 2026-11-19 (P1 stock core API #97 in review); 2026-11-19 (territory plugin #689 and web app #690 merged into `next`); 2026-11-19 (territory API #326 in review); 2026-11-19 (item identity #141 merged into `next`, docs #796); 2026-11-19 (item identity #141 in review); 2026-11-11 (open questions answered, [decision record §11](DECISIONS_2026-11-05.md#11-follow-up-decisions-2026-11-11); issues #324, #325)
+**Last updated:** 2026-11-19 (P4 yield areas API #138 in review); 2026-11-19 (P3b production engine web app #678 in review); 2026-11-19 (P3 production engine API #86 merged into `next`); 2026-11-19 (P2c world plugin #677 in review); 2026-11-19 (P2 world API #91 merged into `next`); 2026-11-19 (P1b stock web app #675 in review; P1 API #97 merged into `next`); 2026-11-19 (P1 stock core API #97 in review); 2026-11-19 (territory plugin #689 and web app #690 merged into `next`); 2026-11-19 (territory API #326 in review); 2026-11-19 (item identity #141 merged into `next`, docs #796); 2026-11-19 (item identity #141 in review); 2026-11-11 (open questions answered, [decision record §11](DECISIONS_2026-11-05.md#11-follow-up-decisions-2026-11-11); issues #324, #325)
 **Design:** [DESIGN.md](DESIGN.md), [PRODUCTION_KINDS.md](PRODUCTION_KINDS.md), [TOWN_LOGISTICS.md](TOWN_LOGISTICS.md),
 [shops DESIGN](../shops/DESIGN.md), [NPC platform](../npc-platform/DESIGN.md) (lifecycle).
 **Evidence:** [V2 scan](../../reports/2026-10-09-v2-production-storage-transport-scan.md).
@@ -159,7 +159,8 @@ contested keeps its town and is flagged; rural structures through navigation, di
 **Status (2026-11-19):** API built in link L9 (in review): everything in the API list below except the "Later" items.
 Agent decisions on knk-web-api PR `claude/production-p3` (e.g. cycle speed shortens the cycle without raising the
 rate per hour; weather days of 20 real minutes; inputs consumed per hour of running time; child lists edited through
-the API until the web app editors of #678). Web app: #678.
+the API until the web app editors of #678). Web app #678 built in link L10 (in review, knk-web-app branch `claude/production-p3b`):
+everything in the "Web app" line below, plus the engine timing card and Run production now on the game settings page.
 
 **API**
 

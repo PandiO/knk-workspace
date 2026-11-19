@@ -86,6 +86,30 @@ This is a human-readable record of capabilities merged into the V3 default branc
   3. No `api.env` key and no plugin `config.yml` change. The engine timing is a game setting (`production.engine`,
      defaults above).
 
+- **Production engine in the web app: kind, level and line editors, weather, the production view and the cycle trace** ([PandiO/knk-workspace#678](https://github.com/PandiO/knk-workspace/issues/678),
+  link L10 of the production, storage and transport chain; [production design](specs/production-storage-transport/DESIGN.md)
+  § 9, § 11.1, [production kinds](specs/production-storage-transport/PRODUCTION_KINDS.md) § 4-5). Staff can now run
+  the production engine from the web app. The dashboard lists production kinds, levels, lines, modifiers, climate zones
+  and weather types; each is created and edited with its seeded form. A kind's page lists its ten levels (yield,
+  cycle speed, area and output caps, upgrade coins, upgrade cost and unlocks); a level's page edits its **unlocks and
+  upgrade cost**; a line's page shows its state and accrual, edits its **inputs** per hour, settles it now and lists its
+  latest cycles; a climate zone's page edits its **weather odds** (at most 100% together, the rest clear) and its
+  **towns**, and lists the stored daily rolls; a weather type's page edits its **effects** per resource category. A
+  production structure's page gets a **Production** panel: why it isn't producing (production off, no kind, no output
+  storage, a full output storage, missing inputs), each line's rate step by step (base rate, each modifier in the order
+  applied, the unlock and the workers present), the **workers** present, the **upgrade** to the next level with its
+  coins and resources shown before paying (`knk.economy.admin`), and the latest cycles, each with its **trace**. The game
+  settings page gets a **Production engine** card (base cycle, catch-up cap, weather day) and **Run production now**;
+  a save of the game settings now keeps `production.engine` (before, the web app's save dropped it and the API reset
+  it to the defaults). knk-web-app: one client per resource, `StructureProductionPanel`, `ProductionKindLevelsPanel`,
+  `ProductionKindLevelItemsPanel`, `ProductionLinePanel`, `ClimateZonePanel`, `WeatherTypeEffectsPanel`,
+  `ProductionCycleTable`, `ProductionEngineSettingsCard`, `src/utils/productionEngine.ts`;
+  `e2e/production-engine.spec.ts`. Smoke test:
+  [production smoke test § 4.2](guides/production-storage-transport-smoke-test.md#42-steps-web-app-678). Admin steps:
+  1. Deploy the web app with the production engine API (#86, in `next`) and its imported form and display seeds
+     (`ProductionKind`, `ProductionKindLevel`, `ProductionLine`, `ProductionModifier`, `ClimateZone`, `WeatherType`,
+     `ProductionStructure` v2). No migration, setting or plugin change.
+
 - **World web app: warehouses, production structures and rural placement** ([PandiO/knk-workspace#676](https://github.com/PandiO/knk-workspace/issues/676),
   link L7 of the production, storage and transport chain, [production design](specs/production-storage-transport/DESIGN.md)
   § 3.3-3.4, § 11.1). Staff can now create warehouses and production structures in the web app with the seeded forms:
