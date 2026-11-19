@@ -34,7 +34,7 @@ of what is already in `next`.
 | L1 Territory API: holders, crown land entity (G10), power, range (G11), conflicts, loyalty | #326 | Merged into next (2026-11-19) | api `ff50ec1`, workspace `c4211d51`; merges: api `0d6e369a`, workspace `4595e6d8` | [api#53](https://github.com/PandiO/knk-web-api/pull/53), [ws#798](https://github.com/PandiO/knk-workspace/pull/798) | green (build-and-test, mysql-tests, fresh-database) | create_session `session_01R1w2Uwo46dJVo6Cpr8LzmG` (one repo besides knk-workspace), started 2026-11-19 |
 | L2 Territory plugin: chunk cache, lookup, BlueMap outlines | #689 | Merged into next (2026-11-19) | plugin `96ef7326`, workspace `14d3efcd`; merges: plugin `55804b11`, workspace `66d35872` | [plugin#91](https://github.com/PandiO/knk-plugin/pull/91), [ws#804](https://github.com/PandiO/knk-workspace/pull/804) | green (plugin build + paper-boot) | create_session `session_01R1w2Uvhpo37DXAXpm2uqLp` (one repo besides knk-workspace), started 2026-11-19 |
 | L3 Territory web app | #690 | Merged into next (2026-11-19) | web app `0531422`, workspace `f3bd8f27`; merges: web app `89751315`, workspace `54bdc830` (after a coordinator merge of `next`, `e4f2276d`) | [web#57](https://github.com/PandiO/knk-web-app/pull/57), [ws#803](https://github.com/PandiO/knk-workspace/pull/803) | web app green (build-and-test, e2e) | create_session `session_01R1w2UuYHneFJFXcn8GSe6F` (one repo besides knk-workspace), started 2026-11-19 |
-| L4 P1 stock core API: storages, ledger, reconciler, capacity, roll-up | #97 | Running | — | — | — | create_session `session_01R1w2Uwv8FBnKCUoeZauzVt` (one repo besides knk-workspace), started 2026-11-19 |
+| L4 P1 stock core API: storages, ledger, reconciler, capacity, roll-up | #97 | Running (resumed 16:05 after the 5-hour usage limit stopped it at 12:43; nothing pushed before) | — | — | — | create_session `session_01R1w2Uwv8FBnKCUoeZauzVt` (one repo besides knk-workspace), started 2026-11-19 |
 | L5 P1b stock web app | #675 | Not started | — | — | — | — |
 | L6 P2 world API: structure subtypes, TownId, placement rules | #91 | Not started | — | — | — | — |
 | L7 P2b world web app | #676 | Not started | — | — | — | — |
@@ -151,6 +151,13 @@ of what is already in `next`.
    knk-web-api. The coordinator also reads the waiver as covering L4's own smoke gate for L6, because the developer
    asked for L6 to start without waiting on smoke tests. Alternatives: (a) hold L6 for L4's smoke test: against the
    intent of the instruction; the developer can still ask for it.
+
+21. **L4 stopped on the usage limit (2026-11-19).** The L4 session hit the account's 5-hour usage limit at 12:43 UTC
+   before it pushed anything. The coordinator's check-in was also delayed, to 16:03, by a worker restart. At the
+   developer's "try again" the coordinator resumed the same session (16:05). It checks whether its local work
+   survived, pushes work in progress at once, and pushes regularly from now on. Alternatives: (a) a fresh L4 session:
+   would lose any surviving local work; (b) a subagent: the same usage limit applies.
+22. **Territory docs #806:** done by its docs session (bug #807 filed: a conflict page's Edit has no update endpoint).
 
 ## 4. Link blocks
 
