@@ -63,6 +63,22 @@
    waits for the developer's design OK. Chosen: not a blocker; L1 adds its own object config entries without touching
    the permissiongrant entry. Alternatives: (a) wait, rejected (not active).
 
+7. **Replies from other coordinators (2026-11-19), notes for later links.** Chosen: carry these into the link
+   prompts, because they keep later merges mechanical. Alternatives: (a) ignore them and resolve conflicts at merge
+   time, rejected (avoidable conflicts).
+   1. Production (#22): L0 #141 adds a migration now; whichever chain merges second regenerates its migration. Siege
+      ammo or shop items (#611) resolve items with L0's resolver (instance tag, blueprint tag, vanilla match), no
+      parallel lookup. Production messages before each API link with a migration.
+   2. NPC follow-ups (#358): plugin links that add scenarios get a mechanical conflict in `MIN_SCENARIOS`
+      (`.github/workflows/paper-boot.yml`) and `PaperScenariosTest`; keep both lists and count the real total. Tell
+      that coordinator before a plugin link starts if it adds scenarios or touches `KnKPlugin`'s NPC wiring.
+   3. Destination engine (#25): L5 #747 will delete `MatchNavigationScope`, `NavigationEligibility`,
+      `EndReason.SIEGE` and the `navigation.destination-engine` key; weapons links must not read those, and use the
+      engine's siege scopes (`core/navigation/destinations`, `InitialScopes`) if they need navigation.
+   4. Off-road (#698): no shared tick-budget convention; keep per-tick work bounded and wrap it in
+      `PluginMetrics.timed(name, ...)` (L6 projectiles and preview arcs). Budgets in `specs/navigation-offroad/DESIGN.md`
+      § 9.3.
+
 ## 4. Link blocks
 
 _(Each link appends its block here when it finishes.)_
