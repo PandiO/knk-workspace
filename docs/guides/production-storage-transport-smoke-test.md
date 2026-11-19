@@ -8,11 +8,12 @@ waits for #802); not run. § 1.4 (territory web app, #690): 13 of 15 steps autom
 every step can still be run by hand; not run. § 2.1 (stock core API, #97): 15 of 17 steps automated in CI and 2 partly
 (tagged); every step can still be run by hand; not run. § 2.2 (stock web app, #675): 14 of 17 steps automated in CI
 and 3 partly (tagged); every step can still be run by hand; not run. § 3.1 (world API, #91): 14 of 16 steps
-automated in CI and 2 partly (tagged); every step can still be run by hand; not run. § 4.1 (production engine API,
-#86): 16 of 18 steps automated in CI and 2 partly (tagged); every step can still be run by hand; not run. Other
-sections not yet automated
-(the links tag them).
-**Last updated:** 2026-11-19 (§ 4.1 production engine API, link L9, #86); 2026-11-19 (§ 3.1 world API, link L6, #91); 2026-11-19 (§ 2.2 stock web app, link L5, #675); 2026-11-19 (§ 2 stock core API, link L4, #97); 2026-11-19 (§ 1.0 and § 1.3 preconditions: builds from `next` instead of the link branches; guides: [territory admin guide](admin/territory-admin-guide.md), docs #806); 2026-11-19 (§ 1.4 territory web app, link L3, #690); 2026-11-19 (§ 1.3 territory plugin, link L2, #689); 2026-11-19 (§ 1 territory API, link L1, #326); 2026-11-19 (§ 0 item identity, link L0, #141); 2026-11-16 (draft from the design, territory and phases P1-P12)
+automated in CI and 2 partly (tagged); every step can still be run by hand; not run. § 3.3 (world plugin, #677): 6 of
+11 steps automated (one through a plugin scenario on a real Paper server) and 5 partly (tagged); not run. § 3.2 (world
+web app, #676): 8 of 12 steps automated in CI and 4 partly (tagged); every step can still be run by hand; not run. § 4.1 (production
+engine API, #86): 16 of 18 steps automated in CI and 2 partly (tagged); every step can still be run by hand; not
+run. Other sections not yet automated (the links tag them).
+**Last updated:** 2026-11-19 (§ 4.1 production engine API, link L9, #86); 2026-11-19 (§ 3 intro, § 3.0, § 3.2 and § 3.3 intros: builds from `next`; § 3.3 precondition 4: `/knk regions repair` needs `knk.admin.regions`, `/knk territory rebuild` `knk.admin.world.territory`; docs #830); 2026-11-19 (§ 3.2 world web app, link L7, #676); 2026-11-19 (§ 3.3 world plugin, link L8, #677); 2026-11-19 (§ 3.1 world API, link L6, #91); 2026-11-19 (§ 2.2 stock web app, link L5, #675); 2026-11-19 (§ 2 stock core API, link L4, #97); 2026-11-19 (§ 1.0 and § 1.3 preconditions: builds from `next` instead of the link branches; guides: [territory admin guide](admin/territory-admin-guide.md), docs #806); 2026-11-19 (§ 1.4 territory web app, link L3, #690); 2026-11-19 (§ 1.3 territory plugin, link L2, #689); 2026-11-19 (§ 1 territory API, link L1, #326); 2026-11-19 (§ 0 item identity, link L0, #141); 2026-11-16 (draft from the design, territory and phases P1-P12)
 **Design:** [specs/production-storage-transport/DESIGN.md](../specs/production-storage-transport/DESIGN.md) (§17
 acceptance A01-A27, §18 links) · [territory](../specs/territory/DESIGN.md) · [shops](../specs/shops/DESIGN.md) ·
 **Issue:** [PandiO/knk-workspace#22](https://github.com/PandiO/knk-workspace/issues/22)
@@ -595,17 +596,20 @@ be run by hand; not run. Full manual run about 35 minutes; the untagged parts ab
 
 ## 3. Phase P2: world: rural structures, warehouse, production structure (#91 API, #676 web app, #677 plugin; tier:3)
 
-Built so far: link L6, the API (knk-web-api, migration `AddProductionWorld`; branch `claude/production-p2`, PR into
-`next`). The web app forms with region capture and the town picker are link L7 (#676); the managed-region kinds and the
-territory lookup the placement rule P-2 asks are link L8 (#677). Until then § 3.1 runs with a REST client (or Swagger)
-against the API, and P-2 reports "not checked" because no game server answers the lookup yet. 16 steps in § 3.1: 14
+All three links are merged into `next` (2026-11-19): L6, the API (knk-web-api `next` `fcfced27`, migration
+`AddProductionWorld`, § 3.1); L7, the web app forms with region capture and the town picker, the structure pages and
+the flagged-structure filter (#676, knk-web-app `next` `18385344`, § 3.2); L8, the managed-region kinds and the
+territory lookup the placement rule P-2 asks (#677, knk-plugin `next` `8ebb30be`, § 3.3). Use builds from `next`. How
+staff use it: [warehouses and production structures admin guide](admin/production-world-admin-guide.md). § 3.1 runs
+with a REST client (or Swagger) against the API; P-2 reports "not checked" until a game server with the L8 build and
+`production.enabled` answers the lookup. 16 steps in § 3.1: 14
 automated in CI and 2 partly (tagged); every step can still be run by hand; manual steps not run. Full manual run about
-45 minutes; the untagged parts of the partly tagged steps about 10 minutes. § 3.2 and § 3.3 are the draft steps for L7
-and L8.
+45 minutes; the untagged parts of the partly tagged steps about 10 minutes. § 3.2 is L7's, the web app (12 steps, 8
+automated, 4 partly); § 3.3 is L8's (11 steps, 6 automated, 5 partly).
 
 ### 3.0 Preconditions
 
-1. knk-web-api from the branch with migrations `AddStockCore` and `AddProductionWorld` applied
+1. knk-web-api from `next` with migrations `AddStockCore` and `AddProductionWorld` applied
    (`dotnet ef database update`).
 2. Game setting `production.enabled` on (web app game settings, or `PUT api/GameSettings` section `production`), except
    in step 7.
@@ -713,20 +717,192 @@ and L8.
     migration, open an existing structure: its district, street and house number are unchanged. `DELETE api/Streets/<Main>`
     while the Market warehouse uses it. **Expected:** 409 "still used by 1 structure"; the warehouse keeps its street.
 
-### 3.2 Steps (web app #676, draft)
+### 3.2 Steps (web app #676)
 
-1. As Staff, create a warehouse inside a Phoenix district with the web app form and region capture. **Expected:** saved
-   with `DistrictId` set and `TownId` empty; effective town Phoenix. (A06)
-2. Create a rural quarry outside the districts but inside Phoenix territory, picking Phoenix as its town. **Expected:**
-   saved with `TownId` set and `DistrictId` empty; the rule builder offers `InsideTerritory`; the dashboard shows flagged
-   structures. (A06)
+Built in link L7 (knk-web-app, merged into `next` `18385344`). The tags name tests in knk-web-app
+`e2e/production-world.spec.ts` (Playwright, mocked API; the mocks use the same data, with other numbers where noted),
+`e2e/form-builder-draft-rules.spec.ts` and the Jest tests next to the code. Extra preconditions: § 3.0, and § 3.1
+step 1 (the `Warehouse` and `ProductionStructure` form and display seeds imported, "make default"); for the region
+capture of steps 1 and 4 a game server with knk-plugin connected, and for a real P-2 answer in steps 4 and 5 the P2c
+build (§ 3.3). Log in to the web app as **Staff** (holds `knk.admin.world`, `knk.admin.content` and
+`knk.economy.admin`) unless a step says otherwise. 12 steps: 8 automated, 4 partly (tagged); every step can still be
+run by hand; not run. Full manual run about 40 minutes; the untagged parts about 15 minutes.
 
-### 3.3 Steps (plugin #677, draft)
+1. [partly automated: `the forms › saves a warehouse in a district with its region drawn in game (A06, A23)`; by
+   hand: drawing the region in game with a real client] Open the dashboard, type **Warehouse**, press Create (the form
+   comes from the `Warehouse` seed). Step **General information**: Name "Market warehouse", a description; Next. Step
+   **Placement**: District "Market" and Street "Main" (picked from the lists), House number 3, Town (rural) left empty;
+   Next. Step **Region and access**: press **Send to Minecraft** on Region, claim the task in game (`/knk task-claim
+   <code>` if it isn't offered to you), select an area inside Market with WorldEdit and confirm. **Expected:** the
+   Region field fills with `tempregion_worldtask_<n>` and the result names the world. Finish the remaining steps and
+   press Submit. **Expected:** "Warehouse created." and back on the dashboard; the warehouse is saved with Market as its
+   district and no town, its region is renamed `domain_<id>`, and its world comes from the region's world task (no
+   question about the world). (A06, A23)
+2. [automated: `dashboard › lists the warehouses with their town, placement, deliveries and priority`] On the dashboard
+   type **Warehouse**. **Expected:** columns Town, Placement, District, Accepts deliveries, Priority, Territory flag and
+   World; the Market warehouse shows Phoenix, District, Market, Yes, 0 (the seed's priority; the test uses 10) and "-"
+   as Territory flag.
+3. [automated: `the detail pages › a warehouse in a district: its address, town, deliveries and delivery storage`] View
+   the Market warehouse. **Expected:** below the details a **Placement** panel: Placement "In district Market, Main 3"
+   with Market as a link, Town "Phoenix (through its district)", the region, Deliveries "Accepts deliveries, priority
+   0" and Delivery storage "Market warehouse - deliveries" linked to its storage page. Then the **Territory and
+   loyalty** panel ("Inside its town's territory"), a **Storages** panel listing "Market warehouse - deliveries"
+   (Purpose Delivery, Total units 0) and a **Stock: Market warehouse - deliveries** panel ("No stackable stock.").
+4. [partly automated: `the forms › saves a rural production structure with only its town and shows the placement
+   warning (A06, R2)`; by hand: the region in game and the territory lookup of a real game server] Create a
+   **ProductionStructure** "Quarry" with its form: on **Placement** leave District, Street and House number empty and
+   pick **Phoenix** under Town (rural); on **Region and access** capture a region outside the districts but inside
+   Phoenix territory (as in step 1); on **Production** keep Level 1; Submit. **Expected:** "ProductionStructure
+   created." with no placement warning (with the P2c plugin connected and `production.enabled` on); the save sends the
+   town only (no district, no street), and the world comes from the region (or from Phoenix, the rural structure's
+   parent). (A06)
+5. [partly automated: `the forms › saves a rural production structure with only its town and shows the placement
+   warning (A06, R2)`; by hand: the P-2 answer of a real game server] Create a production structure "Outpost" the same
+   way, with Phoenix as its town but its region outside Phoenix territory. **Expected:** it saves ("ProductionStructure
+   created.") and a warning stays on screen until closed: "Saved with a placement warning: P-2: the production
+   structure's region is not inside its town's territory (or part of it is contested)." Without a game server answering
+   the lookup the warning says the territory could not be checked instead. (A06, R2)
+6. [automated: `the forms › a refused save shows the API's reason: both a district and a town (A06)`] Create a
+   production structure "Both" with District "Market" **and** Town (rural) "Phoenix", a region typed by hand, and
+   Submit. **Expected:** "Submit failed": "The form could not be submitted. A structure is either in a district
+   (districtId) or rural (townId): set exactly one of the two." Nothing is saved; close the message, clear Town and pick
+   a street and house number, or clear the district, and Submit again. (A06)
+7. [automated: `dashboard › lists the production structures: a rural one with its town and road connection, one in a
+   district (A06, D5)`] After § 3.1 steps 8 and 9 (the Quarry contested and not connected), on the dashboard type
+   **ProductionStructure**. **Expected:** columns Town, Placement, District, Level, Production, Road connection,
+   Territory flag and World; the Quarry shows Phoenix, Rural, no district, level 1, On, **Unconnected** and "In a
+   contested zone"; a production structure in Market (the Mill of § 3.1 step 10 before it moved) shows District,
+   Market and Road connection "In a district". (#65: unconnected producers)
+8. [automated: `the detail pages › a rural production structure: its town, the contested and road warnings, the flag
+   and its output storage (A06, A07)`] View the Quarry. **Expected:** the **Placement** panel starts with **Warnings**:
+   "Not connected to its town's road network: automatic transport is held." and "Its land is contested: it keeps its
+   town and keeps producing."; Placement "Rural, in its town's territory (no district or street)", Town "Phoenix" as a
+   link, Road connection "Not connected to its town's roads (measured …)", Production "On, level 1", Workers present "2
+   of 2" (the test uses 1 of 2) and Delivers to (the preferred warehouse as a link after § 3.1 step 11, else "The nearest
+   warehouse of its town that accepts deliveries"). The **Territory and loyalty** panel shows "In a contested zone"
+   with the conflict as a link and Phoenix as its own town. The **Storages** panel lists "Quarry - output" (Purpose
+   Output) linked to its storage page, and the **Stock: Quarry - output** panel shows the 5 Stone of § 3.1 step 12 with
+   Adjust stock and Move stock on. (A06, A07, R3)
+9. [automated: `the detail pages › a production structure in a district has no warnings and uses its town's roads`]
+   As **World staff** (holds `knk.admin.world`, not `knk.economy.admin`), view a production structure in Market (the
+   Mill before it moved, or a new one with District Market, Street Main, House number 2). **Expected:** "No
+   warnings.", Placement "In district Market, Main 2", Town "Phoenix (through its district)", Road connection "In a
+   district: uses its town's roads", the territory panel "Inside its town's territory", and in its stock panel Adjust
+   stock and Move stock are off ("Requires knk.economy.admin").
+10. [automated: `dashboard › the structure list shows the flagged structures through the Territory flag filter (A07)`;
+    Jest `PagedEntityTable.categoryFilter.test.tsx` (the filter on all three types)] On the dashboard type
+    **Structure**. **Expected:** the columns Placement and Territory flag after World, and a **Territory flag
+    filter** next to the search box. Choose "Flagged: in a contested zone". **Expected:** only the Quarry is listed
+    (with "In a contested zone"). Choose "Flagged: outside its town's territory". **Expected:** only structures flagged
+    outside their town's territory (the Outpost after § 3.3 step 9). The Warehouse and ProductionStructure lists have the
+    same filter; "All structures" lists everything again. (A07)
+11. [automated: `form-builder-draft-rules.spec.ts › the rule builder offers InsideTerritory as a warning with the town
+    holder config`; Jest `ValidationRuleBuilder.test.tsx › keeps a saved InsideTerritory rule selected with its own
+    settings`] As **Admin**, open the form configuration `ProductionStructure - Default (seed v1)` in the form builder
+    and edit the field Region. **Expected:** its rules list P-1 (Region Containment) and P-2; Edit on P-2 shows
+    Validation Type **Inside Territory** with its config `{"holderKind": "Town", "holderIdPath": "Id"}` and "Block step
+    progression" off. Cancel, press **+ Add Rule** and choose Validation Type **Inside Territory**. **Expected:** the
+    config fills with the town holder (`holderKind` Town, `holderIdPath` Id), the error message "The region is not
+    inside {townName}'s territory (or part of it is contested).", "Block step progression on validation failure" is off
+    (placement rules warn by default) and a help line says the game server answers it and that it never blocks a save
+    while it can't be checked. Cancel without saving the form. (A06, R2)
+12. [partly automated: knk-web-api `StructureSubtypeServicesTests.Update_MovesAStructureFromItsDistrictToRural_AndKeepsItsStorages`
+    (the save); by hand: the edit form in the web app] View the Mill (in Market), press **Edit**; on **Placement** clear
+    District, Street and House number and pick **Rivertown** under Town (rural); on **Production** set Level 4; Submit.
+    **Expected:** "ProductionStructure updated."; the Placement panel shows "Rural, in its town's territory (no district
+    or street)" with Town Rivertown, Production "…, level 4", and the Storages panel still lists the same "Mill - output"
+    storage.
 
-1. In game, check the quarry's WorldGuard region. **Expected:** managed kind `RESOURCE_PRODUCTION`, no parent, its kind's
-   floor priority; PvP allowed inside. The warehouse's region is kind `STRUCTURE` under Market. (P2c)
-2. With the plugin connected, repeat § 3.1 step 5. **Expected:** the P-2 warning comes from the territory lookup
-   (`GET /api/territory/contains-region/{regionId}?holderKind=Town&holderId=<Phoenix>`) instead of "not checked".
+### 3.3 Steps (plugin #677)
+
+Built by link L8 (knk-plugin, merged into `next` `8ebb30be`). No new `config.yml` key: everything below runs
+with the existing switch `production.enabled` (plugin configuration § 4.31). Extra preconditions:
+
+1. The plugin build from `next` on a test server with WorldGuard, connected to the API of 3.0: the API's
+   `MinecraftPlugin:BaseUrl` points at the plugin's region HTTP server (`region-http.bind-address`/`port`, default
+   `127.0.0.1:8081`) and both share the plugin key (`api.auth.api-key` = the API's `Security:PluginApiKey`).
+2. Territory set up as in § 1.3 preconditions 2-4 (Phoenix with Market, range 200; Rivertown), the plugin `production`
+   block merged, `enabled: false` at first. API game setting `production.enabled` on.
+3. The § 3.1 objects with regions drawn in game: **Market warehouse** (inside Market), **Quarry** (rural, Phoenix,
+   within 200 blocks of Market's edge), **Outpost** (rural, Phoenix, more than 200 blocks from every Phoenix district).
+   Note their `wgRegionId`s and Phoenix's and Rivertown's ids.
+4. In game: **Staff** with `knk.admin.world`, `knk.admin.world.territory` (for `/knk territory rebuild`) and
+   `knk.admin.regions` (for `/knk regions repair`), and WorldGuard's `/rg info`; **Member** and
+   **Visitor** for the PvP check. For steps 5-7 a shell on the game server host (`curl`).
+
+Full manual run about 30 minutes; the untagged and partly tagged parts about 15 minutes.
+
+1. [partly automated: knk-plugin `ProductionManagedRegionTest.withProductionOff_everythingIsAsBeforeP2c`,
+   `TerritoryLookupHandlerTest.withProductionOff_bothRoutesAnswer503_territoryUnavailable_withoutReadingARegion`; by
+   hand: the log of a real repair] With `production.enabled: false`, as Staff type `/knk regions repair`, then
+   `/rg info <Quarry's region>`. **Expected:** the repair log names `Structure#<Quarry> 'Quarry': its District (id null)
+   is unknown or has no region; no parent set` as before P2c; the quarry's region is not given the production kind's
+   flags (no `entry` flag added). On the host, `curl -s -H "X-API-Key: <key>"
+   "http://127.0.0.1:8081/api/territory/contains-location?holderKind=Town&holderId=<Phoenix>&x=0&z=0"` answers HTTP 503
+   with `{"inside":null,"available":false,"reason":"territory is off on this game server (production.enabled: false)"}`,
+   and § 3.1 step 5 (the Outpost) still says the P-2 rule was "not checked". (A21)
+2. [automated: `ProductionManagedRegionTest.withProduction_aRuralStructure_isTopLevel_inItsTownsWorld_withoutAWarning`,
+   `ProductionManagedRegionTest.theRepair_givesTheRuralRegionItsFloorPriority_noParent_andTheResourceProductionFlags`,
+   plugin scenario `rural-structure-region`] Set `production.enabled: true`, restart, wait for the startup repair (or
+   type `/knk regions repair`), then `/rg info` on the Quarry's, the Market warehouse's and a production structure in
+   Market's (the Mill of § 3.1 step 10, before it moved) regions. **Expected:** the Quarry: no parent, priority 30
+   (`RESOURCE_PRODUCTION` floor), flag `entry: ALLOW`; the repair log lists it as `ProductionStructure#<id> 'Quarry'
+   (rural, Town#<Phoenix>)` with no "unknown district" warning. The warehouse: parent Market's region, priority 30, no
+   flags added (kind `STRUCTURE`). A production structure in Market: parent Market's region, priority 30, `entry:
+   ALLOW`. (P2c, production DESIGN § 3.4)
+3. [automated: plugin scenario `rural-structure-region` (the WorldGuard PvP query at both spots)] As Member, hit
+   Visitor while both stand inside the Quarry's region, then while both stand inside the Market warehouse.
+   **Expected:** at the Quarry the hit does damage (no parent region, so no town `pvp deny` is inherited; the world
+   default applies); at the warehouse it is refused (Phoenix's `pvp deny`). (Production DESIGN § 3.4, confirmed
+   2026-11-11)
+4. [partly automated: `ProductionManagedRegionTest.theSubtypes_mapToTheirKinds_onlyWithProduction`; by hand: the
+   creation hook on a real region step] Create a new rural production structure for Phoenix with region capture (the
+   web app form of § 3.2, or a WorldTask region step from the API) and finish the region in game. **Expected:** the log
+   shows `[KnK Regions] New region <id> as RESOURCE_PRODUCTION: ...`; `/rg info <id>` shows priority 30 and
+   `entry: ALLOW`, with no parent.
+5. [automated: `TerritoryLookupHandlerTest.aRegion_insideItsTownsTerritory_isTrue_outsideOrPartlyOutside_isFalse`,
+   `TerritoryLookupTest.aRegion_isInside_onlyWhenEveryColumnIsOwned`, `TerritoryLookupTest.theRegionsUnion_withItsSubRegions_isChecked`]
+   On the host: `curl -s -H "X-API-Key: <key>"
+   "http://127.0.0.1:8081/api/territory/contains-region/<Quarry's region>?holderKind=Town&holderId=<Phoenix>&world=world"`,
+   then the same for the Outpost's region, then the Quarry's with `holderId=<Rivertown>`. **Expected:** HTTP 200 each;
+   the Quarry for Phoenix `{"inside":true,"holder":"Town <Phoenix>","columns":<n>,"notOwned":0}`; the Outpost
+   `"inside":false` with a `reason` naming how many columns Phoenix does not own and the first one; the Quarry for
+   Rivertown `"inside":false`. A region with sub-regions is checked as their union.
+6. [automated: `TerritoryLookupHandlerTest.aLocation_isAnsweredFromTheCache_inTheDefaultWorldWithoutAWorld`,
+   `TerritoryLookupTest.aLocation_isInside_whenItsColumnIsOwnedByTheHolder`,
+   `TerritoryLookupTest.contestedColumns_countAsNotOwned`] Stand at three spots and note the block x/z (F3): in Phoenix
+   territory, in the wilderness, and in contested land (§ 1.3 step 8). For each: `curl -s -H "X-API-Key: <key>"
+   "http://127.0.0.1:8081/api/territory/contains-location?holderKind=Town&holderId=<Phoenix>&x=<x>&z=<z>"`.
+   **Expected:** `"inside":true,...,"owner":"Town <Phoenix>","contested":false`; then `"inside":false,...,"owner":null`;
+   then `"inside":false,...,"contested":true` (contested land counts as not owned). Without `world` the server's
+   default world is used.
+7. [automated: `TerritoryLookupHandlerTest.badRequests_unknownRegions_andMissingKeys_areNamed`,
+   `TerritoryLookupTest.parse_readsTheHolderAndColumn_andNamesTheFirstProblem`] Send step 5's request without the
+   `X-API-Key` header, with `holderKind=Duchy`, and for a region id that does not exist. **Expected:** 401; 400 naming
+   `holderKind`; 404 `region <id> not found`. (The API shows every non-200 answer as "not checked", never a block.)
+8. [partly automated: knk-web-api `InsideTerritoryValidatorTests` (the client's URLs and answers),
+   `PlacementRulesTests.P2_RuralOutsideItsTownsTerritory_WarnsByDefault_AndSaves`; knk-plugin
+   `TerritoryLookupHandlerTest` (the plugin's answers); by hand: the two together] With the plugin connected, repeat
+   § 3.1 step 5 (the Outpost) and step 3 (a quarry inside the territory, with another name), then § 3.1 step 6 with P-2
+   blocking. **Expected:** the Outpost saves with the P-2 warning "not inside its town's territory" (no longer "not
+   checked"); the quarry saves without a P-2 warning; with P-2 blocking the Outpost answers 400. Switch P-2 back to a
+   warning. (A06, R2)
+9. [partly automated: `TerritoryServiceTest.ruralStructures_areFlaggedThroughTheirTownId_fromTheStructureSearch`,
+   `StructuresMapperTest.theSearchRows_carryTheTown_ruralRowsHaveNoDistrictOrStreet`; by hand: the flags in the API]
+   As Staff, `/knk territory rebuild`, then `GET api/Territory/structures/<Outpost>` and `<Quarry>`. Raise Rivertown's
+   power until its territory overlaps the Quarry (§ 1.3 step 8) and rebuild again. **Expected:** the Outpost is
+   flagged `OutsideTerritory`, the Quarry has no flag; after the overlap the Quarry is `Contested` with the conflict id,
+   keeps town Phoenix and `productionEnabled` true (`GET api/ProductionStructures/<Quarry>` shows the contested
+   warning). The log line `Report for world: ... flagged structure(s)` counts the rural structures. (A07, R3)
+10. [automated: `ProductionManagedRegionTest.aStructureMovedFromItsDistrictToRural_keepsItsOldParent_theRepairNeverClearsOne`]
+    Move the Mill from Market to rural Rivertown (§ 3.1 step 10), then `/knk regions repair` and `/rg info <Mill's
+    region>`. **Expected:** priority 30, but its old parent (Market's region) is kept: the repair never clears a parent.
+    Remove it by hand with `/rg setparent <Mill's region>` (no parent argument); a second repair leaves it without a
+    parent.
+11. [partly automated: `ProductionManagedRegionTest.withProductionOff_everythingIsAsBeforeP2c`; by hand: the restart]
+    Set `production.enabled: false` again and restart; type `/knk regions repair`. **Expected:** the regions keep what
+    the repair set while it was on (the repair only adds); no lookup answers (503 again); the Quarry is reported with
+    the old "unknown district" warning. (A21)
 
 ## 4. Phase P3: production engine (#86 API, #678 web app; tier:3)
 

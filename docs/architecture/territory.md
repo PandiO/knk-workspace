@@ -1,6 +1,6 @@
 # Territory (knk-web-api, knk-plugin and knk-web-app)
 
-**Status:** Current · **Last updated:** 2026-11-19 (first version, territory V1 #326/#689/#690, docs PandiO/knk-workspace#806)
+**Status:** Current · **Last updated:** 2026-11-19 (§ 5.3 rural structures reported through the search's `townId`, new § 5.6 territory lookup endpoints, § 8 item 4: production P2 #91/#677, knk-plugin `next` `8ebb30be`, docs #830); 2026-11-19 (first version, territory V1 #326/#689/#690, docs PandiO/knk-workspace#806)
 **Checked against:** knk-web-api `next` `0d6e369a` (PR PandiO/knk-web-api#53), knk-plugin `next` `55804b11` (PR
 PandiO/knk-plugin#91), knk-web-app `next` `89751315` (PR PandiO/knk-web-app#57). Not released; everything in game is
 off by default (`production.enabled`), and the smoke test has not been run live yet.
@@ -9,7 +9,7 @@ off by default (`production.enabled`), and the smoke test has not been run live 
 [plugin configuration § 4.31](../guides/admin/plugin-configuration.md#431-production),
 [smoke test § 1](../guides/production-storage-transport-smoke-test.md#1-territory-v1-326-api-689-plugin-690-web-app-tier3),
 [managed WorldGuard regions](managed-worldguard-regions.md) (the `CROWN_LAND` kind),
-[plugin scenarios](../guides/developer/plugin-scenarios.md) (`territory-border-crossing`)
+[plugin scenarios](../guides/developer/plugin-scenarios.md) (`territory-border-crossing`), [production world](production-world.md) (rural structures, the `InsideTerritory` rule and the lookup of § 5.6)
 
 Territory says which town or kingdom holds a spot of land. It is measured outward from the WorldGuard regions of
 districts and crown land: a district reaches as far as its town's range, crown land as far as its own range. Where two
@@ -256,8 +256,10 @@ Nothing below runs unless the plugin key `production.enabled` is `true` (A21); k
 2. **Structures:** a structure is placed at the centre column of its region's bounding box (L2 decision 4).
    Contested land flags it `Contested` with its first two contesting holders; land its own town does not own
    (wilderness, another town, or crown land, also of its own kingdom) flags it `OutsideTerritory` (L2 decision 5). A
-   structure whose town (through its district) or region is unknown is not reported, so rural structures without a
-   district are not checked yet (P2, #91).
+   structure whose town or region is unknown is not reported. Since P2 ([#91](https://github.com/PandiO/knk-workspace/issues/91),
+   [#677](https://github.com/PandiO/knk-workspace/issues/677)) the town is the structure search's `townId`, which is
+   the **effective** town (the district's town, or a rural structure's own), so rural structures are flagged too
+   (`StructureSummary.townId`, `TerritoryService.StructureRef`).
 
 ### 5.4 Outline payload (`TerritoryOutlines`, hub method `ReportTerritoryOutlines`)
 
@@ -294,6 +296,22 @@ plugin on the game server).
 4. **Crown land regions:** managed-region kind `CROWN_LAND` (priority floor 10, no parent, no flags of its own; see
    [managed WorldGuard regions](managed-worldguard-regions.md)). `ManagedRegionKind.fromDomainType("CrownLand")` maps to
    it; the region repair adds crown land regions from the domain catalogue only with `production.enabled`.
+
+### 5.6 Territory lookup for the API (`TerritoryLookup`, `TerritoryLookupHandler`)
+
+Since production P2c ([#677](https://github.com/PandiO/knk-workspace/issues/677)) the region HTTP server answers the
+API's placement rule `InsideTerritory` from the cache, behind the plugin key:
+
+1. `GET /api/territory/contains-region/{regionId}?holderKind=Town&holderId=12[&world=W]`: inside when every block column
+   of the region and its sub-regions is owned by the holder; contested columns count as not owned; regions over 1024
+   columns per side are sampled (outline points and the last column always included).
+2. `GET /api/territory/contains-location?holderKind=Town&holderId=12&x=..&z=..[&world=W]`: the column's owner and
+   whether it is contested; without `world` the server's first world.
+3. 200 `{"inside": bool, …}`; 503 "territory unavailable" while `production.enabled` is off or before the first build;
+   400/404 with the reason. The API shows every non-200 answer as "not checked", never a block.
+
+Full contract: [production world API contract § 6](../specs/api/API_CONTRACT_PRODUCTION_WORLD.md#6-game-server-territory-lookup-knk-plugin-region-http-server);
+how the API uses it: [production world § 4–5](production-world.md#4-placement-rules-p-1-to-p-3).
 
 ## 6. Web app (knk-web-app)
 
@@ -337,9 +355,10 @@ plugin on the game server).
 2. The seeded Town and District forms have no power, kingdom, province or capital fields; the town page's Territory
    panel sets them (proposal on [#690](https://github.com/PandiO/knk-workspace/issues/690#issuecomment-7007691107)).
 3. Loyalty is stored only; it has no effect in game in V1 (DESIGN § 4 Later).
-4. The territory check at structure creation only warns, through the next report's flag; the form rule
-   `InsideTerritory` and rural structures with a `TownId` are P2's ([#91](https://github.com/PandiO/knk-workspace/issues/91)),
-   which also needs a plugin lookup endpoint for it.
+4. Since P2 ([#91](https://github.com/PandiO/knk-workspace/issues/91), [#677](https://github.com/PandiO/knk-workspace/issues/677),
+   in `next`) structures can be rural (a `TownId`), the form rule `InsideTerritory` checks placement through the
+   lookup of § 5.6, and the report flags rural structures; see [production world](production-world.md). The rule
+   warns by default.
 5. Crown land created in the web app sends no domain type to the plugin on a rename (L1 decision 10).
 6. A world whose last source is removed still gets an (empty) report while the plugin runs, so its open conflicts turn
    `stillOverlapping: false`; after a plugin restart that world is no longer reported and its conflicts keep their last
