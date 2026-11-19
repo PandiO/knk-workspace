@@ -67,9 +67,13 @@ on `next` (Decided 2026-11-18, O01–O33, O08 superseded by O31); smoke guide
     on the NAS (`config/maps/overworld.conf` block emptied, `web/.../live/markers.json` cleaned, backups kept). Ideas
     filed: #825 (hide or group dots when zoomed out), #826 (town region drawn like the spike's markers). Details on
     #732.
-12. **Still open for you:** § 3 step 1 on the NAS after the promotion (rebuild the `web` image with the `next`
-    `nginx.conf`), the `/ownermode` case of the L4 check (a second staff account), optional player skins (`heads=` in
-    `webapp.conf`, a service of your choice), and when to promote `next`.
+12. **NAS BlueMap settings applied 2026-11-19 (yours):** player skins from mc-heads.net (your choice:
+    `&heads=https://mc-heads.net/avatar/{uuid}/16` on the bridge line of `config/webapp.conf`, then `bluemap -g`;
+    every viewer's browser asks that service for the heads) and the start position over Cinix (`start-pos: { x: 1408,
+    z: -522 }` in `config/maps/overworld.conf` and `"startPos":[1408,-522]` in `web/maps/overworld/settings.json`).
+    Backups `*.bak-heads-*` and `*.bak-startpos-*` next to the files. Both show on the alpha after the promotion.
+13. **Still open for you:** § 3 step 1 on the NAS after the promotion (rebuild the `web` image with the `next`
+    `nginx.conf`), the `/ownermode` case of the L4 check (a second staff account), and when to promote `next`.
 
 ## 2. Summary
 
