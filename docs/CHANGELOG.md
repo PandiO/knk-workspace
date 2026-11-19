@@ -26,6 +26,32 @@ This is a human-readable record of capabilities merged into the V3 default branc
   3. On a database that imported `SiegeScenario` and `SiegeTeam` before, add the scenario's "Siege weapons" step and
      the team's "Active weapon spots" field in the form designer (the seed files have them; import never overwrites).
 
+- **Item identity: every item a player obtains is a blueprint item** ([PandiO/knk-workspace#141](https://github.com/PandiO/knk-workspace/issues/141),
+  link L0 of the production, storage and transport chain). Every item you pick up, mine, loot, fish, craft or trade
+  for now has a known item type on the server, while it looks and stacks exactly as before. knk-web-api, knk-plugin and
+  knk-workspace branches `claude/item-identity-141` (PRs into `next`).
+  1. API: `ItemBlueprint.VanillaMaterialMatchRefId`, unique, maps each obtainable vanilla material to one blueprint.
+     Plain "vanilla shadow" blueprints in a new top-level "Uncurated" category are generated for materials nobody
+     curated (D11/G4), after every catalogue scan and on `POST api/ItemIdentity/shadows/generate`. New
+     `api/ItemIdentity`: `GET material-map` (any logged-in caller or the plugin key), `GET report` and
+     `PUT matches/{materialRefId}` (`knk.admin.content`; the latter also the plugin key), `POST conversion-counts`
+     (plugin key only). A catalogue merge keeps one match per material.
+  2. Plugin: one resolver (instance tag → blueprint tag → vanilla match); `knightsandkings:knk_blueprint` stamped on
+     blueprint items that differ from the plain vanilla item; the plain item never carries it (retag rule), so
+     stacking is vanilla's. Conversion hooks on pickup, block and mob drops, fishing, crafting, trades and the first
+     open of a container; counts logged and sent to the API. Everything behind `items.identity.enabled` and
+     `items.identity.convert-on-obtain`, both off by default: with them off, items behave exactly as before.
+  3. Admin steps: apply migration `AddItemIdentity` (additive: one nullable column with a unique index, one new table
+     `item_conversion_stats`; no data written). Run a catalogue scan (or `POST api/ItemIdentity/shadows/generate`)
+     to create the shadows. Merge into `config.yml`, then restart:
+     ```yaml
+     items:
+       identity:
+         enabled: false
+         convert-on-obtain: false
+         map-refresh-minutes: 10
+         report-interval-minutes: 10
+     ```
 - **Navigation: walk trails reach the keep storage hall and pass roof hatches** ([PandiO/knk-workspace#771](https://github.com/PandiO/knk-workspace/issues/771)
   items 1 and 2, fix link F1 of the off-road navigation chain). A walking route that once found its way no longer
   loses it when the trail is recalculated inside a building: the recalculation keeps the area and length of the way

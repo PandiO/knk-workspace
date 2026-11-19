@@ -1,7 +1,9 @@
 # Production, storage and transport — smoke test
 
-**Status:** Draft from the design (2026-11-16); no steps run. Steps not yet automated (the links tag them).
-**Last updated:** 2026-11-16 (draft from the design, territory and phases P1-P12)
+**Status:** Draft from the design (2026-11-16); no steps run. § 0 (item identity, #141): 7 of 14 steps automated
+in CI and 4 partly (tagged); every step can still be run by hand; manual steps not run. Other sections not yet
+automated (the links tag them).
+**Last updated:** 2026-11-19 (§ 0 item identity, link L0, #141); 2026-11-16 (draft from the design, territory and phases P1-P12)
 **Design:** [specs/production-storage-transport/DESIGN.md](../specs/production-storage-transport/DESIGN.md) (§17
 acceptance A01-A27, §18 links) · [territory](../specs/territory/DESIGN.md) · [shops](../specs/shops/DESIGN.md) ·
 **Issue:** [PandiO/knk-workspace#22](https://github.com/PandiO/knk-workspace/issues/22)
@@ -14,6 +16,86 @@ Common preconditions for every section:
    of the test town, no staff nodes), **Visitor** (no town, no staff nodes).
 4. Test data: town **Phoenix** with at least two districts, one marked capital; a second town **Rivertown**; a kingdom
    that holds both.
+
+## 0. Item identity (#141 API and plugin; tier:3)
+
+Built in link L0 (knk-web-api and knk-plugin branches `claude/item-identity-141`). Every obtainable vanilla material
+has exactly one item blueprint (a generated "vanilla shadow" in the "Uncurated" category until an admin curates it,
+D11/G4), and every item a player obtains resolves to one: instance tag, then blueprint tag, then the material's vanilla
+match. The plain vanilla item is the canonical form and never carries a blueprint tag, so stacking stays vanilla's.
+Full manual run about 45 minutes; the untagged steps only about 25 minutes.
+
+### 0.0 Preconditions
+
+1. knk-web-api with migration `AddItemIdentity` applied; a completed Minecraft catalogue scan of the test server's
+   version (web app, Minecraft catalogue page, "Scan").
+2. The plugin jar from the branch, with `items.identity` merged into `config.yml` (both keys `false` at first).
+3. A curated stackable blueprint with a display name, e.g. **Phoenix Bread** (`minecraft:bread`, display name
+   `&6Phoenix Bread`), and a kit that hands out 16 of it.
+4. A REST client with a Staff token (`knk.admin.content`) and one with a Visitor token, or Swagger.
+
+### 0.1 Steps
+
+1. [automated: knk-web-api `MinecraftCatalogScanServiceTests.Ingest_GeneratesVanillaShadowBlueprints_ForObtainableItemsWithoutOne`,
+   `VanillaShadowBlueprintsTests`] As Staff, run a catalogue scan and wait for "Completed". Call
+   `GET api/ItemIdentity/report`. **Expected:** `obtainableMaterials` is well over 1,000, `unmatchedMaterials` is
+   empty, `shadowMatches` + `curatedMatches` = `matchedMaterials` = `obtainableMaterials`. In the web app's item
+   blueprint list, the category "Uncurated" holds blueprints such as "Oak Log" with an empty display name; no
+   shadow exists for `minecraft:barrier`, `minecraft:command_block` or any spawn egg. (A04)
+2. [automated: `VanillaShadowBlueprintsTests.Generate_LeavesCuratedMatches_AndIsIdempotent`] Call
+   `POST api/ItemIdentity/shadows/generate` twice. **Expected:** both answer `created: 0` and the same
+   `alreadyMatched`; no blueprint is added. (D11)
+3. [automated: `ItemIdentityServiceTests.SetMatch_MovesTheMatchFromTheShadowToACuratedBlueprint`,
+   `ItemIdentityMySqlTests.Generate_ThenMoveTheMatch_KeepsOneBlueprintPerMaterial`] Look up the id of
+   `minecraft:bread` in the material catalogue, then call `PUT api/ItemIdentity/matches/<that id>` with
+   `{ "itemBlueprintId": <Phoenix Bread's id> }`. **Expected:** the answer names the bread shadow as
+   `previousBlueprintId`; `GET api/ItemIdentity/material-map` lists `minecraft:bread` with Phoenix Bread's id and
+   `"shadow": false`; the report's `curatedMatches` went up by one. (A04)
+4. [automated: `AddItemIdentityTests`, `ItemIdentityMySqlTests.UniqueIndex_AllowsManyUnmatchedBlueprints_ButOnlyOneMatchPerMaterial`]
+   On the database run `SELECT VanillaMaterialMatchRefId, COUNT(*) FROM item_blueprints WHERE VanillaMaterialMatchRefId
+   IS NOT NULL GROUP BY 1 HAVING COUNT(*) > 1;`. **Expected:** no rows. (A04)
+5. [automated: `ItemIdentityControllerAccessTests`, `ReadAccessRulesTests`, `EndpointAccessRulesTests`] As Visitor,
+   call `GET api/ItemIdentity/report`, `POST api/ItemIdentity/shadows/generate` and
+   `POST api/ItemIdentity/conversion-counts`. **Expected:** 403 for all three; nothing changes.
+6. [partly automated: knk-plugin `BlueprintItemAssemblerIdentityTest.identityOff_kitItemsAreBuiltAsBefore_withoutATag`,
+   `ItemIdentityServiceTest.bundledConfig_shipsBothSwitchesOff`, `BlueprintTagTest.stampingIsOffByDefault_itemsAreBuiltAsBefore`;
+   by hand: a real server] With both `items.identity` keys `false`, start the server, claim the Phoenix Bread kit and
+   hold the bread. Run `/data get entity <you> SelectedItem`. **Expected:** no `[ItemIdentity]` line in the startup
+   log; the bread has no `knightsandkings:knk_blueprint` in its custom data; kits and lootboxes behave as before.
+7. Set `items.identity.enabled: true`, `convert-on-obtain: true` and `report-interval-minutes: 1`, restart.
+   **Expected:** the log shows `[ItemIdentity] enabled; conversion hooks on` and
+   `[ItemIdentity] material map: <n> materials with a blueprint` with n = the report's `matchedMaterials`.
+   (Manual: a real server and API.)
+8. [automated: `BlueprintItemAssemblerIdentityTest.identityOn_aCustomBlueprintItemIsTagged`] Claim the Phoenix Bread
+   kit again and run `/data get entity <you> SelectedItem`. **Expected:** the custom data holds
+   `"knightsandkings:knk_blueprint": <Phoenix Bread's id>`.
+9. [automated: `BlueprintItemAssemblerIdentityTest.identityOn_aShadowBlueprintBuildsThePlainVanillaItem_whichStacksWithVanilla`,
+   `BlueprintTagTest.aPlainItemStillStacksWithVanilla_andATaggedPlainOneDoesOnceNormalised`] Give yourself the
+   "Oak Log" shadow with `/knk itemblueprints give`, then chop an oak log and pick it up. **Expected:** the given logs
+   carry no blueprint tag and the picked-up log joins the same stack, exactly as in vanilla.
+10. [partly automated: `ItemConversionListenerTest`; by hand: the real events on a server] Within one minute: mine a
+    block, kill a cow, catch a fish, craft bread, trade with a villager, and open a chest you never opened since the
+    restart (a world-generated loot chest if you have one). **Expected:** every item behaves and stacks as in vanilla;
+    after a minute the log shows `[ItemIdentity] conversions since the last report: vanilla_match=<n>`, and
+    `GET api/ItemIdentity/report?days=1` lists `block_drop`, `pickup`, `entity_death`, `fishing`, `craft`, `trade`
+    and `container_open` with outcome `vanilla_match`. Opening the same chest again adds nothing to
+    `container_open`. (A04)
+11. [partly automated: `ItemConversionListenerTest.deathDrops_areNormalisedInPlace_andCustomItemsLeftAlone`,
+    `ItemIdentityResolverTest.untaggedCustomItems_areUnresolved_withTheReason`; by hand: an anvil on a server] Rename
+    a bread in an anvil, drop it and pick it up twice. **Expected:** the name stays; the log says once
+    `[ItemIdentity] left alone (unresolved_custom_name): minecraft:bread from pickup`; the report's `topUnresolved`
+    lists `minecraft:bread` with `unresolved_custom_name`.
+12. [partly automated: `ItemIdentityServiceTest.convert_leavesPlainItemsAlone_stripsAStaleTag_andCountsTheStackSize`;
+    by hand: the command] Give yourself a plain oak log with a stale tag:
+    `/give @s oak_log[custom_data={PublicBukkitValues:{"knightsandkings:knk_blueprint":999}}] 4`, drop it and pick it
+    up. **Expected:** it loses the tag on pickup and joins your plain oak log stack; the report counts it as
+    `normalized`. (Retag rule.)
+13. Claim a kit and open a lootbox token with the keys on (#261 must keep working). **Expected:** both deliver as
+    before; customised items carry `knk_blueprint`, unique lootbox items also keep `knk_item_instance`; plain items
+    carry no tag. (Manual: real delivery.)
+14. Known limit: hold a Phoenix Bread claimed in step 6 (untagged) and one from step 8 (tagged). **Expected:** they do
+    not stack, and the old one is reported as `unresolved_custom_name`. Follow-up:
+    [PandiO/knk-workspace#791](https://github.com/PandiO/knk-workspace/issues/791). (Manual.)
 
 ## 1. Territory V1 (#326 API, #689 plugin, #690 web app; tier:3)
 
