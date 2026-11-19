@@ -4,6 +4,839 @@ This is a human-readable record of capabilities merged into the V3 default branc
 
 ## Unreleased — on feature branches, not merged
 
+- **Off-road navigation: landmark preference weights** ([PandiO/knk-workspace#709](https://github.com/PandiO/knk-workspace/issues/709),
+  link L9 of the off-road navigation chain, phase 5.2). Behind `navigation.landmarks` (off by default). A landmark
+  with an area (a region or a radius) and a `Preference` above 1.0 makes walking routes avoid that area in the default
+  `preferred` mode; below 1.0 they prefer it (preference indoors without an indoor road graph). `shortest` and
+  `efficient` ignore the weights, NPCs never use them. Overlapping landmarks multiply, capped by the new
+  `navigation.preference-max` (4.0). Landmarks standing on a road also become walk-link ends. knk-plugin and
+  knk-workspace branches `claude/offroad-landmark-weights` (PRs into `next`). Admin steps: add
+  `preference-max: 4.0` under `navigation:` in `config.yml`, restart. No migration.
+- **Off-road navigation: route modes `shortest`, `efficient`, `preferred`** ([PandiO/knk-workspace#707](https://github.com/PandiO/knk-workspace/issues/707),
+  link L7 of the off-road navigation chain, phase 4). `/navigate <place> [shortest|efficient|preferred] [spawn|region]`
+  picks how the route is chosen, on roads and on foot: `shortest` the fewest blocks, `efficient` the cheapest road
+  classes and walking (stairs, ladders, doors, water and drops cost extra), `preferred` also the road weights staff set
+  with `/knk road edge set <id> cost <x>`. Without a word the route is `preferred`, exactly today's route. knk-plugin
+  and knk-workspace branches `claude/offroad-route-modes` (PRs into `next`). No flag, no config key, no migration.
+  1. Each typed word needs its node `knk.navigate.mode.<word>` (declared `default: op`); no word needs none. Tab
+     completion offers only the words a player holds.
+  2. The mode works with the destination engine on and off, and stays for the navigation's re-routes; walk links cost
+     their walked length in `shortest`. NPC routes are unchanged.
+  3. Admin steps: grant the three nodes to the groups that should have them (none by default; staff proposed).
+
+- **Off-road navigation: shortcuts on foot in the middle of a route** ([PandiO/knk-workspace#705](https://github.com/PandiO/knk-workspace/issues/705),
+  link L5 of the off-road navigation chain, phase 2). Where the road goes the long way round (a courtyard, a bailey), the
+  route can now leave the road for a short walk across and join it again: the trail shows the walk in the walk colour
+  and the HUD says "Leave the road and walk across". A target close enough for one walk path is reached over the road
+  when the road carries most of the way. knk-plugin and knk-workspace branches `claude/offroad-walk-links` (PRs into
+  `next`). Behind `navigation.walk-links`, off by default: with it off, routes, trails and sessions are exactly as
+  before. No migration.
+  1. A route is a list of legs: road stretches and walk links in any order, with the walk to the road and the last
+     walk as before (`Route.legs()`). Walk links have their own id space (`WalkLinkId`, at least 2^62).
+  2. Links join road nodes at most `walk-link-range` (40) blocks apart whose road is more than `walk-link-ratio` (2.0)
+     times as long. They are searched lazily, off the main thread, after the first route, and cached per player; the
+     session then takes the better route ("A shorter route opened").
+  3. A link is offered only when the player's gate and region rules let them through; a new block-change hook drops
+     a link within a second of a change near it, with a TTL as the backstop.
+  4. Road-first (direct mode within `max-snap-distance`, which is unchanged): `road-first-share` 0.6 and
+     `road-first-max-ratio` 1.5, defaults for the developer to confirm.
+  5. `/knk road status` shows three walk-link lines (searches, cache, road-first decisions).
+  6. Admin steps (only to try it): under `navigation:` add the keys of the PR's admin steps and set `walk-links: true`;
+     restart.
+
+- **Off-road navigation: the trail rounds plazas** ([PandiO/knk-workspace#712](https://github.com/PandiO/knk-workspace/issues/712),
+  link L10 of the off-road navigation chain, phase 7 step 2). Where your route crosses a plaza from one road to
+  another, the navigation trail now takes a rounded line across the square instead of a sharp corner at its middle,
+  keeping clear of walls, wells and stalls. knk-plugin and knk-workspace branches `claude/offroad-plaza-lines` (PRs into
+  `next`). Behind `navigation.plaza-lines`, off by default: with it off the trail is exactly as before. No migration.
+  1. With the flag on, the road trail's spots inside a plaza crossing are drawn at the same share of the way along
+     the plaza line (`core/navigation/PlazaTrail`, a `TrailRenderer.drawRoute` overload). The crossings are worked out
+     lazily on the main thread, one per redraw, when the trail comes within 24 blocks, once per route.
+  2. The route, its length, the ETA, the HUD, the maneuvers and the session's progress and cursor stay on the route
+     polyline (A25, transcript test).
+  3. The developer's decision after viewing the lines on Cinix and Brink (O33): a curve is taken down to 0.65 from an
+     obstacle (`plaza-curve-clearance`); the A* line still never comes under 0.35.
+  4. `/knk road status` shows "plaza lines: on; placed N of M crossings".
+  5. Admin steps (only to try it): under `navigation:` add `plaza-curve-clearance: 0.65` beside the step-1 keys and set
+     `plaza-lines: true`; restart.
+
+- **Off-road navigation, phase 5.1 step B: landmarks in game** ([PandiO/knk-workspace#708](https://github.com/PandiO/knk-workspace/issues/708),
+  link L8 of the off-road navigation chain). knk-plugin and knk-workspace branches `claude/offroad-landmarks` (PRs into
+  `next`). Behind the new `config.yml` key `navigation.landmarks` (off by default: nothing changes for players).
+  1. With the key on (and `navigation.destination-engine` on), players can `/navigate` to a landmark by name or as
+     `landmark:<name>`; tab completion offers the landmarks of their world they may navigate to, not those with
+     "Offer in /navigate" off, not other worlds' and none during a siege match. A landmark with a region ends the
+     navigation inside the region, one with a radius inside that radius, one without either within the arrive distance.
+     A navigation to a landmark that is deleted or switched off ends with the "no longer" message; a rename keeps it.
+  2. Staff with `knk.admin.world.landmark` use `/knk landmark create <name> [region <id> | radius <n>]`, `list`, `show`,
+     `move`, `delete`, `link <landmark> <domain>` and `unlink` in game.
+  3. The navigation model keeps the landmarks in its snapshot (`offline/navigation-model.json`), so they work with the
+     API down after a restart; a failed landmark read keeps the last ones.
+  4. Admin steps: add `landmarks: false` under `navigation:` in `config.yml` (a missing key means `false`; see
+     [plugin configuration § 4.15](guides/admin/plugin-configuration.md#415-navigation)); restart after changing it.
+     The API side (migration, node) is step A's entry below. Steps:
+     [off-road smoke test § 6.3](guides/navigation-offroad-smoke-test.md#63-in-game-step-b-a12-to-a14).
+
+- **Off-road navigation, phase 5.1 step A: landmarks in the API and the web app** ([PandiO/knk-workspace#708](https://github.com/PandiO/knk-workspace/issues/708),
+  link L8 of the off-road navigation chain, [#698](https://github.com/PandiO/knk-workspace/issues/698)). knk-web-api,
+  knk-web-app and knk-workspace branches `claude/offroad-landmarks` (PRs into `next`). Nothing changes for players
+  yet: the game server reads landmarks from step B (knk-plugin, `navigation.landmarks`, off by default).
+  1. A landmark is a named place made by staff: a Location pin with a name (unique per world), optionally linked to a
+     domain (the link is dropped when the domain is deleted), optionally with an area (a WorldGuard region or a radius
+     up to 512 blocks), a route preference (0.25 to 4.0, used from phase 5.2) and "Offer in /navigate".
+  2. API `api/landmarks`: `GET ?world=` and `GET {id}` for anyone, also without login (the `map` rate limit);
+     `POST search` for the dashboard; `POST`, `PUT {id}`, `DELETE {id}` for staff with the new node
+     `knk.admin.world.landmark` (plus `knk.admin.content` for create and edit, `knk.admin.delete` for delete) or the
+     game server's key.
+  3. Web app: Landmark on the dashboard (World area) with World, Point, Domain, Area and In /navigate columns, the
+     default form "Landmark - Default (seed v1)", and a Landmarks box on every domain's detail page listing the
+     landmarks linked to it, with **Add landmark**.
+  4. Admin steps: apply the migration `AddLandmarks` (one new table `landmarks`, no change to existing tables); import
+     the form seed `Landmark` (form configurations → Import / seeds); grant `knk.admin.world.landmark` to the ranks
+     that make landmarks (`knk.admin.*` and `knk.admin.world.*` include it, a bare `knk.admin.world` does not; see the
+     [dashboard access admin guide § 2](guides/admin/dashboard-access-admin-guide.md#2-area-nodes-one-per-part-of-the-dashboard)).
+     No new settings. Steps: [off-road smoke test § 6](guides/navigation-offroad-smoke-test.md#6-phase-51-landmark-entity-708-tier3).
+
+- **Overview map: moderation from the map** ([PandiO/knk-workspace#743](https://github.com/PandiO/knk-workspace/issues/743),
+  link L9 of the overview map chain, [#732](https://github.com/PandiO/knk-workspace/issues/732)). knk-web-app and
+  knk-workspace branches `claude/overview-map-moderation` (PRs into `next`). No flag of its own: it needs the live
+  players layer (`Map:LivePlayers:Enabled`) and is shown by the viewer's nodes.
+  1. A moderator holding any of `knk.freeze`, `knk.unfreeze`, `knk.kick`, `knk.ban` or `knk.admin.user.manage` who
+     clicks a player on the map gets a "Moderation" section under the name card: Freeze or Unfreeze, Kick and Ban, each
+     only with its own node, with the same dialogs, endpoints and audit entries as the player profile, and
+     "Open profile".
+  2. Everyone else still gets only the name card; anonymous viewers make no extra request.
+  3. Admin steps: none. Steps:
+     [overview map smoke test § 9](guides/overview-map-smoke-test.md#9-phase-7-player-moderation-panel-743-tier2).
+
+- **Navigation destination engine, phase 4: the hard blocks are scopes and running routes are re-checked, behind the flag** ([PandiO/knk-workspace#62](https://github.com/PandiO/knk-workspace/issues/62),
+  link L4 of the destination engine chain, [#25](https://github.com/PandiO/knk-workspace/issues/25)). knk-plugin and
+  knk-workspace branches `claude/navigation-destination-engine` (PRs into `next`). Only with
+  `navigation.destination-engine: true` (off by default: nothing changes for players).
+  1. With the key on, "still loading", "frozen", "no permission" and "in a siege" come from the engine's list with
+     today's texts; freeze also holds for owner mode, staff mode and `knk.navigate.any`. `knk.navigate.any` alone
+     (without `knk.navigate`) is enough to use `/navigate`.
+  2. A running route is checked against the player's list every 2 seconds and at once when an objective is captured,
+     the match ends, the lobby changes, a round is released, owner/staff mode is switched, a freeze starts or ends, or
+     the list of places is refreshed. A destination that left the list ends the route with the reason as the message,
+     for example "You can't navigate while frozen." or "Keep Gate is no longer part of this match."; an objective that
+     only changed from capture to defend keeps the route.
+  3. Admin steps: none (no new key, no migration, no API change). Steps:
+     [destination engine smoke test § 4](guides/navigation-destination-engine-smoke-test.md#4-phase-4-hard-blocks-as-scopes-and-live-re-validation-62-tier3).
+
+- **Overview map: live players on the map** ([PandiO/knk-workspace#739](https://github.com/PandiO/knk-workspace/issues/739),
+  link L5 of the overview map chain, [#732](https://github.com/PandiO/knk-workspace/issues/732)). knk-web-app and
+  knk-workspace branches `claude/overview-map-players-page` (PRs into `next`). Behind the API setting
+  `Map:LivePlayers:Enabled` (off by default: the page asks for no players and draws nothing new).
+  1. The map shows online players with a head and their name label as in the in-game chat line, in the same colours,
+     updated about every 2 s. Tags show AFK, and for staff who may see hidden players also "Staff mode", "Owner mode"
+     and the minigame.
+  2. A running siege shows one pin, for example "[Siege] 12 players", instead of its participants.
+  3. Clicking a player opens a name card with the label and tags.
+  4. Admin steps: none to keep it off. With the backend on (§ 4), the layer appears by itself. Optional: player heads
+     from a skin service through `heads=` in BlueMap's `webapp.conf`
+     ([closed-alpha runbook Phase 10](guides/closed-alpha-deployment-runbook.md#phase-10--overview-map-bluemap-in-the-stack-737)
+     step 3); without it everyone has BlueMap's default head. Steps:
+     [overview map smoke test § 5](guides/overview-map-smoke-test.md#5-phase-4b-live-players-layer-739-tier2).
+
+- **Navigation destination engine, phase 3: `/navigate`, tab completion, the compass and the route start on the engine, behind a flag** ([PandiO/knk-workspace#69](https://github.com/PandiO/knk-workspace/issues/69),
+  link L3 of the destination engine chain, [#25](https://github.com/PandiO/knk-workspace/issues/25)). knk-plugin and
+  knk-workspace branches `claude/navigation-destination-engine` (PRs into `next`). Behind the new `config.yml` key
+  `navigation.destination-engine` (off by default: nothing changes for players).
+  1. With the key on, `/navigate`, its tab completion and the navigation compass use one list of places per player,
+     built from the navigation model of phase 2 and the road network: the same names, forms and messages as today
+     outside a siege, and in a siege match only the match's objectives and team spawn, now also as
+     `objective:<name>` and `objective:#<id>`. Places of another world are not suggested but still get "… is in
+     another world". Nothing is looked up when a destination is chosen, so it works with the API down after a
+     restart; without any saved model only streets and road points are offered, with "Some places aren't available
+     while the web API is down.".
+  2. The compass cycles the same list (the match's in a match, the configured general targets outside a siege) and
+     keeps its own wording; a resume picks the stored destination again only while it is still listed. Routes start
+     only from the list. Owner mode, staff mode and the new node `knk.navigate.any` (not granted by default) list
+     every place, also in a match.
+  3. The road-access answers ("Ignored" domains whose roads stay usable) and the compass settings come from the
+     navigation model with the key on.
+  4. Admin steps: add `destination-engine: false` under `navigation:` in `config.yml` (a missing key means `false`;
+     see [plugin configuration § 4.15](guides/admin/plugin-configuration.md#415-navigation)); restart after changing
+     it. No migration, no API change. Grant `knk.navigate.any` only to accounts that should navigate anywhere. Steps:
+     [destination engine smoke test § 3](guides/navigation-destination-engine-smoke-test.md#3-phase-3-switch-over-behind-the-flag-69-tier3).
+
+- **Navigation destination engine, phase 2: the navigation model and its offline snapshot** ([PandiO/knk-workspace#103](https://github.com/PandiO/knk-workspace/issues/103),
+  link L2 of the destination engine chain, [#25](https://github.com/PandiO/knk-workspace/issues/25)). knk-web-api,
+  knk-plugin and knk-workspace branches `claude/navigation-destination-engine` (PRs into `next`). Nothing changes for
+  players: nothing in the plugin reads the model before phase 3, which switches to it behind a flag.
+  1. The domain search (`POST api/Domains/search`) returns each domain's Location (`location`: id, name, x, y, z, yaw,
+     pitch, world; `null` when the domain has none). The other fields are unchanged; no migration.
+  2. The game server keeps a navigation model: every domain with its spawn Location, region, world, `/navigate`
+     default and road-access flag, the Location targets, the navigation compass settings and an empty landmarks
+     section for off-road landmarks (#708). It is refreshed from the API every minute, saved to
+     `plugins/KnightsAndKings/offline/navigation-model.json` when it changed, and loaded at start-up, so it survives a
+     restart with the API down. With an API from before this change it looks the Locations up one domain at a time,
+     two a second.
+  3. Admin steps: deploy knk-web-api and the plugin together (either order works). New `config.yml` key
+     `navigation.destinations.stale-after-days: 14` under `navigation:` (a missing key means 14; see
+     [plugin configuration § 4.15](guides/admin/plugin-configuration.md#415-navigation)). No migration. Steps:
+     [destination engine smoke test § 2](guides/navigation-destination-engine-smoke-test.md#2-phase-2-navigation-model-and-offline-snapshot-103-tier2).
+
+- **Overview map: gate command buttons in the map panel** ([PandiO/knk-workspace#742](https://github.com/PandiO/knk-workspace/issues/742),
+  link L8 of the overview map chain, [#732](https://github.com/PandiO/knk-workspace/issues/732)). knk-web-app and
+  knk-workspace branches `claude/overview-map-gate-buttons` (PRs into `next`). Behind the API setting
+  `Map:GateCommands:Enabled` (phase 6a, off by default: no buttons, no requests).
+  1. A web account holding `knk.gate.admin` sees "Gate commands" when clicking a gate on `/map`: Open, Close, Toggle
+     and Repair for the whole gate and for each door. The door moves in game; the panel shows the result (done, refused
+     with the reason, no game server, timed out) and then reads the gate again.
+  2. During a siege match on the gate the buttons are disabled with "Gate is in a running siege".
+  3. Everyone else sees the panel as before; anonymous viewers make no permission request, and nobody without the node
+     asks for door ids or sends commands.
+  4. Admin steps: none to keep it off. To turn it on, set `Map__GateCommands__Enabled=true` as in phase 6a and reload
+     `/map`. No migration, no plugin setting. Steps:
+     [overview map smoke test § 8](guides/overview-map-smoke-test.md#8-phase-6b-gate-command-buttons-742-tier2).
+
+- **Overview map: gate commands backend** ([PandiO/knk-workspace#741](https://github.com/PandiO/knk-workspace/issues/741),
+  link L7 of the overview map chain, [#732](https://github.com/PandiO/knk-workspace/issues/732)). knk-web-api,
+  knk-plugin and knk-workspace branches `claude/overview-map-gate-commands` (PRs into `next`). Behind the new API
+  setting `Map:GateCommands:Enabled` (off by default: the route answers 404 and nothing is sent). Nothing changes for
+  players yet: the map panel's gate buttons (phase 6b) call this.
+  1. New staff route `POST api/GateStructures/{id}/commands` with `{action: open|close|toggle|repair, doorId?}`, for
+     web staff holding `knk.gate.admin` only. The API sends the command to the game server over the game hub and waits
+     up to 5 s for its answer; the game server runs the existing gate operations, so the door animates as with
+     `/gate`, and repair works as `/gate repair`.
+  2. Refused while a siege match runs on the gate (409; the game server checks its siege lockdown too), without a
+     connected game server (503), for a door of another gate (400); no answer in time is 504. Every command is written
+     to the audit log (`GateCommandSent`, with the user, action, door and result).
+  3. `GET api/Map/config` now reports `gateCommands.enabled` from the setting.
+  4. Admin steps: none to keep it off. To turn it on, set `Map__GateCommands__Enabled=true` in the API's environment
+     file (`Map__GateCommands__TimeoutSeconds`, default 5). No plugin setting (the plugin answers what it receives,
+     with `realtime.enabled: true`). No migration. Steps:
+     [overview map smoke test § 7](guides/overview-map-smoke-test.md#7-phase-6a-gate-commands-backend-741-tier3),
+     [production installation § 4.3](guides/production-installation.md#43-api-configuration-file--etcknkapienv).
+
+- **Navigation destination engine, phase 1: the pure engine in knk-core** ([PandiO/knk-workspace#96](https://github.com/PandiO/knk-workspace/issues/96),
+  link L1 of the destination engine chain, [#25](https://github.com/PandiO/knk-workspace/issues/25)). knk-plugin and
+  knk-workspace branches `claude/navigation-destination-engine` (PRs into `next`). Nothing changes for players: the
+  engine is code and tests only and nothing in the plugin uses it yet (phase 3 switches to it behind a flag).
+  1. The engine decides which places a player may navigate to: exclusive scopes by priority (loading, frozen, staff
+     bypass, no permission, siege match, siege lobby, world), providers of candidates, name resolution and completion
+     inside the list, an engine-issued handle, and re-validation of a running session by key.
+  2. Each refusal carries a reason code and today's `/navigate` text, so the compass can keep its own wording; places
+     may carry an arrival radius, ready for the landmark provider of off-road navigation (#708).
+  3. Admin steps: none (no flag, no `config.yml` key, no migration). Steps:
+     [destination engine smoke test § 1](guides/navigation-destination-engine-smoke-test.md#1-phase-1-pure-engine-in-knk-core-96-tier2).
+
+- **Overview map: staff details in the map panel** ([PandiO/knk-workspace#740](https://github.com/PandiO/knk-workspace/issues/740),
+  link L6 of the overview map chain, [#732](https://github.com/PandiO/knk-workspace/issues/732)). knk-web-app and
+  knk-workspace branches `claude/overview-map-staff-details` (PRs into `next`). No flag: gated by the node
+  `knk.admin.world`, and shown only where the map is on (`Map:Enabled`).
+  1. World staff who click a town, district or structure on the map see a "Details" section under the public part:
+     the type's default display configuration in a compact form (no header, lists collapsed with their count,
+     related records as links, no buttons or inline edits), with "Open full page" to the record's detail page. A
+     gate shows its gate display (`GateStructure`).
+  2. Everyone else sees the panel as before; their browser asks for no display configuration.
+  3. The detail pages elsewhere in the web app are unchanged (the compact form is a new option of the same
+     renderer).
+  4. Admin steps: none. Steps:
+     [overview map smoke test § 6](guides/overview-map-smoke-test.md#6-phase-5-staff-details-740-tier2).
+
+- **Overview map: live players backend** ([PandiO/knk-workspace#738](https://github.com/PandiO/knk-workspace/issues/738),
+  link L4 of the overview map chain, [#732](https://github.com/PandiO/knk-workspace/issues/732)). knk-plugin,
+  knk-web-api and knk-workspace branches `claude/overview-map-players-api` (PRs into `next`). Behind the new API setting
+  `Map:LivePlayers:Enabled` and the plugin's existing `map.reporting.enabled` (both off by default: nothing is sent,
+  kept or served). Nothing changes for players yet: the map page's player layer (phase 4b) reads this.
+  1. The plugin reports its online players every `map.reporting.interval-ticks` (new key, default 40 = 2 s): world,
+     position, facing, AFK, active mode and running minigame match, over the game hub.
+  2. New anonymous read route `GET api/Map/players` (map rate limit): the live players with their name label as in
+     the in-game chat line, and one pin per running siege match, "[Siege] 12 players". Players in staff or owner mode
+     or in a running match never reach anonymous or plain logged-in viewers, not even in the response; a viewer with
+     `knk.mode.staff` or `knk.mode.owner` sees them with a mode or minigame tag. A player who quits disappears at once,
+     a server that stops reporting within three intervals.
+  3. Admin steps: none to keep it off. To turn it on, set `Map__LivePlayers__Enabled=true` (with `Map__Enabled=true`)
+     in the API's environment file and `map.reporting.enabled: true` in the plugin's `config.yml` (needs
+     `realtime.enabled: true`); `Map__LivePlayers__PollIntervalMs` (2000), `Map__LivePlayers__LabelCacheSeconds` (60)
+     and `map.reporting.interval-ticks` (40) have defaults. No migration. Steps:
+     [overview map smoke test § 4](guides/overview-map-smoke-test.md#4-phase-4a-live-players-backend-738-tier3),
+     [production installation § 4.3](guides/production-installation.md#43-api-configuration-file--etcknkapienv),
+     [plugin configuration § 4.29](guides/admin/plugin-configuration.md#429-map).
+
+- **Overview map: the `/map` page** ([PandiO/knk-workspace#737](https://github.com/PandiO/knk-workspace/issues/737),
+  link L3 of the overview map chain, [#732](https://github.com/PandiO/knk-workspace/issues/732)). knk-web-app and
+  knk-workspace branches `claude/overview-map-page` (PRs into `next`). Behind the API setting `Map:Enabled` (off by
+  default): while it is off the web app shows no map anywhere.
+  1. A public `/map` page with BlueMap's 3D viewer in a frame (served by our own Nginx under `/bluemap/`) and a bridge
+     script inside it that draws our pins and outlines and reports clicks (versioned messages, own origin only).
+  2. Town, district and structure pins with their names: towns at every zoom, districts and structures when zoomed in;
+     structures also show their type ("Structure, Gate").
+  3. Clicking a town flashes its outline three times and opens a panel with its public fields; "Show region" keeps the
+     town and all its districts visible with their names. Districts and structures open their own panels; a gate lists
+     its doors with open/closed, destroyed and a health bar, and "Under siege" during a match.
+  4. The panel works on phones as a bottom sheet. A "Map" entry in the top bar (signed in) and a map link on the start
+     page (signed out) appear only while the map is on.
+  5. Panels come from a map action registry, so later features (staff details, gate buttons, the player panel) add
+     their widgets and actions without touching the map side.
+  6. Admin steps: none to keep it off. To use it, move the existing BlueMap test container into the `knk-alpha` stack
+     and serve `/bluemap/` ([closed-alpha runbook Phase 10](guides/closed-alpha-deployment-runbook.md#phase-10--overview-map-bluemap-in-the-stack-737):
+     BlueMap v5.29, `webapp.conf` `client-decompression: true` and the bridge script, the `web` image with the new
+     `nginx.conf`), then set `Map__Enabled=true`. Steps:
+     [overview map smoke test § 3](guides/overview-map-smoke-test.md#3-phase-3-map-page-737-tier2).
+
+- **Overview map: public map API** ([PandiO/knk-workspace#736](https://github.com/PandiO/knk-workspace/issues/736),
+  link L2 of the overview map chain, [#732](https://github.com/PandiO/knk-workspace/issues/732)). knk-web-api and
+  knk-workspace branches `claude/overview-map-public-api` (PRs into `next`). Behind the new API setting `Map:Enabled`
+  (off by default: every `api/Map` route answers 404). Nothing changes for players yet: the web map page (phase 3)
+  reads these.
+  1. New anonymous read routes under `api/Map`: `config` (label distances, flash settings, marker version),
+     `markers` (pins and outlines of every town, district and structure, labelled with their names; structures with
+     type and subtype; a pin at the spawn location, else at the centre of the region outline), and the public panels
+     `towns/{id}`, `districts/{id}`, `structures/{id}` (a gate adds its doors with open state, destroyed and health,
+     and "under siege"). The responses hold only the fields the design allows for anyone (O32); tests pin each field
+     set.
+  2. A new per-IP rate limit `map` (120 requests per minute by default) covers every map route.
+  3. Admin steps: none to keep it off. To turn it on, set `Map__Enabled=true` in the API's environment file; the other
+     new keys (`RateLimiting__Map__PermitPerMinute`, `Map__Labels__*__MaxDistance`, `Map__Flash__*`,
+     `Map__Markers__CacheSeconds`) have defaults. No migration. Steps:
+     [overview map smoke test § 2](guides/overview-map-smoke-test.md#2-phase-2-public-map-api-736-tier3),
+     [production installation § 4.3](guides/production-installation.md#43-api-configuration-file--etcknkapienv).
+
+- **Overview map: the game server reports town, district and structure outlines** ([PandiO/knk-workspace#735](https://github.com/PandiO/knk-workspace/issues/735),
+  link L1 of the overview map chain, [#732](https://github.com/PandiO/knk-workspace/issues/732)). knk-plugin,
+  knk-web-api and knk-workspace branches `claude/overview-map-outlines` (PRs into `next`). Behind the new plugin key
+  `map.reporting.enabled` (off by default). Nothing changes for players yet: the outlines are what the coming web map
+  draws.
+  1. With reporting on, the plugin sends the outline (2D points, min and max Y) of every Town, District, Structure and
+     Gate region to the API over the game hub (`ReportRegionOutlines`): after every managed-region repair (startup,
+     `/knk regions repair`), after a world task's region is renamed or redefined (the old name is removed), and again
+     on every hub (re)connect. Large reports are split under the hub's message limit.
+  2. The API keeps them in the new table `map_region_outlines`, one row per world and region id, linked to the domain
+     that names the region (main region or sub-region), so the map keeps its outlines while the game server is down.
+     Only a plugin-key game hub connection can write them.
+  3. Admin steps: apply the migration `AddMapRegionOutlines` (additive, one new table). To turn reporting on, paste into
+     the plugin's `config.yml` (it also needs `realtime.enabled: true`):
+     ```yaml
+     map:
+       reporting:
+         enabled: true
+     ```
+     Steps: [overview map smoke test § 1](guides/overview-map-smoke-test.md#1-phase-1-region-outlines-735-tier3),
+     [plugin configuration § 4.29](guides/admin/plugin-configuration.md#429-map).
+
+- **NPC navigation: held NPCs stay held through `/knk cache refresh`** ([PandiO/knk-workspace#724](https://github.com/PandiO/knk-workspace/issues/724),
+  link R1 of the NPC navigation follow-ups chain). knk-plugin and knk-workspace branches `claude/npc-movement-r1` (PRs
+  into `next`). Behind `npc.navigation.enabled` (off by default); no new `config.yml` key, no migration.
+  1. A cache refresh cleared the region → domain map and sent its first availability event at once, about half a
+     second before the re-warm's answers were in. In that gap every region looked open to the NPC checks, so NPCs held
+     at a district edge (followers by their lane check, a single NPC by its blocking element) walked on and crossed,
+     for entry and exit alike. The re-warm's event then reset the trespass guard, so `trespasses` stayed 0.
+  2. A clear of the map (the cache refresh, and a realtime domain change) now keeps the last known answers for the NPC
+     checks until the re-warm is done. While it runs, a region the NPCs knew keeps its answer from before the clear.
+     When the answers are in, the trespass guards of every NPC and follower take a last look under the old answers, the
+     hold ends and the availability event follows, so the NPCs switch to the new answers at that event. A crossing in
+     the gap (an NPC carried over the edge) is counted. Players' lookups are unchanged. A hold that no re-warm ends
+     (NPC navigation off, no roads) ends by itself after a minute.
+  3. Scenario `npc-group-cache-refresh-held` (followers held inside a district they may not leave, then a cache refresh with a slow API; it fails on `next` before the fix)
+     runs in CI's `paper-boot` job (62 scenarios). Steps: [NPC movement smoke test, link R1](guides/npc-movement-smoke-test.md#link-r1-a-cache-refresh-while-npcs-are-held-at-an-edge),
+     [plan Phase 4 known limit 4](specs/npc-platform/IMPLEMENTATION_PLAN.md#phase-4--groups-plugin).
+
+- **NPC navigation: exit rules held while NPCs walk, not only where a route is planned** ([PandiO/knk-workspace#701](https://github.com/PandiO/knk-workspace/issues/701),
+  link E1 of the NPC navigation follow-ups chain). knk-plugin and knk-workspace branches `claude/npc-movement-e1` (PRs
+  into `next`). Behind `npc.navigation.enabled` (off by default); no new `config.yml` key, no migration.
+  1. The NPC walking checks now judge a step by the exit rule of every region the NPC stands in, as well as by the entry
+     rule. That covers the recheck of the way ahead, the trespass guard, the walk to a blocking element, and a group's
+     follower lanes, waypoints and guard. It applies to every domain type. Before, these checks were entry only, and an
+     exit denied while an NPC walked out on an earlier route did not stop it.
+  2. An NPC that would leave a region it may not leave stops at the edge, inside, and waits; it walks on when the rule
+     allows it again, through the same realtime and `/knk cache refresh` paths as entry. In a group, the followers
+     still inside stop at the edge and the leader and the followers already out walk on, as for entry.
+  3. The trespass guard counts a denied exit: `TRESPASS <npc> left <region> at x y z (…)`, in `rules: trespasses`.
+  4. The exit rule is the road router's own (`DomainAvailability` and the shared `DomainAccessEvaluator`). The NPC's
+     access profile applies: `bypass-domain-rules`, an allow list naming the region, and a domain whose rule does not
+     apply to roads all let it leave.
+  5. Scenarios `npc-exit-denied-leader` (an NPC alone: exit denied through realtime, allowed again through a cache
+     refresh) and `npc-group-exit-denied` (a group half inside, both ways through realtime) run in CI's `paper-boot`
+     job (61 scenarios). Steps: [NPC movement smoke test, link E1](guides/npc-movement-smoke-test.md#link-e1-exit-denied-mid-trip),
+     [plan Phase 4 developer test step 15](specs/npc-platform/IMPLEMENTATION_PLAN.md#phase-4--groups-plugin).
+
+- **NPC navigation: off-road starts and ends with the walk navigator's search** ([PandiO/knk-workspace#700](https://github.com/PandiO/knk-workspace/issues/700),
+  link C1 of the NPC navigation follow-ups chain). knk-plugin and knk-workspace branches `claude/npc-movement-c1` (PRs
+  into `next`). Behind `npc.navigation.enabled` (off by default); no new `config.yml` key, no migration.
+  1. An NPC's off-road start (to the road), off-road goal (from the road's end) and a trip with no road are planned
+     with the walk search players' trails use (the capture of loaded chunks, the NPC's gate, door and region access,
+     `navigation.walk`'s caps) and walked as part of the route line: stretches, the 3D handover, the join from the
+     feet, the walking surface. Before, they were straight lines cut into 16-block hops.
+  2. The road is joined where the walk reaches it (any road point within 32 blocks along the road); the walk to the goal
+     is tried from further back along the road when the road's end reaches nothing. Hops stay the fallback.
+  3. A group's followers take the leader's walked path, as on roads; a walk's cells are not shaped or moved off walls
+     (a spiral stair stays a spiral).
+  4. An open door or fence gate no longer counts as a wall for NPC lines; the walk planner checks a found path against
+     the NPC's body and searches again round cells it cannot stand in (an open trapdoor's panel).
+  5. `/knk npc nav snapshot` takes the route's from and to into its box, so an off-road goal (a tower top) is inside.
+  6. Scenario replays read Minecraft 26.x block states written as `{id, properties}` (stairs not facing north, top
+     slabs, open doors); they were missing from every replay before.
+  7. The developer's failed tower route of 2026-11-17 (`northern-wearway-upper-keep-tower`, stuck at 1405 85 −510) is
+     replayed: a leader alone and a group of 20 reach the goal up the spiral staircase (`npc-replay-keep-tower`), and
+     three scenes (a detour round a courtyard, a two-turn spiral, a ravine) run in CI's `paper-boot` job (59 scenarios with the off-road chain's L3, L4 and L10).
+     Steps: [NPC movement smoke test, link C1](guides/npc-movement-smoke-test.md#link-c1-off-road-ends-with-the-walk-search-retest-of-2026-11-17-step-5).
+
+- **Off-road navigation: plaza lines, step 1 (preview for staff)** ([PandiO/knk-workspace#712](https://github.com/PandiO/knk-workspace/issues/712),
+  link L10 of the off-road navigation chain, phase 7 step 1). knk-plugin and knk-workspace branches
+  `claude/offroad-plaza-lines` (PRs into `next`). The trail does not use plaza lines yet: the developer looks at them
+  on Cinix and Brink first (O16). New flag `navigation.plaza-lines`, off by default and read by nothing yet; routes,
+  trails, the session and NPC movement are unchanged. No migration.
+  1. knk-core `core/navigation/shape/PlazaCurve`: where a route enters a plaza on one road and leaves on another, a
+     cubic curve from the entry to the exit pulled towards the plaza node (`plaza-pull` 0.35, O30), checked every 0.5
+     block on the plaza's clearance map, regions and floor; when it does not fit, `PlazaLine`'s A* guided by the curve
+     (`plaza-guide-cost` 2; a new additive `PlazaLine.search` overload, the plain search unchanged); plazas only, by the
+     NPC rule (O19). `core/navigation/PlazaLinePreviews`: the passes through a named node (every pair of its roads) or
+     along a route, and the chat line.
+  2. `/knk road plazaline [<plaza or junction>]` (`knk.admin.road`): draws the lines of your route's junctions, or of
+     every pair of roads at a named node, for 10 seconds (green curve, orange A* line, red rejected curve, white the
+     road graph's bend, light blue the plaza's edge) and writes each one's length against the chord and the right
+     angle, its least clearance and why a curve did not fit.
+  3. Three paper-boot scenarios on real plazas from the developer's snapshots: `plaza-line-brink`,
+     `plaza-line-cinix-south-square`, `plaza-line-cinix-northern-gate-square` (two new trimmed snapshots of 175 KB
+     each).
+  4. Admin steps (optional, for the preview's pull): under `navigation:` add `plaza-lines: false`, `plaza-pull: 0.35`,
+     `plaza-guide-cost: 2`; restart.
+
+- **Off-road navigation: walk-trail particles stay put, and the guidance winds back** ([PandiO/knk-workspace#711](https://github.com/PandiO/knk-workspace/issues/711),
+  link L4 of the off-road navigation chain, phase 6.2). knk-plugin and knk-workspace branches
+  `claude/offroad-trail-cursor` (PRs into `next`). Behind `navigation.guidance-v2`, off by default: with it off the
+  session, the trail, the re-routes and the walk legs are exactly as before (transcript tests). No migration. NPC
+  navigation unchanged.
+  1. Walk-trail particles sit on fixed anchors every `trail-leg-spacing` (3.0) blocks from the walk path's start, drawn
+     from the leg's cursor, which follows the player along the path both ways and jumps more than 3 blocks only when
+     the player really is nearer the other place (`TrailRenderer.anchoredWindow`, `PolylineCursor`).
+  2. The route session keeps a monotone progress (ETA, percentage, maneuvers already announced) and a cursor that
+     follows the player back along the road (continuity within `cursor-jump`, 12, for loops and switchbacks); the
+     trail, the HUD distance and the maneuver ahead come from the cursor (`NavigationSession`, `CursorParameters`).
+  3. A player off the road walks to the join point with the least remaining cost (`JoinPoint`); a walk leg stays while
+     the player is within `walk.recompute-distance` of its path, walking back included, and is recomputed from the
+     player beyond it (at most once per `reroute-min-interval`). `DirectLeg.best` and the start leg's "heading away"
+     (N16) are not used under the flag. KNG-124, N17, rev. 9 and the partial path rule are kept.
+  4. Admin steps (only to try it on a test server): under `navigation:` add `trail-leg-spacing: 3.0` and
+     `cursor-jump: 12` beside `guidance-v2`; restart.
+  5. Tests: knk-core +21 (the cursor on lines, corners, loops and switchbacks, the join point, the session's progress
+     and cursor, today's session as a transcript), knk-paper +13 (anchors, the service with the flag on and off, the
+     keys), new paper-boot scenario `walk-trail-cursor-stairhouse` (the cursor and the anchors on the stair house's
+     shaped trail).
+
+- **Off-road navigation: walk trails keep off the walls and round their corners** ([PandiO/knk-workspace#710](https://github.com/PandiO/knk-workspace/issues/710),
+  link L3 of the off-road navigation chain, phase 6.1). knk-plugin and knk-workspace branches
+  `claude/offroad-trail-corners` (PRs into `next`). Behind `navigation.guidance-v2`, off by default: with it off the
+  walk paths, the search and the trail are exactly as before. No migration.
+  1. With the flag on, the walk search uses a clearance cost (`walk.clearance-cost` 5 per block of clearance a step
+     lacks to `walk.wall-clearance` 0.8) in place of `walk.wall-cost`; `clearance-cost: 0` keeps `wall-cost`.
+  2. A found or partial walk path is shaped on the walk thread by the shared `CorridorShaper` over the captured
+     terrain (`WalkTerrainNavWorld`, `WalkPathShaper` in `knk-core` `core/roads/walk/`), and its corners are drawn as
+     curves checked against the clearance map (`walk.curve`). Leg colour and 3.0 spacing unchanged; the road trail is
+     unchanged. `/knk road status` shows the shaped paths and their mean time.
+  3. Admin steps (only to try it on a test server): under `navigation:` add `guidance-v2: false` (set `true` to test)
+     and under `navigation.walk:` add `clearance-cost: 5`, `wall-clearance: 0.8`, `curve: true`; restart.
+  4. Tests: knk-core +17 (clearance cost, the flag-off identity over five scenes, a 3-wide spiral stair, the NPC and
+     player shapers on one scene), knk-paper +7, new paper-boot scenario `walk-trail-stairhouse` on the developer's
+     stair house (a local run: 0 % of the trail under 0.7 blocks from a wall, against 44.7 % of today's path).
+
+- **Off-road navigation: the shaping code is shared** ([PandiO/knk-workspace#704](https://github.com/PandiO/knk-workspace/issues/704),
+  link L2 of the off-road navigation chain, phase 1). knk-plugin and knk-workspace branches
+  `claude/offroad-shape-package` (PRs into `next`). Players and NPCs see no change; no `config.yml` key, no migration.
+  1. The NPC path shaping (`Corridor`, `CorridorShaper`, `FreeWidth`, `PlazaLine`) and the world primitives it reads
+     (`NavWorld`, `NavPoint`, `NavGeometry`, and `PlazaCrossing`, formerly `RoadPlanner.PlazaCrossing`) moved to
+     `knk-core` `core/navigation/shape/`, so the players' walk trail can use them in phase 6.1 (design O11).
+  2. `HopPlanner`'s floor helpers live in `NavGeometry` (`HopPlanner` delegates); `LocalLegSearch` stays NPC-side.
+  3. Tests: the same counts as before apart from one new guard test (`core/navigation/shape` uses nothing from
+     `core/npc`); the NPC scenarios run in CI's `paper-boot` job.
+
+- **Off-road navigation: walk-search measurements in `/knk road status`** ([PandiO/knk-workspace#703](https://github.com/PandiO/knk-workspace/issues/703),
+  link L1 of the off-road navigation chain, phase 0). knk-plugin and knk-workspace branches `claude/offroad-measurements`
+  (PRs into `next`). Players see no change: routes and trails are the same; staff get numbers to set the off-road
+  budgets with.
+  1. Every walk search reports its expansions, cells touched, search time and the cap that ended it
+     (`max-expansions`, `max-length`), and whether steps were cut at the length cap; every chunk capture its chunks,
+     cache hits, main-thread time and wait.
+  2. `/knk road status` shows them under `walk paths:`: max, p95 and p50 over the last 512 searches and the five
+     newest requests. `/knk road status reset` clears them, so one scene can be read at a time.
+  3. The measurement steps are in the [off-road smoke test § 1](guides/navigation-offroad-smoke-test.md#1-phase-0-measurements-703-tier1);
+     the [report skeleton](reports/2026-11-17-offroad-navigation-measurements.md) waits for the developer's live run.
+  4. Admin steps: new key `navigation.walk.max-chunks-per-request` (default 64, the limit that was built in). Paste
+     under `navigation.walk:`, then restart:
+
+     ```yaml
+         max-chunks-per-request: 64
+     ```
+
+- **NPC navigation: a group's path stays on the walk on stacked flights** ([PandiO/knk-workspace#699](https://github.com/PandiO/knk-workspace/issues/699),
+  link B5 of the NPC navigation follow-ups chain). knk-plugin and knk-workspace branches `claude/npc-movement-b5` (PRs
+  into `next`). Only with `npc.navigation.enabled` on and `group-formation-keeping: elastic` or `plaza-lines` on (all
+  off by default); no new `config.yml` key, no migration.
+  1. A group that keeps its formation elastic, or takes plaza lines, walks a path shaped in its corridor. On the stair
+     house's stacked flights that shaped line cut the hairpin across the stairwell, so the group's path skipped a
+     flight's top and its landing (or ran on the hall floor beside a flight). Followers there were judged against a
+     point a flight away: they left their lanes, walked their own legs back, and in the smoke test of 2026-11-17 walked
+     up and down flight 4 for minutes while their leader waited on the passage right above them.
+  2. A shaped point is now used only where it has a floor within a block of the route line's own point and a straight
+     walk leads to it; otherwise the group path takes the route line's own point. Shaping on one level is unchanged.
+  3. Tests: `npc-replay-quarry-to-keep` replays the developer's snapshot of 2026-11-17 and sends the group on to the
+     route's end in the keep with the developer's settings; it fails when a follower leaves its lane on the flights
+     and landings, or loops (three own legs back from one place). Followers off their lane on the stair house: 21
+     before (every follower, at flight 5's top), 0 now; the leader arrives in 105.5 s instead of 123.8 s.
+
+- **NPC navigation: crowd turns judged in 3D** ([PandiO/knk-workspace#672](https://github.com/PandiO/knk-workspace/issues/672),
+  link B3 of the NPC navigation follow-ups chain). knk-plugin and knk-workspace branches `claude/npc-movement-b3` (PRs
+  into `next`). Only with `npc.navigation.enabled` and `crowd-awareness` on (both off by default); no new `config.yml`
+  key, no migration.
+  1. A narrow place taken in turns now has a floor: flat, or a flight's slope. An NPC whose feet are 1.5 blocks or more
+     above or below it stands on another level.
+  2. An NPC holding a turn that climbed on to the flight above, or fell under the place, has left it: its turn ends,
+     unless one of its followers is still in the place.
+  3. Nobody waits for an NPC on another level. Before, on the stair house's stacked flights, singles going the same
+     way as a group waited behind its leader a flight up (seen from above it looked as if it stood at the place's
+     entry) until the 30 s guard let them go, up to 18 at a time.
+  4. The 30 s guard of a queue counts from the last time anyone entered the narrow place, not from the NPC's arrival:
+     a long single file that keeps moving (18 NPCs up a one-wide stair, about 2 s each) is no longer let go at its
+     end. A place nobody enters still lets its queue go after 30 s.
+  5. Tests: `npc-stairhouse-climb` now fails when the 30 s guard lets anyone go, and reports why (where the NPC and
+     every turn holder stood in 3D). The climb's queue let go by the guard: 0 to 6 per run before, 0 now (longest
+     queue 18, 2.1 s per NPC ahead); falls, jumps toward a waypoint, stuck spells and lost followers stay 0.
+
+- **NPC navigation: waypoints and group slots at the real stair heights; jumps told by upward speed** ([PandiO/knk-workspace#673](https://github.com/PandiO/knk-workspace/issues/673),
+  link B4 of the NPC navigation follow-ups chain). knk-plugin and knk-workspace branches `claude/npc-movement-b4` (PRs
+  into `next`). Only with `npc.navigation.enabled` on; no new `config.yml` key, no migration.
+  1. Waypoints go to the engine at the real walking surface: a bottom slab and an upright stair's step at half a block,
+     not at the whole-block height navigation plans with. Where two waypoints rise more than a step, the step between
+     them goes in, so the NPC walks a half-block stair up step by step instead of jumping.
+  2. Group slots too: a follower's slot on a half-block stair lies on the step's surface.
+  3. Once the leader has arrived, a follower standing at its slot's point (within a block across, less than a block
+     up or down) counts as settled, also where the group path passes the same place twice. Before, it was sent round
+     the loop, stalled next to its slot, and its recovery ended `no point ahead on its floor` and lost.
+  4. A half-block step up is no jump for the low-headroom rule, so recovery finds its point ahead on a half-block stair.
+  5. `/knk npc nav trace` marks `JUMP` by a jump's upward speed, not by any rise over 0.2 blocks: a step up a slab or
+     a stair is no longer a jump.
+  6. Tests: `npc-replay-quarry-to-keep` now fails on a lost follower: the group of 20 with the stored settings arrives
+     with 0 lost (B2: 3) and 4 to 6 stuck spells (B2: 26). `npc-stairhouse-climb` fails on a jump toward a waypoint on the
+     flights and their entries: 0. Both report the engine's own hops off a stair's step separately (Minecraft's move
+     control hops whenever the block at the feet reaches above them; no waypoint height removes those).
+
+- **NPC navigation: stretch handover in 3D, appended, bridged from the feet** ([PandiO/knk-workspace#671](https://github.com/PandiO/knk-workspace/issues/671),
+  link B2 of the NPC navigation follow-ups chain). knk-plugin and knk-workspace branches `claude/npc-movement-b2` (PRs
+  into `next`). The main cause of the failed smoke test of 2026-11-16 (chain report decision 34). Only with
+  `npc.navigation.enabled` on; no new `config.yml` key, no migration.
+  1. The next stretch is handed out by progress along the waypoints in 3D, not by horizontal distance to the stretch
+     end, so a stretch end on the flight above no longer counts as near.
+  2. The new stretch is appended to the waypoints not yet walked (those the NPC is already past are dropped), and the
+     join is bridged from the NPC's feet.
+  3. A step of the line the bridge cannot make is walked as a local leg, never as a straight walk across air.
+  4. A group leader that falls below the group path no longer takes the path with it: followers don't walk off the same
+     edge.
+  5. `npc-stairhouse-climb` and `npc-replay-quarry-to-keep` now fail on falls, handovers onto another level and turns
+     dropped by the crowd's guard after a fall. On the climb: falls 42 → 0, handovers onto another level 446 → 0,
+     stuck spells 117 → 2. Known limit: followers on the stair house's half-block flight still get lost in the replay
+     (a separate cause, proposed for B4, #673).
+
+- **NPC navigation tests: the whole stair house and snapshot replay** ([PandiO/knk-workspace#670](https://github.com/PandiO/knk-workspace/issues/670),
+  link B1b). knk-plugin and knk-workspace branches `claude/npc-movement-b1-scene` (PRs into `next`). Tests only, nothing
+  changes on a server.
+  1. The stair-house scenarios get the developer's whole schematic, both flights and the upper landings, in a bigger
+     scenario box (`SizedScene`).
+  2. `npc-stairhouse-climb` (report mode) walks a group of 20 with 20 singles on the real road line of the developer's
+     traces from the street east of the house up all five flights with short stretches. On `next` it shows falls
+     under the landings, stretches handed out on a flight above the NPC (decision 34's main cause) and a turn dropped
+     by the crowd's 30 s guard.
+  3. `SnapshotReplay` replays a zip of `/knk npc nav snapshot` in a scenario: blocks from its region files (Minecraft
+     26.x included), its domains as WorldGuard regions with fake access data, the stored line and settings.
+     `npc-replay-quarry-to-keep` replays the developer's snapshot of 2026-11-16, trimmed to the stair house. CI's `paper-boot` now expects 50 scenarios.
+
+- **NPC navigation: `/knk npc nav snapshot <route>`** ([PandiO/knk-workspace#670](https://github.com/PandiO/knk-workspace/issues/670),
+  link B1a of the NPC navigation follow-ups chain). knk-plugin branch `claude/npc-movement-b1` (PR into `next`). An admin
+  command (`knk.admin.npc`) that writes one zip to `plugins/KnightsAndKings/npc-snapshots/` with a saved route's road line
+  and stretches, the road graph, domains (whole regions, parents, priorities, entry and exit flags, gate state) and
+  settings around it, and the region files its box touches, so the route can be replayed in CI (the replay follows in
+  B1b). Refused while `npc.navigation.enabled` is off. Deploy: no `config.yml` key, no migration.
+
+- **NPC navigation: the NPC rule checks see WorldGuard regions on a server** ([PandiO/knk-workspace#668](https://github.com/PandiO/knk-workspace/issues/668),
+  link L9 of the NPC navigation follow-ups chain; #506, #593). knk-plugin and knk-workspace branches
+  `claude/npc-followups-l9` (PRs into `next`). Nothing changes with `npc.navigation.enabled: false`.
+  1. **What was wrong.** The NPC module starts while the plugin registers its commands, before the plugin builds its
+     WorldGuard region tracker, so the region query it took at start was empty on every server. The NPC rule checks
+     (the recheck of an NPC's way ahead, its trespass guard, and a group's follower lanes and guard) then saw no region
+     anywhere: a district whose entry was removed mid-walk (realtime or `/knk cache refresh`) stopped nobody until the
+     router's next plan, and `rules: trespasses` stayed 0 because no entry was ever seen. The per-region
+     `npc.navigation` override scopes did not apply to NPCs either. The tests had passed because the scenarios built a
+     region query of their own.
+  2. **What changed.** The module asks for the region query when route following is built (on the first
+     `/knk npc nav`) and logs `[NPC] no WorldGuard region query …` when there is none. The NPC scenarios with domain
+     rules now read regions through the live module, as the server's checks do. L6's realtime path is unchanged; it
+     was correct but had nothing to act on.
+  3. **The op's entry bypass is not involved.** A group started with `/knk npc nav group` is judged as NPCs with its
+     access profile (the command's profile argument, else `default`, whose `bypass-domain-rules` is `false`), never
+     as the player who ran the command.
+  4. **Deploy.** No new `config.yml` key, no migration. Check the startup line `0.1.0+<sha>`; per-region
+     `npc.navigation` overrides now take effect for NPCs.
+
+- **CI: the Paper boot test's log check no longer fails at random on the player scenarios** ([PandiO/knk-workspace#586](https://github.com/PandiO/knk-workspace/issues/586)).
+  knk-plugin and knk-workspace branches `claude/paper-boot-flake-586` (PRs into `next`; the plugin fix also into `main`).
+  1. **What was wrong.** Now and then a `paper-boot` run failed its log check on `Failed to sync user data for
+     Scn…: RuntimeException: Failed to check duplicate`, though every scenario passed. The plugin printed that error's
+     stack trace with `printStackTrace()`, one line at a time, and another API-client thread could log a plain warning
+     in between; the check then gave the trace (with its "API unreachable" cause) to that warning.
+  2. **What changed.** The join's account sync (and its welcome message fallback) log the exception with the log entry;
+     the check prefers the entry that quotes the trace's exception. Nothing is excused that wasn't before. The teleport
+     audit's retry that hits a stopped plugin is one `INFO` line (on `next` since 2026-11-15, now with a test of that
+     exact race) ([CI § 7](guides/developer/ci.md#7-plugin-the-paper-boot-test)).
+  3. **Deploy.** Nothing to deploy; server logs show the sync error's cause as part of the same entry.
+
+- **CI: the API's MySQL tests run on every push** ([PandiO/knk-workspace#419](https://github.com/PandiO/knk-workspace/issues/419)).
+  knk-web-api `main` and `next` ([knk-web-api#43](https://github.com/PandiO/knk-web-api/pull/43)); knk-workspace branch
+  `claude/mysql-tests-ci-419` (PR into `next`).
+  1. **What changed.** The new `mysql-tests` job of the API's "Build and test" workflow runs the 100 `requires-mysql`
+     tests (row locks, transactions, unique indexes, ledger triggers) against a throwaway MySQL 8.0 service container,
+     in parallel with `build-and-test`, and fails if any of them was skipped. 99 run and pass; one is a known failure
+     ([#285](https://github.com/PandiO/knk-workspace/issues/285)). The job takes 7 to 8 minutes
+     ([CI § 1.1.1](guides/developer/ci.md#11-tests-that-ci-does-not-run)).
+  2. **Unchanged.** `build-and-test` keeps its name and duration, and local runs without `KNK_TEST_MYSQL` still skip
+     these tests. `mysql-tests` is not a required check yet (recommended once it has been green a few times).
+  3. **Deploy.** Nothing to deploy; workflows and one test mark only.
+
+- **NPC navigation: push resistance with collision on; `collidable` stays off by default** ([PandiO/knk-workspace#627](https://github.com/PandiO/knk-workspace/issues/627),
+  link M7 of the NPC navigation follow-ups chain, implementation plan Phase 4c.4 item 7, research report 2026-11-15
+  § 6). knk-plugin and knk-workspace branches `claude/npc-movement-m7` (PRs into `next`, in review). Nothing changes with
+  `npc.navigation.collidable: false` (still the default) or with `npc.navigation.enabled: false`.
+  1. **What it does with `collidable: true`.** NPCs push and block each other; players never move an NPC (each NPC is
+     exempt from every player's collision through Paper's per-entity collidable exemptions; no scoreboard team is
+     touched). A push the NPC's own walk doesn't explain (a body, an attack's knockback, water, a piston) is detected,
+     counted and logged with who did it, and the NPC walks back to its line or post: straight back, else along its own
+     footsteps, else a local leg, and last, after 30 s, a teleport home only where no player sees it. Another NPC's
+     jostle on its way is left to the crowd unless it goes towards a drop; queue spots never stand next to a drop of 3
+     blocks or more. With `players-push-npcs: true` players bump NPCs (the realistic mode for later): a player who pushes
+     an NPC 3 times in 10 s, or once towards a drop, stops colliding with it for 60 s. An attack's knockback stays and the
+     NPC walks back. `/knk npc nav stats` shows `pushes: N (players N, attacks N), returned N, exempted N (now N),
+     teleported N`; the metrics count `knk_npc_nav_events_total{event="pushed|push_returned|push_exempt|push_teleport"}`.
+  2. **Checked** (scenarios on Paper 26.3 with Citizens and a scripted player): a player walking through a standing NPC
+     carries it 2.85–3.80 blocks with collision on and no policy, 0.00 with K&K's; a guard on a wall walk pushed towards a
+     7-block drop doesn't move, and with `players-push-npcs` it is pushed 0.68, the player is exempted at the edge, it
+     never falls and walks back; the five Phase 4c scenes pass with collision on as with it off; 12 singles one way
+     through a one-block door all arrive with turns kept.
+  3. **Why the default stays off.** With bodies on everywhere, NPCs walking a 1-wide flight next to a drop can shove
+     each other off it (the #491 stair corner scene: one fell), which push resistance can't undo; bodies of a squeezed
+     row still overlap (closest 0.19). The plan (4c.4 item 7.4.10) lists what is missing before the default turns on.
+  4. **Deploy.** Add the keys to `npc.navigation` in `config.yml` (configuration reference § 4.27) and restart:
+
+     ```yaml
+     npc:
+       navigation:
+         collidable: false
+         players-push-npcs: false
+         push-return: true
+         push-exempt-after: 3
+         push-exempt-window-ticks: 200
+         push-exempt-ticks: 1200
+         push-teleport-ticks: 600
+     ```
+
+- **CI: GitHub Actions on Node.js 24, Release workflow fixes** ([PandiO/knk-workspace#426](https://github.com/PandiO/knk-workspace/issues/426)).
+  knk-web-api, knk-web-app and knk-plugin `main` and `next`; knk-workspace branch `claude/actions-node24-426` (PR into
+  `next`).
+  1. **Actions.** Every workflow uses the Node.js 24 majors: `checkout` v7, `setup-dotnet` v6, `setup-node` v7,
+     `setup-java` v6, `upload-artifact` v7, `cache` v6 and `gradle/actions/setup-gradle` v6 (with the open-source
+     `cache-provider: basic`). The Node.js 20 warning on every run is gone; job and artifact names are unchanged
+     ([CI § 6](guides/developer/ci.md#6-action-versions-nodejs-24)).
+  2. **Release workflow.** One concurrency group per tag, so a third dispatch no longer replaces a pending second one.
+     A tag that already exists at exactly the requested commit without a release gets its release from a new run
+     instead of a failure; a tag at another commit, or one with a release, still fails the run.
+  3. **Deploy.** Nothing to deploy; workflows only.
+
+- **NPC navigation: crowd awareness, off by default** ([PandiO/knk-workspace#626](https://github.com/PandiO/knk-workspace/issues/626),
+  link M4 of the NPC navigation follow-ups chain, implementation plan Phase 4c.4 item 4, decision 3; BEHAVIOR_MODEL
+  NAV-26). knk-plugin and knk-workspace branches `claude/npc-movement-m4` (PRs into `next`, in review). Nothing changes
+  with `crowd-awareness: false` (the default) or with `npc.navigation.enabled: false`.
+  1. **What it does.** NPCs know who stands where near them: every 5 ticks the navigation service hashes the feet cell
+     of every navigating NPC. A narrow place on an NPC's way (a door, an arch, a passage under 2 blocks wide) is taken
+     in turns, one direction at a time: an NPC already in it goes first, then first come (decided by the developer
+     2026-11-15). The others wait in a queue a block apart before it, a block to the side of the line, so the way out
+     stays free. Two NPCs that meet head-on in a narrow place: the second to enter steps back out and waits (a yield).
+     A group's leader keeps its turn until its followers are through. Waiting in a queue, yielding or standing behind
+     another NPC (a single or a group's follower) is counted as a wait, not as a stuck spell, and recovery back-offs and
+     side-steps never end on a cell where another NPC stands; K&K's local legs (`local-legs-clearance`) go round such a
+     cell. `/knk npc nav stats` shows `crowd: waits N, yields N, longest queue N`; the metrics count
+     `knk_npc_nav_events_total{event="crowd_wait"}` and `{event="crowd_yield"}`. Authority values and closed
+     formations first are later updates (plan 4c.7).
+  2. **Checked.** In `npc-doorway-crowd` (6 singles from each side of a one-block doorway at once) today's code gets
+     11 of 12 through with 2 stuck spells and an NPC still for 11.7 s by the door (collision off); with the clearance-aware
+     legs alone all 12 walk through each other (5 in the doorway at once) and, with collision on, open 6 stuck spells.
+     With crowd awareness all 12 arrive both ways with 0 stuck spells, they take the doorway one direction at a time
+     (at most 2 in its cell at once, the same way), the 7th in the queue waits 7.8–8.3 s, 1.5 s per NPC that went
+     first, and nobody stands still outside a queue longer than 0.4 s. Turn-taking costs time with collision off: trips
+     take 6.3 s on average instead of 3.7 s. The group of 20 through the stair-house entrance is unchanged (no narrow
+     place on its line; 0 waits, 0 stuck spells, entrance still 0.4 s). Both scenarios now assert this, with collision
+     off and on. The hash and the turns cost 0.0015–0.0063 ms per NPC per tick.
+  3. **Deploy.** Add the key to `npc.navigation` in `config.yml` (configuration reference § 4.27) and restart:
+
+     ```yaml
+     npc:
+       navigation:
+         crowd-awareness: false
+     ```
+
+- **NPC navigation: plaza lines, off by default** ([PandiO/knk-workspace#625](https://github.com/PandiO/knk-workspace/issues/625),
+  link M5 of the NPC navigation follow-ups chain, implementation plan Phase 4c.4 item 5, decision 6; BEHAVIOR_MODEL
+  NAV-27). knk-plugin and knk-workspace branches `claude/npc-movement-m5` (PRs into `next`, in review). Nothing
+  changes with `plaza-lines: false` (the default) or with `npc.navigation.enabled: false`.
+  1. **What it does.** The road graph collapses a plaza into one junction, so a route across a plaza runs to its
+     middle and out again. With `plaza-lines: true` an NPC crosses a plaza on the straight line from where its route
+     enters to where it leaves: the corridor widens to the plaza (a designed plaza's radius, or the open floor measured
+     round the junction when it is wider than `corridor-half-width`, at most `plaza-corridor-blocks`), and the line
+     goes round wells, stalls and trees with `wall-clearance` and never into a region the route does not pass.
+     Groups take the same line, kept their formation's half width plus `wall-clearance` from obstacles, and keep
+     their width on the open plaza. It works with or without `corridor-steering`. The players' trail and the road
+     graph are unchanged; through-edges in the road-graph builder are a later update (plan 4c.7).
+  2. **Checked.** In `npc-plaza-line` (a 15 × 15 plaza with a well on the chord) 3 singles walked +40 % over the
+     chord through the plaza's middle; with the key on they walk +4 % over the shortest line that keeps 0.8 from the
+     well and pass it at 0.64–0.75 blocks, never near the middle. A group of 7 in ranks of 3 takes the same line round
+     the well with its own margin, 3 abreast all the way. The scenario now asserts this, with collision off and on.
+     Known: with collision off the group there reports its arrival 20 s late (followers already in place), a bug in
+     `next` filed as [#636](https://github.com/PandiO/knk-workspace/issues/636).
+  3. **Deploy.** Add the keys to `npc.navigation` in `config.yml` (configuration reference § 4.27) and restart:
+
+     ```yaml
+     npc:
+       navigation:
+         plaza-lines: false
+         plaza-corridor-blocks: 16
+     ```
+
+- **NPC navigation: elastic formation keeping, off by default** ([PandiO/knk-workspace#624](https://github.com/PandiO/knk-workspace/issues/624),
+  link M3 of the NPC navigation follow-ups chain, implementation plan Phase 4c.4 item 3, decision 2; #522, #493).
+  knk-plugin and knk-workspace branches `claude/npc-movement-m3` (PRs into `next`, in review). Nothing changes with
+  `group-formation-keeping: levels` (the default) or with `npc.navigation.enabled: false`.
+  1. **What it does.** With `group-formation-keeping: elastic` a group fits its width to the free width across its
+     path instead of fixed widths: neighbours move closer, down to shoulder to shoulder (`group-lateral-spacing-min`
+     0.6), and the rows close up (`group-spacing-min` 1.0) before the group drops a width, so 3 abreast walk a 2-wide
+     road. It decides its width ahead (the formation's depth plus `group-lookahead-blocks`, 4), so the followers are
+     in their new lanes before the narrow place. It folds into single file only where 2 abreast squeezed don't fit
+     for longer than `group-width-hysteresis-blocks`; a shorter tight place (a post, a one-block gap) is passed with
+     the lanes merged. Stairs are walked as wide as the flight allows when each lane has its own steps; lanes may
+     cross into regions the group's access rules allow; followers take the new slots by where they stand, so nobody
+     crosses another's line. The group path follows the corridor-shaped line, and the outer lanes keep
+     `wall-clearance` from walls where the road allows.
+  2. **Stats.** The groups line of `/knk npc nav stats` has `merges N (reasons)` next to the narrowings, and the metric
+     `knk_npc_nav_group_width_reasons_total` has `change="merge"`.
+  3. **Checked.** `npc-stairhouse-group` (the developer's stair house, 20 in ranks of 3) now walks 3 abreast with no
+     fold where it folded at the first step, the leader arrives after 7.5 s instead of 27 s and no follower stands in
+     the entrance longer than 0.4 s (was 23.7 s); the group of 9 on the jagged straight has no stuck spells with
+     collision off (was 5, 3 not freed). Both scenarios, collision off and on, check plan 4c.4 item 3.3;
+     `npc-group-narrows` checks the squeeze on the corner scene.
+  4. **Deploy.** Add the keys to `npc.navigation` in `config.yml` (configuration reference § 4.27) and restart:
+
+     ```yaml
+     npc:
+       navigation:
+         group-formation-keeping: levels
+         group-lateral-spacing-min: 0.6
+         group-spacing-min: 1.0
+         group-lookahead-blocks: 4
+     ```
+
+- **NPC navigation: clearance-aware local legs, off by default** ([PandiO/knk-workspace#623](https://github.com/PandiO/knk-workspace/issues/623),
+  link M6 of the NPC navigation follow-ups chain, implementation plan Phase 4c.4 item 6, decision 8, add-on D).
+  knk-plugin and knk-workspace branches `claude/npc-movement-m6` (PRs into `next`, in review). Nothing changes with
+  `local-legs-clearance: false` (the default) or with `npc.navigation.enabled: false`.
+  1. **What it does.** A local leg is the part of a trip an NPC walks without the road line: a short trip, a group
+     follower's own leg back to its group, the recovery ladder's local leg when an NPC is stuck. Until now Citizens'
+     own path search found the way, which knows the body's size but keeps no margin from walls, and its failed
+     searches cost main-thread time before they came back with no path. With the key on, K&K searches the leg itself:
+     on the walkable corridor around it (its own floor, steps of at most a block), with K&K's access rules for the
+     NPC (gates, doors, regions it may not enter), keeping `wall-clearance` (0.8) from walls where the gap allows and
+     never less than the body's width, so one-block doors stay open. The found way is smoothed into a few straight
+     steps that keep the floor under the NPC and is walked as waypoints. When K&K finds nothing within its cell budget,
+     Citizens' search walks the leg as before.
+  2. **Stats.** `/knk npc nav stats` has a new line `local legs: k&k N, engine N, none N`: legs K&K's search found,
+     legs Citizens' search walked, and legs neither found a way for.
+  3. **Checked.** `npc-stuck-ladder` (now with the key on) checks that the ladder's local leg frees the pushed NPC as a
+     K&K leg without an engine search; `npc-stairhouse-singles` (key on, collision off and on) checks that no local
+     leg ends without a path. The other movement scenarios report the counts.
+  4. **Deploy.** Add the key to `npc.navigation` in `config.yml` (configuration reference § 4.27) and restart:
+
+     ```yaml
+     npc:
+       navigation:
+         local-legs-clearance: false
+     ```
+
+- **NPC navigation: corridor steering, off by default** ([PandiO/knk-workspace#622](https://github.com/PandiO/knk-workspace/issues/622),
+  link M2 of the NPC navigation follow-ups chain, implementation plan Phase 4c.4 item 2, decision 1 option A).
+  knk-plugin and knk-workspace branches `claude/npc-movement-m2` (PRs into `next`, in review). Nothing changes with
+  `corridor-steering: false` (the default) or with `npc.navigation.enabled: false`.
+  1. **What it does.** Before an NPC walks a stretch of its route (about 32 blocks), K&K builds the walkable corridor
+     around the road line (`corridor-half-width` blocks each side, the NPC's own floor and the road's regions), works
+     out each spot's clearance from walls, posts and drops, and moves the line: `wall-clearance` (0.8) off walls
+     where the road is wide enough, on straights too; through the middle where it is narrower, so one-block doors
+     stay open; straightened where the corridor allows; and through the middle of a doorway or entrance on its axis,
+     with a waypoint 1.5 blocks before it, one in it and one after it (walked with waypoint margin 0.35). The shaped
+     stretch is built once and shared by every NPC that gets it. Corner clearance and the waypoint chain still run on
+     it. Group members keep today's line until link M3 fits formations to the corridor.
+  2. **Checked.** With the key on, `npc-stairhouse-singles` and `npc-jagged-straight` (collision off and on) now
+     assert: all 12 singles arrive, 0 stuck spells, nobody still longer than 3 s, no fall, corridor steering's own cost
+     at most 0.03 ms per NPC per tick (the plan's budget; about 0.005 ms warm).
+  3. **Deploy.** Add the three keys to `npc.navigation` in `config.yml` (configuration reference § 4.27) and restart:
+
+     ```yaml
+     npc:
+       navigation:
+         corridor-steering: false
+         corridor-half-width: 4
+         wall-clearance: 0.8
+     ```
+
+- **NPC navigation: movement evidence and diagnostics** ([PandiO/knk-workspace#621](https://github.com/PandiO/knk-workspace/issues/621),
+  link M1 of the NPC navigation follow-ups chain, implementation plan Phase 4c.4 item 1 and 4c.5). knk-plugin and
+  knk-workspace branches `claude/npc-movement-m1` (PRs into `next`, in review). No behaviour change, no new
+  `config.yml` key; nothing changes for players or with `npc.navigation.enabled: false` (the default).
+  1. **Why a group folded.** Every fold and narrowing now names its cause in the log line ("folds into a column: the
+     path is too narrow for 2 abreast (stair) at …") and counts it: `stair` (a step on the path), `narrow` (no floor
+     where a lane would stand), `door` (a gate door on the route), `rules` (a lane in other WorldGuard regions) and
+     `edge` (a lane with floor but no room at its shoulder, a jutting wall piece). The groups line of
+     `/knk npc nav stats` shows them ("folds 3 (stair 2, door 1)") and the metrics have
+     `knk_npc_nav_group_width_reasons_total{change, reason}`. Counting only: the widths are chosen as before.
+  2. **How much room the line has.** `/knk npc nav trace` writes a `# corridor:` line after each `# waypoints:` line:
+     each waypoint's free width across the line (total, left, right in blocks, to the nearest wall, post, full-block
+     step or drop, at most 4 per side).
+  3. **Real places as test scenes.** Plugin scenarios can paste a WorldEdit schematic (`.schem`, the format
+     `//schem save` writes) from the plugin's `scenario-scenes/` resources into their box. Five new scenarios, each run
+     with `npc.navigation.collidable` off and on, measure today's movement in report mode (they log a
+     `KNK-NPC-REPORT` line and pass; later links turn the numbers into checks): `npc-stairhouse-singles`,
+     `npc-stairhouse-group`, `npc-jagged-straight`, `npc-doorway-crowd` and `npc-plaza-line`. The stair house is
+     the developer's own schematic (attached to [#603](https://github.com/PandiO/knk-workspace/issues/603)); the
+     other three scenes are synthetic by design. On it, a group of 20 folds at the first step and a follower stands
+     about 24 s in the entrance, the developer's jam. CI's
+     `paper-boot` job runs 45 scenarios now and copies the report lines into its summary.
+- **NPC navigation: movement-quality design (decided)** ([PandiO/knk-workspace#603](https://github.com/PandiO/knk-workspace/issues/603), link L8): implementation plan Phase 4c (steering options from a [research report](reports/2026-11-15-npc-movement-research.md) on how games handle obstacle avoidance and stuck recovery, formations that tighten before they fold, turns at chokepoints, natural lines on plazas; links M1–M5) and BEHAVIOR_MODEL NAV-24–NAV-28; docs only; decided by the developer 2026-11-15 (all fifteen questions).
+- **NPC navigation: entry removed in the web app with realtime on stops a group at the district's edge**
+  ([PandiO/knk-workspace#593](https://github.com/PandiO/knk-workspace/issues/593), the developer's retest of
+  [#506](https://github.com/PandiO/knk-workspace/issues/506) (Phase 4 developer test step 10); also
+  [#533](https://github.com/PandiO/knk-workspace/issues/533); link L6 of the NPC navigation follow-ups chain).
+  knk-plugin and knk-workspace branches `claude/npc-followups-l6` (PRs into `next`, in review). No change for players
+  or with `npc.navigation.enabled: false` (the default).
+  1. **Why the whole group walked in.** A district's entry changed in the web app arrives over realtime as
+     `EntityChanged` (the plugin clears its region → domain map) and `DomainAccessChanged` (the WorldGuard flag sync).
+     Neither told NPC navigation. The group kept its "may enter" answers from before the change, and the NPC checks
+     count a region missing from the map as open, so every follower outside walked in and the trespass guard counted
+     nothing. A `/knk cache refresh` afterwards came too late for the followers who were already inside.
+  2. **The fix.** Both realtime events now ask, coalesced into one run after half a second, for the roads' regions to
+     be asked about again in place (the last known rule is kept until the API answers) and then send the availability
+     event the refresh sends. Followers outside stop at the edge within about a second, without a refresh. Only while
+     NPC navigation runs.
+  3. **The gate region over the district's entry is not the cause.** The NPC entry rule judges each region on its own:
+     a step into `district_1000004` and `gate_2000131` at once is allowed only when both may be entered, so a gate
+     region that allows entry (or has no domain) never hides the district's denial. There is no region priority in
+     the entry rule. The rule is now one core class (`DomainEntryRule`) shared by the server and the tests.
+  4. **No false trespass for an NPC that crossed just before the change arrived.** An NPC's own trespass guard (the
+     leader's, and any NPC with an order of its own) now takes a fresh look when an availability event comes, as the
+     followers' guard already did. An entry made under the old rules is not judged by the new ones. Entries made after
+     the plugin knew still count.
+  5. **Tests.** New plugin scenario `npc-group-realtime-entry`: a district under a gate region on a real server, entry
+     removed and restored through the plugin's realtime classes mid-group (CI `paper-boot` now has `MIN_SCENARIOS` 35).
+     New knk-core `NavGroupDomainRulesTest` covers the realtime, `DomainAccessChanged` and refresh paths with the gate
+     region; on `next` the realtime path fails it (followers enter). There are also new resolver tests, two
+     `NpcNavigationRulesTest` cases and the knk-paper `NavigationDomainChangesTest`.
+  - **Admin steps:** none (no `config.yml` key, no new node, no API change). Developer retest: Phase 4 step 10 as
+    changed in the implementation plan (realtime on, no `/knk cache refresh`), posted on #593.
 - **NPC navigation: NPCs stay on the stair at a turn over a ledge, and falls are counted**
   ([PandiO/knk-workspace#592](https://github.com/PandiO/knk-workspace/issues/592), the developer's L3 retest of
   [#491](https://github.com/PandiO/knk-workspace/issues/491) and [#492](https://github.com/PandiO/knk-workspace/issues/492);

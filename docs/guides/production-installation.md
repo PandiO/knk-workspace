@@ -1,6 +1,6 @@
 # Knights and Kings — production installation guide (admin)
 
-**Status:** Draft · **Last updated:** 2026-11-15 (header and § 5.3: the migrations of releases v0.1 to v0.3 on knk-web-api `main` `2cc8254`, PandiO/knk-workspace#577)
+**Status:** Draft · **Last updated:** 2026-11-18 (§ 4.3: the `Map__GateCommands__*` keys, PandiO/knk-workspace#741); 2026-11-18 (§ 4.3: the `Map__LivePlayers__*` keys, PandiO/knk-workspace#738); 2026-11-18 (§ 4.3: `Map__Enabled` also shows the web map, #737; the `Map__*` and `RateLimiting__Map__*` keys, PandiO/knk-workspace#736); 2026-11-16 (§ 10.4: `actions/checkout@v7` in the release plan, #426); 2026-11-15 (header and § 5.3: the migrations of releases v0.1 to v0.3 on knk-web-api `main` `2cc8254`, PandiO/knk-workspace#577)
 **State:** Draft v1 — written for review. Not yet followed on a real production host. The database, API, seed and
 web-server steps were rehearsed in a scratch environment on 2026-10-07 (see [Appendix A](#appendix-a--what-was-verified-and-how)).
 The Paper server steps and the release and deploy workflows are untested drafts; the CI workflows (§ 10.3) run on GitHub.
@@ -414,6 +414,24 @@ Logging__LogLevel__Microsoft.AspNetCore=Warning
 # --- realtime: optional, the defaults are right for most hosts (#183, merged 2026-11-12) ---
 # Realtime__WebLiveUpdatesEnabled=true      # false: no live table/detail/online-badge updates in the web app
 # Realtime__WebPermissionCacheSeconds=30    # how long a staff member's node check for live updates is cached
+
+# --- overview map: off until the map page is deployed (#736; spec docs/specs/in-game-maps/OVERVIEW_MAP_DESIGN.md) ---
+# Map__Enabled=false                        # true: the anonymous api/Map routes answer; false: they answer 404
+#   [#737] true also shows the web app's "Map" entry and /map; serve BlueMap under /bluemap/ first
+#   (closed-alpha runbook Phase 10). With false the web app shows no map anywhere.
+# RateLimiting__Map__PermitPerMinute=120    # per client IP, every api/Map route together
+# Map__Labels__Town__MaxDistance=0          # BlueMap camera distance for labels; 0 = shown at every zoom
+# Map__Labels__District__MaxDistance=1500
+# Map__Labels__Structure__MaxDistance=600
+# Map__Labels__Arena__MaxDistance=1500
+# Map__Flash__Count=3  Map__Flash__DurationMs=400   # how a clicked town's outline flashes
+# Map__Markers__CacheSeconds=30             # how long the marker set is reused; changes show within this time
+# Map__LivePlayers__Enabled=false          # true: GET api/Map/players answers and the plugin's player reports are kept (#738)
+# Map__LivePlayers__PollIntervalMs=2000     # the page's polling interval and the snapshot tick (500..60000)
+# Map__LivePlayers__LabelCacheSeconds=60    # how long a player's name label (rank, title, colours) is reused
+# Map__GateCommands__Enabled=false         # true: POST api/GateStructures/{id}/commands runs gate commands in game (#741)
+#   (knk.gate.admin only; refused during a siege on the gate; every command audit-logged). false: 404, nothing sent.
+# Map__GateCommands__TimeoutSeconds=5       # how long the endpoint waits for the game server's answer (1..30)
 ```
 
 Notes:
@@ -1356,7 +1374,7 @@ jobs:
   images:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - id: v
         run: echo "version=${GITHUB_REF_NAME#v}" >> "$GITHUB_OUTPUT"
       - uses: docker/login-action@v3
