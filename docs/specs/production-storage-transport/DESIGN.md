@@ -2,9 +2,9 @@
 
 **Status:** **Decided 2026-11-16** (developer), after the in-game menus pass (M1-M5); no open questions (§19). Every recommendation the developer had not discussed was confirmed or changed in the 2026-11-16 design pass ([decision record §15](DECISIONS_2026-11-05.md#15-design-pass-to-decided-2026-11-16), G1-G16). Before that: draft **rev. 3**. Rev. 3 takes in the developer's voice design review of 2026-11-05, recorded in
 [DECISIONS_2026-11-05.md](DECISIONS_2026-11-05.md). Rev. 2 took in the 18 notes of 2026-10-09. §14 lists what is
-settled and what is still open. Nothing is implemented. Items are tagged **[V1]** (first version), **[Later]** (in the
+settled and what is still open. Only the prerequisite item identity (§ 8, #141) is implemented (in `next`). Items are tagged **[V1]** (first version), **[Later]** (in the
 concept, a future update) or **[Parked]** (direction agreed, details open).
-**Last updated:** 2026-11-16 (design pass: §14 confirmations, §15-§19 platform parts, risks, acceptance, tiers, open questions; #22); 2026-11-11 (open questions answered, [decision record §11](DECISIONS_2026-11-05.md#11-follow-up-decisions-2026-11-11))
+**Last updated:** 2026-11-19 (§ 8: the retag rule and what #141 built, docs #796); 2026-11-16 (design pass: §14 confirmations, §15-§19 platform parts, risks, acceptance, tiers, open questions; #22); 2026-11-11 (open questions answered, [decision record §11](DECISIONS_2026-11-05.md#11-follow-up-decisions-2026-11-11))
 **Companion documents:**
 - [PRODUCTION_KINDS.md](PRODUCTION_KINDS.md): farms, loggers, quarries, mines, fisheries, flower farms and florists,
   animal farms, hunters. Covers yield areas, surveys, levels, player harvesting and block regeneration.
@@ -608,8 +608,9 @@ game-wide rule (its own issue):
   - each vanilla `Material` that can be obtained maps to exactly one blueprint (`ItemBlueprint.VanillaMaterialMatch`,
     unique);
   - "vanilla shadow" blueprints are generated for materials nobody has curated yet;
-  - the plugin stamps `knightsandkings:knk_blueprint` on stackables;
-  - non-stackables keep `knk_item_instance`.
+  - the plugin stamps `knightsandkings:knk_blueprint` on blueprint items that differ from the plain vanilla item
+    (built in #141 for every blueprint item, not only stackables; see the retag rule below);
+  - unique items keep `knk_item_instance`.
 - Conversion hooks:
   - `EntityPickupItemEvent`;
   - `BlockDropItemEvent`;
@@ -620,6 +621,19 @@ game-wide rule (its own issue):
   - first open of an unmanaged container.
 - Resolution order when depositing: instance tag → blueprint tag → vanilla match. Items that don't resolve (named,
   custom-lored, from another plugin) are refused.
+- **Retag rule (agent decision on #141, built 2026-11-19): the plain vanilla item is canonical and never tagged.**
+  - A blueprint tag is only ever on an item that differs from the plain vanilla item of its material (a display name,
+    lore, enchantments the blueprint sets). A blueprint whose items look exactly like the vanilla item (every
+    generated shadow) builds the plain, untagged item, which resolves through the vanilla match.
+  - A blueprint tag on an item that is otherwise plain (an older build, or a blueprint edited to plain since) is
+    removed by the conversion hooks; the item then resolves through its material's vanilla match and merges with
+    plain stacks.
+  - So the tag is never the only difference between two stacks, and tagged and untagged stacks of the same item
+    can't exist side by side: stacking is exactly vanilla's.
+  - Untagged items with a custom name, lore or another plugin's data are left alone and counted as unresolved.
+  - Built: knk-web-api `next` `7d213fd6`, knk-plugin `next` `2ef256e7`; how it works in the code:
+    [item identity architecture](../../architecture/item-identity.md). Items handed out before the plugin switch was
+    on are not retagged ([#791](https://github.com/PandiO/knk-workspace/issues/791)).
 
 ## 9. Production (summary; details in PRODUCTION_KINDS.md)
 
