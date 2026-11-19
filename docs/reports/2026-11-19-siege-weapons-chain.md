@@ -21,7 +21,7 @@
 
 | Link | Issue | Status | Branch heads | PR | CI | How started |
 |---|---|---|---|---|---|---|
-| L1 Entities, API, form seeds, unlocks | #782 | Running | `claude/siege-weapons-l1`: (not pushed yet) | — | — | (see below) |
+| L1 Entities, API, form seeds, unlocks | #782 | Running | `claude/siege-weapons-l1`: (not pushed yet) | — | — | subagent of the coordinator (decision 3: two component repos), started 2026-11-19 |
 | L2 Spots through world tasks | #783 | Not started (gate: L1 merged into `next`) | — | — | — | — |
 | L3 Buying, placement, paste, restore | #784 | Not started (gates: L2; #356, #611, #614) | — | — | — | — |
 | L4 Damage, wreck, cooldown, statistics | #785 | Not started | — | — | — | — |
