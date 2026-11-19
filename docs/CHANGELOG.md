@@ -81,18 +81,23 @@ This is a human-readable record of capabilities merged into the V3 default branc
   2. Set power, kingdom, province and capital districts on each town's page (Territory panel); the seeded Town and
      District forms do not have those fields yet (seed follow-up on #690).
 
-- **Siege weapons: weapon spots are created in game from a WorldEdit selection or WorldGuard region** ([PandiO/knk-workspace#783](https://github.com/PandiO/knk-workspace/issues/783),
-  link L2 of the siege weapons chain, phase 2 of [#354](https://github.com/PandiO/knk-workspace/issues/354)). An admin
-  types `/knk weaponspot <scenario id> <team> <name>`, selects the spot with WorldEdit (`save`) or names a WorldGuard
-  region (`region <id>`), and the plugin stores its bounds and team; the facing is pre-filled from where the admin
-  looks (rounded to north, east, south or west) and can be changed (`facing <direction>`); the size class is worked out
-  as width across × length along the facing × height (the largest class that fits) and again when the facing changes;
-  a selection smaller than the small class (7 × 9 × 5) is refused; a floor that isn't solid or a volume that isn't
-  clear is a warning; `confirm` creates the spot. knk-plugin: `/knk weaponspot` and its chat task (node
-  `knk.siege.admin.manage`), rules in knk-core `core/siege/weapons/`. knk-web-api: with all six bounds the API works the
-  size class out from bounds and facing on save (also in the web app's spot form) and refuses bounds smaller than the
-  small class; no migration, no new endpoint. Branches `claude/siege-weapons-l2` in knk-plugin, knk-web-api and
-  knk-workspace (PRs into `next`). Admin steps:
+- **Siege weapons: weapon spots are created in the web form with a world task, from a WorldEdit selection or WorldGuard region** ([PandiO/knk-workspace#783](https://github.com/PandiO/knk-workspace/issues/783)
+  and [#799](https://github.com/PandiO/knk-workspace/issues/799), links L2 and L2b of the siege weapons chain, phase 2
+  of [#354](https://github.com/PandiO/knk-workspace/issues/354)). In the scenario's "Siege weapons" step an admin creates
+  a spot, picks its team and name, and clicks "Send to Minecraft" on the spot form's Min X field; in game they claim
+  the task with `/knk task <code>`, select the spot with WorldEdit (`save`) or name a WorldGuard region
+  (`region <id>`); the facing is pre-filled from where the admin looks (rounded to north, east, south or west) and can
+  be changed (`facing <direction>`); the size class is worked out as width across × length along the facing × height
+  (the largest class that fits) and again when the facing changes; a selection smaller than the small class
+  (7 × 9 × 5) is refused; a floor that isn't solid or a volume that isn't clear is a warning; `confirm` completes the
+  task, and the web form fills its six bounds, facing, size class and region and shows the warnings; the form's Submit
+  saves the spot. knk-plugin: world task handler `SiegeWeaponSpot` (only with `siege.weapons.enabled`), rules in
+  knk-core `core/siege/weapons/`; L2's in-game `/knk weaponspot` command is removed by #799, so there is one way to
+  create a spot. knk-web-app: the spot form's fan-out of the task result. knk-web-api: the `SiegeWeaponSpot` form seed
+  starts the task from Min X; with all six bounds the API works the size class out from bounds and facing on save and
+  refuses bounds smaller than the small class; no migration, no new endpoint. Branches `claude/siege-weapons-l2`
+  (in `next`) and `claude/siege-weapons-l2b` in knk-plugin, knk-web-api, knk-web-app and knk-workspace (PRs into
+  `next`). Admin steps:
   1. Add the new block to the plugin's `config.yml` under the existing `siege:` section (off by default; the plugin
      never adds keys to an existing file):
 
@@ -103,7 +108,9 @@ This is a human-readable record of capabilities merged into the V3 default branc
      ```
 
   2. To create spots, set `siege.weapons.enabled: true` on a test server and restart; the admin needs
-     `knk.siege.admin.manage`.
+     `knk.siege.admin.manage` in the web app.
+  3. Import the `SiegeWeaponSpot` form seed; a database that imported it before #799 gets the task by turning on
+     "Requires in-game action" on Min X with type `SiegeWeaponSpot` in the form designer (import never overwrites).
 
 - **Territory API: kingdoms, provinces, crown land, town power and contested zones** ([PandiO/knk-workspace#326](https://github.com/PandiO/knk-workspace/issues/326),
   link L1 of the production, storage and transport chain, [territory design](specs/territory/DESIGN.md)). Staff can now
