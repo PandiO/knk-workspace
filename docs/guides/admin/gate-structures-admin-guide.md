@@ -1,7 +1,6 @@
 # Gate Structures — Admin Guide
 
-**Status:** Living document — update in place as the code changes
-**Last updated:** 2026-10-25 (troubleshooting: an invincible gate refuses ignition) — earlier: 2026-10-23 (open-door scan in step 5: empty open-door anchor, seed v3, scan refusal, KNG-268/270/271; decorated doors and jam troubleshooting, KNG-272/KNG-273) — earlier: 2026-10-22 (`gates.damage-cracks`; rest based on a full read-only code scan of `knk-plugin` `main`@`e6e428b` and `knk-web-app` `main`@`4ff5dc6`)
+**Status:** Current · **Last updated:** 2026-11-18 (§ Commands: gate commands from the overview map, #741/#742 in `next`, docs #766)
 **Companion docs:** `docs/architecture/gate-structures-design.md` (mechanics), `docs/guides/developer/gate-structures-developer-guide.md` (implementation)
 
 Everything a server admin needs to configure, author, and operate gate structures — in-game commands, permissions, `config.yml` tuning, and how to author a new gate through the web app.
@@ -19,6 +18,8 @@ There's no dedicated "Gate" page — gates are managed through the generic admin
 7. For `REGION`-mode doors (dynamic form only) or any door needing a WorldEdit-captured footprint, use the in-game `/knk gate door capture`/`redefine` commands (below) instead of/in addition to the web form.
 
 ## Commands
+
+Staff holding `knk.gate.admin` can also open, close, toggle and repair a gate or one door from its panel on the overview map (`/map`): the same operations, refused during a siege match, audited as `GateCommandSent` (in `next`, behind `Map:GateCommands:Enabled`, off by default; [overview map admin guide § 5](overview-map-admin-guide.md#5-gate-commands-from-the-map-knkgateadmin)).
 
 All under `/knk gate ...`. A door is selected either by a bare id/name (when globally unique, or the structure has only one door) or `<gateStructure> <gateDoor>`.
 
@@ -90,3 +91,10 @@ Changing `rotationGapFill.rasterization-enabled` and the `world-sync`/`state-syn
 - **A gate won't catch fire** — an effectively-invincible gate refuses ignition entirely (no fire, smoke or burn from flame arrows, fire charges, flint and steel or Fire Aspect; since 2026-10-25), and a gate that becomes invincible mid-burn goes out on the next fire tick. Check the door's `invincible` in `/knk gate info` and the structure's `IsInvincibleOverride`.
 - **New gates in a district aren't loading** — gates load lazily on a player's first WorldGuard-region entry into that district, plus a full load at server startup. Use `/knk gate admin reload district <id>` to force a refresh without waiting for a player to trigger it.
 - **A door's blocks look wrong after a scan** — the closed-state scan (`GateBlockScan`) and open-state scan (`GateOpenedBlockScan`) are independent; re-run the specific one that's wrong, not both by default.
+
+## Changes
+
+1. 2026-11-18: § Commands: gate commands from the overview map, #741/#742 in `next`, docs #766
+2. 2026-10-25: troubleshooting: an invincible gate refuses ignition
+3. 2026-10-23: open-door scan in step 5: empty open-door anchor, seed v3, scan refusal, KNG-268/270/271; decorated doors and jam troubleshooting, KNG-272/KNG-273
+4. 2026-10-22: `gates.damage-cracks`; rest based on a full read-only code scan of `knk-plugin` `main`@`e6e428b` and `knk-web-app` `main`@`4ff5dc6`
