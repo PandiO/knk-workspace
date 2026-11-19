@@ -18,8 +18,9 @@ This is a human-readable record of capabilities merged into the V3 default branc
   `PlayerTerritoryChangeEvent`, realtime `TerritoryChanged`), `/knk territory here|status|rebuild` (node
   `knk.admin.world.territory`), managed-region kind `CROWN_LAND`, plugin scenario `territory-border-crossing`. Map
   outlines are built and can be sent over the game hub, but the API and the map do not take them yet
-  ([#802](https://github.com/PandiO/knk-workspace/issues/802)). Branch `claude/production-t-b` in knk-plugin and
-  knk-workspace (PRs into `next`). Admin steps:
+  ([#802](https://github.com/PandiO/knk-workspace/issues/802)). Merged into `next` 2026-11-19 (knk-plugin `55804b11`,
+  PandiO/knk-plugin#91; knk-workspace PR #804). Guides: [territory admin guide](guides/admin/territory-admin-guide.md),
+  [player guide](guides/users/territory-player-guide.md), [architecture](architecture/territory.md). Admin steps:
   1. Merge into the plugin `config.yml` (the switch off = no change), restart:
      ```yaml
      production:
@@ -50,7 +51,7 @@ This is a human-readable record of capabilities merged into the V3 default branc
   the production switch and the range settings, with a worked example. knk-web-app: clients and types for
   `api/Kingdoms`, `api/Provinces`, `api/CrownLands`, `api/TerritoryConflicts`, `api/Territory`; dashboard columns; the
   three page panels and the settings card; Playwright `e2e/territory.spec.ts`. Every change needs `knk.admin.world`.
-  Branches `claude/production-t-c` in knk-web-app and knk-workspace (PRs into `next`). Smoke test
+  Merged into `next` 2026-11-19 (knk-web-app `89751315`, PandiO/knk-web-app#57; knk-workspace PR #803). Smoke test
   [§ 1.4](guides/production-storage-transport-smoke-test.md#14-steps-web-app-690). No migration, no setting, no plugin
   change. Admin steps:
   1. Deploy the web app with (or after) the territory API (#326) and import its form and display seeds (see that
@@ -97,8 +98,8 @@ This is a human-readable record of capabilities merged into the V3 default branc
   `api/CrownLands`, `api/TerritoryConflicts` (with `resolve` and `reopen`), `api/Territory` (`inputs`, `report`,
   `towns/{id}`, `structures/{id}` with `loyalty` and `flag`); realtime event `TerritoryChanged`; form and display seeds
   for the four new entities. Writes need `knk.admin.world` (create and edit also `knk.admin.content`, deletes
-  `knk.admin.delete`); the report is the game server's only. Branches `claude/production-t-a` in knk-web-api and
-  knk-workspace (PRs into `next`). Admin steps:
+  `knk.admin.delete`); the report is the game server's only. Merged into `next` 2026-11-19 (knk-web-api `0d6e369a`,
+  PandiO/knk-web-api#53; knk-workspace PR #798); API contract in the [territory architecture](architecture/territory.md#4-api-contract). Admin steps:
   1. Apply the migration `AddTerritory` (`dotnet ef database update`; additive: four tables, defaulted columns).
   2. Import the form seeds `Kingdom`, `Province`, `CrownLand`, `TerritoryConflict` and their display seeds ("make
      default").

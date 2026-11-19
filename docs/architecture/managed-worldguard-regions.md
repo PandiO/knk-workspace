@@ -1,6 +1,6 @@
 # Managed WorldGuard regions — hierarchy, priority, flags and startup repair
 
-**Status:** Current · **Last updated:** 2026-11-18 (§7 "Overview map outlines": the repair and rename also report outlines with `map.reporting.enabled`, PandiO/knk-workspace#735, docs #766)
+**Status:** Current · **Last updated:** 2026-11-19 (§3, §4, §5: kind `CROWN_LAND` for crown land of territory V1, knk-plugin `next` `55804b11`, PandiO/knk-workspace#689, docs #806); 2026-11-18 (§7 "Overview map outlines": the repair and rename also report outlines with `map.reporting.enabled`, PandiO/knk-workspace#735, docs #766)
 **Implementation:** Implemented, merged to trunk (2026-09-29, [knk-plugin#6](https://github.com/PandiO/knk-plugin/pull/6), [knk-web-api#3](https://github.com/PandiO/knk-web-api/pull/3); KNG-43 follow-up 2026-10-04) and **smoke-tested in game and accepted 2026-10-05** — Linear KNG-46, §9. Region-step re-run replacement (KNG-103) merged 2026-10-18 after its in-game check ([knk-plugin#12](https://github.com/PandiO/knk-plugin/pull/12), [knk-web-api#10](https://github.com/PandiO/knk-web-api/pull/10)). Lootbox spawn areas' drawn regions renamed to `lootbox_area_<id>` (PandiO/knk-workspace#34, §7): **in the PR into `next` from `claude/plugin-chains-into-next`, not merged, not live-tested**. Temp regions of abandoned drafts removed early (PandiO/knk-workspace#269, §7 "Abandoned drafts"): **in the PR into `next` from `claude/plugin-chains-into-next`, not merged, not live-tested**
 **Supersedes:** Linear KNG-12 ("no WG flags on town/district regions"), the assumption noted in `CombatSafezone`'s Javadoc
 **Evidence:** [`reports/2026-09-28-v1-permissions-worldguard-inventory.md`](../reports/2026-09-28-v1-permissions-worldguard-inventory.md) (categorized v1 inventory), the v3 domain model (`Town → District → Structure`, `GateStructure : Structure`), `vision.md` §2
@@ -35,6 +35,7 @@ The v1 `regions.yml` was **not available** to this work — only the categorized
 | Arena base `arena_2` (1) | none | `ARENA` | No v3 entity. Managed only if listed in `regions.managed.extra-regions`. |
 | Arena children `…-battleground` (8 flagged, 42 unflagged) | none | `BATTLEGROUND` (the 8) | Only the 8 flagged ones are battlegrounds; the other 42 are plain children (no flags) and need no management. Via `extra-regions`. |
 | — (no v1 region category) | `GateStructure` | `GATE` | **v3-only.** v1 handled gates by entity scan, not regions; v3 gate *doors* keep captured vertex JSON, not WG regions (item 6.2). The gate structure's own region is a normal Structure region: parent District, no flags. |
+| — (no v1 region category) | `CrownLand` (territory V1, #326/#689) | `CROWN_LAND` | **v3-only.** A kingdom-held domain region territory is measured from ([territory § 5.5](territory.md#55-players-and-other-features)). No parent, no flags of its own. The repair takes crown land regions from the domain catalogue only while `production.enabled` is on. |
 | Global `__global__` | — | `GLOBAL` | **Off by default** (`manage-global-region`): `build deny` changes what is buildable across the whole world. |
 | Street | `Street` | — | No region (`vision.md` §2.4). |
 
@@ -49,6 +50,7 @@ priority = max(kind floor, parent priority + 10)      (just the floor when there
 | Kind | Parent | Floor | Typical result |
 |---|---|---|---|
 | `TOWN` | none | 10 | 10 |
+| `CROWN_LAND` | none | 10 | 10 |
 | `DISTRICT` | its Town's region | 20 | 20 |
 | `STRUCTURE`, `HOUSE`, `PROPERTY`, `RESOURCE_PRODUCTION`, `GATE` | its District's region | 30 | 30 |
 | `ROOM` | its House/Structure region | 40 | 40 |
@@ -81,7 +83,7 @@ Setting a **parent** also makes the child inherit the parent's *owners and membe
 | Kind | Flags (mode) | Source / reason |
 |---|---|---|
 | `TOWN` | `damage-animals allow`, `entity-item-frame-destroy deny`, `mob-spawning deny`, `pvp deny`, `deny-message ""` (all SEED) | Shared base flags of all 5 v1 towns. `pvp` is SEED so `/rg flag <town> pvp allow` stays the working override that `CombatSafezone` (KNG-11) documents. |
-| `DISTRICT`, `STRUCTURE`, `GATE` | none | Inherit through the parent link (v1 children had no flags). |
+| `DISTRICT`, `STRUCTURE`, `GATE`, `CROWN_LAND` | none | Inherit through the parent link (v1 children had no flags). |
 | `HOUSE`, `ROOM` | `entry deny`, `entry-deny-message ""`, `feed-amount 20`, `feed-delay 1` (SEED) | Shared base flags of v1 houses and rooms. |
 | `PROPERTY` | `entry allow`, `entry-deny-message ""` (SEED) | Shared base flags of v1 properties. |
 | `RESOURCE_PRODUCTION` | as `PROPERTY`; `block-break allow` **only** with `resource-production-block-break: true` | Exception, below. |
