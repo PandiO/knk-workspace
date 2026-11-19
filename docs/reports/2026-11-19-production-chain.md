@@ -55,7 +55,7 @@ of what is already in `next`.
 | L8 P2c world plugin: managed-region kinds | #677 | Merged into next (2026-11-19) | plugin `cc563771`, workspace `cb11e03a`; merges: plugin `8ebb30be`, workspace `4654a1ad` | [plugin#96](https://github.com/PandiO/knk-plugin/pull/96), [ws#823](https://github.com/PandiO/knk-workspace/pull/823) | green (plugin build + paper-boot, 64 scenarios) | create_session `session_01R1w2UtzV6puGzautXYEFJA` (one repo besides knk-workspace), started 2026-11-19 |
 | L9 P3 production engine API | #86 | Merged into next (2026-11-19) | api `20dcfb7`, workspace `ea01df32`; merges: api `6c648f60`, workspace `7b1495d0` (after a coordinator merge of `next`, `50497cc8`) | [api#58](https://github.com/PandiO/knk-web-api/pull/58), [ws#827](https://github.com/PandiO/knk-workspace/pull/827) | green (build-and-test, mysql-tests, fresh-database) | create_session `session_01R1w2Uvi8uaBqDwjJDADicL` (one repo besides knk-workspace), started 2026-11-19 |
 | L10 P3b production web app | #678 | Merged into next (2026-11-19) | web-app `9e5a2ca`, workspace `eaf1f1a1`; merges: web app `4e4ca39a`, workspace `9eef39cf` | [web-app#63](https://github.com/PandiO/knk-web-app/pull/63), [ws#834](https://github.com/PandiO/knk-workspace/pull/834) | green (build-and-test, e2e) | create_session `session_01R1w2UvmqQ34HGVHXxDfmwW` (prompt says start without asking), started 2026-11-19 |
-| L11 P4 yield areas API | #138 | Running | — | — | — | create_session `session_01R1w2UuXh4wtTxPhhZUpLGF` (prompt says start without asking), started 2026-11-19 |
+| L11 P4 yield areas API | #138 | In review (2026-11-19) | api `06b11ca`, workspace `a8e023ae` | [api#60](https://github.com/PandiO/knk-web-api/pull/60), [ws#837](https://github.com/PandiO/knk-workspace/pull/837) | push run on the migration commit green (build-and-test, mysql-tests, fresh-database); PR run pending | create_session `session_01R1w2UuXh4wtTxPhhZUpLGF` (prompt says start without asking), started 2026-11-19 |
 | L12 P4b surveys plugin | #679 | Not started | — | — | — | — |
 | L13 P4c yield areas web app | #680 | Not started | — | — | — | — |
 | L14 P5 transport API (simulated carrying, G14) | #79 | Not started | — | — | — | — |
@@ -1125,3 +1125,81 @@ _(Each link appends its block here when it finishes.)_
     1. L11 (P4 web app) and later web app links: `StructureProductionPanel` mounts for `productionstructure` in `DisplayWizardPage`; add the area and survey views next to it. `RateBreakdown` and `ProductionCycleTable` take any `AppliedModifierDto` list, so new modifier sources show up without changes.
     2. Strict e2e specs that open a production structure page now need a `ProductionStructures/<id>/production` mock (see `e2e/production-world.spec.ts` or `e2e/fixtures/productionEngine.ts`) and, with a kind, `ProductionKinds/<id>`.
     3. The game settings page sends `production.engine` back; a later setting under `production` must be added to `normalizeProductionSettings` the same way.
+
+### 4.11 L11 — P4 yield areas API (#138)
+
+1. **Scope done** (knk-web-api, plus essential docs in knk-workspace).
+    1. `ProductionArea` per structure: model from the kind, shape Region (bounds reported), Cuboid, Polygon or Radius
+       (default centre the structure's Location), bounding box and size (blocks, volume or radius by model). Refused
+       over the level's `MaxAreaSize` (400, G6, A11) and when an exclusive area overlaps another exclusive area of the
+       same model (409, bounding boxes).
+    2. `AreaSurvey` history with `AreaSurveyUnit` rows (unit key, count, `sharedBy`, extra); `GET
+       api/ProductionAreas/survey-due` (requested first, then never surveyed or older than 24 h; Derived and Hybrid
+       only, G5; empty while the flag is off), `POST api/ProductionAreas/{id}/surveys` (plugin key or
+       `knk.admin.world`; 409 while off or for Configured), `POST api/ProductionStructures/{id}/survey` ("survey now"),
+       `api/AreaSurveys` search, by id and `trend`.
+    3. `ProductionKind`: `SurveyProfileJson` (seeded per kind, version raised on change), `PrimaryMultiplier` (1.5),
+       `yieldTable` (unit key or `PREFIX:*` → blueprint, rate, byproduct chance, min level), `primaryOutputs`.
+    4. `ProductionStructure.YieldSource` (new Hybrid, existing Configured). `DerivedBaseRateProvider` and
+       `HybridBaseRateProvider` via DI (L9 note): latest surveys' units × 1/sharedBy × rate × chance, the most specific
+       row per unit and output; Hybrid applies `ProductionYieldOverride` pins, exclusions and scales. "Primary" and
+       ±10% "Variation" (P-D9) modifier sources. Materialization into lines after surveys, overrides, yield table,
+       yield source and level changes; `GET api/ProductionStructures/{id}/yield` explains every rate; `POST
+       {id}/materialize` staff tool.
+    5. Equal split (G7): the queue lists each area's overlapping shared areas; the plugin reports `sharedBy`.
+    6. Seeds (G17): form and display `ProductionArea`, `ProductionYieldOverride`; display `AreaSurvey`;
+       `ProductionKind` v2, `ProductionStructure` v3 (form and display). One additive migration
+       `AddProductionYieldAreas`, generated last on `next` `6c648f6`; `KnKDbContext` edits in one contiguous block.
+    7. #831 (additive extra, closed by the PR): warehouse and production structure updates answer 200 with their
+       placement warnings; 400 bodies without " (Parameter 'dto')"; `Structure` form v3 with "Town (rural)".
+    8. knk-workspace (branch from `next`): smoke guide § 5 (§ 5.1 18 API steps, 17 automated, 1 partly; § 5.2 plugin
+       and § 5.3 web app drafts), changelog entry, production installation § 5.3 item 9, implementation plan status.
+2. **Commits and heads.** knk-web-api `claude/production-p4` at `06b11ca` (6 commits, base `next` `6c648f6`, which had
+   not moved at the last fetch, so the migration was generated last on it); knk-workspace `claude/production-p4` at
+   `a8e023ae` (1 commit, base `next` `7b1495d0`).
+3. **PRs.** [knk-web-api#60](https://github.com/PandiO/knk-web-api/pull/60) (Closes #138, Closes #831) and
+   [knk-workspace#837](https://github.com/PandiO/knk-workspace/pull/837) (Part of #138, #831), base `next`. Not merged.
+4. **Tests, baseline → result.**
+    1. knk-web-api: baseline on `next` `6c648f6` 4774 passed / 116 skipped / 0 failed; branch 4801 passed / 117
+       skipped / 0 failed. New: `ProductionYieldTests` (18), `ProductionYieldControllersTests` (2),
+       `PlacementRulesTests` (+3, #831), `AddProductionYieldAreasTests` (4), `ProductionYieldMySqlTests` (1,
+       requires-mysql). The shared split and the size cap were broken on purpose once and their tests went red.
+    2. MySQL 8.0.46 locally with `KNK_TEST_MYSQL`: 4917 passed, 1 failed = the known red #285.
+    3. Migration applied, rolled back to `AddProductionEngine` and re-applied; `has-pending-model-changes` clean.
+    4. CI: build-and-test, mysql-tests and fresh-database green on the push of the migration commit; the PR run on
+       `06b11ca` was running when this block was written (the coordinator checks it).
+    5. Known reds: #285 (MySQL run only).
+5. **Decisions (DESIGN § 4.3).** All 14, each with alternatives, are in knk-web-api#60. The main ones:
+    1. *Shared split.* Chosen: the plugin reports `sharedBy` per unit; the API lists overlapping shared areas in the
+       queue. Alternatives: (a) estimate from bounding-box overlap: inexact; (b) store unit positions: too much data.
+    2. *Pin.* Chosen: replaces the survey's rate. Alternatives: (a) adds to it.
+    3. *Vanished outputs.* Chosen: the line stays with base 0. Alternatives: (a) delete it: loses its cycle records.
+    4. *Existing structures.* Chosen: `Configured` (column default), new ones `Hybrid`. Alternatives: (a) all Hybrid:
+       the P3 lines would no longer match their structure.
+    5. *Yield tables.* Chosen: none seeded (blueprint ids differ per server); profiles seeded. Follow-up #836.
+    6. *Primary multiplier.* Chosen: kind field, 1.5, on Derived and Hybrid lines only. Alternatives: (a) also on
+       Configured lines; (b) per structure.
+    7. *Survey interval.* Chosen: a 24 h constant (G5). Alternatives: (a) a game setting.
+    8. *Smoke gate.* The developer's 2026-11-19 waiver of the L4 and L6 smoke gates, read by the coordinator as
+       covering this link too (it builds on L9, whose smoke test is open).
+6. **Out of scope, noted.** #836 filed (default yield tables per kind). Comments on #679 (queue and report contract,
+   `sharedBy`, profile JSON) and #680 (endpoints, DTOs, editors). Codex: the connector hit its code-review usage limit
+   on both PRs (review "failed", usage-limit comment); no inline findings; noted on each PR.
+7. **Blockers.** None.
+8. **At merge / what the developer must do.**
+    1. Apply migration `AddProductionYieldAreas` (additive; existing structures become `Configured`).
+    2. Import the seeds `ProductionArea`, `ProductionYieldOverride` (form and display) and `AreaSurvey` (display); make
+       `ProductionKind` v2, `ProductionStructure` v3 (form and display) and `Structure` v3 (form) the default.
+    3. Fill each kind's `yieldTable` (none seeded; #836 proposes defaults).
+    4. No `api.env` key, no plugin `config.yml` change.
+    5. Smoke test [§ 5.1](../guides/production-storage-transport-smoke-test.md) (tier:3): 17 of 18 steps automated,
+       about 5 minutes for the untagged part.
+    6. At merge into `next`: the `documentation` sub-issue (yield areas architecture page and API contract, admin guide
+       for areas, yield tables, overrides and "survey now", feature register row).
+9. **Notes for later links.**
+    1. L12 (#679): see the comment on #679. Report one unit row per (key, `sharedBy`); count `sharedBy` over distinct
+       structures, this one included. The plugin owns the survey profile JSON beyond `unitTypes`.
+    2. L13 (#680): see the comment on #680. `areas` is read only on the structure DTO; area create/update return the
+       area with `size`, `sizeUnit` and the level's `maxSize`.
+    3. L21 (P8a): the pool factor is still not in the engine; the latest survey's `TotalUnits` can seed a pool's
+       capacity.
