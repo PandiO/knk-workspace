@@ -1,6 +1,6 @@
 # Knights and Kings — Player Handbook
 
-**Status:** Current · **Last updated:** 2026-11-18 (The map: the overview map, in `next`, not released, PandiO/knk-workspace#766)
+**Status:** Current · **Last updated:** 2026-11-19 (Territory: the action bar lines, in `next`, not released, PandiO/knk-workspace#806); 2026-11-18 (The map: the overview map, in `next`, not released, PandiO/knk-workspace#766)
 **Checked against:** knk-plugin `main` `57884e9`, knk-web-api `master` `f445d21`, knk-web-app `main` `3ba747d`
 **Related:** [commands reference](commands.md), [menus](menus-player-guide.md), [guides index](../README.md)
 
@@ -26,8 +26,9 @@ Everything described here is in the released game unless it says otherwise.
 11. [Gates](#gates)
 12. [Siege](#siege)
 13. [The map](#the-map)
-14. [Building and protection](#building-and-protection)
-15. [Getting help](#getting-help)
+14. [Territory](#territory)
+15. [Building and protection](#building-and-protection)
+16. [Getting help](#getting-help)
 
 ## Getting started
 
@@ -216,6 +217,15 @@ one by one. Not released yet.
 
 Full guide: [Overview map](overview-map-player-guide.md).
 
+## Territory
+
+The land around each town belongs to that town; some land belongs to a kingdom (crown land), some is claimed by two
+towns (contested), the rest is wilderness. Once staff switch territory on, a line above your hotbar says where you are
+when you cross a border, for example "Entering the territory of Phoenix" or "Leaving Phoenix: wilderness". Nothing else
+changes for players yet. Not released yet.
+
+Full guide: [Territory](territory-player-guide.md).
+
 ## Building and protection
 
 Most of the world is protected. Outside towns and other areas you can't break or place blocks, or use crafting
@@ -235,7 +245,8 @@ allowed there.
 
 ## Changes
 
-1. 2026-11-18: The map: link to the overview map player guide (PandiO/knk-workspace#766)
-2. 2026-11-14: Siege: link to the Siege player guide (PandiO/knk-workspace#297)
-3. 2026-11-14: Getting around: link to the navigation and teleports player guide (PandiO/knk-workspace#298)
-4. 2026-11-13: first version, replaces the archived Dutch v1 manual (PandiO/knk-workspace#296)
+1. 2026-11-19: Territory: the action bar lines, link to the territory player guide (PandiO/knk-workspace#806)
+2. 2026-11-18: The map: link to the overview map player guide (PandiO/knk-workspace#766)
+3. 2026-11-14: Siege: link to the Siege player guide (PandiO/knk-workspace#297)
+4. 2026-11-14: Getting around: link to the navigation and teleports player guide (PandiO/knk-workspace#298)
+5. 2026-11-13: first version, replaces the archived Dutch v1 manual (PandiO/knk-workspace#296)
