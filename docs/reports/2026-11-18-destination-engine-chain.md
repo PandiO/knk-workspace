@@ -14,15 +14,12 @@
 
 ## 1. Waiting for the developer
 
-1. **Live test of P3 and P4 (gate of L5, #747).** L1–L4 are in `next` (knk-plugin `3e04ba8f`, knk-web-api `6094276d`,
-   knk-workspace `9db3df91`). Deploy API and plugin from `next`; in `config.yml` under `navigation:` set
-   `destination-engine: true` (and `destinations.stale-after-days: 14`, optional); restart; grant `knk.navigate.any` to
-   the Bypass test account; run smoke § 3 and § 4 (§ 4 needs the Opponent and Senior Staff accounts too); say on #25 or
-   #62 that they passed (or what failed). Set the flag back to `false` afterwards if wanted.
-2. **Timing of L6 (#55, arena duels provider).** Gate: L5 merged and the arena duels work (KNG-197) in `next`; I will ask
-   on #25 before starting it.
-3. **Out of scope from L3, to decide or file:** `/knk road` status showing the navigation model's age; a knk-web-api rank
-   seed for `knk.navigate.any`.
+1. **Rest of the live test (gate of L5, #747).** The run on 2026-11-19 (report on #25) passed every step run except
+   § 4.1 s4 and § 4.2 s3 (#845, pre-existing permission model). Still to run: § 3.3 s1 (API down), § 4.4 s1–s2 (flag
+   off), the siege part of § 3.1 s2.
+2. **Does #845 gate L5?** Recommended: no (§ 3 item 27). And who runs #845 (recommended: a small link here after L5).
+3. **Route ending at `/siege join`:** keep, reword for a queued player, or end at the lobby teleport (asked on #25).
+4. **Open:** L6 (#55) timing; `/knk road` showing the model's age; rank seed for `knk.navigate.any` (wanted, in #845).
 
 ## 2. Summary
 
@@ -185,6 +182,14 @@
 26. **Off-road F2 merged, slot free (2026-11-19 14:31).** knk-plugin#94: reads only the session's `Destination`; new keys
     `navigation.road-goal-reachable`, `road-goal-candidates`, `road-to-its-end` (all off). No off-road link queued. No
     live-test result at 13:13 or 14:31. L5 waits only for the developer's live test. Alternatives: none.
+27. **Live test report (2026-11-19 21:05, #25).** FAILED/incomplete: all run steps of § 3 and § 4 passed except § 4.1 s4
+    and § 4.2 s3. Cause: `knk.navigate` is `default: true` in `plugin.yml`, so the "Bukkit or in-house" node check never
+    sees an in-house deny; predates the chain. Filed #845 (the developer's option A: `default: false` plus a knk-web-api
+    seed for the default rank and `knk.navigate.any`) and #846 (idea: type word first in `/navigate`). Recommended to
+    the developer that #845 does not gate L5 (L5 touches only the flag-off path; the engine's no-permission scope is
+    tested) and that #845 runs as a small link after L5. Alternatives: (a) treat the failure as a gate blocker and fix
+    first — needs an API seed migration the charter did not plan; (b) fold #845 into L5 — mixes a permission-model
+    change into a removal link. Still to run before L5: § 3.3 s1, § 4.4 s1–s2, § 3.1 s2 siege part.
 
 ## 4. Link blocks
 

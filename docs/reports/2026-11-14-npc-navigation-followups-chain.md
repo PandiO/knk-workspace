@@ -62,6 +62,7 @@ the configuration reference § 4.27), then restart. In test order:
 | C1 Off-road starts and ends with the walk search, walked like the road line | #700 | In review (PRs open, not merged) | knk-plugin `b7608662`; knk-workspace `bafe631f` (`next` `ce0f65ec` merged in) | PandiO/knk-plugin#71, PandiO/knk-workspace#721 | `build` and `paper-boot` (59) green on `b7608662` (runs 44225040650, 44225046762, 44225040520, 44225046831); one red `paper-boot` on `ced61331` fixed (doorway jam); docs no CI; Codex at its usage limit | create_session (2026-11-17) |
 | E1 Exit rules checked while NPCs walk | #701 | In review (PRs open, not merged) | knk-plugin `de1c8a6a`; knk-workspace `a827abc6` | PandiO/knk-plugin#74, PandiO/knk-workspace#725 | `build` and `paper-boot` (61) green on `de1c8a6a` (push and PR runs); both new scenarios fail on `next`'s walking checks, pass with E1; docs no CI; Codex at its usage limit | create_session (2026-11-18) |
 | R1 Fix: held NPCs stay held through `/knk cache refresh` | #724 | In review (PRs open, not merged) | knk-plugin `836ddf62`; knk-workspace `3f1ec0c5` | PandiO/knk-plugin#75, PandiO/knk-workspace#730 | `build` and `paper-boot` (62) green on `836ddf62` (push and PR runs); the new scenario and core test fail on `next`, pass with R1; docs no CI; Codex at its usage limit | create_session (2026-11-18) |
+| J1 Fix: no jumps toward a waypoint on the stair house (the climb's CI flake) | #695 | In review (PRs open, not merged) | knk-plugin `7dd44ed9`; knk-workspace `874e7510` | PandiO/knk-plugin#95, PandiO/knk-workspace#840 | `build` and `paper-boot` (63) green on `5521b833` (push and PR runs); 12/12 local climbs and 34/34 `npc-*`; docs no CI; Codex at its usage limit | create_session (2026-11-19) |
 
 ## 3. Coordinator decisions
 
@@ -410,6 +411,29 @@ the configuration reference § 4.27), then restart. In test order:
     knk-plugin#75 → `1f414d08`, knk-workspace#730 → `f82b5975`. Held NPCs no longer cross after a cache refresh
     (6 unit tests and a scenario fail before, pass after). For the developer's review: R1 decisions 5.1, 5.2, 5.6.
     No NPC link running; the chain waits for the developer's retest.
+50. **Developer go for #695, #779 and #814** (2026-11-19). Run one at a time as links J1 (the stair-climb jump flake,
+    knk-plugin Actions run 44411540731 attempt 1; the check stays), H1 (NPC checks agree with `WalkCells.isClimbableHatch`
+    from the off-road chain's #771) and G1 (F2's road-goal rule shared with NPC plans, for transports to building
+    destinations such as the keep storage hall; where the shared rule lives agreed with the off-road chain first). J1
+    started. The off-road (#698) and siege weapons (#354) coordinators were told. Also on 2026-11-19: the developer's
+    decision on long walks (O32, L6 on hold; transports ride the extended rural roads with short walk legs); NPC walk
+    legs share the players' `navigation.walk` caps (an NPC-only override offered, not scheduled).
+51. **Developer retest of 2026-11-19: B5, C1, E1, R1 passed** (evidence `evidence/smoke-2026-11-16`
+    `.../evidence/2026-11-19/`: run log, a new tower snapshot with the box over the goal and the start). The `ranks`
+    group holds formation well on the stair house; the keep tower is reached by one NPC and a group of 20; the off-road
+    start joins the road where reachable; exit denials and the refresh hold; `trespasses 0` throughout. The developer
+    accepted the E1 refresh step and R1's steps without testing them (correction, 2026-11-19). To improve later (developer: not a problem): an NPC looks jittery in
+    the spiral staircase, the walk path hugging the inner wall. NPC walk legs are not shaped by clearance yet; the
+    off-road chain's walk-path shaping (O11, guidance v2) is player-side, and NPC legs could reuse it later.
+52. **Developer decisions, 2026-11-19:** the review decisions of B5 (block 4.21 § 5) and C1 (block 4.22 § 5) are
+    accepted. "Accepted" on a smoke step means accepted without testing (E1 step 3, R1). NPC walk-leg shaping filed as
+    #817 (gated on the off-road chain's #710 live test).
+53. **Developer decisions, 2026-11-19:** the review decisions of E1 (block 4.23 § 5) and R1 (block 4.24 § 5) are
+    accepted. **Option B (a short-horizon steering layer, plan 4c.4 item 8) is postponed**, not dropped: no dynamic case
+    is left that A, D and M4 do not handle in the tests so far, but two cases are untested. It is looked at again (1)
+    when a test route with a real narrow place (a one-block door or narrow gate where groups queue) is added and (2)
+    when `collidable: true` is tested. If NPCs then get in each other's way where crowd awareness does not help, B gets
+    its own link.
 
 ## 4. Link blocks
 
@@ -2043,3 +2067,73 @@ _(Each link appends its block here when it finishes.)_
 9. **Notes for later links.**
     1. NPC checks read domains through `RegionDomainResolver.getLastKnownDomain`. A new NPC rule check should too, not `getDomainByRegionIdNoRefresh`.
     2. Any new path that clears the map and re-warms it should take `holdGeneration()` at the start and call `releaseLastKnown` after its answers are in, with the NPC guards' look first (`DomainCacheRewarm` does this).
+
+### 4.25 J1 — No jumps toward a waypoint on the stair house: the climb's CI flake, the hall entry, the engine's stair hop (#695)
+
+1. **Scope done** (prompt § 2, #695). Behind `npc.navigation.enabled` (off by default); no new key, no migration.
+    1. **The CI failure, found.** The log of run 44411540731 attempt 1 and its artifact showed 5 jumps at real 1408 53 −497 on flight 1, all by singles that had waited 10 s or more in the queue for flight 1's top. A diagnostic jar (a jump print in `ClimbWatch`, Citizens' current destination) and a print in `CrowdControl.spot` found the cause.
+        1. Flight 1's top (1410 54 −500) is a one-cell narrow place with a diagonal axis (0.69, −0.73).
+        2. Queue spot k = 2 goes 5.5 blocks back along that axis, beyond the flight's west wall, where there is no floor. Its side spot was the wall top (1407.45 55 −494.82), a block above the feet.
+        3. The waiting NPCs, pressed against the wall at x 1408.30, jumped at it again and again.
+        4. Locally the flake did not show on `next` (12 of 12 runs with 0 such jumps). Once the engine's stair hop was held back it did show: 16, 54 and 17 jumps in 3 of 7 runs.
+    2. **Fix 1** (knk-core `CrowdControl.onTheWaysLevel`, `walkedTo`). A queue spot lies within 0.6 of the queue line's own floor there, and the NPC walks to it from its feet: along the straight line, no cell is more than 0.6 above the one before. Otherwise the NPC waits where it stands, as before. A first version judged by "not more than a step above the feet" only and still failed 1 run in 4: the spot is decided while the NPC stands on the top stair's lower half (54.5).
+    3. **The hall entry (#695's first report) and the developer's hop: one mechanism.**
+        1. The replay's 56–63 jumps at the hall entry with the smoke test's settings were already gone on `next` (0 in this link's baseline run).
+        2. The stored settings' 4 were #695's guess. Citizens' A* strategy moves on to the next waypoint once the body is within the list's margin across (`NavigatorParameters.withinMargin`). A follower 0.66 from the stair's waypoint then steered to the next one, exactly 1.000 up and 0.94 to 0.99 across. Citizens' move control jumps for a target at least the step height up (`>=`; Citizens' NPCs have step height 1.0) and less than a block across.
+        3. The developer's "walked up a stair block and then seemed to jump up a bit" is the move control's other jump: on a stair's lower half the block at the feet reaches above them. Their trace of 2026-11-17 shows it 8 times.
+    4. **Fix 2** (knk-paper `CitizensNpcRuntime.jumpPower`, `StepHop`). Citizens' human NPC jumps through its own code, not Paper's `EntityJumpEvent`. Its jump power supplier (`NPC.Metadata.JUMP_POWER_SUPPLIER`) returns 0 in two cases:
+        1. A jump for the target when the next cell toward it is at most a half-block step up (0.6).
+        2. Otherwise, a stair hop: the block at the feet tops out at most 0.6 above them.
+
+       A whole block keeps its jump. Counted per mover (`NpcMover.stepHopsHeld`); the climb and the replay report `engine jumps held back, walked instead (J1)`.
+    5. **The check is unchanged.** `npc-stairhouse-climb` still fails on any jump toward a waypoint on the flights. Nothing was widened or weakened.
+2. **Commits and heads.**
+    1. knk-plugin `claude/npc-movement-j1`, base `next` `6311de11`, `origin/next` merged twice (last `8ebb30be`). 7 J1 commits; head **`7dd44ed9`**. `89c36b14` and `ce3576c0` hold the dropped margin and its removal.
+    2. knk-workspace `claude/npc-movement-j1`, base `next` (merged `9eef39cf`), head **`874e7510`**.
+3. **PRs** (base `next`, not merged).
+    1. PandiO/knk-plugin#95 (`Part of #695`).
+    2. PandiO/knk-workspace#840 (`Closes #695`).
+4. **Tests, baseline → result.**
+    1. `./gradlew build -x deployToDevServer`. Baseline on `6311de11`: core 3514, api-client 368 (2 skipped), paper 3210 (18 skipped). Result on `7dd44ed9`: core 3541, api-client 366 (2 skipped), paper 3229 (18 skipped), 0 failures. New: `CrowdControlTest` +3 (the ledge test fails on `next`), `StepHopTest` 12. The rest of the change in counts is `next`'s merges.
+    2. **Proof, locally** (Paper 26.3 b205, Citizens b4269):
+        1. `npc-stairhouse-climb`, 12 consecutive runs on the final code (6 server starts × 2): 12/12, 0 jumps toward a waypoint.
+            1. Jumps of any kind 151–166 → 0, with 645–655 held back.
+            2. Leader 75.0–80.7 s → 57.0 s (71.0 s in 2 runs).
+            3. Longest crowd wait 28–34 s → 17–19.5 s.
+            4. Falls, handovers onto another level, stuck spells, lost followers and queues let go: 0.
+        2. `npc-replay-quarry-to-keep`: jumps toward a waypoint 4 → 0, every jump in all four phases 0; the groups as on `next` (120.8 s with 2 stuck spells, 68.8 s with 0).
+        3. `npc-replay-keep-tower`: group 59.1 s, 0 stuck (`next` 59.2 s, 0).
+        4. All 34 `npc-*` scenarios in one run: 34/34.
+    3. **CI.**
+        1. `build` and `paper-boot` (63 scenarios) green on `5521b833`, push and PR runs (44607864659, 44607875857; climb 2641 ticks).
+        2. Two red `paper-boot` rounds on the way, each fixed by the next commit:
+            1. `e7663c67`: keep tower, from the margin together with the hold-back.
+            2. `7d9570fc`: `npc-corners-walk`, a whole block held back when the next cell was judged by the step height 1.0.
+        3. CI on the last `next` merge `7dd44ed9` was running at the time of writing.
+    4. Known reds: none. Local infra: Citizens failed to start on 3 server starts (Maven Central 429 on its Adventure libraries). Those runs were voided and the library folder cached; they are not counted above.
+    5. Codex: at its code-review usage limit on PandiO/knk-plugin#95 (said on the PR).
+5. **Decisions (DESIGN § 4.3).**
+    1. *Where to fix the early-advance jump.* Chosen: hold the jump back in Citizens' jump power supplier when the next cell is a half-block step. Alternatives:
+        1. (a) A margin of 0.25 on lists that climb. Tried: it removes the jump but slows groups on stairs, and with the hold-back it stalled `npc-replay-keep-tower` (bisected).
+        2. (b) More waypoints between a step and the next. Citizens' margin still skips them.
+        3. (c) A Paper `EntityJumpEvent` listener. It never fires for Citizens' human NPCs.
+    2. *Holding back the engine's stair hop* (revisits B4 decision 5.5, where the hops were only reported). Chosen: hold it back. The developer saw it as odd, and the body steps up 0.5 by itself. Alternatives:
+        1. (a) Keep reporting only. The developer's observation would stay.
+        2. (b) A config switch. Not asked for; reversible by reverting `jumpPower`.
+    3. *The walk limit.* Chosen: 0.6 (navigation's `STEP_UP`), not the attribute's 1.0. Alternative:
+        1. (a) The step height 1.0. It held back whole-block jumps (CI `npc-corners-walk`).
+    4. *Queue spot rule.* Chosen: the queue line's level plus a walking check from the feet. Alternatives:
+        1. (a) The feet's level only. Still failed 1 in 4.
+        2. (b) No side spots on diagonal places. That changes M4's turn rule more widely.
+    5. *The check.* Chosen: unchanged (fails on any jump toward a waypoint on the flights). The held-back jumps are reported, not failed.
+6. **Out of scope, noted.**
+    1. Docs follow-ups for the docs session: `docs/architecture/npc-navigation.md` (the jump power supplier, queue spots on the way's level), and the admin guide (the new report line).
+    2. The proof harness (`tools/paper-boot`) still downloads Citizens' libraries on every start. A cache in CI is not needed (CI did not hit 429s), so nothing is filed.
+7. **Blockers.** None.
+8. **At merge / what the developer must do.**
+    1. Nothing in `config.yml`, no migration.
+    2. The smoke test on the stair house: a leader alone shows no hop after a stair step. Singles queueing at flight 1's top stand on the flight, not against the wall.
+    3. Review decisions 5.1 and 5.2 (5.2 changes B4's decision 5.5).
+9. **Notes for later links.**
+    1. Citizens' NPCs have a step-height attribute of 1.0. Its move control jumps for a target at least that far up (`>=`), and its A* strategy moves on within the margin across with |dy| < 1. Any rule about NPC jumps needs these, not vanilla's.
+    2. Local scenario runs here: cache `plugins/Citizens/lib` between starts, or Citizens fails on 429s now and then.
