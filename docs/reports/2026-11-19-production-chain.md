@@ -45,7 +45,7 @@ of what is already in `next`.
 | L4 P1 stock core API: storages, ledger, reconciler, capacity, roll-up | #97 | Merged into next (2026-11-19) | api `e524721`, workspace `abef76fc`; coordinator merge of `next` `06fee906`; merges: api `2e7d4e81`, workspace `1bbdd69f` | [api#56](https://github.com/PandiO/knk-web-api/pull/56), [ws#816](https://github.com/PandiO/knk-workspace/pull/816) | green (build-and-test, mysql-tests, fresh-database) | create_session `session_01R1w2Uwv8FBnKCUoeZauzVt` (one repo besides knk-workspace), started 2026-11-19 |
 | L5 P1b stock web app | #675 | Merged into next (2026-11-19) | web app `9bec60f`, workspace `a5d10f37`; merges: web app `9f46cb49`, workspace `8fff63e2` | [web#60](https://github.com/PandiO/knk-web-app/pull/60), [ws#818](https://github.com/PandiO/knk-workspace/pull/818) | web app green (build-and-test, e2e) | create_session `session_01R1w2UuKsus7BT7DcXyL4jr` (one repo besides knk-workspace), started 2026-11-19 |
 | L6 P2 world API: structure subtypes, TownId, placement rules | #91 | Merged into next (2026-11-19) | api `303b6ab`, workspace `9ab62ab1`; merges: api `fcfced27`, workspace `c7fe8996` (after a coordinator merge of `next`, `15e3011e`) | [api#57](https://github.com/PandiO/knk-web-api/pull/57), [ws#822](https://github.com/PandiO/knk-workspace/pull/822) | green (build-and-test, mysql-tests, fresh-database) | create_session `session_01R1w2UscSGsG34qwc8vtEQj` (one repo besides knk-workspace), started 2026-11-19 |
-| L7 P2b world web app | #676 | Running | — | — | — | subagent of the coordinator (19:37; the create_session `session_01R1w2UwqC5tNA7JBrnf61ko` refused to start, decision 34) |
+| L7 P2b world web app | #676 | In review (PRs open, 2026-11-19) | web app `f5ea646`, workspace `9d578854` | [web#61](https://github.com/PandiO/knk-web-app/pull/61), [ws#829](https://github.com/PandiO/knk-workspace/pull/829) | web app green (build-and-test, e2e) | subagent of the coordinator (19:37; the create_session `session_01R1w2UwqC5tNA7JBrnf61ko` refused to start, decision 34) |
 | L8 P2c world plugin: managed-region kinds | #677 | Merged into next (2026-11-19) | plugin `cc563771`, workspace `cb11e03a`; merges: plugin `8ebb30be`, workspace `4654a1ad` | [plugin#96](https://github.com/PandiO/knk-plugin/pull/96), [ws#823](https://github.com/PandiO/knk-workspace/pull/823) | green (plugin build + paper-boot, 64 scenarios) | create_session `session_01R1w2UtzV6puGzautXYEFJA` (one repo besides knk-workspace), started 2026-11-19 |
 | L9 P3 production engine API | #86 | Running | — | — | — | create_session `session_01R1w2Uvi8uaBqDwjJDADicL` (one repo besides knk-workspace), started 2026-11-19 |
 | L10 P3b production web app | #678 | Not started | — | — | — | — |
@@ -807,6 +807,48 @@ _(Each link appends its block here when it finishes.)_
        `DomainId`). `ProductionEnabled` is the structure's own switch; `WorkersPresent` is yours to write.
     4. L14 (P5) / L15 (P5b): `RoadConnection` is written through `PUT api/ProductionStructures/{id}/road-connection`;
        automatic transport is held unless `Connected` for rural structures (D5).
+
+### 4.7 L7 — P2b world web app (#676)
+
+1. **Scope done** (knk-web-app, plus the essential docs in knk-workspace).
+    1. Types and clients: `src/types/dtos/structure/ProductionWorldDtos.ts` (mirrors `ProductionWorldDtos.cs` and the enums), placement fields on `StructureDto.ts` plus `StructureListDto`; `warehouseClient`, `productionStructureClient` (CRUD, search, `road-connection`), `storageClient.searchStorages`. Registry additions, additive and grouped: `Controllers`, `entityApiMapping` (all five for `warehouse` and `productionstructure`), `objectConfigs` columns, `domainWorld` types.
+    2. Forms (A06, A23): the seeded `Warehouse` and `ProductionStructure` forms in the form wizard with the RegionClaim world task and the Town (rural) picker; a create shows each placement warning (P-1 to P-3) in a toast kept until closed; a refused save shows the API's `{ error }` sentence (District-xor-Town, a blocking rule).
+    3. Rule builder: validation type **Inside Territory** (town holder config, a warning by default, help line); a saved `InsideTerritory` rule stays selected when edited.
+    4. Dashboard: Warehouse and ProductionStructure columns (town, placement, district, deliveries, priority; level, production, road connection, territory flag); Placement and Territory flag columns on Structure; a **Territory flag** filter on the three structure tables (the plan's "dashboard shows flagged structures", A07).
+    5. Detail pages of warehouses and production structures: `StructurePlacementPanel` (placement, effective town, the production structure's `warnings`, road connection, production, workers, delivery preference; a warehouse's deliveries and delivery storage), `StructureTerritoryPanel` (flag and loyalty, A07), `StructureStoragesPanel` (`POST api/Storages/search` with `domainId`, links to `/display/Storage/<id>`, one L5 `StoragePanel` per storage; `StoragePanel` got an optional `title` and a per-storage heading id).
+    6. #65 (world part): the road connection column, the page's warnings and the flagged-structure filter.
+    7. knk-workspace (branch from `next`): smoke guide § 3.2 (12 web app steps in full: 8 automated, 4 partly), § 3 intro and status header, changelog entry, implementation plan P2 status.
+2. **Commits and heads.**
+    1. knk-web-app `claude/production-p2b` at `f5ea646`: 3 commits, base `next` at `9f46cb4`, which had not moved at PR time or at the last fetch.
+    2. knk-workspace `claude/production-p2b` at `9d578854`: 1 commit, base `next` at `4654a1ad` (includes L8's docs PR #823).
+3. **PRs.** [knk-web-app#61](https://github.com/PandiO/knk-web-app/pull/61) (Closes #676) and [knk-workspace#829](https://github.com/PandiO/knk-workspace/pull/829) (Part of #676), both into `next`. Not merged.
+4. **Tests, baseline → result.**
+    1. knk-web-app baseline on `next` `9f46cb4`: Jest 2808 passed (329 suites), Playwright 253 passed, `tsc` clean, build OK.
+    2. Branch: Jest 2825 passed (331 suites). New: `src/utils/__tests__/productionWorld.test.ts`, `src/apiClients/__tests__/productionWorldClients.test.ts`; extended `ValidationRuleBuilder.test.tsx`, `PagedEntityTable.categoryFilter.test.tsx`, `domainWorld.test.ts`; the pinned structure picker columns (`pickerRowValues.test.ts`) list the two new columns.
+    3. Branch: Playwright 263 passed. New `e2e/production-world.spec.ts` (9 tests, strict API, DTO-typed fixtures `e2e/fixtures/productionWorld.ts`) and one test in `form-builder-draft-rules.spec.ts`. `tsc` and `typecheck:e2e` clean, build OK.
+    4. Seen failing on purpose: with the warning toast and the storage search broken, 4 of the new e2e tests failed.
+    5. CI on `f5ea646`: PR runs 44604543460 (e2e) and 44604544965 (build-and-test) and push runs 44604409793 and 44604410140, all green.
+    6. Known reds: none.
+5. **Decisions (DESIGN § 4.3).**
+    1. *Where the screens live.* Chosen: panels below the generic Warehouse and ProductionStructure detail pages (the L3/L5 pattern) and the seeds' forms as they are. Alternatives: (a) custom create pages with a District-or-Town switch: duplicates the seeded FormConfigurations (G17); (b) a client-side District-xor-Town pre-check: duplicates the API rule and could block a valid edit; the API's reason is shown instead.
+    2. *Placement warnings.* Chosen: one warning toast per warning, kept until closed. Alternatives: (a) a modal: blocks the return for a warning that by design doesn't block; (b) nothing: the warnings would be lost.
+    3. *Refusal reason.* Chosen: read `{ error }` (without " (Parameter 'dto')") for the two P2 types only. Alternatives: (a) change `describeErrorBody` app-wide: outside this link; (b) API change: knk-web-api (noted on #676).
+    4. *Flagged structures.* Chosen: a Territory flag filter on the three structure tables plus a column. Alternatives: (a) a separate page: the conflict page already lists its structures; (b) column only: can't list just the flagged ones.
+    5. *Storages on the page.* Chosen: the `domainId` search plus one `StoragePanel` per storage. Alternatives: (a) links only: no storage contents on the page (DESIGN § 11.1); (b) the read's `storages` list: misses storages added by hand.
+    6. *InsideTerritory default.* Chosen: a new rule starts as a warning. Alternatives: (a) blocking like the other types: against DESIGN § 3.4.
+    7. *Road connection.* Chosen: shown only. Alternatives: (a) a staff override of `PUT road-connection`: it is the game server's measurement (P5b) and would be overwritten.
+    8. *Generic Structure page.* Chosen: unchanged apart from columns and the filter. Alternatives: (a) the placement panel there too: the Structure form seed has no Town field yet.
+6. **Out of scope, noted.** [#676 comment](https://github.com/PandiO/knk-workspace/issues/676#issuecomment-7020712503): the subtype endpoints' `{ error }` body with the .NET parameter suffix, update drops the placement warnings (204), the Structure form seed's missing Town field. No new issues. Codex: the connector hit its code-review usage limit on both PRs (review "failed", usage-limit comment); no inline findings or threads; noted on each PR.
+7. **Blockers.** None.
+8. **At merge / what the developer must do.**
+    1. Deploy the web app with the world API (#91, in `next`) and its imported `Warehouse` and `ProductionStructure` form and display seeds. No migration, setting or plugin change.
+    2. Smoke test [§ 3.2](../guides/production-storage-transport-smoke-test.md#32-steps-web-app-676) (tier:2): about 40 minutes in full, about 15 minutes for the untagged parts (a region drawn in game, a real P-2 answer, the edit form).
+    3. At the end of P2 (L7 and L8 merged, coordinator decision 31): the `documentation` sub-issue covers the admin guide for warehouses, production structures, placement rules and the flag filter, and the feature register row.
+    4. Coordinator: decide on the two API points of the #676 comment (update warnings, error body).
+9. **Notes for later links.**
+    1. L10 (P3b) and later web app links: `StructurePlacementPanel` and `StructureStoragesPanel` (`src/components/production/`) mount in `DisplayWizardPage` for `isProductionWorldType`; add the kind, lines and cycle history next to them. `placementRefusalReason` reads the subtype endpoints' `{ error }`.
+    2. Strict e2e specs that open a warehouse or production structure page need `Territory/structures/<id>`, `Towns`, `Storages/search` and `Storages/<id>` mocks (see `e2e/fixtures/productionWorld.ts`).
+    3. P10c (shops): a `Shop` subtype fits `PRODUCTION_WORLD_TYPES`, the flag filter set and the placement panel.
 
 ### 4.8 L8 — P2c world plugin: managed-region kinds (#677)
 
