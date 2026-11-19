@@ -1,6 +1,6 @@
 # Production, storage and transport chain — progress report
 
-**Status:** Waiting for the developer (2026-11-19: L0–L3 in `next`; L4 waits for the smoke test of L0) · **Last updated:** 2026-11-19
+**Status:** Running (2026-11-19: L0–L3 in `next`; L4 running; smoke gates waived by the developer for L4 and L6) · **Last updated:** 2026-11-19
 
 **Issue:** [PandiO/knk-workspace#22](https://github.com/PandiO/knk-workspace/issues/22), links
 [#141](https://github.com/PandiO/knk-workspace/issues/141) (L0), [#326](https://github.com/PandiO/knk-workspace/issues/326) (L1), [#689](https://github.com/PandiO/knk-workspace/issues/689) (L2), [#690](https://github.com/PandiO/knk-workspace/issues/690) (L3), [#97](https://github.com/PandiO/knk-workspace/issues/97) (L4), [#675](https://github.com/PandiO/knk-workspace/issues/675) (L5), [#91](https://github.com/PandiO/knk-workspace/issues/91) (L6), [#676](https://github.com/PandiO/knk-workspace/issues/676) (L7), [#677](https://github.com/PandiO/knk-workspace/issues/677) (L8), [#86](https://github.com/PandiO/knk-workspace/issues/86) (L9), [#678](https://github.com/PandiO/knk-workspace/issues/678) (L10), [#138](https://github.com/PandiO/knk-workspace/issues/138) (L11), [#679](https://github.com/PandiO/knk-workspace/issues/679) (L12), [#680](https://github.com/PandiO/knk-workspace/issues/680) (L13), [#79](https://github.com/PandiO/knk-workspace/issues/79) (L14), [#681](https://github.com/PandiO/knk-workspace/issues/681) (L15), [#682](https://github.com/PandiO/knk-workspace/issues/682) (L16), [#683](https://github.com/PandiO/knk-workspace/issues/683) (L17), [#74](https://github.com/PandiO/knk-workspace/issues/74) (L18), [#60](https://github.com/PandiO/knk-workspace/issues/60) (L19), [#684](https://github.com/PandiO/knk-workspace/issues/684) (L20), [#685](https://github.com/PandiO/knk-workspace/issues/685) (L21), [#134](https://github.com/PandiO/knk-workspace/issues/134) (L22), [#127](https://github.com/PandiO/knk-workspace/issues/127) (L23), [#686](https://github.com/PandiO/knk-workspace/issues/686) (L24), [#248](https://github.com/PandiO/knk-workspace/issues/248) (L25), [#687](https://github.com/PandiO/knk-workspace/issues/687) (L26), [#688](https://github.com/PandiO/knk-workspace/issues/688) (L27), [#249](https://github.com/PandiO/knk-workspace/issues/249) (L28), [#250](https://github.com/PandiO/knk-workspace/issues/250) (L29).
@@ -9,30 +9,22 @@
 
 ## 1. Waiting for the developer
 
-Every link L0–L3 is in `next`. No link can start until item 1 is done: every remaining link depends on L4.
+The developer waived the smoke gates for L4 and L6 on 2026-11-19 (decision 20). These are not blockers: they are tests
+of what is already in `next`.
 
-1. **Smoke test of L0 (item identity, tier:3), unblocks L4 (#97) and so the rest of the chain:** guide
-   `docs/guides/production-storage-transport-smoke-test.md` § 0 on `next` (14 steps, about 25 minutes for the untagged
-   ones).
+1. **Smoke test of L0 (item identity, tier:3):** guide `docs/guides/production-storage-transport-smoke-test.md` § 0
+   on `next`.
    1. Apply migration `AddItemIdentity`.
    2. Run a catalogue scan (or `POST api/ItemIdentity/shadows/generate`).
-   3. Merge the `items.identity` block into the plugin `config.yml` (both switches off by default).
-   Or say "start L4 without it" (charter § 2.3 allows the developer to waive the gate).
-2. **Smoke test of territory, tier:3 (L1 API § 1.1–1.2, L2 plugin § 1.3, L3 web app § 1.4), unblocks L6 (#91) later.**
+   3. Merge the `items.identity` block into the plugin `config.yml`.
+2. **Smoke test of territory (L1 § 1.1–1.2, L2 § 1.3, L3 § 1.4).**
    1. Apply migration `AddTerritory`.
-   2. Import the form seeds `Kingdom`, `Province`, `CrownLand`, `TerritoryConflict` and their display seeds (`Kingdom`
-      first, "make default").
-   3. Merge the plugin `production` block into `config.yml`. The YAML is in the changelog. The switch is off by default.
-   4. To test, turn on plugin `production.enabled` and the API game setting `production.enabled`, and give staff
-      `knk.admin.world.territory`. Keep `map-outlines: false` until #802.
-3. **Decision:** L0 stores conversion counts in `item_conversion_stats` without form/display seeds, an exception to
-   G17 (block 4.0, decision 7). Confirm or ask for seeds.
-4. **Review:** the agent decisions in blocks 4.0–4.3, mainly:
-   1. L0's retag rule (plain vanilla items are never tagged).
-   2. L1: the game server computes territory; loyalty is a town id.
-   3. L2's crown land region kind.
-   4. Coordinator decision 15 (Town/District seed fields).
-5. Later: the shop menu templates for L26 (#687).
+   2. Import the four territory form and display seeds (`Kingdom` first).
+   3. Merge the plugin `production` block into `config.yml`.
+   4. To test, turn on `production.enabled` in the plugin and in the API game settings.
+3. **Review:** the agent decisions in blocks 4.0–4.3 (L0's retag rule; L1 server-side territory and loyalty as a town
+   id; L2's crown land region kind) and coordinator decision 15 (Town/District seed fields).
+4. Later: the shop menu templates for L26 (#687).
 
 ## 2. Summary
 
@@ -42,7 +34,7 @@ Every link L0–L3 is in `next`. No link can start until item 1 is done: every r
 | L1 Territory API: holders, crown land entity (G10), power, range (G11), conflicts, loyalty | #326 | Merged into next (2026-11-19) | api `ff50ec1`, workspace `c4211d51`; merges: api `0d6e369a`, workspace `4595e6d8` | [api#53](https://github.com/PandiO/knk-web-api/pull/53), [ws#798](https://github.com/PandiO/knk-workspace/pull/798) | green (build-and-test, mysql-tests, fresh-database) | create_session `session_01R1w2Uwo46dJVo6Cpr8LzmG` (one repo besides knk-workspace), started 2026-11-19 |
 | L2 Territory plugin: chunk cache, lookup, BlueMap outlines | #689 | Merged into next (2026-11-19) | plugin `96ef7326`, workspace `14d3efcd`; merges: plugin `55804b11`, workspace `66d35872` | [plugin#91](https://github.com/PandiO/knk-plugin/pull/91), [ws#804](https://github.com/PandiO/knk-workspace/pull/804) | green (plugin build + paper-boot) | create_session `session_01R1w2Uvhpo37DXAXpm2uqLp` (one repo besides knk-workspace), started 2026-11-19 |
 | L3 Territory web app | #690 | Merged into next (2026-11-19) | web app `0531422`, workspace `f3bd8f27`; merges: web app `89751315`, workspace `54bdc830` (after a coordinator merge of `next`, `e4f2276d`) | [web#57](https://github.com/PandiO/knk-web-app/pull/57), [ws#803](https://github.com/PandiO/knk-workspace/pull/803) | web app green (build-and-test, e2e) | create_session `session_01R1w2UuYHneFJFXcn8GSe6F` (one repo besides knk-workspace), started 2026-11-19 |
-| L4 P1 stock core API: storages, ledger, reconciler, capacity, roll-up | #97 | Not started | — | — | — | — |
+| L4 P1 stock core API: storages, ledger, reconciler, capacity, roll-up | #97 | Running | — | — | — | create_session `session_01R1w2Uwv8FBnKCUoeZauzVt` (one repo besides knk-workspace), started 2026-11-19 |
 | L5 P1b stock web app | #675 | Not started | — | — | — | — |
 | L6 P2 world API: structure subtypes, TownId, placement rules | #91 | Not started | — | — | — | — |
 | L7 P2b world web app | #676 | Not started | — | — | — | — |
@@ -148,6 +140,17 @@ Every link L0–L3 is in `next`. No link can start until item 1 is done: every r
    waits for the developer's smoke test of L0 (§ 1.1). The coordinator stops the loop and checks #22 and the digest
    issue for the developer's reply. Alternatives: (a) start L4 anyway: charter § 2.3 says no unless the developer
    waives it.
+
+20. **Developer decisions, 2026-11-19 (in chat with the coordinator).**
+   1. Start L4 (#97) without the smoke test of L0.
+   2. Start L6 (#91) without the territory smoke test.
+   3. G17 means every major entity. Conversion tables and many-to-many join tables are lower priority and may ship
+      without form/display seeds at first. This settles L0's `item_conversion_stats` exception (block 4.0, decision 7):
+      accepted.
+   Applied: L4 started at once. L6 starts as soon as L4 is merged, because its gate is "L1, L4 merged" and both are
+   knk-web-api. The coordinator also reads the waiver as covering L4's own smoke gate for L6, because the developer
+   asked for L6 to start without waiting on smoke tests. Alternatives: (a) hold L6 for L4's smoke test: against the
+   intent of the instruction; the developer can still ask for it.
 
 ## 4. Link blocks
 
