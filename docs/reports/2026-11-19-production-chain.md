@@ -25,14 +25,20 @@ of what is already in `next`.
    1. Apply migration `AddProductionWorld` (structures get an optional district and a town; its `Down` fails while a
       rural structure exists).
    2. Import the form and display seeds `Warehouse` and `ProductionStructure` ("make default").
-4. **Smoke test of territory (L1 § 1.1–1.2, L2 § 1.3, L3 § 1.4).**
+4. **Smoke test of L9 (production engine API, tier:3):** guide § 4.1 (16 of 18 steps automated).
+   1. Check that `SELECT Id FROM production_structures WHERE ProductionKindId NOT BETWEEN 1 AND 8;` returns nothing.
+   2. Apply migration `AddProductionEngine`.
+   3. Import the form and display seeds `ProductionKind`, `ProductionKindLevel`, `ProductionLine`, `ProductionModifier`,
+      `ClimateZone` and `WeatherType`.
+   4. Make `ProductionStructure` v2 (form, display), `ItemBlueprint` v2 (form) and `Storage` v2 (display) the default.
+5. **Smoke test of territory (L1 § 1.1–1.2, L2 § 1.3, L3 § 1.4).**
    1. Apply migration `AddTerritory`.
    2. Import the four territory form and display seeds (`Kingdom` first).
    3. Merge the plugin `production` block into `config.yml`.
    4. To test, turn on `production.enabled` in the plugin and in the API game settings.
-5. **Review:** the agent decisions in blocks 4.0–4.6 (L6's are listed in knk-web-api#57) (L0's retag rule; L1 server-side territory and loyalty as a town
+6. **Review:** the agent decisions in blocks 4.0–4.9 (L6's are listed in knk-web-api#57) (L0's retag rule; L1 server-side territory and loyalty as a town
    id; L2's crown land region kind) and coordinator decision 15 (Town/District seed fields).
-6. Later: the shop menu templates for L26 (#687).
+7. Later: the shop menu templates for L26 (#687).
 
 ## 2. Summary
 
@@ -47,9 +53,9 @@ of what is already in `next`.
 | L6 P2 world API: structure subtypes, TownId, placement rules | #91 | Merged into next (2026-11-19) | api `303b6ab`, workspace `9ab62ab1`; merges: api `fcfced27`, workspace `c7fe8996` (after a coordinator merge of `next`, `15e3011e`) | [api#57](https://github.com/PandiO/knk-web-api/pull/57), [ws#822](https://github.com/PandiO/knk-workspace/pull/822) | green (build-and-test, mysql-tests, fresh-database) | create_session `session_01R1w2UscSGsG34qwc8vtEQj` (one repo besides knk-workspace), started 2026-11-19 |
 | L7 P2b world web app | #676 | Merged into next (2026-11-19) | web app `f5ea646`, workspace `9d578854`; merges: web app `18385344`, workspace `a5c05901` | [web#61](https://github.com/PandiO/knk-web-app/pull/61), [ws#829](https://github.com/PandiO/knk-workspace/pull/829) | web app green (build-and-test, e2e) | subagent of the coordinator (19:37; the create_session `session_01R1w2UwqC5tNA7JBrnf61ko` refused to start, decision 34) |
 | L8 P2c world plugin: managed-region kinds | #677 | Merged into next (2026-11-19) | plugin `cc563771`, workspace `cb11e03a`; merges: plugin `8ebb30be`, workspace `4654a1ad` | [plugin#96](https://github.com/PandiO/knk-plugin/pull/96), [ws#823](https://github.com/PandiO/knk-workspace/pull/823) | green (plugin build + paper-boot, 64 scenarios) | create_session `session_01R1w2UtzV6puGzautXYEFJA` (one repo besides knk-workspace), started 2026-11-19 |
-| L9 P3 production engine API | #86 | In review (2026-11-19) | api `20dcfb7`, workspace `ea01df32` | [api#58](https://github.com/PandiO/knk-web-api/pull/58), [ws#827](https://github.com/PandiO/knk-workspace/pull/827) | green (build-and-test, mysql-tests, fresh-database) | create_session `session_01R1w2Uvi8uaBqDwjJDADicL` (one repo besides knk-workspace), started 2026-11-19 |
-| L10 P3b production web app | #678 | Not started | — | — | — | — |
-| L11 P4 yield areas API | #138 | Not started | — | — | — | — |
+| L9 P3 production engine API | #86 | Merged into next (2026-11-19) | api `20dcfb7`, workspace `ea01df32`; merges: api `6c648f60`, workspace `7b1495d0` (after a coordinator merge of `next`, `50497cc8`) | [api#58](https://github.com/PandiO/knk-web-api/pull/58), [ws#827](https://github.com/PandiO/knk-workspace/pull/827) | green (build-and-test, mysql-tests, fresh-database) | create_session `session_01R1w2Uvi8uaBqDwjJDADicL` (one repo besides knk-workspace), started 2026-11-19 |
+| L10 P3b production web app | #678 | Running | — | — | — | create_session `session_01R1w2UvmqQ34HGVHXxDfmwW` (prompt says start without asking), started 2026-11-19 |
+| L11 P4 yield areas API | #138 | Running | — | — | — | create_session `session_01R1w2UuXh4wtTxPhhZUpLGF` (prompt says start without asking), started 2026-11-19 |
 | L12 P4b surveys plugin | #679 | Not started | — | — | — | — |
 | L13 P4c yield areas web app | #680 | Not started | — | — | — | — |
 | L14 P5 transport API (simulated carrying, G14) | #79 | Not started | — | — | — | — |
@@ -239,6 +245,22 @@ of what is already in `next`.
    the error messages carry a .NET parameter suffix; the Structure form seed lacks Town. Chosen: fold them into the
    next free knk-web-api link (L11 #138) as an additive extra, like #819 in L9. Alternatives: (a) a separate link:
    overhead for three small fixes.
+
+37. **P2 docs #830:** done by its docs session (PR #833 merged; promotion-time leftovers in #832).
+38. **L9 merge (2026-11-19).** § 6 checks held:
+   1. Heads matched, and the API branch contained `next`.
+   2. CI was green (build-and-test, mysql-tests, fresh-database). Codex was at its usage limit, so there were no
+      findings.
+   3. The scope matched #86 plus #819: the ItemBlueprint form v2 and the Storage display v2.
+   4. Its additive touches outside production (currency reason `PRODUCTION_UPGRADE`, `StockReason.Upgrade`, player
+      notification queue items) are part of the upgrade and notification scope.
+   Merged API #58 `6c648f60`. Workspace #827 conflicted with L7/L8 docs in `next`. Both sides only added text, so the
+   coordinator merged `origin/next` (`50497cc8`) and then merged #827 `7b1495d0`. The migration needs a pre-check
+   (§ 1.4.1): a FK on `ProductionKindId` fails on unknown kind ids.
+39. **After L9: L11 (#138, with #831) and L10 (#678) started** as cloud sessions whose prompts begin with "start at
+   once, don't ask" (lesson of decision 34). L12 (#679) and L13 (#680) wait for L11. The plugin is idle until then.
+   The account showed a weekly usage-limit warning (`seven_day`, `allowed_warning`), so both prompts stress frequent
+   pushes.
 
 ## 4. Link blocks
 
