@@ -25,14 +25,20 @@ of what is already in `next`.
    1. Apply migration `AddProductionWorld` (structures get an optional district and a town; its `Down` fails while a
       rural structure exists).
    2. Import the form and display seeds `Warehouse` and `ProductionStructure` ("make default").
-4. **Smoke test of territory (L1 § 1.1–1.2, L2 § 1.3, L3 § 1.4).**
+4. **Smoke test of L9 (production engine API, tier:3):** guide § 4.1 (16 of 18 steps automated).
+   1. Check that `SELECT Id FROM production_structures WHERE ProductionKindId NOT BETWEEN 1 AND 8;` returns nothing.
+   2. Apply migration `AddProductionEngine`.
+   3. Import the form and display seeds `ProductionKind`, `ProductionKindLevel`, `ProductionLine`, `ProductionModifier`,
+      `ClimateZone` and `WeatherType`.
+   4. Make `ProductionStructure` v2 (form, display), `ItemBlueprint` v2 (form) and `Storage` v2 (display) the default.
+5. **Smoke test of territory (L1 § 1.1–1.2, L2 § 1.3, L3 § 1.4).**
    1. Apply migration `AddTerritory`.
    2. Import the four territory form and display seeds (`Kingdom` first).
    3. Merge the plugin `production` block into `config.yml`.
    4. To test, turn on `production.enabled` in the plugin and in the API game settings.
-5. **Review:** the agent decisions in blocks 4.0–4.6 (L6's are listed in knk-web-api#57) (L0's retag rule; L1 server-side territory and loyalty as a town
+6. **Review:** the agent decisions in blocks 4.0–4.9 (L6's are listed in knk-web-api#57) (L0's retag rule; L1 server-side territory and loyalty as a town
    id; L2's crown land region kind) and coordinator decision 15 (Town/District seed fields).
-6. Later: the shop menu templates for L26 (#687).
+7. Later: the shop menu templates for L26 (#687).
 
 ## 2. Summary
 
@@ -47,9 +53,9 @@ of what is already in `next`.
 | L6 P2 world API: structure subtypes, TownId, placement rules | #91 | Merged into next (2026-11-19) | api `303b6ab`, workspace `9ab62ab1`; merges: api `fcfced27`, workspace `c7fe8996` (after a coordinator merge of `next`, `15e3011e`) | [api#57](https://github.com/PandiO/knk-web-api/pull/57), [ws#822](https://github.com/PandiO/knk-workspace/pull/822) | green (build-and-test, mysql-tests, fresh-database) | create_session `session_01R1w2UscSGsG34qwc8vtEQj` (one repo besides knk-workspace), started 2026-11-19 |
 | L7 P2b world web app | #676 | Merged into next (2026-11-19) | web app `f5ea646`, workspace `9d578854`; merges: web app `18385344`, workspace `a5c05901` | [web#61](https://github.com/PandiO/knk-web-app/pull/61), [ws#829](https://github.com/PandiO/knk-workspace/pull/829) | web app green (build-and-test, e2e) | subagent of the coordinator (19:37; the create_session `session_01R1w2UwqC5tNA7JBrnf61ko` refused to start, decision 34) |
 | L8 P2c world plugin: managed-region kinds | #677 | Merged into next (2026-11-19) | plugin `cc563771`, workspace `cb11e03a`; merges: plugin `8ebb30be`, workspace `4654a1ad` | [plugin#96](https://github.com/PandiO/knk-plugin/pull/96), [ws#823](https://github.com/PandiO/knk-workspace/pull/823) | green (plugin build + paper-boot, 64 scenarios) | create_session `session_01R1w2UtzV6puGzautXYEFJA` (one repo besides knk-workspace), started 2026-11-19 |
-| L9 P3 production engine API | #86 | In review (2026-11-19) | api `20dcfb7`, workspace `ea01df32` | [api#58](https://github.com/PandiO/knk-web-api/pull/58), [ws#827](https://github.com/PandiO/knk-workspace/pull/827) | green (build-and-test, mysql-tests, fresh-database) | create_session `session_01R1w2Uvi8uaBqDwjJDADicL` (one repo besides knk-workspace), started 2026-11-19 |
-| L10 P3b production web app | #678 | Not started | — | — | — | — |
-| L11 P4 yield areas API | #138 | Not started | — | — | — | — |
+| L9 P3 production engine API | #86 | Merged into next (2026-11-19) | api `20dcfb7`, workspace `ea01df32`; merges: api `6c648f60`, workspace `7b1495d0` (after a coordinator merge of `next`, `50497cc8`) | [api#58](https://github.com/PandiO/knk-web-api/pull/58), [ws#827](https://github.com/PandiO/knk-workspace/pull/827) | green (build-and-test, mysql-tests, fresh-database) | create_session `session_01R1w2Uvi8uaBqDwjJDADicL` (one repo besides knk-workspace), started 2026-11-19 |
+| L10 P3b production web app | #678 | Merged into next (2026-11-19) | web-app `9e5a2ca`, workspace `eaf1f1a1`; merges: web app `4e4ca39a`, workspace `9eef39cf` | [web-app#63](https://github.com/PandiO/knk-web-app/pull/63), [ws#834](https://github.com/PandiO/knk-workspace/pull/834) | green (build-and-test, e2e) | create_session `session_01R1w2UvmqQ34HGVHXxDfmwW` (prompt says start without asking), started 2026-11-19 |
+| L11 P4 yield areas API | #138 | In review (2026-11-19) | api `06b11ca`, workspace `b467e15a` | [api#60](https://github.com/PandiO/knk-web-api/pull/60), [ws#837](https://github.com/PandiO/knk-workspace/pull/837) | green on `06b11ca` (build-and-test, mysql-tests, fresh-database) | create_session `session_01R1w2UuXh4wtTxPhhZUpLGF` (prompt says start without asking), started 2026-11-19 |
 | L12 P4b surveys plugin | #679 | Not started | — | — | — | — |
 | L13 P4c yield areas web app | #680 | Not started | — | — | — | — |
 | L14 P5 transport API (simulated carrying, G14) | #79 | Not started | — | — | — | — |
@@ -239,6 +245,33 @@ of what is already in `next`.
    the error messages carry a .NET parameter suffix; the Structure form seed lacks Town. Chosen: fold them into the
    next free knk-web-api link (L11 #138) as an additive extra, like #819 in L9. Alternatives: (a) a separate link:
    overhead for three small fixes.
+
+37. **P2 docs #830:** done by its docs session (PR #833 merged; promotion-time leftovers in #832).
+38. **L9 merge (2026-11-19).** § 6 checks held:
+   1. Heads matched, and the API branch contained `next`.
+   2. CI was green (build-and-test, mysql-tests, fresh-database). Codex was at its usage limit, so there were no
+      findings.
+   3. The scope matched #86 plus #819: the ItemBlueprint form v2 and the Storage display v2.
+   4. Its additive touches outside production (currency reason `PRODUCTION_UPGRADE`, `StockReason.Upgrade`, player
+      notification queue items) are part of the upgrade and notification scope.
+   Merged API #58 `6c648f60`. Workspace #827 conflicted with L7/L8 docs in `next`. Both sides only added text, so the
+   coordinator merged `origin/next` (`50497cc8`) and then merged #827 `7b1495d0`. The migration needs a pre-check
+   (§ 1.4.1): a FK on `ProductionKindId` fails on unknown kind ids.
+39. **After L9: L11 (#138, with #831) and L10 (#678) started** as cloud sessions whose prompts begin with "start at
+   once, don't ask" (lesson of decision 34). L12 (#679) and L13 (#680) wait for L11. The plugin is idle until then.
+   The account showed a weekly usage-limit warning (`seven_day`, `allowed_warning`), so both prompts stress frequent
+   pushes.
+
+40. **L10 merge (2026-11-19).** § 6 checks held:
+   1. Heads matched, and both branches contained `next` (clean).
+   2. CI was green (build-and-test, e2e). Codex was at its usage limit, so there were no findings.
+   3. The scope matched #678.
+   Merged web app #63 `4e4ca39a` and workspace #834 `9eef39cf`. P3 (L9–L10) is complete: `documentation` sub-issue
+   #839 under #86, with a docs session.
+41. **P3 API follow-ups found by L10 (#838, tier:1).** Three knk-web-api reads: the kind name on the structure list,
+   the blueprint name on consumed inputs, and a cycle-record list. Chosen: fold them into the next free knk-web-api
+   link, L14 (#79), as an additive extra (L11 already carries #831). Alternatives: (a) add them to the running L11: it
+   is close to its PRs.
 
 ## 4. Link blocks
 
@@ -1043,3 +1076,130 @@ _(Each link appends its block here when it finishes.)_
        applies present/total. A level's `TransportCapacity` is written to the structure on level change.
     4. L21 (P8a): the pool factor and harvest moves are not in the engine yet; add the pool as a built-in step next to
        unlock and workers.
+
+### 4.10 L10 — P3b production engine web app (#678)
+
+1. **Scope done** (knk-web-app, plus the essential docs in knk-workspace).
+    1. Types and clients: `src/types/dtos/production/ProductionEngineDtos.ts` (mirrors `ProductionEngineDtos.cs` and the enums). One client per resource: kinds, levels (read and update), lines (+ settle), modifiers, climate zones (+ `rolls/search`), weather types, cycle records (read only), `api/Production` (`run-now`). `productionStructureClient` gets `getProduction`, `setWorkers` and `upgrade`. Registry additions, additive and grouped: `Controllers`, `entityApiMapping`, `objectConfigs` columns.
+    2. Kind and level editors (G8, A09): a kind's page lists its ten levels, each linked; a level's page edits its unlocks and upgrade cost (`ProductionKindLevelItemsPanel`).
+    3. Line editor: `ProductionLinePanel` shows state and reason, accrual and settle times, edits the inputs, and has Settle now (the 409 reason while off) and the line's latest cycles.
+    4. Modifier, climate zone and weather editors: modifier list columns (scope, "+2/h" or "× 0.5", window); `ClimateZonePanel` (odds checked to at most 100% with the rest shown as clear, towns, stored rolls); `WeatherTypeEffectsPanel`.
+    5. Production view: `StructureProductionPanel` on a production structure's page:
+        1. why it isn't producing, structure-wide and per line;
+        2. each line's rate step by step (`RateBreakdown`) ending in the API's effective rate;
+        3. the workers present;
+        4. the upgrade with its cost shown before paying (payer picker, optional storage, confirm);
+        5. the latest cycles with a trace (`ProductionCycleTable`).
+    6. Game settings: a `ProductionEngineSettingsCard` (timing with the API's bounds) and Run production now. **Fix:** the page's save dropped `production.engine`, so the API reset it to the defaults on every save; `normalizeProductionSettings` now keeps it.
+    7. #65 (production part): the cycle trace on the structure and line pages, and blocked lines in words on the line list.
+    8. knk-workspace (branch from `next`): smoke guide § 4.2 (16 web app steps in full: 13 automated, 3 partly), § 4 intro and status header, changelog entry, implementation plan P3 status.
+2. **Commits and heads.**
+    1. knk-web-app `claude/production-p3b` at `9e5a2ca`: 4 commits, base `next` at `1838534`, which had not moved at PR time or at the last fetch.
+    2. knk-workspace `claude/production-p3b` at `eaf1f1a1`: 1 commit, base `next` at `7b1495d0`, which had not moved at the last fetch.
+3. **PRs.** [knk-web-app#63](https://github.com/PandiO/knk-web-app/pull/63) (Closes #678) and [knk-workspace#834](https://github.com/PandiO/knk-workspace/pull/834) (Part of #678), both into `next`. Not merged.
+4. **Tests, baseline → result.**
+    1. knk-web-app baseline on `next` `1838534`: Jest 2825 passed (331 suites), Playwright 263 passed, `tsc` clean, build OK.
+    2. Branch: Jest 2845 passed (333 suites). New: `src/utils/__tests__/productionEngine.test.ts` and `src/apiClients/__tests__/productionEngineClients.test.ts`, plus one test in `territory.test.ts` (engine kept on save).
+    3. Branch: Playwright 280 passed. New: `e2e/production-engine.spec.ts` (17 tests, strict API, DTO-typed fixtures in `e2e/fixtures/productionEngine.ts`). Changed: `territory.spec.ts` (the saved `production` section now includes `engine`) and `production-world.spec.ts` (the strict P2 structure pages mock the new production view). `tsc` and `typecheck:e2e` clean, build OK.
+    4. Seen failing on purpose: with the engine dropped on save and the line inputs not sent, the two matching e2e tests failed.
+    5. CI on `9e5a2ca`: PR runs 44612404305 (build-and-test) and 44612404476 (e2e), and push runs 44612008299 and 44612008372, all green.
+    6. Known reds: none.
+5. **Decisions (DESIGN § 4.3).**
+    1. *Where the screens live.* Chosen: panels below the generic detail pages (the L3/L5/L7 pattern) and the seeded forms as they are. Alternatives: (a) custom pages per type: they would duplicate the seeded FormConfigurations (G17).
+    2. *Child-list saves.* Chosen: each list editor sends only `{ id, <list> }` (the API keeps null fields); the level editor sends the level as read plus `items`. Alternatives: (a) send the full DTO from every editor: it would overwrite a concurrent edit; (b) put the lists on the form wizard: they are not on the seeds.
+    3. *Rate breakdown.* Chosen: the steps are computed in the web app from the API's applied modifiers, in its order, ending in the API's `effectiveRatePerHour`. Alternatives: (a) the modifier list and the effective rate only: the trace is harder to follow (A08).
+    4. *Upgrade request.* Chosen: a confirm step, the payer from the User lookup (required when coins are due), an optional storage (empty = Output), and no client idempotency key (the API derives one from the structure and level). Alternatives: (a) a key per request in the web app: it adds nothing.
+    5. *Engine settings and Run now.* Chosen: a card on the game settings page, saved with the page; Run now is not gated in the web app because the page is staff-only and a 403 is shown. Alternatives: (a) a separate settings page: it splits the `production` section across two saves.
+    6. *Workers.* Chosen: World staff can edit them (the API allows `knk.admin.world`), for tests and fixes. Alternatives: (a) read only: staff could not test the worker factor.
+    7. *#65.* Chosen: the cycle trace on the structure and line pages. Alternatives: (a) a dashboard list of cycle records: the API registers the type as `ViewOnly` (noted on #678).
+6. **Out of scope, noted.**
+    1. [#678 comment](https://github.com/PandiO/knk-workspace/issues/678#issuecomment-7021819495) lists three API points (no kind name on `ProductionWorldListDto`, no blueprint name on `ConsumedInputDto`, no cycle record list) and one web app point (the new-line form isn't pre-filled with the structure). No new issues.
+    2. Codex reached its code-review usage limit on both PRs (review "failed", no inline findings or threads); this is noted on each PR.
+7. **Blockers.** None.
+8. **At merge / what the developer must do.**
+    1. Deploy the web app with the production engine API (#86, in `next`) and its imported form and display seeds. There is no migration, setting or plugin change.
+    2. Smoke test [§ 4.2](../guides/production-storage-transport-smoke-test.md#42-steps-web-app-678) (tier:2): about 45 minutes in full, about 10 minutes for the untagged parts (creating a line and a modifier with their seeded forms, a level's own values).
+    3. At merge into `next`: the `documentation` sub-issue (production engine admin guide for kinds, levels, lines, modifiers, weather, the production view, upgrades and the engine settings card, plus the feature register row).
+    4. Coordinator: decide on the API points of the #678 comment.
+9. **Notes for later links.**
+    1. L11 (P4 web app) and later web app links: `StructureProductionPanel` mounts for `productionstructure` in `DisplayWizardPage`; add the area and survey views next to it. `RateBreakdown` and `ProductionCycleTable` take any `AppliedModifierDto` list, so new modifier sources show up without changes.
+    2. Strict e2e specs that open a production structure page now need a `ProductionStructures/<id>/production` mock (see `e2e/production-world.spec.ts` or `e2e/fixtures/productionEngine.ts`) and, with a kind, `ProductionKinds/<id>`.
+    3. The game settings page sends `production.engine` back; a later setting under `production` must be added to `normalizeProductionSettings` the same way.
+
+### 4.11 L11 — P4 yield areas API (#138)
+
+1. **Scope done** (knk-web-api, plus essential docs in knk-workspace).
+    1. `ProductionArea` per structure: model from the kind, shape Region (bounds reported), Cuboid, Polygon or Radius
+       (default centre the structure's Location), bounding box and size (blocks, volume or radius by model). Refused
+       over the level's `MaxAreaSize` (400, G6, A11) and when an exclusive area overlaps another exclusive area of the
+       same model (409, bounding boxes).
+    2. `AreaSurvey` history with `AreaSurveyUnit` rows (unit key, count, `sharedBy`, extra); `GET
+       api/ProductionAreas/survey-due` (requested first, then never surveyed or older than 24 h; Derived and Hybrid
+       only, G5; empty while the flag is off), `POST api/ProductionAreas/{id}/surveys` (plugin key or
+       `knk.admin.world`; 409 while off or for Configured), `POST api/ProductionStructures/{id}/survey` ("survey now"),
+       `api/AreaSurveys` search, by id and `trend`.
+    3. `ProductionKind`: `SurveyProfileJson` (seeded per kind, version raised on change), `PrimaryMultiplier` (1.5),
+       `yieldTable` (unit key or `PREFIX:*` → blueprint, rate, byproduct chance, min level), `primaryOutputs`.
+    4. `ProductionStructure.YieldSource` (new Hybrid, existing Configured). `DerivedBaseRateProvider` and
+       `HybridBaseRateProvider` via DI (L9 note): latest surveys' units × 1/sharedBy × rate × chance, the most specific
+       row per unit and output; Hybrid applies `ProductionYieldOverride` pins, exclusions and scales. "Primary" and
+       ±10% "Variation" (P-D9) modifier sources. Materialization into lines after surveys, overrides, yield table,
+       yield source and level changes; `GET api/ProductionStructures/{id}/yield` explains every rate; `POST
+       {id}/materialize` staff tool.
+    5. Equal split (G7): the queue lists each area's overlapping shared areas; the plugin reports `sharedBy`.
+    6. Seeds (G17): form and display `ProductionArea`, `ProductionYieldOverride`; display `AreaSurvey`;
+       `ProductionKind` v2, `ProductionStructure` v3 (form and display). One additive migration
+       `AddProductionYieldAreas`, generated last on `next` `6c648f6`; `KnKDbContext` edits in one contiguous block.
+    7. #831 (additive extra, closed by the PR): warehouse and production structure updates answer 200 with their
+       placement warnings; 400 bodies without " (Parameter 'dto')"; `Structure` form v3 with "Town (rural)".
+    8. knk-workspace (branch from `next`): smoke guide § 5 (§ 5.1 18 API steps, 17 automated, 1 partly; § 5.2 plugin
+       and § 5.3 web app drafts), changelog entry, production installation § 5.3 item 9, implementation plan status.
+2. **Commits and heads.** knk-web-api `claude/production-p4` at `06b11ca` (6 commits, base `next` `6c648f6`, which had
+   not moved at the last fetch, so the migration was generated last on it); knk-workspace `claude/production-p4` at
+   `b467e15a` (1 commit plus a merge of `next` `9eef39cf`, L10's docs; header lines kept from both sides).
+3. **PRs.** [knk-web-api#60](https://github.com/PandiO/knk-web-api/pull/60) (Closes #138, Closes #831) and
+   [knk-workspace#837](https://github.com/PandiO/knk-workspace/pull/837) (Part of #138, #831), base `next`. Not merged.
+4. **Tests, baseline → result.**
+    1. knk-web-api: baseline on `next` `6c648f6` 4774 passed / 116 skipped / 0 failed; branch 4801 passed / 117
+       skipped / 0 failed. New: `ProductionYieldTests` (18), `ProductionYieldControllersTests` (2),
+       `PlacementRulesTests` (+3, #831), `AddProductionYieldAreasTests` (4), `ProductionYieldMySqlTests` (1,
+       requires-mysql). The shared split and the size cap were broken on purpose once and their tests went red.
+    2. MySQL 8.0.46 locally with `KNK_TEST_MYSQL`: 4917 passed, 1 failed = the known red #285.
+    3. Migration applied, rolled back to `AddProductionEngine` and re-applied; `has-pending-model-changes` clean.
+    4. CI: build-and-test, mysql-tests and fresh-database green on the push of the migration commit; the PR run on
+       `06b11ca` green too (21:27).
+    5. Known reds: #285 (MySQL run only).
+5. **Decisions (DESIGN § 4.3).** All 14, each with alternatives, are in knk-web-api#60. The main ones:
+    1. *Shared split.* Chosen: the plugin reports `sharedBy` per unit; the API lists overlapping shared areas in the
+       queue. Alternatives: (a) estimate from bounding-box overlap: inexact; (b) store unit positions: too much data.
+    2. *Pin.* Chosen: replaces the survey's rate. Alternatives: (a) adds to it.
+    3. *Vanished outputs.* Chosen: the line stays with base 0. Alternatives: (a) delete it: loses its cycle records.
+    4. *Existing structures.* Chosen: `Configured` (column default), new ones `Hybrid`. Alternatives: (a) all Hybrid:
+       the P3 lines would no longer match their structure.
+    5. *Yield tables.* Chosen: none seeded (blueprint ids differ per server); profiles seeded. Follow-up #836.
+    6. *Primary multiplier.* Chosen: kind field, 1.5, on Derived and Hybrid lines only. Alternatives: (a) also on
+       Configured lines; (b) per structure.
+    7. *Survey interval.* Chosen: a 24 h constant (G5). Alternatives: (a) a game setting.
+    8. *Smoke gate.* The developer's 2026-11-19 waiver of the L4 and L6 smoke gates, read by the coordinator as
+       covering this link too (it builds on L9, whose smoke test is open).
+6. **Out of scope, noted.** #836 filed (default yield tables per kind). Comments on #679 (queue and report contract,
+   `sharedBy`, profile JSON) and #680 (endpoints, DTOs, editors). Codex: the connector hit its code-review usage limit
+   on both PRs (review "failed", usage-limit comment); no inline findings; noted on each PR.
+7. **Blockers.** None.
+8. **At merge / what the developer must do.**
+    1. Apply migration `AddProductionYieldAreas` (additive; existing structures become `Configured`).
+    2. Import the seeds `ProductionArea`, `ProductionYieldOverride` (form and display) and `AreaSurvey` (display); make
+       `ProductionKind` v2, `ProductionStructure` v3 (form and display) and `Structure` v3 (form) the default.
+    3. Fill each kind's `yieldTable` (none seeded; #836 proposes defaults).
+    4. No `api.env` key, no plugin `config.yml` change.
+    5. Smoke test [§ 5.1](../guides/production-storage-transport-smoke-test.md) (tier:3): 17 of 18 steps automated,
+       about 5 minutes for the untagged part.
+    6. At merge into `next`: the `documentation` sub-issue (yield areas architecture page and API contract, admin guide
+       for areas, yield tables, overrides and "survey now", feature register row).
+9. **Notes for later links.**
+    1. L12 (#679): see the comment on #679. Report one unit row per (key, `sharedBy`); count `sharedBy` over distinct
+       structures, this one included. The plugin owns the survey profile JSON beyond `unitTypes`.
+    2. L13 (#680): see the comment on #680. `areas` is read only on the structure DTO; area create/update return the
+       area with `size`, `sizeUnit` and the level's `maxSize`.
+    3. L21 (P8a): the pool factor is still not in the engine; the latest survey's `TotalUnits` can seed a pool's
+       capacity.

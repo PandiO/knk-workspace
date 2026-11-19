@@ -4,6 +4,170 @@ This is a human-readable record of capabilities merged into the V3 default branc
 
 ## Unreleased — on feature branches, not merged
 
+- **Overview map: moderation from the map** ([PandiO/knk-workspace#743](https://github.com/PandiO/knk-workspace/issues/743),
+  link L9 of the overview map chain, [#732](https://github.com/PandiO/knk-workspace/issues/732)). knk-web-app and
+  knk-workspace branches `claude/overview-map-moderation` (PRs into `next`). No flag of its own: it needs the live
+  players layer (`Map:LivePlayers:Enabled`) and is shown by the viewer's nodes.
+  1. A moderator holding any of `knk.freeze`, `knk.unfreeze`, `knk.kick`, `knk.ban` or `knk.admin.user.manage` who
+     clicks a player on the map gets a "Moderation" section under the name card: Freeze or Unfreeze, Kick and Ban, each
+     only with its own node, with the same dialogs, endpoints and audit entries as the player profile, and
+     "Open profile". Without `knk.admin.user.manage` (the profile page's node) "Open profile" is greyed out with a
+     tooltip that says why, instead of a link to a no-access page (fix link F2,
+     [#809](https://github.com/PandiO/knk-workspace/issues/809), branches `claude/overview-map-f2-panel-fixes`).
+  2. Everyone else still gets only the name card; anonymous viewers make no extra request.
+  3. Admin steps: none. Steps:
+     [overview map smoke test § 9](guides/overview-map-smoke-test.md#9-phase-7-player-moderation-panel-743-tier2).
+
+- **Overview map: live players on the map** ([PandiO/knk-workspace#739](https://github.com/PandiO/knk-workspace/issues/739),
+  link L5 of the overview map chain, [#732](https://github.com/PandiO/knk-workspace/issues/732)). knk-web-app and
+  knk-workspace branches `claude/overview-map-players-page` (PRs into `next`). Behind the API setting
+  `Map:LivePlayers:Enabled` (off by default: the page asks for no players and draws nothing new).
+  1. The map shows online players with a head and their name label as in the in-game chat line, in the same colours,
+     updated about every 2 s. Tags show AFK, and for staff who may see hidden players also "Staff mode", "Owner mode"
+     and the minigame.
+  2. A running siege shows one pin, for example "[Siege] 12 players", instead of its participants.
+  3. Clicking a player opens a name card with the label and tags.
+  4. Admin steps: none to keep it off. With the backend on (§ 4), the layer appears by itself. Optional: player heads
+     from a skin service through `heads=` in BlueMap's `webapp.conf`
+     ([closed-alpha runbook Phase 10](guides/closed-alpha-deployment-runbook.md#phase-10--overview-map-bluemap-in-the-stack-737)
+     step 3); without it everyone has BlueMap's default head. Steps:
+     [overview map smoke test § 5](guides/overview-map-smoke-test.md#5-phase-4b-live-players-layer-739-tier2).
+
+- **Overview map: gate command buttons in the map panel** ([PandiO/knk-workspace#742](https://github.com/PandiO/knk-workspace/issues/742),
+  link L8 of the overview map chain, [#732](https://github.com/PandiO/knk-workspace/issues/732)). knk-web-app and
+  knk-workspace branches `claude/overview-map-gate-buttons` (PRs into `next`). Behind the API setting
+  `Map:GateCommands:Enabled` (phase 6a, off by default: no buttons, no requests).
+  1. A web account holding `knk.gate.admin` sees "Gate commands" when clicking a gate on `/map`: Open, Close, Toggle
+     and Repair for the whole gate and for each door. The door moves in game; the panel shows the result (done, refused
+     with the reason, no game server, timed out) and then reads the gate again.
+  2. During a siege match on the gate the buttons are disabled with "Gate is in a running siege".
+  3. Everyone else sees the panel as before; anonymous viewers make no permission request, and nobody without the node
+     asks for door ids or sends commands.
+  4. Admin steps: none to keep it off. To turn it on, set `Map__GateCommands__Enabled=true` as in phase 6a and reload
+     `/map`. No migration, no plugin setting. Steps:
+     [overview map smoke test § 8](guides/overview-map-smoke-test.md#8-phase-6b-gate-command-buttons-742-tier2).
+
+- **Overview map: gate commands backend** ([PandiO/knk-workspace#741](https://github.com/PandiO/knk-workspace/issues/741),
+  link L7 of the overview map chain, [#732](https://github.com/PandiO/knk-workspace/issues/732)). knk-web-api,
+  knk-plugin and knk-workspace branches `claude/overview-map-gate-commands` (PRs into `next`). Behind the new API
+  setting `Map:GateCommands:Enabled` (off by default: the route answers 404 and nothing is sent). Nothing changes for
+  players yet: the map panel's gate buttons (phase 6b) call this.
+  1. New staff route `POST api/GateStructures/{id}/commands` with `{action: open|close|toggle|repair, doorId?}`, for
+     web staff holding `knk.gate.admin` only. The API sends the command to the game server over the game hub and waits
+     up to 5 s for its answer; the game server runs the existing gate operations, so the door animates as with
+     `/gate`, and repair works as `/gate repair`.
+  2. Refused while a siege match runs on the gate (409; the game server checks its siege lockdown too), without a
+     connected game server (503), for a door of another gate (400); no answer in time is 504. Every command is written
+     to the audit log (`GateCommandSent`, with the user, action, door and result).
+  3. `GET api/Map/config` now reports `gateCommands.enabled` from the setting.
+  4. Admin steps: none to keep it off. To turn it on, set `Map__GateCommands__Enabled=true` in the API's environment
+     file (`Map__GateCommands__TimeoutSeconds`, default 5). No plugin setting (the plugin answers what it receives,
+     with `realtime.enabled: true`). No migration. Steps:
+     [overview map smoke test § 7](guides/overview-map-smoke-test.md#7-phase-6a-gate-commands-backend-741-tier3),
+     [production installation § 4.3](guides/production-installation.md#43-api-configuration-file--etcknkapienv).
+
+- **Overview map: staff details in the map panel** ([PandiO/knk-workspace#740](https://github.com/PandiO/knk-workspace/issues/740),
+  link L6 of the overview map chain, [#732](https://github.com/PandiO/knk-workspace/issues/732)). knk-web-app and
+  knk-workspace branches `claude/overview-map-staff-details` (PRs into `next`). No flag: gated by the node
+  `knk.admin.world`, and shown only where the map is on (`Map:Enabled`).
+  1. World staff who click a town, district or structure on the map see a "Details" section under the public part:
+     the type's default display configuration in a compact form (no header, lists collapsed with their count,
+     related records as links, no buttons or inline edits), with "Open full page" to the record's detail page. A
+     gate shows its gate display (`GateStructure`).
+  2. Everyone else sees the panel as before; their browser asks for no display configuration.
+  3. The detail pages elsewhere in the web app are unchanged (the compact form is a new option of the same
+     renderer).
+  4. Admin steps: none. Steps:
+     [overview map smoke test § 6](guides/overview-map-smoke-test.md#6-phase-5-staff-details-740-tier2).
+
+- **Overview map: live players backend** ([PandiO/knk-workspace#738](https://github.com/PandiO/knk-workspace/issues/738),
+  link L4 of the overview map chain, [#732](https://github.com/PandiO/knk-workspace/issues/732)). knk-plugin,
+  knk-web-api and knk-workspace branches `claude/overview-map-players-api` (PRs into `next`). Behind the new API setting
+  `Map:LivePlayers:Enabled` and the plugin's existing `map.reporting.enabled` (both off by default: nothing is sent,
+  kept or served). Nothing changes for players yet: the map page's player layer (phase 4b) reads this.
+  1. The plugin reports its online players every `map.reporting.interval-ticks` (new key, default 40 = 2 s): world,
+     position, facing, AFK, active mode and running minigame match, over the game hub.
+  2. New anonymous read route `GET api/Map/players` (map rate limit): the live players with their name label as in
+     the in-game chat line, and one pin per running siege match, "[Siege] 12 players". Players in staff or owner mode
+     or in a running match never reach anonymous or plain logged-in viewers, not even in the response; a viewer with
+     `knk.mode.staff` or `knk.mode.owner` sees them with a mode or minigame tag. A player who quits disappears at once,
+     a server that stops reporting within three intervals.
+  3. Admin steps: none to keep it off. To turn it on, set `Map__LivePlayers__Enabled=true` (with `Map__Enabled=true`)
+     in the API's environment file and `map.reporting.enabled: true` in the plugin's `config.yml` (needs
+     `realtime.enabled: true`); `Map__LivePlayers__PollIntervalMs` (2000), `Map__LivePlayers__LabelCacheSeconds` (60)
+     and `map.reporting.interval-ticks` (40) have defaults. No migration. Steps:
+     [overview map smoke test § 4](guides/overview-map-smoke-test.md#4-phase-4a-live-players-backend-738-tier3),
+     [production installation § 4.3](guides/production-installation.md#43-api-configuration-file--etcknkapienv),
+     [plugin configuration § 4.29](guides/admin/plugin-configuration.md#429-map).
+
+- **Overview map: the `/map` page** ([PandiO/knk-workspace#737](https://github.com/PandiO/knk-workspace/issues/737),
+  link L3 of the overview map chain, [#732](https://github.com/PandiO/knk-workspace/issues/732)). knk-web-app and
+  knk-workspace branches `claude/overview-map-page` (PRs into `next`). Behind the API setting `Map:Enabled` (off by
+  default): while it is off the web app shows no map anywhere.
+  1. A public `/map` page with BlueMap's 3D viewer in a frame (served by our own Nginx under `/bluemap/`) and a bridge
+     script inside it that draws our pins and outlines and reports clicks (versioned messages, own origin only).
+     Opening `/bluemap` itself in the browser goes to `/map`, so the map always shows under the app's header.
+  2. Town, district and structure pins with their names: towns at every zoom, districts and structures when zoomed in;
+     structures also show their type ("Structure, Gate").
+  3. Clicking a town flashes its outline three times and opens a panel with its public fields; "Show region" keeps the
+     town and all its districts visible with their names. Districts and structures open their own panels; a gate lists
+     its doors with open/closed, destroyed and a health bar, and "Under siege" during a match.
+  4. The panel works on phones as a bottom sheet. A "Map" entry in the top bar (signed in) and a map link on the start
+     page (signed out) appear only while the map is on. Escape closes the panel, also right after a click inside the
+     map: the bridge reports the key with the new message type `escapePressed` (fix link F2,
+     [#757](https://github.com/PandiO/knk-workspace/issues/757), branches `claude/overview-map-f2-panel-fixes`).
+  5. Panels come from a map action registry, so later features (staff details, gate buttons, the player panel) add
+     their widgets and actions without touching the map side.
+  6. Admin steps: none to keep it off. To use it, move the existing BlueMap test container into the `knk-alpha` stack
+     and serve `/bluemap/` ([closed-alpha runbook Phase 10](guides/closed-alpha-deployment-runbook.md#phase-10--overview-map-bluemap-in-the-stack-737):
+     BlueMap v5.29, `webapp.conf` `client-decompression: true` and the bridge script, the `web` image with the new
+     `nginx.conf`), then set `Map__Enabled=true`. Steps:
+     [overview map smoke test § 3](guides/overview-map-smoke-test.md#3-phase-3-map-page-737-tier2).
+
+- **Overview map: public map API** ([PandiO/knk-workspace#736](https://github.com/PandiO/knk-workspace/issues/736),
+  link L2 of the overview map chain, [#732](https://github.com/PandiO/knk-workspace/issues/732)). knk-web-api and
+  knk-workspace branches `claude/overview-map-public-api` (PRs into `next`). Behind the new API setting `Map:Enabled`
+  (off by default: every `api/Map` route answers 404). Nothing changes for players yet: the web map page (phase 3)
+  reads these.
+  1. New anonymous read routes under `api/Map`: `config` (label distances, flash settings, marker version),
+     `markers` (pins and outlines of every town, district and structure, labelled with their names; structures with
+     type and subtype; a pin at the spawn location, else at the centre of the region outline), and the public panels
+     `towns/{id}`, `districts/{id}`, `structures/{id}` (a gate adds its doors with open state, destroyed and health,
+     and "under siege"). The responses hold only the fields the design allows for anyone (O32); tests pin each field
+     set.
+  2. A new per-IP rate limit `map` (120 requests per minute by default) covers every map route.
+  3. Admin steps: none to keep it off. To turn it on, set `Map__Enabled=true` in the API's environment file; the other
+     new keys (`RateLimiting__Map__PermitPerMinute`, `Map__Labels__*__MaxDistance`, `Map__Flash__*`,
+     `Map__Markers__CacheSeconds`) have defaults. No migration. Steps:
+     [overview map smoke test § 2](guides/overview-map-smoke-test.md#2-phase-2-public-map-api-736-tier3),
+     [production installation § 4.3](guides/production-installation.md#43-api-configuration-file--etcknkapienv).
+
+- **Overview map: the game server reports town, district and structure outlines** ([PandiO/knk-workspace#735](https://github.com/PandiO/knk-workspace/issues/735),
+  link L1 of the overview map chain, [#732](https://github.com/PandiO/knk-workspace/issues/732)). knk-plugin,
+  knk-web-api and knk-workspace branches `claude/overview-map-outlines` (PRs into `next`). Behind the new plugin key
+  `map.reporting.enabled` (off by default). Nothing changes for players yet: the outlines are what the coming web map
+  draws.
+  1. With reporting on, the plugin sends the outline (2D points, min and max Y) of every Town, District, Structure and
+     Gate region to the API over the game hub (`ReportRegionOutlines`): after every managed-region repair (startup,
+     `/knk regions repair`), after a world task's region is renamed or redefined (the old name is removed), and again
+     on every hub (re)connect. Large reports are split under the hub's message limit. Since fix F1
+     ([#750](https://github.com/PandiO/knk-workspace/issues/750), knk-plugin and knk-workspace branches
+     `claude/overview-map-f1-subregions`, PRs into `next`) the domain sub-regions (`domain_<id>_sub_<n>`) are reported
+     too: after every region access sync, the sub-regions it lists that were not reported yet, so a domain's outline is
+     its main region plus its sub-regions, also for sub-regions drawn before reporting was on. No new key.
+  2. The API keeps them in the new table `map_region_outlines`, one row per world and region id, linked to the domain
+     that names the region (main region or sub-region), so the map keeps its outlines while the game server is down.
+     Only a plugin-key game hub connection can write them.
+  3. Admin steps: apply the migration `AddMapRegionOutlines` (additive, one new table). To turn reporting on, paste into
+     the plugin's `config.yml` (it also needs `realtime.enabled: true`):
+     ```yaml
+     map:
+       reporting:
+         enabled: true
+     ```
+     Steps: [overview map smoke test § 1](guides/overview-map-smoke-test.md#1-phase-1-region-outlines-735-tier3),
+     [plugin configuration § 4.29](guides/admin/plugin-configuration.md#429-map).
+
 - **NPC navigation: NPCs stay on the stair at a turn over a ledge, and falls are counted**
   ([PandiO/knk-workspace#592](https://github.com/PandiO/knk-workspace/issues/592), the developer's L3 retest of
   [#491](https://github.com/PandiO/knk-workspace/issues/491) and [#492](https://github.com/PandiO/knk-workspace/issues/492);

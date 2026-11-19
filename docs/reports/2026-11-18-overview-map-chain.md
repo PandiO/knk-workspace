@@ -1,6 +1,6 @@
 # Overview map chain — progress report
 
-**Status:** In review; F1 and F2 merged, dev smoke run passed (2026-11-19) · **Last updated:** 2026-11-19
+**Status:** Done, promoted to trunk 2026-11-19 (overview map only) · **Last updated:** 2026-11-19
 
 **Issue:** [PandiO/knk-workspace#732](https://github.com/PandiO/knk-workspace/issues/732), links
 [#735](https://github.com/PandiO/knk-workspace/issues/735) (L1), [#736](https://github.com/PandiO/knk-workspace/issues/736) (L2),
@@ -14,6 +14,14 @@ on `next` (Decided 2026-11-18, O01–O33, O08 superseded by O31); smoke guide
 [guides/overview-map-smoke-test.md](https://github.com/PandiO/knk-workspace/blob/next/docs/guides/overview-map-smoke-test.md) on `next`.
 
 ## 1. Waiting for the developer
+
+**2026-11-19, promoted:** the overview map alone went to trunk on the developer's go (selective promotion: branches
+from `main` with only the overview map merges of `next` replayed, CI green): knk-web-api `75b84343` (#59, release v0.4),
+knk-web-app `31a6896d` (#62, v0.4), knk-plugin `2411d785` (#97, v0.3), knk-workspace `a199ad15` (#835, the overview map
+docs only). Deployed to the alpha by the developer (`deploy-api`, `deploy-web`, `deploy-plugin`; `Map__Enabled` in
+`config/api/cloudflare-access.env`; the web build file `_files/nginx.conf` with the `/bluemap` redirect); smoke § 3
+step 1 passed on the alpha. #732 and its sub-issues are closed; the board row is archived (`sessions-archive/2026-11.md`).
+Open: #767 (screenshots), ideas #825 and #826, the `/ownermode` case. The items below are kept as history.
 
 1. **L1 (#735) smoke test (tier:3):** L1 is in `next` (knk-web-api `562f504`, knk-plugin `7f4bdd3a`). Deploy the API
    from `next` and apply the migration `AddMapRegionOutlines` (additive); deploy the plugin from `next`, paste

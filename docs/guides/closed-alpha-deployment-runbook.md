@@ -1,6 +1,6 @@
 # Closed-alpha deployment runbook
 
-**Status:** Current · **Last updated:** 2026-11-14 (knk-web-api's trunk renamed from `master` to `main`); 2026-11-13 (§ Every deploy: deploy gate, release tags, deployment log row and GitHub Release, PandiO/knk-workspace#303)
+**Status:** Current · **Last updated:** 2026-11-19 (Phase 10 promoted to main alone with the overview map, #732); 2026-11-18 (Phase 10 step 8: opening `/bluemap` itself goes to `/map`, #737); 2026-11-18 (Phase 10 step 3: optional `heads=` for live players, #739); 2026-11-18 (Phase 10: overview map, BlueMap in the stack, deploy notes for #737, not applied); 2026-11-14 (knk-web-api's trunk renamed from `master` to `main`); 2026-11-13 (§ Every deploy: deploy gate, release tags, deployment log row and GitHub Release, PandiO/knk-workspace#303)
 **Progress:** In progress — phases 0–3 complete; phase 3b (API upgrade to the KNG-64 build, [KNG-227](https://linear.app/kngpandi/issue/KNG-227)) complete 2026-10-22 ([report](../reports/2026-10-22-alpha-api-kng64-upgrade.md)); API updated to `4aeb794` ([KNG-275](https://linear.app/kngpandi/issue/KNG-275)) and phase 4 Stage 2 (KnK plugin `d56e41da`, [KNG-225](https://linear.app/kngpandi/issue/KNG-225)) done 2026-10-24 ([report](../reports/2026-10-24-alpha-api-4aeb794-and-plugin-stage-2.md)); `/hub` waits for a hub selection in the approved seed. Phase 5 (playit.gg, `play.knightsandkings.net`) done 2026-10-24 ([report](../reports/2026-10-24-alpha-phase-5-playit.md)). Phase 6 (web app, `app.knightsandkings.net`, own tunnel, Access; API `a38c8ee9`) done 2026-10-24 ([report](../reports/2026-10-24-alpha-phase-6-web-ingress.md)). Security probe (go-live § 8) passed 2026-10-24 privately and through Cloudflare ([report](../reports/2026-10-24-alpha-security-probe.md)). HSTS and the apex redirect done the same day. Phase 7 deferred to beta (developer, 2026-10-24); the alpha uses manual snapshots (`scripts/alpha-snapshot/`). Phase 9 done 2026-10-24: mail relay, Access sync and bypass, sign-up by invitation, admission gate with the whitelist off ([report](../reports/2026-10-24-alpha-phase-9-invite-only.md)). Approved seed and fresh world imported 2026-10-24 ([report](../reports/2026-10-24-alpha-seed-import.md)); `/hub` works. Next: the first alpha run. Web hostname decided 2026-10-21: `app.knightsandkings.net`
 **Progress report:** [2026-10-11 closed-alpha infrastructure progress](../reports/2026-10-11-closed-alpha-infrastructure-progress.md)
 **Handoff:** [2026-10-11 closed-alpha infrastructure](../ai-agents/handoffs/2026-10-11-closed-alpha-infrastructure.md)
@@ -575,9 +575,106 @@ The step details and the kill switches are in [alpha go-live § 11.1](alpha-go-l
 Acceptance: a new tester gets in with only an invite mail (sign-up → Cloudflare PIN → join → code → link → rejoin); the
 current testers join without a code; the whitelist is off; `/admin/invitations` shows the Access sync green.
 
+## Phase 10 — overview map: BlueMap in the stack (#737)
+
+**Not applied yet** (deploy notes of [PandiO/knk-workspace#737](https://github.com/PandiO/knk-workspace/issues/737),
+overview map L3; spec [OVERVIEW_MAP_DESIGN § 3.1.10, O26](../specs/in-game-maps/OVERVIEW_MAP_DESIGN.md)). The
+developer applies it on the NAS (`knk-deploy`, ask before each change). Nothing new is set up for rendering: the
+hand-started `bluemap-test` container (`docker run`, image `:latest`, port 8100) and its folders under
+`/mnt/fast/knk-alpha/bluemap/` (`config/`, `data/`, `web/`, `world/`) move into the `knk-alpha` stack:
+
+1. a `bluemap` **render service** (BlueMap **v5.29**, pinned by digest, the same four folders) in the profile
+   `bluemap`, so `docker compose up -d` never starts it; a render is `docker compose --profile bluemap run --rm bluemap`;
+2. the `web` service (nginx) **serves `web/` under `/bluemap/`** of `app.knightsandkings.net`, same origin as the app;
+   BlueMap's own web server and port 8100 are no longer used;
+3. BlueMap's `webapp.conf` loads the **bridge script** `/bluemap-bridge/bridge.js`, which ships with the web app build
+   (knk-web-app `public/bluemap-bridge/`).
+
+Files: [`scripts/alpha-web/compose.bluemap-service.yaml`](../../scripts/alpha-web/compose.bluemap-service.yaml) (the
+service and the `web` volume), [`scripts/alpha-web/nginx.conf`](../../scripts/alpha-web/nginx.conf) (`location
+/bluemap/`). The `/map` page and its nav entry stay hidden until the API's `Map__Enabled=true`
+([production installation § 4.3](production-installation.md#43-api-configuration-file--etcknkapienv)); the tiles can
+be in place before that.
+
+**Version pin (spec § 9.5).** The bridge was written and checked against BlueMap v5.29's web app (`window.bluemap`,
+`window.BlueMap.MarkerSet`, the root marker set, `map.terrainHeightAt`, the `bluemapCameraMoved` and
+`bluemapMapChanged` events, and the 10-second `live/markers.json` reload that removes unknown root marker sets, which
+the bridge guards against). On any BlueMap upgrade: read the release notes for web app changes, update the digest,
+and repeat steps 7–8 before the new image renders for the live site.
+
+Steps (root shell on the NAS: `sudo -i` on its own line first, as in
+[BLUEMAP_EVALUATION § 7](../specs/in-game-maps/BLUEMAP_EVALUATION.md#7-test-procedure-reproducible-nas-over-ssh)):
+
+1. **Back up and look.** `docker ps -a --filter name=bluemap-test` and
+   `docker inspect bluemap-test --format '{{range .Mounts}}{{.Source}} -> {{.Destination}}{{println}}{{end}}'`: the four
+   mounts must be the folders above. `ls /mnt/fast/knk-alpha/bluemap/config/maps/` names the map ids (the test render
+   has `overworld.conf`, so the map id is `overworld`). Copy the config:
+   `cp -a /mnt/fast/knk-alpha/bluemap/config /mnt/fast/knk-alpha/bluemap/config.bak-$(date +%F)`.
+2. **Retire the hand-started container** (the files stay): `docker stop bluemap-test && docker rm bluemap-test`.
+3. **Edit `config/webapp.conf`** (BlueMap's own file in `/mnt/fast/knk-alpha/bluemap/config/`):
+   ```hocon
+   # Static hosting by nginx: the viewer unpacks the gzip tiles itself.
+   client-decompression: true
+   # The overview map bridge, from the web app's own origin. worlds=<BlueMap map id>:<game world name>, comma-separated;
+   # the game world name is the `world` of the pins in GET /api/Map/markers (Domain.WorldName).
+   scripts: [
+     "/bluemap-bridge/bridge.js?worlds=overworld:world_KNK-DEV"
+   ]
+   ```
+   Check the world name first: `curl -s https://app.knightsandkings.net/api/Map/markers | jq -r '[.towns[].pin.world] | unique'`
+   once `Map__Enabled=true`, or the `WorldName` column of the `domains` table. A map id equal to the world name
+   needs no entry. Optional (live players, #739): `&heads=<address with {uuid}>` after the `worlds` value draws each
+   player's own head, for example `&heads=https://mc-heads.net/avatar/{uuid}/16`; every viewer's browser then asks
+   that third-party service for the heads (it sees their IP addresses), so leave it out unless the developer chooses a
+   service. Without it every player shows BlueMap's default head (`assets/steve.png`). Keep `render-thread-count` in `config/core.conf` at 4 or lower.
+4. **World copy.** For the test render the existing `world/` copy is fine. For the full-world render, refresh it as in
+   [BLUEMAP_EVALUATION § 7.3](../specs/in-game-maps/BLUEMAP_EVALUATION.md#73-copy-the-world-safely) (`save-off`,
+   `save-all flush`, `rsync`, `save-on`) and remove the test area's render mask from `config/maps/overworld.conf`.
+5. **Compose.** Paste the `bluemap` block of `compose.bluemap-service.yaml` into
+   the `knk-alpha` stack's Compose file (in `/srv/docker/stacks/knk-alpha/`) with the other services, and add the read-only volume
+   `/mnt/fast/knk-alpha/bluemap/web:/usr/share/nginx/bluemap:ro` to the `web` service. `docker compose config -q`.
+6. **Web image.** Build the web app image as in Phase 6 from a knk-web-app revision that contains #737 (it ships
+   `/bluemap-bridge/bridge.js` and `/map`), with this repo's `scripts/alpha-web/nginx.conf`. Then
+   `docker compose up -d web`. Nginx must read the tiles as UID 101: `find /mnt/fast/knk-alpha/bluemap/web ! -perm -o+r | head`
+   prints nothing (else `chmod -R a+rX /mnt/fast/knk-alpha/bluemap/web`).
+7. **Regenerate the web app files** with the new `webapp.conf` (no render):
+   `docker compose --profile bluemap run --rm bluemap -g`. Then
+   `jq '.scripts, .clientDecompression' /mnt/fast/knk-alpha/bluemap/web/settings.json` shows the bridge URL and `true`.
+8. **Check.** `curl -sI https://app.knightsandkings.net/bluemap/ | grep -i x-frame` answers `SAMEORIGIN` (through
+   Cloudflare Access, so from a logged-in browser or with the service token); `/bluemap/settings.json` is JSON. A
+   browser that opens `/bluemap` or `/bluemap/` itself is sent to `/map` (302, from its `Sec-Fetch-Dest: document`
+   header): BlueMap only shows inside the map page's frame, under the app's header. `curl` sends no such header and
+   gets the viewer, so to look at the bare render from the NAS use
+   `docker compose exec web wget -qO- http://127.0.0.1:8080/bluemap/ | head`. With `Map__Enabled=true`, `/map`
+   shows it with the pins: smoke guide
+   [§ 3](overview-map-smoke-test.md#3-phase-3-map-page-737-tier2).
+9. **Full-world render** (about 20 hours on 4 threads, about 40 GB, BLUEMAP_EVALUATION § 6), in the background:
+   `docker compose --profile bluemap run -d --name knk-alpha-bluemap-render bluemap -r -g` (add `-f` after a config
+   change that needs a re-render), `docker logs -f knk-alpha-bluemap-render`, and
+   `docker rm knk-alpha-bluemap-render` when it has finished. Later renders of changed chunks use the same command;
+   a world copy is needed first (step 4).
+
+**Rollback.** `docker compose up -d web` with the previous web image and the `web` volume line removed; the render
+service is inert without `--profile bluemap`. To go back to the old viewer:
+`docker run -d --name bluemap-test -p 8100:8100 ... -r -w` as in BLUEMAP_EVALUATION § 7.5, with the backed-up config.
+
+Notes:
+
+1. During the closed alpha the whole host stays behind Cloudflare Access, so "public" means "without a K&K login":
+   only invited emails reach `/map` and `/bluemap/`.
+2. Cloudflare caching of `/bluemap/maps/` tiles is a later step (BLUEMAP_EVALUATION § 8 item 7); nginx sends
+   `expires 1h` for tiles and `no-cache` for the viewer and `settings.json`.
+3. No `live/` data: there is no BlueMap plugin on the game server (O15). BlueMap's own marker and player files are
+   missing, which the viewer tolerates; pins and players come from the K&K API through the bridge.
+
+Acceptance: `docker ps` shows no `bluemap-test`; `docker compose --profile bluemap config --services` lists `bluemap`;
+`/bluemap/` loads the render in the browser with `X-Frame-Options: SAMEORIGIN`, the rest of the site keeps `DENY`;
+`settings.json` lists the bridge; smoke § 3 passes.
+
 ## Changes
 
-1. 2026-11-13: header converted to the doc header standard, LAN addresses replaced by placeholders, PandiO/knk-workspace#305
+1. 2026-11-18: Phase 10, the overview map's BlueMap render service and `/bluemap/` (deploy notes, not applied), PandiO/knk-workspace#737
+2. 2026-11-13: header converted to the doc header standard, LAN addresses replaced by placeholders, PandiO/knk-workspace#305
 
 Header history up to 2026-11-13, as the old `Last updated` line gave it (newer changes: the header and git history):
 
