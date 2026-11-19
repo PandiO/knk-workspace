@@ -32,7 +32,7 @@
 | L2 P2 model, snapshot, domain search Location | #103 | Merged into next (2026-11-18) | `claude/navigation-destination-engine`: knk-web-api `a49fba23`, knk-plugin `61fe656a`, knk-workspace `30894797` | [knk-web-api#49](https://github.com/PandiO/knk-web-api/pull/49) (merge `6094276d`), [knk-plugin#80](https://github.com/PandiO/knk-plugin/pull/80) (merge `2f1c783e`), [knk-workspace#760](https://github.com/PandiO/knk-workspace/pull/760) (merge `560dd839`) | API build-and-test, mysql-tests, fresh-database green; plugin build + paper-boot green; Codex skipped (usage limit) | subagent of the coordinator (two repos besides knk-workspace, SKILL § 4.1.4 item 2) |
 | L3 P3 switch-over behind the flag | #69 | Merged into next (2026-11-18) | `claude/navigation-destination-engine`: knk-plugin `03ec14ce`, knk-workspace `9dda7c92` | [knk-plugin#81](https://github.com/PandiO/knk-plugin/pull/81) (merge `073fa4cf`), [knk-workspace#761](https://github.com/PandiO/knk-workspace/pull/761) (merge `d484361e`) | build + paper-boot green on the PR; Codex skipped (usage limit) | create_session session_01R1w2UvmCT8TsW9NNue38Vg |
 | L4 P4 hard blocks as scopes, live re-validation | #62 | Merged into next (2026-11-18) | `claude/navigation-destination-engine`: knk-plugin `d38fb46c`, knk-workspace `0b1274d4` | [knk-plugin#82](https://github.com/PandiO/knk-plugin/pull/82) (merge `3e04ba8f`), [knk-workspace#762](https://github.com/PandiO/knk-workspace/pull/762) (merge `9db3df91`) | build + paper-boot green on the PR; Codex skipped (usage limit) | create_session session_01R1w2Ux1p4b4KMqSayuzntM |
-| L5 phase 4b removal of old paths and the flag | #747 | Waiting: developer's live test of smoke § 3 and § 4 with the flag on (gate); off-road L8 #708 plugin part runs first | — | — | — | — |
+| L5 phase 4b removal of old paths and the flag | #747 | Waiting: developer's live test of smoke § 3 and § 4 with the flag on (gate); plugin navigation slot free since off-road L9 #709 merged 23:28 (plugin `c7be34fb`) | — | — | — | — |
 | L6 P5 arena duels provider and scope | #55 | Not started | — | — | — | — |
 
 ## 3. Coordinator decisions
@@ -125,6 +125,46 @@
     chain's L8 (#708) plugin part takes the knk-plugin navigation slot now (agreed in item 13); L5 does not start until
     it is merged into `next`, even once the live test passes. Alternatives: (a) hold the slot for L5 — L5 cannot start
     before the live test anyway.
+16. **Off-road L8 merged (2026-11-18 16:46).** Its coordinator reports L8 (#708) merged into `next` (knk-plugin
+    `5fd81466`, knk-web-api `935fe8cc` with the additive `AddLandmarks` migration, knk-web-app `3432e6ef`, knk-workspace
+    `7722cc76`): a `LandmarkProvider` in the World scope and an arrival-cylinder check in `NavigationService`, behind
+    `navigation.landmarks` and `navigation.destination-engine`. The plugin slot is free; L5 starts when the developer's
+    live test passes, telling the off-road coordinator first (its L10 step 2 and L5 #705 also wait for the developer).
+    L5's prompt must keep the landmark provider and arrival check while removing the flag. Alternatives: none.
+17. **Check-in 18:01 (2026-11-18).** `next` CI green after L4 (`3e04ba8f`) and off-road L8 (`5fd81466`); no live-test
+    result on #25 or #62 yet. The off-road chain took the plugin navigation slot at 17:45 for L10 step 2 (#712, plaza
+    lines behind `navigation.plaza-lines`, its `NavigationService` plaza/trail sections, `TrailRenderer`, `PlazaCurve`);
+    agreed, L5 waits for its merge as well as for the live test. Alternatives: (a) claim the slot for L5 — L5 cannot
+    start before the live test.
+18. **Off-road L10 step 2 merged (2026-11-18 18:33).** knk-plugin#84 `4daa0c84`, knk-workspace#769 `2e0c04d4`
+    (plaza-trail section of `NavigationService`, a `TrailRenderer.drawRoute` overload, `PlazaTrail`, `PlazaCurve.Options`,
+    `RoadAdminCommand`, `config.yml`). The slot is free; L5 now waits only for the developer's live test. The off-road
+    L5 (#705) waits for the developer's measurements; whichever is ready first goes first, telling the other
+    coordinator. Alternatives: none.
+19. **Off-road L5 takes the slot (2026-11-18 20:12).** The developer's measurements arrived (#770), so the off-road
+    chain started its L5 (#705: route as a leg list, walk links in the road A*, block-change hook, behind
+    `navigation.walk-links`; `core/roads/`, `core/navigation/` route and session classes, `NavigationService` route
+    resolution and walk legs). Agreed, since my L5 still waits for the live test. Asked it to hang its code off the
+    shared `begin(...)` path, not the raw-destination entry or the other paths my L5 deletes, so the removal stays
+    mechanical. Alternatives: (a) hold the slot for my L5 — it cannot start before the live test.
+20. **Off-road L5 merged, L7 takes the slot (2026-11-18 21:15).** Off-road L5 (#705) merged (knk-plugin#85 `3977329c`,
+    knk-workspace#774 `e2cac646`); its route code hangs off `computeRoute` (the shared `begin` path). Its L7 (#707, route
+    modes: mode word on `/navigate`, mode nodes, router costs; `NavigateCommand`, router cost functions,
+    `NavigationService` route request) now holds the slot, working on both paths while the flag exists. Agreed, since
+    my L5 still waits for the live test; asked it to keep the mode-word parsing in one place shared by both branches so
+    my L5 can delete the flag-off branch without moving its code. My L5's prompt must keep the mode word on the engine
+    path. Alternatives: (a) hold the slot — L5 cannot start before the live test.
+21. **Off-road L7 merged, L9 takes the slot (2026-11-18 22:06).** L7 (#707) merged (knk-plugin#86 `a94332d9`,
+    knk-workspace#775 `dd09f782`); mode-word parsing, node check and completion live once in `NavigateCommand`
+    (`parseRoute`, `withMode`, `addTrailingWords`), called by both branches and tested on the engine path; the mode
+    reaches `begin` as a `navigate(…, RouteMode)` argument. Off-road L9 (#709, landmark weights in the walk search;
+    `core/roads/walk`, `NavigationService.forMode`, reads landmark records) holds the slot now. No live-test result at
+    22:05; next check-in 04:07 on 2026-11-19. Alternatives: none.
+22. **Off-road L9 merged, slot free (2026-11-18 23:28).** L9 (#709) merged (knk-plugin#87 `c7be34fb`, knk-workspace#776
+    `99fef23d`): `Landmark.preference` in the model record and snapshot (additive; old files read 1.0) and a
+    `Landmarks` port in `NavigationService` behind `navigation.landmarks`. The off-road chain's last link L6 (#706) waits
+    for the developer, so L5 can start as soon as the live test passes (tell that coordinator when it starts).
+    Alternatives: none.
 
 ## 4. Link blocks
 
