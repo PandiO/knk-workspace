@@ -24,7 +24,7 @@
 | Link | Issue | Status | Branch heads | PR | CI | How started |
 |---|---|---|---|---|---|---|
 | L0 Item identity: every obtainable item is a blueprint; generated "Uncurated" shadow blueprints (G4) | #141 | Merged into next (2026-11-19) | api `5daa3c6`, plugin `a6c5a2bc`, workspace `8ffdbb1a`; merges: api `7d213fd6`, plugin `2ef256e7`, workspace `ca3bcc98` | [api#51](https://github.com/PandiO/knk-web-api/pull/51), [plugin#89](https://github.com/PandiO/knk-plugin/pull/89), [ws#793](https://github.com/PandiO/knk-workspace/pull/793) | green (API PR checks; plugin build + paper-boot) | subagent of the coordinator (two repos besides knk-workspace, SKILL § 4.1.4.2), started 2026-11-19 |
-| L1 Territory API: holders, crown land entity (G10), power, range (G11), conflicts, loyalty | #326 | Running | — | — | — | create_session `session_01R1w2Uwo46dJVo6Cpr8LzmG` (one repo besides knk-workspace), started 2026-11-19 |
+| L1 Territory API: holders, crown land entity (G10), power, range (G11), conflicts, loyalty | #326 | In review (PRs open, not merged) | api `ff50ec1`, workspace `c4211d51` | [api#53](https://github.com/PandiO/knk-web-api/pull/53), [ws#798](https://github.com/PandiO/knk-workspace/pull/798) | api green (build-and-test, mysql-tests, fresh-database) | create_session `session_01R1w2Uwo46dJVo6Cpr8LzmG` (one repo besides knk-workspace), started 2026-11-19 |
 | L2 Territory plugin: chunk cache, lookup, BlueMap outlines | #689 | Not started | — | — | — | — |
 | L3 Territory web app | #690 | Not started | — | — | — | — |
 | L4 P1 stock core API: storages, ledger, reconciler, capacity, roll-up | #97 | Not started | — | — | — | — |
@@ -190,3 +190,90 @@ _(Each link appends its block here when it finishes.)_
        are refused per DESIGN § 8.
     2. API side: a material's blueprint is the `ItemBlueprint` with `VanillaMaterialMatchRefId` = the material's id;
        shadows are the blueprints in the top-level "Uncurated" category.
+
+### 4.1 L1 — Territory API: holders, crown land entity (G10), power, range (G11), conflicts, loyalty (#326)
+
+1. **Scope done** (knk-web-api, plus essential docs in knk-workspace).
+    1. Holders: entities `Kingdom`, `Province` (one kingdom, name unique per kingdom) and `CrownLand` (a `Domain`
+       subtype owned by a kingdom, with `Range`, region captured like a district, G10). `Town.Power`/`KingdomId`/
+       `ProvinceId` (province must be in the town's kingdom), `District.IsCapital`.
+    2. Range = base + power × factor, capital × multiplier (G11), from the new game settings section `production`
+       (`enabled` = `Production:Enabled`, default off; `territory` base 100, factor 2, capital 1.5).
+    3. Plugin inputs: `GET api/Territory/inputs` (one read: kingdoms, towns, districts and crown land with region,
+       sub-regions, holder, rank and computed range, awards, `version` hash) and realtime event `TerritoryChanged`
+       (scope `territory`) on any input change; the report's own writes send none.
+    4. Conflicts: `PUT api/Territory/report` (plugin key, `Production:Enabled` on, else 409) turns equal-rank overlaps
+       into open `TerritoryConflict` rows and flags structures (`OutsideTerritory`/`Contested`, listed on the
+       conflict, cleared when no longer reported). Admins: `api/TerritoryConflicts/{id}/resolve` (Awarded/Redrawn),
+       `reopen`, delete.
+    5. Structures: `LoyaltyTownId` (stored only; `PUT api/Territory/structures/{id}/loyalty`), territory flag.
+    6. CRUD controllers `api/Kingdoms`, `api/Provinces`, `api/CrownLands`; dashboard registry, lookups, pinned access
+       tests; form and display seeds for the four new entities (G17). One additive migration `AddTerritory`.
+    7. knk-workspace: smoke guide § 1 (1.1-1.2: 19 steps, all tagged; 1.3 keeps the plugin/web app draft), changelog,
+       production installation § 5.3, territory DESIGN and implementation plan status.
+2. **Commits and heads.** knk-web-api `claude/production-t-a` at `ff50ec1` (3 commits + merge of `origin/next`
+   `e940aef` with the siege weapons migration, before generating `AddTerritory`); knk-workspace `claude/production-t-a`
+   at `c4211d51` (1 commit, base `next` `80f6ff72`). `next` had not moved again when the PRs were opened.
+3. **PRs.** [knk-web-api#53](https://github.com/PandiO/knk-web-api/pull/53) (Closes #326),
+   [knk-workspace#798](https://github.com/PandiO/knk-workspace/pull/798) (Part of #326); base `next`. Not merged.
+4. **Tests, baseline → result.**
+    1. knk-web-api: baseline on `next` `7d213fd` 4485 passed / 103 skipped; branch after merging `next` `e940aef`
+       4600 passed / 103 skipped / 0 failed (new: `TerritoryRulesTests`, `TerritoryServiceTests`,
+       `TerritoryConflictServiceTests`, `TerritoryHolderServicesTests`, `ProductionSettingsTests`,
+       `TerritoryRealtimeEventTests`, `AddTerritoryTests`; 65 tests; the rest of the rise is the siege tests from `next`).
+       With `KNK_TEST_MYSQL` on MySQL 8.0.46: 4702 passed, 1 failed = the known red #285
+       (`MinecraftCatalogMySqlTests.UpgradePath_…`). Migration applied, rolled back to `AddSiegeWeapons`, re-applied;
+       `has-pending-model-changes` clean. CI on `ff50ec1` (PR run 44507088448): build-and-test, mysql-tests,
+       fresh-database green.
+    2. Known reds: #285 only (MySQL run).
+5. **Decisions (DESIGN § 4.3).**
+    1. *Where territory is computed.* Chosen: the game server (it has the region geometry); the API holds inputs and
+       the reported results and computes ranges. Alternatives: (a) API computes overlaps: it has no region shapes and
+       would ask the plugin per chunk; (b) plugin owns conflicts too: no admin record or resolution in the database.
+    2. *Conflict detection contract.* Chosen: one full-snapshot report per world; an open conflict per holder pair and
+       world; a gone overlap stays open with `stillOverlapping: false`. Alternatives: (a) auto-close vanished
+       conflicts: DESIGN § 3 says admins resolve; (b) incremental reports: lost messages leave stale flags.
+    3. *Creation-time territory check.* Chosen: the structure flag from the next report (warns, never blocks); the
+       form rule `InsideTerritory` stays with P2 (#91, DESIGN § 3.4). Alternatives: (a) API→plugin lookup call at
+       save: needs a plugin endpoint that does not exist before #689; (b) add `InsideTerritory` now: P2's item.
+    4. *Loyalty field shape.* Chosen: `LoyaltyTownId` (the town it is loyal to; null = its own), since DESIGN § 4
+       Later speaks of "the town it is loyal to". Alternatives: (a) a 0-100 number: no target town for switching
+       sides; (b) both: speculative.
+    5. *Settings location.* Chosen: game settings JSON section `production` (`enabled`, `territory`), like hub and
+       chat tokens. Alternatives: (a) `appsettings`/`api.env`: not editable by admins, a restart to change; (b) three
+       columns: the next links add more production settings.
+    6. *Flag gating.* Chosen: the report (the only background work) answers 409 when off; CRUD, inputs and resolve
+       stay on. Alternatives: (a) gate the inputs read too: the plugin could not show its state; (b) no gate.
+    7. *Town fields on the existing DTO.* Chosen: `power`, `kingdomId`, `provinceId` on `TownDto` with "null power =
+       not on this form" (teleport pattern), `isCapital` nullable on `DistrictDto`. Alternatives: (a) a separate
+       endpoint only: the web app's town form could not edit them; (b) always applied: today's forms would wipe them.
+    8. *Services on the DbContext, manual DTO projection* for the new types (like 33 existing services). Alternatives:
+       (a) repository + AutoMapper per entity: ~10 more files for plain CRUD.
+    9. *TerritoryConflict in the registry* as a deletable World type without create/update (`changesNeedContent:
+       false`, added to the `ChangesWithoutContent` test list; read-only form seed). Alternatives: (a) `ViewOnly`:
+       no admin delete of a stale conflict.
+    10. *Crown land region domain type.* Chosen: none sent to the plugin on rename (no parent, plugin only renames);
+        a managed-region kind is #689's. Alternatives: (a) send "CrownLand": unknown to today's plugin.
+    11. *Town and District form seeds* not bumped (power, kingdom, province, capital); #690 adds them. Alternatives:
+        (a) new seed versions now: re-GUIDs the Town field other seeds' rules depend on.
+6. **Out of scope, noted.** On #326 (comment): #689 should add a `CrownLand` managed-region kind and implement the
+   inputs/report contract (knk-web-api#53 "Contract for #689"); #690 adds the town/district territory fields to the
+   Town and District forms and the conflict resolve actions. No new issues.
+   Codex: the connector hit its code-review usage limit on both PRs (review "failed", usage-limit comment); no
+   findings to handle; noted on each PR.
+7. **Blockers.** None.
+8. **At merge / what the developer must do.**
+    1. Apply migration `AddTerritory` (additive). Import the form seeds `Kingdom`, `Province`, `CrownLand`,
+       `TerritoryConflict` and the four display seeds ("make default", `Kingdom` first).
+    2. Keep `production.enabled` false (game settings) until #689 is deployed. No plugin `config.yml` change.
+    3. Smoke test [§ 1.1-1.2](../guides/production-storage-transport-smoke-test.md#1-territory-v1-326-api-689-plugin-690-web-app-tier3)
+       (tier:3 gate before L6 builds on it); untagged steps none (1.2.6 needs a connected server to check by hand).
+    4. At merge into `next`: the `documentation` sub-issue (API contract page, admin guide, feature register row).
+9. **Notes for later links.**
+    1. L2 (#689): read `GET api/Territory/inputs`, rebuild on `TerritoryChanged` when `version` changed, use each
+       region's `range` as given, rank 2 beats 1, awards win their chunks; report per world with
+       `PUT api/Territory/report` (full snapshot) only when `productionEnabled`. Reference: `TerritoryRules.Resolve`.
+    2. L3 (#690): endpoints `api/Kingdoms`, `api/Provinces`, `api/CrownLands`, `api/TerritoryConflicts` (+ `resolve`,
+       `reopen`), `api/Territory/towns/{id}` (effective ranges), `api/Territory/structures/{id}` (+ `loyalty`, `flag`);
+       game settings section `production`.
+    3. L6 (P2): rural `TownId` and `InsideTerritory` are yours; the structure flag and `TerritoryConflictId` exist.
