@@ -34,7 +34,7 @@ of what is already in `next`.
 | L1 Territory API: holders, crown land entity (G10), power, range (G11), conflicts, loyalty | #326 | Merged into next (2026-11-19) | api `ff50ec1`, workspace `c4211d51`; merges: api `0d6e369a`, workspace `4595e6d8` | [api#53](https://github.com/PandiO/knk-web-api/pull/53), [ws#798](https://github.com/PandiO/knk-workspace/pull/798) | green (build-and-test, mysql-tests, fresh-database) | create_session `session_01R1w2Uwo46dJVo6Cpr8LzmG` (one repo besides knk-workspace), started 2026-11-19 |
 | L2 Territory plugin: chunk cache, lookup, BlueMap outlines | #689 | Merged into next (2026-11-19) | plugin `96ef7326`, workspace `14d3efcd`; merges: plugin `55804b11`, workspace `66d35872` | [plugin#91](https://github.com/PandiO/knk-plugin/pull/91), [ws#804](https://github.com/PandiO/knk-workspace/pull/804) | green (plugin build + paper-boot) | create_session `session_01R1w2Uvhpo37DXAXpm2uqLp` (one repo besides knk-workspace), started 2026-11-19 |
 | L3 Territory web app | #690 | Merged into next (2026-11-19) | web app `0531422`, workspace `f3bd8f27`; merges: web app `89751315`, workspace `54bdc830` (after a coordinator merge of `next`, `e4f2276d`) | [web#57](https://github.com/PandiO/knk-web-app/pull/57), [ws#803](https://github.com/PandiO/knk-workspace/pull/803) | web app green (build-and-test, e2e) | create_session `session_01R1w2UuYHneFJFXcn8GSe6F` (one repo besides knk-workspace), started 2026-11-19 |
-| L4 P1 stock core API: storages, ledger, reconciler, capacity, roll-up | #97 | Running (resumed 16:05 after the 5-hour usage limit stopped it at 12:43; nothing pushed before) | — | — | — | create_session `session_01R1w2Uwv8FBnKCUoeZauzVt` (one repo besides knk-workspace), started 2026-11-19 |
+| L4 P1 stock core API: storages, ledger, reconciler, capacity, roll-up | #97 | In review (2026-11-19; block 4.4) | api `e524721`, workspace `abef76fc` | [api#56](https://github.com/PandiO/knk-web-api/pull/56), [ws#816](https://github.com/PandiO/knk-workspace/pull/816) | green (build-and-test, mysql-tests, fresh-database) | create_session `session_01R1w2Uwv8FBnKCUoeZauzVt` (one repo besides knk-workspace), started 2026-11-19 |
 | L5 P1b stock web app | #675 | Not started | — | — | — | — |
 | L6 P2 world API: structure subtypes, TownId, placement rules | #91 | Not started | — | — | — | — |
 | L7 P2b world web app | #676 | Not started | — | — | — | — |
@@ -507,3 +507,93 @@ _(Each link appends its block here when it finishes.)_
        Crown land created in the web app has no domain type sent to the plugin (L1 decision 10).
     2. Web app links: the territory panels mount in `DisplayWizardPage.tsx` next to the landmark panel; strict
        e2e specs that open a town page need `mockNoTownTerritory(api, id)` from `e2e/fixtures/territory.ts`.
+
+### 4.4 L4 — P1 stock core API: storages, ledger, reconciler, capacity, roll-up (#97)
+
+1. **Scope done** (knk-web-api, plus essential docs in knk-workspace).
+    1. Storages (`Storage`): kinds Domain, Player, Clan, Transit and Virtual, with one holder per kind (`DomainId`,
+       `UserId`, `ClanId` or `SystemKey`) and check constraint `CK_storages_Holder`. Also `Purpose`, capacity
+       (`MaxUnits`, `MaxDistinct`, `UnitsPerSlot`), stored `TotalUnits` and `DistinctItems`, a `RowVersion` token, and
+       `LockedUntil` with `LockReason`. The five system storages are seeded (ids 1-5).
+    2. `StockLine` (blueprint FK Restrict) and `StockUnit` (an `ItemInstance`, unique).
+    3. `StockTransaction` + `StockMove`: append-only, unique idempotency key with request hash, compensating
+       corrections (`ReversesTransactionId`, unique).
+    4. `IStockService` (`Move`, `MoveMany`, `Adjust`, `Reverse`): row locks `FOR UPDATE` in id order, conditional
+       updates, AllOrNothing or Partial, capacity (raw units × the new `ItemBlueprint.StorageWeight`), distinct cap,
+       missing stock and locks returned as results, never thrown. It enlists in the caller's transaction.
+    5. `StockReconciler`: per blueprint the sum is zero, each line equals the net of its moves plus roll-ups, units
+       sit where their last move put them, stored totals match.
+    6. `StockRollupService` (G3): `Production` and `ProductionInput` moves of whole days more than 30 days back become
+       `stock_move_rollups` rows per day, reason, storage pair and blueprint. Totals are unchanged.
+    7. `StockMaintenanceService`: reconcile every 6 h and roll up daily, only with `production.enabled` on. Admin
+       CRUD, moves, adjust, reverse, reconcile and roll-up by hand stay on (DESIGN § 18.2).
+    8. Endpoints `api/Storages` (dashboard type `Storage`, World area) and `api/StockTransactions`. Ledger reads need
+       the World area or `knk.economy.admin`; move, `adjust`, `{id}/reverse` and `rollup` need the new node
+       `knk.economy.admin`. Lookup `Storage`.
+    9. Form and display seeds `Storage` and `StockTransaction` (G17). Pinned access, seed and lookup tests updated.
+       One additive migration, `AddStockCore`.
+    10. knk-workspace (branch from `next`): smoke guide § 2 (17 steps, 15 automated, 2 partly), changelog entry,
+        production installation § 5.3 item 6, implementation plan status.
+2. **Commits and heads.** knk-web-api `claude/production-p1` at `e524721` (4 commits, base `next` `7dc1038`, which
+   had not moved at the final fetch, so no merge was needed); knk-workspace `claude/production-p1` at `abef76fc`
+   (1 commit, base `next` `ac437102`).
+3. **PRs.** [knk-web-api#56](https://github.com/PandiO/knk-web-api/pull/56) (Closes #97) and
+   [knk-workspace#816](https://github.com/PandiO/knk-workspace/pull/816) (Part of #97), both into `next`. Not merged.
+4. **Tests, baseline → result.**
+    1. knk-web-api: baseline on `next` `7dc1038` 4610 passed / 103 skipped / 0 failed. Branch: 4677 passed /
+       112 skipped / 0 failed.
+    2. New tests: `StockServiceTests`, `StockReconcilerAndRollupTests`, `StorageServiceTests`, `StockControllersTests`,
+       `AddStockCoreTests` (67 run by default), and `StockLedgerMySqlTests` (9, requires-mysql).
+    3. MySQL 8.0.46 locally: all 9 stock MySQL tests green, including 1000 concurrent moves with a clean reconciler
+       (A01), no overdraw, no cap overrun, one key applying once also across storages, caller-transaction rollback,
+       the check constraint and the roll-up. The full suite with `KNK_TEST_MYSQL` failed only the known red #285 and
+       a pinned lookup test, which was then fixed.
+    4. Each new behaviour was seen failing once by breaking it on purpose: the capacity, idempotency and distinct-cap
+       checks; removing the row lock failed 3 MySQL tests.
+    5. Migration applied, rolled back to `AddTerritory` and re-applied; `has-pending-model-changes` clean.
+    6. CI on `e524721`: build-and-test, mysql-tests and fresh-database green. Known reds: #285 (MySQL run only).
+5. **Decisions (DESIGN § 4.3).** All 16, each with its alternatives, are in knk-web-api#56. The main ones:
+    1. *Node.* Chosen: `knk.economy.admin` as IMPLEMENTATION_PLAN § P1 names it, not under `knk.admin`, so
+       `knk.admin.*` does not grant moving stock. Alternatives: (a) `knk.admin.economy` or `knk.admin.world`: every
+       admin could create goods.
+    2. *Ledger reads.* Chosen: the World area or `knk.economy.admin` (dashboard type `StockTransaction`).
+       Alternatives: (a) economy only: needs an eighth area node, which the area test forbids.
+    3. *Clan holder.* Chosen: FK to the existing minimal `clans` table; no clan model invented. Alternatives: (a) a
+       bare id without FK.
+    4. *Caps.* Chosen: flat columns, null = no cap; a lowered cap allows removals only. Alternatives: (a) an owned type
+       (the forms bind flat fields); (b) a required cap.
+    5. *Locking.* Chosen: every storage of a request, system storages included. `SYS_PRODUCTION` is a hot spot,
+       accepted for V1. Alternatives: (a) atomic increments for virtual lines.
+    6. *Unique items.* Chosen: never held in virtual storages (row created from one, deleted to one); a unit counts
+       1 total and 1 distinct item. Alternatives: (a) rows in `SYS_WORLD` for items in players' hands.
+    7. *Append-only.* Chosen: by service API, no MySQL triggers, because the roll-up deletes old production moves.
+       Roll-ups are a separate table counted by the reconciler; reversed and unique-item transactions are skipped.
+       Alternatives: (a) triggers with an exception; (b) flagged rows in `stock_moves`.
+    8. *Seeds* (ledger rows were the agent's call, developer 2026-11-19). Chosen: `Storage` and `StockTransaction`;
+       lines, units and moves are view-only child types on their parents' pages; roll-up rows have none.
+       Alternatives: (a) seeds for every row type.
+    9. *`StorageWeight`* uses null = keep on the blueprint DTOs; the `ItemBlueprint` form seed is not bumped (noted
+       on #675). Alternatives: (a) seed v-next now.
+    10. *DbContext layout* (coordinator note on the siege chain): one contiguous model block and one `DbSet` block.
+        If `next` gets a migration before merge: merge `origin/next` and regenerate `AddStockCore`, then update the
+        migration name in production installation § 5.3 item 6.
+6. **Out of scope, noted.** On #675 (comment): the endpoints, filters and result statuses for the web app; the
+   `ItemBlueprint` form seed doesn't carry `storageWeight` yet. No new issues. Codex: the connector hit its
+   code-review usage limit on both PRs (review "failed", usage-limit comment); no inline findings; noted on each PR.
+7. **Blockers.** None.
+8. **At merge / what the developer must do.**
+    1. Apply migration `AddStockCore` (additive). Import the form and display seeds `Storage` and `StockTransaction`.
+    2. Grant `knk.economy.admin` to the staff who may move or adjust stock. No `api.env` key, no plugin `config.yml`
+       change.
+    3. Smoke test [§ 2](../guides/production-storage-transport-smoke-test.md#2-phase-p1-stock-core-97-api-675-web-app-tier3)
+       (tier:3 gate before L6 builds on it): 15 of 17 steps automated, about 10 minutes for the untagged parts.
+    4. At merge into `next`: the `documentation` sub-issue (stock core architecture page and API contract, stock admin
+       guide, feature register row).
+9. **Notes for later links.**
+    1. L5 (#675): see the comment on #675. Results are 200s with a `status`; show `rejectReason` per line.
+    2. L6 (P2, #91): a structure's storages are `Kind = Domain` with `DomainId` = the structure's id (structures are
+       domains), so default storages on create are `StorageService.CreateAsync` with `DomainId` (or rows inserted with
+       the same rules). Moves into a new storage go through `IStockService` inside your own transaction.
+    3. Later links: P5 creates `Transit` storages per order (no holder, uncapped); P7 uses Player storages with
+       `Purpose = Inbox` or `Stash` and `SYS_LOSS`; every caller that may retry sends an idempotency key.
+
