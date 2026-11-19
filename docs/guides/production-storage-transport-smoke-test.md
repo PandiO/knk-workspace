@@ -19,7 +19,7 @@ Common preconditions for every section:
 
 ## 0. Item identity (#141 API and plugin; tier:3)
 
-Built in link L0 (knk-web-api and knk-plugin branches `claude/item-identity-141`). Every obtainable vanilla material
+Built in link L0, merged into `next` 2026-11-19 (knk-web-api `7d213fd6`, knk-plugin `2ef256e7`). Admins: [item identity admin guide](admin/item-identity-admin-guide.md). Every obtainable vanilla material
 has exactly one item blueprint (a generated "vanilla shadow" in the "Uncurated" category until an admin curates it,
 D11/G4), and every item a player obtains resolves to one: instance tag, then blueprint tag, then the material's vanilla
 match. The plain vanilla item is the canonical form and never carries a blueprint tag, so stacking stays vanilla's.
@@ -29,7 +29,7 @@ Full manual run about 45 minutes; the untagged steps only about 25 minutes.
 
 1. knk-web-api with migration `AddItemIdentity` applied; a completed Minecraft catalogue scan of the test server's
    version (web app, Minecraft catalogue page, "Scan").
-2. The plugin jar from the branch, with `items.identity` merged into `config.yml` (both keys `false` at first).
+2. The plugin jar from `next`, with `items.identity` merged into `config.yml` (both keys `false` at first).
 3. A curated stackable blueprint with a display name, e.g. **Phoenix Bread** (`minecraft:bread`, display name
    `&6Phoenix Bread`), and a kit that hands out 16 of it.
 4. A REST client with a Staff token (`knk.admin.content`) and one with a Visitor token, or Swagger.
