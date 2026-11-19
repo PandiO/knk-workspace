@@ -35,6 +35,7 @@ on `next` (Decided 2026-11-17).
 | L9 Phase 5.2 landmark weights | #709 | Merged into next (2026-11-18); waits for the developer's smoke § 7 steps 1–3 | knk-plugin `claude/offroad-landmark-weights` `636c9f32`; knk-workspace `9d0c926f` | [knk-plugin#87](https://github.com/PandiO/knk-plugin/pull/87) → `c7be34fb`, [#776](https://github.com/PandiO/knk-workspace/pull/776) → `99fef23d` | green (build; paper-boot after one #695 flake on the PR run) | create_session `session_01R1w2Ut1P9c2jGxRYC3weCJ` (2026-11-18) |
 | L10 Phase 7 plaza lines | #712 | Merged into next (step 1 and step 2, 2026-11-18); waits for the developer's smoke § 10.2 | knk-plugin `claude/offroad-plaza-lines` `28ad18c5`; knk-workspace `d7e4e834` | step 1: [knk-plugin#73](https://github.com/PandiO/knk-plugin/pull/73) → `ce0f65ec`, [#723](https://github.com/PandiO/knk-workspace/pull/723) → `c7f61e9e`; step 2: [knk-plugin#84](https://github.com/PandiO/knk-plugin/pull/84) → `4daa0c84`, [#769](https://github.com/PandiO/knk-workspace/pull/769) → `2e0c04d4` | green (build, paper-boot) | create_session `session_01R1w2Ussca79jpGCPqzcTf8` (2026-11-18) |
 | F1 walk-search fixes (#771 items 1, 2) | #771 | Merged into next (2026-11-19); waits for the developer's smoke § 12; the storage hall by road stays open (#780) | knk-plugin `claude/offroad-walk-fixes-771` `321daf6b`; knk-workspace `8fdfe392` | [knk-plugin#88](https://github.com/PandiO/knk-plugin/pull/88) → `cee53213`, [#778](https://github.com/PandiO/knk-workspace/pull/778) → `d1850c7a` | green (build, paper-boot) | create_session `session_01R1w2Ut7LKtBrvQw9bA3mVQ` (2026-11-19) |
+| F2 road goal and route ends (#780 b, #771 items 3–5) | #780, #771 | Running (started 2026-11-19 12:26 from plugin `next` `55804b11`) | `claude/offroad-route-ends-f2` | — | — | create_session `session_01R1w2UtLzNFzgycUAEB8mVd` (2026-11-19) |
 
 ## 3. Coordinator decisions
 
@@ -236,6 +237,13 @@ on `next` (Decided 2026-11-17).
     #698) with two options for the developer: (a) a road to the hall (data, fits the road-network plan), (b) choose
     the road goal by walk reachability (code). The watchtower roof works at shipped limits. Engine and NPC coordinators
     told; the NPC chain files its own follow-up for the hatch in the NPC body check.
+37. **Fix link F2 started (2026-11-19 12:26, developer's go).** Developer decisions: #780 both (a: a road to the
+    keep storage hall, the developer's; b: road goal by walk reachability, F2) and #771 items 3–5 into F2. Every
+    behaviour change sits behind a key off by default (item 3: `trail-leg-spacing` also with `guidance-v2` off,
+    default 3.0), so today's routes and L7's golden transcripts stay as they are. Alternatives: (a) unflagged bug
+    fixes; rejected, the road-goal change alters many routes and the chain's rule 1 keeps new behaviour behind keys;
+    (b) separate links for #780 and #771; rejected, items 4 and 5 sit in the same route-end code. Engine, NPC and
+    siege weapons coordinators told; F2 holds the plugin navigation slot.
 
 ## 4. Link blocks
 
