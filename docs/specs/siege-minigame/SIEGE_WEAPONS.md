@@ -3,8 +3,10 @@
 **Status:** **Decided 2026-11-19** (developer), with one change on approval (W75). Open questions answered (§ 15);
 agent decisions W64–W73 accepted with the approval. Earlier: V1 gameplay decided 2026-11-12 to 2026-11-16 (W1–W57),
 review gaps closed 2026-11-19 (W58–W74). Phases and sub-issues in § 14.2. Phase 1 (#782: entities, API, form seeds,
-unlocks) built on branches `claude/siege-weapons-l1` (PRs into `next`); no gameplay code yet.
-**Last updated:** 2026-11-19 (phase 1 built on branches, link L1 of the chain); 2026-11-19 (Decided: W75 aiming preview arc, open questions answered, phases split to 9 with
+unlocks) merged into `next`. Phase 2 (#783: weapon spots created in game with `/knk weaponspot`, an in-game task that
+writes through the API like the gate door region capture; size class from bounds and facing in the plugin and on API
+saves) built on branches `claude/siege-weapons-l2` (PRs into `next`), behind `siege.weapons.enabled` (default off).
+**Last updated:** 2026-11-19 (phase 2 built on branches, link L2 of the chain); 2026-11-19 (phase 1 built on branches, link L1 of the chain); 2026-11-19 (Decided: W75 aiming preview arc, open questions answered, phases split to 9 with
 sub-issues, smoke-test guide); 2026-11-19 (design run, `knk-design` skill: spread by ranging in, impact height and cover, weapon
 kill points, no buyer privileges, in-game aiming fallback, plugin-owned state with the API as relay
 ([DECISION-weapon-state.md](DECISION-weapon-state.md)), page credential, structure damage, flight time, check before
