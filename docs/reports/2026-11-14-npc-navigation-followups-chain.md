@@ -417,6 +417,22 @@ the configuration reference § 4.27), then restart. In test order:
     started. The off-road (#698) and siege weapons (#354) coordinators were told. Also on 2026-11-19: the developer's
     decision on long walks (O32, L6 on hold; transports ride the extended rural roads with short walk legs); NPC walk
     legs share the players' `navigation.walk` caps (an NPC-only override offered, not scheduled).
+51. **Developer retest of 2026-11-19: B5, C1, E1, R1 passed** (evidence `evidence/smoke-2026-11-16`
+    `.../evidence/2026-11-19/`: run log, a new tower snapshot with the box over the goal and the start). The `ranks`
+    group holds formation well on the stair house; the keep tower is reached by one NPC and a group of 20; the off-road
+    start joins the road where reachable; exit denials and the refresh hold; `trespasses 0` throughout. The developer
+    accepted the E1 refresh step and R1's steps without testing them (correction, 2026-11-19). To improve later (developer: not a problem): an NPC looks jittery in
+    the spiral staircase, the walk path hugging the inner wall. NPC walk legs are not shaped by clearance yet; the
+    off-road chain's walk-path shaping (O11, guidance v2) is player-side, and NPC legs could reuse it later.
+52. **Developer decisions, 2026-11-19:** the review decisions of B5 (block 4.21 § 5) and C1 (block 4.22 § 5) are
+    accepted. "Accepted" on a smoke step means accepted without testing (E1 step 3, R1). NPC walk-leg shaping filed as
+    #817 (gated on the off-road chain's #710 live test).
+53. **Developer decisions, 2026-11-19:** the review decisions of E1 (block 4.23 § 5) and R1 (block 4.24 § 5) are
+    accepted. **Option B (a short-horizon steering layer, plan 4c.4 item 8) is postponed**, not dropped: no dynamic case
+    is left that A, D and M4 do not handle in the tests so far, but two cases are untested. It is looked at again (1)
+    when a test route with a real narrow place (a one-block door or narrow gate where groups queue) is added and (2)
+    when `collidable: true` is tested. If NPCs then get in each other's way where crowd awareness does not help, B gets
+    its own link.
 
 ## 4. Link blocks
 

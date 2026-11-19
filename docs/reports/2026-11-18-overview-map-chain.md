@@ -1,6 +1,6 @@
 # Overview map chain — progress report
 
-**Status:** In review; fix links F1 and F2 merged into `next` (2026-11-19) · **Last updated:** 2026-11-19
+**Status:** In review; F1 and F2 merged, dev smoke run passed (2026-11-19) · **Last updated:** 2026-11-19
 
 **Issue:** [PandiO/knk-workspace#732](https://github.com/PandiO/knk-workspace/issues/732), links
 [#735](https://github.com/PandiO/knk-workspace/issues/735) (L1), [#736](https://github.com/PandiO/knk-workspace/issues/736) (L2),
@@ -61,7 +61,15 @@ on `next` (Decided 2026-11-18, O01–O33, O08 superseded by O31); smoke guide
     its outline stays on the map until the next full outline report of that domain. #772 (direct `/bluemap` visits
     go to `/map`, relative redirects) is merged into `next` (`8487a058`): rebuild the alpha `web` image with its
     `nginx.conf` together with the promotion, not before.
-11. **Still open for you:** the `/ownermode` case of the L4 check (a second staff account), and when to promote `next`.
+11. **Dev smoke run 2026-11-19 (yours): passed** §§ 1 (incl. step 8, F1), 3 steps 2–9 (incl. F2's Escape), 4, 5, 6
+    and 9 on a local stack from `next`, with BlueMap's static `web/` copied into the web app's `public/bluemap/`. No
+    findings in the code: the permanent district volumes were the spike's static `wg2bluemap` marker sets, now removed
+    on the NAS (`config/maps/overworld.conf` block emptied, `web/.../live/markers.json` cleaned, backups kept). Ideas
+    filed: #825 (hide or group dots when zoomed out), #826 (town region drawn like the spike's markers). Details on
+    #732.
+12. **Still open for you:** § 3 step 1 on the NAS after the promotion (rebuild the `web` image with the `next`
+    `nginx.conf`), the `/ownermode` case of the L4 check (a second staff account), optional player skins (`heads=` in
+    `webapp.conf`, a service of your choice), and when to promote `next`.
 
 ## 2. Summary
 

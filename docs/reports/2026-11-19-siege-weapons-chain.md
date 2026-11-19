@@ -137,6 +137,13 @@
     limit (13:00) and was resumed at 16:04 with `SendMessage`. Alternatives: (a) send knk-web-app and knk-workspace
     back to merge `next` first, rejected (clean merge, unrelated files, merge commit through the PR carries `next`).
 
+15. **Production chain changes for later links (2026-11-19 evening).** knk-web-api `next` now also carries
+    `AddStockCore` (`2e7d4e81`) and `AddProductionWorld` (`fcfced27`): `Structure.DistrictId`/`StreetId` are `int?`, a
+    new `Structure.TownId` with check `CK_structures_DistrictXorTown` (a rural structure has no district);
+    `SiegeScenarioRepository` and `SiegeScenarioReadiness` were updated by Production for that. Chosen: pass this to
+    L3/L4 in their prompts (siege code reading structures must handle a null district), and generate L3/L4/L8
+    migrations on top of the latest `next`. Alternatives: (a) none needed now; no siege weapons link is running.
+
 ## 4. Link blocks
 
 _(Each link appends its block here when it finishes.)_
