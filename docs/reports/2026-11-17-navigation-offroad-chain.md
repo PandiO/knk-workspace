@@ -34,7 +34,7 @@ on `next` (Decided 2026-11-17).
 | L8 Phase 5.1 landmark entity | #708 | Merged into next (2026-11-18); waits for the developer's live test (tier:3, smoke § 6) | knk-web-api `d331bdf4`, knk-web-app `b50c4134`, knk-plugin `be9e3a74`, knk-workspace `eb3321a9` (`claude/offroad-landmarks`) | [knk-web-api#50](https://github.com/PandiO/knk-web-api/pull/50) → `935fe8cc`, [knk-web-app#54](https://github.com/PandiO/knk-web-app/pull/54) → `3432e6ef`, [knk-plugin#83](https://github.com/PandiO/knk-plugin/pull/83) → `5fd81466`, [#763](https://github.com/PandiO/knk-workspace/pull/763) → `7722cc76` | green (all jobs) | subagent of the coordinator (three component repos; resumed once after the usage limit) |
 | L9 Phase 5.2 landmark weights | #709 | Merged into next (2026-11-18); waits for the developer's smoke § 7 steps 1–3 | knk-plugin `claude/offroad-landmark-weights` `636c9f32`; knk-workspace `9d0c926f` | [knk-plugin#87](https://github.com/PandiO/knk-plugin/pull/87) → `c7be34fb`, [#776](https://github.com/PandiO/knk-workspace/pull/776) → `99fef23d` | green (build; paper-boot after one #695 flake on the PR run) | create_session `session_01R1w2Ut1P9c2jGxRYC3weCJ` (2026-11-18) |
 | L10 Phase 7 plaza lines | #712 | Merged into next (step 1 and step 2, 2026-11-18); waits for the developer's smoke § 10.2 | knk-plugin `claude/offroad-plaza-lines` `28ad18c5`; knk-workspace `d7e4e834` | step 1: [knk-plugin#73](https://github.com/PandiO/knk-plugin/pull/73) → `ce0f65ec`, [#723](https://github.com/PandiO/knk-workspace/pull/723) → `c7f61e9e`; step 2: [knk-plugin#84](https://github.com/PandiO/knk-plugin/pull/84) → `4daa0c84`, [#769](https://github.com/PandiO/knk-workspace/pull/769) → `2e0c04d4` | green (build, paper-boot) | create_session `session_01R1w2Ussca79jpGCPqzcTf8` (2026-11-18) |
-| F1 walk-search fixes (#771 items 1, 2) | #771 | Done, in review (2026-11-19): PRs into `next`, not merged; waits for the developer's smoke § 12 steps 1 and 3 | knk-plugin `claude/offroad-walk-fixes-771` `321daf6b`; knk-workspace `f2c94b7e` | [knk-plugin#88](https://github.com/PandiO/knk-plugin/pull/88), [#778](https://github.com/PandiO/knk-workspace/pull/778) | green (build, paper-boot) | create_session `session_01R1w2Ut7LKtBrvQw9bA3mVQ` (2026-11-19) |
+| F1 walk-search fixes (#771 items 1, 2) | #771 | Merged into next (2026-11-19); waits for the developer's smoke § 12; the storage hall by road stays open (#780) | knk-plugin `claude/offroad-walk-fixes-771` `321daf6b`; knk-workspace `8fdfe392` | [knk-plugin#88](https://github.com/PandiO/knk-plugin/pull/88) → `cee53213`, [#778](https://github.com/PandiO/knk-workspace/pull/778) → `d1850c7a` | green (build, paper-boot) | create_session `session_01R1w2Ut7LKtBrvQw9bA3mVQ` (2026-11-19) |
 
 ## 3. Coordinator decisions
 
@@ -228,6 +228,14 @@ on `next` (Decided 2026-11-17).
     way to the keep storage hall, a transport destination) and 2 (open trapdoor over a ladder). Tier:2, no flag
     (bug fixes); #771 added as a sub-issue of #698. The trapdoor fix also reaches NPC walk legs (wanted; NPC scenarios
     are the guard). Items 3–5 stay open. Engine and NPC coordinators told.
+36. **F1 merged into `next` (2026-11-19 07:10).** § 6 checks held for the plugin PR (heads matched, branch contained
+    `next`, `build` and `paper-boot` green on both runs, no NPC/destinations/shape file, golden transcripts and flag-off
+    tests unchanged, no Codex findings). The docs PR was sent back once: its smoke steps used `max-snap-distance` 600,
+    which the developer ruled out for real routes; the shipped-settings run then showed that scene 1 by road still ends
+    on the stair house's lower landing (straight-line road goal), which F1 does not fix. Filed as #780 (sub-issue of
+    #698) with two options for the developer: (a) a road to the hall (data, fits the road-network plan), (b) choose
+    the road goal by walk reachability (code). The watchtower roof works at shipped limits. Engine and NPC coordinators
+    told; the NPC chain files its own follow-up for the hatch in the NPC body check.
 
 ## 4. Link blocks
 
