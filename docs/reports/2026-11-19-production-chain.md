@@ -40,7 +40,7 @@ of what is already in `next`.
 | L3 Territory web app | #690 | Merged into next (2026-11-19) | web app `0531422`, workspace `f3bd8f27`; merges: web app `89751315`, workspace `54bdc830` (after a coordinator merge of `next`, `e4f2276d`) | [web#57](https://github.com/PandiO/knk-web-app/pull/57), [ws#803](https://github.com/PandiO/knk-workspace/pull/803) | web app green (build-and-test, e2e) | create_session `session_01R1w2UuYHneFJFXcn8GSe6F` (one repo besides knk-workspace), started 2026-11-19 |
 | L4 P1 stock core API: storages, ledger, reconciler, capacity, roll-up | #97 | Merged into next (2026-11-19) | api `e524721`, workspace `abef76fc`; coordinator merge of `next` `06fee906`; merges: api `2e7d4e81`, workspace `1bbdd69f` | [api#56](https://github.com/PandiO/knk-web-api/pull/56), [ws#816](https://github.com/PandiO/knk-workspace/pull/816) | green (build-and-test, mysql-tests, fresh-database) | create_session `session_01R1w2Uwv8FBnKCUoeZauzVt` (one repo besides knk-workspace), started 2026-11-19 |
 | L5 P1b stock web app | #675 | Merged into next (2026-11-19) | web app `9bec60f`, workspace `a5d10f37`; merges: web app `9f46cb49`, workspace `8fff63e2` | [web#60](https://github.com/PandiO/knk-web-app/pull/60), [ws#818](https://github.com/PandiO/knk-workspace/pull/818) | web app green (build-and-test, e2e) | create_session `session_01R1w2UuKsus7BT7DcXyL4jr` (one repo besides knk-workspace), started 2026-11-19 |
-| L6 P2 world API: structure subtypes, TownId, placement rules | #91 | Running | — | — | — | create_session `session_01R1w2UscSGsG34qwc8vtEQj` (one repo besides knk-workspace), started 2026-11-19 |
+| L6 P2 world API: structure subtypes, TownId, placement rules | #91 | In review (2026-11-19) | api `303b6ab`, workspace `9ab62ab1` | [api#57](https://github.com/PandiO/knk-web-api/pull/57), [ws#822](https://github.com/PandiO/knk-workspace/pull/822) | green (build-and-test, mysql-tests, fresh-database) | create_session `session_01R1w2UscSGsG34qwc8vtEQj` (one repo besides knk-workspace), started 2026-11-19 |
 | L7 P2b world web app | #676 | Not started | — | — | — | — |
 | L8 P2c world plugin: managed-region kinds | #677 | Not started | — | — | — | — |
 | L9 P3 production engine API | #86 | Not started | — | — | — | — |
@@ -675,3 +675,92 @@ _(Each link appends its block here when it finishes.)_
 9. **Notes for later links.**
     1. Web app links (L7, L10, L16 and on): `StoragePanel` takes a storage id. A structure page can list its storages (`POST api/Storages/search` with `domainId`) and link each to `/display/Storage/<id>`. `lineMovesPath`, `storageLedgerPath` and `itemInstanceMovesPath` in `src/utils/stock.ts` build the explorer links.
     2. The stock result view (`StockResultView`) and `stockRefusalReason` work for any endpoint that answers a `StockResultDto` or `{ error }`.
+
+### 4.6 L6 — P2 world API: structure subtypes, TownId, placement rules (#91)
+
+1. **Scope done** (knk-web-api, plus essential docs in knk-workspace).
+    1. Rural structures (R1): `Structure.TownId`; `DistrictId` and `StreetId` nullable; exactly one of `DistrictId` and
+       `TownId` (check constraint `CK_structures_DistrictXorTown` plus `StructurePlacement`); effective town
+       `District.Town ?? Town`. A rural structure has no street and house number 0. `api/Structures` accepts `townId` and
+       its search lists `townId` (effective), `isRural`, `territoryFlag` with filters on them.
+    2. `Warehouse : Structure` (`AcceptsDeliveries`, `Priority`, `DefaultStorageId`) and `ProductionStructure : Structure`
+       (`ProductionKindId` plain id, `Level` 1-10, `ProductionEnabled`, transport settings, `WarehousePreference` +
+       `PreferredWarehouseId`, `RoadConnection` + measured-at, `WorkersTotal`, `WorkersPresent`), TPT tables.
+    3. Default storages on create through `IStorageService.CreateAsync` (`Kind = Domain`, `DomainId` = the structure) in
+       the create's transaction: Delivery (the warehouse's default storage) and Output. Delete removes them first, 409
+       while one holds stock or history.
+    4. Placement rules (R2): new validation type `InsideTerritory` (P-2/P-3) through `ITerritoryLookupClient` (plugin
+       lookup, contract on #677); skipped while `production.enabled` is off (A21). The default form's rules run when the
+       API saves a Structure, Warehouse or ProductionStructure: a failed blocking rule is 400, warnings come back as
+       `placementWarnings`, a rule that could not run never blocks.
+    5. Contested land (R3, A07): a rural structure flagged by the territory report keeps its town and keeps producing;
+       `ProductionStructureDto.warnings` (contested, outside territory, unconnected D5). `PUT
+       api/ProductionStructures/{id}/road-connection` for P5b.
+    6. Endpoints `api/Warehouses`, `api/ProductionStructures`; registry (World area), lookups, pinned access tests; form
+       and display seeds `Warehouse` and `ProductionStructure` (G17) with P-1 and P-2 as warnings. Audit of every
+       `Structure.District`/`Street` call site (13 items, listed in knk-web-api#57). One additive migration
+       `AddProductionWorld`; `KnKDbContext` edits in one contiguous block.
+    7. knk-workspace (branch from `next`): smoke guide § 3 (§ 3.1 16 steps, 14 automated, 2 partly; § 3.2/3.3 drafts
+       for L7/L8), changelog entry, production installation § 5.3 item 7, implementation plan status.
+2. **Commits and heads.** knk-web-api `claude/production-p2` at `303b6ab` (6 commits, base `next` `2e7d4e8`, which had
+   not moved at the final fetch, so no merge was needed and the migration was generated last on it); knk-workspace
+   `claude/production-p2` at `9ab62ab1` (1 commit, base `next` `1bbdd69f`).
+3. **PRs.** [knk-web-api#57](https://github.com/PandiO/knk-web-api/pull/57) (Closes #91) and
+   [knk-workspace#822](https://github.com/PandiO/knk-workspace/pull/822) (Part of #91), both into `next`. Not merged.
+4. **Tests, baseline → result.**
+    1. knk-web-api: baseline on `next` `2e7d4e8` 4678 passed / 112 skipped / 0 failed. Branch: 4723 passed /
+       114 skipped / 0 failed.
+    2. New tests: `StructureSubtypeServicesTests` (15), `PlacementRulesTests` (6, the shipped seeds imported and their
+       rules run on save: warn, block when set, offline never blocks, production off skips), `InsideTerritoryValidatorTests`
+       (12, including the lookup client's URLs, key and answers), `RuralStructureTests` (5: StructureService, search,
+       region decisions without parent, contested keeps its town), `AddProductionWorldTests` (4),
+       `ProductionWorldMySqlTests` (2, requires-mysql: the check constraint; a used street or town can't be deleted).
+    3. MySQL 8.0.46 locally with `KNK_TEST_MYSQL`: 4836 passed, 1 failed = the known red #285. (`max_connections` had to
+       be raised from 151 for the full MySQL run; environment only.)
+    4. A new test caught a real bug in reading JSON numbers in the validator; the existing
+       `DeleteConstraintExceptionFilterTests` caught that `Restrict` on the now optional FKs let EF null a structure's
+       street on delete (decision 4).
+    5. Migration applied, rolled back to `AddStockCore` and re-applied; `has-pending-model-changes` clean.
+    6. CI on `303b6ab`: build-and-test, mysql-tests and fresh-database green (PR runs 44587806782, 44587806947).
+5. **Decisions (DESIGN § 4.3).** All 12, each with its alternatives, are in knk-web-api#57. The main ones:
+    1. *`InsideTerritory` (coordinator note 3.1).* Chosen: the API calls a lookup on the plugin's region HTTP server
+       (`GET /api/territory/contains-region/{regionId}` and `/contains-location`, `holderKind`/`holderId`, plugin key),
+       answered by L8. Alternatives: (a) compute territory in the API: it has no region geometry; (b) a SignalR request:
+       new plumbing for one call.
+    2. *Rural structures in the report (note 3.2).* Chosen: the structure search lists the effective `townId`; the plugin
+       flags rural structures through the existing report. Alternatives: (a) a separate endpoint: duplicates the search.
+    3. *Production off and offline server.* Chosen: the territory rule is skipped while `production.enabled` is off; a
+       rule that can't be checked is a warning, never a block. Alternatives: (a) "not checked" on every save while off;
+       (b) block when unknown: an offline server would stop authoring.
+    4. *Optional structure FKs `ClientNoAction`.* `Restrict` on an optional relationship lets EF null the FK of tracked
+       structures, so a street delete would succeed silently; `ClientNoAction` keeps the database refusal (MySQL test).
+       Alternatives: (a) service checks on every delete path.
+    5. *Default storages without kinds:* Output / Delivery, uncapped; `ProductionKindId` a plain id until P3.
+       Alternatives: (a) none until P3; (b) a placeholder kind table.
+    6. *Seeds:* new `Warehouse` and `ProductionStructure` seeds; the generic `Structure` seed is not bumped (the API
+       accepts `townId`). Alternatives: (a) Structure seed v3 now: L7's form work.
+    7. *Gates stay district-only* and get no save-time rule check (unchanged behaviour). Alternatives: (a) rules on save
+       for gates too: outside P2.
+6. **Out of scope, noted.** Comments on #676 (endpoints, fields, seeds, the rule builder needs `InsideTerritory`) and
+   #677 (the lookup contract, `townId` for rural structures in the report, region decisions without parent). P-3 for
+   production areas waits for P4's areas (the validation types are ready). No new issues. Codex: the connector hit its
+   code-review usage limit on both PRs (review "failed", usage-limit comment); no inline findings; noted on each PR.
+7. **Blockers.** None.
+8. **At merge / what the developer must do.**
+    1. Apply migration `AddProductionWorld` (additive). Import the form and display seeds `Warehouse` and
+       `ProductionStructure` ("make default").
+    2. No `api.env` key, no plugin `config.yml` change.
+    3. Smoke test [§ 3.1](../guides/production-storage-transport-smoke-test.md) (tier:3): 14 of 16 steps automated;
+       about 10 minutes for the untagged parts (the forms in the web app; P-2 with a connected P2c plugin).
+    4. At merge into `next`: the `documentation` sub-issue (structure placement and subtypes architecture page and API
+       contract, admin guide for warehouses, production structures and placement rules, feature register row).
+9. **Notes for later links.**
+    1. L7 (#676): see the comment on #676. Placement is District-xor-Town; read `effectiveTownId`, `isRural`, `storages`,
+       `warnings`; add `InsideTerritory` to the rule builder.
+    2. L8 (#677): see the comment on #677. Implement the two lookup endpoints; use `townId` from the structure search for
+       rural structures in the territory report; rural regions have no parent.
+    3. L9 (P3): `ProductionStructure.ProductionKindId` is a plain nullable int with an index; add the FK with the kind
+       catalogue. Kind-driven storages can be added next to the Output storage (`IStorageService.CreateAsync` with
+       `DomainId`). `ProductionEnabled` is the structure's own switch; `WorkersPresent` is yours to write.
+    4. L14 (P5) / L15 (P5b): `RoadConnection` is written through `PUT api/ProductionStructures/{id}/road-connection`;
+       automatic transport is held unless `Connected` for rural structures (D5).
