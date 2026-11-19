@@ -1140,7 +1140,7 @@ _(Each link appends its block here when it finishes.)_
     2. **Reproduced on `quarry-to-keep-stairhouse.zip`** (its `roads.json` loaded as the road graph):
         1. Today's goal is edge 2000000033 at 1415 58 -490. The walk from there ends in FALLBACK at the shipped limits.
         2. With the key on, the goal is the end of edge 2000000017 (1421 84 -521): 347 blocks by road plus 97 on foot, and the last leg is found.
-        3. 7 of the 34 per-edge candidates within 48 blocks are reached at the shipped limits. All of them are in the keep's courtyard (y 80 to 84).
+        3. 6 of the about 30 per-edge candidates within 48 blocks are reached at the shipped limits. All of them are in the keep's courtyard (y 80 to 84).
     3. **#771 item 4 (scene 2) has the same cause, under the same key.** The straight-line goal for the tower roof (edge 2000000019 at 1411.5 84 -516) lies about 10 blocks past the end of edge 2000000017, where the walk to the stair leaves the road. On `keep-tower.zip` the chosen goal makes the road part 72 blocks shorter and road plus walk 38 blocks shorter. The snapshot's graph routes from spawn the long way round, so the chosen point there is earlier on that route.
     4. **#771 item 5: two causes in the code, neither depends on `guidance-v2`.**
         1. The road goal: the road part ends at a straight-line point while the road goes on. The #780 key fixes this.
