@@ -1,7 +1,7 @@
 # NPC navigation follow-ups chain — charter
 
-**Status:** Done (2026-11-18): fix links L9, B1–B5, C1 and E1 merged into `next`; the developer's retest, review decisions and promotion open
-**Last updated:** 2026-11-18
+**Status:** Running (2026-11-19): links J1, H1, G1 (developer go); retest of B5, C1, E1, R1 open
+**Last updated:** 2026-11-19
 **Issues:** parent [PandiO/knk-workspace#358](https://github.com/PandiO/knk-workspace/issues/358); link sub-issues
 [#519](https://github.com/PandiO/knk-workspace/issues/519) (L1),
 [#520](https://github.com/PandiO/knk-workspace/issues/520) (L2),
@@ -69,6 +69,9 @@ component repos.
 | C1 | #700 | tier:3 | Off-road starts and ends with today's walk search within its caps, walked like stretches; road join by reachability; hops as fallback; snapshot box over from/to (long walks come from #698) | knk-plugin, knk-workspace | `claude/npc-movement-c1` | `next` | `npc.navigation.enabled` (off) | B5 merged and #698 phase 1 (move to `core/navigation/shape/`) merged (report decision 44) |
 | E1 | #701 | tier:2 | Exit rules checked while NPCs walk (recheck, trespass guard, follower lanes), not only when planned | knk-plugin, knk-workspace | `claude/npc-movement-e1` | `next` | `npc.navigation.enabled` (off) | C1 merged |
 | R1 | #724 | tier:2 | A cache refresh's first event with an empty region map lets held NPCs cross; fix the refresh path, count such a crossing | knk-plugin, knk-workspace | `claude/npc-movement-r1` | `next` | `npc.navigation.enabled` (off) | E1 merged; off-road coordinator's OK (2026-11-18) |
+| J1 | #695 | tier:2 | The stair-climb's intermittent jump toward a waypoint (CI flake) and the hall-entry jumps; the check stays as it is | knk-plugin, knk-workspace | `claude/npc-movement-j1` | `next` | `npc.navigation.enabled` (off) | developer go 2026-11-19 |
+| H1 | #779 | tier:2 | NPC checks agree with the walk search on open roof hatches over ladders | knk-plugin, knk-workspace | `claude/npc-movement-h1` | `next` | `npc.navigation.enabled` (off) | J1 merged |
+| G1 | #814 | tier:2 | Road goal by reachable walk length for NPC point destinations, shared with F2 (#780) | knk-plugin, knk-workspace | `claude/npc-movement-g1` | `next` | `npc.navigation.enabled` (off) | H1 merged; where the shared rule lives agreed with the off-road chain |
 
 ## 2. Gates
 

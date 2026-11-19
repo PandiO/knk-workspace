@@ -1,6 +1,6 @@
 # Siege weapons chain — progress report
 
-**Status:** Running L2b; L3 blocked on #356, #611, #614 (2026-11-19) · **Last updated:** 2026-11-19
+**Status:** Paused (L3 blocked on #356, #611, #614) (2026-11-19) · **Last updated:** 2026-11-19
 
 **Issue:** [PandiO/knk-workspace#354](https://github.com/PandiO/knk-workspace/issues/354), links
 [#782](https://github.com/PandiO/knk-workspace/issues/782) (L1), [#783](https://github.com/PandiO/knk-workspace/issues/783) (L2),
@@ -23,7 +23,10 @@
    in L1's order, `siege.weapons.enabled: false` under `siege:` in the plugin `config.yml` (true only on a test
    server for § 2).
 3. **Decide where #795 goes** (buying a weapon unlock with coins, W32, in no phase). #799 decided 2026-11-19: it runs
-   as L2b. Smoke § 2 will be rewritten by L2b, so test § 2 after L2b is merged.
+   as L2b, merged into `next` 2026-11-19; smoke § 2 now covers the web-form flow and can be tested. At deploy also
+   import the updated `SiegeWeaponSpot` seed (or turn on "Requires in-game action" on Min X with type
+   `SiegeWeaponSpot` in the form designer on a database that imported it before). Say so if `/knk weaponspot`
+   should come back as a second way (removed as the coordinator's reversible default).
 
 ## 2. Summary
 
@@ -31,7 +34,7 @@
 |---|---|---|---|---|---|---|
 | L1 Entities, API, form seeds, unlocks | #782 | Merged into next (2026-11-19: API `e940aef1`, web app `24c8a988`, workspace `80f6ff72`) | API `d65e7c9`, web app `6138dc9`, workspace `f6ce0304` (`claude/siege-weapons-l1`) | [api#52](https://github.com/PandiO/knk-web-api/pull/52), [app#56](https://github.com/PandiO/knk-web-app/pull/56), [ws#794](https://github.com/PandiO/knk-workspace/pull/794) | green | subagent of the coordinator (decision 3: two component repos), started 2026-11-19 |
 | L2 Spots through world tasks | #783 | Merged into next (2026-11-19: plugin `2f970779`, API `7dc10383`, workspace `2f0dc79c`) | plugin `565620ec`, API `7a88f61c`, workspace `e4abab00` (`claude/siege-weapons-l2`) | [plugin#90](https://github.com/PandiO/knk-plugin/pull/90), [api#54](https://github.com/PandiO/knk-web-api/pull/54), [ws#800](https://github.com/PandiO/knk-workspace/pull/800) | green | subagent of the coordinator, started 2026-11-19 |
-| L2b Spots through the web form's world task | #799 | Running | `claude/siege-weapons-l2b`: (not pushed yet) | — | — | subagent of the coordinator (three component repos), started 2026-11-19 |
+| L2b Spots through the web form's world task | #799 | Merged into next (2026-11-19: plugin `bf51edb7`, API `90bbddf9`, web app `aaf7066d`, workspace `8a6a4749`) | plugin `251595ce`, API `6d891907`, web app `99b88481`, workspace `eacae619` (`claude/siege-weapons-l2b`) | [plugin#92](https://github.com/PandiO/knk-plugin/pull/92), [api#55](https://github.com/PandiO/knk-web-api/pull/55), [app#58](https://github.com/PandiO/knk-web-app/pull/58), [ws#810](https://github.com/PandiO/knk-workspace/pull/810) | green | subagent of the coordinator (three component repos), started 2026-11-19 |
 | L3 Buying, placement, paste, restore | #784 | Blocked (external gate: #356, #611, #614 not in `next`; report § 1.1) | — | — | — | — |
 | L4 Damage, wreck, cooldown, statistics | #785 | Not started | — | — | — | — |
 | L5 Ballista direct fire | #786 | Not started | — | — | — | — |
@@ -127,6 +130,20 @@
     (`DiscoveryLedgerMySqlTests.TitleCrossing_...`); filed as #805 (not this chain's area); rerun of run 44512749267
     green 2026-11-19 12:00. knk-plugin `next` `2f970779` green (build, paper-boot). Not a blocker.
 
+14. **L2b merged into `next`.** Every check of skill § 6 held: heads match, knk-plugin and knk-web-api branches
+    contain `next`, knk-web-app (3 Overview-map commits behind, map files only) and knk-workspace (48 behind) merge
+    cleanly (`git merge-tree`), CI green on every PR head, scope matches #799 (plugin handler, web app fan-out, API
+    seed and type constant, no migration), Codex at its usage limit on all four PRs. The link stopped once on a usage
+    limit (13:00) and was resumed at 16:04 with `SendMessage`. Alternatives: (a) send knk-web-app and knk-workspace
+    back to merge `next` first, rejected (clean merge, unrelated files, merge commit through the PR carries `next`).
+
+15. **Production chain changes for later links (2026-11-19 evening).** knk-web-api `next` now also carries
+    `AddStockCore` (`2e7d4e81`) and `AddProductionWorld` (`fcfced27`): `Structure.DistrictId`/`StreetId` are `int?`, a
+    new `Structure.TownId` with check `CK_structures_DistrictXorTown` (a rural structure has no district);
+    `SiegeScenarioRepository` and `SiegeScenarioReadiness` were updated by Production for that. Chosen: pass this to
+    L3/L4 in their prompts (siege code reading structures must handle a null district), and generate L3/L4/L8
+    migrations on top of the latest `next`. Alternatives: (a) none needed now; no siege weapons link is running.
+
 ## 4. Link blocks
 
 _(Each link appends its block here when it finishes.)_
@@ -199,3 +216,38 @@ _(Each link appends its block here when it finishes.)_
 9. **Notes for later links.**
     1. L3: spots carry bounds (inclusive corners), facing and a size class the API derives from them (`SiegeWeaponSpotSizing` / knk-core `SpotSizing`, `SpotSizeClass.fits` for "a larger spot holds a smaller weapon"); `siege.weapons.enabled` and `SiegeWeaponsModule` (`paper/siege/weapons/`) are the place to wire placement; `SpotSiteCheck` can be reused for the paste-area check (W43).
     2. Any later API link changing spot saves: the size class rule lives in `SiegeWeaponService.ApplySpot`; keep the C# and Java numbers in step.
+
+### 4.3 L2b — Spots through the web form's world task (#799)
+
+1. **Scope done.**
+    1. knk-plugin: `WeaponSpotTaskHandler` (`paper/siege/weapons/`), registered by task type `SiegeWeaponSpot` in `WorldTaskHandlerRegistry` by `SiegeWeaponsModule`, only with `siege.weapons.enabled`. Claimed with `/knk task <code>`; chat `save` (WorldEdit), `region <id>` (WorldGuard), `facing <dir>`, `confirm` (completes the task with bounds, facing, size class, region id, world and warnings: knk-core `SpotTaskOutput`), `cancel` (hand back), `discard`. Reuses `SpotFacing`, `SpotSizeClass`, `SpotBounds`, `SpotSizing`, `SpotSiteCheck`, `SpotDraft`, `WorldEditSpotSelections`, `BukkitBlockProbe`. `WorldTaskChatListener` also routes chat to handlers implementing the new `ChatTaskInput` (only this one). Removed: `/knk weaponspot` (command, chat task, listener), `SpotTeams`, the `SiegeWeaponSpotsApi` port and client. `plugin.yml` node description back to before L2; `config.yml` comment updated. Flag off: nothing registered; a `SiegeWeaponSpot` task finds no handler and is failed with the reason (A04 test).
+    2. knk-web-app: `extractTaskResult` gives Min X its value; `applySiegeWeaponSpotResult` in `FormWizard.tsx` spreads the six bounds, `Facing`, `SizeClass` and `WgRegionId` over the form; the task panel lists bounds, facing, size class, region and world and shows the warnings (existing scan warning list); `worldTaskTypes.ts` and a `FieldEditor` hint offer the type.
+    3. knk-web-api: `SiegeWeaponSpot.json` seed puts the world task on `MinX` (in place), descriptions updated; `WorldTaskTypes.SiegeWeaponSpot` and the import's known types list it; seed README note. No endpoint, no write, no migration; `SiegeWeaponService.ApplySpot` unchanged.
+    4. knk-workspace (`next`): smoke test § 2 rewritten (10 steps: 2 automated, 8 partly, tagged), changelog "Unreleased" entry, plugin configuration reference § 2.1 row and § 4.13, spec status line.
+2. **Commits and heads** (branch `claude/siege-weapons-l2b`, base `next`): knk-plugin `251595ce` (2 commits on `55804b11` plus a merge of `origin/next` `6311de11`, off-road F2, no conflict); knk-web-api `6d891907` (1 commit on `7dc10383`); knk-web-app `99b88481` (1 commit on `89751315`); knk-workspace `eacae619` (1 commit plus merges of `origin/next` `8487a058`, territory docs #806, and `05b8edc3`, off-road F2 docs; both conflicted in the configuration reference header and § 2.1 table, resolved keeping both sides). knk-web-api and knk-web-app `next` had not moved.
+3. **PRs.** https://github.com/PandiO/knk-plugin/pull/92 (Closes #799), https://github.com/PandiO/knk-web-api/pull/55, https://github.com/PandiO/knk-web-app/pull/58, https://github.com/PandiO/knk-workspace/pull/810, base `next`. Not merged.
+4. **Tests, baseline → result.**
+    1. knk-plugin (`./gradlew build -x deployToDevServer`, JDK 21 + JDK 25 toolchain): knk-core 3510 → 3511, knk-api-client 368 → 364 (2 skipped), knk-paper 3200 → 3196 (18 skipped), 0 failed; after merging `next` (F2 adds tests): 3515, 364, 3206, 0 failed. New: `SpotTaskOutputTest` 3, `WeaponSpotTaskHandlerTest` 10 (MockBukkit, including registry start by type and chat routing), `SiegeWeaponsSettingsTest` flag off/on; removed with the removed code: `WeaponSpotTaskTest`, `WeaponSpotCommandTest`, `SpotTeamsTest`, `SiegeWeaponSpotsApiImplTest`.
+    2. knk-web-api: 4610 → 4611 passed, 0 failed, 103 skipped (MySQL, no `KNK_TEST_MYSQL`); new `SiegeWeaponSpotSeed_StartsTheSpotWorldTaskFromMinX`.
+    3. knk-web-app: `npm run test:ci` 2787 → 2791 (new Jest file); `tsc --noEmit` clean → clean; build OK; Playwright 227 → 228 passed (new spot world task spec with a mocked API).
+    4. CI: green on every head: knk-plugin `251595ce` build and paper-boot (runs 44562441616, 44562441770 and the push runs); knk-web-api `6d891907` build-and-test, mysql-tests, fresh-database; knk-web-app `99b88481` build-and-test and e2e (the push run's e2e first failed once on the unrelated `e2e/data-table.spec.ts` header sort test, which passed in the PR run on the same commit and locally; the job was rerun and passed); knk-workspace has no CI.
+    5. Known reds: none. Codex: at its code-review usage limit on all four PRs, no inline findings; noted on each PR.
+5. **Decisions (DESIGN § 4.3).**
+    1. *Field the task sits on.* Chosen: `MinX` (first bounds field), because the registry falls back to a handler by field name and `WgRegionId` has one: with the flag off a task on `WgRegionId` would run the region-create handler and leave a temp region; on `MinX` it finds no handler and is failed with the reason. Alternatives: (a) `WgRegionId` (fallback problem above); (b) a new phantom field (the form validation refuses fields that aren't entity properties); (c) registering a refusing handler with the flag off (registers something while off, against A04).
+    2. *Overwrite or ask.* Chosen: the fan-out overwrites the spot fields without the scan conflict prompt; fields stay editable and "Capture again" redoes it. Alternatives: (a) the `ScanConflictModal` per filled field (Facing and Size class always have defaults, so it would ask every time).
+    3. *Region id on a WorldEdit capture.* Chosen: cleared, so a region typed earlier doesn't stay with other bounds. Alternatives: (a) keep the typed value.
+    4. *Chat routing.* Chosen: a small `ChatTaskInput` interface the listener asks after its existing handlers. Alternatives: (a) a hard-wired getter for this handler like WgRegionId/Location (one more special case); (b) a separate listener in the siege module (two listeners answering task chat).
+    5. *Port and client.* Chosen: `SiegeWeaponSpotsApi` and its client removed (no other user; L3 can add the read it needs). Alternatives: (a) keep them unused.
+    6. *Seed version.* Chosen: in place in seed v1 (not on `main`, only `next` test databases imported it), README note with the form-designer step. Alternatives: (a) seed v2 with a new GUID (a second spot form for a seed nobody runs live yet).
+    7. *Node.* Chosen: no node check in the handler, like the other player world tasks (the task code and the web form's `knk.siege.admin.manage` gate it). Alternatives: (a) require `knk.siege.admin.manage` in game too.
+    8. *422 on complete.* Chosen: the task ends with the API's reason (the API failed it); 409/404 end it as "no longer yours"; other errors keep it open for another `confirm`. Alternatives: (a) keep it open on 422 (the task is already Failed).
+6. **Out of scope, noted.** The API's `POST api/SiegeScenarios/{id}/weapon-spots` stays (the web form saves through it). The workspace merge commit `d4688742` has the trailers before git's "# Conflicts" lines rather than last (pushed before noticed; no force-push).
+7. **Blockers.** None.
+8. **At merge / what the developer must do.**
+    1. Nothing new in `config.yml` (L2's `siege.weapons.enabled: false` block); `true` on a test server to create spots through the web form.
+    2. Import the `SiegeWeaponSpot` seed, or on a database that imported it before: turn on "Requires in-game action" on Min X with type `SiegeWeaponSpot` in the form designer.
+    3. Run smoke test § 2 (tier:2, about 20 minutes). Object to decision "/knk weaponspot removed" if you want the in-game path back.
+    4. At the merge into `next`: docs follow-ups (siege weapons admin guide section, register row; the commands guide never got a `/knk weaponspot` row) go into the `Docs:` sub-issue.
+9. **Notes for later links.**
+    1. L3: there is no `SiegeWeaponSpotsApi` in the plugin any more; add a read port for the scenario's spots. `SiegeWeaponsModule.register` now takes the `WorldTaskHandlerRegistry` and `WorldTasksApi` and is called right after the KitScan registration in `KnKPlugin`; wire placement there or next to it.
+    2. The task output shape is `SpotTaskOutput` (knk-core) and `siegeWeaponSpotBounds`/`applySiegeWeaponSpotResult` (web app); change both together.

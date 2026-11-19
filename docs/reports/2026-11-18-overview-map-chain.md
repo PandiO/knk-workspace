@@ -1,6 +1,6 @@
 # Overview map chain — progress report
 
-**Status:** Done, in review (2026-11-18) · **Last updated:** 2026-11-18
+**Status:** Done, promoted to trunk 2026-11-19 (overview map only) · **Last updated:** 2026-11-19
 
 **Issue:** [PandiO/knk-workspace#732](https://github.com/PandiO/knk-workspace/issues/732), links
 [#735](https://github.com/PandiO/knk-workspace/issues/735) (L1), [#736](https://github.com/PandiO/knk-workspace/issues/736) (L2),
@@ -15,6 +15,14 @@ on `next` (Decided 2026-11-18, O01–O33, O08 superseded by O31); smoke guide
 
 ## 1. Waiting for the developer
 
+**2026-11-19, promoted:** the overview map alone went to trunk on the developer's go (selective promotion: branches
+from `main` with only the overview map merges of `next` replayed, CI green): knk-web-api `75b84343` (#59, release v0.4),
+knk-web-app `31a6896d` (#62, v0.4), knk-plugin `2411d785` (#97, v0.3), knk-workspace `a199ad15` (#835, the overview map
+docs only). Deployed to the alpha by the developer (`deploy-api`, `deploy-web`, `deploy-plugin`; `Map__Enabled` in
+`config/api/cloudflare-access.env`; the web build file `_files/nginx.conf` with the `/bluemap` redirect); smoke § 3
+step 1 passed on the alpha. #732 and its sub-issues are closed; the board row is archived (`sessions-archive/2026-11.md`).
+Open: #767 (screenshots), ideas #825 and #826, the `/ownermode` case. The items below are kept as history.
+
 1. **L1 (#735) smoke test (tier:3):** L1 is in `next` (knk-web-api `562f504`, knk-plugin `7f4bdd3a`). Deploy the API
    from `next` and apply the migration `AddMapRegionOutlines` (additive); deploy the plugin from `next`, paste
    `map:` / `reporting:` / `enabled: true` into `config.yml` (needs `realtime.enabled: true`) and follow smoke guide § 1
@@ -24,10 +32,15 @@ on `next` (Decided 2026-11-18, O01–O33, O08 superseded by O31); smoke guide
    `Map__Enabled=true` and follow smoke guide § 2 (new settings with defaults in production-installation § 4.3; no
    migration). Optional: `@codex review` on knk-web-api#46 and knk-workspace#751 (Codex at its limit / failed).
 3. **L3 (#737) NAS steps and smoke test (tier:2):** L3 is in `next` (knk-web-app `f551804d`). The BlueMap spike
-   passed (v5.29, evidence on #737). On the NAS, apply closed-alpha runbook Phase 10 (move `bluemap-test` into the
-   `knk-alpha` Compose stack, Nginx `/bluemap/`; knk-deploy, ask before each change), run the full-world render
-   (about 20 hours), then set `Map__Enabled=true` and follow smoke guide § 3. Optional: `@codex review` on
-   knk-web-app#50 (Codex at its limit).
+   passed (v5.29, evidence on #737). **Runbook Phase 10 applied on the NAS 2026-11-18** by the developer (steps 1–3, 5–8):
+   `bluemap` service in the `knk-alpha` stack (profile-gated), `webapp.conf` bridge script and `client-decompression`,
+   web image `knk-web-app:alpha-909e7089-bluemap` (the running alpha revision plus only the `location /bluemap/`
+   block, so no unpromoted code reached the alpha), web files written with `bluemap -g`; `/bluemap/` loads through
+   Cloudflare Access. The **full-world render (steps 4 and 9) is skipped by the developer's decision**: only the
+   already rendered area is used now and in the near future, and the render mask stays. `/bluemap` without the
+   trailing slash falls through to the web app's 404 (redirect not added yet). The `bridge.js` 404 in the viewer's
+   console is expected until `next` is promoted. Remaining: after the promotion, set `Map__Enabled=true` and follow
+   smoke guide § 3. Optional: `@codex review` on knk-web-app#50 (Codex at its limit).
 4. **L4 (#738) live check: done 2026-11-18** (comment on #738: steps 2, 3 and 5 pass; step 3's `/ownermode` part not
    run, no second staff account). L5 is merged. Remaining for L4/L5: the `mode: "owner"` case when a second staff
    account is at hand, and smoke guide § 5 once the map is live (§ 3).
@@ -49,6 +62,27 @@ on `next` (Decided 2026-11-18, O01–O33, O08 superseded by O31); smoke guide
    `3e04ba8f`, knk-web-app `eff6ed9`, knk-workspace `8328c9da`). Docs follow-up: #766, docs session
    `session_01R1w2UuMzfZ1Z1FB7pV7iXR`; its player and admin guide items gate a deploy to knk-alpha. #732 and its
    sub-issues stay open (`status:in-review`) until you promote `next`.
+10. **Fix links F1 and F2 merged into `next` (2026-11-19, on your go).** F1 (#750, knk-plugin `c0ca56e4`: sub-region
+    outlines reported after the access sync) and F2 (#757 Escape in the map frame, #809 "Open profile" disabled with a
+    tooltip; knk-web-app `ee73be3f`). Your smoke steps: § 1 step 8, § 3 step 4, § 5 step 7, § 9 steps 1, 3 and 4. No
+    config key, setting or migration. Known limit (F1): a sub-region that is deleted is not reported as removed, so
+    its outline stays on the map until the next full outline report of that domain. #772 (direct `/bluemap` visits
+    go to `/map`, relative redirects) is merged into `next` (`8487a058`): rebuild the alpha `web` image with its
+    `nginx.conf` together with the promotion, not before.
+11. **Dev smoke run 2026-11-19 (yours): passed** §§ 1 (incl. step 8, F1), 3 steps 2–9 (incl. F2's Escape), 4, 5, 6
+    and 9 on a local stack from `next`, with BlueMap's static `web/` copied into the web app's `public/bluemap/`. No
+    findings in the code: the permanent district volumes were the spike's static `wg2bluemap` marker sets, now removed
+    on the NAS (`config/maps/overworld.conf` block emptied, `web/.../live/markers.json` cleaned, backups kept). Ideas
+    filed: #825 (hide or group dots when zoomed out), #826 (town region drawn like the spike's markers). Details on
+    #732.
+12. **NAS BlueMap settings applied 2026-11-19 (yours):** player skins from Minotar (your choice:
+    `&heads=https://minotar.net/helm/{uuid}/16` on the bridge line of `config/webapp.conf`, then `bluemap -g`;
+    every viewer's browser asks that service for the heads; mc-heads.net was tried first but returned Steve for your
+    account, also by name) and the start position over Cinix (`start-pos: { x: 1408,
+    z: -522 }` in `config/maps/overworld.conf` and `"startPos":[1408,-522]` in `web/maps/overworld/settings.json`).
+    Backups `*.bak-heads-*` and `*.bak-startpos-*` next to the files. Both show on the alpha after the promotion.
+13. **Still open for you:** § 3 step 1 on the NAS after the promotion (rebuild the `web` image with the `next`
+    `nginx.conf`), the `/ownermode` case of the L4 check (a second staff account), and when to promote `next`.
 
 ## 2. Summary
 
@@ -63,6 +97,8 @@ on `next` (Decided 2026-11-18, O01–O33, O08 superseded by O31); smoke guide
 | L7 Gate commands backend | #741 | Merged into `next` 2026-11-18 (knk-web-api `0308377d`, knk-plugin `02aa110e`, knk-workspace `b7820e99`); waiting for the developer's smoke test § 7 | `claude/overview-map-gate-commands`: knk-web-api `16e4157`, knk-plugin `1f8bb3c7`, knk-workspace `8368b901` (from `next`) | [knk-web-api#48](https://github.com/PandiO/knk-web-api/pull/48), [knk-plugin#79](https://github.com/PandiO/knk-plugin/pull/79), [knk-workspace#758](https://github.com/PandiO/knk-workspace/pull/758) | API green (build-and-test, mysql-tests, fresh-database); plugin build and paper-boot green | create_session session_01R1w2UxDt6K1RcnDPPagNAN (2026-11-18) |
 | L8 Gate command buttons | #742 | Merged into `next` 2026-11-18 (knk-web-app `de43f6be`, knk-workspace `bf28138d`); waiting for the developer's smoke test § 8 | `claude/overview-map-gate-buttons`: knk-web-app `05a30ea`, knk-workspace `9fad9531` (from `next`) | [knk-web-app#53](https://github.com/PandiO/knk-web-app/pull/53), [knk-workspace#759](https://github.com/PandiO/knk-workspace/pull/759) | Web app build-and-test green on `05a30ea`, e2e running at report time (local full run 176 passed); knk-workspace no CI; Codex at its limit | create_session session_01R1w2UvQqqmQ9NwMTQbq3Cb (2026-11-18) |
 | L9 Player context panel | #743 | Merged into `next` 2026-11-18 (knk-web-app `eff6ed98`, knk-workspace `8328c9da`); waiting for the developer's smoke test § 9 | `claude/overview-map-moderation`: knk-web-app `1ff5418`, knk-workspace `553c751b` (from `next`) | [knk-web-app#55](https://github.com/PandiO/knk-web-app/pull/55), [knk-workspace#765](https://github.com/PandiO/knk-workspace/pull/765) | Web app push runs green on `1ff5418` (build-and-test, e2e), pull_request runs running at report time (local full run: Jest 2754, e2e 191 passed); knk-workspace no CI; Codex at its limit | create_session session_01R1w2Uw4EdZTG53RQ7gnyQ3 (2026-11-18) |
+| F1 Sub-region outlines at startup | #750 | Merged into `next` 2026-11-19 (knk-plugin `c0ca56e4`, knk-workspace `7330f0b6`); waiting for smoke § 1 step 8 | `claude/overview-map-f1-subregions`: knk-plugin `23e71315`, knk-workspace `90c4eabb` (from `next`) | [knk-plugin#93](https://github.com/PandiO/knk-plugin/pull/93), [knk-workspace#811](https://github.com/PandiO/knk-workspace/pull/811) | build and paper-boot green on `23e71315`; tests 7078 → 7106 (14 new), 0 failed; Codex at its limit | create_session session_01R1w2Uvrr2qFRCUBSxjXe7Y (2026-11-19) |
+| F2 Escape in the map frame, "Open profile" disabled | #757, #809 | Merged into `next` 2026-11-19 (knk-web-app `ee73be3f`, knk-workspace `ac437102`); waiting for smoke § 3 step 4, § 5 step 7, § 9 | `claude/overview-map-f2-panel-fixes`: knk-web-app `c1e4dc9`, knk-workspace `72714c17` (from `next`) | [knk-web-app#59](https://github.com/PandiO/knk-web-app/pull/59), [knk-workspace#812](https://github.com/PandiO/knk-workspace/pull/812) | build-and-test and e2e green on `c1e4dc9`; Jest 2787 → 2791, 44 map e2e specs pass; Codex at its limit | create_session session_01R1w2UuSPaZGzxZKERwXfh3 (2026-11-19) |
 
 ## 3. Coordinator decisions
 
@@ -218,6 +254,48 @@ on `next` (Decided 2026-11-18, O01–O33, O08 superseded by O31); smoke guide
     (`session_01R1w2UuMzfZ1Z1FB7pV7iXR`). The tracker row stays "In review" until the developer accepts.
     Alternatives: (a) write the remaining docs in this coordinator: the global instructions keep them in a separate
     session so merges stay fast.
+22. **#772 merged; fix links started (2026-11-19, developer's go).** The developer reviewed the status and said:
+    merge #772, start #750 and #757, and for the kick-only moderator make "Open profile" disabled with a tooltip
+    (filed as #809, tier:2, sub-issue of #732). Chosen:
+    1. Merge knk-workspace#772 into `next` with a merge commit (`8487a058`). knk-workspace has no CI; the scratch nginx
+       checks are in the PR; Codex was at its limit (noted on the PR).
+    2. Two fix links in parallel, both with `create_session` (one component repository each, so the classifier route
+       of skill § 4.1.4 applies): **F1** #750 in knk-plugin (session_01R1w2Uvrr2qFRCUBSxjXe7Y, branch
+       `claude/overview-map-f1-subregions`; knk-web-api read only, stop and report if the API must change) and **F2**
+       #757 plus #809 in knk-web-app (session_01R1w2UuSPaZGzxZKERwXfh3, branch `claude/overview-map-f2-panel-fixes`).
+       #757 and #809 share one link because both change the `/map` page code in knk-web-app (one link per component
+       repo).
+    3. Links put their report blocks in their PR bodies and on their issues; the coordinator copies them here, as
+       this session's direct pushes to `main` are refused (HTTP 403 on 2026-11-18, refused again 2026-11-19);
+       bookkeeping goes through PR #773.
+    4. Overlap check (board read from `origin/main`, 2026-11-19): the siege weapons L2b (#799, knk-plugin world-task
+       handlers, knk-web-app `FormWizard`) and the production chain (territory L1–L3 in `next`, which reuse the
+       outline reporting) touch neither `src/pages/map/`, `src/components/map/` nor `public/bluemap-bridge/`; F1 is
+       told to build on the territory changes in `next`. No blocker.
+    Alternatives: (a) one link for all three issues: needs knk-plugin and knk-web-app, so the subagent route, and
+    serialises independent work; (b) #809 hidden instead of disabled, per spec § 5 rule 13: the developer chose
+    disabled with a tooltip, logged by F2 as a spec decision.
+
+23. **F2 and F1 checks and merges (2026-11-19).** Both links stopped on the account's 5-hour usage limit at about
+    12:45 UTC and were resumed at 16:05 on the developer's "try again". Chosen:
+    1. Merge knk-web-app#59 and knk-workspace#812 (F2) into `next` with merge commits: every skill § 6 check held
+       (web app branch contained `next`; scope 9 map files; CI green; Jest 2787 → 2791; the new Escape e2e tests fail
+       without the bridge listener; Codex at its limit). Before the merge I added `72714c17` to the docs branch: O34
+       and § 5 item 12 now cite the hidden-not-disabled rule in § 6.3.5 / § 6.3.8 instead of § 5 rule 13 (F2's
+       finding; my issue #809 had cited the wrong rule).
+    2. F2's agent decisions: Escape from the frame as the new additive v1 type `escapePressed` (O35) rather than moving
+       focus to the panel; a panel-local tooltip (the web app has no shared one), shown on tap, hidden on blur.
+    3. Merge knk-plugin#93 and knk-workspace#811 (F1) into `next` with merge commits: build and paper-boot green on
+       `23e71315`; plugin tests 7078 → 7106 (14 new), 0 failed; scope 7 files (`MapReportingService`, `MapReporting`,
+       `DomainAccessFlagSync`, `KnKPlugin` wiring, tests); API untouched; Codex at its limit. Plugin `next` had moved
+       by the siege weapons L2b merge (other files); the test merge was clean. The F1 docs branch conflicted with
+       F2's smoke guide header and change list: I merged `next` into it (`90c4eabb`), keeping both.
+    4. F1's agent decisions: a separate `reportSubRegions` with its own remembered set (also resent by `resendAll`);
+       later syncs send only new sub-regions; the hook sits on the access sync, after the mirror. **Known limit:** a
+       sub-region that disappears is not sent as removed (block item 5.3); recorded in § 1 item 10, not filed.
+    Alternatives: (a) send F1 back to merge `next` again itself: the conflict was in docs header lines only, so
+    resolving it here kept the merge mechanical and saved a round trip; (b) wait for Codex: skipped under the usage
+    limit rule.
 
 ## 4. Link blocks
 
