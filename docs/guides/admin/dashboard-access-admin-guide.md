@@ -1,6 +1,6 @@
 # Dashboard access, staff ranks and area nodes — admin guide
 
-**Status:** Current · **Last updated:** 2026-11-18 (§ 2: Landmark in the World area, node `knk.admin.world.landmark`, on `next`, #708); 2026-11-15 (release v0.3: a group's nodes in its Permissions panel (#50) and read-only town Streets (#409) are released; PandiO/knk-workspace#577)
+**Status:** Current · **Last updated:** 2026-11-19 (§ 2: siege weapon types in the Siege area, on `next`, #782); 2026-11-18 (§ 2: Landmark in the World area, node `knk.admin.world.landmark`, on `next`, #708); 2026-11-15 (release v0.3: a group's nodes in its Permissions panel (#50) and read-only town Streets (#409) are released; PandiO/knk-workspace#577)
 **Checked against:** knk-web-api `master` `45043a7` and knk-web-app `next` `e6ba115`
 (the dashboard access model, [#280](https://github.com/PandiO/knk-workspace/issues/280) AM1–AM3, and bulk delete,
 [#205](https://github.com/PandiO/knk-workspace/issues/205), merged 2026-11-12/13 on `main`; create and edit back on
@@ -46,7 +46,7 @@ so a direct API call without `knk.admin.content` is refused as well (§ 4).
 | World | `knk.admin.world` | Domain, Town, District, Structure, Street, Location, Gate structure, Gate door, Domain sub-region, Landmark (on `next`, not released: create, edit and delete need `knk.admin.world.landmark` instead of `knk.admin.world`, see below) | yes |
 | Kits | `knk.kit.manage` | Kit | yes |
 | Lootboxes | `knk.admin.lootbox.manage` | Lootbox type, special entry, spawn area | yes |
-| Siege | `knk.siege.admin.manage` | Siege scenario, team, lobby, objective, spawnpoint | yes |
+| Siege | `knk.siege.admin.manage` | Siege scenario, team, lobby, objective, spawnpoint; on `next`, not released: siege weapon template, ammo type, weapon spot, user siege weapon unlock (#782) | yes |
 | Roads | `knk.admin.road` | Road profile | yes |
 | Players | `knk.admin.user.manage` (changing permission groups: `knk.admin.user.perm`) | User, Permission group | **no**, one at a time only |
 
