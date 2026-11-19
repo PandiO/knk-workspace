@@ -54,7 +54,7 @@ of what is already in `next`.
 | L7 P2b world web app | #676 | Merged into next (2026-11-19) | web app `f5ea646`, workspace `9d578854`; merges: web app `18385344`, workspace `a5c05901` | [web#61](https://github.com/PandiO/knk-web-app/pull/61), [ws#829](https://github.com/PandiO/knk-workspace/pull/829) | web app green (build-and-test, e2e) | subagent of the coordinator (19:37; the create_session `session_01R1w2UwqC5tNA7JBrnf61ko` refused to start, decision 34) |
 | L8 P2c world plugin: managed-region kinds | #677 | Merged into next (2026-11-19) | plugin `cc563771`, workspace `cb11e03a`; merges: plugin `8ebb30be`, workspace `4654a1ad` | [plugin#96](https://github.com/PandiO/knk-plugin/pull/96), [ws#823](https://github.com/PandiO/knk-workspace/pull/823) | green (plugin build + paper-boot, 64 scenarios) | create_session `session_01R1w2UtzV6puGzautXYEFJA` (one repo besides knk-workspace), started 2026-11-19 |
 | L9 P3 production engine API | #86 | Merged into next (2026-11-19) | api `20dcfb7`, workspace `ea01df32`; merges: api `6c648f60`, workspace `7b1495d0` (after a coordinator merge of `next`, `50497cc8`) | [api#58](https://github.com/PandiO/knk-web-api/pull/58), [ws#827](https://github.com/PandiO/knk-workspace/pull/827) | green (build-and-test, mysql-tests, fresh-database) | create_session `session_01R1w2Uvi8uaBqDwjJDADicL` (one repo besides knk-workspace), started 2026-11-19 |
-| L10 P3b production web app | #678 | Running | — | — | — | create_session `session_01R1w2UvmqQ34HGVHXxDfmwW` (prompt says start without asking), started 2026-11-19 |
+| L10 P3b production web app | #678 | In review (2026-11-19) | web-app `9e5a2ca`, workspace `eaf1f1a1` | [web-app#63](https://github.com/PandiO/knk-web-app/pull/63), [ws#834](https://github.com/PandiO/knk-workspace/pull/834) | green (build-and-test, e2e) | create_session `session_01R1w2UvmqQ34HGVHXxDfmwW` (prompt says start without asking), started 2026-11-19 |
 | L11 P4 yield areas API | #138 | Running | — | — | — | create_session `session_01R1w2UuXh4wtTxPhhZUpLGF` (prompt says start without asking), started 2026-11-19 |
 | L12 P4b surveys plugin | #679 | Not started | — | — | — | — |
 | L13 P4c yield areas web app | #680 | Not started | — | — | — | — |
@@ -1065,3 +1065,52 @@ _(Each link appends its block here when it finishes.)_
        applies present/total. A level's `TransportCapacity` is written to the structure on level change.
     4. L21 (P8a): the pool factor and harvest moves are not in the engine yet; add the pool as a built-in step next to
        unlock and workers.
+
+### 4.10 L10 — P3b production engine web app (#678)
+
+1. **Scope done** (knk-web-app, plus the essential docs in knk-workspace).
+    1. Types and clients: `src/types/dtos/production/ProductionEngineDtos.ts` (mirrors `ProductionEngineDtos.cs` and the enums). One client per resource: kinds, levels (read and update), lines (+ settle), modifiers, climate zones (+ `rolls/search`), weather types, cycle records (read only), `api/Production` (`run-now`). `productionStructureClient` gets `getProduction`, `setWorkers` and `upgrade`. Registry additions, additive and grouped: `Controllers`, `entityApiMapping`, `objectConfigs` columns.
+    2. Kind and level editors (G8, A09): a kind's page lists its ten levels, each linked; a level's page edits its unlocks and upgrade cost (`ProductionKindLevelItemsPanel`).
+    3. Line editor: `ProductionLinePanel` shows state and reason, accrual and settle times, edits the inputs, and has Settle now (the 409 reason while off) and the line's latest cycles.
+    4. Modifier, climate zone and weather editors: modifier list columns (scope, "+2/h" or "× 0.5", window); `ClimateZonePanel` (odds checked to at most 100% with the rest shown as clear, towns, stored rolls); `WeatherTypeEffectsPanel`.
+    5. Production view: `StructureProductionPanel` on a production structure's page:
+        1. why it isn't producing, structure-wide and per line;
+        2. each line's rate step by step (`RateBreakdown`) ending in the API's effective rate;
+        3. the workers present;
+        4. the upgrade with its cost shown before paying (payer picker, optional storage, confirm);
+        5. the latest cycles with a trace (`ProductionCycleTable`).
+    6. Game settings: a `ProductionEngineSettingsCard` (timing with the API's bounds) and Run production now. **Fix:** the page's save dropped `production.engine`, so the API reset it to the defaults on every save; `normalizeProductionSettings` now keeps it.
+    7. #65 (production part): the cycle trace on the structure and line pages, and blocked lines in words on the line list.
+    8. knk-workspace (branch from `next`): smoke guide § 4.2 (16 web app steps in full: 13 automated, 3 partly), § 4 intro and status header, changelog entry, implementation plan P3 status.
+2. **Commits and heads.**
+    1. knk-web-app `claude/production-p3b` at `9e5a2ca`: 4 commits, base `next` at `1838534`, which had not moved at PR time or at the last fetch.
+    2. knk-workspace `claude/production-p3b` at `eaf1f1a1`: 1 commit, base `next` at `7b1495d0`, which had not moved at the last fetch.
+3. **PRs.** [knk-web-app#63](https://github.com/PandiO/knk-web-app/pull/63) (Closes #678) and [knk-workspace#834](https://github.com/PandiO/knk-workspace/pull/834) (Part of #678), both into `next`. Not merged.
+4. **Tests, baseline → result.**
+    1. knk-web-app baseline on `next` `1838534`: Jest 2825 passed (331 suites), Playwright 263 passed, `tsc` clean, build OK.
+    2. Branch: Jest 2845 passed (333 suites). New: `src/utils/__tests__/productionEngine.test.ts` and `src/apiClients/__tests__/productionEngineClients.test.ts`, plus one test in `territory.test.ts` (engine kept on save).
+    3. Branch: Playwright 280 passed. New: `e2e/production-engine.spec.ts` (17 tests, strict API, DTO-typed fixtures in `e2e/fixtures/productionEngine.ts`). Changed: `territory.spec.ts` (the saved `production` section now includes `engine`) and `production-world.spec.ts` (the strict P2 structure pages mock the new production view). `tsc` and `typecheck:e2e` clean, build OK.
+    4. Seen failing on purpose: with the engine dropped on save and the line inputs not sent, the two matching e2e tests failed.
+    5. CI on `9e5a2ca`: PR runs 44612404305 (build-and-test) and 44612404476 (e2e), and push runs 44612008299 and 44612008372, all green.
+    6. Known reds: none.
+5. **Decisions (DESIGN § 4.3).**
+    1. *Where the screens live.* Chosen: panels below the generic detail pages (the L3/L5/L7 pattern) and the seeded forms as they are. Alternatives: (a) custom pages per type: they would duplicate the seeded FormConfigurations (G17).
+    2. *Child-list saves.* Chosen: each list editor sends only `{ id, <list> }` (the API keeps null fields); the level editor sends the level as read plus `items`. Alternatives: (a) send the full DTO from every editor: it would overwrite a concurrent edit; (b) put the lists on the form wizard: they are not on the seeds.
+    3. *Rate breakdown.* Chosen: the steps are computed in the web app from the API's applied modifiers, in its order, ending in the API's `effectiveRatePerHour`. Alternatives: (a) the modifier list and the effective rate only: the trace is harder to follow (A08).
+    4. *Upgrade request.* Chosen: a confirm step, the payer from the User lookup (required when coins are due), an optional storage (empty = Output), and no client idempotency key (the API derives one from the structure and level). Alternatives: (a) a key per request in the web app: it adds nothing.
+    5. *Engine settings and Run now.* Chosen: a card on the game settings page, saved with the page; Run now is not gated in the web app because the page is staff-only and a 403 is shown. Alternatives: (a) a separate settings page: it splits the `production` section across two saves.
+    6. *Workers.* Chosen: World staff can edit them (the API allows `knk.admin.world`), for tests and fixes. Alternatives: (a) read only: staff could not test the worker factor.
+    7. *#65.* Chosen: the cycle trace on the structure and line pages. Alternatives: (a) a dashboard list of cycle records: the API registers the type as `ViewOnly` (noted on #678).
+6. **Out of scope, noted.**
+    1. [#678 comment](https://github.com/PandiO/knk-workspace/issues/678#issuecomment-7021819495) lists three API points (no kind name on `ProductionWorldListDto`, no blueprint name on `ConsumedInputDto`, no cycle record list) and one web app point (the new-line form isn't pre-filled with the structure). No new issues.
+    2. Codex reached its code-review usage limit on both PRs (review "failed", no inline findings or threads); this is noted on each PR.
+7. **Blockers.** None.
+8. **At merge / what the developer must do.**
+    1. Deploy the web app with the production engine API (#86, in `next`) and its imported form and display seeds. There is no migration, setting or plugin change.
+    2. Smoke test [§ 4.2](../guides/production-storage-transport-smoke-test.md#42-steps-web-app-678) (tier:2): about 45 minutes in full, about 10 minutes for the untagged parts (creating a line and a modifier with their seeded forms, a level's own values).
+    3. At merge into `next`: the `documentation` sub-issue (production engine admin guide for kinds, levels, lines, modifiers, weather, the production view, upgrades and the engine settings card, plus the feature register row).
+    4. Coordinator: decide on the API points of the #678 comment.
+9. **Notes for later links.**
+    1. L11 (P4 web app) and later web app links: `StructureProductionPanel` mounts for `productionstructure` in `DisplayWizardPage`; add the area and survey views next to it. `RateBreakdown` and `ProductionCycleTable` take any `AppliedModifierDto` list, so new modifier sources show up without changes.
+    2. Strict e2e specs that open a production structure page now need a `ProductionStructures/<id>/production` mock (see `e2e/production-world.spec.ts` or `e2e/fixtures/productionEngine.ts`) and, with a kind, `ProductionKinds/<id>`.
+    3. The game settings page sends `production.engine` back; a later setting under `production` must be added to `normalizeProductionSettings` the same way.
