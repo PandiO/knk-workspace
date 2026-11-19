@@ -120,7 +120,11 @@ territory report can flag rural structures. P-3 (production areas) uses the same
 (P2c, #677) in review (link L8, knk-plugin `claude/production-p2c`, behind `production.enabled`): region kinds
 `RESOURCE_PRODUCTION` (production structures) and `STRUCTURE` (warehouses), rural structure regions with no parent at
 the kind's floor, the two territory lookup endpoints, rural structures in the territory report. Structure NPCs do not
-exist yet (they come with P5's workers and P11's shopkeepers), so "structure NPCs invulnerable" is left to those phases.
+exist yet (they come with P5's workers and P11's shopkeepers), so "structure NPCs invulnerable" is left to those phases. Web app
+(P2b, #676) in review (link L7, knk-web-app `claude/production-p2b`): the seeded forms with region capture and the town
+picker, placement warnings shown after a save and the API's reason for a refused one, `InsideTerritory` in the rule
+builder, the dashboard columns and a Territory flag filter for flagged structures, and the warehouse and production
+structure pages (placement, warnings, territory flag, storages with their stock).
 
 **API**
 

@@ -4,6 +4,26 @@ This is a human-readable record of capabilities merged into the V3 default branc
 
 ## Unreleased — on feature branches, not merged
 
+- **World web app: warehouses, production structures and rural placement** ([PandiO/knk-workspace#676](https://github.com/PandiO/knk-workspace/issues/676),
+  link L7 of the production, storage and transport chain, [production design](specs/production-storage-transport/DESIGN.md)
+  § 3.3-3.4, § 11.1). Staff can now create warehouses and production structures in the web app with the seeded forms:
+  in a district (district, street, house number) or rural (only the town, picked from the list), with the region drawn
+  in game through Send to Minecraft. A save that breaks a placement rule set to warn still saves and shows the warning
+  (for example P-2, outside the town's territory) until it is closed; a refused save shows the API's reason (both a
+  district and a town, a blocking rule). The dashboard lists both types with their town, placement (District or Rural)
+  and territory flag, production structures also with level, production on or off and their road connection; the
+  structure, warehouse and production structure lists have a **Territory flag** filter that shows the structures the
+  territory report flagged (contested, outside their town's territory). A warehouse's or production structure's page
+  shows where it stands and its town, the production structure's warnings (contested land, outside its territory, not
+  connected to its town's roads), its road connection, workers and delivery preference, the territory flag and
+  loyalty, and every storage it holds with its stock (adjust and move with `knk.economy.admin`). The form builder's rule
+  editor offers the validation type **Inside Territory**, a warning by default. knk-web-app: `warehouseClient`,
+  `productionStructureClient`, `StructurePlacementPanel`, `StructureStoragesPanel`, `TerritoryFlagFilterSelect`,
+  `src/utils/productionWorld.ts`; `e2e/production-world.spec.ts`. Smoke test:
+  [production smoke test § 3.2](guides/production-storage-transport-smoke-test.md#32-steps-web-app-676). Admin steps:
+  1. Deploy the web app with the world API (#91, in `next`) and its imported `Warehouse` and `ProductionStructure`
+     form and display seeds. No migration, setting or plugin change.
+
 - **World plugin: production region kinds, rural structure regions and the territory lookup** ([PandiO/knk-workspace#677](https://github.com/PandiO/knk-workspace/issues/677),
   link L8 of the production, storage and transport chain, [production design](specs/production-storage-transport/DESIGN.md)
   § 3.4). With the plugin switch `production.enabled` on, the managed-region repair (and a freshly finished region)
