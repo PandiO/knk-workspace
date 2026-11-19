@@ -21,14 +21,18 @@ of what is already in `next`.
    1. Apply migration `AddStockCore`.
    2. Import the form and display seeds `Storage` and `StockTransaction`.
    3. Grant `knk.economy.admin` to the staff who may move or adjust stock.
-3. **Smoke test of territory (L1 § 1.1–1.2, L2 § 1.3, L3 § 1.4).**
+3. **Smoke test of L6 (world API, tier:3):** guide § 3.1 (14 of 16 steps automated).
+   1. Apply migration `AddProductionWorld` (structures get an optional district and a town; its `Down` fails while a
+      rural structure exists).
+   2. Import the form and display seeds `Warehouse` and `ProductionStructure` ("make default").
+4. **Smoke test of territory (L1 § 1.1–1.2, L2 § 1.3, L3 § 1.4).**
    1. Apply migration `AddTerritory`.
    2. Import the four territory form and display seeds (`Kingdom` first).
    3. Merge the plugin `production` block into `config.yml`.
    4. To test, turn on `production.enabled` in the plugin and in the API game settings.
-4. **Review:** the agent decisions in blocks 4.0–4.4 (L0's retag rule; L1 server-side territory and loyalty as a town
+5. **Review:** the agent decisions in blocks 4.0–4.6 (L6's are listed in knk-web-api#57) (L0's retag rule; L1 server-side territory and loyalty as a town
    id; L2's crown land region kind) and coordinator decision 15 (Town/District seed fields).
-5. Later: the shop menu templates for L26 (#687).
+6. Later: the shop menu templates for L26 (#687).
 
 ## 2. Summary
 
@@ -40,10 +44,10 @@ of what is already in `next`.
 | L3 Territory web app | #690 | Merged into next (2026-11-19) | web app `0531422`, workspace `f3bd8f27`; merges: web app `89751315`, workspace `54bdc830` (after a coordinator merge of `next`, `e4f2276d`) | [web#57](https://github.com/PandiO/knk-web-app/pull/57), [ws#803](https://github.com/PandiO/knk-workspace/pull/803) | web app green (build-and-test, e2e) | create_session `session_01R1w2UuYHneFJFXcn8GSe6F` (one repo besides knk-workspace), started 2026-11-19 |
 | L4 P1 stock core API: storages, ledger, reconciler, capacity, roll-up | #97 | Merged into next (2026-11-19) | api `e524721`, workspace `abef76fc`; coordinator merge of `next` `06fee906`; merges: api `2e7d4e81`, workspace `1bbdd69f` | [api#56](https://github.com/PandiO/knk-web-api/pull/56), [ws#816](https://github.com/PandiO/knk-workspace/pull/816) | green (build-and-test, mysql-tests, fresh-database) | create_session `session_01R1w2Uwv8FBnKCUoeZauzVt` (one repo besides knk-workspace), started 2026-11-19 |
 | L5 P1b stock web app | #675 | Merged into next (2026-11-19) | web app `9bec60f`, workspace `a5d10f37`; merges: web app `9f46cb49`, workspace `8fff63e2` | [web#60](https://github.com/PandiO/knk-web-app/pull/60), [ws#818](https://github.com/PandiO/knk-workspace/pull/818) | web app green (build-and-test, e2e) | create_session `session_01R1w2UuKsus7BT7DcXyL4jr` (one repo besides knk-workspace), started 2026-11-19 |
-| L6 P2 world API: structure subtypes, TownId, placement rules | #91 | In review (2026-11-19) | api `303b6ab`, workspace `9ab62ab1` | [api#57](https://github.com/PandiO/knk-web-api/pull/57), [ws#822](https://github.com/PandiO/knk-workspace/pull/822) | green (build-and-test, mysql-tests, fresh-database) | create_session `session_01R1w2UscSGsG34qwc8vtEQj` (one repo besides knk-workspace), started 2026-11-19 |
-| L7 P2b world web app | #676 | Not started | — | — | — | — |
-| L8 P2c world plugin: managed-region kinds | #677 | Not started | — | — | — | — |
-| L9 P3 production engine API | #86 | Not started | — | — | — | — |
+| L6 P2 world API: structure subtypes, TownId, placement rules | #91 | Merged into next (2026-11-19) | api `303b6ab`, workspace `9ab62ab1`; merges: api `fcfced27`, workspace `c7fe8996` (after a coordinator merge of `next`, `15e3011e`) | [api#57](https://github.com/PandiO/knk-web-api/pull/57), [ws#822](https://github.com/PandiO/knk-workspace/pull/822) | green (build-and-test, mysql-tests, fresh-database) | create_session `session_01R1w2UscSGsG34qwc8vtEQj` (one repo besides knk-workspace), started 2026-11-19 |
+| L7 P2b world web app | #676 | Running | — | — | — | create_session `session_01R1w2UwqC5tNA7JBrnf61ko` (one repo besides knk-workspace), started 2026-11-19 |
+| L8 P2c world plugin: managed-region kinds | #677 | Running | — | — | — | create_session `session_01R1w2UtzV6puGzautXYEFJA` (one repo besides knk-workspace), started 2026-11-19 |
+| L9 P3 production engine API | #86 | Running | — | — | — | create_session `session_01R1w2Uvi8uaBqDwjJDADicL` (one repo besides knk-workspace), started 2026-11-19 |
 | L10 P3b production web app | #678 | Not started | — | — | — | — |
 | L11 P4 yield areas API | #138 | Not started | — | — | — | — |
 | L12 P4b surveys plugin | #679 | Not started | — | — | — | — |
@@ -183,6 +187,24 @@ of what is already in `next`.
    knk-web-api link, L9 (#86), as an additive extra. Alternatives: (a) add it to L6, which is already in CI: it would
    widen a finished link; (b) a separate one-file link: overhead for a seed bump.
 28. **P1 docs.** `documentation` sub-issue #820 under #97, docs session started (decision 25).
+
+29. **L6 merge (2026-11-19).** § 6 checks held:
+   1. Heads matched, and the API branch contained `next`.
+   2. CI was green (build-and-test, mysql-tests, fresh-database). Codex was at its usage limit, so there were no
+      findings.
+   3. The scope matched #91. L6 also edited existing siege, map, hub-settings and domain code. Each edit adapts a
+      reader of `Structure.DistrictId` to it becoming optional (rural structures), which is part of #91.
+   4. Both of decision 18's notes are handled: `InsideTerritory` calls a plugin lookup that L8 answers, and the
+      structure search lists the effective `townId` for the territory report.
+   Merged API #57 `fcfced27`. Workspace #822 conflicted with L5's docs in `next` (installation guide, smoke guide
+   header, plan status). Both sides only added text, so the coordinator merged `origin/next` into
+   `claude/production-p2` (`15e3011e`) and then merged #822 `c7fe8996`.
+30. **After L6: L7 (#676), L8 (#677) and L9 (#86) in parallel.** Their gates are open (L6 merged) and they use three
+   different repos (web app, plugin, API). L9 carries #819 as an additive extra (decision 27). The coordinator reads
+   the developer's waiver (decision 20) as covering L9's build on L6. The siege coordinator was told about the
+   nullable `Structure.DistrictId` and L9's coming migration.
+31. **P2 docs at the end of P2.** The `documentation` sub-issue for P2 (#91, #676, #677) starts when L7 and L8 are
+   merged.
 
 ## 4. Link blocks
 
