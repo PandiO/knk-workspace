@@ -1,6 +1,6 @@
 # Siege weapons chain — progress report
 
-**Status:** Running L2b; L3 blocked on #356, #611, #614 (2026-11-19) · **Last updated:** 2026-11-19
+**Status:** Paused (L3 blocked on #356, #611, #614) (2026-11-19) · **Last updated:** 2026-11-19
 
 **Issue:** [PandiO/knk-workspace#354](https://github.com/PandiO/knk-workspace/issues/354), links
 [#782](https://github.com/PandiO/knk-workspace/issues/782) (L1), [#783](https://github.com/PandiO/knk-workspace/issues/783) (L2),
@@ -23,7 +23,10 @@
    in L1's order, `siege.weapons.enabled: false` under `siege:` in the plugin `config.yml` (true only on a test
    server for § 2).
 3. **Decide where #795 goes** (buying a weapon unlock with coins, W32, in no phase). #799 decided 2026-11-19: it runs
-   as L2b. Smoke § 2 will be rewritten by L2b, so test § 2 after L2b is merged.
+   as L2b, merged into `next` 2026-11-19; smoke § 2 now covers the web-form flow and can be tested. At deploy also
+   import the updated `SiegeWeaponSpot` seed (or turn on "Requires in-game action" on Min X with type
+   `SiegeWeaponSpot` in the form designer on a database that imported it before). Say so if `/knk weaponspot`
+   should come back as a second way (removed as the coordinator's reversible default).
 
 ## 2. Summary
 
@@ -31,7 +34,7 @@
 |---|---|---|---|---|---|---|
 | L1 Entities, API, form seeds, unlocks | #782 | Merged into next (2026-11-19: API `e940aef1`, web app `24c8a988`, workspace `80f6ff72`) | API `d65e7c9`, web app `6138dc9`, workspace `f6ce0304` (`claude/siege-weapons-l1`) | [api#52](https://github.com/PandiO/knk-web-api/pull/52), [app#56](https://github.com/PandiO/knk-web-app/pull/56), [ws#794](https://github.com/PandiO/knk-workspace/pull/794) | green | subagent of the coordinator (decision 3: two component repos), started 2026-11-19 |
 | L2 Spots through world tasks | #783 | Merged into next (2026-11-19: plugin `2f970779`, API `7dc10383`, workspace `2f0dc79c`) | plugin `565620ec`, API `7a88f61c`, workspace `e4abab00` (`claude/siege-weapons-l2`) | [plugin#90](https://github.com/PandiO/knk-plugin/pull/90), [api#54](https://github.com/PandiO/knk-web-api/pull/54), [ws#800](https://github.com/PandiO/knk-workspace/pull/800) | green | subagent of the coordinator, started 2026-11-19 |
-| L2b Spots through the web form's world task | #799 | In review (PRs open, CI green, not merged) | plugin `251595ce`, API `6d891907`, web app `99b88481`, workspace `eacae619` (`claude/siege-weapons-l2b`) | [plugin#92](https://github.com/PandiO/knk-plugin/pull/92), [api#55](https://github.com/PandiO/knk-web-api/pull/55), [app#58](https://github.com/PandiO/knk-web-app/pull/58), [ws#810](https://github.com/PandiO/knk-workspace/pull/810) | green | subagent of the coordinator (three component repos), started 2026-11-19 |
+| L2b Spots through the web form's world task | #799 | Merged into next (2026-11-19: plugin `bf51edb7`, API `90bbddf9`, web app `aaf7066d`, workspace `8a6a4749`) | plugin `251595ce`, API `6d891907`, web app `99b88481`, workspace `eacae619` (`claude/siege-weapons-l2b`) | [plugin#92](https://github.com/PandiO/knk-plugin/pull/92), [api#55](https://github.com/PandiO/knk-web-api/pull/55), [app#58](https://github.com/PandiO/knk-web-app/pull/58), [ws#810](https://github.com/PandiO/knk-workspace/pull/810) | green | subagent of the coordinator (three component repos), started 2026-11-19 |
 | L3 Buying, placement, paste, restore | #784 | Blocked (external gate: #356, #611, #614 not in `next`; report § 1.1) | — | — | — | — |
 | L4 Damage, wreck, cooldown, statistics | #785 | Not started | — | — | — | — |
 | L5 Ballista direct fire | #786 | Not started | — | — | — | — |
@@ -126,6 +129,13 @@
 13. **knk-web-api `next` CI after the L2 merge.** `7dc10383` went red on the same flaky MySQL test as after L1
     (`DiscoveryLedgerMySqlTests.TitleCrossing_...`); filed as #805 (not this chain's area); rerun of run 44512749267
     green 2026-11-19 12:00. knk-plugin `next` `2f970779` green (build, paper-boot). Not a blocker.
+
+14. **L2b merged into `next`.** Every check of skill § 6 held: heads match, knk-plugin and knk-web-api branches
+    contain `next`, knk-web-app (3 Overview-map commits behind, map files only) and knk-workspace (48 behind) merge
+    cleanly (`git merge-tree`), CI green on every PR head, scope matches #799 (plugin handler, web app fan-out, API
+    seed and type constant, no migration), Codex at its usage limit on all four PRs. The link stopped once on a usage
+    limit (13:00) and was resumed at 16:04 with `SendMessage`. Alternatives: (a) send knk-web-app and knk-workspace
+    back to merge `next` first, rejected (clean merge, unrelated files, merge commit through the PR carries `next`).
 
 ## 4. Link blocks
 
