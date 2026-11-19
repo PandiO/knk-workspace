@@ -897,7 +897,7 @@ items:
 
 ## Changes
 
-1. 2026-11-19: § 4.30 `items.identity` (`enabled`, `convert-on-obtain`, `map-refresh-minutes`, `report-interval-minutes`, #141), § 2.1 and § 3 rows; checked against knk-plugin `claude/item-identity-141` `a6c5a2bc`, not merged into `next` yet
+1. 2026-11-19: § 4.30 `items.identity` (`enabled`, `convert-on-obtain`, `map-refresh-minutes`, `report-interval-minutes`, #141), § 2.1 and § 3 rows; checked against knk-plugin `claude/item-identity-141` `a6c5a2bc`; unchanged in the merge into `next` `2ef256e7` (checked 2026-11-19, docs #796). Admin guide: [item identity](item-identity-admin-guide.md)
 1. 2026-11-18: § 4.15 `navigation.walk-links`, `walk-link-range`, `walk-link-ratio`, `walk-link-ttl-seconds`, `walk-link-retry-seconds`, `walk-link-searches-per-route`, `road-first-share`, `road-first-max-ratio` (#705), § 2.1 row; checked against knk-plugin `claude/offroad-walk-links` `de44d58b`, not merged into `next` yet
 1. 2026-11-18: § 4.15 `navigation.plaza-curve-clearance`, the `plaza-lines` text (#712 step 2), § 2.1 row; checked against knk-plugin `claude/offroad-plaza-lines` `28ad18c5`, not merged into `next` yet
 1. 2026-11-18: § 4.29 `map.reporting.interval-ticks` and the live player report (#738), § 2.1 row; checked against knk-plugin `claude/overview-map-players-api`, not merged into `next` yet

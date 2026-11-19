@@ -7,7 +7,9 @@ This is a human-readable record of capabilities merged into the V3 default branc
 - **Item identity: every item a player obtains is a blueprint item** ([PandiO/knk-workspace#141](https://github.com/PandiO/knk-workspace/issues/141),
   link L0 of the production, storage and transport chain). Every item you pick up, mine, loot, fish, craft or trade
   for now has a known item type on the server, while it looks and stacks exactly as before. knk-web-api, knk-plugin and
-  knk-workspace branches `claude/item-identity-141` (PRs into `next`).
+  knk-workspace branches `claude/item-identity-141`, merged into `next` 2026-11-19 (knk-web-api `7d213fd6`, knk-plugin
+  `2ef256e7`, knk-workspace `ca3bcc98`). Guides: [admin](guides/admin/item-identity-admin-guide.md),
+  [architecture](architecture/item-identity.md) (docs #796).
   1. API: `ItemBlueprint.VanillaMaterialMatchRefId`, unique, maps each obtainable vanilla material to one blueprint.
      Plain "vanilla shadow" blueprints in a new top-level "Uncurated" category are generated for materials nobody
      curated (D11/G4), after every catalogue scan and on `POST api/ItemIdentity/shadows/generate`. New

@@ -1,6 +1,6 @@
 # Knights and Kings — production installation guide (admin)
 
-**Status:** Draft · **Last updated:** 2026-11-18 (§ 4.3: the `Map__GateCommands__*` keys, PandiO/knk-workspace#741); 2026-11-18 (§ 4.3: the `Map__LivePlayers__*` keys, PandiO/knk-workspace#738); 2026-11-18 (§ 4.3: `Map__Enabled` also shows the web map, #737; the `Map__*` and `RateLimiting__Map__*` keys, PandiO/knk-workspace#736); 2026-11-16 (§ 10.4: `actions/checkout@v7` in the release plan, #426); 2026-11-15 (header and § 5.3: the migrations of releases v0.1 to v0.3 on knk-web-api `main` `2cc8254`, PandiO/knk-workspace#577)
+**Status:** Draft · **Last updated:** 2026-11-19 (§ 5.3: the migrations waiting in `next`, with `AddItemIdentity`, docs PandiO/knk-workspace#796); 2026-11-18 (§ 4.3: the `Map__GateCommands__*` keys, PandiO/knk-workspace#741); 2026-11-18 (§ 4.3: the `Map__LivePlayers__*` keys, PandiO/knk-workspace#738); 2026-11-18 (§ 4.3: `Map__Enabled` also shows the web map, #737; the `Map__*` and `RateLimiting__Map__*` keys, PandiO/knk-workspace#736); 2026-11-16 (§ 10.4: `actions/checkout@v7` in the release plan, #426); 2026-11-15 (header and § 5.3: the migrations of releases v0.1 to v0.3 on knk-web-api `main` `2cc8254`, PandiO/knk-workspace#577)
 **State:** Draft v1 — written for review. Not yet followed on a real production host. The database, API, seed and
 web-server steps were rehearsed in a scratch environment on 2026-10-07 (see [Appendix A](#appendix-a--what-was-verified-and-how)).
 The Paper server steps and the release and deploy workflows are untested drafts; the CI workflows (§ 10.3) run on GitHub.
@@ -611,6 +611,17 @@ API, run the migrator (`dotnet ef database update`; the API does not migrate on 
 needs the new endpoints. No settings and no plugin `config.yml` keys change; kick and ban reach the game with knk-plugin `v0.2`
 (#574) or later, running with `realtime.enabled: true`. Details per change: the
 [v0.3 changelog section](../CHANGELOG.md#v03--2026-11-15).
+
+**Waiting in `next` (not released; knk-web-api `next` `7d213fd6`, 2026-11-19)**, in this order. The release that
+promotes `next` lists them here with its tag:
+
+1. `20261118095421_AddMapRegionOutlines` (#735, overview map): additive, one new table.
+2. `20261118152046_AddLandmarks` (#708, navigation landmarks): additive, one new table `landmarks`.
+3. `20261119090845_AddItemIdentity` (#141, item identity): additive; `item_blueprints` gets a nullable
+   `VanillaMaterialMatchRefId` with a unique index and a foreign key to `minecraftmaterialrefs`, and the new table
+   `item_conversion_stats`; no data written. After migrating, run a Minecraft catalogue scan (or
+   `POST api/ItemIdentity/shadows/generate`) to create the "Uncurated" shadow blueprints. The plugin keys
+   `items.identity.*` are off by default ([item identity admin guide](admin/item-identity-admin-guide.md)).
 
 Earlier: `v0.2` (`58e3218`, 2026-11-14) added `20261109081203_AddTempRegionReleases` (#269), and `v0.1` (`6d5e9c1`,
 2026-11-13) added `20261113161725_SeedStaffFreezeNodes` (gives the Staff group `knk.freeze` and `knk.unfreeze`, #367).
