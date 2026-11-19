@@ -1,7 +1,7 @@
 # Realtime channel (SignalR) between knk-web-api, knk-plugin and knk-web-app
 
-**Status:** Accepted design (developer decisions 2026-10-26, §12). S1 (§4–§5), S2 (§6.1), WT1 (§8.2, §8.7, #180; as built: [world-tasks/README.md § Lifecycle](../world-tasks/README.md#lifecycle-and-endpoints-pandioknk-workspace180)), WT2 (§8.3–§8.6, #181; as built: §8.8) and S3 (§6.2–§6.4, #182; as built: §6.8) **merged into the default branches 2026-11-04** (API `master` `2258df5`, plugin `main` `e1b6a7a9`, web app `main` `d0c2ba8`) after the developer's smoke tests of #180 and WT2; `realtime.enabled: false` by default in the plugin. **S4** (#183, chain 2 X1, web live updates) **merged 2026-11-12** (API `master` `bc97b7d`, web app `main` `1371951`; smoke test § S4 not run); as built: §6.9; since #280 AM1 (same merge) the audience is the type's area node. **S5** (#184, chain 2 R1, account erasure): API part merged 2026-11-12 in `bc97b7d` (migration `AddPrivacyErasureEvents`), plugin part and § 7.5 in the PR into `next` from `claude/plugin-chains-into-next` (2026-11-13).
-**Last updated:** 2026-11-15 (§6.10 item 8: the plugin's handler as built, #574 in review); 2026-11-15 (§6.10: `PlayerKick` / `PlayerBan` v1 for kick and ban from the web app, #565 in review); 2026-11-14 (§7.5 corrections after the #486 retest: the feed is PascalCase, the first join is decided after the account sync); 2026-11-14 (§7.5: the returning player is new, #486); 2026-11-13 (§7.5: a failed erasure step keeps the feed position, a feed reset forgets this run's ids, review of knk-plugin#20); 2026-11-13 (#31 rest: §6.8 note brought into `claude/plugin-chains-into-next`, PR into `next`); 2026-11-13 (S5 #184 plugin part: R1 docs brought into `claude/plugin-chains-into-next`, PR into `next`, §7.5 as built); 2026-11-12 (§6.9 as built brought over from `claude/realtime-web-live-183` and marked merged, audience per area node since #280 AM1 — docs #341); 2026-11-12 (status: S4 merged, S5 API part merged); 2026-11-06 (§6.9: `Realtime:WebLiveUpdatesEnabled`, decision on LX1-10); 2026-11-05 (S4 built: §6.9, §6.5 table, §9); 2026-11-05 (#239 offer permission check, #240 Send again merged); 2026-11-04 (#239, #240 on a feature branch); 2026-11-02 (S3 built: §6.8); 2026-11-02 (WT2 built: §8.8); 2026-11-01 (status: WT1 built, #180); 2026-10-26 (S2 built: implementation notes in §6.7; S1 built: §4.6; decisions recorded; §8.3 delivery and busy flow, §8.7 tasks anchored to the draft, §4.3 publishing path)
+**Status:** Current · **Last updated:** 2026-11-18 (§6.11 and §6.4: the overview map's hub methods `ReportRegionOutlines`, `ReportMapPlayers`, `GateCommand` / `GateCommandResult` and the `GateCommandSent` audit entry, in `next`, PandiO/knk-workspace#732, docs #766)
+**Phases:** Accepted design (developer decisions 2026-10-26, §12). S1 (§4–§5), S2 (§6.1), WT1 (§8.2, §8.7, #180; as built: [world-tasks/README.md § Lifecycle](../world-tasks/README.md#lifecycle-and-endpoints-pandioknk-workspace180)), WT2 (§8.3–§8.6, #181; as built: §8.8) and S3 (§6.2–§6.4, #182; as built: §6.8) **merged into the default branches 2026-11-04** (API `master` `2258df5`, plugin `main` `e1b6a7a9`, web app `main` `d0c2ba8`) after the developer's smoke tests of #180 and WT2; `realtime.enabled: false` by default in the plugin. **S4** (#183, chain 2 X1, web live updates) **merged 2026-11-12** (API `master` `bc97b7d`, web app `main` `1371951`; smoke test § S4 not run); as built: §6.9; since #280 AM1 (same merge) the audience is the type's area node. **S5** (#184, chain 2 R1, account erasure): API part merged 2026-11-12 in `bc97b7d` (migration `AddPrivacyErasureEvents`), plugin part and § 7.5 in the PR into `next` from `claude/plugin-chains-into-next` (2026-11-13).
 **Issue:** [PandiO/knk-workspace#66](https://github.com/PandiO/knk-workspace/issues/66) (KNG-57, priority high); phase issues in
 [IMPLEMENTATION_PLAN.md](IMPLEMENTATION_PLAN.md). Related: #76 (KNG-170, rank changes don't reach the server),
 #121 (KNG-262, cache TTLs), #31 (KNG-202, startup-only siege work), #35 (KNG-176), #34 (KNG-246), #145 (KNG-249), #75.
@@ -242,6 +242,7 @@ hub-down case.
 | `ReportRoster(players[])`, `PlayerJoined`, `PlayerLeft` | presence (§5) |
 | `ReportWorlds(worlds[])` | replaces the 10-minute runtime-worlds REST report while connected (keep REST as fallback) |
 | `WorldTaskOfferResult {taskId, result}` | §8 |
+| `ReportRegionOutlines(report)`, `ReportMapPlayers(report)`, `GateCommandResult(result)` | overview map (§6.11) |
 | `Heartbeat` | not needed: SignalR keep-alive + connection state are the server liveness |
 
 Batched data (statistics, discoveries, PM logs, telemetry, analytics, gate state) **stays on REST**: it is spooled,
@@ -468,6 +469,61 @@ and unban stays `/pardon` in game; every kick and ban is audited in the API.
    when missing) only when none exists (an existing entry, e.g. from `/ban`, is kept as it is), then kicks an online
    player with `realtime.moderation.ban-message` (`Cause.BANNED`), also when the ban list could not be written. No
    resync step (nothing to re-read). One `[KnK Moderation]` log line per handled action.
+
+### 6.11 Overview map: region outlines, live players and gate commands (PandiO/knk-workspace#732, in `next`)
+
+As built by the overview map chain (L1 [#735](https://github.com/PandiO/knk-workspace/issues/735), L4
+[#738](https://github.com/PandiO/knk-workspace/issues/738), L7 [#741](https://github.com/PandiO/knk-workspace/issues/741));
+merged into `next` 2026-11-18 (knk-web-api `6094276`, knk-plugin `3e04ba8f`), not on trunk, not live-tested
+([smoke test § 1, § 4, § 7](../../guides/overview-map-smoke-test.md)). Design:
+[OVERVIEW_MAP_DESIGN § 6.2.5–6.2.6, § 7](../in-game-maps/OVERVIEW_MAP_DESIGN.md); contracts in knk-web-api
+`Realtime/Contracts/MapContracts.cs`, hub methods in `Realtime/Hubs/GameServerHub.cs`. All three hub methods are on
+`/api/hubs/game`, so only a connection holding the plugin key with a valid server id reaches them (§7.3); none answers
+anything, and a bad or empty argument is ignored.
+
+1. **`ReportRegionOutlines(RegionOutlineReportDto)`**, game server → API (L1). Sent only with the plugin's
+   `map.reporting.enabled: true`: every domain region after each managed-region repair, one region after a world
+   task's Region step renames or redraws it, and the remembered set again on every hub (re)connect (a resync hook).
+   1. Argument: `outlines[]` of `{wgRegionId, worldName, points[{x, z}] (at least three, in order), minY, maxY}` and
+      `removed[]` of `{wgRegionId, worldName}` (the old name of a renamed region). Split by the plugin under the hub's
+      message limit.
+   2. The API (`Services/Map/MapRegionOutlineService`) upserts table `map_region_outlines` by world and region id and
+      links each row to the domain or domain sub-region that names it; removed names are deleted. Log: `Game server
+      <id> reported region outlines: <n> stored, <u> unchanged, <r> removed, <x> rejected`.
+   3. Architecture: [managed WorldGuard regions § 7 "Overview map outlines"](../../architecture/managed-worldguard-regions.md#overview-map-outlines-pandioknk-workspace735-in-next).
+2. **`ReportMapPlayers(MapPlayersReportDto)`**, game server → API (L4). Sent with `map.reporting.enabled: true` every
+   `map.reporting.interval-ticks` (default 40 = 2 s, clamped 10..1200; snapshot on the main thread, send off it).
+   1. Argument: `intervalMs` and `players[]` of `{uuid, world, x, y, z (0.1 block), yaw (whole degrees), afk, mode
+      (none | staff | owner; anything else counts as hidden), minigame (siege or null), matchId (the API's match id or
+      null)}`. Split when large; one empty report when the server empties.
+   2. Kept in memory (`Services/Map/MapPlayerRegistry`) only while `Map:LivePlayers:Enabled` is on; otherwise ignored,
+      so nothing is held. A player is dropped at once on `PlayerLeft` (§6.4) and after three missed intervals.
+   3. Never served as is: `GET api/Map/players` builds per-audience snapshots (anonymous / logged in / holding
+      `knk.mode.staff` or `knk.mode.owner`), leaving mode players and match participants out of the first two and
+      adding one arena pin per running siege match.
+3. **`GateCommand` v1**, API → game server (L7), an event with the usual envelope (§4.2) to every connected game server
+   (`servers` group), published by `Services/Map/GateCommandService` for `POST api/GateStructures/{id}/commands`
+   (node `knk.gate.admin`; only while `Map:GateCommands:Enabled` is on, else 404 `GateCommandsOff`).
+   1. Payload (`GateCommandPayload`): `commandId` (GUID, also in the audit entry; a receiver acts once per id), `gateId`,
+      `doorId` (one door of that gate, or null for every door), `action` (`open`, `close`, `toggle`, `repair`),
+      `staffUserId`, `staffUsername`.
+   2. Before sending, the API refuses an unknown door or one of another gate (400 `DoorNotOfGate`), a gate with a
+      created or running siege match on it (409 `GateInSiege`, outcome `siege`) and no connected game server (503 `NoGameServerConnected`, outcome
+      `no-game-server`).
+   3. The plugin (`paper/realtime/GateCommandRealtimeSync`, knk-core `gates/command/GateCommandHandler`) runs it on the
+      main thread with the existing gate operations and answers with `GateCommandResult`.
+4. **`GateCommandResult(GateCommandResultDto)`**, game server → API (L7): `commandId`, `result` (`done`, `refused` or
+   `siege`), `message` (shown in the map panel and audited) and `doors[]` of `{doorId, state (open | closed | opening |
+   closing), healthCurrent, healthMax, destroyed, outcome (started | already | repaired | skipped), reason}`. Handed to
+   the waiting request through `Services/Map/GateCommandWaiter`: the first answer per id wins; one after
+   `Map:GateCommands:TimeoutSeconds` (default 5, 1..30; the endpoint then answers 504 `timeout`) or for an unknown id is
+   logged and ignored. Ignored while `Map:GateCommands:Enabled` is off.
+5. **Audit:** every command that passed validation writes `GateCommandSent` (`AuditAction` 65, subject type
+   `GateStructure`, the gate's id) with `{commandId, action, doorId, result, message, gameServers}`, `result` being
+   `done`, `refused`, `siege`, `no-game-server` or `timeout`.
+6. **Delivery limits** as §6.10 item 6: a doorbell without outbox. A gate command is not replayed; a server that misses
+   it never runs it, and a time-out does not mean it didn't run. Outlines and players recover by themselves (the
+   reconnect resends the outlines; the next player report replaces the last).
 
 ## 7. Reliability
 
@@ -825,3 +881,24 @@ about the game server); small once the web hub exists. Phase S4 web part, low pr
 | Q17 | Busy check "Replace": what happens to the held task | **Released** to Pending (its task code stays usable), not cancelled |
 | Q18 | Sessions with no draft and no activity | **Removed after 7 days** with their open tasks |
 | Q19 | First world task in a new form | **Saves the draft silently** (no modal) |
+
+## Changes
+
+1. 2026-11-18: §6.11 and §6.4: the overview map's hub methods and the `GateCommandSent` audit entry, PandiO/knk-workspace#732, docs #766
+2. 2026-11-15: §6.10 item 8: the plugin's handler as built, #574 in review
+3. 2026-11-15: §6.10: `PlayerKick` / `PlayerBan` v1 for kick and ban from the web app, #565 in review
+4. 2026-11-14: §7.5 corrections after the #486 retest: the feed is PascalCase, the first join is decided after the account sync
+5. 2026-11-14: §7.5: the returning player is new, #486
+6. 2026-11-13: §7.5: a failed erasure step keeps the feed position, a feed reset forgets this run's ids, review of knk-plugin#20
+7. 2026-11-13: #31 rest: §6.8 note brought into `claude/plugin-chains-into-next`, PR into `next`
+8. 2026-11-13: S5 #184 plugin part: R1 docs brought into `claude/plugin-chains-into-next`, PR into `next`, §7.5 as built
+9. 2026-11-12: §6.9 as built brought over from `claude/realtime-web-live-183` and marked merged, audience per area node since #280 AM1 — docs #341
+10. 2026-11-12: status: S4 merged, S5 API part merged
+11. 2026-11-06: §6.9: `Realtime:WebLiveUpdatesEnabled`, decision on LX1-10
+12. 2026-11-05: S4 built: §6.9, §6.5 table, §9
+13. 2026-11-05: #239 offer permission check, #240 Send again merged
+14. 2026-11-04: #239, #240 on a feature branch
+15. 2026-11-02: S3 built: §6.8
+16. 2026-11-02: WT2 built: §8.8
+17. 2026-11-01: status: WT1 built, #180
+18. 2026-10-26: S2 built: implementation notes in §6.7; S1 built: §4.6; decisions recorded; §8.3 delivery and busy flow, §8.7 tasks anchored to the draft, §4.3 publishing path

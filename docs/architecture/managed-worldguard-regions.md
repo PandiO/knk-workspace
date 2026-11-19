@@ -1,7 +1,7 @@
 # Managed WorldGuard regions — hierarchy, priority, flags and startup repair
 
-**Status:** Implemented, merged to trunk (2026-09-29, [knk-plugin#6](https://github.com/PandiO/knk-plugin/pull/6), [knk-web-api#3](https://github.com/PandiO/knk-web-api/pull/3); KNG-43 follow-up 2026-10-04) and **smoke-tested in game and accepted 2026-10-05** — Linear KNG-46, §9. Region-step re-run replacement (KNG-103) merged 2026-10-18 after its in-game check ([knk-plugin#12](https://github.com/PandiO/knk-plugin/pull/12), [knk-web-api#10](https://github.com/PandiO/knk-web-api/pull/10)). Lootbox spawn areas' drawn regions renamed to `lootbox_area_<id>` (PandiO/knk-workspace#34, §7): **in the PR into `next` from `claude/plugin-chains-into-next`, not merged, not live-tested**. Temp regions of abandoned drafts removed early (PandiO/knk-workspace#269, §7 "Abandoned drafts"): **in the PR into `next` from `claude/plugin-chains-into-next`, not merged, not live-tested**
-**Last updated:** 2026-11-15 (#399 of §7 released in knk-web-api v0.3, `main` `2cc8254`, PandiO/knk-workspace#577); 2026-11-15 (§7 "What the game server is given": `serverId` required, due rows read in pages, PandiO/knk-workspace#399, knk-web-api#33 into `next`); 2026-11-13 (§7 #34 and #269 in the PR into `next` from `claude/plugin-chains-into-next`); 2026-11-09 (§7 "Abandoned drafts: temp regions released early", PandiO/knk-workspace#269, on feature branch `claude/temp-region-drafts-269`, not merged; §8 item 5); 2026-11-05 (§7 "Lootbox spawn areas", PandiO/knk-workspace#34, on feature branch `claude/lootbox-area-rename-34`, not merged; §8 item 5); 2026-10-23 (§7 "Domain sub-regions", KNG-254–KNG-258, merged and live-tested); 2026-10-18 (KNG-103 in-game check passed and merged; §7 recovering a domain the old bug left on a temp name, purge keeps what the last repair saw; §9 result); 2026-10-12 (§7 "Re-running a domain's region step" and `/knk regions temp`, KNG-103; §9 checklist, not yet run); 2026-10-06 (§5 "Rank-dependent access" links the domain entry/exit enforcement, KNG-55/KNG-56); 2026-10-05 (KNG-46 in-game smoke test passed; parent-inheritance decision accepted; vanilla spawn-protection note, §8 item 10)
+**Status:** Current · **Last updated:** 2026-11-19 (overview map promoted to main alone, #732); 2026-11-19 (§7 "Domain sub-regions", "Overview map outlines": sub-region outlines reported after every access sync with `map.reporting.enabled`, PandiO/knk-workspace#750, branch `claude/overview-map-f1-subregions`); 2026-11-18 (§7 "Overview map outlines": the repair and rename also report outlines with `map.reporting.enabled`, PandiO/knk-workspace#735, docs #766)
+**Implementation:** Implemented, merged to trunk (2026-09-29, [knk-plugin#6](https://github.com/PandiO/knk-plugin/pull/6), [knk-web-api#3](https://github.com/PandiO/knk-web-api/pull/3); KNG-43 follow-up 2026-10-04) and **smoke-tested in game and accepted 2026-10-05** — Linear KNG-46, §9. Region-step re-run replacement (KNG-103) merged 2026-10-18 after its in-game check ([knk-plugin#12](https://github.com/PandiO/knk-plugin/pull/12), [knk-web-api#10](https://github.com/PandiO/knk-web-api/pull/10)). Lootbox spawn areas' drawn regions renamed to `lootbox_area_<id>` (PandiO/knk-workspace#34, §7): **in the PR into `next` from `claude/plugin-chains-into-next`, not merged, not live-tested**. Temp regions of abandoned drafts removed early (PandiO/knk-workspace#269, §7 "Abandoned drafts"): **in the PR into `next` from `claude/plugin-chains-into-next`, not merged, not live-tested**
 **Supersedes:** Linear KNG-12 ("no WG flags on town/district regions"), the assumption noted in `CombatSafezone`'s Javadoc
 **Evidence:** [`reports/2026-09-28-v1-permissions-worldguard-inventory.md`](../reports/2026-09-28-v1-permissions-worldguard-inventory.md) (categorized v1 inventory), the v3 domain model (`Town → District → Structure`, `GateStructure : Structure`), `vision.md` §2
 
@@ -111,6 +111,8 @@ Outcome rules: **checked** = distinct regions considered; **skipped** = domain w
 
 `/knk regions repair` (permission `knk.admin.regions`, child of `knk.admin`) runs the same pass on demand — needed after creating a Town or Structure in the web app (§8).
 
+With `map.reporting.enabled: true` every run also reports the domain regions' outlines to the API for the overview map (§7 "Overview map outlines").
+
 ## 7. Creation path and config
 
 `POST /Regions/rename` (API → plugin) now accepts optional `domainType` and `parentRegionId`. Every domain service — `TownService`, `DistrictService`, `StructureService`, `GateStructureService`, `DomainService` — calls the shared `IDomainRegionNameFinalizer` after create/update (KNG-43): a region still named `tempregion_worldtask_<n>` becomes `domain_<id>`, with the concrete type and the parent's region (District → its Town, Structure/Gate → its District). A failed rename never fails the save; the region keeps its temp name. The plugin renames the temp region — **copying owners and members**, and (KNG-43) keeping the region's own parent and re-linking regions whose parent it was — then runs `reconcileOne` for the new name. Without a type the rename behaves as before and the next repair sets the region up.
@@ -146,6 +148,7 @@ A domain can have extra regions besides its main `WgRegionId` ([design](../specs
 - **Mirror.** `SubRegionMirror` (core) runs after every access sync: startup, every 5 min, `/knk regions repair`, `/knk regions sync`. It makes each sub-region a copy of its main region: priority, every flag, owners, members, and the main region as parent. Only the region's own `knk-creation-timestamp` / `knk-orphaned-since` are kept.
 - **Rename.** `RegionRenamePlan` accepts the `_sub_` name (KNG-103 replace in place on a re-run). `POST /Regions/rename …&subRegionOf=<main>` mirrors at once.
 - **Repair.** The reconciler never sees sub-regions; the main region's repair reaches them through the mirror.
+- **Map outlines.** With `map.reporting.enabled: true`, every completed access sync hands its rules to the overview map after the mirror (`DomainAccessFlagSync.afterSync`), which reports the outlines of the sub-regions they list (§ "Overview map outlines", [#750](https://github.com/PandiO/knk-workspace/issues/750)). Off, no listener is set.
 - **Orphans.** A `_sub_` region no domain lists on two syncs in a row is orphaned (`OrphanedSubRegions`): its access flags, `knk-domain-id` and parent are removed, and it gets `knk-orphaned-since`. The daily cleanup deletes it after `regions.temp-retention.days` (default 14) counted from that mark (`TempRegionCleanupPolicy.decideOrphanedSubRegion`). `/knk regions temp [purge [hours]]` lists and purges them; they are no longer reported among the orphaned `domain_<id>` regions.
 - **Shapes.** Every region a world task draws (main or sub) turns a `//sel cyl`, ellipsoid or convex selection into a polygon (`SelectionShapes`). Before, it became the box around the selection.
 
@@ -184,6 +187,42 @@ Before #269 a `tempregion_worldtask_<n>` whose form was abandoned waited for the
   `POST api/WorldTasks/temp-region-releases/{id}/settle` deletes the release; a failed settle lists it again (then `Missing`). The log says `Removed temp region <world>/<id> (its draft was deleted; …)`.
 - **Not released:** a region task that completed for a draft that was then **completed** without using it (e.g. "Capture again" after a completed capture: the older region stays), a task deleted by hand (`DELETE api/WorldTasks/{id}`), drafts the 90-day retention deletes (long after 14 days). These still go after 14 days. A task still InProgress when its draft is deleted is not cancelled: if the player finishes, the region is removed afterwards.
 - **Backstop unchanged:** the daily `TempRegionRetentionTask` pass (§8 item 5) still runs with its 14 days and catches everything not released (older API, plugin with the pass off, a release dropped after 30 days).
+
+### Overview map outlines (PandiO/knk-workspace#735, in `next`)
+
+With `map.reporting.enabled: true` (and `realtime.enabled: true`) the repair and the rename path also report region
+outlines for the web app's overview map ([design](../specs/in-game-maps/OVERVIEW_MAP_DESIGN.md) § 6.2.6, § 7;
+[admin guide § 3](../guides/admin/overview-map-admin-guide.md#3-outlines-and-what-keeps-them-current)). Off by default:
+then nothing is hooked in and the repair and rename behave exactly as above. Merged into `next` 2026-11-18 (knk-plugin#76,
+knk-web-api#45), not on trunk, not live-tested ([smoke test § 1](../guides/overview-map-smoke-test.md#1-phase-1-region-outlines-735-tier3)).
+
+- **Wiring** (`KnKPlugin`, `paper/map/MapReporting`, `core/map/MapReportingService`): `ManagedRegionRepairService.afterRepair`
+  hands every run's domain region specs (Town, District, Structure, Gate) to `reportDomainRegions`;
+  `WgRegionIdTaskHandler`'s rename listener calls `regionRenamed` after a world task's Region step renames a temp region
+  to `domain_<id>` or redraws a domain's region in place (KNG-103 replace); the realtime resync hook calls `resendAll`
+  on every game hub (re)connect, so a repair that finished before the hub was up, or an API restart, is covered.
+  Since F1 ([#750](https://github.com/PandiO/knk-workspace/issues/750), branch `claude/overview-map-f1-subregions`,
+  PR into `next`): `DomainAccessFlagSync.afterSync` hands every completed access sync's rules (startup, every
+  `interval-minutes`, `/knk regions repair`, `/knk regions sync`, after a new region) to `reportSubRegions` with the
+  sub-regions they list (`MapReporting.subRegions`, in the domain's world). That set is remembered next to the domain
+  regions: the first sync sends every sub-region, later syncs only those not reported yet (a quiet sync reads
+  nothing), one not found is tried again next sync, one no longer listed only leaves the set; `resendAll` sends both
+  sets. A domain's outline is its main region plus its sub-regions.
+- **What is sent:** the hub method `ReportRegionOutlines` with each region's 2D points in order (a cuboid's four
+  corners, a polygon's points; at least three), min and max Y, keyed by world and region id; a rename names the old id
+  under `removed` (never the final name of a re-run in place). `RegionOutlineAdapter` reads WorldGuard on the main
+  thread; reports are split under the hub's message limit. Contract: [realtime design § 6.11](../specs/realtime-signalr/DESIGN.md#611-overview-map-region-outlines-live-players-and-gate-commands-pandioknk-workspace732-in-next).
+- **API side:** `Services/Map/MapRegionOutlineService` upserts table `map_region_outlines` (migration
+  `AddMapRegionOutlines`), one row per world and region id, linked to the domain whose `WgRegionId` or
+  `domain_sub_regions` row names it; unchanged rows keep their `UpdatedAt`; rows for removed names are deleted. Only a
+  plugin-key game hub connection can write.
+- **Log lines:** `[KnK Map] Region outlines (domain regions): <n> outline(s), <m> removed, …` after a repair,
+  `[KnK Map] Region outlines (sub-regions): …` after an access sync that found sub-regions not reported yet,
+  `[KnK Map] Region outlines (region <id>): …` after a rename; the API logs `Game server <id> reported region outlines:
+  <n> stored, <u> unchanged, <r> removed, <x> rejected`.
+- **Limits:** a hand edit (`/rg redefine`) of a domain region is reported only by the next repair; of a sub-region
+  only on the next hub reconnect or plugin restart (the access sync sends a known sub-region once). Lootbox areas and
+  other unmanaged regions are never reported.
 
 ## 8. Unresolved v1 → v3 differences and observed hazards
 
@@ -228,3 +267,18 @@ In-game checklist used (dev server, back up `plugins/WorldGuard/worlds/*/regions
 6. Create a District in the web app: the region ends up `domain_<id>` with parent, priority and inherited flags without a restart; owners/members on the temp region survive the rename.
 7. Stop the API and start the server: repair retries, then logs "skipped … No region was changed"; `/knk regions repair` works once the API is back.
 8. Confirm that giving a Town's owners build rights inside its Districts (parent inheritance) is acceptable for imported v1 towns.
+
+## Changes
+
+1. 2026-11-19: §7 "Domain sub-regions", "Overview map outlines": sub-region outlines after every access sync, PandiO/knk-workspace#750
+2. 2026-11-18: §7 "Overview map outlines": the repair and rename also report outlines with `map.reporting.enabled`, PandiO/knk-workspace#735, docs #766
+3. 2026-11-15: #399 of §7 released in knk-web-api v0.3, `main` `2cc8254`, PandiO/knk-workspace#577
+4. 2026-11-15: §7 "What the game server is given": `serverId` required, due rows read in pages, PandiO/knk-workspace#399, knk-web-api#33 into `next`
+5. 2026-11-13: §7 #34 and #269 in the PR into `next` from `claude/plugin-chains-into-next`
+6. 2026-11-09: §7 "Abandoned drafts: temp regions released early", PandiO/knk-workspace#269, on feature branch `claude/temp-region-drafts-269`, not merged; §8 item 5
+7. 2026-11-05: §7 "Lootbox spawn areas", PandiO/knk-workspace#34, on feature branch `claude/lootbox-area-rename-34`, not merged; §8 item 5
+8. 2026-10-23: §7 "Domain sub-regions", KNG-254–KNG-258, merged and live-tested
+9. 2026-10-18: KNG-103 in-game check passed and merged; §7 recovering a domain the old bug left on a temp name, purge keeps what the last repair saw; §9 result
+10. 2026-10-12: §7 "Re-running a domain's region step" and `/knk regions temp`, KNG-103; §9 checklist, not yet run
+11. 2026-10-06: §5 "Rank-dependent access" links the domain entry/exit enforcement, KNG-55/KNG-56
+12. 2026-10-05: KNG-46 in-game smoke test passed; parent-inheritance decision accepted; vanilla spawn-protection note, §8 item 10

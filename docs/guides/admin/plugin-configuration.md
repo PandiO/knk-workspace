@@ -1,6 +1,6 @@
 # Plugin configuration reference (`config.yml`)
 
-**Status:** Current · **Last updated:** 2026-11-15 (§ 4.3 `realtime.moderation` and § 2.1, web kick/ban, #574); 2026-11-15 (§ 2.1: #522 merged into `next` `deb7ff49`, #589); 2026-11-15 (§ 4.27 `npc`: `group-lateral-spacing`, `group-width-hysteresis-blocks`, `group-followers-finish-trip`, `group-spacing` 2.0 → 1.5, `group-formation` and `group-ranks-width` texts, #522); 2026-11-15 (§ 4.27 `npc`: `corner-clearance`, `waypoint-margin`, `recovery-wait-ticks`, `stationary-ticks` and `no-progress-ticks` 40, `max-retries` reworded, #521); 2026-11-14 (§ 4.28 `testing.scenarios`, test servers only, #421); 2026-11-14 (§ 4.18 `messages.web-account-registered`, #485); 2026-11-14 (§ 2.1: the #377 `group-*` keys are in `next` since 2026-11-13, PandiO/knk-workspace#496); 2026-11-13 (§ 4.11 gates are discovered too; § 4.21 realtime push; § 4.26 the kit cache, PandiO/knk-workspace#300)
+**Status:** Current · **Last updated:** 2026-11-19 (§ 4.29 `map` promoted to main alone with the overview map, #732); 2026-11-18 (§ 4.29 `map.reporting.interval-ticks` and the live player report, § 2.1 row, overview map L4, #738); 2026-11-18 (§ 4.29 `map.reporting.enabled`, § 2.1 and § 3 rows, overview map L1, #735); 2026-11-15 (§ 4.3 `realtime.moderation` and § 2.1, web kick/ban, #574); 2026-11-15 (§ 2.1: #522 merged into `next` `deb7ff49`, #589); 2026-11-15 (§ 4.27 `npc`: `group-lateral-spacing`, `group-width-hysteresis-blocks`, `group-followers-finish-trip`, `group-spacing` 2.0 → 1.5, `group-formation` and `group-ranks-width` texts, #522); 2026-11-15 (§ 4.27 `npc`: `corner-clearance`, `waypoint-margin`, `recovery-wait-ticks`, `stationary-ticks` and `no-progress-ticks` 40, `max-retries` reworded, #521); 2026-11-14 (§ 4.28 `testing.scenarios`, test servers only, #421); 2026-11-14 (§ 4.18 `messages.web-account-registered`, #485); 2026-11-14 (§ 2.1: the #377 `group-*` keys are in `next` since 2026-11-13, PandiO/knk-workspace#496); 2026-11-13 (§ 4.11 gates are discovered too; § 4.21 realtime push; § 4.26 the kit cache, PandiO/knk-workspace#300)
 **Checked against:** knk-plugin `main` `121030f`; § 4.11, § 4.21 and § 4.26 against `57884e9`; § 4.27 `npc`, the `realtime.erasure` and `realtime.moderation` blocks and `regions.temp-retention.release-interval-minutes` against knk-plugin `next` (not on trunk yet). Update this page in place whenever a `config.yml` key is added, renamed, removed or gets a new default.
 **Source:** knk-plugin `knk-paper/src/main/resources/config.yml` (1,152 lines at `121030f`), read by
 `knk-paper/.../paper/config/ConfigLoader.java`, `EnchantmentConfigManager.java` and `KnKPlugin.java`
@@ -85,6 +85,8 @@ Newest first. Builds before this list: compare the files with the script.
 
 | Merged | Issue | Added (+), removed (−) or changed | Applies |
 |---|---|---|---|
+| in review, not in `next` yet (`claude/overview-map-players-api`) | [#738](https://github.com/PandiO/knk-workspace/issues/738) | + `map.reporting.interval-ticks` (40); with `map.reporting.enabled: true` the plugin also reports its online players (position, AFK, mode, minigame match) for the map's live player layer | Restart |
+| in review, not in `next` yet (`claude/overview-map-outlines`) | [#735](https://github.com/PandiO/knk-workspace/issues/735) | + `map.reporting.enabled` (false): region outlines to the API for the overview map; needs `realtime.enabled: true` | Restart |
 | in review, not in `next` yet (`claude/web-kick-ban-574`) | [#574](https://github.com/PandiO/knk-workspace/issues/574) | + `realtime.moderation` (`kick-default-reason`, `ban-message`; optional, defaults apply when missing) | Restart |
 | in `next` (`deb7ff49`, 2026-11-15), not on trunk yet | [#522](https://github.com/PandiO/knk-workspace/issues/522) | + `npc.navigation.group-lateral-spacing` (1.0), + `group-width-hysteresis-blocks` (3), + `group-followers-finish-trip` (false); `group-spacing` default 2.0 → 1.5 (now the gap between rows and in the column). A server whose `config.yml` still says `group-spacing: 2.0` keeps 2.0: change it to 1.5 | Restart |
 | in `next` (`5dc88cfd`, 2026-11-15), not on trunk yet | [#521](https://github.com/PandiO/knk-workspace/issues/521) | + `npc.navigation.corner-clearance` (1.0), + `waypoint-margin` (0.5), + `recovery-wait-ticks` (20); `stationary-ticks` and `no-progress-ticks` default 60 → 40; `max-retries` now counts the recovery steps (back-off, side-step, local leg ahead). A server whose `config.yml` still says 60 keeps 60: change the two lines to 40 | Restart |
@@ -144,6 +146,7 @@ Newest first. Builds before this list: compare the files with the script.
 | 4.26 | `cache` | API response cache per entity |
 | 4.27 | `npc` | NPC navigation on Citizens (off by default) |
 | 4.28 | `testing` | In-plugin test scenarios, test servers only (off by default) |
+| 4.29 | `map` | Overview map reports to the API (off by default) |
 
 ## 4. Key reference
 
@@ -751,6 +754,26 @@ testing:
       z: 30000
 ```
 
+### 4.29 `map`
+
+Overview map in the web app ([design](../../specs/in-game-maps/OVERVIEW_MAP_DESIGN.md) § 7, [smoke test § 1](../overview-map-smoke-test.md#1-phase-1-region-outlines-735-tier3),
+[#732](https://github.com/PandiO/knk-workspace/issues/732)). Off by default: with `reporting.enabled: false` the plugin
+reads and sends nothing for the map and behaves as before. The reports travel over the game hub, so they also need
+`realtime.enabled: true` (§ 4.3); with realtime off the plugin logs a warning and sends nothing. The block sits between
+`regions` and `command-visibility` in the file.
+
+| Key | Default | What it does, safe values | Applies | Added by |
+|---|---|---|---|---|
+| `reporting.enabled` | `false` | `true` sends the outline (2D points, min and max Y) of every Town, District, Structure and Gate region to the API, which keeps them in `map_region_outlines`: after every managed-region repair (startup, `/knk regions repair`), after a world task's region is renamed or redefined (the old name is removed), and again on every game hub (re)connect | Restart | #735 |
+| `reporting.interval-ticks` | `40` | With `reporting.enabled: true`, every this many ticks (40 = 2 s; 10 to 1200, values outside are clamped) the plugin also sends each online player's world, position, facing, AFK state, active mode and running minigame match to the API (`ReportMapPlayers`). The API decides who may see whom: players in staff or owner mode or in a running match never reach anonymous or plain logged-in viewers. The snapshot runs on the main thread (one pass over the online players, timed as `map.player_snapshot` in the metrics), the send off it | Restart | #738 |
+
+```yaml
+map:
+  reporting:
+    enabled: false
+    interval-ticks: 40       # live player report interval (40 ticks = 2 s; 10..1200)
+```
+
 ## 5. Maintaining this page
 
 - A change that adds, renames or removes a key, or changes a default, updates § 2.1 and the section's table in the
@@ -762,6 +785,8 @@ testing:
 
 ## Changes
 
+1. 2026-11-18: § 4.29 `map.reporting.interval-ticks` and the live player report (#738), § 2.1 row; checked against knk-plugin `claude/overview-map-players-api`, not merged into `next` yet
+1. 2026-11-18: § 4.29 `map.reporting.enabled` (#735), § 2.1 and § 3 rows; checked against knk-plugin `claude/overview-map-outlines`, not merged into `next` yet
 1. 2026-11-15: § 4.27 `npc`: `group-lateral-spacing`, `group-width-hysteresis-blocks`, `group-followers-finish-trip`, `group-spacing` 2.0 → 1.5, the `group-formation` and `group-ranks-width` texts (#522), § 2.1 row (and the #521 row now in `next`); checked against knk-plugin `claude/npc-followups-l4`, not merged into `next` yet
 2. 2026-11-15: § 4.27 `npc`: `corner-clearance`, `waypoint-margin`, `recovery-wait-ticks`, `stationary-ticks` and `no-progress-ticks` 40, `max-retries` and `group-rejoin-blocks` reworded (#521), § 2.1 row; checked against knk-plugin `claude/npc-followups-l3`, not merged into `next` yet
 3. 2026-11-14: § 4.28 `testing.scenarios` (#421), § 2.1 and § 3 rows; checked against knk-plugin `next` `309d3580`

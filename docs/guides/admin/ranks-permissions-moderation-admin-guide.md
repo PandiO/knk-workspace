@@ -1,6 +1,6 @@
 # Ranks, permissions and moderation — admin guide
 
-**Status:** Current · **Last updated:** 2026-11-15 (release v0.3: the group Permissions panel, the PermissionGrant table, the profile's permission search, kick and ban from the web app, the unfreeze reason, game sessions and the search filters are released; PandiO/knk-workspace#577)
+**Status:** Current · **Last updated:** 2026-11-18 (§ 5: moderation from the overview map, #743 in `next`, docs #766)
 **Checked against:** knk-web-api `master` `75b5a00`, knk-web-app `main` `3ba747d`, knk-plugin `main` `57884e97`; not
 live-tested as a whole (the parts' own smoke tests are linked in § 9). The group Permissions panel, the PermissionGrant
 table and the profile's permission search (#50, #408, #407), and kick and ban from the web app, the unfreeze reason,
@@ -183,6 +183,8 @@ they don't hold (PandiO/knk-workspace#469, not yet checked live). Until that is 
 `knk.admin.user.group` only to people you would trust with `*`, and check the audit log (§ 7).
 
 ## 5. Moderation tools
+
+Freeze, unfreeze, kick and ban also work from a player's name card on the overview map (`/map`), each under its own node, with the same dialogs, endpoints and audit entries as the profile (in `next`, not released; [overview map admin guide § 6](overview-map-admin-guide.md#6-moderation-from-the-map)).
 
 ### 5.1 Freeze
 
@@ -421,10 +423,11 @@ Never test kick and ban on a real player. For dashboard rights use the [dashboar
 
 ## Changes
 
-1. 2026-11-15: release v0.3: "in `next`" markers of #50, #408, #407, #565 now "since v0.3"; the plugin side
+1. 2026-11-18: § 5: moderation from the overview map, #743 in `next`, docs #766
+2. 2026-11-15: release v0.3: "in `next`" markers of #50, #408, #407, #565 now "since v0.3"; the plugin side
    of kick and ban (#574) is in knk-plugin `v0.2`; PandiO/knk-workspace#577
-2. 2026-11-15: § 5.4 kick and ban from the web app, § 5.1 unfreeze reason and frozen since/by, § 5.6 the moderation
+3. 2026-11-15: § 5.4 kick and ban from the web app, § 5.1 unfreeze reason and frozen since/by, § 5.6 the moderation
    search's filters and sort, § 7 game sessions in the timeline, § 8–10; #565, #574 in `next`, docs #597
-3. 2026-11-15: § 3.1, § 3.3, § 7: a group's nodes with History, the PermissionGrant table, the profile's permission
+4. 2026-11-15: § 3.1, § 3.3, § 7: a group's nodes with History, the PermissionGrant table, the profile's permission
    search; #50, #408, #407 in `next`, docs #576
-4. 2026-11-13: first version, PandiO/knk-workspace#301
+5. 2026-11-13: first version, PandiO/knk-workspace#301
