@@ -1,6 +1,6 @@
 # Production Engine — Admin Guide
 
-**Status:** Current · **Last updated:** 2026-11-19 (first version, production P3 #86/#678, docs PandiO/knk-workspace#839)
+**Status:** Current · **Last updated:** 2026-11-20 (P4 pointers to the yield areas admin guide; docs #882); 2026-11-19 (first version, production P3 #86/#678, docs PandiO/knk-workspace#839)
 **Checked against:** knk-web-api `next` `6c648f60`, knk-web-app `next` `4e4ca39a` (not released; the engine runs only
 with the game setting Production enabled on; the manual steps of the
 [smoke test § 4](../production-storage-transport-smoke-test.md#4-phase-p3-production-engine-86-api-678-web-app-tier3)
@@ -63,10 +63,10 @@ Florist and Animal farm (no Hunter in V1). The list shows Area model, Resource c
 The kind form has three steps:
 
 1. **Kind:** Name (unique), Description, Icon (a Minecraft material such as `IRON_PICKAXE`), **Area model** and
-   **Exclusive areas** (used from phase P4, when structures get their areas), **Resource category** (Crops, Wood,
+   **Exclusive areas** (whether the structures' areas may overlap; [yield areas admin guide](production-yield-areas-admin-guide.md) § 3.3), **Resource category** (Crops, Wood,
    Stone, Ore, Fish, Flowers, Animals: what weather and category modifiers act on), Active.
-2. **Yield sources and workers:** Allows Derived, Allows Configured, Allows Hybrid (at least one; only Configured is
-   used before P4), **Default workers** (0–100: the workers a new structure of this kind gets), Cycle variation (used
+2. **Yield sources and workers:** Allows Derived, Allows Configured, Allows Hybrid (at least one; the yield sources a
+   structure of this kind may use, [yield areas admin guide](production-yield-areas-admin-guide.md) § 3.1), **Default workers** (0–100: the workers a new structure of this kind gets), Cycle variation (used
    from P4).
 3. **Default storages:** a JSON list of the storages a new structure of this kind gets next to its Output storage, for
    example `[{"purpose":"Input","name":"inputs","maxUnits":500}]` for a kind whose lines consume something. Don't list
@@ -83,7 +83,7 @@ Click a level to open it. Levels can't be added or removed, only edited. The lev
 
 1. **Level:** **Yield multiplier** (0–100; level 1 is 1, each level adds 0.15 up to 2.35 at level 10) and **Cycle
    speed** (how often the line settles: 2 = twice as often; it does not change the amount per hour; 1 to 1.45 by
-   default). **Max area size** is for P4.
+   default). **Max area size** caps the structures' areas ([yield areas admin guide](production-yield-areas-admin-guide.md) § 3.2).
 2. **Caps:** **Output storage cap** (Max units of the structure's Output storage), **Units per slot** and **Transport
    capacity**. They are written to the structure when it reaches this level (create, upgrade or a level change on its
    form); left empty they leave the structure as it is. The seeded levels leave all three empty. **Upkeep reduction**
@@ -110,7 +110,8 @@ line**) or from the **ProductionLine** dashboard list. The form has one step, **
 
 1. **Production structure** (pick it; the form isn't pre-filled from the structure page) and **Output** (the item
    blueprint). One line per blueprint per structure.
-2. **Rate source:** Configured (the only one before P4). **Rate per hour:** units per hour at level multiplier 1 with
+2. **Rate source:** Configured for a line you make by hand (Derived and Hybrid lines are made from the surveys,
+   [yield areas admin guide](production-yield-areas-admin-guide.md) § 4.3). **Rate per hour:** units per hour at level multiplier 1 with
    every worker present (0 to 1 000 000).
 3. **Resource category** (optional): overrides the kind's for weather and category modifiers (a Farm line making
    flowers can be Flowers).
@@ -214,7 +215,7 @@ Northern coast (Crops)", "Half"), the unlock and workers steps, and the **Effect
 | Unlocked at level 4 (the structure is level 2). | Upgrade the structure, or remove the unlock from the level |
 | All workers are away (0 of 2 present). / Only 1 of 2 workers present: 50% output. / The structure has no workers. | Set Workers present (§ 5.3), or raise the structure's Workers |
 | The base rate is 0. / The modifiers bring the rate to 0. | Raise the line's Rate per hour; check the modifiers in the rate steps |
-| Rate source … is not available yet (P4). / The structure has no Output storage. | Use Configured; create an Output storage for the structure |
+| The structure has no Output storage. | Create an Output storage for the structure |
 
 A structure without a kind still produces: its lines just get no Level step.
 
@@ -311,7 +312,7 @@ The full checks are the [smoke test § 4](../production-storage-transport-smoke-
 | A line stays "Blocked: inputs missing" | The first Input storage lacks an input | Put at least one of each input in it |
 | A line is in Error | No Output storage, or a rate source other than Configured | Create the storage; set Rate source Configured |
 | "The structure already has a line for this blueprint." | One line per blueprint per structure | Edit the existing line |
-| "rateSource: only Configured exists yet …" | Derived and Hybrid come with P4 | Use Configured |
+| "rateSource: a Derived line needs a Derived structure …" | Survey lines follow the structure's yield source | Use Configured for a hand-made line ([yield areas admin guide](production-yield-areas-admin-guide.md)) |
 | "The weather odds add up to more than 100%." | Too much weather | Lower the chances; the rest is clear |
 | "This is the default zone; make another zone the default instead." | You unticked Default zone | Tick Default zone on another zone |
 | "payerUserId is required: level N costs C coins." | No payer picked | Pick Paid by (coins) |
@@ -323,3 +324,4 @@ The full checks are the [smoke test § 4](../production-storage-transport-smoke-
 ## Changes
 
 1. 2026-11-19: first version (docs PandiO/knk-workspace#839).
+2. 2026-11-20: pointers to the [yield areas admin guide](production-yield-areas-admin-guide.md) where P3 said "P4" (docs PandiO/knk-workspace#882).

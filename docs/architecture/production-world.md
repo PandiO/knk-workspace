@@ -1,6 +1,6 @@
 # Production world: structure subtypes and placement (knk-web-api, knk-web-app and knk-plugin)
 
-**Status:** Current · **Last updated:** 2026-11-19 (P3 pointers: kind foreign key, workers, kind storages; docs #839); 2026-11-19 (first version, production P2 #91/#676/#677, docs PandiO/knk-workspace#830)
+**Status:** Current · **Last updated:** 2026-11-20 (P-3 not built (#883), #831 fixed in P4, docs #882); 2026-11-19 (P3 pointers: kind foreign key, workers, kind storages; docs #839); 2026-11-19 (first version, production P2 #91/#676/#677, docs PandiO/knk-workspace#830)
 **Checked against:** knk-web-api `next` `fcfced27` (PR PandiO/knk-web-api#57), knk-web-app `next` `18385344` (PR
 PandiO/knk-web-app#61), knk-plugin `next` `8ebb30be` (PR PandiO/knk-plugin#96). Not released; the manual steps of the
 [smoke test § 3](../guides/production-storage-transport-smoke-test.md#3-phase-p2-world-rural-structures-warehouse-production-structure-91-api-676-web-app-677-plugin-tier3)
@@ -124,7 +124,7 @@ progression" setting (`IsBlocking`, DESIGN § 3.4, R2).
 |---|---|---|---|
 | P-1 | A structure in a district has its region completely inside the district's region | `RegionContainment` (dependency District, `parentRegionPath: WgRegionId`, full containment) | both seeds, warning |
 | P-2 | A rural structure's region lies inside its town's territory | `InsideTerritory` (dependency Town, `holderKind: Town`, `holderIdPath: Id`) | both seeds, warning |
-| P-3 | A production area stays inside its structure's district or its town's territory | as P-1 / P-2 | waits for P4's areas |
+| P-3 | A production area stays inside its structure's district or its town's territory | as P-1 / P-2 | not built: P4 added the areas without the rule ([#883](https://github.com/PandiO/knk-workspace/issues/883)) |
 
 1. **In the form wizard** the rules run as for any field (step progression, warnings in the step).
 2. **On save through the API** (`IStructurePlacement.CheckRulesAsync`, run by `StructureService` and the subtype
@@ -275,9 +275,10 @@ key; after turning `production.enabled` on in the plugin, run `/knk regions repa
 
 ## 12. Limitations (P2)
 
-1. P-3 waits for P4's production areas; the validation types are ready.
-2. An update drops the placement warnings (204), and the subtype endpoints' error body carries the .NET parameter
-   suffix (the web app cuts it); [#831](https://github.com/PandiO/knk-workspace/issues/831).
+1. P-3 is not built: P4 added production areas ([yield areas architecture](production-yield-areas.md)) but no rule checks them ([#883](https://github.com/PandiO/knk-workspace/issues/883)); the
+   validation types are ready.
+2. Fixed in knk-web-api `next` `e26c7d88` (P4, [#831](https://github.com/PandiO/knk-workspace/issues/831)): an update
+   answers 200 with the placement warnings, and error bodies no longer carry the .NET parameter suffix.
 3. The generic `Structure` form seed has no Town field yet, so a rural plain structure (not a warehouse or production
    structure) can only be created through `api/Structures` with `townId` ([#831](https://github.com/PandiO/knk-workspace/issues/831)).
 4. A stale WorldGuard parent after a move to rural is not cleared ([#824](https://github.com/PandiO/knk-workspace/issues/824)).
@@ -288,3 +289,4 @@ key; after turning `production.enabled` on in the plugin, run `/knk regions repa
 
 1. 2026-11-19: first version (docs PandiO/knk-workspace#830).
 2. 2026-11-19: pointers to the production engine (P3) where P2 said "comes with P3" (docs PandiO/knk-workspace#839).
+3. 2026-11-20: P-3 is not built with P4's areas (#883); the #831 limitation is fixed in P4 (docs PandiO/knk-workspace#882).
