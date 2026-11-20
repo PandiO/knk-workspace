@@ -39,6 +39,34 @@ This is a human-readable record of capabilities merged into the V3 default branc
   2. Grant `knk.admin.world.production` (binding) and `knk.admin.world` (the menus' staff buttons) to staff; town
      members need `knk.town.member.<town id>` (#683).
   3. Putting items into terminals needs `items.identity.enabled: true` (#141).
+- **Siege shop in PvP Siege** ([PandiO/knk-workspace#868](https://github.com/PandiO/knk-workspace/issues/868); link
+  L3 of the siege shop chain, #611). For players, with `siege.shop.enabled: true` and `siege.points.enabled: true` in
+  the plugin's `config.yml` (both default `false`): during a running match `/siege shop` or the new **Shop** button in
+  `/siege menu` opens the siege shop anywhere on the map. It lists the match's categories (Consumables; Siege weapons
+  only with `siege.weapons.enabled`) with each offer's current price, "bought n/cap", cooldown left and why it can't be
+  bought now; a click buys at once when every check passes (match live and alive, unlock, cap, cooldown, room for the
+  whole stack, enough points), then charges, then gives. Prices rise per purchase and cooldowns grow along each
+  entry's curve; caps and counters reset each match. Each match reads its catalogue once at the start, so admin edits
+  apply from the next match; purchases are final and bought items go with the gear restore. A locked weapon says
+  "Locked: unlock it in /menu → Minigames → Siege unlocks."; unlocked weapons are bought from siege weapons phase 3 on
+  (#784, through the shop's `ShopPurchaseHandler` port). Bought potions carry their blueprint's potion type. knk-plugin:
+  knk-core `core/siege/shop/` (`ShopCatalogue`, `ShopBrakes`, `ShopPurchaseService`, `ShopPurchaseHandler`, views),
+  `SiegeShopApi`; knk-paper `siege/shop/` (`SiegeShopService`, `ItemPurchaseHandler`, `SiegeShopMenuFeature`,
+  telemetry `siege.shop_purchase`), `/siege shop`, `KnkItemBlueprint.potionType`. knk-web-api: menu seeds `siege.shop`,
+  `siege.shop.category` and the Shop button in `siege.information` (added once to databases seeded before), the
+  telemetry catalog line; no migration. Branches `claude/siege-shop-l3` in knk-plugin, knk-web-api and knk-workspace.
+  Admin steps: deploy the plugin **before** the API (an older plugin blocks `siege.information` once the API seeds the
+  Shop button), restart the API once, then set in `config.yml` (Restart):
+
+  ```yaml
+  siege:
+    points:
+      enabled: true
+    shop:
+      enabled: true
+  ```
+
+  Smoke test: [siege shop smoke test § 3](guides/siege-shop-smoke-test.md#3-phase-3-shop-menus-and-purchases-in-the-plugin-868-tier3).
 - **Terminals, displays and structure menus: the API** ([PandiO/knk-workspace#683](https://github.com/PandiO/knk-workspace/issues/683),
   link L17 of the production, storage and transport chain; [design](specs/production-storage-transport/DESIGN.md)
   § 6 and § 11.2, decision record § 15.1 M1-M5). The game server part (binding chests, the terminal and display
