@@ -1264,7 +1264,13 @@ _(Each link appends its block here when it finishes.)_
         2. Cause: `WalkAccessFactory` asked WorldGuard's door check for every door block, open ones too. The § 8 run's player (MrBedue) may not use the keep's doors. With the door denied, the snapshot gives the live picture (NO_PATH, partial trail to the door) with either flag.
         3. Fix: `WalkChunk.openDoorBlocks` and `WalkCapture.openDoorBlocks` (additions) record the open state. The player's door check is asked for closed doors only.
         4. NPC subjects keep their own door answer, unchanged.
-    5. Kept stable (additions only): `WalkLegPreparer`, `WalkSearch`/`WalkPathfinder`, `MovementProfile`, `RoadGoalChoice`, the shape package, `RoadPlanner`'s port. No `core/npc`, `paper/npc`, destinations, production or siege file was touched.
+    5. **`trail-leg-spacing` ships as 2.0** (the developer's choice in § 13 step 5, relayed by the coordinator 2026-11-20). #100 and #851 were merged before it, so it is a follow-up: [knk-plugin#101](https://github.com/PandiO/knk-plugin/pull/101) (`c7ca2d34`) and [#853](https://github.com/PandiO/knk-workspace/pull/853) (`01b9f561`), base `next`, not merged.
+        1. `config.yml` and `TrailConfig.DEFAULT_LEG_SPACING` go from 3.0 to 2.0.
+        2. `TrailRendererTest` and `ConfigLoaderNavigationTest` now pin 2.0 as the default and set 3.0 explicitly where they compare with it.
+        3. `TrailRenderer.LEG_SPACING` (the straight legs) stays 3.0.
+        4. No golden transcript changed: L7's cover routes, not particle spacing.
+        5. Build green locally, with the same counts.
+    6. Kept stable (additions only): `WalkLegPreparer`, `WalkSearch`/`WalkPathfinder`, `MovementProfile`, `RoadGoalChoice`, the shape package, `RoadPlanner`'s port. No `core/npc`, `paper/npc`, destinations, production or siege file was touched.
 2. **Commits and heads.**
     1. knk-plugin `claude/offroad-smoke-fixes-f3` at `64b4de3b` (3 commits, base `next` `4e296797`).
     2. knk-workspace `claude/offroad-smoke-fixes-f3` at `e7e6d306` (1 commit, base `next` `e50b423f`).
@@ -1299,7 +1305,7 @@ _(Each link appends its block here when it finishes.)_
     2. The "Keep Stair House" gate door's sheared reference points (warned at every start) may remove a floor from the walk grid. To check with § 14 step 3's INFO line before filing.
 7. **Blockers.** None. Codex reached its code-review usage limit on both PRs (its comments of 2026-11-20 09:37 UTC), so the link finished without its review (developer decision 2026-11-14); said on both PRs. CI on `64b4de3b`: build and paper-boot green on the push and PR runs, no re-run.
 8. **At merge / what the developer must do.**
-    1. Add `navigation.road-goal-walk-weight: 4.0` under `navigation:` (YAML in the plugin PR).
+    1. Add `navigation.road-goal-walk-weight: 4.0` and set `navigation.trail-leg-spacing: 2.0` under `navigation:` (YAML in the plugin PRs #100 and #101).
     2. Live test, about 25 minutes: smoke § 14 steps 1 to 5. Use shipped settings and `max-snap-distance` 48; route-end keys on for steps 1 to 3; player MrBedue with `guidance-v2` on, then off, for steps 4 and 5.
 9. **Notes for later links.**
     1. `RoadGoalChoice.best(options)` stays F2's rule. G1 (#814) should use `best(options, walkWeight)` if NPCs ought to walk as little as players.
