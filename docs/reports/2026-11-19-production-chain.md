@@ -332,6 +332,13 @@ of what is already in `next`.
    3. L16 takes the #838 reads in the web app.
    L19 (P7 delivery API) has an open gate (L4 merged) but comes after L17 in charter order on knk-web-api.
 
+50. **Weekly usage limit (2026-11-20 13:17).** L15, L16, L17 and the P4 docs session stopped three minutes after they
+   started because the account's weekly limit was reached. It reset at 17:00 UTC. A worker restart delayed this
+   coordinator's 14:06 check-in to 18:12. All four were resumed at 18:13 with send_message; nothing had been pushed, so
+   almost nothing was lost. L17 was told that the siege shop L1 migration (`AddSiegePointsEarning`, `9a3132dc`) is now
+   in `next`. Lesson: with the weekly limit near, start fewer links at once. Alternatives: (a) fresh sessions: same
+   result, more setup.
+
 ## 4. Link blocks
 
 _(Each link appends its block here when it finishes.)_
