@@ -74,7 +74,7 @@ of what is already in `next`.
 | L14 P5 transport API (simulated carrying, G14) | #79 | Merged into next (2026-11-20) | api `ef61cd1`, workspace `ae26c88b`; merges: api `bf8633fb`, workspace `66cd37f0` (after a coordinator merge of `next`, `9a4de0b9`) | [api#65](https://github.com/PandiO/knk-web-api/pull/65), [ws#880](https://github.com/PandiO/knk-workspace/pull/880) | api build-and-test, fresh-database green; mysql-tests green on push run | create_session `session_01R1w2UtGLZrUEAUNFYvkqGB` (prompt says start without asking), started 2026-11-19 |
 | L15 P5b lanes plugin | #681 | Merged into next (2026-11-20) | plugin `796f1127`, workspace `77ebdc07`; merges: plugin `7116f1a5`, workspace `e0bf327e` (after a coordinator merge of `next`, `8be418b6`) | [plugin#108](https://github.com/PandiO/knk-plugin/pull/108), [ws#886](https://github.com/PandiO/knk-workspace/pull/886) | CI green (build + paper-boot) on `796f1127` | create_session `session_01R1w2Ux1xEr3Um5M3f3UysM` (prompt says start without asking), started 2026-11-20 |
 | L16 P5c transport web app | #682 | Merged into next (2026-11-20) | web app `e36d39f`, workspace `77b3d4f5`; merges: web app `5ad5029f`, workspace `9eae7f48` | [web-app#68](https://github.com/PandiO/knk-web-app/pull/68), [ws#887](https://github.com/PandiO/knk-workspace/pull/887) | green on `e36d39f` (build-and-test, e2e) | create_session `session_01R1w2Uu8TpsSchsfou5i63j` (prompt says start without asking), started 2026-11-20 |
-| L17 P6a API: StorageContainer, caller-filtered reads, menu seeds | #683 | Running | — | — | — | create_session `session_01R1w2UukTGdahr4dAwQTutW` (prompt says start without asking), started 2026-11-20 |
+| L17 P6a API: StorageContainer, caller-filtered reads, menu seeds | #683 | In review (2026-11-20) | api `a2b8a98`, workspace `bd4d7949` | [api#67](https://github.com/PandiO/knk-web-api/pull/67), [ws#889](https://github.com/PandiO/knk-workspace/pull/889) | green (build-and-test, mysql-tests, fresh-database) | create_session `session_01R1w2UukTGdahr4dAwQTutW` (prompt says start without asking), started 2026-11-20 |
 | L18 P6 plugin: terminals, displays, Structures menu, structure menu, orders list | #74 | Not started | — | — | — | — |
 | L19 P7 delivery and inbox API | #60 | Not started | — | — | — | — |
 | L20 P7b inbox plugin, kit/lootbox migration | #684 | Not started | — | — | — | — |
@@ -1651,3 +1651,91 @@ _(Each link appends its block here when it finishes.)_
     1. Strict e2e specs that open a production structure page now need `mockNoTransport(api)` (`e2e/fixtures/transport.ts`): `ProductionStructures/<id>/transport` and `TransportLanes/search`.
     2. The game settings page sends `production.transport` back; a later setting under `production` goes into `normalizeProductionSettings` the same way.
     3. L23 (P9, town logistics): `TransportOrderTable` and `TransportPlanView` take any order rows and plan; the order list's `structureId` and `storageId` filters cover consumers and warehouses.
+
+### 4.17 L17 — P6a API: StorageContainer, caller-filtered reads, menu seeds (#683)
+
+1. **Scope done** (knk-web-api, plus essential docs in knk-workspace).
+    1. `StorageContainer` (Terminal, Display; DESIGN § 6.2): a block (world, x, y, z, unique) bound to a domain, player
+       or clan storage, with Chest, TrappedChest or Barrel and a double flag (27 or 54 slots). Binding, moving or
+       unbinding a container, or changing the storage's `UnitsPerSlot` (also through a level upgrade), writes
+       `MaxUnits = Σ slots × UnitsPerSlot` under the storage row lock (§ 4.4).
+    2. `api/StorageContainers`: CRUD and search (World area to read, `knk.admin.world` to write, delete also
+       `knk.admin.delete`, dashboard type and lookup) and `by-block`. Game-server-only routes: `{id}/terminal`,
+       `{id}/put` and `{id}/take` (`SYS_WORLD` moves, Deposit and Withdraw, idempotency key, `X-Acting-User-Id`
+       required, `Production:Enabled` required) and `{id}/display` (a sample by fill level). A14, API side.
+    3. `api/StructureMenus` (M3): `search` (public overview rows of production structures and warehouses: status
+       Working, Stalled, NoRoad or Full; filters town, kind, type, status), `{id}` (the `detail` with rates,
+       storages, workers, warnings and the open order count only for members of the town and staff) and `{id}/orders`
+       (403 for visitors). A25, A26.
+    4. Staff actions (M4): new `POST api/TransportOrders/{id}/retry`; survey now, dry run and cancel are the existing
+       routes.
+    5. Menu content seeds `structures.overview`, `structures.structure`, `structures.orders` and the hub's "Structures"
+       tile (slot 18, added to an existing hub at startup). A27.
+    6. Seeds: `StorageContainer` form and display (G17, A23); `StockTransaction` form v2 with `Upgrade` (#881);
+       `ProductionArea` form v2 with RegionClaim and CaptureRadius (#877).
+    7. #877 API part: `CaptureRadius` is a known world task type; a Region area with empty bounds takes them from the
+       region's stored outline; `ProductionWorldListDto.yieldSource`.
+    8. One additive migration `20261120185936_AddStorageContainers`, regenerated last after merging `next` `aff345d`
+       (after `AddSiegeShopCatalogue`; first generated on `9a3132d`, removed and regenerated, snapshot never hand-edited);
+       `KnKDbContext` edits in one DbSet block and one model block.
+    9. knk-workspace (branch from `next`): smoke guide § 7 (§ 7.1 20 API steps: 15 automated, 4 partly, 1 by hand; § 7.2
+       plugin draft for L18), changelog entry, production installation § 5.3 item 13, implementation plan status.
+2. **Commits and heads.** knk-web-api `claude/production-p6a` at `a2b8a98` (5 commits plus a merge of `next` `aff345d`;
+   the seed README conflict kept both sections). knk-workspace `claude/production-p6a` at `bd4d7949` (2 commits, a
+   merge of `next` `e0bf327e` and a fix commit: that merge recorded conflict markers in the smoke guide header, which
+   `bd4d7949` resolves by keeping the § 6.2 and § 6.3 status lines of `next` and adding § 7.1).
+3. **PRs.** [knk-web-api#67](https://github.com/PandiO/knk-web-api/pull/67) (Closes #683, Closes #881, Part of #877) and
+   [knk-workspace#889](https://github.com/PandiO/knk-workspace/pull/889) (Part of #683, #877, #881), base `next`. Not
+   merged.
+4. **Tests, baseline → result.**
+    1. knk-web-api: baseline on `next` `aff345d` 4936 passed / 119 skipped / 0 failed (earlier bases: `bf8633f` 4865,
+       `9a3132d` 4879). Branch `a2b8a98`: 4969 / 119 / 0.
+    2. New (33): `TerminalsAndMenusTests` (18), `ProductionAreaRegionBoundsTests` (2), `MenuTemplateProductionSeedTests`
+       (8), `AddStorageContainersTests` (2), the three menus in the content seed theory (3). Pinned:
+       `ReadAccessRulesTests`, `DashboardChangeAccessRulesTests`, `DeleteAccessRulesTests`, `LookupFiltersTests`.
+    3. Broken on purpose: the display split (the first version was not largest remainder; the test caught it).
+    4. MySQL tests skipped locally (no `KNK_TEST_MYSQL`).
+    5. CI: on `a2b8a98` build-and-test, mysql-tests and fresh-database green on both the push and the PR runs (also green on the earlier head `4e71216`). Known reds: none seen.
+5. **Decisions (DESIGN § 4.3).** All 14, each with alternatives, are in knk-web-api#67. The main ones:
+    1. *Town membership.* Chosen: permission node `knk.town.member.<townId>` (wildcard-aware) behind
+       `ITownMembershipResolver`, since the API has no membership data until #246. Alternatives: (a) staff only (A26 not
+       met for members); (b) a membership table now (#246's design).
+    2. *Container-derived cap.* Chosen: written through to `Storage.MaxUnits`. Alternatives: (a) computed at move time
+       (every cap reader would need it); (b) a `ContainerSlots` column on `storages`.
+    3. *Last container unbound.* Chosen: the last cap stays as a fixed cap. Alternatives: (a) clear it; (b) refuse.
+    4. *Terminal use.* Chosen: members of the holder's town, the player of a player storage, staff; game server only;
+       put and take need the flag. Alternatives: (a) anyone; (b) staff only; (c) web users too.
+    5. *Retry.* Chosen: a waiting order runs now; a Returned or Cancelled one is sent again once (`retry-of-<id>`).
+       Alternatives: (a) waiting orders only; (b) a new order per click.
+    6. *Menu contract.* Chosen: this link names the plugin-side roots, sources, getters and actions (comment on #74).
+       Alternatives: (a) leave the seeds to L18 (A27 is this link's).
+    7. *Overview.* Chosen: stored state only (no settle), filtered and paged in memory; status Full > NoRoad > Stalled >
+       Working. Alternatives: (a) settle on read.
+    8. *Region bounds (#877).* Chosen: from `map_region_outlines`; bounds that are sent win. Alternatives: (a) ask the
+       game server at save time.
+    9. *Smoke gate.* The developer's 2026-11-19 waiver of the smoke gates, read by the coordinator as covering the later
+       links.
+6. **Out of scope, noted.** The API contract for L18 is a comment on #74 (container routes, menu roots, sources,
+   getters and actions, the membership node, CaptureRadius completion fields). No new issues. Codex: the connector hit
+   its code-review usage limit on both PRs (review "failed", usage-limit comment); no inline findings; noted on each PR.
+7. **Blockers.** None.
+8. **At merge / what the developer must do.**
+    1. Apply migration `AddStorageContainers` (additive, one table, after `AddSiegeShopCatalogue`).
+    2. Import the seeds `StorageContainer` (form and display), `StockTransaction` v2 and `ProductionArea` v2 ("make
+       default").
+    3. Grant `knk.town.member.<town id>` to each town's members (a permission group per town) until #246.
+    4. Restart the API once: the menus and the hub tile are seeded.
+    5. No `api.env` key, no plugin `config.yml` change.
+    6. Smoke test [§ 7.1](../guides/production-storage-transport-smoke-test.md) (tier:2): 15 of 20 steps automated,
+       about 10 minutes for the untagged parts.
+    7. At merge into `next`: the `documentation` sub-issue (terminals and structure menus architecture page and API
+       contract, admin guide for containers and the membership node, feature register row; the player guide with L18).
+9. **Notes for later links.**
+    1. L18 (#74): see the comment on #74. Regenerate the plugin's `content-seeds.json` from
+       `MenuTemplateContentSeedTests.ContentSeeds_ExportAsApiJson` (`KNK_MENU_CONTENT_SEED_EXPORT`); the three production
+       menus are in the export list. Bind the left half of a double chest. Put/take resolve blueprints with item identity
+       (#141).
+    2. A later plugin link: the `CaptureRadius` world task handler (complete with `centerX/Y/Z`, `radius`, `worldName`).
+    3. #246 (town roles): replace `PermissionTownMembershipResolver` (one class behind `ITownMembershipResolver`).
+    4. L19 (P7): Player storages with Purpose Inbox or Stash can be bound to containers the same way; the terminal rule
+       already lets a player use their own player storage.
