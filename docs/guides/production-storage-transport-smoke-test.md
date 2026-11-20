@@ -18,8 +18,9 @@ every step can still be run by hand; not run. § 5.2 (surveys plugin, #679): 7 o
 scenario on a real Paper server), 7 partly and 1 manual (tagged); not run. § 5.3 (yield areas web app, #680): 9 of 12 steps automated in CI, 2
 partly (tagged) and 1 by hand; every step can still be run by hand; not run. § 6.1 (transport API, #79): 18 of 20 steps automated in CI
 and 2 partly (tagged); every step can still be run by hand; not run. § 6.2 (transport lanes plugin, #681): 3 of 14
-steps automated, 10 partly and 1 manual (tagged); not run. Other sections not yet automated (the links tag them).
-**Last updated:** 2026-11-20 (§ 6.2 transport lanes plugin, link L15, #681); 2026-11-20 (§ 6 transport API, link L14, #79; § 6.2 and § 6.3 drafts for L15 and L16); 2026-11-20 (§ 5.2 surveys plugin, link L12, #679); 2026-11-20 (§ 5.3 yield areas web app, link L13, #680); 2026-11-19 (§ 5 yield areas API, link L11, #138; § 5.1 step 18: #831); 2026-11-19 (§ 4.2 production engine web app, link L10, #678); 2026-11-19 (§ 4.1 production engine API, link L9, #86); 2026-11-19 (§ 3 intro, § 3.0, § 3.2 and § 3.3 intros: builds from `next`; § 3.3 precondition 4: `/knk regions repair` needs `knk.admin.regions`, `/knk territory rebuild` `knk.admin.world.territory`; docs #830); 2026-11-19 (§ 3.2 world web app, link L7, #676); 2026-11-19 (§ 3.3 world plugin, link L8, #677); 2026-11-19 (§ 3.1 world API, link L6, #91); 2026-11-19 (§ 2.2 stock web app, link L5, #675); 2026-11-19 (§ 2 stock core API, link L4, #97); 2026-11-19 (§ 1.0 and § 1.3 preconditions: builds from `next` instead of the link branches; guides: [territory admin guide](admin/territory-admin-guide.md), docs #806); 2026-11-19 (§ 1.4 territory web app, link L3, #690); 2026-11-19 (§ 1.3 territory plugin, link L2, #689); 2026-11-19 (§ 1 territory API, link L1, #326); 2026-11-19 (§ 0 item identity, link L0, #141); 2026-11-16 (draft from the design, territory and phases P1-P12)
+steps automated, 10 partly and 1 manual (tagged); not run. § 6.3 (transport web app, #682): 10 of 16 steps
+automated in CI, 5 partly (tagged) and 1 by hand; every step can still be run by hand; not run. Other sections not yet automated (the links tag them).
+**Last updated:** 2026-11-20 (§ 6.2 transport lanes plugin, link L15, #681); 2026-11-20 (§ 6.3 transport web app, link L16, #682); 2026-11-20 (§ 6 transport API, link L14, #79; § 6.2 and § 6.3 drafts for L15 and L16); 2026-11-20 (§ 5.2 surveys plugin, link L12, #679); 2026-11-20 (§ 5.3 yield areas web app, link L13, #680); 2026-11-19 (§ 5 yield areas API, link L11, #138; § 5.1 step 18: #831); 2026-11-19 (§ 4.2 production engine web app, link L10, #678); 2026-11-19 (§ 4.1 production engine API, link L9, #86); 2026-11-19 (§ 3 intro, § 3.0, § 3.2 and § 3.3 intros: builds from `next`; § 3.3 precondition 4: `/knk regions repair` needs `knk.admin.regions`, `/knk territory rebuild` `knk.admin.world.territory`; docs #830); 2026-11-19 (§ 3.2 world web app, link L7, #676); 2026-11-19 (§ 3.3 world plugin, link L8, #677); 2026-11-19 (§ 3.1 world API, link L6, #91); 2026-11-19 (§ 2.2 stock web app, link L5, #675); 2026-11-19 (§ 2 stock core API, link L4, #97); 2026-11-19 (§ 1.0 and § 1.3 preconditions: builds from `next` instead of the link branches; guides: [territory admin guide](admin/territory-admin-guide.md), docs #806); 2026-11-19 (§ 1.4 territory web app, link L3, #690); 2026-11-19 (§ 1.3 territory plugin, link L2, #689); 2026-11-19 (§ 1 territory API, link L1, #326); 2026-11-19 (§ 0 item identity, link L0, #141); 2026-11-16 (draft from the design, territory and phases P1-P12)
 **Design:** [specs/production-storage-transport/DESIGN.md](../specs/production-storage-transport/DESIGN.md) (§17
 acceptance A01-A27, §18 links) · [territory](../specs/territory/DESIGN.md) · [shops](../specs/shops/DESIGN.md) ·
 **Issue:** [PandiO/knk-workspace#22](https://github.com/PandiO/knk-workspace/issues/22)
@@ -1449,12 +1450,14 @@ about 15 minutes (the in-game parts wait for the survey runner of #679).
 
 Built so far: link L14, the API (knk-web-api, migration `AddTransportCore`; branch `claude/production-p5`, PR into
 `next`). The lane measurer (`/knk logistics lanes measure`, the headless job, road connection updates) is link L15
-(#681); the order list and detail, the manual order form and the dry run in the web app are link L16 (#682). Until then
-§ 6.1 runs with a REST client (or Swagger) against the API; lanes are typed in by Staff and the road connection is set
-with `PUT api/ProductionStructures/<id>/road-connection`, as the plugin will. 20 steps in § 6.1: 18 automated in CI
-and 2 partly (tagged); every step can still be run by hand; manual steps not run. § 6.2 (plugin, link L15) is built; § 6.3 (web
-app) is a draft for L16. Full manual run about 45 minutes (most of it waiting for trips, or `POST
-api/TransportOrders/run-now`); the untagged parts of the partly tagged steps about 10 minutes. The tests are in
+(#681, § 6.2, built: 14 steps, 3 automated, 10 partly and 1 manual); the order list and detail, the manual order
+form and the dry run in the web app are link L16 (#682, § 6.3, built: 16 steps, 10 automated in CI, 5 partly and 1
+by hand). § 6.1 runs with a REST client (or Swagger), the web app's pages or both; lanes are measured by the plugin
+(or typed in by Staff with the web app's lane form) and the road connection is set by the plugin or with
+`PUT api/ProductionStructures/<id>/road-connection`. 20 steps in § 6.1: 18 automated in CI and 2 partly (tagged);
+every step can still be run by hand; manual steps not run. Full manual run of § 6.1 about 45 minutes (most of it
+waiting for trips, or `POST api/TransportOrders/run-now`); the untagged parts of the partly tagged steps about 10
+minutes. The tests are in
 knk-web-api `Tests/.../Services/Production/TransportTests.cs`, `TransportLanesAndSettingsTests.cs`,
 `Api/TransportControllersTests.cs`, `Migrations/AddTransportCoreTests.cs` and, with `KNK_TEST_MYSQL`,
 `MySql/TransportMySqlTests.cs`. The developer waived the smoke gates of L4 and L6 on 2026-11-19; the coordinator reads
@@ -1695,16 +1698,116 @@ snapshot and the API, no blocks or entities, so the in-game steps below are the 
     `sharedBy` 1 (the logger counts no crops); trees inside it would be `sharedBy` 2. Before the API sends the unit
     types, the crops read `sharedBy` 2 as in § 5.2.
 
-### 6.3 Steps (web app #682, draft)
+### 6.3 Steps (web app #682)
 
-*Draft for link L16: the order list and detail (timeline from the event log, cargo, route), the manual order form with
-the dry run, and the structure's transport view.*
+Built in link L16 (knk-web-app, branch `claude/production-p5c`, PR into `next`). The tags name tests in knk-web-app
+`e2e/transport.spec.ts` (Playwright, mocked API; the mocks use the Quarry with its Output storage, the warehouses North
+and South with their delivery storages, order 701 on the road to North over a measured lane, order 702 delivered to both
+and order 703 waiting for room at South) and the Jest tests next to the code (`src/utils/__tests__/transport.test.ts`,
+`src/apiClients/__tests__/transportClients.test.ts`). Extra preconditions: § 6.0 and § 6.1 steps 1-15 (the seeds
+imported with "make default", the lanes reported, orders made, delivered, re-routed, returned and cancelled), so the
+lists below have real rows. Log in to the web app as **Staff** (holds `knk.admin.world` and `knk.admin.content`) unless a
+step says otherwise. 16 steps: 10 automated, 5 partly (tagged), 1 by hand (step 16); every step can still be run by hand;
+not run. Full manual run about 40 minutes; the untagged parts about 15 minutes (most of it waiting for a trip, or
+`POST api/TransportOrders/run-now`).
 
-1. Open the transport order list and an order. **Expected:** the lifecycle as a timeline, the cargo per blueprint,
-   the stops with their distances and route source. (A12)
-2. Make a manual order with the form; run the dry run first. **Expected:** the plan's legs, warnings and errors are
-   shown before the order is made.
-3. Open Bare quarry. **Expected:** the warnings for the missing road and the full storage. (A13)
+1. [automated: `the order list › lists the orders newest first with status in words, route and units, each linking to
+   its page (A12)`] In the admin sidebar (group World) open **Transport orders** (`/admin/transport/orders`).
+   **Expected:** a table with Order, Status, Origin, From, To, Units, Created and ETA, newest first; statuses in words
+   ("On the road", "Waiting for room", "Delivered"), a waiting order with its reason under the status, To as the stops
+   joined with " → ", Units as "20 of 20 delivered" (plus "returned" when some came back); each order number links to
+   the order's page; a **New manual order** button. (A12)
+2. [automated: `the order list › filters by open, status, origin, structure and storage through the URL`] Pick Open or
+   final "Open", Status "Waiting for room", Origin "Automatic", type Quarry's Output storage id in **Storage id** and
+   press **Apply filters**. **Expected:** the URL carries the filters (a reload keeps them) and only matching orders are
+   listed; **Clear** lists everything again. Open `/admin/transport/orders?structureId=<Quarry>`: only Quarry's orders
+   (source, stop or carrier).
+3. [partly automated: `an order › shows the status, cargo, the route with distance sources and the timeline oldest first
+   (A12)`; by hand: compare with the API] Open the order of § 6.1 step 4 (delivered to North). **Expected:** below the
+   details a **Transport** panel: the status in words; From (the source storage, linked, at its structure); Carried by
+   ("A worker of Quarry, up to 64 units" or "A simulated carrier"); the cargo storage; created, runs after, departed
+   and completed times; a **Cargo** table per blueprint (requested, loaded, delivered, returned, lost); "On the road
+   now: nothing"; a **Route** with each stop (its storage linked, its status, "431.7 blocks (measured lane)", arrived
+   or ETA, delivered of planned per blueprint); **Carriers** (mode, workers, speed, capacity, assigned and back); a
+   **Timeline** oldest first (Created, Carrier assigned, Loaded, Departed, Arrived at a stop, Delivered, Worker back,
+   Completed), each with its message, the stop and a link to its stock transaction. By hand: the timeline matches the
+   order's `events` in `GET api/TransportOrders/<id>`, and each transaction link opens the move. (A12)
+4. [automated: `an order › an estimated leg, a re-route and a wait are shown in words; a final order has no Cancel`]
+   Open the re-routed order of § 6.1 step 11 while it waits. **Expected:** "Waiting for room" with its reason and the
+   waiting time; the first stop Skipped, the next one "re-routed from <first stop>"; a leg without a lane says
+   "(estimated (straight line × factor))", one without positions "(fallback distance)"; Re-routes 1. Open a delivered
+   order: **Expected:** no Cancel button.
+5. [automated: `an order › Cancel says what happens, sends the reason and shows the API's refusal`] Make an order with
+   `executeAfter` an hour ahead (step 6) and open it; press **Cancel the order**. **Expected:** "Nothing is loaded yet:
+   the order ends Cancelled."; type a reason and press **Cancel the order now**: the status becomes Cancelled, the
+   timeline gets "Cancel requested" and "Cancelled" with the reason, the button is gone. On an order on the road the
+   sentence is "The cargo is loaded: the carrier turns back and the order ends Returned." and the status becomes
+   Returning. A refusal (409, e.g. already returning) shows the API's sentence.
+6. [partly automated: `the manual order page › fills the source and carrier from a structure page, dry-runs first, then
+   makes the order once (G17)`; by hand: the made order] Put 40 Cobblestone into Quarry's Output storage. Open Quarry's
+   page and press **New order from here** in the Transport panel. **Expected:** the **New transport order** page with
+   Source storage "Quarry - output" and Carrier "Quarry" filled in; Make the order is off and the problems list says
+   "Stop 1: pick its storage.". As stop 1 pick South's delivery storage, item Cobblestone, amount 64, and press **Dry
+   run**. **Expected:** a **Dry run** section: "The order can be made.", the warnings (only 40 of 64 at the source;
+   an estimated route if no lane), the carrier with workers present, capacity and speed, cargo 64 units with the trip
+   time, a cargo table ("40 (short)") and a legs table (South's storage, distance with its source, time, the drops, the
+   room). Type a note: Make the order is off again until the next **Dry run**; then press **Make the order**.
+   **Expected:** "Transport order #<n> made." and the order's page opens; by hand: it is Manual with the note, and a
+   double click made one order (the request carries a `clientKey`).
+7. [automated: `the manual order page › a plan with errors can't be made, and the API's refusal of a create is shown`]
+   Empty Quarry's Output storage and dry-run the same order. **Expected:** "The order can't be made." with the API's
+   errors (no Cobblestone at the source); Make the order stays off. If the stock goes away between the dry run and the
+   create, the API's refusal sentence is shown on the page.
+8. [automated: `the manual order page › two stops with two items each are sent in visiting order`] Make an order with
+   stop 1 South (64 Cobblestone, 4 Coal; **Add an item to stop 1**) and stop 2 North (10 Cobblestone; **Add a stop**),
+   then dry-run. **Expected:** the plan has two legs in that order, each with its own drops (no V2 defect 3);
+   **Remove stop 2** and **Remove item 2** take them out again. The source storage can't be a stop, and one storage
+   can't be two stops (the problems list says so).
+9. [automated: `a production structure's transport › shows the missing road and the full Output as warnings and why
+   the trigger is held (A13)`] Open **Bare quarry** (unconnected, § 6.0 precondition 4) once its Output is full.
+   **Expected:** below the Yield panel a **Transport** panel: **Transport warnings** with the missing road (D5) and the
+   full Output storage; Automatic transport On; Road connection Unconnected; Output "100 / 100 units" (linked); Trigger
+   at 75 units; "A worker carries 64 units"; Workers "2 of 2 present, 0 away carrying"; Goes to the warehouse it would
+   use; under **Automatic trigger now** why it would send an order and why it is held (no road connection); Open orders;
+   "All orders of this structure" (the order list filtered by the structure) and "New order from here"; a **Lanes**
+   table. (A13)
+10. [automated: `a production structure's transport › shows the order the trigger would make now`] Open **Quarry**
+    with its automatic transport on, Output over the threshold and a free worker (do not run the sweep).
+    **Expected:** no warnings; under Automatic trigger now the reason and **The order the trigger would make** (the
+    plan as in step 6: the units sized by the worker's capacity, the nearest or preferred warehouse, the trip time).
+    As a staff member without `knk.admin.world`: no "New order from here" and no "Add a lane".
+11. [partly automated: `dashboard › lists the orders with status in words and the lanes with their distances (A23)`;
+    by hand: the lane form] Open the dashboard and type **TransportLane**. **Expected:** columns From, To, Road
+    distance, Straight, Source and Measured; the lanes of § 6.1 step 2 with Source Plugin ("Unreachable" for an
+    unreachable one). Press Create (the seeded TransportLane form): From Bare quarry, To North, road distance 500;
+    save. **Expected:** listed with Source Manual and in Bare quarry's Lanes table; the same pair again is refused
+    (409, one lane per direction); edit and delete it (delete needs `knk.admin.delete`). Type **TransportOrder**:
+    **Expected:** the orders with status in words and "20 of 20" delivered; no Create button and no edit or delete
+    (orders are made on the manual order page). (A23)
+12. [automated: `dashboard › lists production structures with their kind's name (#838)`] Type **ProductionStructure**
+    on the dashboard. **Expected:** a **Kind** column with each structure's kind name.
+13. [automated: `the production page's cycles (#838) › names the blueprints a cycle consumed and links to all cycle
+    records`] On a production structure whose line takes inputs (§ 4.1), open a cycle's trace in **Latest cycles**.
+    **Expected:** the inputs by blueprint name ("3 × Wheat"), not by id; **All cycle records** opens the
+    ProductionCycleRecord list on the dashboard.
+14. [automated: `game settings › shows and keeps the transport section on a save of another section, and saves a
+    changed one`; Jest `territory.test.ts › keeps the transport settings, so a save does not reset them (#682)`] Open
+    **Game settings**. **Expected:** a **Transport** card with walking speed, carrier capacity, trigger threshold (%),
+    trigger for uncapped Output, unmeasured route factor, fallback distance, wait at a full stop, re-routes per order
+    and lane max age, with the stored values (§ 6.0 precondition 5). Change the production engine's base cycle and
+    save: the transport values are sent back unchanged. Type 11 re-routes: "production.transport.maxReroutes must be a
+    whole number between 0 and 10." and Save is off; type 3 and save: `GET api/GameSettings` has 3.
+15. [partly automated: `game settings › Run transport now reports the sweep, and the API's 409 while production is
+    off`; by hand: production off] With production on press **Run transport now** in the Transport card.
+    **Expected:** "<n> orders created, <m> moved on." (and "<k> failed" when some failed). Turn production off and
+    save: the button is off with "Production is off: no order moves". A refusal of the run (403 without
+    `knk.admin.world`, 409 while production is off) shows the API's sentence in the card.
+16. End to end (by hand): with production on, Quarry connected, its automatic transport on and its Cobblestone line
+    running, wait until its Output passes the threshold (or put stock in), press **Run transport now** and open
+    Quarry. **Expected:** the new order under Open orders, Workers "1 of 2 present, 1 away carrying"; its page shows
+    Carrier assigned, Loaded, Departed on the timeline and an ETA; after the trip (run the sweep again past the ETA)
+    Arrived at a stop, Delivered, Worker back and Completed, the cargo delivered at the warehouse's storage and the
+    worker present again. (A12)
 
 ## 7. Phase P6: terminals, displays, menus, commands (#683 API, #74 plugin; tier:2)
 

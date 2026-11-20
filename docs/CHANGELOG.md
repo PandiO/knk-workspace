@@ -49,6 +49,26 @@ This is a human-readable record of capabilities merged into the V3 default branc
         road-connections: true
   ```
 
+- **Siege shop catalogue in the API and web app** ([PandiO/knk-workspace#867](https://github.com/PandiO/knk-workspace/issues/867),
+  link L2 of the siege shop chain, #611; with [#878](https://github.com/PandiO/knk-workspace/issues/878)). For staff:
+  the web app's dashboard and form wizard edit shop categories (seeded: Siege weapons, Consumables, Magic), shop
+  entries per game mode (PvP Siege, Siege Survival) selling an item blueprint in a quantity or a siege weapon type, with
+  a siege-point price and the brakes of DESIGN § 5.4 (price step and maximum, cooldown step and maximum, each with
+  None/Linear/Logarithmic/Exponential growth, cap per match), and on a scenario's new "Siege shop" step its overrides
+  (hide a default entry or change its price, quantity, cap, cooldown, steps or order) and scenario-only entries.
+  `GET api/SiegeShop/catalogue?mode=&scenarioId=` returns what a match sells: enabled defaults minus hidden ones, with
+  overrides applied, plus the scenario's own entries; a weapon entry without a price uses the template's
+  `MatchPrice`. The default catalogue of DESIGN § 12.2 is seeded at API start while a mode has no entries (ender pearl,
+  splash potion of healing II, golden apple, potion of regeneration; Survival at ×10 prices; one PvP entry per existing
+  weapon template). Item blueprints gain a potion type (`minecraft:strong_healing`). The Siege settings page gets a
+  "Siege points" section with L1's earn amounts and the teammate transfer switch (#878). Nothing in game reads the
+  catalogue yet (the shop is L3, #868). knk-web-api: `SiegeShopCategory`, `SiegeShopEntry`,
+  `SiegeScenarioShopOverride`, CRUD under `knk.siege.admin.manage` (overrides under
+  `api/SiegeScenarios/{id}/shop-overrides`), dashboard registry, lookups, form seeds, migration
+  `AddSiegeShopCatalogue` (additive: three tables, the categories, `item_blueprints.PotionType`). Branches
+  `claude/siege-shop-l2` in knk-web-api, knk-web-app and knk-workspace. Admin steps: apply the migration; restart the
+  API once (seed); import the form seeds `SiegeShopCategory`, `SiegeShopEntry`, `SiegeScenarioShopOverride` and the
+  updated `SiegeScenario` and `ItemBlueprint`. Smoke test: [siege shop smoke test § 2](guides/siege-shop-smoke-test.md#2-phase-2-shop-catalogue-entities-scenario-overrides-and-web-app-forms-867-tier2).
 - **Production P4b: yield-area surveys in the plugin** ([PandiO/knk-workspace#679](https://github.com/PandiO/knk-workspace/issues/679),
   link L12 of the production chain, #22; the API half is #138). For staff: with `production.enabled: true` the game
   server surveys every `Derived` and `Hybrid` production area the API queues (on creation, once a day while its chunks
@@ -156,6 +176,32 @@ This is a human-readable record of capabilities merged into the V3 default branc
   unusable end. knk-plugin branch `claude/offroad-smoke-fixes-f3`; config key in
   [plugin configuration § 4.15](guides/admin/plugin-configuration.md). Smoke test:
   [off-road smoke test § 14](guides/navigation-offroad-smoke-test.md#14-f3-smoke-test-failures-of-2026-11-19-780-771-710-tier2).
+- **Transport in the web app: order list and detail, manual orders with a dry run, a structure's transport**
+  ([PandiO/knk-workspace#682](https://github.com/PandiO/knk-workspace/issues/682), link L16 of the production, storage
+  and transport chain; [design](specs/production-storage-transport/DESIGN.md) § 7, § 11.1). Staff can follow and steer
+  the goods on the road. **Transport orders** (admin sidebar, World) lists every order newest first with its status in
+  words, route, units delivered and ETA, filtered by open or final, status, origin, structure and storage. An order's
+  page shows its status and reason, source, carrier and times, the cargo per blueprint (requested, loaded, delivered,
+  returned, lost) and what is on the road now, the route stop by stop with each leg's distance and where it came from
+  (a measured lane, an estimate, the fallback), the carriers, and the event log as a timeline with a link to each stock
+  transaction; **Cancel** says what will happen first (cancelled, or the cargo turns back). **New manual order**
+  (source, an optional carrier, stops in visiting order with their items, a start time and a note) runs a **dry run**
+  first: errors, warnings, the cargo against the source's stock and each leg with its distance, time and room; the
+  order can be made only after a dry run of the same request. A production structure's page gets a **Transport** panel:
+  the warnings (no road connection, a full Output storage, no warehouse, no workers), the Output fill against the
+  threshold, the workers away, why the automatic trigger would fire or is held and the order it would make now, the
+  open orders, the lanes from and to the structure, and "New order from here". Lanes are on the dashboard with the
+  seeded form. The game settings page gets a **Transport** card (speed, capacity, triggers, route estimates, waits,
+  lane age; always sent back on save) with **Run transport now**. Also #838: the production structure list shows the
+  kind's name, a cycle's consumed inputs show blueprint names, and the production panel links to all cycle records.
+  knk-web-app: `transportOrderClient`, `transportLaneClient`, `productionStructureClient.getTransport`,
+  `TransportOrderPanel`, `StructureTransportPanel`, `TransportPlanView`, `TransportOrderTable`, pages
+  `TransportOrdersPage` and `TransportOrderNewPage`, `TransportSettingsCard`, `src/utils/transport.ts`;
+  `e2e/transport.spec.ts`. Smoke test:
+  [production smoke test § 6.3](guides/production-storage-transport-smoke-test.md#63-steps-web-app-682). Admin steps:
+  1. Deploy the web app with the transport API (#79, in `next`) and its imported seeds (`TransportOrder`,
+     `TransportLane`). No migration, setting or plugin change.
+
 - **Transport API: production structures send their goods to the town's warehouses** ([PandiO/knk-workspace#79](https://github.com/PandiO/knk-workspace/issues/79),
   link L14 of the production, storage and transport chain; [design](specs/production-storage-transport/DESIGN.md)
   § 7, decisions D5, D6 and G14). When a producer's Output storage fills up (75% of its cap by default), one of its
