@@ -21,7 +21,7 @@ developer's instruction of 2026-11-20; its own report is [2026-11-19-siege-weapo
 | Link | Issue | Status | Branch heads | PR | CI | How started |
 |---|---|---|---|---|---|---|
 | L1 Shared ledger, siege points earning | #866 | Merged into `next` 2026-11-20 (knk-web-api `9a3132dc`, knk-plugin `91e3ddb8`, knk-workspace `1e38c7ec`) | `claude/siege-shop-l1`: knk-plugin `b6fa74ec`, knk-web-api `4da6780`, knk-workspace `8a215193` | [knk-plugin#107](https://github.com/PandiO/knk-plugin/pull/107), [knk-web-api#64](https://github.com/PandiO/knk-web-api/pull/64), [knk-workspace#879](https://github.com/PandiO/knk-workspace/pull/879) | green (plugin build + paper-boot; API build-and-test, mysql-tests, fresh-database) | subagent of the coordinator (two component repos), started 2026-11-20 |
-| L2 Shop catalogue (API, web app) | #867 | Running (also takes #878, siege settings page earn fields) | `claude/siege-shop-l2` | — | — | subagent of the coordinator (two component repos), started 2026-11-20 |
+| L2 Shop catalogue (API, web app) | #867 | In review (CI green, Codex at usage limit; also built #878) | `claude/siege-shop-l2`: knk-web-api `1bed630a`, knk-web-app `77791388`, knk-workspace `a31db5c7` | [knk-web-api#66](https://github.com/PandiO/knk-web-api/pull/66), [knk-web-app#69](https://github.com/PandiO/knk-web-app/pull/69), [knk-workspace#888](https://github.com/PandiO/knk-workspace/pull/888) | green (API build-and-test, mysql-tests, fresh-database; web app build-and-test, e2e) | subagent of the coordinator (two component repos), started 2026-11-20 |
 | L3 Shop in the plugin | #868 | Not started (gate: L1, L2 merged) | — | — | — | — |
 | L4 Weapon unlocks | #869 | Not started (gate: L2, L3, L5 merged) | — | — | — | — |
 | L5 Menu item settings (API, web app) | #870 | Not started (gate: L2 merged) | — | — | — | — |
@@ -98,3 +98,36 @@ _(Each link appends its block here when it finishes.)_
     2. L2/L5: #878 (siege settings page fields) fits either.
     3. Whoever merges a knk-web-api migration after L1 regenerates theirs (or L1 regenerates if it merges second).
 10. **2026-11-20, update after the coordinator's check.** `origin/next` merged into all three branches (merge commits with trailers). knk-web-api: `AddSiegePointsEarning` regenerated on top of Production's `AddTransportCore` (now `20261120131558_AddSiegePointsEarning`, Up/Down unchanged, existing settings row still gets the § 5.2 defaults; L17 #683 had not landed in `next`). knk-workspace: CHANGELOG and plugin-configuration conflicts resolved by keeping both sides. New heads: knk-plugin `b6fa74ec`, knk-web-api `4da6780`, knk-workspace `8a215193`, each 0 behind `next`. Tests: plugin 7303 tests, 20 skipped, 0 failed; API 4879 passed, 119 skipped, 0 failed. CI green: API build-and-test, mysql-tests, fresh-database; plugin build and paper-boot (the push run of paper-boot failed once in the NPC scenario `npc-road-goal-dead-end`, chunk UNLOADED, not touched by L1; it passed on rerun and in the pull-request run of the same head). Codex still at its usage limit after `@codex review`.
+
+### 4.2 L2 — Shop catalogue (#867)
+
+1. **Scope done.**
+    1. knk-web-api: `SiegeShopCategory` (seeded `siege-weapons`, `consumables`, `magic` with `HasData`), `SiegeShopEntry` (game mode, optional scenario for scenario-only entries, category, kind `Item` with blueprint and quantity or `SiegeWeapon` with template, display name, icon, price and the § 5.4 brake fields, order, enabled), `SiegeScenarioShopOverride` (hidden plus nullable price, quantity, cap, cooldown, steps, order; unique per scenario and entry); CRUD under `knk.siege.admin.manage` (overrides under `api/SiegeScenarios/{id}/shop-overrides`), `GET api/SiegeShop/catalogue?mode=&scenarioId=` (§ 5.3, weapon price from `MatchPrice`), dashboard registry, lookups, pinned access tests, form seeds (and a "Siege shop" step on the scenario form, `PotionType` on the blueprint form), `ItemBlueprint.PotionType` (DESIGN § 9.4: no potion field existed), startup seed `SiegeShopSeed` (§ 12.2), migration `20261120183543_AddSiegeShopCatalogue` (additive: three tables, the categories, one nullable column), generated last on top of `next` `9a3132d`.
+    2. knk-web-app: shop DTO types, clients (category, entry, override, catalogue), `entityApiMapping`, dashboard columns, scenario DTO lists, `potionType`; #878: "Siege points" section on the Siege settings page with L1's 13 fields, help texts and API ranges.
+    3. knk-workspace (branch, PR into `next`): smoke guide § 2 rewritten and tagged (11 of 14 steps automated or partly), changelog Unreleased entry.
+2. **Commits and heads.** knk-web-api `claude/siege-shop-l2` at `1bed630a` (2 commits, base `next` `9a3132dc`); knk-web-app at `77791388` (1 commit, base `next` `eaf0467`); knk-workspace at `a31db5c7` (1 commit on `next` `35e95fbb`). All 0 behind `next` at hand-back.
+3. **PRs.** [knk-web-api#66](https://github.com/PandiO/knk-web-api/pull/66) (Closes #867), [knk-web-app#69](https://github.com/PandiO/knk-web-app/pull/69) (Part of #867, Closes #878), [knk-workspace#888](https://github.com/PandiO/knk-workspace/pull/888) (Part of #867), base `next`. Not merged.
+4. **Tests, baseline → result.**
+    1. knk-web-api: 4879 passed, 119 skipped (MySQL), 0 failed → 4936 passed, 119 skipped, 0 failed (57 new). A14, A15, A16 tests seen failing against a broken rule.
+    2. knk-web-app: Jest 338 suites / 2882 tests → 339 / 2889; tsc, `typecheck:e2e`, build clean; Playwright 296 → 303 passed.
+    3. CI: green on all heads: knk-web-api build-and-test, mysql-tests, fresh-database; knk-web-app build-and-test, e2e (pull-request and push runs).
+    4. Known reds: none. Codex: usage limit on all three PRs (noted on each), no review.
+5. **Decisions (DESIGN § 4.3).**
+    1. *Default entries as a startup seed.* Chosen: categories in the migration, entries in `SiegeShopSeed` per mode only while that mode has no default entry, because entries point at blueprints whose ids exist only at runtime and admin edits must not be overwritten. Alternatives: (a) all in the migration, blueprints and material refs can't be made there; (b) re-seed missing rows each start, fights deletions.
+    2. *Weapon entries.* Chosen: one PvP entry per weapon template existing when the seed runs (none on a fresh database; admins add them later). Alternatives: (a) seed three templates, changes the weapon data beyond the spec.
+    3. *Potion field.* Chosen: one nullable `PotionType` registry key (strong_/long_ variants are keys; drink/splash from the material); null clears like the trim. Alternatives: (a) effect, level and duration fields, more than vanilla potions need.
+    4. *Override routes.* Chosen: created and listed under the scenario like weapon spots. Alternatives: (a) a flat POST with the scenario in the body.
+    5. *Catalogue read rule.* Chosen: `SiegeShopEntry` read nodes or the plugin key, pinned in `PluginReads`. Alternatives: (a) any signed-in user.
+    6. *Weapon flag (§ 5.3.4).* Chosen: the API always lists weapon entries; the plugin drops them while `siege.weapons.enabled` is off. Alternatives: (a) a query flag, the API can't see the plugin config.
+    7. *Rules the spec left open.* Chosen: weapon entries quantity 1; cooldown step or max need a base cooldown; overrides only on default entries, one per scenario and entry; a category in use can't be deleted. Alternatives: (a) accept and ignore such values silently.
+    8. *Scenario-only entries on the scenario form.* Chosen: a second owned list "Scenario-only entries" next to "Shop overrides" (§ 4.4.2 "add a scenario-only entry"). Alternatives: (a) only from the entries dashboard with the scenario picked.
+6. **Out of scope, noted.** None filed.
+7. **Blockers.** None.
+8. **At merge / what the developer must do.**
+    1. Apply migration `AddSiegeShopCatalogue`; restart the API once (seed).
+    2. Import form seeds `SiegeShopCategory`, `SiegeShopEntry`, `SiegeScenarioShopOverride`; add the "Siege shop" step and "Potion type" field by hand where `SiegeScenario`/`ItemBlueprint` were imported before.
+    3. Smoke test § 2 of `docs/guides/siege-shop-smoke-test.md` (steps 9 and the wizard parts of 5, 7, 10, 11 are manual).
+9. **Notes for later links.**
+    1. L3 (#868): read `GET api/SiegeShop/catalogue?mode=Siege|SiegeSurvival&scenarioId=` once per match (already in `ReadAccessRulesTests.PluginReads`); `price` is resolved, override fields applied, `source` tells Default/Overridden/Scenario; drop `SiegeWeapon` entries while `siege.weapons.enabled` is off; growth factor null means 1.5.
+    2. L3: `BlueprintItemAssembler` must apply `ItemBlueprint.potionType` (`minecraft:strong_healing`) to potion meta; the plugin DTO doesn't read it yet.
+    3. A fresh database has no weapon entries (no templates); the weapons chain or admins add them.
