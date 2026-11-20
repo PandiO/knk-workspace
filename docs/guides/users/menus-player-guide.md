@@ -1,7 +1,8 @@
 # Menus — Player Guide
 
 **Status:** Living document — update in place as the game changes
-**Last updated:** 2026-11-13 (§ Kits: kits a staff member gives you from the web app, PandiO/knk-workspace#261, in
+**Last updated:** 2026-11-20 (§ Structures and § Storage terminals and displays, production chain L18,
+PandiO/knk-workspace#74, knk-plugin branch `claude/production-p6`, not in `next` yet); 2026-11-13 (§ Kits: kits a staff member gives you from the web app, PandiO/knk-workspace#261, in
 knk-plugin `next` `745fcf6`, not yet released); 2026-11-11 (first version, PandiO/knk-workspace#302; checked against knk-plugin `main` `121030f`; menu
 texts are the seed defaults of knk-web-api `master` `b5e57fa`, staff can change them)
 
@@ -53,6 +54,7 @@ available, so a tile may be missing for a while after a server start.
 | **Premium tiers** | Every premium tier and your own (salary multiplier, until when) |
 | **Discoveries** | The places you discovered, their rewards, and how many are left per type |
 | **Teleport to points on the map** | Teleport to spawn and to important places; prices are paid in gems |
+| **Structures** | Farms, mines, workshops and warehouses: what they produce and how they are doing (only on servers with production switched on) |
 | **Player manager** | Staff only |
 | **Exit** (top right) | Closes the menu |
 
@@ -98,6 +100,58 @@ The siege overview lists every siege with its scenario, players, stage and timer
 menu lets you join or leave during matchmaking (leaving needs a second click within 3 seconds), vote, read the
 objectives and change your spawnpoint. See the siege guides for the match itself.
 
+### Structures
+
+*On servers with production switched on (knk-plugin branch `claude/production-p6`, PandiO/knk-workspace#74; not
+released yet).*
+
+The **Structures** tile lists every production structure (farm, logger, quarry, mine, fishery, florist, pasture,
+workshop) and every warehouse, one item each, with its kind, town, level, what it produces and its status:
+
+| Status | Meaning |
+|---|---|
+| **Working** (green) | It produces |
+| **Stalled** (gold) | Switched off, no line running, or no worker present |
+| **No road** (red) | A structure outside a town that isn't connected to a road; its goods can't be carried away |
+| **Full** (red) | A line stopped because its storage is full |
+
+1. **Filters:** the compass cycles through the towns, the hopper through the kinds, the redstone torch through the
+   statuses (after the last one: all again); the barrier clears all filters. The sign searches by name.
+2. **Your town first:** when you open the list standing on a town's land, the Town filter starts on that town. In the
+   wilderness it starts empty.
+3. **A structure's menu:** click a structure. Everyone sees its name, kind, town, level, what it produces and its
+   status. **Members of its town** and staff also see the exact rates per hour, its workers (present and away), its
+   warnings, its storages with what they hold ("Amount: N") and a **Transport orders** button: open and recent orders
+   with cargo, from, to, state and when they arrive.
+4. You can't change anything here; staff have extra buttons (see "For staff").
+
+Until town roles arrive, "member of a town" is a permission your town's staff give you.
+
+### Storage terminals and displays
+
+*Same servers and status as Structures.*
+
+Some chests and barrels in warehouses and town vaults are bound to a storage:
+
+1. **Terminal:** right-click it and you see the storage itself, page by page (the chest stays empty). Left-click an
+   item to take a stack, right-click to take one, shift-click to take as much as fits in your inventory. To put
+   something in, click it in your own inventory (right-click puts one). The middle item at the bottom shows how full the
+   storage is. Only members of the storage's town (or the player it belongs to) and staff can use a terminal.
+2. **Display:** right-click it and you see a sample of what the storage holds, as full as the storage is. You can't take
+   anything out; its items are only a picture.
+3. You can't break a bound chest or barrel, and hoppers don't take from it.
+
+What a terminal refuses, and why:
+
+| Message | Meaning |
+|---|---|
+| `Only members of this storage's town, its owner and staff can use this terminal.` | It isn't your town's |
+| `This item isn't in the item catalogue (...)` | A renamed item or another plugin's item; it can't be stock |
+| `Damaged items can't go into a terminal ...` / `Enchanted items can't go into a terminal ...` | They would come back repaired or without enchantments |
+| `Unique items can't be put in a terminal in game yet; use the web app.` | Unique items move through the web app for now |
+| `Production is switched off; the terminal moves nothing right now.` | Staff switched production off |
+| `Nothing put in: the storage is full.` | The storage has no room; your items are back in your inventory |
+
 ## Moving around in menus
 
 - **Back / Exit:** the barrier at the top right. It says **Back** (to the menu you came from) or **Exit** (close).
@@ -125,6 +179,10 @@ objectives and change your spawnpoint. See the siege guides for the match itself
 | `Something went wrong with that.` | The click failed; tell staff if it keeps happening |
 
 ## For staff
+
+In a structure's menu, staff (`knk.admin.world`) get a bottom row: **Survey now**, **Transport dry run** (what the
+automatic transport would do, in chat) and **Show area outline**; in its transport orders, click an order to cancel it
+or to retry it (with Confirm and Cancel). Binding chests: `/knk storage bind` ([commands](commands.md)).
 
 The **Player manager** tile (needs `knk.admin.user.manage`) manages players ranked below you: balances (staged until
 you type a reason in chat), titles, groups, staff mode, salary, freeze, kick and ban. How menus are built and changed:

@@ -4,6 +4,42 @@ This is a human-readable record of capabilities merged into the V3 default branc
 
 ## Unreleased — on feature branches, not merged
 
+- **Terminals, displays and structure menus in game** ([PandiO/knk-workspace#74](https://github.com/PandiO/knk-workspace/issues/74),
+  link L18 of the production, storage and transport chain; the API is #683; [design](specs/production-storage-transport/DESIGN.md)
+  § 6 and § 11.2, decision record § 15.1 M1-M5). With `production.enabled: true` in the plugin: staff bind the chest,
+  trapped chest or barrel they look at to a storage with `/knk storage bind <storage id> <terminal|display> [label]`
+  (also `unbind`, `info`, `reload`; node `knk.admin.world.production`). Right-clicking a **terminal** opens the storage
+  page by page: left-click takes a stack, right-click one, shift-click as much as fits; clicking an item in your own
+  inventory puts it in. Each click is one ledger move as the player, so only members of the storage's town, its player
+  and staff can use it; what the storage refuses (full, not enough stock) comes straight back. Renamed, damaged,
+  enchanted vanilla and unique items are refused. A **display** holds a read-only sample of the stock, as full as the
+  storage is, refreshed when its chunk loads and after terminal moves. Bound blocks can't be broken, survive explosions
+  and hoppers move nothing in or out. Players get the **Structures** tile in the main menu: every production structure
+  and warehouse with search and Town, Kind and Status filters, the Town filter starting on the town whose land you stand
+  in; a structure's menu shows its public details, and for members of its town and staff its rates, workers, warnings,
+  storages and transport orders. Staff get buttons for survey now, the transport dry run, the area outline, and
+  cancelling or retrying an order (with a confirm). With `production.enabled: false` the menus are blocked (the tile is
+  hidden) and chests are plain chests. Not yet: opening the structure menu from a worker NPC (there is no worker NPC
+  entity), unique items in terminals in game. #877: the `CaptureRadius` world task the production area form sends is
+  handled since #679; its output is the API's. knk-plugin: knk-core `production/terminal` (container index, terminal
+  layout, display layout and throttle) and `production/menu` (menu text, facets), ports `StorageContainersApi` and
+  `StructureMenusApi` with their knk-api-client implementations, knk-paper `production/terminal`
+  (`StorageTerminalModule`, terminal and display views, display writer), `menu/content/StructuresMenuFeature`,
+  `commands/StorageAdminCommand`, the scenario `storage-display-double-chest`. Branch `claude/production-p6` in
+  knk-plugin and knk-workspace. Smoke test:
+  [production smoke test § 7.2](guides/production-storage-transport-smoke-test.md#72-steps-plugin-74).
+  Admin steps:
+  1. Merge into the plugin's `config.yml` (Restart; [plugin configuration § 4.31](guides/admin/plugin-configuration.md#431-production)):
+     ```yaml
+     production:
+       storage:
+         refresh-minutes: 5
+         display-refresh-seconds: 30
+     ```
+  2. Grant `knk.admin.world.production` (binding) and `knk.admin.world` (the menus' staff buttons) to staff; town
+     members need `knk.town.member.<town id>` (#683).
+  3. Putting items into terminals needs `items.identity.enabled: true` (#141).
+
 - **Siege weapon unlocks with coins and a minimum title** ([PandiO/knk-workspace#869](https://github.com/PandiO/knk-workspace/issues/869),
   also [#795](https://github.com/PandiO/knk-workspace/issues/795); link L4 of the siege shop chain, #611). For players,
   no flag: outside a match, `/menu` → **Siege Minigame** → **Siege unlocks** lists every siege weapon type with its
