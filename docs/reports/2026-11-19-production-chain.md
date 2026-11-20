@@ -72,7 +72,7 @@ of what is already in `next`.
 | L12 P4b surveys plugin | #679 | Merged into next (2026-11-20) | plugin `3472e32d`, workspace `c6f53e07`; merges: plugin `d36001b2`, workspace `496ed6fa` | [plugin#105](https://github.com/PandiO/knk-plugin/pull/105), [ws#876](https://github.com/PandiO/knk-workspace/pull/876) | green (plugin build + paper-boot, 68 scenarios) | create_session `session_01R1w2Utt8cigo5ND98ZqXzC` (prompt says start without asking), started 2026-11-19 |
 | L13 P4c yield areas web app | #680 | Merged into next (2026-11-20) | web app `6da700c`, workspace `638e5c3c`; merges: web app `eaf0467d`, workspace `2159952e` | [web-app#67](https://github.com/PandiO/knk-web-app/pull/67), [ws#873](https://github.com/PandiO/knk-workspace/pull/873) | green on `6da700c` (build-and-test, e2e) | create_session `session_01R1w2UwYw3NNQSSBoP7XaBk` (prompt says start without asking), started 2026-11-19 |
 | L14 P5 transport API (simulated carrying, G14) | #79 | Merged into next (2026-11-20) | api `ef61cd1`, workspace `ae26c88b`; merges: api `bf8633fb`, workspace `66cd37f0` (after a coordinator merge of `next`, `9a4de0b9`) | [api#65](https://github.com/PandiO/knk-web-api/pull/65), [ws#880](https://github.com/PandiO/knk-workspace/pull/880) | api build-and-test, fresh-database green; mysql-tests green on push run | create_session `session_01R1w2UtGLZrUEAUNFYvkqGB` (prompt says start without asking), started 2026-11-19 |
-| L15 P5b lanes plugin | #681 | Running | — | — | — | create_session `session_01R1w2Ux1xEr3Um5M3f3UysM` (prompt says start without asking), started 2026-11-20 |
+| L15 P5b lanes plugin | #681 | In review (2026-11-20) | plugin `796f1127`, workspace `77ebdc07` | [plugin#108](https://github.com/PandiO/knk-plugin/pull/108), [ws#886](https://github.com/PandiO/knk-workspace/pull/886) | plugin build green (push run); paper-boot running | create_session `session_01R1w2Ux1xEr3Um5M3f3UysM` (prompt says start without asking), started 2026-11-20 |
 | L16 P5c transport web app | #682 | Running | — | — | — | create_session `session_01R1w2Uu8TpsSchsfou5i63j` (prompt says start without asking), started 2026-11-20 |
 | L17 P6a API: StorageContainer, caller-filtered reads, menu seeds | #683 | Running | — | — | — | create_session `session_01R1w2UukTGdahr4dAwQTutW` (prompt says start without asking), started 2026-11-20 |
 | L18 P6 plugin: terminals, displays, Structures menu, structure menu, orders list | #74 | Not started | — | — | — | — |
@@ -1504,3 +1504,89 @@ _(Each link appends its block here when it finishes.)_
        consumer's worker as carrier (`CarrierStructureId` is a `ProductionStructure` today; consumers that are not
        production structures need it widened) and the warehouse storage as source. The automatic trigger only looks at
        production structures.
+
+### 4.15 L15 — P5b lanes plugin (#681)
+
+1. **Scope done** (knk-plugin, plus essential docs in knk-workspace). Everything runs only with `production.enabled:
+   true` (A21).
+    1. knk-core `production/transport/` (Bukkit-free): `LaneMeasurer` (the road route of each due pair with `AStarRouter`
+       over the road snapshot, read-only: road distance = walk to the road + road route + walk from it; unreachable
+       beyond `max-snap-distance`, on roads that do not join, or across worlds; skipped without a location or without a
+       loaded road network), `LaneJob` (list → measure on its own thread, timed `production.lanes.measure` → report in
+       chunks of 500 → road connections; one run at a time), `RoadConnectionBook` (Connected with any reachable lane
+       measured since start, Unconnected when all are unreachable; only changes sent; a 404 marks a warehouse),
+       `LaneSettings`; port `TransportLanesApi`.
+    2. knk-api-client `TransportLanesApiImpl` (`GET api/TransportLanes/due`, `POST api/TransportLanes/report`, `PUT
+       api/ProductionStructures/{id}/road-connection`).
+    3. knk-paper `production/LaneModule` (headless job every `interval-minutes`, first run 2 min after start),
+       `LaneConfig`, `commands/LogisticsAdminCommand` (`/knk logistics lanes measure|status`, node
+       `knk.admin.world.production`); `config.yml` `production.logistics.lanes.*` (four keys). `KnKPlugin` and
+       `config.yml` changes are separate additive blocks. No navigation code changed.
+    4. #875 (additive extra, plugin side): the survey queue's overlaps may carry `unitTypes` or `surveyProfileJson`;
+       `SurveyCounter.sharedBy` then counts only structures whose kind counts the unit's type; without them as before.
+    5. #877 (plugin side): no change; the `CaptureRadius` handler is on `next` since L12, registered by task type only,
+       so it tolerates an API without the type. Comment on #877 with the type name and output for L17.
+    6. knk-workspace (branch from `next`): smoke guide § 6.2 (14 steps: 3 automated, 10 partly, 1 manual), plugin
+       configuration § 4.31 `production.logistics.lanes.*` with § 2.1 and § 3 rows, changelog entry with the YAML,
+       implementation plan § P5 status.
+2. **Commits and heads.** knk-plugin `claude/production-p5b` at `796f1127` (8 commits plus a merge of `origin/next`
+   `91e3ddb8`, siege shop L1; no conflicts). knk-workspace `claude/production-p5b` at `77ebdc07` (1 commit on `next`
+   `35e95fbb`).
+3. **PRs.** [knk-plugin#108](https://github.com/PandiO/knk-plugin/pull/108) (Closes #681, Part of #875, #877),
+   [knk-workspace#886](https://github.com/PandiO/knk-workspace/pull/886) (Part of #681, #875), base `next`. Not merged.
+4. **Tests, baseline → result** (`./gradlew build -x deployToDevServer`, Gradle on JDK 21, JDK 25 toolchain).
+    1. Baseline on `next` `d36001b2`: knk-core 3594, knk-api-client 371 (2 skipped), knk-paper 3285 (18 skipped), 0
+       failures.
+    2. Branch at `796f1127` (with `next` `91e3ddb8`, which adds siege shop L1's tests): knk-core 3643, knk-api-client 378
+       (2 skipped), knk-paper 3312 (18 skipped), 0 failures.
+    3. New: `LaneMeasurerTest` (7, over a built road network), `LaneJobTest` (7, fake API), `RoadConnectionBookTest`
+       (3), `TransportLanesApiImplTest` (4), `LaneConfigTest` (3), `LogisticsAdminCommandTest` (4, MockBukkit),
+       `SurveyCounterTest` +1, `ProductionSurveyApiImplTest` +1. `TransportLanesApiImplTest` caught that the
+       road-connection PUT must accept a 204 (fixed in the test's expectations; `BaseApiImpl` already does).
+    4. CI on `796f1127`: build green on the push run; paper-boot running when this block was written. No plugin scenario
+       added (`MIN_SCENARIOS` stays 68).
+    5. Known reds: none.
+5. **Decisions (DESIGN § 4.3).** All 11 with alternatives are in knk-plugin#108. The main ones:
+    1. *Road distance.* Chosen: walk to the road + road route + walk from it. Alternatives: (a) road route only:
+       underestimates trips for structures set back from the road.
+    2. *Unconnected threshold.* Chosen: no road within 48 blocks (navigation's snap distance), configurable.
+       Alternatives: (a) 96; (b) distance from the structure's region edge.
+    3. *Routing.* Chosen: default mode, every gate and region open, one-way roads count. Alternatives: (a) `shortest`
+       mode; (b) a player's access policy (no player; closed gates would cut lanes).
+    4. *Road connection.* Chosen: judged on all lanes measured since start, any reachable = Connected. Alternatives:
+       (a) this run's lanes only (flips); (b) read all lanes via search (outside the plugin key's contract).
+    5. *Warehouses.* Chosen: found by the 404 of the road-connection PUT, not asked again. Alternatives: (a) a kind on
+       the due rows (API change, noted on #681).
+    6. *Unmeasurable pairs.* Chosen: skipped, not reported. Alternatives: (a) unreachable: an empty road cache at start
+       would disconnect every producer.
+    7. *No plugin scenario.* Measuring reads only the road snapshot and the API; the in-game run is smoke § 6.2.
+       Alternatives: (a) a scenario wrapping the core test.
+6. **Out of scope, noted.** Comment on #681: the due rows carry no structure kind (nice-to-have for the next API link).
+   Comments on #875 (API DTO field still open) and #877 (task type and output for L17). Codex: the connector hit its
+   code-review usage limit on both PRs (review "failed", usage-limit comment); no inline findings; noted on each PR.
+7. **Blockers.** None.
+8. **At merge / what the developer must do.**
+    1. Merge into the plugin's `production` block (nothing runs while `production.enabled` is false) and restart; the
+       road network must be built (navigation):
+
+       ```yaml
+       production:
+         logistics:
+           lanes:
+             interval-minutes: 60
+             batch: 100
+             max-snap-distance: 48
+             road-connections: true
+       ```
+    2. Grant `knk.admin.world.production` to staff who measure (in `knk.admin.world.*`).
+    3. Smoke test [§ 6.2](../guides/production-storage-transport-smoke-test.md) (tier:2): about 20 minutes for the
+       untagged and partly tagged parts; needs L14 (merged) and the road network.
+    4. At merge into `next`: the `documentation` sub-issue (transport architecture page: the lane measurer and road
+       connections; admin guide for lanes and `/knk logistics`; commands guide; feature register row).
+9. **Notes for later links.**
+    1. L16 (#682): lanes from the plugin have `source` Plugin and `routeEdgeIds` in walking order; an unreachable lane
+       has no road distance. A structure's road connection changes only when the plugin measures it.
+    2. L23 (P9): `LaneJob` measures whatever pairs the due list returns; consumer → warehouse pairs need no plugin
+       change, but the road connection PUT targets `ProductionStructures` only (non-producers get 404 and are skipped).
+    3. NPC carriers (#251): `LaneMeasurer` routes with `AccessPolicy.ALL_OPEN`; rendered carriers will need the gate
+       rules.
