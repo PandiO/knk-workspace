@@ -4,12 +4,35 @@ This is a human-readable record of capabilities merged into the V3 default branc
 
 ## Unreleased — on feature branches, not merged
 
+- **Off-road navigation: a default route mode per permission group, step B (plugin)**
+  ([PandiO/knk-workspace#852](https://github.com/PandiO/knk-workspace/issues/852), link L7b of the off-road chain,
+  #698). For players: `/navigate <dest>` without a mode word now follows the default route mode of the player's
+  highest-weight group that has one (a weight tie goes to the lower group id), without needing that mode's
+  `knk.navigate.mode.<word>` node; a typed word still wins and still needs its node. With no default on any group,
+  routes are as before. NPC routes are unchanged, and a siege match on the legacy path takes no group default (as it
+  takes no typed word). knk-plugin: `defaultRouteMode` in knk-api-client `PermissionGroupListItemDto`, the
+  Bukkit-free `GroupRouteModeResolver` in knk-core, the per-player cache `GroupRouteModeDefaults` (cleared on
+  `PermissionGroupChanged` and membership changes; a cold cache uses today's default while it fills) and the shared
+  `NavigateCommand` mode path, for both the legacy and the destination-engine path. Branch
+  `claude/offroad-group-route-mode` (PandiO/knk-plugin#103). Smoke test:
+  [off-road smoke test § 15.4](guides/navigation-offroad-smoke-test.md#154-in-game-step-b). Admin steps: none (no
+  config key, no migration); needs knk-web-api with step A (an older API sends no default, so routes stay as before).
+- **Overview map: cleaner region drawing and fewer dots when zoomed out** ([PandiO/knk-workspace#826](https://github.com/PandiO/knk-workspace/issues/826),
+  [#825](https://github.com/PandiO/knk-workspace/issues/825); fix link F3 of the overview map chain, #732). A town's
+  flash and "Show region" now look like the spike's static markers: outlines without extra corners on straight edges,
+  the town as a flat surface with one clean outline and openings where its districts are (a click there opens the
+  district), districts as see-through volumes without vertical edge lines and one outline along the top, heights
+  clamped to y 20..120. District and structure dots now disappear with their labels when zoomed out; town dots stay.
+  Grouping dots into clusters is not built (#825 keeps it as an idea). Web app only, no new setting; the bridge
+  protocol is unchanged. knk-web-app branch `claude/overview-map-f3-map-drawing` (`public/bluemap-bridge/bridge.js`),
+  spec [OVERVIEW_MAP_DESIGN.md](specs/in-game-maps/OVERVIEW_MAP_DESIGN.md) O36–O42. Smoke test:
+  [overview map smoke test § 3](guides/overview-map-smoke-test.md#3-phase-3-map-page-737-tier2) steps 2–4.
+
 - **Off-road navigation: a default route mode per permission group, step A (API and web app)**
   ([PandiO/knk-workspace#852](https://github.com/PandiO/knk-workspace/issues/852), link L7b of the off-road chain,
   #698, on top of the route modes of #707). For staff: a permission group can now have a **default route mode**
   (`shortest`, `efficient` or `preferred`; "None (default: preferred)" = no default), set on the group's form under
-  Group and shown in the dashboard's "Default route" column. Players don't notice anything yet: the game server starts
-  using it in step B (`/navigate <dest>` without a mode word then takes the default of the player's highest-weight group
+  Group and shown in the dashboard's "Default route" column. The game server uses it since step B (`/navigate <dest>` without a mode word then takes the default of the player's highest-weight group
   that has one; a typed word still wins and still needs its `knk.navigate.mode.<word>` node). knk-web-api:
   `PermissionGroup.DefaultRouteMode` (nullable, stored lowercase), `defaultRouteMode` in `PermissionGroupDto` (read by
   the plugin through `GET api/PermissionGroups`) and `PermissionGroupListDto`; on create and update the three words are
