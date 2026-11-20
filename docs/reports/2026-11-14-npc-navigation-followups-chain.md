@@ -441,6 +441,14 @@ the configuration reference § 4.27), then restart. In test order:
     on a wall top beside flight 1 (the CI flake), and Citizens' move control jumping for walkable steps (the hall-entry
     jumps and the developer's hop after a stair step); jumps 151–166 → 0, leader 75–81 → 57 s. For the developer's
     review: J1 decisions 5.1 and 5.2. H1 (#779) started.
+55. **H1 checked and merged; G1 started** (2026-11-20). H1 stopped on the 5-hour usage limit at 22:12 on 2026-11-19 and
+    sat idle overnight (the coordinator's 23:19 check-in arrived about 10 hours late); resumed 09:08. § 6 held: CI
+    `build` and `paper-boot` (65) green on `d6b3c0f0`, no debug code, no edits in the other chains' areas; `next` had
+    moved by the off-road chain's trail-spacing default only (a clean merge). Merged knk-plugin#99 → `3fd493e8`,
+    knk-workspace#850 → `741aa686`. NPC checks agree with `WalkCells.isClimbableHatch`, closed hatches open with
+    `open-doors`, `ClimbHold` keeps a climber in its column. For the developer's review: H1 decisions 5.1, 5.4, 5.5.
+    Filed by H1: #848. G1 (#814) started on F3's `RoadGoalChoice` (`6878d584`); the off-road and destination engine
+    (#25) coordinators were told, and G1 reports any `paper/navigation` or `core/roads` hunk before pushing it.
 
 ## 4. Link blocks
 
