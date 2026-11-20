@@ -1,7 +1,7 @@
 # Off-road navigation and landmarks — smoke test
 
-**Status:** Draft from the design (2026-11-17); no steps run. L7b step A (§ 15.1 to § 15.3): 11 of 11 steps automated (2 in part), § 15.4 waits for step B; F3 (§ 14): 8 of 8 steps automated (5 in part); F2 (§ 13): 7 of 9 steps automated (4 in part); F1 (§ 12): 5 of 7 steps automated (3 in part); Phase 5.2 (§ 7): 7 of 8 steps automated (3 in part); Phase 4 (§ 5): 8 of 9 steps automated (2 in part); Phase 2 (§ 3): 13 of 14 steps automated (5 in part); Phase 5.1 (§ 6): 21 of 22 steps automated (6 in part); Phase 0 (§ 1): 1 of 9 steps automated; phase 1 (§ 2): 4 of 4 steps automated; phase 6.1 (§ 8): 6 of 8 steps automated (3 of them in part); phase 6.2 (§ 9): 11 of 11 steps automated (3 of them in part); phase 7 step 1 (§ 10.1): 4 of 7 steps automated (3 of them in part), viewed by the developer 2026-11-18; phase 7 step 2 (§ 10.2): 9 of 9 steps automated (3 of them in part); the other phases not yet automated (the links tag them).
-**Last updated:** 2026-11-20 (§ 15 L7b step A, a default route mode per permission group, #852: API, web and migration steps, eleven, all automated, two in part; in-game steps marked step B); 2026-11-20 (§ 14 F3, the smoke-test failures of 2026-11-19, #780, #771, #710: the road goal weighs the walk above the road, no repeated turn message, which end a 0-expansion search could not use, open doors passed without the door check, `trail-leg-spacing` shipped as 2.0: eight steps, all automated, five in part; shipped settings); 2026-11-19 (§ 13 F2, road goal by walk reachability, the road kept to its end and the flag-off walk-trail spacing, #780 and #771 items 3 to 5: nine steps, seven automated, four in part; shipped settings); 2026-11-19 (§ 12 F1, the walk-search fixes of #771 items 1 and 2: seven steps, five automated, three in part; shipped settings first, scene 1 by road recorded as known); 2026-11-18 (§ 7 phase 5.2 built by link L9, #709: eight steps, seven automated, three in part); 2026-11-18 (§ 5 phase 4 built by link L7, #707: nine steps, eight automated, two in part); 2026-11-18 (§ 3 phase 2 built by link L5, #705: fourteen steps, thirteen automated, five in part); 2026-11-18 (§ 10 phase 7: step 1 viewed by the developer, O33; § 10.2 step 2 built by link L10, #712: nine steps, all automated, three in part); 2026-11-18 (§ 6.3 phase 5.1 step B, link L8: the in-game steps); 2026-11-18 (§ 6 phase 5.1 updated to what link L8 step A built, #708: API and web steps, plugin steps marked step B); 2026-11-18 (§ 10 phase 7 split into step 1, built by link L10, #712: the staff preview and the developer's viewing steps on Cinix and Brink, and step 2, the trail, not built yet); 2026-11-18 (§ 9 phase 6.2 updated to what link L4 built, #711: eleven steps, all automated, three in part); 2026-11-17 (§ 8 phase 6.1 updated to what link L3 built, #710: eight steps, six automated); 2026-11-17 (§ 2 phase 1 updated to what link L2 built, #704: every step automated); 2026-11-17 (§ 1 phase 0 updated to what link L1 built, #703: the measurement steps and the `/knk road status` lines); 2026-11-17 (draft from the design, phases 0, 1, 2, 3, 4, 5.1, 5.2, 6.1, 6.2, 7)
+**Status:** Draft from the design (2026-11-17); no steps run. L7b (§ 15): step A 11 of 11 steps automated (2 in part), step B (§ 15.4) 4 of 7 automated (1 in part); F3 (§ 14): 8 of 8 steps automated (5 in part); F2 (§ 13): 7 of 9 steps automated (4 in part); F1 (§ 12): 5 of 7 steps automated (3 in part); Phase 5.2 (§ 7): 7 of 8 steps automated (3 in part); Phase 4 (§ 5): 8 of 9 steps automated (2 in part); Phase 2 (§ 3): 13 of 14 steps automated (5 in part); Phase 5.1 (§ 6): 21 of 22 steps automated (6 in part); Phase 0 (§ 1): 1 of 9 steps automated; phase 1 (§ 2): 4 of 4 steps automated; phase 6.1 (§ 8): 6 of 8 steps automated (3 of them in part); phase 6.2 (§ 9): 11 of 11 steps automated (3 of them in part); phase 7 step 1 (§ 10.1): 4 of 7 steps automated (3 of them in part), viewed by the developer 2026-11-18; phase 7 step 2 (§ 10.2): 9 of 9 steps automated (3 of them in part); the other phases not yet automated (the links tag them).
+**Last updated:** 2026-11-20 (§ 15.4 L7b step B, the plugin uses a group's default route mode, #852: seven steps, four automated, one in part); 2026-11-20 (§ 15 L7b step A, a default route mode per permission group, #852: API, web and migration steps, eleven, all automated, two in part; in-game steps marked step B); 2026-11-20 (§ 14 F3, the smoke-test failures of 2026-11-19, #780, #771, #710: the road goal weighs the walk above the road, no repeated turn message, which end a 0-expansion search could not use, open doors passed without the door check, `trail-leg-spacing` shipped as 2.0: eight steps, all automated, five in part; shipped settings); 2026-11-19 (§ 13 F2, road goal by walk reachability, the road kept to its end and the flag-off walk-trail spacing, #780 and #771 items 3 to 5: nine steps, seven automated, four in part; shipped settings); 2026-11-19 (§ 12 F1, the walk-search fixes of #771 items 1 and 2: seven steps, five automated, three in part; shipped settings first, scene 1 by road recorded as known); 2026-11-18 (§ 7 phase 5.2 built by link L9, #709: eight steps, seven automated, three in part); 2026-11-18 (§ 5 phase 4 built by link L7, #707: nine steps, eight automated, two in part); 2026-11-18 (§ 3 phase 2 built by link L5, #705: fourteen steps, thirteen automated, five in part); 2026-11-18 (§ 10 phase 7: step 1 viewed by the developer, O33; § 10.2 step 2 built by link L10, #712: nine steps, all automated, three in part); 2026-11-18 (§ 6.3 phase 5.1 step B, link L8: the in-game steps); 2026-11-18 (§ 6 phase 5.1 updated to what link L8 step A built, #708: API and web steps, plugin steps marked step B); 2026-11-18 (§ 10 phase 7 split into step 1, built by link L10, #712: the staff preview and the developer's viewing steps on Cinix and Brink, and step 2, the trail, not built yet); 2026-11-18 (§ 9 phase 6.2 updated to what link L4 built, #711: eleven steps, all automated, three in part); 2026-11-17 (§ 8 phase 6.1 updated to what link L3 built, #710: eight steps, six automated); 2026-11-17 (§ 2 phase 1 updated to what link L2 built, #704: every step automated); 2026-11-17 (§ 1 phase 0 updated to what link L1 built, #703: the measurement steps and the `/knk road status` lines); 2026-11-17 (draft from the design, phases 0, 1, 2, 3, 4, 5.1, 5.2, 6.1, 6.2, 7)
 **Design:** [specs/navigation-offroad/DESIGN.md](../specs/navigation-offroad/DESIGN.md) · **Issue:**
 [PandiO/knk-workspace#698](https://github.com/PandiO/knk-workspace/issues/698)
 
@@ -1076,14 +1076,14 @@ the nullable `DefaultRouteMode` on permission groups (migration `AddPermissionGr
 in the group DTOs (the plugin reads it from `GET api/PermissionGroups`), the field on the PermissionGroup form seed
 (step Group) and the dashboard's "Default route" column. Changing it is a group edit: `knk.admin.user.perm` (or the
 plugin key) and `PermissionEscalationGuard`'s rank rule, unchanged. Step B (knk-plugin, after F3) makes `/navigate
-<dest>` without a mode word use the default of the player's highest-weight group that has one (§ 15.4, not built yet).
+<dest>` without a mode word use the default of the player's highest-weight group that has one (§ 15.4).
 API, web and migration steps: 11 of 11 automated (tagged), 2 of them in part. Time: about 15 min for § 15.1 to § 15.3.*
 
 ### 15.0 Preconditions
 
 1. Deployed: knk-web-api with the migration `AddPermissionGroupDefaultRouteMode` applied (`dotnet ef database update`)
    and knk-web-app from the same `next`. For § 15.4 also the plugin build with step B.
-2. Settings: none (no `api.env` key, no plugin `config.yml` key for step A).
+2. Settings: none (no `api.env` key, no plugin `config.yml` key).
 3. Data: the PermissionGroup form has the field "Default route mode" (a fresh import of the seed `PermissionGroup`
    has it; a form imported earlier gets it in the form designer, see the changelog entry's admin step 2). The groups
    Default (weight 0) and Staff (weight 40) exist.
@@ -1136,16 +1136,37 @@ API, web and migration steps: 11 of 11 automated (tagged), 2 of them in part. Ti
    `permission_groups.DefaultRouteMode` (`varchar(16)`), null on every row, no other change; `Down` drops only that
    column. [automated: knk-web-api `AddPermissionGroupDefaultRouteModeTests`; CI "Migrations (fresh DB)" on the API PR]
 
-### 15.4 In game (step B, not built yet)
+### 15.4 In game (step B)
 
-*Written from #852; step B (knk-plugin) fills in the commands, messages and automated tests.*
+*Built 2026-11-20 (link L7b step B, knk-plugin `claude/offroad-group-route-mode`, PandiO/knk-plugin#103): the plugin
+reads `defaultRouteMode` from `GET api/PermissionGroups` and, for `/navigate <dest>` without a mode word, uses the
+default of the player's highest-weight active group that has one (a weight tie goes to the lower group id; an unknown
+word counts as no default and is logged once at INFO). The lookup is cached per player and cleared on
+`PermissionGroupChanged` and on the player's membership changes; on a cold cache the first run uses today's default
+while the cache fills, so no API call blocks the command. No config key, no migration. Not covered: a siege match on
+the legacy path (`navigateInMatch`) passes through no mode, so no group default applies there, as no typed word does
+today; on the destination-engine path a found match destination does take it. In-game steps: 4 of 7 automated (1 in
+part). Time: about 10 min.*
 
-1. Player C only in Default (no default set anywhere): `/navigate <dest>`. **Expected:** the same route as today
-   (`preferred`, L7's golden transcripts).
-2. Set Staff's default to `efficient`; a player in Staff types `/navigate <dest>` with no mode word. **Expected:** the
-   `efficient` route (the § 5 road pair with a cost multiplier shows the difference), without holding
-   `knk.navigate.mode.efficient` (a group default needs no node, unless the developer decides otherwise in step B).
-3. A player in two groups with different defaults. **Expected:** the default of the higher-weight group wins; a group
-   without a default is skipped.
-4. The Staff player types `/navigate <dest> shortest`. **Expected:** the typed word wins and still needs
-   `knk.navigate.mode.shortest`; without it "You don't have permission to use this command.".
+1. Player C only in groups without a default (every group's default None): `/navigate <dest>`. **Expected:** the same
+   route as before step B (`preferred`, L7's golden transcripts). [automated: knk-paper
+   `NavigateCommandGroupRouteModeTest`, L7 goldens unchanged]
+2. Set Staff's default to `shortest` in the web app (§ 15.2) and give player D Staff without
+   `knk.navigate.mode.shortest`. D runs `/navigate <dest>` twice (the § 5 road pair shows the difference).
+   **Expected:** the first run after a server start may still use `preferred` while the cache fills; from the second
+   run on the route is the `shortest` one, and no permission message appears. [automated in part: the command part in
+   `NavigateCommandGroupRouteModeTest`, the cache in `GroupRouteModeDefaultsTest`]
+3. D types `/navigate <dest> efficient` without `knk.navigate.mode.efficient`. **Expected:** refused with "You don't
+   have permission to use this command." as before; the group default does not grant typed words.
+   [automated: `NavigateCommandGroupRouteModeTest`]
+4. Change Staff's default to `efficient` in the web app (fires `PermissionGroupChanged`). D runs `/navigate <dest>`
+   (once to warm the cache, then again). **Expected:** the `efficient` route. Then give D a second group of higher
+   weight with default `shortest`. **Expected:** `shortest` wins; a higher group with None is skipped.
+   [automated: knk-core `GroupRouteModeResolverTest`, `RouteModeInvalidationHooksTest`]
+5. Remove D from every group with a default (in game or in the web app), then `/navigate <dest>` twice. **Expected:**
+   the `preferred` route again.
+6. Set `navigation.destination-engine: true` in the plugin `config.yml`, restart, and repeat steps 2 to 5.
+   **Expected:** the same results on the engine path. [automated: the engine path in
+   `NavigateCommandGroupRouteModeTest`]
+7. Watch an NPC route (any NPC walk from the NPC movement smoke test) while Staff has a default. **Expected:** NPC
+   routes are unchanged; NPCs never take a group default.
