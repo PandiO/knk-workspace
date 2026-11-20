@@ -1,6 +1,6 @@
 # Production world: structure subtypes and placement (knk-web-api, knk-web-app and knk-plugin)
 
-**Status:** Current · **Last updated:** 2026-11-20 (P-3 not built (#883), #831 fixed in P4, docs #882); 2026-11-19 (P3 pointers: kind foreign key, workers, kind storages; docs #839); 2026-11-19 (first version, production P2 #91/#676/#677, docs PandiO/knk-workspace#830)
+**Status:** Current · **Last updated:** 2026-11-20 (warehouse `Priority` is a tie-break in transport, P5, docs #891); 2026-11-20 (P-3 not built (#883), #831 fixed in P4, docs #882); 2026-11-19 (P3 pointers: kind foreign key, workers, kind storages; docs #839); 2026-11-19 (first version, production P2 #91/#676/#677, docs PandiO/knk-workspace#830)
 **Checked against:** knk-web-api `next` `fcfced27` (PR PandiO/knk-web-api#57), knk-web-app `next` `18385344` (PR
 PandiO/knk-web-app#61), knk-plugin `next` `8ebb30be` (PR PandiO/knk-plugin#96). Not released; the manual steps of the
 [smoke test § 3](../guides/production-storage-transport-smoke-test.md#3-phase-p2-world-rural-structures-warehouse-production-structure-91-api-676-web-app-677-plugin-tier3)
@@ -72,7 +72,7 @@ default; null on update means "keep".
 | Field | Default | Rule |
 |---|---|---|
 | `AcceptsDeliveries` | true | takes deliveries from producers and transport (P5, P9) |
-| `Priority` | 0 | 0–1000; higher first when several warehouses of a town could take a delivery |
+| `Priority` | 0 | 0–1000; in transport (P5) a tie-break only: warehouses with room for the cargo come first, then the shortest route, then the higher priority ([transport architecture § 6.1](production-transport.md#61-the-evaluation)) |
 | `DefaultStorageId` | the storage created with it | must be a storage the warehouse holds; `SET NULL` when that storage is deleted |
 
 Deleting a warehouse resets every production structure that preferred it to `Nearest` (`BeforeDeleteAsync`).
