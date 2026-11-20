@@ -38,7 +38,7 @@ on `next` (Decided 2026-11-17).
 | F2 road goal and route ends (#780 b, #771 items 3–5) | #780, #771 | Merged into next (2026-11-19); waits for the developer's smoke § 13 | knk-plugin `claude/offroad-route-ends-f2` `ebc63265`; knk-workspace `441dd7cc` | [knk-plugin#94](https://github.com/PandiO/knk-plugin/pull/94) → `6311de11`, [#813](https://github.com/PandiO/knk-workspace/pull/813) → `05b8edc3` | green (build, paper-boot) | create_session `session_01R1w2UtLzNFzgycUAEB8mVd` (2026-11-19; resumed once after the usage limit) |
 | F3 smoke-test failures of 2026-11-19 (#780, #771, #710) | #780, #771, #710 | Running (started 2026-11-20 09:09 from plugin `next` `4e296797`) | `claude/offroad-smoke-fixes-f3` | — | — | create_session `session_01R1w2UsZsisbttfNE2dkTV3` (2026-11-20) |
 | F2 road goal and route ends (#780 b, #771 items 3–5) | #780, #771 | Merged into next (2026-11-19); waits for the developer's smoke § 13 | knk-plugin `claude/offroad-route-ends-f2` `ebc63265`; knk-workspace `441dd7cc` | [knk-plugin#94](https://github.com/PandiO/knk-plugin/pull/94) → `6311de11`, [#813](https://github.com/PandiO/knk-workspace/pull/813) → `05b8edc3` | green (build, paper-boot) | create_session `session_01R1w2UtLzNFzgycUAEB8mVd` (2026-11-19; resumed once after the usage limit) |
-| F3 smoke-test failures of 2026-11-19 (#780, #771, #710) | #780, #771, #710 | In review (2026-11-20); waits for the coordinator's merge and the developer's smoke § 14; § 12 step 3a not reproduced (diagnostics added) | knk-plugin `claude/offroad-smoke-fixes-f3` `64b4de3b`; knk-workspace `e7e6d306` | [knk-plugin#100](https://github.com/PandiO/knk-plugin/pull/100), [#851](https://github.com/PandiO/knk-workspace/pull/851) | local build green; PR CI pending | create_session `session_01R1w2UsZsisbttfNE2dkTV3` (2026-11-20) |
+| F3 smoke-test failures of 2026-11-19 (#780, #771, #710) | #780, #771, #710 | In review (2026-11-20); waits for the coordinator's merge and the developer's smoke § 14; § 12 step 3a not reproduced (diagnostics added) | knk-plugin `claude/offroad-smoke-fixes-f3` `64b4de3b`; knk-workspace `e7e6d306` | [knk-plugin#100](https://github.com/PandiO/knk-plugin/pull/100), [#851](https://github.com/PandiO/knk-workspace/pull/851) | green (build, paper-boot, push and PR runs, on `64b4de3b`) | create_session `session_01R1w2UsZsisbttfNE2dkTV3` (2026-11-20) |
 
 ## 3. Coordinator decisions
 
@@ -1282,7 +1282,7 @@ _(Each link appends its block here when it finishes.)_
 6. **Out of scope, noted.**
     1. With the route-end keys off, a live-tag network swap still repeats the turn message (today's behaviour).
     2. The "Keep Stair House" gate door's sheared reference points (warned at every start) may remove a floor from the walk grid. To check with § 14 step 3's INFO line before filing.
-7. **Blockers.** None. Codex: see the PRs.
+7. **Blockers.** None. Codex reached its code-review usage limit on both PRs (its comments of 2026-11-20 09:37 UTC), so the link finished without its review (developer decision 2026-11-14); said on both PRs. CI on `64b4de3b`: build and paper-boot green on the push and PR runs, no re-run.
 8. **At merge / what the developer must do.**
     1. Add `navigation.road-goal-walk-weight: 4.0` under `navigation:` (YAML in the plugin PR).
     2. Live test, about 25 minutes: smoke § 14 steps 1 to 5. Use shipped settings and `max-snap-distance` 48; route-end keys on for steps 1 to 3; player MrBedue with `guidance-v2` on, then off, for steps 4 and 5.
