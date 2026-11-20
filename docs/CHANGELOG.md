@@ -4,6 +4,24 @@ This is a human-readable record of capabilities merged into the V3 default branc
 
 ## Unreleased — on feature branches, not merged
 
+- **Siege weapon unlocks with coins and a minimum title** ([PandiO/knk-workspace#869](https://github.com/PandiO/knk-workspace/issues/869),
+  also [#795](https://github.com/PandiO/knk-workspace/issues/795); link L4 of the siege shop chain, #611). For players,
+  no flag: outside a match, `/menu` → **Siege Minigame** → **Siege unlocks** lists every siege weapon type with its
+  coin price, minimum title and state ("Unlocked", "Unlock for 1000 coins", "Needs title Squire"); an unlockable type
+  asks to confirm, then pays from the player's coins once (a double click charges once), and the type can be bought in
+  siege matches from the next match on. During a running match the menu opens but unlocking is refused. The same list
+  and button are on the player's own account page in the web app (**Siege unlocks** panel). For admins: the siege
+  weapon template form gains **Minimum title to unlock** (optional). knk-web-api: `POST api/SiegeWeaponUnlocks/purchase`
+  (plugin key for a named player, or the signed-in player for themselves; title and coins checked before charging,
+  ledger reason `SIEGE_UNLOCK` with key `siege-unlock:{templateId}:{userId}`, unlock row in the same transaction),
+  `GET api/SiegeWeaponUnlocks/mine` and `by-user/{userId}`, `SiegeWeaponTemplate.UnlockMinTitleLevel` (migration
+  `AddSiegeWeaponUnlockMinTitle`), form seed SiegeWeaponTemplate v2, menu seed `siege.unlocks` and its button in
+  `siege.overview` (added once to databases seeded before). knk-plugin: knk-core `core/siege/unlocks/`,
+  `SiegeWeaponUnlocksApi`; knk-paper `SiegeUnlocksMenuFeature`. knk-web-app: `MySiegeUnlocksSection` on the account
+  page. Branches `claude/siege-shop-l4` in knk-web-api, knk-plugin, knk-web-app and knk-workspace. Admin steps: apply
+  the migration, restart the API once (menu seeds), import the form seed **SiegeWeaponTemplate - Default (seed v2)**
+  and make it the default; no deploy order and no `config.yml` keys. Smoke test:
+  [siege shop smoke test § 4](guides/siege-shop-smoke-test.md#4-phase-4-siege-weapon-unlocks-with-coins-and-title-level-869-tier2).
 - **Siege shop in PvP Siege** ([PandiO/knk-workspace#868](https://github.com/PandiO/knk-workspace/issues/868); link
   L3 of the siege shop chain, #611). For players, with `siege.shop.enabled: true` and `siege.points.enabled: true` in
   the plugin's `config.yml` (both default `false`): during a running match `/siege shop` or the new **Shop** button in
