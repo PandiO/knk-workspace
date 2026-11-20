@@ -450,6 +450,13 @@ the configuration reference § 4.27), then restart. In test order:
     `open-doors`, `ClimbHold` keeps a climber in its column. For the developer's review: H1 decisions 5.1, 5.4, 5.5.
     Filed by H1: #848. G1 (#814) started on F3's `RoadGoalChoice` (`6878d584`); the off-road and destination engine
     (#25) coordinators were told, and G1 reports any `paper/navigation` or `core/roads` hunk before pushing it.
+56. **G1 checked and merged** (2026-11-20). § 6 held: CI `build` and `paper-boot` (67) green on `03b41285`;
+    `npc-road-goal-dead-end` fails with the key off and passes with it on; `RoadGoalChoiceTest` and
+    `NavigationServiceRouteEndsTest` unchanged; `npc.navigation.road-goal-reachable` defaults to `false`; no hunk in
+    the off-road, shape or siege areas; `next` (with L7b step B `c7e36e6e`) merged in cleanly. The keep hall replay
+    passes with the key off too (today's goal already reaches the hall on that snapshot), so it is kept as a regression
+    check, not as proof. Merged knk-plugin#104 → `3da2dffc`, knk-workspace#872 → `659575ab`. For the developer's
+    review: G1 decisions 5.1, 5.2, 5.6. The off-road, siege and destination engine coordinators were told.
 
 ## 4. Link blocks
 
