@@ -678,7 +678,7 @@ promotes `next` lists them here with its tag:
 11. `20261120120805_SeedNavigateDefaultNode` (#845, `/navigate` can be taken away; on its branch
     `claude/navigate-permission-default` until merged): data only; gives the Default group `knk.navigate` unless the
     group or a parent already grants, denies or wildcards it. Down removes nothing. **Apply it before deploying the
-    plugin build with `knk.navigate` as `default: false`**, or every player loses `/navigate` until it is applied. No
+    plugin build with `knk.navigate` as `default: false`** (PandiO/knk-plugin#106), or every player loses `/navigate` until it is applied. No
     `api.env` key ([changelog](../CHANGELOG.md) entry of #845).
 
 Earlier: `v0.2` (`58e3218`, 2026-11-14) added `20261109081203_AddTempRegionReleases` (#269), and `v0.1` (`6d5e9c1`,
