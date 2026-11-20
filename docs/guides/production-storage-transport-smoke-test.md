@@ -17,8 +17,9 @@ still be run by hand; not run. § 5.1 (yield areas API, #138): 17 of 18 steps au
 every step can still be run by hand; not run. § 5.2 (surveys plugin, #679): 7 of 15 steps automated (one through a plugin
 scenario on a real Paper server), 7 partly and 1 manual (tagged); not run. § 5.3 (yield areas web app, #680): 9 of 12 steps automated in CI, 2
 partly (tagged) and 1 by hand; every step can still be run by hand; not run. § 6.1 (transport API, #79): 18 of 20 steps automated in CI
-and 2 partly (tagged); every step can still be run by hand; not run. Other sections not yet automated (the links tag them).
-**Last updated:** 2026-11-20 (§ 6 transport API, link L14, #79; § 6.2 and § 6.3 drafts for L15 and L16); 2026-11-20 (§ 5.2 surveys plugin, link L12, #679); 2026-11-20 (§ 5.3 yield areas web app, link L13, #680); 2026-11-19 (§ 5 yield areas API, link L11, #138; § 5.1 step 18: #831); 2026-11-19 (§ 4.2 production engine web app, link L10, #678); 2026-11-19 (§ 4.1 production engine API, link L9, #86); 2026-11-19 (§ 3 intro, § 3.0, § 3.2 and § 3.3 intros: builds from `next`; § 3.3 precondition 4: `/knk regions repair` needs `knk.admin.regions`, `/knk territory rebuild` `knk.admin.world.territory`; docs #830); 2026-11-19 (§ 3.2 world web app, link L7, #676); 2026-11-19 (§ 3.3 world plugin, link L8, #677); 2026-11-19 (§ 3.1 world API, link L6, #91); 2026-11-19 (§ 2.2 stock web app, link L5, #675); 2026-11-19 (§ 2 stock core API, link L4, #97); 2026-11-19 (§ 1.0 and § 1.3 preconditions: builds from `next` instead of the link branches; guides: [territory admin guide](admin/territory-admin-guide.md), docs #806); 2026-11-19 (§ 1.4 territory web app, link L3, #690); 2026-11-19 (§ 1.3 territory plugin, link L2, #689); 2026-11-19 (§ 1 territory API, link L1, #326); 2026-11-19 (§ 0 item identity, link L0, #141); 2026-11-16 (draft from the design, territory and phases P1-P12)
+and 2 partly (tagged); every step can still be run by hand; not run. § 6.2 (transport lanes plugin, #681): 3 of 14
+steps automated, 10 partly and 1 manual (tagged); not run. Other sections not yet automated (the links tag them).
+**Last updated:** 2026-11-20 (§ 6.2 transport lanes plugin, link L15, #681); 2026-11-20 (§ 6 transport API, link L14, #79; § 6.2 and § 6.3 drafts for L15 and L16); 2026-11-20 (§ 5.2 surveys plugin, link L12, #679); 2026-11-20 (§ 5.3 yield areas web app, link L13, #680); 2026-11-19 (§ 5 yield areas API, link L11, #138; § 5.1 step 18: #831); 2026-11-19 (§ 4.2 production engine web app, link L10, #678); 2026-11-19 (§ 4.1 production engine API, link L9, #86); 2026-11-19 (§ 3 intro, § 3.0, § 3.2 and § 3.3 intros: builds from `next`; § 3.3 precondition 4: `/knk regions repair` needs `knk.admin.regions`, `/knk territory rebuild` `knk.admin.world.territory`; docs #830); 2026-11-19 (§ 3.2 world web app, link L7, #676); 2026-11-19 (§ 3.3 world plugin, link L8, #677); 2026-11-19 (§ 3.1 world API, link L6, #91); 2026-11-19 (§ 2.2 stock web app, link L5, #675); 2026-11-19 (§ 2 stock core API, link L4, #97); 2026-11-19 (§ 1.0 and § 1.3 preconditions: builds from `next` instead of the link branches; guides: [territory admin guide](admin/territory-admin-guide.md), docs #806); 2026-11-19 (§ 1.4 territory web app, link L3, #690); 2026-11-19 (§ 1.3 territory plugin, link L2, #689); 2026-11-19 (§ 1 territory API, link L1, #326); 2026-11-19 (§ 0 item identity, link L0, #141); 2026-11-16 (draft from the design, territory and phases P1-P12)
 **Design:** [specs/production-storage-transport/DESIGN.md](../specs/production-storage-transport/DESIGN.md) (§17
 acceptance A01-A27, §18 links) · [territory](../specs/territory/DESIGN.md) · [shops](../specs/shops/DESIGN.md) ·
 **Issue:** [PandiO/knk-workspace#22](https://github.com/PandiO/knk-workspace/issues/22)
@@ -1451,8 +1452,8 @@ Built so far: link L14, the API (knk-web-api, migration `AddTransportCore`; bran
 (#681); the order list and detail, the manual order form and the dry run in the web app are link L16 (#682). Until then
 § 6.1 runs with a REST client (or Swagger) against the API; lanes are typed in by Staff and the road connection is set
 with `PUT api/ProductionStructures/<id>/road-connection`, as the plugin will. 20 steps in § 6.1: 18 automated in CI
-and 2 partly (tagged); every step can still be run by hand; manual steps not run. § 6.2 (plugin) and § 6.3 (web app)
-are drafts for L15 and L16. Full manual run about 45 minutes (most of it waiting for trips, or `POST
+and 2 partly (tagged); every step can still be run by hand; manual steps not run. § 6.2 (plugin, link L15) is built; § 6.3 (web
+app) is a draft for L16. Full manual run about 45 minutes (most of it waiting for trips, or `POST
 api/TransportOrders/run-now`); the untagged parts of the partly tagged steps about 10 minutes. The tests are in
 knk-web-api `Tests/.../Services/Production/TransportTests.cs`, `TransportLanesAndSettingsTests.cs`,
 `Api/TransportControllersTests.cs`, `Migrations/AddTransportCoreTests.cs` and, with `KNK_TEST_MYSQL`,
@@ -1602,15 +1603,97 @@ that as covering this link too (it builds on L9, whose smoke test is open).
     and `GET api/TransportOrders/<id>`. **Expected:** 403 for each (writes need `knk.admin.world` or the plugin key,
     reads the World area); with the plugin key `GET api/TransportLanes/due` and `POST api/TransportLanes/report` work.
 
-### 6.2 Steps (plugin #681, draft)
+### 6.2 Steps (plugin #681)
 
-*Draft for link L15: the lane measurer reads `GET api/TransportLanes/due`, measures each pair with `AStarRouter` over
-the road snapshot and reports with `POST api/TransportLanes/report`; it sets road connections with `PUT
-api/ProductionStructures/<id>/road-connection`.*
+Built by link L15 (knk-plugin branch `claude/production-p5b`, PR into `next`). Everything runs only with
+`production.enabled: true`; the new keys are `production.logistics.lanes.*` (plugin configuration § 4.31, YAML in the
+changelog). The plugin measures lanes with the road router over the navigation road snapshot (read-only) and sets the
+road connections the API holds automatic transport by (D5). Extra preconditions:
 
-1. Run `/knk logistics lanes measure`. **Expected:** every due pair of § 6.1 step 2 is measured and reported; the
-   reported road distances match the road route between the structures. (A12)
-2. Move Bare quarry's road away. **Expected:** the headless job reports it Unconnected; its transport is held. (A13)
+1. The plugin build from `next` on a test server, connected to the API of § 6.0 with the plugin key
+   (`api.auth.api-key` = the API's `Security:PluginApiKey`). The `production` block merged with its `logistics` keys,
+   with `interval-minutes: 0` (only on the command) and `enabled: false` at first. API `Production:Enabled` on.
+2. The world's road network built and loaded on the server (navigation admin guide; `/knk road reload`), with one
+   connected network that passes within 20 blocks of **Quarry**, **North** and **South**. **Bare quarry** stands more
+   than 48 blocks from any road. Each of the four structures has a Location (the web app's structure form, or `PUT
+   api/ProductionStructures/<id>` / `PUT api/Warehouses/<id>` with a location). Note how far apart they are by road:
+   `/navigate` from Quarry to North shows the road length.
+3. No lanes of these structures yet: delete the three lanes typed in at § 6.1 step 2 (`DELETE api/TransportLanes/<id>`
+   as Staff, ids from `POST api/TransportLanes/search`), so `GET api/TransportLanes/due` lists the five pairs again.
+4. In game: **Staff** with `knk.admin.world.production` (in `knk.admin.*` and `knk.admin.world.*`), and a player
+   **Visitor** without it.
+5. For step 12: `metrics.enabled: true` and its port reachable (performance metrics guide).
+
+Full manual run about 40 minutes; the untagged and partly tagged parts about 20 minutes. The tests are in knk-plugin
+`knk-core/.../production/transport/` (`LaneMeasurerTest` over a built road network, `LaneJobTest` with a fake API,
+`RoadConnectionBookTest`), `knk-api-client/.../TransportLanesApiImplTest`, `knk-paper/.../production/LaneConfigTest`
+and `knk-paper/.../commands/LogisticsAdminCommandTest` (MockBukkit). No plugin scenario: measuring reads only the road
+snapshot and the API, no blocks or entities, so the in-game steps below are the real-server check.
+
+1. [partly automated: knk-plugin `LogisticsAdminCommandTest.offWithoutProductionEnabled`, `LaneConfigTest`; by hand:
+   the log] With `production.enabled: false`, start the server and as Staff type `/knk logistics lanes measure`.
+   **Expected:** "Production is off on this server (production.enabled: false)."; the log has no "Lane measurer is on"
+   line and the API's access log shows no `TransportLanes/due` reads. (A21)
+2. [partly automated: `LaneConfigTest.theValuesAreRead_andClamped`; by hand: the log] Set `production.enabled: true`,
+   restart. **Expected:** the log line `Lane measurer is on (production.enabled): only on /knk logistics lanes measure,
+   100 pairs per run, road connections on.`; no lane is read until the command.
+3. [partly automated: `LaneJobTest.aRun_reportsEveryMeasuredPair_skipsTheUnmeasurable_andSetsTheProducersRoadConnection`,
+   `LogisticsAdminCommandTest.measureRunsNow_reportsTheLanes_andTellsTheSenderTheResult_A13`; by hand: in game] As
+   Staff, `/knk logistics lanes measure`. **Expected:** "Reading the lane list and measuring over the road
+   network...", then within a few seconds a yellow line "Lanes (command by Staff, … s ago): 5 due, 3 reachable, 2
+   without a road, 0 skipped; API created 5, updated 0; road connections sent 2", lines per pair ("#<Quarry> Quarry →
+   #<North> North: <n> blocks by road", "#<Bare quarry> Bare quarry → #<North> North: no road (#<Bare quarry> is more
+   than 48 blocks from a road)"), and "Structure #<Quarry> is now Connected" and "Structure #<Bare quarry> is now
+   Unconnected: its automatic transport is held". North and South get no road connection of their own (warehouses;
+   the API answers 404 and the plugin stops asking). The server log has the same summary under `[Lanes]`. (A12, A13)
+4. [partly automated: `LaneMeasurerTest.aReachableLane_isTheWalkToTheRoad_theRoadRoute_andTheWalkFromIt_withItsEdgesInOrder`,
+   `TransportLanesApiImplTest.report_sendsReachableLanesWithTheirRoadDistance_andUnreachableOnesWithout`; by hand: the
+   API] As Staff, `POST api/TransportLanes/search`. **Expected:** five lanes with `source` Plugin and `measuredAt` now.
+   Quarry → North is `reachable` with a `roadDistance` close to the `/navigate` length of precondition 2 plus the few
+   blocks between each structure's location and the road, never less than its `straightDistance`, and lists its
+   `routeEdgeIds`. Both Bare quarry lanes are not reachable and have no road distance. `GET api/TransportLanes/due` is
+   empty. (A12)
+5. [partly automated: knk-web-api `TransportTests.AManualOrder_MovesSourceToTransitToStop_WithTheLedgerBalancedAtEveryStep_AndTakesRoadLengthOverSpeed`;
+   by hand: the dry run] `POST api/TransportOrders/dry-run` from Quarry's Output to North's delivery storage (§ 6.1 step
+   4). **Expected:** one leg with `distanceSource` Lane, its distance the measured road distance, and its seconds that
+   distance ÷ 4.317; no "no measured lane" warning. (A12)
+6. [partly automated: knk-web-api `TransportTests.AnUnconnectedRuralProducer_HoldsTransport_FillsUp_AndStops_WithBothWarnings`;
+   by hand: the API] `GET api/ProductionStructures/<Bare quarry>/transport`. **Expected:** `roadConnection`
+   Unconnected and the warning "Not connected to its town's road network: automatic transport is held (D5)". Quarry
+   reads Connected and has no such warning. (A13)
+7. [partly automated: `RoadConnectionBookTest.oneReachableLaneConnects_everyLaneUnreachableDisconnects_noLaneIsNotJudged`;
+   by hand: in game] Build a road from the network to within 20 blocks of Bare quarry and let the road network pick it
+   up (`/knk road reload`). Delete Bare quarry's two lanes (`DELETE api/TransportLanes/<id>`), then `/knk logistics
+   lanes measure`. **Expected:** "2 due, 2 reachable, 0 without a road"; "Structure #<Bare quarry> is now Connected";
+   its transport view no longer warns, and the next transport sweep may plan its automatic order (§ 6.1 step 10).
+   (A13, D5)
+8. [automated: `LaneJobTest.anUnchangedConnection_isNotSentAgain_andAWarehouseIsAskedOnlyOnce`, `LaneJobTest.oneRunAtATime_aSecondCallGetsTheRunningOne`]
+   Type `/knk logistics lanes measure` twice quickly. **Expected:** the second answers "A lane run is already going;
+   you'll hear its result."; with nothing due: "0 due …" and "Nothing due: every lane is measured and fresh (or the
+   API's production flag is off)."; no road connection is sent again.
+9. [automated: `LogisticsAdminCommandTest.statusBeforeAnyRun_andTheUsageAndCompletion`, `LogisticsAdminCommandTest.measureRunsNow_reportsTheLanes_andTellsTheSenderTheResult_A13`]
+   `/knk logistics lanes status`. **Expected:** "Lane measurer: only on /knk logistics lanes measure, 100 pairs per run;
+   lanes known since start: 5" and the last run's summary. Tab completion offers `lanes`, then `measure` and `status`.
+10. [partly automated: `LaneConfigTest`; by hand: the log, about 5 minutes] Set `interval-minutes: 1` and restart.
+    Delete Quarry → South's lane. **Expected:** about two minutes after start, and then every minute, the log has
+    `[Lanes] Run (schedule): …`; the first scheduled run measures and reports Quarry → South again ("1 due, 1
+    reachable"). Set it back to 60.
+11. [automated: `LaneMeasurerTest.noPosition_orNoRoadNetworkLoaded_isSkipped_neverReportedAsNoRoad`,
+    `LaneMeasurerTest.differentWorlds_areUnreachable_withoutAStraightDistance`, `LaneMeasurerTest.roadsThatDoNotJoin_areUnreachable`]
+    Optional by hand: a structure without a Location, or in a world without a road network, is skipped ("skipped, #<id>
+    has no location" / "no road network loaded for world …"), stays due and keeps its road connection; a warehouse in
+    another world is a lane without a road.
+12. [manual] With `metrics.enabled: true`, run step 3's measure again after deleting the lanes. **Expected:** the
+    metrics have `knk_task_duration_seconds` for `task="production.lanes.measure"`; the server's tick time does not
+    move (measuring runs on the `KnK-lanes` thread; the main thread only starts the run and prints the answer).
+13. [partly automated: `LogisticsAdminCommandTest.metadataGatesOnTheProductionNode`; by hand: in game] As Visitor,
+    `/knk logistics lanes measure`. **Expected:** refused for lack of permission; nothing is read or sent.
+14. [partly automated: knk-plugin `SurveyCounterTest.anOverlapSharesOnlyTheUnitTypesItsStructureCounts_875`,
+    `ProductionSurveyApiImplTest.surveyDue_readsEachOverlapsUnitTypes_fromUnitTypesOrItsProfile_875`; by hand once
+    the API sends the overlaps' unit types (#875)] With § 5.2's **Farm** area overlapping **North logger**'s radius,
+    `/knk production survey <Farm>`. **Expected:** the farm's crops inside the logger's radius are reported with
+    `sharedBy` 1 (the logger counts no crops); trees inside it would be `sharedBy` 2. Before the API sends the unit
+    types, the crops read `sharedBy` 2 as in § 5.2.
 
 ### 6.3 Steps (web app #682, draft)
 

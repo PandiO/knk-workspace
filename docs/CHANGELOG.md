@@ -22,6 +22,33 @@ This is a human-readable record of capabilities merged into the V3 default branc
   knk-plugin, knk-web-api and knk-workspace. Admin steps: apply the migration; set `siege:` → `points:` →
   `enabled: true` to turn it on (Restart). The web app's siege settings page does not show the new fields yet
   (edit them with `PUT api/SiegeConfiguration`; web app fields: #878). Smoke test: [siege shop smoke test § 1](guides/siege-shop-smoke-test.md#1-phase-1-shared-match-ledger-and-siege-points-earning-866-tier3).
+- **Production P5b: transport lanes in the plugin** ([PandiO/knk-workspace#681](https://github.com/PandiO/knk-workspace/issues/681),
+  link L15 of the production chain, #22; the API half is #79). For staff: with `production.enabled: true` the game
+  server measures the road route between every producer and the warehouses of its town (and between a town's
+  warehouses) over its road network, every hour and on `/knk logistics lanes measure`, and reports each lane's road
+  length to the API, which uses it for the trip time of transport orders (A12). A producer with no road within 48
+  blocks of its location, or on roads that do not join its town's, is set `Unconnected` and its automatic transport is
+  held (A13, D5); a reachable lane sets it `Connected`. `/knk logistics lanes status` shows the last run. Node
+  `knk.admin.world.production`. Measuring runs on its own thread (metric `production.lanes.measure`); the road router
+  and snapshot are used read-only. Also: a survey's shared split counts an overlapping area only when its structure
+  counts the unit's type, once the API sends the overlaps' unit types (#875; until then as before). knk-plugin: knk-core
+  `production/transport/` (`LaneMeasurer`, `LaneJob`, `RoadConnectionBook`), port `TransportLanesApi`, knk-api-client
+  `TransportLanesApiImpl`, knk-paper `production/LaneModule`, `LaneConfig` and `commands/LogisticsAdminCommand`.
+  Branch `claude/production-p5b`. Smoke test: [production smoke test § 6.2](guides/production-storage-transport-smoke-test.md#62-steps-plugin-681).
+  Admin steps: merge the `logistics` keys into the plugin's `production` block (nothing runs while `production.enabled`
+  is false), restart; the road network must be built (navigation); grant `knk.admin.world.production` to staff who
+  measure:
+
+  ```yaml
+  production:
+    logistics:
+      lanes:
+        interval-minutes: 60
+        batch: 100
+        max-snap-distance: 48
+        road-connections: true
+  ```
+
 - **Production P4b: yield-area surveys in the plugin** ([PandiO/knk-workspace#679](https://github.com/PandiO/knk-workspace/issues/679),
   link L12 of the production chain, #22; the API half is #138). For staff: with `production.enabled: true` the game
   server surveys every `Derived` and `Hybrid` production area the API queues (on creation, once a day while its chunks
