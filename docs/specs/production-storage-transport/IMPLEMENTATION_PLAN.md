@@ -285,7 +285,7 @@ protected from breaking, explosions and hoppers; the structures overview with th
 lookup, the structure menu and the orders list with the staff buttons (survey now, dry run, area outline, cancel and
 retry). Not built: opening the structure menu from a worker NPC (production structures have no worker NPC entity yet),
 unique items in terminals in game, notifications and Bukkit events (`ProductionCycleEvent`,
-`TransportOrderStatusEvent`), `/knk transport` and watch on/off (issues filed by L18).
+`TransportOrderStatusEvent`), `/knk transport` and watch on/off ([#897](https://github.com/PandiO/knk-workspace/issues/897)).
 
 All **V1**; Backed mode is Later ([#113](https://github.com/PandiO/knk-workspace/issues/113)).
 
