@@ -20,8 +20,8 @@ developer's instruction of 2026-11-20; its own report is [2026-11-19-siege-weapo
 
 | Link | Issue | Status | Branch heads | PR | CI | How started |
 |---|---|---|---|---|---|---|
-| L1 Shared ledger, siege points earning | #866 | In review (CI green, Codex at usage limit) | `claude/siege-shop-l1`: knk-plugin `b6fa74ec`, knk-web-api `4da6780`, knk-workspace `8a215193` | [knk-plugin#107](https://github.com/PandiO/knk-plugin/pull/107), [knk-web-api#64](https://github.com/PandiO/knk-web-api/pull/64), [knk-workspace#879](https://github.com/PandiO/knk-workspace/pull/879) | green (plugin build + paper-boot; API build-and-test, mysql-tests, fresh-database) | subagent of the coordinator (two component repos), started 2026-11-20 |
-| L2 Shop catalogue (API, web app) | #867 | Not started (gate: L1 merged, shares knk-web-api) | — | — | — | — |
+| L1 Shared ledger, siege points earning | #866 | Merged into `next` 2026-11-20 (knk-web-api `9a3132dc`, knk-plugin `91e3ddb8`, knk-workspace `1e38c7ec`) | `claude/siege-shop-l1`: knk-plugin `b6fa74ec`, knk-web-api `4da6780`, knk-workspace `8a215193` | [knk-plugin#107](https://github.com/PandiO/knk-plugin/pull/107), [knk-web-api#64](https://github.com/PandiO/knk-web-api/pull/64), [knk-workspace#879](https://github.com/PandiO/knk-workspace/pull/879) | green (plugin build + paper-boot; API build-and-test, mysql-tests, fresh-database) | subagent of the coordinator (two component repos), started 2026-11-20 |
+| L2 Shop catalogue (API, web app) | #867 | Running (also takes #878, siege settings page earn fields) | `claude/siege-shop-l2` | — | — | subagent of the coordinator (two component repos), started 2026-11-20 |
 | L3 Shop in the plugin | #868 | Not started (gate: L1, L2 merged) | — | — | — | — |
 | L4 Weapon unlocks | #869 | Not started (gate: L2, L3, L5 merged) | — | — | — | — |
 | L5 Menu item settings (API, web app) | #870 | Not started (gate: L2 merged) | — | — | — | — |
@@ -56,6 +56,7 @@ developer's instruction of 2026-11-20; its own report is [2026-11-19-siege-weapo
    (whoever merges second regenerates); the Production coordinator is told. Siege Survival (#41) is unmerged with no
    link running: L1 copies `MatchLedger` with the same public API (P11) and comments on #41 at merge. Alternatives:
    wait for Production's links, rejected (mechanical conflicts only).
+7. 2026-11-20: L1 merged into `next` after the § 6 checks (heads matched, 0 behind `next`, migration `20261120131558_AddSiegePointsEarning` on top of `AddTransportCore`, CI green, Codex at its usage limit). L2 #867 started as a subagent; #878 (siege settings page earn fields) rides along in L2 because both touch knk-web-app. Production told about the migration.
 
 ## 4. Link blocks
 
