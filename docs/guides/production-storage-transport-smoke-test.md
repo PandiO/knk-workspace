@@ -14,8 +14,9 @@ web app, #676): 8 of 12 steps automated in CI and 4 partly (tagged); every step 
 engine API, #86): 16 of 18 steps automated in CI and 2 partly (tagged); every step can still be run by hand; not
 run. § 4.2 (production engine web app, #678): 13 of 16 steps automated in CI and 3 partly (tagged); every step can
 still be run by hand; not run. § 5.1 (yield areas API, #138): 17 of 18 steps automated in CI and 1 partly (tagged);
-every step can still be run by hand; not run. Other sections not yet automated (the links tag them).
-**Last updated:** 2026-11-19 (§ 5 yield areas API, link L11, #138; § 5.1 step 18: #831); 2026-11-19 (§ 4.2 production engine web app, link L10, #678); 2026-11-19 (§ 4.1 production engine API, link L9, #86); 2026-11-19 (§ 3 intro, § 3.0, § 3.2 and § 3.3 intros: builds from `next`; § 3.3 precondition 4: `/knk regions repair` needs `knk.admin.regions`, `/knk territory rebuild` `knk.admin.world.territory`; docs #830); 2026-11-19 (§ 3.2 world web app, link L7, #676); 2026-11-19 (§ 3.3 world plugin, link L8, #677); 2026-11-19 (§ 3.1 world API, link L6, #91); 2026-11-19 (§ 2.2 stock web app, link L5, #675); 2026-11-19 (§ 2 stock core API, link L4, #97); 2026-11-19 (§ 1.0 and § 1.3 preconditions: builds from `next` instead of the link branches; guides: [territory admin guide](admin/territory-admin-guide.md), docs #806); 2026-11-19 (§ 1.4 territory web app, link L3, #690); 2026-11-19 (§ 1.3 territory plugin, link L2, #689); 2026-11-19 (§ 1 territory API, link L1, #326); 2026-11-19 (§ 0 item identity, link L0, #141); 2026-11-16 (draft from the design, territory and phases P1-P12)
+every step can still be run by hand; not run. § 5.2 (surveys plugin, #679): 7 of 15 steps automated (one through a plugin
+scenario on a real Paper server), 7 partly and 1 manual (tagged); not run. Other sections not yet automated (the links tag them).
+**Last updated:** 2026-11-20 (§ 5.2 surveys plugin, link L12, #679); 2026-11-19 (§ 5 yield areas API, link L11, #138; § 5.1 step 18: #831); 2026-11-19 (§ 4.2 production engine web app, link L10, #678); 2026-11-19 (§ 4.1 production engine API, link L9, #86); 2026-11-19 (§ 3 intro, § 3.0, § 3.2 and § 3.3 intros: builds from `next`; § 3.3 precondition 4: `/knk regions repair` needs `knk.admin.regions`, `/knk territory rebuild` `knk.admin.world.territory`; docs #830); 2026-11-19 (§ 3.2 world web app, link L7, #676); 2026-11-19 (§ 3.3 world plugin, link L8, #677); 2026-11-19 (§ 3.1 world API, link L6, #91); 2026-11-19 (§ 2.2 stock web app, link L5, #675); 2026-11-19 (§ 2 stock core API, link L4, #97); 2026-11-19 (§ 1.0 and § 1.3 preconditions: builds from `next` instead of the link branches; guides: [territory admin guide](admin/territory-admin-guide.md), docs #806); 2026-11-19 (§ 1.4 territory web app, link L3, #690); 2026-11-19 (§ 1.3 territory plugin, link L2, #689); 2026-11-19 (§ 1 territory API, link L1, #326); 2026-11-19 (§ 0 item identity, link L0, #141); 2026-11-16 (draft from the design, territory and phases P1-P12)
 **Design:** [specs/production-storage-transport/DESIGN.md](../specs/production-storage-transport/DESIGN.md) (§17
 acceptance A01-A27, §18 links) · [territory](../specs/territory/DESIGN.md) · [shops](../specs/shops/DESIGN.md) ·
 **Issue:** [PandiO/knk-workspace#22](https://github.com/PandiO/knk-workspace/issues/22)
@@ -1143,7 +1144,8 @@ run by hand; not run. Full manual run about 45 minutes; the untagged parts about
 ## 5. Phase P4: yield areas and surveys (#138 API, #679 plugin, #680 web app; tier:3)
 
 Built so far: link L11, the API (knk-web-api, migration `AddProductionYieldAreas`; branch `claude/production-p4`, PR into
-`next`). The survey runner, `/knk production survey|area show` and the `CaptureRadius` world task are link L12 (#679);
+`next`). The survey runner, `/knk production survey|area show` and the `CaptureRadius` world task are link L12 (#679,
+§ 5.2);
 the area capture, survey viewer and Hybrid override editor are link L13 (#680). Until then § 5.1 runs with a REST client
 (or Swagger) against the API, the plugin's part played by `POST api/ProductionAreas/<id>/surveys` with the plugin key.
 18 steps in § 5.1: 17 automated in CI and 1 partly (tagged); every step can still be run by hand; manual steps not run.
@@ -1273,20 +1275,99 @@ builds on L9, whose smoke test is open).
     structure and its `placementWarnings` (it was 204); with `"level": 42` the 400 body is `{ "error": "level must be 1
     to 10." }` without " (Parameter 'dto')"; a rural plain structure can be made from the Structure form v3.
 
-### 5.2 Steps (plugin #679, draft)
+### 5.2 Steps (plugin #679)
 
-*Draft for link L12; it updates these steps to what it builds and tags the automated ones.*
+Built by link L12 (knk-plugin branch `claude/production-p4b`, PR into `next`). Everything runs only with
+`production.enabled: true`; the new keys are `production.surveys.*` (plugin configuration § 4.31, YAML in the
+changelog). Extra preconditions:
 
-1. Create a logger with a captured radius area (the `CaptureRadius` world task). **Expected:** a survey runs on
-   creation; the survey lists trees by species and size; the production lines come from the survey. (A10)
-2. As Staff, run `/knk production survey <logger>`. **Expected:** a new survey row. (A10)
-3. Leave the server running over the daily survey time with the logger's chunks loaded. **Expected:** one scheduled
-   survey that day. (A10)
-4. Cut down a large part of the forest. **Expected:** a resurvey after the notable-change threshold; lower rates. (A10)
-5. Check a tree inside both loggers' areas. **Expected:** the survey reports it with `sharedBy` 2; each logger counts
-   half of it. (A11)
-6. `/knk production area show <logger>`. **Expected:** the outline is drawn with particles.
-7. Watch the tick metrics during a survey. **Expected:** no main-thread spike from block reads.
+1. The plugin build from `next` on a test server with WorldGuard, connected to the API of 5.0 with the plugin key
+   (`api.auth.api-key` = the API's `Security:PluginApiKey`). The `production` block merged with its `surveys` keys;
+   `enabled: false` at first. API `Production:Enabled` on.
+2. In the world, near spawn, made by hand: a small forest (at least five oak and two birch trees of different sizes, a
+   few saplings), a 20 × 20 stone pit with some coal and iron ore, a wheat and carrot field on farmland, a pond of at
+   least 50 water blocks, a fenced pasture with four sheep and two cows.
+3. Through the API (§ 5.1, until the web app link L13): production structures **North logger** (Logger, Hybrid) with a
+   `Radius` area of 24 around the forest's centre, **South logger** (Logger, Hybrid) whose `Radius` area overlaps the
+   forest's east half, **Pit** (Quarry, Hybrid) with a `Cuboid` area over the stone pit, **Farm**, **Pond** (Fishery)
+   and **Pasture** (Animal farm), each Hybrid with an area over its part, and the § 4 **Quarry** (Configured). Note
+   their ids and their areas' ids.
+4. In game: **Staff** with `knk.admin.world` and `knk.admin.world.production` (both in `knk.admin.*`); a WorldTask code
+   flow as for other world tasks (`/knk task <code>`).
+5. For step 13: `metrics.enabled: true` and its port reachable (performance metrics guide).
+
+Full manual run about 60 minutes; the untagged and partly tagged parts about 30 minutes. The tests are in knk-plugin
+`knk-core/.../production/survey/` (`SurveyCounterTest`, `SurveyAreasTest`, `CaptureRadiusTest`),
+`knk-api-client/.../ProductionSurveyApiImplTest`, `knk-paper/.../production/` (`SurveyRunnerTest`, `SurveyConfigTest`),
+`knk-paper/.../commands/ProductionAdminCommandTest` and the plugin scenario `production-area-survey` (a real Paper
+server, CI job `paper-boot`).
+
+1. [partly automated: knk-plugin `ProductionAdminCommandTest.offWithoutProductionEnabled`, `SurveyConfigTest`; by hand:
+   the log] With `production.enabled: false`, start the server and as Staff type `/knk production survey <North
+   logger>`. **Expected:** "Production is off on this server (production.enabled: false)."; the log has no
+   "Yield-area surveys are on" line and the API's access log shows no `survey-due` reads. (A21)
+2. [partly automated: `SurveyConfigTest.theValuesAreRead`; by hand: the log] Set `production.enabled: true`, restart.
+   **Expected:** the log line `Yield-area surveys are on (production.enabled): queue every 5 min, 2 chunks per tick,
+   notable change after 64 blocks.`; about 30 s after start the plugin reads `GET api/ProductionAreas/survey-due`.
+3. [partly automated: `CaptureRadiusTest`; by hand: the task in game] Create a world task of type `CaptureRadius` for
+   a new Logger area (from the web app once L13 is in, or `POST api/WorldTasks` with `taskType` `CaptureRadius`), claim
+   it with `/knk task <code>`, stand at the forest's centre and type `radius 24` in chat. **Expected:** green particles
+   draw the circle around you; typing `radius 999` is refused ("The radius must be 1 to 256 blocks."); `center` after a
+   few steps moves the circle; `confirm` completes the task with `shape` `Radius`, `worldName`, `centerX/Y/Z` and
+   `radius` 24 in its output (the web app form or `GET api/WorldTasks/<id>`). `cancel` hands the task back.
+4. [partly automated: plugin scenario `production-area-survey` (real blocks, snapshots on the main thread, counting on
+   its own thread), `SurveyRunnerTest.aSurveyCapturesWithinTheTickBudget_countsAndReports`; by hand: the API's rows]
+   After creating the areas of precondition 3, wait up to `poll-minutes` (or type `/knk production survey status`).
+   **Expected:** each Hybrid area is surveyed once (trigger `Creation`): `GET api/AreaSurveys` lists one survey per area
+   with `contentHash`, a note `plugin survey: blocks …, trees …` and units such as `TREE:OAK:MEDIUM`, `TREE:BIRCH:SMALL`,
+   `SAPLING:OAK` (loggers), `BLOCK:STONE`, `BLOCK:COAL_ORE`, `BLOCK:IRON_ORE` (Pit), `CROP:WHEAT`, `CROP:CARROTS`
+   (Farm), `WATER:<biome>` with extra `columns`, `avgDepth` and `openSkyShare` (Pond) and `ENTITY:SHEEP` 4,
+   `ENTITY:COW` 2 (Pasture). The structures' yield (`GET api/ProductionStructures/<id>/yield`) explains its lines from
+   these units once their kinds have yield table rows. (A10)
+5. [automated: `ProductionAdminCommandTest.surveyAsksTheApiForTheStructure_andStatusShowsTheQueue`,
+   `ProductionSurveyApiImplTest.requestSurveyAndAreas_useTheirRoutes`; by hand: the replies in chat] As Staff type
+   `/knk production survey <North logger>`. **Expected:** "Asking the API to survey structure #<id>...", then "Queued 1
+   area(s); you will hear each result here." and within a few seconds a green "Survey #<area> … of structure #<id> North
+   logger: N rows, M units (…); survey #<n>, lines +a ~b". A new survey row with trigger `Admin`. (A10)
+6. [partly automated: `ProductionSurveyApiImplTest.report_refusedWhileTheApiFlagIsOff_failsWith409`; the API side in
+   § 5.1; by hand: the reply] Type `/knk production survey <Quarry>` (Configured). **Expected:** "Survey not requested:
+   API 409: …Configured…"; no survey row for the Quarry, ever. (A10, G5)
+7. [automated: `SurveyRunnerTest.aScheduledSurveyWaitsForLoadedChunks_aRequestedOneLoadsThem`,
+   `SurveyRunnerTest.scheduledLoadsChunksLetsTheDailySurveyLoadThem_andUngeneratedChunksAreLeftOut`] Let a day pass
+   (or set an area's last survey back by more than 24 h in the database) while nobody is near the Pit, then type
+   `/knk production survey status`. **Expected:** the Pit's line says "skipped, N of N chunks not loaded (a Scheduled
+   survey waits for loaded chunks; production.surveys.scheduled-loads-chunks)"; walk to the Pit and wait for the next
+   queue read: one survey with trigger `Scheduled` that day. With `scheduled-loads-chunks: true` it is surveyed
+   without anyone there. (A10, P-D2)
+8. [partly automated: `SurveyAreasTest.notableChangesFireAtTheThresholdOncePerCooldown`,
+   `SurveyRunnerTest.afterANotableChangeTheReportSaysSo_andOverlapsSplitTheUnits`; by hand: the survey row] Break 64
+   stone blocks inside the Pit's area. **Expected:** within seconds a survey with trigger `NotableChange` and 64 fewer
+   `BLOCK:STONE`; breaking 64 more within 30 minutes (`notable-cooldown-minutes`) asks for no further survey. (A10)
+9. [automated: `SurveyCounterTest.sharedUnitsAreReportedPerSharedByCountingDistinctOtherStructures`, plugin scenario
+   `production-area-survey` (a tree inside another structure's radius)] Survey North logger (`/knk production survey`).
+   **Expected:** trees in the east half (inside South logger's area too) are reported in rows with `sharedBy` 2, the
+   others with `sharedBy` 1; the API's yield explanation shows a share of 0.5 for the former. (A11, G7)
+10. [automated: `SurveyCounterTest.treesAreLogClustersWithLeavesBySpeciesAndSize`,
+    `…mixedTreesGoToTheMajoritySpeciesAndDiagonalBranchesJoin`, `…aLogClusterOverMaxLogsIsABuilding`,
+    `…strippedLogsAndSaplings`] Build a log cabin (more than 400 logs, no leaves) and a three-log fence post in North
+    logger's area, then survey it. **Expected:** neither counts as a tree; the note says "log buildings skipped 1"
+    when the cabin's logs touch leaves, otherwise nothing. (PRODUCTION_KINDS § 8.2)
+11. [automated: `SurveyRunnerTest.anAreaOverTheCapIsSkipped`, `SurveyAreasTest.settingsRefuseAreasOverTheCaps`]
+    Set `production.surveys.max-area-chunks: 4`, restart and survey North logger. **Expected:** "skipped, the area spans
+    N chunks (production.surveys.max-area-chunks 4)"; no survey row. Set it back.
+12. [partly automated: `ProductionAdminCommandTest.wrongArgumentsGetTheUsage_andAShowDrawsTheStructuresAreas`; by
+    hand: the particles] Type `/knk production area show <Pit>` and `/knk production area show <North logger> 0 10`.
+    **Expected:** the chat lists each area (shape, exclusive or shared, bounds); orange particles outline the Pit and
+    green ones the logger's circle at your feet height for 30 s (10 s for the second), seen only by you.
+13. [manual] With metrics on, survey all areas at once (`/knk production survey <id>` for each) and watch
+    `knk_task_duration_seconds{task="production.survey.capture"}` and the TPS. **Expected:** no main-thread spike from
+    block reads: the capture task stays in the low milliseconds per tick (two chunk snapshots); counting runs on the
+    `KnK-survey` thread.
+14. [automated: `SurveyCounterTest.placeholdersCountAsTheirOriginal`; by hand once P8 (#134) is in] Harvest ore in the
+    Pit (regenerating placeholders) and survey it. **Expected:** the survey counts the ore that waits to regenerate as
+    present (no drop in `BLOCK:COAL_ORE`). Before P8 there are no placeholders; only the automated part applies.
+15. [automated: `SurveyCounterTest.theSameWorldGivesTheSameHash`] Survey the Pit twice without changing it.
+    **Expected:** both surveys have the same `contentHash`.
 
 ### 5.3 Steps (web app #680, draft)
 
