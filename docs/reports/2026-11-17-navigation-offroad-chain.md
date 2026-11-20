@@ -38,6 +38,7 @@ on `next` (Decided 2026-11-17).
 | F2 road goal and route ends (#780 b, #771 items 3–5) | #780, #771 | Merged into next (2026-11-19); waits for the developer's smoke § 13 | knk-plugin `claude/offroad-route-ends-f2` `ebc63265`; knk-workspace `441dd7cc` | [knk-plugin#94](https://github.com/PandiO/knk-plugin/pull/94) → `6311de11`, [#813](https://github.com/PandiO/knk-workspace/pull/813) → `05b8edc3` | green (build, paper-boot) | create_session `session_01R1w2UtLzNFzgycUAEB8mVd` (2026-11-19; resumed once after the usage limit) |
 | F3 smoke-test failures of 2026-11-19 (#780, #771, #710) | #780, #771, #710 | Running (started 2026-11-20 09:09 from plugin `next` `4e296797`) | `claude/offroad-smoke-fixes-f3` | — | — | create_session `session_01R1w2UsZsisbttfNE2dkTV3` (2026-11-20) |
 | F2 road goal and route ends (#780 b, #771 items 3–5) | #780, #771 | Merged into next (2026-11-19); waits for the developer's smoke § 13 | knk-plugin `claude/offroad-route-ends-f2` `ebc63265`; knk-workspace `441dd7cc` | [knk-plugin#94](https://github.com/PandiO/knk-plugin/pull/94) → `6311de11`, [#813](https://github.com/PandiO/knk-workspace/pull/813) → `05b8edc3` | green (build, paper-boot) | create_session `session_01R1w2UtLzNFzgycUAEB8mVd` (2026-11-19; resumed once after the usage limit) |
+| F3 smoke-test failures of 2026-11-19 (#780, #771, #710) | #780, #771, #710 | In review (2026-11-20); waits for the coordinator's merge and the developer's smoke § 14; § 12 step 3a not reproduced (diagnostics added) | knk-plugin `claude/offroad-smoke-fixes-f3` `64b4de3b`; knk-workspace `e7e6d306` | [knk-plugin#100](https://github.com/PandiO/knk-plugin/pull/100), [#851](https://github.com/PandiO/knk-workspace/pull/851) | local build green; PR CI pending | create_session `session_01R1w2UsZsisbttfNE2dkTV3` (2026-11-20) |
 
 ## 3. Coordinator decisions
 
@@ -1223,3 +1224,68 @@ _(Each link appends its block here when it finishes.)_
     1. The engine chain's removal of the raw entry (#747) is not affected: F2 uses `begin` and `onNetworkChanged` only.
     2. NPC long walks (#698's NPC phase) could reuse `RoadGoalChoice.candidates`/`best` for an NPC's road goal; that is the NPC chain's call.
 
+
+### 4.13 F3 — smoke-test failures of 2026-11-19 (#780, #771, #710)
+
+1. **Scope done.** The four failures of the developer's live runs of 2026-11-19 (smoke § 8, § 12, § 13), tier:2, no migration.
+    1. **Road goal too early (#780, #771 items 4 and 5), behind `road-goal-reachable`.**
+        1. Reproduced on `keep-tower.zip`: with F2's rule (least road + walk) the tower roof's goal is the garrison exit (edge 2000000003 at 1399 80 -532, 198 walked; live 202), and the watchtower's goal stays under the watchtower. The snapshot routes the long way through the Keep Upper Stairhouse and the Keep Garrison, as the live route did.
+        2. New key `navigation.road-goal-walk-weight` (4.0, 1..100): the score is road + weight × walk (`RoadGoalChoice.best(options, walkWeight)`, `Option.score`).
+        3. New candidates: `RoadGoalChoice.candidatesAlongRoad`. These are the per-edge points plus the network nodes reached from today's goal's edge ends, breadth first, without leaving `max-snap-distance`. Nearest first, today's first, at most `road-goal-candidates`. Node #74 is now a candidate.
+        4. Result on the snapshot, tower roof: the road goes into the Keep Gate (1421 84 -521), 161 walked. That is the least walk of the 9 candidates (node #74: 168).
+        5. Result on the snapshot, watchtower: the goal moves to 1417 81 -546, 86 walked instead of 124.
+        6. One INFO line per choice lists every candidate with its road, walk and score, and marks the chosen one.
+        7. `candidates` and `best(options)` are unchanged (for the NPC chain's G1, #814).
+    2. **First turn said 4× (#780), behind either route-end key.**
+        1. Cause: `routeAdopted` reset the announced maneuvers on every adoption, including the silent NETWORK_CHANGED ones (the goal choice, live-tag swaps).
+        2. Fix: `Active.spokenManeuvers` survives silent replacements while a key is on. A maneuver with the same text within 2 blocks is not said again.
+        3. With the keys off, a swap still repeats the turn, as today (pinned).
+    3. **0 expansions from the watchtower roof (#771, § 12 step 3a): not reproduced.**
+        1. On the merged snapshots (`keep-tower` blocks over `quarry-to-keep-stairhouse`'s), every roof floor cell reaches every road point within 60 blocks (pinned). This includes the cells with a snow layer.
+        2. 0 expansions means the start or target cell check failed. A new INFO line names which, with both positions.
+        3. Suspect for the repeat run: the sheared "Keep Stair House" gate door (ID 2) on the road the start leg aims at, 45 blocks away.
+    4. **Open door not crossed (#710, § 8), unflagged (it only makes a valid route work).**
+        1. Not `guidance-v2`: both flags cross the door on the snapshot from every point along the way, with the real leg boxes.
+        2. Cause: `WalkAccessFactory` asked WorldGuard's door check for every door block, open ones too. The § 8 run's player (MrBedue) may not use the keep's doors. With the door denied, the snapshot gives the live picture (NO_PATH, partial trail to the door) with either flag.
+        3. Fix: `WalkChunk.openDoorBlocks` and `WalkCapture.openDoorBlocks` (additions) record the open state. The player's door check is asked for closed doors only.
+        4. NPC subjects keep their own door answer, unchanged.
+    5. Kept stable (additions only): `WalkLegPreparer`, `WalkSearch`/`WalkPathfinder`, `MovementProfile`, `RoadGoalChoice`, the shape package, `RoadPlanner`'s port. No `core/npc`, `paper/npc`, destinations, production or siege file was touched.
+2. **Commits and heads.**
+    1. knk-plugin `claude/offroad-smoke-fixes-f3` at `64b4de3b` (3 commits, base `next` `4e296797`).
+    2. knk-workspace `claude/offroad-smoke-fixes-f3` at `e7e6d306` (1 commit, base `next` `e50b423f`).
+3. **PRs.** [PandiO/knk-plugin#100](https://github.com/PandiO/knk-plugin/pull/100) and [PandiO/knk-workspace#851](https://github.com/PandiO/knk-workspace/pull/851), base `next`, `Part of` #780, #771, #710. Not merged.
+4. **Tests, baseline → result.**
+    1. knk-plugin `./gradlew build -x deployToDevServer`, baseline on `next` `4e296797`:
+        1. knk-core 3541 → 3544 (+3).
+        2. knk-paper 3229 → 3240 (+11, 18 skipped as before).
+        3. knk-api-client 366 → 366.
+        4. 0 failures; no known reds.
+    2. New tests:
+        1. knk-core `RoadGoalChoiceTest` +3.
+        2. knk-paper `NavigationServiceRouteEndsTest` +9 (test fixture `DevWorldSnapshot.merged`).
+        3. knk-paper `WalkAccessFactoryTest` +2 (`WalkCaptureTest.FakeWorld` gains open block states).
+    3. Unchanged and green: L7's golden transcripts, the flag-off identity tests, F1/F2's tests, the engine's handle tests, the NPC tests. No golden changed.
+5. **Decisions (DESIGN § 4.3).**
+    1. *Walk over road.* Chosen: road + k × walk, k a key, default 4. Alternatives:
+        1. (a) Least walk, near-ties broken by the longer road: on the snapshot it picks the dead-end node 34 for the watchtower, an overshoot like #771 item 4.
+        2. (b) Least walk only: any long road detour would win.
+    2. *k = 4.* Chosen because it is the smallest round weight that turns both live failures on the snapshot, with a margin. The tower roof is 1088 against 1107 for the next candidate. Alternatives:
+        1. (a) 2: the garrison exit still loses only narrowly.
+        2. (b) 10: a few blocks of walk would justify long road detours.
+    3. *Onward candidates.* Chosen: network nodes reached from today's goal's edge ends without leaving `max-snap-distance`, merged with the per-edge points nearest first. Alternative: (a) only the next node past today's goal along the route: needs the route's direction, and misses the Keep Gate's split points.
+    4. *Tower roof end point.* Chosen: assert the road into the Keep Gate (x ≥ 1413, z ≥ -523) with the least walk, rather than node #74 itself. From node #74 the walk is 7 blocks longer, and #771 item 4 had asked for no overshoot past the walk's start. Alternative: (a) force node #74: contradicts the "start walking as late as useful" rule by the numbers.
+    5. *Repeated turn.* Chosen: remember the maneuvers said and skip the same text at the same node, behind the route-end keys. Alternative: (a) keep the counter across NETWORK_CHANGED: a replacement's maneuver list may shift indexes.
+    6. *Open doors.* Chosen: the capture records the open state and only the player path skips the check. Alternatives:
+        1. (a) Skip for every subject: changes NPC access, outside this link's area.
+        2. (b) Behind `guidance-v2`: the cause is not the flag.
+    7. *Failure 3.* Chosen: diagnostics plus a pinned negative result. Alternative: (a) change `WalkGrid`'s gate-footprint floor rule on suspicion: it is shared with the road builder and not proven.
+6. **Out of scope, noted.**
+    1. With the route-end keys off, a live-tag network swap still repeats the turn message (today's behaviour).
+    2. The "Keep Stair House" gate door's sheared reference points (warned at every start) may remove a floor from the walk grid. To check with § 14 step 3's INFO line before filing.
+7. **Blockers.** None. Codex: see the PRs.
+8. **At merge / what the developer must do.**
+    1. Add `navigation.road-goal-walk-weight: 4.0` under `navigation:` (YAML in the plugin PR).
+    2. Live test, about 25 minutes: smoke § 14 steps 1 to 5. Use shipped settings and `max-snap-distance` 48; route-end keys on for steps 1 to 3; player MrBedue with `guidance-v2` on, then off, for steps 4 and 5.
+9. **Notes for later links.**
+    1. `RoadGoalChoice.best(options)` stays F2's rule. G1 (#814) should use `best(options, walkWeight)` if NPCs ought to walk as little as players.
+    2. Door access now depends on the door's open state at capture time. A door toggled within `chunk-ttl-seconds` (10 s) keeps its captured state, as before.
