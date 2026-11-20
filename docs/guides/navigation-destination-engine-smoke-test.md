@@ -3,7 +3,7 @@
 **Status:** Draft from the design (2026-11-18); § 1 updated by the P1 link (9 of 11 steps automated, tagged), § 2 by
 the P2 link (12 of 13 steps automated, tagged), § 3 by the P3 link (20 of 22 steps automated, tagged), § 4 by the P4
 link (16 of 18 steps automated, tagged); no manual steps run. Later sections are not yet automated (their links tag them).
-**Last updated:** 2026-11-18 (§ 4 updated to the P4 code, steps tagged, #62); 2026-11-18 (§ 3 updated to the P3 code, steps tagged, #69); 2026-11-18 (§ 2 updated to the P2 code, steps tagged, #103); 2026-11-18 (§ 1 updated to the P1 code, steps tagged, #96); 2026-11-18 (design approved: tiers confirmed, phase 4b is #747); 2026-11-18 (draft from the design refresh, phases 1, 2, 3, 4, 4b and 5)
+**Last updated:** 2026-11-20 (§ 4.0 item 4: the `knk.navigate` seed and `default: false`, #845); 2026-11-18 (§ 4 updated to the P4 code, steps tagged, #62); 2026-11-18 (§ 3 updated to the P3 code, steps tagged, #69); 2026-11-18 (§ 2 updated to the P2 code, steps tagged, #103); 2026-11-18 (§ 1 updated to the P1 code, steps tagged, #96); 2026-11-18 (design approved: tiers confirmed, phase 4b is #747); 2026-11-18 (draft from the design refresh, phases 1, 2, 3, 4, 4b and 5)
 **Design:** [specs/navigation-destination-engine/DESIGN.md](../specs/navigation-destination-engine/DESIGN.md) · **Issue:**
 [PandiO/knk-workspace#25](https://github.com/PandiO/knk-workspace/issues/25)
 
@@ -361,7 +361,13 @@ do the manual form written in the step.
    mode and freeze), a second staff account of higher rank (Senior Staff, can freeze Staff), Bypass (granted
    `knk.navigate.any` through the in-house permission system); the dev world with a town reachable by road; the
    siege scenario with at least two objectives, the compass switched on for sieges.
-4. The in-house permission system can take `knk.navigate` away from Player's group and give it back.
+4. The in-house permission system can take `knk.navigate` away from Player's group and give it back
+   ([#845](https://github.com/PandiO/knk-workspace/issues/845)): knk-web-api has the seed migration
+   `SeedNavigateDefaultNode` applied (the Default group holds `knk.navigate`) and the plugin build has `knk.navigate`
+   as `default: false` in `plugin.yml`, so Bukkit no longer answers yes for every player. "Take it away" means a deny
+   of `knk.navigate` on Player's group (or Player's account) in the in-house permission system, then the permission
+   cache refreshed; "give it back" means removing that deny. With the older plugin (`default: true`) the deny is
+   never asked and § 4.1 step 4 and § 4.2 step 3 cannot pass.
 
 ### 4.1 Refusals come from the scopes (A22)
 
