@@ -1,6 +1,6 @@
 # Production transport: orders, transit storage, simulated carriers and road-measured lanes (knk-web-api, knk-plugin and knk-web-app)
 
-**Status:** Current · **Last updated:** 2026-11-20 (first version, production P5 #79/#681/#682, docs PandiO/knk-workspace#891)
+**Status:** Current · **Last updated:** 2026-11-20 (header: P6 adds the staff retry and the in-game orders menu, docs #903); 2026-11-20 (first version, production P5 #79/#681/#682, docs PandiO/knk-workspace#891)
 **Checked against:** knk-web-api `next` `bf8633fb` (PR PandiO/knk-web-api#65), knk-plugin `next` `7116f1a5` (PR
 PandiO/knk-plugin#108), knk-web-app `next` `5ad5029f` (PR PandiO/knk-web-app#68). Not released; the manual steps of the
 [smoke test § 6](../guides/production-storage-transport-smoke-test.md#6-phase-p5-transport-core-simulated-79-api-681-plugin-682-web-app-tier3)
@@ -10,7 +10,9 @@ lifecycle, carriers, triggers, lanes, workers), [API contract](../specs/api/API_
 [admin guide](../guides/admin/production-transport-admin-guide.md), [production engine](production-engine.md) (lines,
 settle, the worker factor), [production world](production-world.md) (warehouses, production structures, road
 connection field), [stock admin guide](../guides/admin/stock-admin-guide.md) (storages, the ledger and the reconciler),
-[plugin configuration § 4.31](../guides/admin/plugin-configuration.md#431-production) (`production.logistics.lanes.*`)
+[plugin configuration § 4.31](../guides/admin/plugin-configuration.md#431-production) (`production.logistics.lanes.*`),
+[storage terminals and structure menus](production-storage-terminals.md) (P6: `POST api/TransportOrders/{id}/retry`, the
+in-game orders menu with cancel and retry)
 
 Phase P5 moves goods. A **transport order** takes cargo from a source storage (normally a production structure's Output
 storage) to one or more **stops** (normally a warehouse's delivery storage). While it travels the cargo sits in the
