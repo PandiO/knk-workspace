@@ -15,8 +15,9 @@ engine API, #86): 16 of 18 steps automated in CI and 2 partly (tagged); every st
 run. § 4.2 (production engine web app, #678): 13 of 16 steps automated in CI and 3 partly (tagged); every step can
 still be run by hand; not run. § 5.1 (yield areas API, #138): 17 of 18 steps automated in CI and 1 partly (tagged);
 every step can still be run by hand; not run. § 5.2 (surveys plugin, #679): 7 of 15 steps automated (one through a plugin
-scenario on a real Paper server), 7 partly and 1 manual (tagged); not run. Other sections not yet automated (the links tag them).
-**Last updated:** 2026-11-20 (§ 5.2 surveys plugin, link L12, #679); 2026-11-19 (§ 5 yield areas API, link L11, #138; § 5.1 step 18: #831); 2026-11-19 (§ 4.2 production engine web app, link L10, #678); 2026-11-19 (§ 4.1 production engine API, link L9, #86); 2026-11-19 (§ 3 intro, § 3.0, § 3.2 and § 3.3 intros: builds from `next`; § 3.3 precondition 4: `/knk regions repair` needs `knk.admin.regions`, `/knk territory rebuild` `knk.admin.world.territory`; docs #830); 2026-11-19 (§ 3.2 world web app, link L7, #676); 2026-11-19 (§ 3.3 world plugin, link L8, #677); 2026-11-19 (§ 3.1 world API, link L6, #91); 2026-11-19 (§ 2.2 stock web app, link L5, #675); 2026-11-19 (§ 2 stock core API, link L4, #97); 2026-11-19 (§ 1.0 and § 1.3 preconditions: builds from `next` instead of the link branches; guides: [territory admin guide](admin/territory-admin-guide.md), docs #806); 2026-11-19 (§ 1.4 territory web app, link L3, #690); 2026-11-19 (§ 1.3 territory plugin, link L2, #689); 2026-11-19 (§ 1 territory API, link L1, #326); 2026-11-19 (§ 0 item identity, link L0, #141); 2026-11-16 (draft from the design, territory and phases P1-P12)
+scenario on a real Paper server), 7 partly and 1 manual (tagged); not run. § 5.3 (yield areas web app, #680): 9 of 12 steps automated in CI, 2
+partly (tagged) and 1 by hand; every step can still be run by hand; not run. Other sections not yet automated (the links tag them).
+**Last updated:** 2026-11-20 (§ 5.2 surveys plugin, link L12, #679); 2026-11-20 (§ 5.3 yield areas web app, link L13, #680); 2026-11-19 (§ 5 yield areas API, link L11, #138; § 5.1 step 18: #831); 2026-11-19 (§ 4.2 production engine web app, link L10, #678); 2026-11-19 (§ 4.1 production engine API, link L9, #86); 2026-11-19 (§ 3 intro, § 3.0, § 3.2 and § 3.3 intros: builds from `next`; § 3.3 precondition 4: `/knk regions repair` needs `knk.admin.regions`, `/knk territory rebuild` `knk.admin.world.territory`; docs #830); 2026-11-19 (§ 3.2 world web app, link L7, #676); 2026-11-19 (§ 3.3 world plugin, link L8, #677); 2026-11-19 (§ 3.1 world API, link L6, #91); 2026-11-19 (§ 2.2 stock web app, link L5, #675); 2026-11-19 (§ 2 stock core API, link L4, #97); 2026-11-19 (§ 1.0 and § 1.3 preconditions: builds from `next` instead of the link branches; guides: [territory admin guide](admin/territory-admin-guide.md), docs #806); 2026-11-19 (§ 1.4 territory web app, link L3, #690); 2026-11-19 (§ 1.3 territory plugin, link L2, #689); 2026-11-19 (§ 1 territory API, link L1, #326); 2026-11-19 (§ 0 item identity, link L0, #141); 2026-11-16 (draft from the design, territory and phases P1-P12)
 **Design:** [specs/production-storage-transport/DESIGN.md](../specs/production-storage-transport/DESIGN.md) (§17
 acceptance A01-A27, §18 links) · [territory](../specs/territory/DESIGN.md) · [shops](../specs/shops/DESIGN.md) ·
 **Issue:** [PandiO/knk-workspace#22](https://github.com/PandiO/knk-workspace/issues/22)
@@ -1149,6 +1150,7 @@ Built so far: link L11, the API (knk-web-api, migration `AddProductionYieldAreas
 the area capture, survey viewer and Hybrid override editor are link L13 (#680). Until then § 5.1 runs with a REST client
 (or Swagger) against the API, the plugin's part played by `POST api/ProductionAreas/<id>/surveys` with the plugin key.
 18 steps in § 5.1: 17 automated in CI and 1 partly (tagged); every step can still be run by hand; manual steps not run.
+The web app part (§ 5.3, link L13) is built: 12 steps, 9 automated in CI, 2 partly and 1 by hand.
 Full manual run about 45 minutes (an hour of it waiting, or `POST api/Production/run-now`); the untagged part of the
 partly tagged step about 5 minutes. The tests are in knk-web-api `Tests/.../Services/Production/ProductionYieldTests.cs`,
 `Api/ProductionYieldControllersTests.cs`, `Services/Production/PlacementRulesTests.cs` (#831),
@@ -1369,18 +1371,77 @@ server, CI job `paper-boot`).
 15. [automated: `SurveyCounterTest.theSameWorldGivesTheSameHash`] Survey the Pit twice without changing it.
     **Expected:** both surveys have the same `contentHash`.
 
-### 5.3 Steps (web app #680, draft)
+### 5.3 Steps (web app #680)
 
-*Draft for link L13; it updates these steps to what it builds and tags the automated ones.*
+Built in link L13 (knk-web-app, branch `claude/production-p4c`, PR into `next`). The tags name tests in knk-web-app
+`e2e/production-yield.spec.ts` (Playwright, mocked API; the mocks use a quarry with a "Quarry pit" cuboid of 320 of
+400 blocks, a shared "North slope" radius and the Mill's "Mill wood" overlapping it, Cobblestone from stone and Coal
+from coal ore) and the Jest tests next to the code (`src/utils/__tests__/productionYield.test.ts`,
+`src/apiClients/__tests__/productionYieldClients.test.ts`). Extra preconditions: § 5.0 and § 5.1 steps 1-9 (the seeds
+imported with "make default", Logger A with its Forest area, a survey, the overrides; Logger B). Log in to the web app as
+**Staff** (holds `knk.admin.world` and `knk.admin.content`) unless a step says otherwise. 12 steps: 9 automated, 2
+partly (tagged), 1 by hand (step 3); every step can still be run by hand; not run. Full manual run about 40 minutes; the untagged parts
+about 15 minutes (the in-game parts wait for the survey runner of #679).
 
-1. Capture an area larger than the level 1 maximum for the kind. **Expected:** refused with the maximum. (A11)
-2. Open the logger's survey viewer. **Expected:** the composition table, the 2D plot and the trend; each rate explained
-   from its units, shares and yield rows. (A10)
-3. Add a Hybrid pin (always produce apples at 5 per hour) in the override editor. **Expected:** the line exists after
-   the save whatever the survey says. (A10)
-4. Check the quarry (`Configured`). **Expected:** the yield source is shown and no survey has ever run for it; the
-   "survey now" button is off. (A10, G5)
-5. Press "survey now" on the logger. **Expected:** a new survey row once the game server has run it. (A10)
+1. [automated: `dashboard › lists the areas with their structure, shape, size and last survey`] Open the dashboard and
+   type **ProductionArea**. **Expected:** columns Name, Structure, Model, Shape, Exclusive, Size, Enabled and Last
+   survey; Logger A's Forest with `Radius`, "Shared", size 20 and its survey time; an area never surveyed says "Never".
+2. [partly automated: `the area form › an area over the level's cap is refused with the maximum (A11, G6)`; by hand: the
+   structure picker and a saved area] Open Logger A's page and press **Add area** in the **Yield** panel (the
+   ProductionArea form). Pick Logger A, name "Forest 2", Shape Radius, Radius 33, no centre; submit. **Expected:** "The
+   form could not be submitted. The area is 33 (radius); level 1 of Logger allows at most 32." Change the radius to 10
+   and submit. **Expected:** saved; the area centres on the logger's Location and is listed in the Yield panel as
+   "10 of 32 radius". (A11, G6)
+3. Area capture in game (by hand): as Admin, in the
+   form builder open "ProductionArea - Default (seed v1)" and on the **WorldGuard region** field turn on "Requires
+   in-game action" with type `RegionClaim` (the seed has no world task on it yet, see #680). Make an area with Shape
+   Region, press the world task button and claim a region in game; fill the bounds (Min/Max X, Y, Z) from the region.
+   **Expected:** the region id is filled in from the game and the area saves with its bounding box. The `CaptureRadius`
+   world task (stand at the centre, set the radius) comes with #679 and is not in the web app yet. (A10)
+4. [automated: `the production structure page › shows the yield source, the areas against the level cap and why each
+   rate is what it is (A10, #65)`] View Logger A. **Expected:** below the Production panel a **Yield** panel: "Yield
+   source Hybrid." with a sentence on where the rates come from; an **Areas** table (each name links to the area page,
+   its shape, "20 of 32 radius", Exclusive or Shared, the last survey); under **Outputs and why each rate is what it is**
+   one block per output: Oak log "Surveyed 16/h, Scale × 0.5 → base 8/h." (a primary output adds "then the primary
+   multiplier as a modifier") and a link to its line; **Show the survey units** lists area, unit, the matched yield row, count,
+   share ("1/2 (shared)" for Logger B's trees), rate per unit, chance and rate per hour; **Surveyed but producing
+   nothing** lists `TREE:SPRUCE:LARGE`. (A10, #65)
+5. [automated: `the production structure page › the Hybrid override editor pins, changes and removes an override per
+   output`] In the Oak log block set **Override** to Pin, leave the value empty (**Save override** stays off), enter 12
+   and save. **Expected:** "Override saved: Pin 12/h."; the block says "Pin 12/h → base 12/h". On Birch log (Exclude)
+   pick Scale 0.5, save: "Override saved: Scale × 0.5."; pick "None (the survey's rate)" and save: "Override removed.";
+   the base is the surveyed rate again. A refused save (a pin of 0) shows the API's reason. (A10)
+6. [automated: `the production structure page › pins an output the survey does not yield`] Under **Pin an output the
+   survey doesn't yield** search "Apple", keep Pin, enter 5 and press **Add override**. **Expected:** the Apple output
+   appears with base 5/h and its line, whatever the survey says. (A10)
+7. [automated: `the production structure page › Survey now asks the game server to survey the enabled areas; a refusal
+   shows the API's reason`] Press **Survey now**. **Expected:** "Survey requested for 1 area: the game server surveys at
+   its next poll."; the area shows "(survey requested)". With every area disabled the button is off; a refusal shows
+   the API's sentence (for example "The structure has no enabled area to survey."). With #679 running, a new survey row
+   appears once the game server has surveyed. (A10)
+8. [automated: `the production structure page › a Configured structure is never surveyed: no Survey now and no outputs
+   list (A10, G5)`] View the **Quarry** (`Configured`). **Expected:** "Yield source Configured. … The structure is never
+   surveyed."; "A Configured structure is never surveyed, so there is no Survey now (G5)."; no Survey now button and no
+   outputs list. (A10, G5)
+9. [automated: `an area and its surveys › shows the size against the cap, the plot with its overlaps, the composition,
+   the trend and the history`] Open the Forest area. **Expected:** an **Area and surveys** panel: the structure link, the
+   model and shape, "20 of 32 radius" with "The level allows at most 32 radius.", Shared; **From above** a plot of the
+   circle with Logger B's area dashed and a table of the overlapping areas (each linked); **Latest survey** with its
+   composition (unit, count, share of the survey with a bar, "Shared by 2" or "Own"), largest first; **Trend** with per
+   unit the first and latest count, the change and a small line; **Survey history** newest first, each linked. (A10)
+10. [automated: `an area and its surveys › Survey this area now asks for this area only`] Press **Survey this area now**.
+    **Expected:** "Survey requested: the game server surveys the area at its next poll."; only this area is asked for.
+11. [automated: `a survey › lists what the game server counted, largest first`] Open a survey from the history.
+    **Expected:** a **Composition** panel with the area link, time, trigger, profile version, total units and the
+    composition table.
+12. [partly automated: `a kind's yield table › edits the yield table and primary outputs; the lists replace the stored
+    ones (G17)`; by hand: the survey profile and primary multiplier on the kind's form] View the kind **Logger**.
+    **Expected:** a **Yield table** panel with the profile version and primary multiplier and the rows of § 5.1 step 3.
+    Press **Add row**, enter unit key `TREE:*:LARGE`: the panel says "Row <n>: a unit key is parts of letters, digits and _
+    joined by ":", optionally ending in ":*" (or just "*")." and **Save yield table** stays off. Enter `tree:birch:*`
+    (saved in capitals), pick Stick, rate 0.1, chance 0.5. **Add primary output** Oak log; save. **Expected:** "Logger:
+    yield table saved."; after the reload the row reads `TREE:BIRCH:*`; Logger A's Yield panel shows the Stick rate
+    from the birches too. Edit the kind with its form and change the survey profile: the version goes up by one.
 
 ## 6. Phase P5: transport core, simulated (#79 API, #681 plugin, #682 web app; tier:3)
 
