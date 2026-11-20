@@ -1,6 +1,6 @@
 # Production Engine — Admin Guide
 
-**Status:** Current · **Last updated:** 2026-11-20 (P4 pointers to the yield areas admin guide; docs #882); 2026-11-19 (first version, production P3 #86/#678, docs PandiO/knk-workspace#839)
+**Status:** Current · **Last updated:** 2026-11-20 (P5: workers away carrying, docs #891); 2026-11-20 (P4 pointers to the yield areas admin guide; docs #882); 2026-11-19 (first version, production P3 #86/#678, docs PandiO/knk-workspace#839)
 **Checked against:** knk-web-api `next` `6c648f60`, knk-web-app `next` `4e4ca39a` (not released; the engine runs only
 with the game setting Production enabled on; the manual steps of the
 [smoke test § 4](../production-storage-transport-smoke-test.md#4-phase-p3-production-engine-86-api-678-web-app-tier3)
@@ -223,7 +223,8 @@ A structure without a kind still produces: its lines just get no Level step.
 
 1. **Workers:** **Workers present (of 2)** and **Save workers**. Output and inputs scale with the share present: one
    of two away halves them, both away stops the line (without blocking it). The time before the change counts at the
-   old share. Until phase P5 sends workers away, this is only for tests and fixes.
+   old share. Since phase P5 a worker carrying a transport order is away until the order ends ([transport admin guide](production-transport-admin-guide.md)); the
+   button is for tests and fixes.
 2. **Latest cycles:** the structure's last 20 settles: Settled, Output, Period, Rate, Accepted ("10 of 10"), State
    after, Shortfall. **Trace** opens one: workers present, accrued before and after, rate source, the rate steps, the
    inputs taken and a link to the stock transaction (the **Ledger**). A cycle is written for each settle that produced
