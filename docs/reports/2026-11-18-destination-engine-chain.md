@@ -194,6 +194,12 @@
     (road-goal choice, route-replacement announcements, walk start cell, door clearance; `core/roads`,
     `NavigationService`), reading `HandleDestinations`/`Destination` only. Agreed: L5 still waits for the rest of the
     live test and the #845 decision. Alternatives: none.
+29. **Off-road F3 merged, two more off-road steps (2026-11-20 10:07).** F3 merged (knk-plugin `6878d584`, handle untouched).
+    The off-road chain runs a `trail-leg-spacing` follow-up and L7b's plugin step (default route mode per permission
+    group, route request only) next, while L5 still waits for the developer. Agreed on condition that L5 takes the next
+    free slot once its gate opens, ahead of further off-road plugin links, and that L7b resolves the per-group default
+    in the shared `parseRoute`/`withMode` path. Alternatives: (a) reserve the slot now for L5 — it cannot start before
+    the developer answers.
 
 ## 4. Link blocks
 
