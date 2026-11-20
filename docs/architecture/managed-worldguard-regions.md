@@ -1,6 +1,6 @@
 # Managed WorldGuard regions — hierarchy, priority, flags and startup repair
 
-**Status:** Current · **Last updated:** 2026-11-19 (§3, §4, §5, §6, §7: production P2c region kinds `ProductionStructure` → `RESOURCE_PRODUCTION`, `Warehouse` → `STRUCTURE`, rural structures without a parent, with `production.enabled`; knk-plugin `next` `8ebb30be`, PandiO/knk-workspace#677, docs #830); 2026-11-19 (§7 "Domain sub-regions", "Overview map outlines": sub-region outlines reported after every access sync with `map.reporting.enabled`, PandiO/knk-workspace#750, branch `claude/overview-map-f1-subregions`); 2026-11-19 (§3, §4, §5: kind `CROWN_LAND` for crown land of territory V1, knk-plugin `next` `55804b11`, PandiO/knk-workspace#689, docs #806); 2026-11-18 (§7 "Overview map outlines": the repair and rename also report outlines with `map.reporting.enabled`, PandiO/knk-workspace#735, docs #766)
+**Status:** Current · **Last updated:** 2026-11-20 (§7 overview map outlines on trunk, docs #767); 2026-11-19 (§3, §4, §5, §6, §7: production P2c region kinds `ProductionStructure` → `RESOURCE_PRODUCTION`, `Warehouse` → `STRUCTURE`, rural structures without a parent, with `production.enabled`; knk-plugin `next` `8ebb30be`, PandiO/knk-workspace#677, docs #830); 2026-11-19 (§7 "Domain sub-regions", "Overview map outlines": sub-region outlines reported after every access sync with `map.reporting.enabled`, PandiO/knk-workspace#750, branch `claude/overview-map-f1-subregions`); 2026-11-19 (§3, §4, §5: kind `CROWN_LAND` for crown land of territory V1, knk-plugin `next` `55804b11`, PandiO/knk-workspace#689, docs #806); 2026-11-18 (§7 "Overview map outlines": the repair and rename also report outlines with `map.reporting.enabled`, PandiO/knk-workspace#735, docs #766)
 **Implementation:** Implemented, merged to trunk (2026-09-29, [knk-plugin#6](https://github.com/PandiO/knk-plugin/pull/6), [knk-web-api#3](https://github.com/PandiO/knk-web-api/pull/3); KNG-43 follow-up 2026-10-04) and **smoke-tested in game and accepted 2026-10-05** — Linear KNG-46, §9. Region-step re-run replacement (KNG-103) merged 2026-10-18 after its in-game check ([knk-plugin#12](https://github.com/PandiO/knk-plugin/pull/12), [knk-web-api#10](https://github.com/PandiO/knk-web-api/pull/10)). Lootbox spawn areas' drawn regions renamed to `lootbox_area_<id>` (PandiO/knk-workspace#34, §7): **in the PR into `next` from `claude/plugin-chains-into-next`, not merged, not live-tested**. Temp regions of abandoned drafts removed early (PandiO/knk-workspace#269, §7 "Abandoned drafts"): **in the PR into `next` from `claude/plugin-chains-into-next`, not merged, not live-tested**
 **Supersedes:** Linear KNG-12 ("no WG flags on town/district regions"), the assumption noted in `CombatSafezone`'s Javadoc
 **Evidence:** [`reports/2026-09-28-v1-permissions-worldguard-inventory.md`](../reports/2026-09-28-v1-permissions-worldguard-inventory.md) (categorized v1 inventory), the v3 domain model (`Town → District → Structure`, `GateStructure : Structure`), `vision.md` §2
@@ -199,7 +199,7 @@ Before #269 a `tempregion_worldtask_<n>` whose form was abandoned waited for the
 - **Not released:** a region task that completed for a draft that was then **completed** without using it (e.g. "Capture again" after a completed capture: the older region stays), a task deleted by hand (`DELETE api/WorldTasks/{id}`), drafts the 90-day retention deletes (long after 14 days). These still go after 14 days. A task still InProgress when its draft is deleted is not cancelled: if the player finishes, the region is removed afterwards.
 - **Backstop unchanged:** the daily `TempRegionRetentionTask` pass (§8 item 5) still runs with its 14 days and catches everything not released (older API, plugin with the pass off, a release dropped after 30 days).
 
-### Overview map outlines (PandiO/knk-workspace#735, in `next`)
+### Overview map outlines (PandiO/knk-workspace#735, on trunk since knk-plugin v0.3)
 
 With `map.reporting.enabled: true` (and `realtime.enabled: true`) the repair and the rename path also report region
 outlines for the web app's overview map ([design](../specs/in-game-maps/OVERVIEW_MAP_DESIGN.md) § 6.2.6, § 7;
@@ -281,15 +281,16 @@ In-game checklist used (dev server, back up `plugins/WorldGuard/worlds/*/regions
 
 ## Changes
 
-1. 2026-11-19: §7 "Domain sub-regions", "Overview map outlines": sub-region outlines after every access sync, PandiO/knk-workspace#750
-2. 2026-11-18: §7 "Overview map outlines": the repair and rename also report outlines with `map.reporting.enabled`, PandiO/knk-workspace#735, docs #766
-3. 2026-11-15: #399 of §7 released in knk-web-api v0.3, `main` `2cc8254`, PandiO/knk-workspace#577
-4. 2026-11-15: §7 "What the game server is given": `serverId` required, due rows read in pages, PandiO/knk-workspace#399, knk-web-api#33 into `next`
-5. 2026-11-13: §7 #34 and #269 in the PR into `next` from `claude/plugin-chains-into-next`
-6. 2026-11-09: §7 "Abandoned drafts: temp regions released early", PandiO/knk-workspace#269, on feature branch `claude/temp-region-drafts-269`, not merged; §8 item 5
-7. 2026-11-05: §7 "Lootbox spawn areas", PandiO/knk-workspace#34, on feature branch `claude/lootbox-area-rename-34`, not merged; §8 item 5
-8. 2026-10-23: §7 "Domain sub-regions", KNG-254–KNG-258, merged and live-tested
-9. 2026-10-18: KNG-103 in-game check passed and merged; §7 recovering a domain the old bug left on a temp name, purge keeps what the last repair saw; §9 result
-10. 2026-10-12: §7 "Re-running a domain's region step" and `/knk regions temp`, KNG-103; §9 checklist, not yet run
-11. 2026-10-06: §5 "Rank-dependent access" links the domain entry/exit enforcement, KNG-55/KNG-56
-12. 2026-10-05: KNG-46 in-game smoke test passed; parent-inheritance decision accepted; vanilla spawn-protection note, §8 item 10
+1. 2026-11-20: §7 "Overview map outlines" on trunk since knk-plugin v0.3 (docs #767)
+2. 2026-11-19: §7 "Domain sub-regions", "Overview map outlines": sub-region outlines after every access sync, PandiO/knk-workspace#750
+3. 2026-11-18: §7 "Overview map outlines": the repair and rename also report outlines with `map.reporting.enabled`, PandiO/knk-workspace#735, docs #766
+4. 2026-11-15: #399 of §7 released in knk-web-api v0.3, `main` `2cc8254`, PandiO/knk-workspace#577
+5. 2026-11-15: §7 "What the game server is given": `serverId` required, due rows read in pages, PandiO/knk-workspace#399, knk-web-api#33 into `next`
+6. 2026-11-13: §7 #34 and #269 in the PR into `next` from `claude/plugin-chains-into-next`
+7. 2026-11-09: §7 "Abandoned drafts: temp regions released early", PandiO/knk-workspace#269, on feature branch `claude/temp-region-drafts-269`, not merged; §8 item 5
+8. 2026-11-05: §7 "Lootbox spawn areas", PandiO/knk-workspace#34, on feature branch `claude/lootbox-area-rename-34`, not merged; §8 item 5
+9. 2026-10-23: §7 "Domain sub-regions", KNG-254–KNG-258, merged and live-tested
+10. 2026-10-18: KNG-103 in-game check passed and merged; §7 recovering a domain the old bug left on a temp name, purge keeps what the last repair saw; §9 result
+11. 2026-10-12: §7 "Re-running a domain's region step" and `/knk regions temp`, KNG-103; §9 checklist, not yet run
+12. 2026-10-06: §5 "Rank-dependent access" links the domain entry/exit enforcement, KNG-55/KNG-56
+13. 2026-10-05: KNG-46 in-game smoke test passed; parent-inheritance decision accepted; vanilla spawn-protection note, §8 item 10
