@@ -21,7 +21,7 @@ This is a human-readable record of capabilities merged into the V3 default branc
   `SiegeMatchParticipant`, migration `AddSiegePointsEarning` (additive). Branches `claude/siege-shop-l1` in
   knk-plugin, knk-web-api and knk-workspace. Admin steps: apply the migration; set `siege:` → `points:` →
   `enabled: true` to turn it on (Restart). The web app's siege settings page does not show the new fields yet
-  (edit them with `PUT api/SiegeConfiguration`). Smoke test: [siege shop smoke test § 1](guides/siege-shop-smoke-test.md#1-phase-1-shared-match-ledger-and-siege-points-earning-866-tier3).
+  (edit them with `PUT api/SiegeConfiguration`; web app fields: #878). Smoke test: [siege shop smoke test § 1](guides/siege-shop-smoke-test.md#1-phase-1-shared-match-ledger-and-siege-points-earning-866-tier3).
 - **`/navigate` can be taken away from a rank or player** ([PandiO/knk-workspace#845](https://github.com/PandiO/knk-workspace/issues/845),
   developer decision option A, 2026-11-19; found in the destination engine live test, #25). For staff: a deny of
   `knk.navigate` in the in-house permission system (on a group or an account) now refuses `/navigate` and the

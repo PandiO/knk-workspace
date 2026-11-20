@@ -28,7 +28,7 @@ manual steps not run yet. A full manual run takes about 40 minutes; the untagged
    ```
    then restart. `SiegeConfiguration` with the default earn amounts (kill 100, streak step 0.1 cap 1.5, assist 40 with
    4 damage in 10 s, death 15, 1 point per 5 gate HP, 3 per capture %, capture 100, trickle 10 per 60 s) and
-   `pointTransfersEnabled` false. The web app's siege settings page does not show these fields yet: check them with
+   `pointTransfersEnabled` false. The web app's siege settings page does not show these fields yet (#878): check them with
    `GET api/SiegeConfiguration` and change them with `PUT api/SiegeConfiguration` (Swagger, signed in as Admin), for
    example `{ "pointTransfersEnabled": true }`. The migration gives an existing configuration row the defaults.
 3. Accounts and data: A1, A2, D1; a Ready Siege scenario with at least one gate and one capturable (non-instant-victory)
