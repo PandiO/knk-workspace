@@ -785,6 +785,26 @@ This is a human-readable record of capabilities merged into the V3 default branc
      Steps: [overview map smoke test § 1](guides/overview-map-smoke-test.md#1-phase-1-region-outlines-735-tier3),
      [plugin configuration § 4.29](guides/admin/plugin-configuration.md#429-map).
 
+- **NPC navigation: NPCs climb a ladder through a roof hatch, and open a closed one** ([PandiO/knk-workspace#779](https://github.com/PandiO/knk-workspace/issues/779),
+  link H1 of the NPC navigation follow-ups chain). An NPC whose off-road leg goes up a tower's ladder now climbs it and
+  passes through the roof hatch above it. Before, the NPC stalled at the ladder's foot: its own checks treated the
+  ladder and the open trapdoor as walls, although the walk search (#771) climbs them. knk-plugin and knk-workspace
+  branches `claude/npc-movement-h1` (PRs into `next`). Behind `npc.navigation.enabled` (off by default); no new
+  `config.yml` key, no migration.
+  1. A ladder and an open trapdoor right above one are climbed, never a wall or a floor, in every NPC check: the
+     planner's body check, headroom, and "blocks a body" (knk-core `NpcClimbables`, knk-paper `BukkitNavWorld`). The
+     route line and its waypoints keep the walk's ladder cells (`RouteFollower`, `WaypointChain`). A climbing body is
+     kept in its ladder column. Minecraft let it creep sideways until its head caught on the roof beside the hatch
+     (`ClimbHold`).
+  2. An NPC whose access profile has `open-doors` opens a closed wooden hatch on its way, as it opens doors, and closes
+     it again once nobody is in the shaft (`NpcHatches`; Citizens' own door opener skips trapdoors). Without
+     `open-doors` the closed hatch blocks, and an iron hatch always does.
+  3. New scenario `npc-ladder-hatch` (CI `MIN_SCENARIOS` 65): four trips up a tower, with the hatch open or closed and
+     with or without `open-doors`. On `next`, the first trip ended under the roof; now three arrive in about 17 s and
+     the fourth is kept off the roof. Known limits, including #848 (a leg walked in hops ends as "arrived" under an
+     unreachable goal): [plan § 4c.8 item 7](specs/npc-platform/IMPLEMENTATION_PLAN.md#4c8-fix-links-after-the-smoke-tests-of-2026-11-16-and-2026-11-17-b1b5-c1-j1-h1).
+     Smoke test: [Link H1](guides/npc-movement-smoke-test.md#link-h1-a-ladder-and-a-roof-hatch-on-an-npcs-off-road-leg).
+
 - **NPC navigation: no jumps toward a waypoint on the stair house; no hop after a stair step** ([PandiO/knk-workspace#695](https://github.com/PandiO/knk-workspace/issues/695),
   link J1 of the NPC navigation follow-ups chain). NPCs walk up stairs without the small hop after each step, and waiting
   NPCs no longer jump at the wall beside a flight. knk-plugin and knk-workspace branches `claude/npc-movement-j1` (PRs
@@ -802,7 +822,7 @@ This is a human-readable record of capabilities merged into the V3 default branc
      report the jumps held back.
   3. Local runs of `npc-stairhouse-climb` (12 in a row, half of them the first run after a server start):
      0 jumps toward a waypoint and 0 engine hops (151 to 166 a run on `next`), the leader up in 57 s (75 to 81 s on
-     `next`), the longest crowd wait 17 to 20 s (28 to 34 s). CI `paper-boot` green. Steps: [plan § 4c.8 item 6](specs/npc-platform/IMPLEMENTATION_PLAN.md#4c8-fix-links-after-the-smoke-tests-of-2026-11-16-and-2026-11-17-b1b5-c1-j1).
+     `next`), the longest crowd wait 17 to 20 s (28 to 34 s). CI `paper-boot` green. Steps: [plan § 4c.8 item 6](specs/npc-platform/IMPLEMENTATION_PLAN.md#4c8-fix-links-after-the-smoke-tests-of-2026-11-16-and-2026-11-17-b1b5-c1-j1-h1).
 
 - **NPC navigation: held NPCs stay held through `/knk cache refresh`** ([PandiO/knk-workspace#724](https://github.com/PandiO/knk-workspace/issues/724),
   link R1 of the NPC navigation follow-ups chain). knk-plugin and knk-workspace branches `claude/npc-movement-r1` (PRs
