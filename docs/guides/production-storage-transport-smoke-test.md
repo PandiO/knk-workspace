@@ -1962,8 +1962,9 @@ REST client (or Swagger) against the API, sending what the game server will send
 still be run by hand; not run. § 8.2 is the draft for L20. Full manual run about 35 minutes; the untagged parts about
 10 minutes. The tests are in knk-web-api `Tests/.../Services/Stock/ItemDeliveryServiceTests.cs`,
 `Api/InboxControllersTests.cs`, `Services/Production/ProductionAreaPlacementTests.cs`,
-`Services/Production/TransportReadNamesTests.cs` (`TransportReadNamesTests`, `SurveyOverlapUnitTypesTests`) and
-`Migrations/AddItemDeliveryTests.cs`. Tier:3; the developer's waiver of the smoke gates (2026-11-19) is read by the
+`Services/Production/TransportReadNamesTests.cs` (`TransportReadNamesTests`, `SurveyOverlapUnitTypesTests`),
+`Migrations/AddItemDeliveryTests.cs` and, with `KNK_TEST_MYSQL`, `MySql/ItemDeliveryMySqlTests.cs` (one inbox per player, one
+delivery per key and the cap under concurrent deliveries). Tier:3; the developer's waiver of the smoke gates (2026-11-19) is read by the
 coordinator as covering the later links.
 
 ### 8.0 Preconditions
