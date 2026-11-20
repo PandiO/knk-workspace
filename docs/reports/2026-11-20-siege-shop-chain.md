@@ -21,10 +21,10 @@ developer's instruction of 2026-11-20; its own report is [2026-11-19-siege-weapo
 | Link | Issue | Status | Branch heads | PR | CI | How started |
 |---|---|---|---|---|---|---|
 | L1 Shared ledger, siege points earning | #866 | Merged into `next` 2026-11-20 (knk-web-api `9a3132dc`, knk-plugin `91e3ddb8`, knk-workspace `1e38c7ec`) | `claude/siege-shop-l1`: knk-plugin `b6fa74ec`, knk-web-api `4da6780`, knk-workspace `8a215193` | [knk-plugin#107](https://github.com/PandiO/knk-plugin/pull/107), [knk-web-api#64](https://github.com/PandiO/knk-web-api/pull/64), [knk-workspace#879](https://github.com/PandiO/knk-workspace/pull/879) | green (plugin build + paper-boot; API build-and-test, mysql-tests, fresh-database) | subagent of the coordinator (two component repos), started 2026-11-20 |
-| L2 Shop catalogue (API, web app) | #867 | In review (CI green, Codex at usage limit; also built #878) | `claude/siege-shop-l2`: knk-web-api `1bed630a`, knk-web-app `77791388`, knk-workspace `a31db5c7` | [knk-web-api#66](https://github.com/PandiO/knk-web-api/pull/66), [knk-web-app#69](https://github.com/PandiO/knk-web-app/pull/69), [knk-workspace#888](https://github.com/PandiO/knk-workspace/pull/888) | green (API build-and-test, mysql-tests, fresh-database; web app build-and-test, e2e) | subagent of the coordinator (two component repos), started 2026-11-20 |
-| L3 Shop in the plugin | #868 | Not started (gate: L1, L2 merged) | — | — | — | — |
+| L2 Shop catalogue (API, web app) | #867 | Merged into `next` 2026-11-20 (knk-web-api `aff345dd`, knk-web-app `6f494154`, knk-workspace `ea361394`) | `claude/siege-shop-l2`: knk-web-api `1bed630a`, knk-web-app `77791388`, knk-workspace `a31db5c7` | [knk-web-api#66](https://github.com/PandiO/knk-web-api/pull/66), [knk-web-app#69](https://github.com/PandiO/knk-web-app/pull/69), [knk-workspace#888](https://github.com/PandiO/knk-workspace/pull/888) | green (API build-and-test, mysql-tests, fresh-database; web app build-and-test, e2e) | subagent of the coordinator (two component repos), started 2026-11-20 |
+| L3 Shop in the plugin | #868 | Running | `claude/siege-shop-l3` | — | — | subagent of the coordinator (decision 8), started 2026-11-20 |
 | L4 Weapon unlocks | #869 | Not started (gate: L2, L3, L5 merged) | — | — | — | — |
-| L5 Menu item settings (API, web app) | #870 | Not started (gate: L2 merged) | — | — | — | — |
+| L5 Menu item settings (API, web app) | #870 | Running (parallel with L3) | `claude/siege-shop-l5` | — | — | subagent of the coordinator, started 2026-11-20 |
 | L6 Menu item in the plugin | #871 | Not started (gate: L3, L5 merged) | — | — | — | — |
 
 ## 3. Coordinator decisions
@@ -57,6 +57,8 @@ developer's instruction of 2026-11-20; its own report is [2026-11-19-siege-weapo
    link running: L1 copies `MatchLedger` with the same public API (P11) and comments on #41 at merge. Alternatives:
    wait for Production's links, rejected (mechanical conflicts only).
 7. 2026-11-20: L1 merged into `next` after the § 6 checks (heads matched, 0 behind `next`, migration `20261120131558_AddSiegePointsEarning` on top of `AddTransportCore`, CI green, Codex at its usage limit). L2 #867 started as a subagent; #878 (siege settings page earn fields) rides along in L2 because both touch knk-web-app. Production told about the migration.
+8. 2026-11-20: L2 merged into `next` after the § 6 checks (heads matched, 0 behind, migration `20261120183543_AddSiegeShopCatalogue` after `AddSiegePointsEarning`, CI green, Codex at its usage limit; #878 closed by knk-web-app#69). Production told. L2's seven agent decisions (§ 4.2) wait for the developer's review; none blocks L3.
+9. 2026-11-20: L3 #868 and L5 #870 started together. Route for L3 (plugin only): a subagent, not `create_session`. Chosen because this session already has every repo attached and two parallel subagents are checked the same way; alternative `create_session` with `add_repo`, whose attach the Auto-mode classifier refused once (#511).
 
 ## 4. Link blocks
 
