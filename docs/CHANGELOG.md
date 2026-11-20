@@ -11,7 +11,7 @@ This is a human-readable record of capabilities merged into the V3 default branc
   the Keep Garrison into the Keep Gate instead of stopping at the garrison exit; Garrison Watchtower Roof: no longer
   under the watchtower with a long walk back); the first turn is said once, not again on every silent route
   replacement; an open door is walked through even where the player may not open doors (the keep's spiral-stair door
-  stopped the walk trail). For staff: new key `navigation.road-goal-walk-weight` (4.0); one INFO line per road-goal
+  stopped the walk trail). Walk trails are denser: `navigation.trail-leg-spacing` ships as 2.0 (was 3.0; the developer's choice; set it in an existing `config.yml`, which keeps its value). For staff: new key `navigation.road-goal-walk-weight` (4.0); one INFO line per road-goal
   choice with every candidate's road and walk lengths, and one per walk search that never left its start naming the
   unusable end. knk-plugin branch `claude/offroad-smoke-fixes-f3`; config key in
   [plugin configuration § 4.15](guides/admin/plugin-configuration.md). Smoke test:

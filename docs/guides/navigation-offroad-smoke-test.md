@@ -1006,11 +1006,11 @@ The developer's live test is steps 1 to 5 (about 25 minutes).
 
 ### 14.0 Preconditions
 
-1. Deployed: plugin build from `next` with the F3 PR merged; `config.yml` with the new key of the deploy notes merged
-   (`navigation.road-goal-walk-weight: 4.0`).
+1. Deployed: plugin build from `next` with the F3 PR merged; `config.yml` with the deploy notes merged
+   (`navigation.road-goal-walk-weight: 4.0`; `trail-leg-spacing: 2.0`, the new shipped default).
 2. Settings: **shipped**: `max-snap-distance: 48` and the shipped walk limits (`walk.max-length` 144,
    `walk.detour-allowance` 48, `walk.max-expansions` 20000, `walk.max-chunks-per-request` 64), `walk.enabled: true`,
-   `trail-leg-spacing: 2.0` (the developer's choice in § 13). Never raise `max-snap-distance` for these steps. For
+   `trail-leg-spacing: 2.0` (the developer's choice in § 13, shipped as the default since F3). Never raise `max-snap-distance` for these steps. For
    steps 1 to 3: `road-goal-reachable: true`, `road-to-its-end: true`, `guidance-v2: false` (restart).
 3. Accounts: player A (the developer's usual player) and player B without WorldGuard use rights in the keep (MrBedue in
    the § 8 run).
