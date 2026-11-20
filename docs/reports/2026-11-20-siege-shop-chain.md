@@ -24,7 +24,7 @@ developer's instruction of 2026-11-20; its own report is [2026-11-19-siege-weapo
 | L2 Shop catalogue (API, web app) | #867 | Merged into `next` 2026-11-20 (knk-web-api `aff345dd`, knk-web-app `6f494154`, knk-workspace `ea361394`) | `claude/siege-shop-l2`: knk-web-api `1bed630a`, knk-web-app `77791388`, knk-workspace `a31db5c7` | [knk-web-api#66](https://github.com/PandiO/knk-web-api/pull/66), [knk-web-app#69](https://github.com/PandiO/knk-web-app/pull/69), [knk-workspace#888](https://github.com/PandiO/knk-workspace/pull/888) | green (API build-and-test, mysql-tests, fresh-database; web app build-and-test, e2e) | subagent of the coordinator (two component repos), started 2026-11-20 |
 | L3 Shop in the plugin | #868 | Running | `claude/siege-shop-l3` | — | — | subagent of the coordinator (decision 8), started 2026-11-20 |
 | L4 Weapon unlocks | #869 | Not started (gate: L2, L3, L5 merged) | — | — | — | — |
-| L5 Menu item settings (API, web app) | #870 | Running (parallel with L3) | `claude/siege-shop-l5` | — | — | subagent of the coordinator, started 2026-11-20 |
+| L5 Menu item settings (API, web app) | #870 | In review (PRs open, not merged) | `claude/siege-shop-l5`: knk-web-api `478d1d61`, knk-web-app `9fa2b791`, knk-workspace `7ec5fa9f` | [knk-web-api#68](https://github.com/PandiO/knk-web-api/pull/68), [knk-web-app#70](https://github.com/PandiO/knk-web-app/pull/70), [knk-workspace#894](https://github.com/PandiO/knk-workspace/pull/894) | web app green; API green in the pull-request run, push run's mysql-tests red only in flaky #805 (rerun once) | subagent of the coordinator, started 2026-11-20 |
 | L6 Menu item in the plugin | #871 | Not started (gate: L3, L5 merged) | — | — | — | — |
 
 ## 3. Coordinator decisions
@@ -133,3 +133,34 @@ _(Each link appends its block here when it finishes.)_
     1. L3 (#868): read `GET api/SiegeShop/catalogue?mode=Siege|SiegeSurvival&scenarioId=` once per match (already in `ReadAccessRulesTests.PluginReads`); `price` is resolved, override fields applied, `source` tells Default/Overridden/Scenario; drop `SiegeWeapon` entries while `siege.weapons.enabled` is off; growth factor null means 1.5.
     2. L3: `BlueprintItemAssembler` must apply `ItemBlueprint.potionType` (`minecraft:strong_healing`) to potion meta; the plugin DTO doesn't read it yet.
     3. A fresh database has no weapon entries (no templates); the weapons chain or admins add them.
+
+### 4.4 L5 — Menu item settings (#870)
+
+1. **Scope done.**
+    1. knk-web-api: `GameSettings.MenuItemSettingsJson` and the `menuItem` section of `GET`/`PUT api/GameSettings` (`MenuItemSettingsDto`, `MenuItemActionDto`; null on update keeps it): enabled, give to all/bedrock, give on join, keep on death, material, name, lore, slot, droppable, movable, `clicks` (click type → action) and `overrides` (situation → partial clicks). `Services/MenuItemSettings.cs` holds the fixed lists (clicks `LEFT_CLICK`, `RIGHT_CLICK`, `SHIFT_LEFT_CLICK`, `SHIFT_RIGHT_CLICK`, `INVENTORY_CLICK`; actions `OpenMenu`, `RunCommand`, `None`; situations `siege.survival.match`, `siege.match`, `siege.hub`, most specific first), the seeded defaults and validation with `menuItem.…` reasons. A save sends `GameSettingsChanged` (existing realtime map). Migration `20261120193455_AddMenuItemSettings` (additive: one nullable longtext column), regenerated last on `next` `a2865d7` after Production's `AddStorageContainers`. Access unchanged (no new endpoint).
+    2. knk-web-app: Menu item card on the game settings page (`MenuItemCard.tsx`, `utils/menuItemSettings.ts`): look fields with the colour preview, click table (Open menu with a key picker, Run command, Nothing), situation overrides with "Use default", Remove and Add override, inline checks that keep Save off, one change group.
+    3. knk-workspace (branch, PR into `next`): smoke guide § 5 rewritten: § 5.1 seven steps for phase 5a, all tagged; § 5.2 in-game draft kept for #871. Changelog Unreleased entry.
+2. **Commits and heads.** knk-web-api `claude/siege-shop-l5` at `478d1d61` (3 commits incl. a merge of `next` `a2865d7`; base `aff345dd`); knk-web-app at `9fa2b791` (2 commits incl. a merge of `next` `5ad5029`, conflict in `canSave` resolved by keeping both checks; base `6f494154`); knk-workspace at `7ec5fa9f` (2 commits incl. a merge of `next` `3dc4267c`; base `ea361394`). All 0 behind `next` at hand-back.
+3. **PRs.** [knk-web-api#68](https://github.com/PandiO/knk-web-api/pull/68) (Closes #870), [knk-web-app#70](https://github.com/PandiO/knk-web-app/pull/70), [knk-workspace#894](https://github.com/PandiO/knk-workspace/pull/894) (both Part of #870), base `next`. Not merged.
+4. **Tests, baseline → result.**
+    1. knk-web-api: 4936 passed, 119 skipped (MySQL), 0 failed → 4959 passed, 119 skipped, 0 failed (23 new); after merging `next`: 4992 passed, 119 skipped, 0 failed.
+    2. knk-web-app: Jest 339 suites / 2889 tests → 340 / 2894; tsc, `typecheck:e2e`, build clean; Playwright 303 → 309 passed (6 new in `menu-item-settings.spec.ts`); after merging `next`: Jest 342 / 2906, Playwright 325 passed.
+    3. CI: first heads green everywhere (API build-and-test, mysql-tests, fresh-database; web app build-and-test, e2e). Merge heads: web app green; API green in one run, the other run's build-and-test failed in `RealtimeHubTests.WebHub_WithBearer_JoinsTheUserGroup_AndReceivesPublishedMessages` (10 s timeout, not touched by L5, passed in the parallel run and locally) and mysql-tests in the known flaky `DiscoveryLedgerMySqlTests.TitleCrossing_PostsTheXpOnceAndAppliesTheBonusOnce` (#805); rerun once: build-and-test green, mysql-tests failed again in the same #805 test only. Every check is green in at least one run of `478d1d61` (pull-request run 44804108996 all green).
+    4. Codex: usage limit on all three PRs (noted on each), no review; `@codex review` posted again after the merges.
+5. **Decisions (DESIGN § 4.3).**
+    1. *Seeds as read defaults.* Chosen: a null column reads as `MenuItemSettings.Defaults()`. Alternatives: (a) the migration writes the JSON, duplicates the defaults and misses databases without a row; (b) a startup seed, more code for the same result.
+    2. *Shift clicks in the default table.* Chosen: shift-left and shift-right open `main` too, because today a shift-click is a plain click to the plugin ("as today"). Alternatives: (a) leave them unset per the literal § 4.3.4 list, a shift-click outside a match would stop opening the menu; (b) an implicit shift → plain fallback in the plugin, a hidden rule.
+    3. *Shape.* Chosen: dictionaries as § 6.1.8 words it (`clicks` click → action, `overrides` situation → partial clicks), JSON keys as written (`LEFT_CLICK`, `siege.match`). Alternatives: (a) lists of rows, more duplicate checks.
+    4. *Menu key check.* Chosen: format only. Alternatives: (a) must exist as a `MenuTemplate`, would refuse the seeded `siege.shop` until L3 lands.
+    5. *Run command.* Chosen: any one-line player command, leading slash dropped. Alternatives: (a) an allow-list, too narrow.
+    6. *Empty overrides.* Chosen: dropped on save. Alternatives: (a) kept, no behaviour difference.
+    7. *Menu key picker.* Chosen: a datalist of `main`, `siege.information`, `siege.shop`, `siege.overview` plus free text. Alternatives: (a) a new `api/MenuTemplates` client, more scope and still missing code-only menus.
+6. **Out of scope, noted.** None filed.
+7. **Blockers.** None.
+8. **At merge / what the developer must do.**
+    1. Apply migration `AddMenuItemSettings`. Nothing changes in game until L6 #871.
+    2. Smoke test § 5.1 of `docs/guides/siege-shop-smoke-test.md` (all steps tagged; step 6 needs a connected game server to see the event).
+9. **Notes for later links.**
+    1. L6 (#871): read `menuItem` from `GET api/GameSettings` (always present, defaults when unset) and reload it on `GameSettingsChanged` (scope `Game`). Situation order to check: `MenuItemSettings.Situations` (survival match, match, hub). A click missing from an override uses `clicks`; a click missing from `clicks` does nothing. `RunCommand` text has no slash. `giveTo` is lower case `all`/`bedrock`; material is upper case without `minecraft:`. `INVENTORY_CLICK` only while `movable` is false (card hint says so).
+    2. L6: the `siege.information` key needs the lobby context the plugin already adds for `/siege menu`; `siege.shop` exists once L3 is merged.
+    3. L4 (#869) and L6: L5's migration is the latest of this chain in knk-web-api; whoever merges after Production's next migration regenerates.
