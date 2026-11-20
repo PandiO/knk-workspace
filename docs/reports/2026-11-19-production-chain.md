@@ -84,7 +84,7 @@ of what is already in `next`.
 | L16 P5c transport web app | #682 | Merged into next (2026-11-20) | web app `e36d39f`, workspace `77b3d4f5`; merges: web app `5ad5029f`, workspace `9eae7f48` | [web-app#68](https://github.com/PandiO/knk-web-app/pull/68), [ws#887](https://github.com/PandiO/knk-workspace/pull/887) | green on `e36d39f` (build-and-test, e2e) | create_session `session_01R1w2Uu8TpsSchsfou5i63j` (prompt says start without asking), started 2026-11-20 |
 | L17 P6a API: StorageContainer, caller-filtered reads, menu seeds | #683 | Merged into next (2026-11-20) | api `a2b8a98`, workspace `bd4d7949`; merges: api `a2865d75`, workspace `3dc4267c` | [api#67](https://github.com/PandiO/knk-web-api/pull/67), [ws#889](https://github.com/PandiO/knk-workspace/pull/889) | green (build-and-test, mysql-tests, fresh-database) | create_session `session_01R1w2UukTGdahr4dAwQTutW` (prompt says start without asking), started 2026-11-20 |
 | L18 P6 plugin: terminals, displays, Structures menu, structure menu, orders list | #74 | Merged into next (2026-11-20) | plugin `a9ee8bf1`, workspace `f947c84b`; final head `19f74865` (L18 merged `next` and regenerated `content-seeds.json`); merges: plugin `8e672ba6`, workspace `df27cc18` (after a coordinator merge of `next`, `0f1c8264`) | [plugin#110](https://github.com/PandiO/knk-plugin/pull/110), [ws#898](https://github.com/PandiO/knk-workspace/pull/898) | green (plugin build + paper-boot, 69 scenarios) | create_session `session_01R1w2UxMM4WEwxxedAe11ji` (prompt says start without asking), started 2026-11-20 |
-| L19 P7 delivery and inbox API | #60 | Running | — | — | — | create_session `session_01R1w2UwpK1NtaZLrA8k2uhP` (prompt says start without asking), started 2026-11-20 |
+| L19 P7 delivery and inbox API | #60 | In review (2026-11-21) | api `a389259`, workspace `fbe4ded6` | [api#70](https://github.com/PandiO/knk-web-api/pull/70), [ws#899](https://github.com/PandiO/knk-workspace/pull/899) | build-and-test, fresh-database green; mysql-tests running (green locally) | create_session `session_01R1w2UwpK1NtaZLrA8k2uhP` (prompt says start without asking), started 2026-11-20 |
 | L20 P7b inbox plugin, kit/lootbox migration | #684 | Not started | — | — | — | — |
 | L21 P8a harvest API | #685 | Not started | — | — | — | — |
 | L22 P8 harvest plugin | #134 | Not started | — | — | — | — |
@@ -1876,3 +1876,97 @@ _(Each link appends its block here when it finishes.)_
     1. L19/L20 (P7): inbox and stash storages bind with `/knk storage bind` the same way, and the terminal works for a
        player's own storage. Unique items still need an instance-to-item builder (#897).
     2. Worker NPCs: open `structures.structure` with `ctx.structureId` and `ctx.name`. The feature needs no change.
+
+### 4.19 L19 — P7 delivery and inbox API (#60)
+
+1. **Scope done** (knk-web-api, plus essential docs in knk-workspace).
+    1. `IItemDeliveryService` (DESIGN § 4.6, decision record § 2.4, D7, A15): `POST api/ItemDeliveries` (the game server
+       sends what it could not place; staff with `knk.economy.admin` send gifts). Items move `SYS_WORLD` → the player's
+       Inbox storage (Player, purpose Inbox, made on first use) as RewardInbox; fungible items as stock lines, unique
+       ones as `StockUnit`s. A hard cap (raw units × storage weight) that premium tiers raise; the overflow moves
+       `SYS_WORLD` → `SYS_LOSS` as InboxOverflow. One delivery per idempotency key (replay; another body is 409).
+    2. Entities `ItemDelivery` and `ItemDeliveryLine` (the inbox lots: requested, inboxed, lost, claimed, expired,
+       remaining, expiry, reminders). Notification `InboxUpdated` (Delivered with lost units and a warning level,
+       ExpiryReminder, Expired).
+    3. Claim `POST api/Inbox/{userId}/claim` (game server, `X-Acting-User-Id` = the player): partial, oldest lots first,
+       InboxClaim to `SYS_WORLD`. 30-day expiry with reminders 7 and 1 days before: `InboxMaintenanceService` hourly and
+       `POST api/Inbox/sweep` (staff); InboxExpired to `SYS_LOSS`.
+    4. Premium stash (separate Player storage, purpose Stash): idempotent `.../stash/deposit` and `.../withdraw` for the
+       game server (that player) or `knk.economy.admin`. Views `GET api/Inbox/{userId}` and `.../stash` for the game
+       server, the player themself and economy staff.
+    5. Game settings section `production.delivery` (caps, expiry, reminder days, warning levels, premium tier caps by
+       permission group). Every move needs `Production:Enabled` (409); reads work while it is off. Kit and lootbox
+       delivery are untouched (#261).
+    6. #883: validation method `ProductionAreaPlacement` (P-3) on the `ProductionArea` form's structure field (seed v3,
+       warning by default); run on area create and update, `placementWarnings` returned. Region areas whole, Cuboid by
+       corners, Radius by centre and edge points; Polygon not checked (#900).
+    7. #890: `destinationWarehouseName`, `carrierStructureName`, `productionStructureName` (cycle records),
+       `fromKind`/`toKind` on due lanes, `unitTypes` on survey overlaps (#875).
+    8. Seeds `ItemDelivery` (form and display, G17), `ProductionArea` form seed v3. Pinned access tests. One additive
+       migration `20261120234819_AddItemDelivery` (two tables), regenerated last after merging `next` `fc1a514`
+       (`AddSiegeWeaponUnlockMinTitle`); first generated on `a2865d7`, regenerated after `AddMenuItemSettings` and again;
+       snapshot never hand-edited. `KnKDbContext`: one contiguous model block, no DbSet properties.
+    9. knk-workspace (branch from `next`): smoke guide § 8 (§ 8.1 20 API steps: 16 automated, 3 partly, 1 by hand; § 8.2
+       plugin draft for L20), changelog entry, production installation § 5.3 item 14, implementation plan status.
+2. **Commits and heads.** knk-web-api `claude/production-p7` at `a389259` (9 commits plus 2 merges of `next`, last
+   `fc1a514`). knk-workspace `claude/production-p7` at `fbe4ded6` (3 commits plus 2 merges of `next`; the changelog and
+   the smoke guide header kept both sides).
+3. **PRs.** [knk-web-api#70](https://github.com/PandiO/knk-web-api/pull/70) (Closes #60, #883, #890; Part of #875) and
+   [knk-workspace#899](https://github.com/PandiO/knk-workspace/pull/899) (Part of #60, #883, #890), base `next`. Not
+   merged.
+4. **Tests, baseline → result.**
+    1. knk-web-api: baseline on `next` `fc1a514` 5019 passed / 119 skipped / 0 failed (first base `a2865d7`: 4969).
+       Branch `a389259`: 5048 / 122 / 0.
+    2. New (32): `ItemDeliveryServiceTests` (12), `InboxControllersTests` (4), `ProductionAreaPlacementTests` (6),
+       `TransportReadNamesTests` (4), `SurveyOverlapUnitTypesTests` (1), `AddItemDeliveryTests` (2),
+       `ItemDeliveryMySqlTests` (3, requires-mysql). Pinned: `ReadAccessRulesTests`, `FormConfigurationSeedFilesTests`.
+    3. MySQL 8.0.46 locally: the 3 delivery and 9 stock ledger MySQL tests green; the full suite with `KNK_TEST_MYSQL`
+       fails only the known red #285.
+    4. Broken on purpose: newest-lot-first claims fail the FIFO test; removing the user row lock fails all three MySQL
+       delivery tests.
+    5. CI on `a389259`: build-and-test and fresh-database green; mysql-tests still running at the time of writing (green locally, see 3).
+    6. Known reds: #285 (MySQL run only).
+5. **Decisions (DESIGN § 4.3).** All 16, each with alternatives, are in knk-web-api#70. The main ones:
+    1. *Who places.* Chosen: the game server places what fits and sends only the rest; placed items never touch the
+       ledger. Alternatives: (a) API-side pending deliveries as for #261: a second path, items in limbo for offline
+       players; (b) everything into the inbox and an auto-claim: a full inbox would lose rewards an online player had
+       room for.
+    2. *Ledger counterpart.* Chosen: `SYS_WORLD` for deliveries and claims. Alternatives: (a) `SYS_PRODUCTION`: mixes
+       rewards into production figures; (b) `SYS_ADJUSTMENT`: kept for staff corrections.
+    3. *Expiry.* Chosen: the lots (`ItemDeliveryLine`) carry the expiry; the stock line stays the truth. Alternatives: (a)
+       per stock line: loses arrival times; (b) one row per item.
+    4. *Premium caps.* Chosen: game settings `production.delivery.premiumTiers` by permission group id, the higher of
+       base and tier. Alternatives: (a) columns on `PermissionGroup` (wider migration, form seed bump); (b) permission
+       nodes per cap.
+    5. *Defaults.* Chosen: inbox 2304 units, stash 0 (premium perk), reminders 7 and 1 days, warnings 80 % and 95 %.
+       Alternatives: (a) a base stash for everyone; (b) other numbers (all settings).
+    6. *Flag.* Chosen: every move (deliver, claim, stash, sweep) needs `Production:Enabled`; reads stay on; expiry waits.
+       Alternatives: (a) claims while off (A21); (b) expiry while off.
+    7. *Concurrency.* Chosen: lock the user row before finding or making the inbox, then the storages in id order.
+       Alternatives: (a) a unique index on (user, purpose).
+    8. *P-3.* Chosen: a new validation method on the structure field, district or territory picked from the structure.
+       Alternatives: (a) `RegionContainment` + `InsideTerritory` with paths: one would always fail per structure; (b)
+       Polygon by bounding box: false warnings.
+    9. *Smoke gate.* The developer's 2026-11-19 waiver, read by the coordinator as covering the later links.
+6. **Out of scope, noted.** #900 (P-3 for Polygon areas, tier:1), #901 (P7 web app: settings card, a player's inbox,
+   stash and gifting, tier:2). The L20 contract is a comment on #684; #875 API part a comment on #875. Codex: the
+   connector hit its code-review usage limit on both PRs (also on the `@codex review` after the last merge); no inline
+   findings; noted on each PR.
+7. **Blockers.** None.
+8. **At merge / what the developer must do.**
+    1. Apply migration `AddItemDelivery` (additive, two tables, after `AddSiegeWeaponUnlockMinTitle`).
+    2. Import the seeds `ItemDelivery` (form and display) and `ProductionArea` v3 ("make default").
+    3. Set the game settings section `production.delivery` and each premium tier's caps (JSON in the changelog entry);
+       defaults apply when missing.
+    4. Grant `knk.economy.admin` to staff who gift items or use players' stashes. No `api.env` key, no plugin
+       `config.yml` change.
+    5. Smoke test [§ 8.1](../guides/production-storage-transport-smoke-test.md) (tier:3): 16 of 20 steps automated,
+       about 10 minutes for the untagged parts.
+    6. At merge into `next`: the `documentation` sub-issue (delivery and inbox architecture page and API contract, admin
+       guide for the inbox settings and gifting, feature register row; the player guide with L20).
+9. **Notes for later links.**
+    1. L20 (#684): see the comment on #684. Place first, then `POST api/ItemDeliveries` with the rest and a stable key
+       (`kit-claim-<claimId>`, `lootbox-claim-<claimId>`); claim with one key per click and place exactly `accepted`;
+       fall back to today's delivery when the API answers 409 `ProductionDisabled`. Claimed unique items need the
+       instance-to-item builder (#897, from L18).
+    2. A web app link (#901): the `production.delivery` settings card and a player's inbox and stash.
