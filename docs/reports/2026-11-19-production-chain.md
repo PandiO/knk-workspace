@@ -289,6 +289,17 @@ of what is already in `next`.
    three different repos. L14 is the next API link in charter order; L19 (P7) and L25 (P10) also have open gates but
    come later in that order.
 
+44. **L12, L13, L14 stopped on the usage limit (2026-11-19 22:13).** All three hit the account's 5-hour limit, which
+   reset at 23:40. This coordinator session was also idle until 2026-11-20 12:08, so the 22:46 check-in fired 13 hours
+   late. L12 (`c00f95a2`) and L13 (`efcfcfc`) had pushed work in progress; L14 had not pushed yet. All three were
+   resumed at 12:10 with send_message: push what survived, merge the moved `next`, carry on. The weekly limit still
+   shows a warning (resets about 17:00 UTC). Alternatives: (a) fresh sessions: would lose L14's unpushed work if it
+   survived.
+45. **P3 docs #839:** done (PR #844 merged).
+46. **Siege shop chain (#611, same coordinator as #354), 2026-11-20.** Shop L1 #866 adds a knk-web-api migration, and a
+   plugin link edits `KnKPlugin`, `config.yml` (`siege.points`) and `plugin.yml` in its own blocks. Same rule as decision
+   7: whoever merges second regenerates. L12 and L14 were told.
+
 ## 4. Link blocks
 
 _(Each link appends its block here when it finishes.)_
