@@ -72,8 +72,8 @@ of what is already in `next`.
 | L12 P4b surveys plugin | #679 | Merged into next (2026-11-20) | plugin `3472e32d`, workspace `c6f53e07`; merges: plugin `d36001b2`, workspace `496ed6fa` | [plugin#105](https://github.com/PandiO/knk-plugin/pull/105), [ws#876](https://github.com/PandiO/knk-workspace/pull/876) | green (plugin build + paper-boot, 68 scenarios) | create_session `session_01R1w2Utt8cigo5ND98ZqXzC` (prompt says start without asking), started 2026-11-19 |
 | L13 P4c yield areas web app | #680 | Merged into next (2026-11-20) | web app `6da700c`, workspace `638e5c3c`; merges: web app `eaf0467d`, workspace `2159952e` | [web-app#67](https://github.com/PandiO/knk-web-app/pull/67), [ws#873](https://github.com/PandiO/knk-workspace/pull/873) | green on `6da700c` (build-and-test, e2e) | create_session `session_01R1w2UwYw3NNQSSBoP7XaBk` (prompt says start without asking), started 2026-11-19 |
 | L14 P5 transport API (simulated carrying, G14) | #79 | Merged into next (2026-11-20) | api `ef61cd1`, workspace `ae26c88b`; merges: api `bf8633fb`, workspace `66cd37f0` (after a coordinator merge of `next`, `9a4de0b9`) | [api#65](https://github.com/PandiO/knk-web-api/pull/65), [ws#880](https://github.com/PandiO/knk-workspace/pull/880) | api build-and-test, fresh-database green; mysql-tests green on push run | create_session `session_01R1w2UtGLZrUEAUNFYvkqGB` (prompt says start without asking), started 2026-11-19 |
-| L15 P5b lanes plugin | #681 | In review (2026-11-20) | plugin `796f1127`, workspace `77ebdc07` | [plugin#108](https://github.com/PandiO/knk-plugin/pull/108), [ws#886](https://github.com/PandiO/knk-workspace/pull/886) | CI green (build + paper-boot) on `796f1127` | create_session `session_01R1w2Ux1xEr3Um5M3f3UysM` (prompt says start without asking), started 2026-11-20 |
-| L16 P5c transport web app | #682 | In review (PRs open, not merged) | web app `e36d39f`, workspace `77b3d4f5` | [web-app#68](https://github.com/PandiO/knk-web-app/pull/68), [ws#887](https://github.com/PandiO/knk-workspace/pull/887) | green on `e36d39f` (build-and-test, e2e) | create_session `session_01R1w2Uu8TpsSchsfou5i63j` (prompt says start without asking), started 2026-11-20 |
+| L15 P5b lanes plugin | #681 | Merged into next (2026-11-20) | plugin `796f1127`, workspace `77ebdc07`; merges: plugin `7116f1a5`, workspace `e0bf327e` (after a coordinator merge of `next`, `8be418b6`) | [plugin#108](https://github.com/PandiO/knk-plugin/pull/108), [ws#886](https://github.com/PandiO/knk-workspace/pull/886) | CI green (build + paper-boot) on `796f1127` | create_session `session_01R1w2Ux1xEr3Um5M3f3UysM` (prompt says start without asking), started 2026-11-20 |
+| L16 P5c transport web app | #682 | Merged into next (2026-11-20) | web app `e36d39f`, workspace `77b3d4f5`; merges: web app `5ad5029f`, workspace `9eae7f48` | [web-app#68](https://github.com/PandiO/knk-web-app/pull/68), [ws#887](https://github.com/PandiO/knk-workspace/pull/887) | green on `e36d39f` (build-and-test, e2e) | create_session `session_01R1w2Uu8TpsSchsfou5i63j` (prompt says start without asking), started 2026-11-20 |
 | L17 P6a API: StorageContainer, caller-filtered reads, menu seeds | #683 | Running | — | — | — | create_session `session_01R1w2UukTGdahr4dAwQTutW` (prompt says start without asking), started 2026-11-20 |
 | L18 P6 plugin: terminals, displays, Structures menu, structure menu, orders list | #74 | Not started | — | — | — | — |
 | L19 P7 delivery and inbox API | #60 | Not started | — | — | — | — |
@@ -338,6 +338,25 @@ of what is already in `next`.
    almost nothing was lost. L17 was told that the siege shop L1 migration (`AddSiegePointsEarning`, `9a3132dc`) is now
    in `next`. Lesson: with the weekly limit near, start fewer links at once. Alternatives: (a) fresh sessions: same
    result, more setup.
+
+51. **L15 and L16 merge (2026-11-20).** § 6 checks held for both:
+   1. Heads matched, and the branches merged cleanly with `next`.
+   2. CI was green: plugin build and paper-boot; web app build-and-test and e2e.
+   3. Codex was at its usage limit, so there were no findings.
+   4. The scope matched #681 and #682.
+   A cancelled duplicate e2e run blocked the web app PR under the required-check rule. The coordinator re-ran it,
+   then merged.
+   1. Merged: plugin #108 `7116f1a5`, workspace #887 `9eae7f48`, web app #68 `5ad5029f`.
+   2. Workspace #886 conflicted with L16's docs and the siege shop changelog entry. The coordinator merged `origin/next`
+      (`8be418b6`), then merged #886 as `e0bf327e`.
+   L15 did the plugin side of #875. The `CaptureRadius` handler of #877 waits for L17's task type and output.
+   P5 (L14–L16) is complete: `documentation` sub-issue #891 under #79, with a docs session.
+52. **P5 API follow-ups (#890, tier:1) and #883 (P-3 for production areas).** The API gaps found by L15 and L16 are
+   #890: names on the transport reads, the structure kind on due lanes, and the #875 DTO field. #883 is a missing
+   piece of P4: the design's placement rule P-3, warn by default. Chosen: fold both into L19 (#60), the next API link
+   after L17. #883 needs no developer decision, because DESIGN § 3.4 already defines the rule. Alternatives: (a) a
+   separate small link: overhead.
+53. **P4 docs #882:** done (#884 holds the promotion-time leftovers).
 
 ## 4. Link blocks
 
