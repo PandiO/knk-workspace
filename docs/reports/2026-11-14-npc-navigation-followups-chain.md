@@ -1,6 +1,6 @@
 # NPC navigation follow-ups chain — progress report
 
-**Status:** In review: every link merged into `next`; developer smoke tests, the option-B decision and promotion open (2026-11-16) · **Last updated:** 2026-11-16
+**Status:** In review: every link merged into `next`; developer smoke tests, the option-B decision and promotion open (2026-11-16) · **Last updated:** 2026-11-20 (block 4.26, link H1)
 
 **Issue:** [PandiO/knk-workspace#358](https://github.com/PandiO/knk-workspace/issues/358), links
 [#519](https://github.com/PandiO/knk-workspace/issues/519) (L1),
@@ -63,6 +63,7 @@ the configuration reference § 4.27), then restart. In test order:
 | E1 Exit rules checked while NPCs walk | #701 | In review (PRs open, not merged) | knk-plugin `de1c8a6a`; knk-workspace `a827abc6` | PandiO/knk-plugin#74, PandiO/knk-workspace#725 | `build` and `paper-boot` (61) green on `de1c8a6a` (push and PR runs); both new scenarios fail on `next`'s walking checks, pass with E1; docs no CI; Codex at its usage limit | create_session (2026-11-18) |
 | R1 Fix: held NPCs stay held through `/knk cache refresh` | #724 | In review (PRs open, not merged) | knk-plugin `836ddf62`; knk-workspace `3f1ec0c5` | PandiO/knk-plugin#75, PandiO/knk-workspace#730 | `build` and `paper-boot` (62) green on `836ddf62` (push and PR runs); the new scenario and core test fail on `next`, pass with R1; docs no CI; Codex at its usage limit | create_session (2026-11-18) |
 | J1 Fix: no jumps toward a waypoint on the stair house (the climb's CI flake) | #695 | In review (PRs open, not merged) | knk-plugin `7dd44ed9`; knk-workspace `874e7510` | PandiO/knk-plugin#95, PandiO/knk-workspace#840 | `build` and `paper-boot` (63) green on `5521b833` (push and PR runs); 12/12 local climbs and 34/34 `npc-*`; docs no CI; Codex at its usage limit | create_session (2026-11-19) |
+| H1 Fix: ladders and roof hatches on an NPC's off-road leg | #779 | In review (PRs open, not merged) | knk-plugin `d6b3c0f0`; knk-workspace `644945d5` (`next` `6878d584` merged in) | PandiO/knk-plugin#99, PandiO/knk-workspace#850 | `build` and `paper-boot` (65) green on `d6b3c0f0` (push and PR runs); red on `18e39020` (the climb's creep, fixed); 6/6 local runs, 65/65 local suite; docs no CI; Codex at its usage limit | create_session (2026-11-19) |
 
 ## 3. Coordinator decisions
 
@@ -2143,3 +2144,78 @@ _(Each link appends its block here when it finishes.)_
 9. **Notes for later links.**
     1. Citizens' NPCs have a step-height attribute of 1.0. Its move control jumps for a target at least that far up (`>=`), and its A* strategy moves on within the margin across with |dy| < 1. Any rule about NPC jumps needs these, not vanilla's.
     2. Local scenario runs here: cache `plugins/Citizens/lib` between starts, or Citizens fails on 429s now and then.
+
+### 4.26 H1 — Ladders and roof hatches on an NPC's off-road leg (#779)
+
+1. **Scope done** (#779; prompt § 2). Behind `npc.navigation.enabled` (off by default); no new key, no migration. Nothing in `core/roads/walk`, `paper/navigation`, `core/navigation/shape` or `siege/`. The NPC side adapts to `WalkCells.isClimbableHatch` (#771, `cee53213`).
+    1. **The mismatch, found.** On `next` the new scenario fails: "NO_PATH … 8 cells closed to a body, walked in hops", and the NPC ends under the roof. Three NPC-side checks dropped the ladder:
+        1. The planner's body check: `BukkitNavWorld.blocksBody` treated a ladder and an open trapdoor as walls (both have a collision box).
+        2. `RouteFollower` kept a walked cell only on a standable floor, and a ladder cell has none.
+        3. `WaypointChain.split` made the step from the ladder's foot to the roof a gap for a local leg, where Citizens' A* found no path either.
+        4. C1's "no ladders" profile (decision 5.6) never applied: the search reads climbables from the captured cells.
+    2. **The rules** (knk-core `NpcClimbables`). A ladder, or an open trapdoor right above one, is climbed, as `WalkCells.isClimbableHatch` says. A closed trapdoor over a ladder, other than the iron one, is a hatch a hand opens. `climbStep` gives the walk search's ladder moves.
+    3. **Passability and straight-walk checks** (`BukkitNavWorld`). Ladders and open hatches are passable, never a wall and never a floor; a closed hatch stays solid. `climbsAt` tells the route line where a body climbs (`NpcClimbables.Climbs`, because `NavWorld` belongs to `core/navigation/shape`). `RouteFollower` keeps a walked ladder cell at its own height; `WaypointChain` keeps a ladder move as it is.
+    4. **The planner's body check** (`NpcWalkPlanner.BodyCheck.Bukkit`, made per leg). It passes ladders and open hatches, and closed hatches for an NPC with `open-doors`. The NPC profile keeps the walk settings' climbables. For an NPC with `open-doors`, a closed hatch over a captured ladder is climbable in the search (`NpcClimbables.withClosedHatches` over the capture); without it, the capture is unchanged and the hatch blocks.
+    5. **Opening a closed hatch** (`NpcMover.openHatchAhead`, knk-paper `NpcHatches`). Citizens' door opener skips trapdoors (`MinecraftBlockExaminer.isDoor`). For a moving NPC with `open-doors`, K&K opens the hatch in the column of Citizens' current waypoint or right above the head, within 2.5 blocks, with the wooden trapdoor sound. It closes it again 1.5 s after the shaft is empty, and leaves a hatch alone if someone else closed it in between.
+    6. **The climb** (`NpcMover.holdOnClimb`, knk-paper `ClimbHold`). Citizens follows a waypoint list straight up a ladder: the move control's jump becomes climbing in a ladder block. But with the waypoint right overhead, the body crept sideways about 0.005 a tick (x 23.55 → 23.10 under 23.50). At the top its head caught on the roof block beside the hatch, and it hung until the watchdog replanned. That gave 1 or 2 stuck spells in about 1 run in 3, locally and in CI on `18e39020`. Now, while the body climbs toward a waypoint in its own column, its sideways speed draws it back to the middle. Every NPC gets this.
+    7. **J1's step-hop hold-back** (prompt § 2.4) does not stop the climb. A waypoint straight above is in the body's own cell, so `walksOn` keeps the jump, and jump power does not apply off the ground. 0 jumps were held back on every trip of every run.
+    8. **Scenario `npc-ladder-hatch`** (`NpcLadderHatchScene`, `MIN_SCENARIOS` 65, `PaperScenariosTest` 65). A 7 × 7 tower with a ladder on its inside north wall and an oak hatch facing the same way. Four trips from a fake road to the roof:
+        1. Open hatch, `open-doors`.
+        2. Open hatch, no `open-doors`.
+        3. Closed hatch, `open-doors`.
+        4. Closed hatch, no `open-doors`: no walk through it, never on the roof, the hatch stays closed.
+    9. `ScenarioNpcs.spawn(feet, profile)` for a profile of its own.
+2. **Commits and heads.**
+    1. knk-plugin `claude/npc-movement-h1` at **`d6b3c0f0`**: base `next` `cbac2b6c`, `origin/next` merged twice (`4e296797`, `6878d584`; clean). 4 H1 commits.
+    2. knk-workspace `claude/npc-movement-h1` at **`644945d5`**: base `next`, merged up to `a798db43`.
+3. **PRs** (base `next`, not merged).
+    1. PandiO/knk-plugin#99 (`Part of #779`).
+    2. PandiO/knk-workspace#850 (`Closes #779`).
+4. **Tests, baseline → result.**
+    1. `./gradlew build -x deployToDevServer`. Baseline on `cbac2b6c`: core 3541, api-client 366 (2 skipped), paper 3229 (18 skipped). Result on `d6b3c0f0` (with `next` `6878d584`): core 3552, api-client 366 (2 skipped), paper 3254 (18 skipped), 0 failures.
+    2. H1's own tests are core +8 and paper +14. The rest of the change is `next`'s merges.
+        1. `NpcClimbablesTest` 7.
+        2. `NpcNavigationOffRoadWalksTest` +1 (hatch only with `open-doors`; fails with the condition removed).
+        3. `BukkitNavWorldBlocksTest` +4.
+        4. `NpcWalkPlannerTest` +3 (fails with the overlay off; C1's profile test changed to the new decision).
+        5. `NpcHatchesTest` 5 (MockBukkit).
+        6. `ClimbHoldTest` 2.
+    3. **Scenario, before → after** (local, Paper 26.3 b205, Citizens b4269):
+        1. `npc-ladder-hatch` on `next`: fails (trip 1 ends under the roof).
+        2. After the fix, 6 of 6 standalone runs pass. Trips 1–3 arrive in 17.2 to 17.3 s; trip 4 is kept off the roof. 0 stuck spells, 0 jumps held back. On the ladder, x stays within 23.46 to 23.61.
+        3. Whole suite in one local run: 64/65 before the climb fix (only this scenario), 65/65 after (24 min).
+    4. **CI.**
+        1. On `18e39020`: `build` green; `paper-boot` red on push and PR runs (44708792074, 44708854059), `npc-ladder-hatch` only, the climb's creep. Fixed in `abb997e9`.
+        2. Runs on `abb997e9` were cancelled by the next push.
+        3. On `d6b3c0f0`: `build` and `paper-boot` green on push and PR runs (44717119539/44717119421, 44717129333/44717129374): 65 scenarios, 0 problems, `npc-ladder-hatch` 1288 ticks.
+    5. Known reds: none. Codex: at its code-review usage limit on PandiO/knk-workspace#850 (said on PandiO/knk-plugin#99); finished without its review.
+5. **Decisions (DESIGN § 4.3).**
+    1. *Ladders in the NPC profile* (revisits C1 decision 5.6). Chosen: ladders as the walk settings', since the issue asks for the climb and the search read them from the capture anyway. Alternatives:
+        1. (a) Keep "no ladders" and make it binding (a filter on the captured cells): towers stay out of reach.
+    2. *Where the hatch rule lives.* Chosen: a knk-core `NpcClimbables` over `WalkCells.isClimbableHatch`, used by every NPC check. Alternatives:
+        1. (a) Rules per check in `BukkitNavWorld` (two copies of the rule).
+        2. (b) A `NavWorld` method (`core/navigation/shape` is the off-road chain's).
+    3. *Closed hatches for NPCs that open doors.* Chosen: an overlay on the captured cells in `NpcWalkPlanner`, with K&K opening the hatch in the world. Alternatives:
+        1. (a) A change to the capture (`paper/navigation`, forbidden).
+        2. (b) Citizens' door opener (it skips trapdoors).
+        3. (c) Opening hatches at plan time (opens them long before the NPC comes).
+    4. *Closing a hatch again.* Chosen: closed 1.5 s after its shaft is empty, unless someone else touched it, like a door behind the NPC. Alternatives:
+        1. (a) Leave it open (a player's tower left open).
+        2. (b) Close it right after the opener passed (shuts on a follower).
+    5. *The climb's creep.* Chosen: K&K draws a climbing body back to its column's waypoint (sideways speed, at most 0.1 a tick). Alternatives:
+        1. (a) Move climb waypoints toward the ladder's wall (fixes only one axis).
+        2. (b) Teleport the body to the middle (heavier, may cancel Citizens' order).
+        3. (c) A wider tower in the scenario (hides the bug from real towers).
+    6. *The blocked trip's result.* Chosen: not judged; filed #848 (hops end as `Arrived` under an unreachable goal, already on `next`). Alternative:
+        1. (a) Fix the hop fallback here (outside #779's scope).
+6. **Out of scope, noted.**
+    1. Filed #848: an off-road leg walked in hops ends as `Arrived` under an unreachable goal on another level.
+    2. Docs follow-ups for the docs session: `docs/architecture/npc-navigation.md` (`NpcClimbables`, `NpcHatches`, `ClimbHold`, the two mover hooks), `plugin-scenarios.md` (`npc-ladder-hatch`), and the admin guide (NPCs open wooden roof hatches with `open-doors`).
+7. **Blockers.** None.
+8. **At merge / what the developer must do.**
+    1. Nothing in `config.yml`, no migration. For the smoke test, add an access profile `no-doors` with `open-doors: false` (YAML in the guide).
+    2. The smoke test: `docs/guides/npc-movement-smoke-test.md`, section "Link H1". 6 steps, 4 tagged; climbing down and game feel by hand.
+    3. Review decisions 5.1 (it changes C1's 5.6), 5.4 and 5.5.
+9. **Notes for later links.**
+    1. Citizens' NPCs climb a ladder on a waypoint list by themselves. Minecraft's move control lets a body creep sideways under a waypoint right overhead, and `ClimbHold` corrects that. Any climbable added later (vines, scaffolding) needs `NpcClimbables.DEFAULT` or the walk settings' list passed through: `BukkitNavWorld`, the hatch opener and the route line use the default (plan 4c.8 item 7.8.1).
+    2. Group followers on a ladder are not proven (plan item 7.8.2).
