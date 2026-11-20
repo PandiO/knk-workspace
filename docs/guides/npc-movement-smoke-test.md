@@ -3,7 +3,7 @@
 **Status:** Written 2026-11-16 for knk-plugin `next` `cc5262ff` (links M1–M7 merged into `next`, behind
 `npc.navigation.enabled` and each link's own key, all off by default); only the steps no plugin scenario checks; not
 run yet (the developer's run with every key on is planned for 2026-11-16)
-**Last updated:** 2026-11-18 (link R1 section, [#724](https://github.com/PandiO/knk-workspace/issues/724)); 2026-11-18 (link E1 section, [#701](https://github.com/PandiO/knk-workspace/issues/701)); 2026-11-18 (link C1 section, [#700](https://github.com/PandiO/knk-workspace/issues/700)); 2026-11-17 (link B5 section, [#699](https://github.com/PandiO/knk-workspace/issues/699)); 2026-11-16 (assembled from the developer tests of implementation plan 4c.4, PandiO/knk-workspace#658)
+**Last updated:** 2026-11-20 (link H1 section, [#779](https://github.com/PandiO/knk-workspace/issues/779)); 2026-11-18 (link R1 section, [#724](https://github.com/PandiO/knk-workspace/issues/724)); 2026-11-18 (link E1 section, [#701](https://github.com/PandiO/knk-workspace/issues/701)); 2026-11-18 (link C1 section, [#700](https://github.com/PandiO/knk-workspace/issues/700)); 2026-11-17 (link B5 section, [#699](https://github.com/PandiO/knk-workspace/issues/699)); 2026-11-16 (assembled from the developer tests of implementation plan 4c.4, PandiO/knk-workspace#658)
 **Issue:** [PandiO/knk-workspace#358](https://github.com/PandiO/knk-workspace/issues/358) (links
 [#621](https://github.com/PandiO/knk-workspace/issues/621)–[#627](https://github.com/PandiO/knk-workspace/issues/627));
 post results on the link's sub-issue or [#603](https://github.com/PandiO/knk-workspace/issues/603)
@@ -200,6 +200,61 @@ by hand; not run yet. About 15 minutes; 5 minutes for the untagged step only.
    but run `/knk cache refresh` within a second of setting AllowEntry back to true. Look: the followers follow within
    about a second of the refresh (they switch to the new answers when the re-warm's event comes, not before); no
    `TRESPASS` line.
+
+## Link H1: a ladder and a roof hatch on an NPC's off-road leg
+
+Added 2026-11-20 for knk-plugin `claude/npc-movement-h1` ([#779](https://github.com/PandiO/knk-workspace/issues/779));
+run it on `next` once H1 is merged. Same setup as above; the movement keys don't matter for this section. 4 of 6 steps
+automated or partly automated (tagged); every step can still be run by hand; not run yet. About 20 minutes; 10 minutes
+for the untagged steps only.
+
+Setup:
+
+1. Build or pick a tower whose only way onto the roof is a ladder on an inside wall and a wooden trapdoor in the roof
+   right above the ladder's top. Place the trapdoor so that, when open, its panel lies against the same wall as the
+   ladder; Minecraft lets a player climb through it then. Stand on the road nearest the tower and run
+   `/knk npc nav from`. Stand on the roof, a few blocks from the hatch, and run `/knk npc nav to` and
+   `/knk npc nav route save hatch-tower`.
+2. Add a second access profile without door opening to `config.yml` (it is a map: no new key), then restart:
+
+   ```yaml
+   npc:
+     navigation:
+       access-profiles:
+         no-doors:
+           bypass-domain-rules: false
+           open-doors: false
+           allow-regions: []
+           deny-regions: []
+   ```
+
+Steps:
+
+1. [automated: `npc-ladder-hatch`, trip "hatch open, open-doors"] **Open hatch, a default NPC.** Open the hatch by hand.
+   `/knk npc nav route load hatch-tower`, `/knk npc nav clear`, `/knk npc nav stats reset`, `/knk npc nav spawn 1`. The
+   NPC walks off the road into the tower, climbs the ladder, passes through the hatch and steps onto the roof. It
+   stops near the goal and does not stand still at the ladder's foot. In the `npc-logs/` run log you see one line
+   "off-road walk to the goal … body check: 0 cells closed …", and no "walked in hops" or "engine found no path".
+   `stats` shows `orders failed 0` and no stuck spells.
+2. [automated: `npc-ladder-hatch`, trip "hatch open, no open-doors"] **Open hatch, an NPC that may not open doors.**
+   The hatch is still open. `/knk npc nav clear`, `/knk npc nav spawn 1 no-doors`. The same as step 1: an open hatch
+   is no door to open.
+3. [automated: `npc-ladder-hatch`, trip "hatch closed, open-doors"] **Closed hatch, a default NPC.** Close the hatch by
+   hand, then `/knk npc nav clear`, `/knk npc nav spawn 1`. On its way up the ladder, the NPC opens the hatch with the
+   trapdoor sound just before its head reaches it, climbs through and arrives on the roof. About 1.5 s after it has
+   left the hatch, the hatch closes again by itself.
+4. [partly automated: `npc-ladder-hatch`, trip "hatch closed, no open-doors"; by hand: what the order ends with]
+   **Closed hatch, an NPC that may not open doors.** The hatch is closed. `/knk npc nav clear`,
+   `/knk npc nav spawn 1 no-doors`. The NPC never opens the hatch and never gets onto the roof. The log shows "off-road
+   walk to the goal …: NO_PATH …, walked in hops". Known: the order then ends as arrived under the roof
+   ([#848](https://github.com/PandiO/knk-workspace/issues/848)). Note what `stats` says.
+5. **Climbing down** (manual: no scenario walks down). Save the reverse route (`/knk npc nav from` on the roof,
+   `/knk npc nav to` on the road, `/knk npc nav route save hatch-tower-down`), close the hatch, then
+   `/knk npc nav route load hatch-tower-down`, `/knk npc nav clear`, `/knk npc nav spawn 1`. The NPC spawns on the
+   roof, opens the hatch beside it, climbs down the ladder and walks out to the road. It must not fall down the shaft.
+6. **Game feel** (manual: needs a real client). Watch steps 1 and 3 from the roof and from the ladder's foot. The climb
+   looks like a player's: no hopping on the ladder and no sliding back down. The hatch opens before the head touches
+   it, not while the NPC is still on the ground.
 
 ## After the run
 
