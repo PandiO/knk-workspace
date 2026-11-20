@@ -235,8 +235,12 @@ endpoint for the plugin (#681) and can be typed in by staff; a structure's trans
 api/ProductionStructures/{id}/transport`) is the automatic trigger's dry run. Agent decisions on knk-web-api PR
 `claude/production-p5` (e.g. the walking speed 4.317 blocks/s as a game setting; the worker is away from loading until
 the order ends; at a full stop the carrier waits 30 minutes, re-routes within the town, else carries on and brings the
-rest back; manual orders through the API, the TransportOrder form seed read only). Plugin: #681. Web app: #682.
-Web app built in link L16 (#682, in review, knk-web-app branch `claude/production-p5c`): the order list and detail
+rest back; manual orders through the API, the TransportOrder form seed read only). Plugin built in link L15 (merged
+into `next`, knk-plugin `7116f1a5`, #681): the lane measurer over the road snapshot, road connections,
+`/knk logistics lanes measure|status` and the headless job (`production.logistics.lanes.*`); agent decisions on the
+knk-plugin PR (e.g. the road distance includes the walk to and from the road; a structure more than 48 blocks from a
+road is Unconnected; the road connection is judged on every lane measured since the server started).
+Web app built in link L16 (#682): the order list and detail
 (timeline, cargo, route, cancel), the manual order page with the dry run, a structure's transport panel with its lanes,
 lanes on the dashboard, the transport settings card with Run transport now, and the #838 reads.
 
