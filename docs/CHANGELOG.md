@@ -14,6 +14,31 @@ This is a human-readable record of capabilities merged into the V3 default branc
   protocol is unchanged. knk-web-app branch `claude/overview-map-f3-map-drawing` (`public/bluemap-bridge/bridge.js`),
   spec [OVERVIEW_MAP_DESIGN.md](specs/in-game-maps/OVERVIEW_MAP_DESIGN.md) O36–O42. Smoke test:
   [overview map smoke test § 3](guides/overview-map-smoke-test.md#3-phase-3-map-page-737-tier2) steps 2–4.
+
+- **Off-road navigation: a default route mode per permission group, step A (API and web app)**
+  ([PandiO/knk-workspace#852](https://github.com/PandiO/knk-workspace/issues/852), link L7b of the off-road chain,
+  #698, on top of the route modes of #707). For staff: a permission group can now have a **default route mode**
+  (`shortest`, `efficient` or `preferred`; "None (default: preferred)" = no default), set on the group's form under
+  Group and shown in the dashboard's "Default route" column. Players don't notice anything yet: the game server starts
+  using it in step B (`/navigate <dest>` without a mode word then takes the default of the player's highest-weight group
+  that has one; a typed word still wins and still needs its `knk.navigate.mode.<word>` node). knk-web-api:
+  `PermissionGroup.DefaultRouteMode` (nullable, stored lowercase), `defaultRouteMode` in `PermissionGroupDto` (read by
+  the plugin through `GET api/PermissionGroups`) and `PermissionGroupListDto`; on create and update the three words are
+  accepted in any case, `""` clears, an omitted value keeps the stored one, anything else answers `400`; changing it is
+  a group edit under the existing access rules (`knk.admin.user.perm` and `PermissionEscalationGuard`'s rank rule). The
+  PermissionGroup form seed has the field in place. knk-web-app: the field in the group DTOs and object config, the
+  dashboard column, and the form dropdown's empty option named by the field setting `emptyOptionLabel`. Branches
+  `claude/offroad-group-route-mode` in knk-web-api, knk-web-app and knk-workspace. Smoke test:
+  [off-road smoke test § 15](guides/navigation-offroad-smoke-test.md#15-l7b-default-route-mode-per-permission-group-852-tier3).
+  Admin steps:
+  1. Apply the migration `AddPermissionGroupDefaultRouteMode` (`dotnet ef database update`; additive: one nullable
+     column `permission_groups.DefaultRouteMode`, null on every group, so routes stay as today).
+  2. Add the field to the PermissionGroup form if it was imported before this change (import never overwrites): in the
+     form designer, step Group, a String field named `DefaultRouteMode`, label "Default route mode", not required,
+     settings JSON `{"enumValues": ["shortest", "efficient", "preferred"], "emptyOptionLabel": "None (default: preferred)"}`.
+     A fresh import of `PermissionGroup` has it. Without the field the form keeps a group's stored default.
+  3. No `api.env` key, no new permission node and no plugin `config.yml` change.
+
 - **Off-road navigation: the smoke-test failures of 2026-11-19** ([PandiO/knk-workspace#780](https://github.com/PandiO/knk-workspace/issues/780),
   [#771](https://github.com/PandiO/knk-workspace/issues/771), [#710](https://github.com/PandiO/knk-workspace/issues/710);
   fix link F3 of the off-road chain, #698). For players: with `navigation.road-goal-reachable` on, the road part of a
