@@ -199,7 +199,9 @@ All **V1** (unchanged in rev. 3; Hybrid default confirmed, P-D1).
 area, with `sharedBy` for units in overlapping shared areas (the API lists those areas in its survey queue), so the
 equal split is computed from what the plugin counted; exclusive overlaps are checked from bounding boxes. Agent
 decisions on knk-web-api PR `claude/production-p4` (e.g. a pin replaces the survey's rate; lines whose output
-disappears stay with base 0; no yield table rows seeded). Plugin: #679. Web app #680 built in link L13 (in review,
+disappears stay with base 0; no yield table rows seeded). Plugin: #679, built in link L12 (2026-11-20, in review,
+knk-plugin branch `claude/production-p4b`): everything in the plugin list below; the placeholder overlay waits for P8's
+regeneration jobs. Web app #680 built in link L13 (in review,
 knk-web-app branch `claude/production-p4c`): the survey viewer, Survey now, the Hybrid override editor and the yield
 table editor; area capture uses the seeded form, with the region world task to be added to the seed (#680) and
 `CaptureRadius` waiting for #679.

@@ -4,6 +4,40 @@ This is a human-readable record of capabilities merged into the V3 default branc
 
 ## Unreleased — on feature branches, not merged
 
+- **Production P4b: yield-area surveys in the plugin** ([PandiO/knk-workspace#679](https://github.com/PandiO/knk-workspace/issues/679),
+  link L12 of the production chain, #22; the API half is #138). For staff: with `production.enabled: true` the game
+  server surveys every `Derived` and `Hybrid` production area the API queues (on creation, once a day while its chunks
+  are loaded, on `/knk production survey <structure> [area]` and after a notable change of 64 blocks) and reports what
+  it holds: trees by species and size class, saplings, rock and ores, crops, flowers, water per biome (depth, open
+  sky), pasture animals; units inside other structures' shared areas are reported with their `sharedBy` (G7). Blocks
+  waiting to regenerate count as present once harvesting (P8) adds them. `/knk production survey status` shows the
+  queue and the last results; `/knk production area show <structure> [area] [seconds]` draws the areas with particles;
+  the `CaptureRadius` world task (stand at the centre, `radius <blocks>`, `confirm`) gives a radius area's centre and
+  radius. Node `knk.admin.world.production`. Chunk snapshots are taken on the main thread within `chunks-per-tick`
+  (metric `production.survey.capture`); counting runs on its own thread. knk-plugin: knk-core
+  `production/survey/` (`SurveyCounter` over the `BlockSnapshotSource` port, `PlaceholderOverlay`, `AreaShape`,
+  `SurveyProfile`, `NotableChangeTracker`), knk-api-client `ProductionSurveyApiImpl`, knk-paper `production/`
+  (`SurveyModule`, `SurveyRunner`, `ChunkSnapshotBlocks`, `CaptureRadiusTaskHandler`, `AreaOutlineRenderer`) and
+  `commands/ProductionAdminCommand`; plugin scenario `production-area-survey`. Branch `claude/production-p4b`. Smoke
+  test: [production smoke test § 5.2](guides/production-storage-transport-smoke-test.md#52-steps-plugin-679). Admin
+  steps: merge the `surveys` keys into the plugin's `production` block (nothing runs while `production.enabled` is
+  false), restart; grant `knk.admin.world.production` to staff who survey (in `knk.admin.world.*`):
+
+  ```yaml
+  production:
+    surveys:
+      poll-minutes: 5
+      batch: 20
+      chunks-per-tick: 2
+      max-area-blocks: 16000000
+      max-area-chunks: 256
+      scheduled-loads-chunks: false
+      notable-change-blocks: 64
+      notable-cooldown-minutes: 30
+      areas-refresh-minutes: 10
+  ```
+
+
 - **`/navigate` can be taken away from a rank or player** ([PandiO/knk-workspace#845](https://github.com/PandiO/knk-workspace/issues/845),
   developer decision option A, 2026-11-19; found in the destination engine live test, #25). For staff: a deny of
   `knk.navigate` in the in-house permission system (on a group or an account) now refuses `/navigate` and the
