@@ -1,7 +1,9 @@
 # Siege Shop and Siege Points — one in-match shop paid with a per-match balance
 
-**Status:** **Proposed** (2026-11-20) — 3 open questions in § 12.
-**Last updated:** 2026-11-20 (first version, design session with the developer: P01–P09 developer, P10–P27 agent)
+**Status:** **Decided 2026-11-20** (developer). Open questions answered with the recommended options (§ 12); agent
+decisions P10–P27 accepted with the approval. Phases split into sub-issues (§ 11).
+**Last updated:** 2026-11-20 (Decided: open questions answered, phases with sub-issues #866–#871, smoke-test guide);
+2026-11-20 (first version, design session with the developer: P01–P09 developer, P10–P27 agent)
 **Issue:** [PandiO/knk-workspace#611](https://github.com/PandiO/knk-workspace/issues/611) (siege shop),
 [#356](https://github.com/PandiO/knk-workspace/issues/356) (siege points) and
 [#859](https://github.com/PandiO/knk-workspace/issues/859) (menu item settings, designed here in § 4.3); phases as
@@ -471,37 +473,31 @@ Ledger, earn rules, brakes, catalogue resolution, purchase order and the click r
 
 ## 11. Phases
 
-*Proposed split, confirmed on approval; sub-issues are filed then.*
+Confirmed on approval 2026-11-20. Phases 1–4 are sub-issues of #611 (phase 1 builds #356); 5a and 5b of #859.
 
 | Phase | Scope | Acceptance | Repos | Tier | Flag | Sub-issue | Depends on |
 |---|---|---|---|---|---|---|---|
-| 1 | Shared ledger in `core/siege/economy`, siege points earning, assists, per-player board, `/siege points`, `/siege pay`, settings columns, participant totals | A01–A12 | knk-plugin, knk-web-api | tier:3 | `siege.points.enabled` | — | — |
-| 2 | Shop catalogue: entities, overrides, effective catalogue endpoint, form seeds, web app forms; potion blueprint check | A13–A16 | knk-web-api, knk-web-app | tier:2 | none (data only) | — | — |
-| 3 | Shop in the plugin: menus, item purchases with brakes, weapon purchase port for #784, Survival hook, telemetry | A17–A26 | knk-plugin | tier:3 | `siege.shop.enabled` | — | 1, 2 |
-| 4 | Weapon unlocks: purchase endpoint with title level, main-menu Siege unlocks, web app profile panel | A26–A28 | knk-web-api, knk-plugin, knk-web-app | tier:2 | none | — | 2 |
-| 5a | Menu item settings in the API and the game settings card (#859) | A29 | knk-web-api, knk-web-app | tier:2 | none | — | — |
-| 5b | Menu item from the API in the plugin: clicks, situations, fallback, siege seeds | A29–A31 | knk-plugin | tier:2 | none | — | 5a, 3 |
+| 1 | Shared ledger in `core/siege/economy`, siege points earning, assists, per-player board, `/siege points`, `/siege pay`, settings columns, participant totals | A01–A12 | knk-plugin, knk-web-api | tier:3 | `siege.points.enabled` | #866 | — |
+| 2 | Shop catalogue: entities, overrides, effective catalogue endpoint, form seeds, web app forms; potion blueprint check | A13–A16 | knk-web-api, knk-web-app | tier:2 | none (data only) | #867 | — |
+| 3 | Shop in the plugin: menus, item purchases with brakes, weapon purchase port for #784, Survival hook, telemetry | A17–A26 | knk-plugin | tier:3 | `siege.shop.enabled` | #868 | 1, 2 |
+| 4 | Weapon unlocks: purchase endpoint with title level, main-menu Siege unlocks, web app profile panel | A26–A28 | knk-web-api, knk-plugin, knk-web-app | tier:2 | none | #869 | 2 |
+| 5a | Menu item settings in the API and the game settings card (#859) | A29 | knk-web-api, knk-web-app | tier:2 | none | #870 | — |
+| 5b | Menu item from the API in the plugin: clicks, situations, fallback, siege seeds | A29–A31 | knk-plugin | tier:2 | none | #871 | 5a, 3 |
 
 #784 (weapons phase 3) needs phases 1–3; phases 2, 4 and 5a can run in parallel with phase 1.
 
-Smoke test: [guides/siege-shop-smoke-test.md](../../guides/siege-shop-smoke-test.md) (written on approval).
+Smoke test: [guides/siege-shop-smoke-test.md](../../guides/siege-shop-smoke-test.md) (draft from the design).
 
 ## 12. Open questions
 
-1. **Default earn amounts (§ 5.2).** Ship the table's proposals (kill 100, streak 0.1 up to ×1.5, assist 40, death
-   15, 1 per 5 gate HP, 3 per capture %, capture 100, trickle 10/min)? Options: (a) ship them and tune in the alpha
-   balance runs (#651); (b) give your own numbers now. Recommendation: (a), because W14 prices in minutes of play
-   and only real runs show the earn rate.
-2. **Default catalogue seeds.** Proposed PvP Siege consumables: ender pearl ×1 (300, +50 linear, cooldown 20 s +10 s
-   exponential, cap 8), splash potion of healing II ×1 (150, +25 linear, cooldown 10 s, cap 10), golden apple ×1
-   (200, +50 linear, cap 6), potion of regeneration ×1 (250, cap 4); plus the three weapon entries at their template
-   prices. Survival: the same consumables at Survival prices (×10, since Survival pays 70 per kill against 1000 per
-   Mystery Box roll). Options: (a) seed these; (b) seed only weapons and let you fill consumables. Recommendation:
-   (a), so the first test run has a usable shop.
-3. **Healing items vs end-game gear.** Test run 1 players brought two stacks of golden apples in their own gear
-   (#651). Should the shop's healing matter while own gear allows that? Options: (a) leave own-gear rules alone for
-   now and see in the balance runs; (b) file an issue to cap golden apples brought into a match. Recommendation: (a),
-   with #651 watching healing items used.
+None open. Answered on approval (2026-11-20, developer, recommended options):
+
+1. **Default earn amounts:** (a) ship the § 5.2 proposals and tune them in the alpha balance runs (#651).
+2. **Default catalogue seeds:** (a) seed in phase 2: PvP Siege consumables ender pearl ×1 (300, +50 linear, cooldown
+   20 s +10 s exponential ×1.5, cap 8), splash potion of healing II ×1 (150, +25 linear, cooldown 10 s, cap 10),
+   golden apple ×1 (200, +50 linear, cap 6), potion of regeneration ×1 (250, cap 4), plus the three weapon entries at
+   their template prices; Siege Survival the same consumables at ×10 prices.
+3. **Healing vs own-gear golden apples:** (a) own-gear rules stay; #651 watches healing items used.
 
 ### After v1
 
