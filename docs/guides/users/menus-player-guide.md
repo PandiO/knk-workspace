@@ -1,7 +1,8 @@
 # Menus — Player Guide
 
 **Status:** Living document — update in place as the game changes
-**Last updated:** 2026-11-20 (§ Structures and § Storage terminals and displays, production chain L18,
+**Last updated:** 2026-11-20 (§ Structures and § Storage terminals: in knk-plugin `next` `8e672ba6`, more terminal
+messages, docs PandiO/knk-workspace#903); 2026-11-20 (§ Structures and § Storage terminals and displays, production chain L18,
 PandiO/knk-workspace#74, knk-plugin branch `claude/production-p6`, not in `next` yet); 2026-11-13 (§ Kits: kits a staff member gives you from the web app, PandiO/knk-workspace#261, in
 knk-plugin `next` `745fcf6`, not yet released); 2026-11-11 (first version, PandiO/knk-workspace#302; checked against knk-plugin `main` `121030f`; menu
 texts are the seed defaults of knk-web-api `master` `b5e57fa`, staff can change them)
@@ -102,8 +103,8 @@ objectives and change your spawnpoint. See the siege guides for the match itself
 
 ### Structures
 
-*On servers with production switched on (knk-plugin branch `claude/production-p6`, PandiO/knk-workspace#74; not
-released yet).*
+*On servers with production switched on (in knk-plugin `next` `8e672ba6`, PandiO/knk-workspace#74; not released
+yet).*
 
 The **Structures** tile lists every production structure (farm, logger, quarry, mine, fishery, florist, pasture,
 workshop) and every warehouse, one item each, with its kind, town, level, what it produces and its status:
@@ -151,6 +152,13 @@ What a terminal refuses, and why:
 | `Unique items can't be put in a terminal in game yet; use the web app.` | Unique items move through the web app for now |
 | `Production is switched off; the terminal moves nothing right now.` | Staff switched production off |
 | `Nothing put in: the storage is full.` | The storage has no room; your items are back in your inventory |
+| `Put in 40 (24 back: the storage is full)` | Only part fitted; the rest is back in your inventory (or at your feet when that is full) |
+| `Nothing taken: not enough in stock.` | Someone took it first; the page shows what is left |
+| `Your inventory is full.` | Make room before taking |
+| `Unique items can't be taken out in game yet; use the web app.` | Unique items move through the web app for now |
+| `That is a display sample, not a real item.` | Display items are only a picture |
+| `The storage is busy or locked; try again in a moment.` | Another move happened at the same time, or staff locked the storage |
+| `This container is no longer bound.` | Staff unbound it; it is a plain chest again |
 
 ## Moving around in menus
 
@@ -182,7 +190,7 @@ What a terminal refuses, and why:
 
 In a structure's menu, staff (`knk.admin.world`) get a bottom row: **Survey now**, **Transport dry run** (what the
 automatic transport would do, in chat) and **Show area outline**; in its transport orders, click an order to cancel it
-or to retry it (with Confirm and Cancel). Binding chests: `/knk storage bind` ([commands](commands.md)).
+or to retry it (with Confirm and Cancel). Binding chests: `/knk storage bind` ([commands](commands.md), [storage terminals admin guide](../admin/production-storage-admin-guide.md)).
 
 The **Player manager** tile (needs `knk.admin.user.manage`) manages players ranked below you: balances (staged until
 you type a reason in chat), titles, groups, staff mode, salary, freeze, kick and ban. How menus are built and changed:
