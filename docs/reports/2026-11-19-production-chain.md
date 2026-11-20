@@ -61,7 +61,7 @@ of what is already in `next`.
 | L9 P3 production engine API | #86 | Merged into next (2026-11-19) | api `20dcfb7`, workspace `ea01df32`; merges: api `6c648f60`, workspace `7b1495d0` (after a coordinator merge of `next`, `50497cc8`) | [api#58](https://github.com/PandiO/knk-web-api/pull/58), [ws#827](https://github.com/PandiO/knk-workspace/pull/827) | green (build-and-test, mysql-tests, fresh-database) | create_session `session_01R1w2Uvi8uaBqDwjJDADicL` (one repo besides knk-workspace), started 2026-11-19 |
 | L10 P3b production web app | #678 | Merged into next (2026-11-19) | web-app `9e5a2ca`, workspace `eaf1f1a1`; merges: web app `4e4ca39a`, workspace `9eef39cf` | [web-app#63](https://github.com/PandiO/knk-web-app/pull/63), [ws#834](https://github.com/PandiO/knk-workspace/pull/834) | green (build-and-test, e2e) | create_session `session_01R1w2UvmqQ34HGVHXxDfmwW` (prompt says start without asking), started 2026-11-19 |
 | L11 P4 yield areas API | #138 | Merged into next (2026-11-19) | api `06b11ca`, workspace `b467e15a`; merges: api `e26c7d88`, workspace `e846be50` | [api#60](https://github.com/PandiO/knk-web-api/pull/60), [ws#837](https://github.com/PandiO/knk-workspace/pull/837) | green on `06b11ca` (build-and-test, mysql-tests, fresh-database) | create_session `session_01R1w2UuXh4wtTxPhhZUpLGF` (prompt says start without asking), started 2026-11-19 |
-| L12 P4b surveys plugin | #679 | Running | — | — | — | create_session `session_01R1w2Utt8cigo5ND98ZqXzC` (prompt says start without asking), started 2026-11-19 |
+| L12 P4b surveys plugin | #679 | In review (2026-11-20) | plugin `3472e32d`, workspace `c6f53e07` | [plugin#105](https://github.com/PandiO/knk-plugin/pull/105), [ws#876](https://github.com/PandiO/knk-workspace/pull/876) | green (plugin build + paper-boot, 68 scenarios) | create_session `session_01R1w2Utt8cigo5ND98ZqXzC` (prompt says start without asking), started 2026-11-19 |
 | L13 P4c yield areas web app | #680 | Merged into next (2026-11-20) | web app `6da700c`, workspace `638e5c3c`; merges: web app `eaf0467d`, workspace `2159952e` | [web-app#67](https://github.com/PandiO/knk-web-app/pull/67), [ws#873](https://github.com/PandiO/knk-workspace/pull/873) | green on `6da700c` (build-and-test, e2e) | create_session `session_01R1w2UwYw3NNQSSBoP7XaBk` (prompt says start without asking), started 2026-11-19 |
 | L14 P5 transport API (simulated carrying, G14) | #79 | Done, in review (2026-11-20) | api `ef61cd1`, workspace `ae26c88b` | [api#65](https://github.com/PandiO/knk-web-api/pull/65), [ws#880](https://github.com/PandiO/knk-workspace/pull/880) | api build-and-test, fresh-database green; mysql-tests green on push run | create_session `session_01R1w2UtGLZrUEAUNFYvkqGB` (prompt says start without asking), started 2026-11-19 |
 | L15 P5b lanes plugin | #681 | Not started | — | — | — | — |
@@ -1236,6 +1236,104 @@ _(Each link appends its block here when it finishes.)_
        area with `size`, `sizeUnit` and the level's `maxSize`.
     3. L21 (P8a): the pool factor is still not in the engine; the latest survey's `TotalUnits` can seed a pool's
        capacity.
+
+### 4.12 L12 — P4b surveys plugin (#679)
+
+1. **Scope done** (knk-plugin, plus essential docs in knk-workspace). Everything runs only with `production.enabled:
+   true` (A21).
+    1. knk-core `production/survey/` (Bukkit-free): `SurveyCounter` over the `BlockSnapshotSource` port (trees as
+       26-connected log clusters with leaves within reach, species by majority log, SMALL/MEDIUM/LARGE by log count,
+       clusters over `maxLogs` are buildings; saplings; rock and ores in the whole volume; crops; flowers, tall ones
+       once; still water per biome with `columns`, `avgDepth`, `openSkyShare`; pasture animals), `PlaceholderOverlay`
+       (blocks waiting to regenerate count as their original; empty until P8), `AreaShape`, `AreaSpec`, `SurveyProfile`
+       (the seeded `unitTypes` plus the plugin's `materials`, `entityTypes`, `tree`), `NotableChangeTracker`,
+       `AreaOutline`, `CaptureRadius`, `SurveySettings`, `CapturedChunks`; port `ProductionSurveyApi`. Shared split per the
+       L11 contract: one row per (key, `sharedBy`), `sharedBy` = 1 + distinct other structures whose overlapping shared
+       areas contain the unit. SHA-256 content hash of the rows.
+    2. knk-api-client `ProductionSurveyApiImpl` (`survey-due`, `{id}/surveys`, `ProductionStructures/{id}/survey`,
+       `GET api/ProductionAreas`).
+    3. knk-paper `production/`: `SurveyRunner` (one survey at a time; `chunks-per-tick` snapshots on the main thread,
+       timed as `production.survey.capture`; counting and reporting on the `KnK-survey` thread; Scheduled surveys wait
+       for loaded chunks, requested ones load chunks without generating them; caps), `SurveyModule` (queue poll, area
+       list, block break/place counters → `NotableChange`), `ChunkSnapshotBlocks`, `SurveyWorld`, `SurveyRegionShapes`,
+       `AreaOutlineRenderer`, `CaptureRadiusTaskHandler` (world task `CaptureRadius`).
+    4. `/knk production survey <structure> [area] | survey status | area show <structure> [area] [seconds]`, node
+       `knk.admin.world.production`; `config.yml` `production.surveys.*` (nine keys). `KnKPlugin`, `config.yml` and
+       `plugin.yml` changes are separate additive blocks.
+    5. Plugin scenario `production-area-survey`; `MIN_SCENARIOS` 68 (65 + link G1's two + this one). Hunters deferred
+       (P-D10).
+    6. knk-workspace (branch from `next`): smoke guide § 5.2 (15 steps: 7 automated, 7 partly, 1 manual), plugin
+       configuration § 4.31 `production.surveys.*` with § 2.1 and § 3 rows, changelog entry with the YAML,
+       implementation plan § P4 status.
+2. **Commits and heads.** knk-plugin `claude/production-p4b` at `3472e32d` (6 commits plus two merges of `origin/next`,
+   the second `MIN_SCENARIOS` 66/67 → 68 and the scenario count test); knk-workspace `claude/production-p4b` at
+   `c6f53e07` (1 commit plus three merges of `origin/next`; changelog, plugin configuration, smoke guide and plan
+   conflicts were both-sides additions, L13's § 5.3 kept). The first push `c00f95a2` (before the usage-limit stop) did
+   not compile (a package-private method used by the command); fixed in the next commit.
+3. **PRs.** [knk-plugin#105](https://github.com/PandiO/knk-plugin/pull/105) (Closes #679),
+   [knk-workspace#876](https://github.com/PandiO/knk-workspace/pull/876) (Part of #679), base `next`. Not merged.
+4. **Tests, baseline → result** (`./gradlew build -x deployToDevServer`, Gradle on JDK 21, JDK 25 toolchain).
+    1. Baseline on `next` `cbac2b6c`: knk-core 3541, knk-api-client 366 (2 skipped), knk-paper 3229 (18 skipped), 0
+       failures.
+    2. Branch at `3472e32d` (after merging `next`): knk-core 3594, knk-api-client 371 (2 skipped), knk-paper 3284 (18
+       skipped), 0 failures.
+    3. New: `SurveyCounterTest` (15), `SurveyAreasTest` (9), `CaptureRadiusTest` (3), `ProductionSurveyApiImplTest` (4),
+       `SurveyRunnerTest` (6), `SurveyConfigTest` (3), `ProductionAdminCommandTest` (4); `PaperScenariosTest` updated. A
+       mutation of the shared split (`sharedBy` always 1) failed `SurveyCounterTest` and `SurveyRunnerTest`.
+    4. CI on `3472e32d`: build green; paper-boot green (68 scenarios, `production-area-survey` PASS in 3 ticks). The scenario was not run locally (no Paper server in the
+       session).
+    5. Known reds: none.
+5. **Decisions (DESIGN § 4.3).** All nine with alternatives are in knk-plugin#105. The main ones:
+    1. *Scheduled surveys and unloaded chunks.* Chosen: skipped (stays due) unless every chunk is loaded;
+       `scheduled-loads-chunks: true` loads them; requested surveys always load them, never generate. Alternatives: (a)
+       always load: daily cost for remote areas; (b) never load: a requested survey of a remote area never runs.
+    2. *Trees at the border.* Chosen: only logs inside the area cluster; a tree's position is its lowest log.
+       Alternatives: (a) read a margin: more snapshots, trees mostly outside would count.
+    3. *Tree limits.* Chosen: SMALL ≤ 6 logs, MEDIUM ≤ 20, building > 400, leaves within 1 block; profile overrides.
+       Alternatives: (a) per-species tables.
+    4. *Farmland.* Chosen: crops count without a farmland or hydration check (§ 8.1 open). Alternatives: (a) hydrated
+       farmland only: excludes sugar cane, cocoa, nether wart.
+    5. *sharedBy.* Chosen: the L11 contract literally. Alternatives: (a) same area model only: still wrong; follow-up
+       #875.
+    6. *Notable change.* Chosen: block breaks and places per area (64, cooldown 30 min), then "survey now" through the
+       API with trigger `NotableChange`. Alternatives: (a) wait for P8's harvest counters.
+    7. *Plugin caps.* Chosen: `max-area-chunks` 256, `max-area-blocks` 16M (snapshot memory, counting time); the API's
+       level cap (G6) stays the rule. Alternatives: (a) no plugin cap.
+6. **Out of scope, noted.** [#875](https://github.com/PandiO/knk-workspace/issues/875) (tier:2, under #22): overlaps in the
+   survey queue should carry each area's unit types, so `sharedBy` counts only structures that count the unit (a farm
+   inside a logger's radius now halves its crops). Codex: the connector hit its code-review usage limit on both PRs
+   (usage-limit comment, review "failed"); no inline findings; noted on each PR.
+7. **Blockers.** None.
+8. **At merge / what the developer must do.**
+    1. Merge into the plugin's `production` block (nothing runs while `production.enabled` is false) and restart:
+
+       ```yaml
+       production:
+         surveys:
+           poll-minutes: 5
+           batch: 20
+           chunks-per-tick: 2
+           max-area-blocks: 16000000
+           max-area-chunks: 256
+           scheduled-loads-chunks: false
+           notable-change-blocks: 64
+           notable-cooldown-minutes: 30
+           areas-refresh-minutes: 10
+       ```
+    2. Grant `knk.admin.world.production` to staff who survey (in `knk.admin.world.*`).
+    3. Smoke test [§ 5.2](../guides/production-storage-transport-smoke-test.md) (tier:3): about 30 minutes for the
+       untagged and partly tagged parts; needs L11 (API) and yield table rows (#836) for rates.
+    4. At merge into `next`: the `documentation` sub-issue (survey architecture page with the profile JSON fields and
+       unit keys, admin guide for surveys and `/knk production`, commands guide, plugin scenarios guide
+       `production-area-survey`, feature register row).
+9. **Notes for later links.**
+    1. L22 (P8 harvest): implement `PlaceholderOverlay` over the regeneration jobs and pass it to `SurveyRunner` in
+       `SurveyModule` (now `PlaceholderOverlay.NONE`); a felled tree's job should list every original log and leaves
+       block so the tree counts whole. Harvest counters can feed `NotableChangeTracker.record`.
+    2. L13 / web app: the `CaptureRadius` world task's output is `{shape, worldName, centerX, centerY, centerZ, radius}`;
+       its input may carry `radius` and `maxRadius` (the level's cap).
+    3. Profiles: the plugin reads `materials`, `entityTypes` and `tree.{smallMaxLogs, mediumMaxLogs, maxLogs, leafReach}`
+       beyond `unitTypes`; raising the kind's profile version is the API's job when they change.
 
 ### 4.13 L13 — P4c yield areas web app (#680)
 
