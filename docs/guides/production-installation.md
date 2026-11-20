@@ -1,6 +1,6 @@
 # Knights and Kings — production installation guide (admin)
 
-**Status:** Draft · **Last updated:** 2026-11-19 (§ 4.3 overview map keys promoted to main alone, #732); 2026-11-18 (§ 4.3: the `Map__GateCommands__*` keys, PandiO/knk-workspace#741); 2026-11-18 (§ 4.3: the `Map__LivePlayers__*` keys, PandiO/knk-workspace#738); 2026-11-18 (§ 4.3: `Map__Enabled` also shows the web map, #737; the `Map__*` and `RateLimiting__Map__*` keys, PandiO/knk-workspace#736); 2026-11-15 (header and § 5.3: the migrations of releases v0.1 to v0.3 on knk-web-api `main` `2cc8254`, PandiO/knk-workspace#577)
+**Status:** Draft · **Last updated:** 2026-11-19 (§ 5.3 item 7: link to the warehouses and production structures admin guide, `/knk regions repair` once, docs #830); 2026-11-19 (§ 5.3: `AddSiegeWeapons` and `AddTerritory` both in `next` `0d6e369a`, in order; link to the territory admin guide, docs #806); 2026-11-19 (§ 5.3: `AddTerritory` of #326 on its branch); 2026-11-19 (§ 5.3: the migrations waiting in `next`, with `AddItemIdentity`, docs PandiO/knk-workspace#796); 2026-11-18 (§ 4.3: the `Map__GateCommands__*` keys, PandiO/knk-workspace#741); 2026-11-18 (§ 4.3: the `Map__LivePlayers__*` keys, PandiO/knk-workspace#738); 2026-11-18 (§ 4.3: `Map__Enabled` also shows the web map, #737; the `Map__*` and `RateLimiting__Map__*` keys, PandiO/knk-workspace#736); 2026-11-16 (§ 10.4: `actions/checkout@v7` in the release plan, #426); 2026-11-15 (header and § 5.3: the migrations of releases v0.1 to v0.3 on knk-web-api `main` `2cc8254`, PandiO/knk-workspace#577)
 **State:** Draft v1 — written for review. Not yet followed on a real production host. The database, API, seed and
 web-server steps were rehearsed in a scratch environment on 2026-10-07 (see [Appendix A](#appendix-a--what-was-verified-and-how)).
 The Paper server steps and the release and deploy workflows are untested drafts; the CI workflows (§ 10.3) run on GitHub.
@@ -611,6 +611,66 @@ API, run the migrator (`dotnet ef database update`; the API does not migrate on 
 needs the new endpoints. No settings and no plugin `config.yml` keys change; kick and ban reach the game with knk-plugin `v0.2`
 (#574) or later, running with `realtime.enabled: true`. Details per change: the
 [v0.3 changelog section](../CHANGELOG.md#v03--2026-11-15).
+
+**Waiting in `next` (not released; knk-web-api `next` `0d6e369a`, 2026-11-19)**, in this order. The release that
+promotes `next` lists them here with its tag:
+
+1. `20261118095421_AddMapRegionOutlines` (#735, overview map): additive, one new table.
+2. `20261118152046_AddLandmarks` (#708, navigation landmarks): additive, one new table `landmarks`.
+3. `20261119090845_AddItemIdentity` (#141, item identity): additive; `item_blueprints` gets a nullable
+   `VanillaMaterialMatchRefId` with a unique index and a foreign key to `minecraftmaterialrefs`, and the new table
+   `item_conversion_stats`; no data written. After migrating, run a Minecraft catalogue scan (or
+   `POST api/ItemIdentity/shadows/generate`) to create the "Uncurated" shadow blueprints. The plugin keys
+   `items.identity.*` are off by default ([item identity admin guide](admin/item-identity-admin-guide.md)).
+4. `20261119100022_AddSiegeWeapons` (#782, siege weapons L1): additive; five new tables and three defaulted columns
+   for weapon templates, ammo types, weapon spots and unlocks; import the siege weapon form seeds afterwards (see the
+   [changelog](../CHANGELOG.md) entry of #782).
+5. `20261119102500_AddTerritory` (#326, territory API):
+   additive; new tables `kingdoms`, `provinces`, `crown_lands` (a domain subtype) and `territory_conflicts`; `towns`
+   gets `Power` (0), `KingdomId` and `ProvinceId` (null), `districts` gets `IsCapital` (false), `structures` gets
+   `LoyaltyTownId`, `TerritoryFlag` (`None`), `TerritoryFlaggedAt` and `TerritoryConflictId`, and `game_settings`
+   gets `ProductionSettingsJson` (null = `Production:Enabled` off, base range 100, factor 2, capital × 1.5); no data
+   written. No `api.env` key: the production flag and ranges are game settings (web app or `PUT api/GameSettings`,
+   section `production`). Set-up afterwards: [territory admin guide](admin/territory-admin-guide.md) (form and display
+   seeds `Kingdom`, `Province`, `CrownLand`, `TerritoryConflict`).
+6. `20261119160613_AddStockCore` (#97, stock core P1): additive; new tables `storages` (holder check constraint `CK_storages_Holder`), `stock_lines`,
+   `stock_units`, `stock_transactions`, `stock_moves` and `stock_move_rollups` (every FK Restrict);
+   `item_blueprints` gets `StorageWeight` (decimal, 1 on existing rows); the only data written are the five system
+   storages `SYS_PRODUCTION`, `SYS_CONSUMPTION`, `SYS_LOSS`, `SYS_ADJUSTMENT`, `SYS_WORLD` (ids 1-5). No `api.env` key.
+   Set-up afterwards: import the form and display seeds `Storage` and `StockTransaction`, and grant
+   `knk.economy.admin` to the staff who may move stock ([changelog](../CHANGELOG.md) entry of #97, [stock admin guide](admin/stock-admin-guide.md)).
+7. `20261119180109_AddProductionWorld` (#91, production world P2): additive; `structures.DistrictId` and `StreetId`
+   become nullable (existing rows keep their values), new nullable `structures.TownId` (FK to `towns`) and the check
+   constraint `CK_structures_DistrictXorTown` (exactly one of district and town; every existing structure has a
+   district); new tables `warehouses` and `production_structures` (subtypes of `structures`). The structure FKs to
+   districts, streets and towns are re-created without a delete action, so deleting a street, district or town a
+   structure uses is still refused. No data written, no `api.env` key; the plugin keeps reading `MinecraftPlugin:BaseUrl`
+   and `Security:PluginApiKey` for the new territory lookup. Set-up afterwards: import the form and display seeds
+   `Warehouse` and `ProductionStructure` ([changelog](../CHANGELOG.md) entry of #91, [warehouses and production
+   structures admin guide](admin/production-world-admin-guide.md)); with the plugin's `production.enabled` on, run
+   `/knk regions repair` once. Its `Down` makes the two columns
+   required again and fails while a rural structure exists.
+8. `20261119193750_AddProductionEngine` (#86, production engine P3): additive; thirteen new tables
+   (`production_kinds`, `production_kind_levels`, `production_kind_level_items`, `production_lines`,
+   `production_line_inputs`, `production_modifiers`, `climate_zones`, `climate_zone_weathers`, `climate_zone_towns`,
+   `weather_types`, `weather_type_effects`, `weather_rolls`, `production_cycle_records`) and the foreign key
+   `production_structures.ProductionKindId` → `production_kinds` (Restrict). Data written: the catalogue (eight kinds,
+   ids 1-8, with ten levels each), the climate zone "Default climate" (no odds: clear weather) and the weather types
+   Rain, Storm and Drought with example effects. Check first that no production structure has a kind id outside 1-8
+   (`SELECT Id FROM production_structures WHERE ProductionKindId NOT BETWEEN 1 AND 8;`), or the foreign key can't be
+   added. No `api.env` key: the engine timing is the game setting `production.engine` (`baseCycleMinutes` 10,
+   `catchUpCapHours` 24, `weatherDayMinutes` 20), and the engine runs only with `Production:Enabled` on. Set-up
+   afterwards: import the six production engine form and display seeds and make the v2 seeds of `ProductionStructure`,
+   `ItemBlueprint` (form) and `Storage` (display) the default ([changelog](../CHANGELOG.md) entry of #86).
+9. `20261119205631_AddProductionYieldAreas` (#138, yield areas P4): additive; six new tables (`production_areas`,
+   `area_surveys`, `area_survey_units`, `production_yield_rows`, `production_kind_primary_outputs`,
+   `production_yield_overrides`), the columns `production_kinds.SurveyProfileJson`, `SurveyProfileVersion` (1) and
+   `PrimaryMultiplier` (1.5), and `production_structures.YieldSource` (`Configured` for every existing structure, so
+   their P3 lines keep their rates; new structures default to `Hybrid`). Data written: a survey profile for each of the
+   eight seeded kinds. No yield table rows are seeded: fill them per kind before surveys can yield. No `api.env` key;
+   the survey queue and reports run only with `Production:Enabled` on. Set-up afterwards: import the P4 form and display
+   seeds and make `ProductionKind` v2, `ProductionStructure` v3 and `Structure` v3 the default ([changelog](../CHANGELOG.md)
+   entry of #138).
 
 Earlier: `v0.2` (`58e3218`, 2026-11-14) added `20261109081203_AddTempRegionReleases` (#269), and `v0.1` (`6d5e9c1`,
 2026-11-13) added `20261113161725_SeedStaffFreezeNodes` (gives the Staff group `knk.freeze` and `knk.unfreeze`, #367).
@@ -1374,7 +1434,7 @@ jobs:
   images:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - id: v
         run: echo "version=${GITHUB_REF_NAME#v}" >> "$GITHUB_OUTPUT"
       - uses: docker/login-action@v3
