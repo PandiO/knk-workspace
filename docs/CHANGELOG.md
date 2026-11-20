@@ -48,6 +48,60 @@ This is a human-readable record of capabilities merged into the V3 default branc
      ```
   4. Grant `knk.economy.admin` to staff who may gift items or use players' stashes from the web app.
 
+- **Terminals, displays and structure menus in game** ([PandiO/knk-workspace#74](https://github.com/PandiO/knk-workspace/issues/74),
+  link L18 of the production, storage and transport chain; the API is #683; [design](specs/production-storage-transport/DESIGN.md)
+  § 6 and § 11.2, decision record § 15.1 M1-M5). With `production.enabled: true` in the plugin: staff bind the chest,
+  trapped chest or barrel they look at to a storage with `/knk storage bind <storage id> <terminal|display> [label]`
+  (also `unbind`, `info`, `reload`; node `knk.admin.world.production`). Right-clicking a **terminal** opens the storage
+  page by page: left-click takes a stack, right-click one, shift-click as much as fits; clicking an item in your own
+  inventory puts it in. Each click is one ledger move as the player, so only members of the storage's town, its player
+  and staff can use it; what the storage refuses (full, not enough stock) comes straight back. Renamed, damaged,
+  enchanted vanilla and unique items are refused. A **display** holds a read-only sample of the stock, as full as the
+  storage is, refreshed when its chunk loads and after terminal moves. Bound blocks can't be broken, survive explosions
+  and hoppers move nothing in or out. Players get the **Structures** tile in the main menu: every production structure
+  and warehouse with search and Town, Kind and Status filters, the Town filter starting on the town whose land you stand
+  in; a structure's menu shows its public details, and for members of its town and staff its rates, workers, warnings,
+  storages and transport orders. Staff get buttons for survey now, the transport dry run, the area outline, and
+  cancelling or retrying an order (with a confirm). With `production.enabled: false` the menus are blocked (the tile is
+  hidden) and chests are plain chests. Not yet: opening the structure menu from a worker NPC (there is no worker NPC
+  entity), unique items in terminals in game. #877: the `CaptureRadius` world task the production area form sends is
+  handled since #679; its output is the API's. knk-plugin: knk-core `production/terminal` (container index, terminal
+  layout, display layout and throttle) and `production/menu` (menu text, facets), ports `StorageContainersApi` and
+  `StructureMenusApi` with their knk-api-client implementations, knk-paper `production/terminal`
+  (`StorageTerminalModule`, terminal and display views, display writer), `menu/content/StructuresMenuFeature`,
+  `commands/StorageAdminCommand`, the scenario `storage-display-double-chest`. Branch `claude/production-p6` in
+  knk-plugin and knk-workspace. Smoke test:
+  [production smoke test § 7.2](guides/production-storage-transport-smoke-test.md#72-steps-plugin-74).
+  Admin steps:
+  1. Merge into the plugin's `config.yml` (Restart; [plugin configuration § 4.31](guides/admin/plugin-configuration.md#431-production)):
+     ```yaml
+     production:
+       storage:
+         refresh-minutes: 5
+         display-refresh-seconds: 30
+     ```
+  2. Grant `knk.admin.world.production` (binding) and `knk.admin.world` (the menus' staff buttons) to staff; town
+     members need `knk.town.member.<town id>` (#683).
+  3. Putting items into terminals needs `items.identity.enabled: true` (#141).
+
+- **Siege weapon unlocks with coins and a minimum title** ([PandiO/knk-workspace#869](https://github.com/PandiO/knk-workspace/issues/869),
+  also [#795](https://github.com/PandiO/knk-workspace/issues/795); link L4 of the siege shop chain, #611). For players,
+  no flag: outside a match, `/menu` → **Siege Minigame** → **Siege unlocks** lists every siege weapon type with its
+  coin price, minimum title and state ("Unlocked", "Unlock for 1000 coins", "Needs title Squire"); an unlockable type
+  asks to confirm, then pays from the player's coins once (a double click charges once), and the type can be bought in
+  siege matches from the next match on. During a running match the menu opens but unlocking is refused. The same list
+  and button are on the player's own account page in the web app (**Siege unlocks** panel). For admins: the siege
+  weapon template form gains **Minimum title to unlock** (optional). knk-web-api: `POST api/SiegeWeaponUnlocks/purchase`
+  (plugin key for a named player, or the signed-in player for themselves; title and coins checked before charging,
+  ledger reason `SIEGE_UNLOCK` with key `siege-unlock:{templateId}:{userId}`, unlock row in the same transaction),
+  `GET api/SiegeWeaponUnlocks/mine` and `by-user/{userId}`, `SiegeWeaponTemplate.UnlockMinTitleLevel` (migration
+  `AddSiegeWeaponUnlockMinTitle`), form seed SiegeWeaponTemplate v2, menu seed `siege.unlocks` and its button in
+  `siege.overview` (added once to databases seeded before). knk-plugin: knk-core `core/siege/unlocks/`,
+  `SiegeWeaponUnlocksApi`; knk-paper `SiegeUnlocksMenuFeature`. knk-web-app: `MySiegeUnlocksSection` on the account
+  page. Branches `claude/siege-shop-l4` in knk-web-api, knk-plugin, knk-web-app and knk-workspace. Admin steps: apply
+  the migration, restart the API once (menu seeds), import the form seed **SiegeWeaponTemplate - Default (seed v2)**
+  and make it the default; no deploy order and no `config.yml` keys. Smoke test:
+  [siege shop smoke test § 4](guides/siege-shop-smoke-test.md#4-phase-4-siege-weapon-unlocks-with-coins-and-title-level-869-tier2).
 - **Siege shop in PvP Siege** ([PandiO/knk-workspace#868](https://github.com/PandiO/knk-workspace/issues/868); link
   L3 of the siege shop chain, #611). For players, with `siege.shop.enabled: true` and `siege.points.enabled: true` in
   the plugin's `config.yml` (both default `false`): during a running match `/siege shop` or the new **Shop** button in
