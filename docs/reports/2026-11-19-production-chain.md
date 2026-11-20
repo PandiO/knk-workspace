@@ -62,7 +62,7 @@ of what is already in `next`.
 | L10 P3b production web app | #678 | Merged into next (2026-11-19) | web-app `9e5a2ca`, workspace `eaf1f1a1`; merges: web app `4e4ca39a`, workspace `9eef39cf` | [web-app#63](https://github.com/PandiO/knk-web-app/pull/63), [ws#834](https://github.com/PandiO/knk-workspace/pull/834) | green (build-and-test, e2e) | create_session `session_01R1w2UvmqQ34HGVHXxDfmwW` (prompt says start without asking), started 2026-11-19 |
 | L11 P4 yield areas API | #138 | Merged into next (2026-11-19) | api `06b11ca`, workspace `b467e15a`; merges: api `e26c7d88`, workspace `e846be50` | [api#60](https://github.com/PandiO/knk-web-api/pull/60), [ws#837](https://github.com/PandiO/knk-workspace/pull/837) | green on `06b11ca` (build-and-test, mysql-tests, fresh-database) | create_session `session_01R1w2UuXh4wtTxPhhZUpLGF` (prompt says start without asking), started 2026-11-19 |
 | L12 P4b surveys plugin | #679 | Running | — | — | — | create_session `session_01R1w2Utt8cigo5ND98ZqXzC` (prompt says start without asking), started 2026-11-19 |
-| L13 P4c yield areas web app | #680 | In review (2026-11-20) | web app `6da700c`, workspace `638e5c3c` | [web-app#67](https://github.com/PandiO/knk-web-app/pull/67), [ws#873](https://github.com/PandiO/knk-workspace/pull/873) | green on `6da700c` (build-and-test, e2e) | create_session `session_01R1w2UwYw3NNQSSBoP7XaBk` (prompt says start without asking), started 2026-11-19 |
+| L13 P4c yield areas web app | #680 | Merged into next (2026-11-20) | web app `6da700c`, workspace `638e5c3c`; merges: web app `eaf0467d`, workspace `2159952e` | [web-app#67](https://github.com/PandiO/knk-web-app/pull/67), [ws#873](https://github.com/PandiO/knk-workspace/pull/873) | green on `6da700c` (build-and-test, e2e) | create_session `session_01R1w2UwYw3NNQSSBoP7XaBk` (prompt says start without asking), started 2026-11-19 |
 | L14 P5 transport API (simulated carrying, G14) | #79 | Running | — | — | — | create_session `session_01R1w2UtGLZrUEAUNFYvkqGB` (prompt says start without asking), started 2026-11-19 |
 | L15 P5b lanes plugin | #681 | Not started | — | — | — | — |
 | L16 P5c transport web app | #682 | Not started | — | — | — | — |
@@ -299,6 +299,12 @@ of what is already in `next`.
 46. **Siege shop chain (#611, same coordinator as #354), 2026-11-20.** Shop L1 #866 adds a knk-web-api migration, and a
    plugin link edits `KnKPlugin`, `config.yml` (`siege.points`) and `plugin.yml` in its own blocks. Same rule as decision
    7: whoever merges second regenerates. L12 and L14 were told.
+
+47. **L13 merge (2026-11-20).** § 6 checks held: heads matched, branches merged cleanly with `next`, CI was green
+   (build-and-test, e2e), Codex was at its usage limit (no findings) and the scope matched #680. Merged web app #67
+   `eaf0467d` and workspace #873 `2159952e`. The API points L13 raised (area seed `RegionClaim` and bounds,
+   `CaptureRadius`, `yieldSource` on the structure list) are #877 (tier:1). They fold into L17 (#683), the next API link,
+   and the plugin part of `CaptureRadius` goes into a later plugin link. P4 docs start when L12 is merged.
 
 ## 4. Link blocks
 
