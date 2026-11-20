@@ -4,6 +4,49 @@ This is a human-readable record of capabilities merged into the V3 default branc
 
 ## Unreleased — on feature branches, not merged
 
+- **Item delivery, reward inbox and stash: the API** ([PandiO/knk-workspace#60](https://github.com/PandiO/knk-workspace/issues/60),
+  link L19 of the production, storage and transport chain; [design](specs/production-storage-transport/DESIGN.md)
+  § 4.6, decision record § 2.4, D7). The game server part (`/inbox`, the inbox menu, kits and lootboxes through the
+  inbox) is link L20 (#684); this entry is what the API offers it and staff. Rewards the game server cannot place (the
+  player is offline, the inventory is full, the player is in a siege match or a minigame) go to the player's **reward
+  inbox**, a private storage, with a notification. The inbox has a **hard cap** that premium tiers raise; what arrives
+  when it is full is **lost** (recorded in the ledger) and the player is told, with a **warning** as the inbox passes
+  80 % and 95 %. Items wait **30 days**, with **reminders** 7 days and 1 day before; then they expire. The player
+  **claims** what fits in the inventory; the oldest items go first. Premium tiers also get a **stash**, a separate
+  private storage with deposit and withdraw. Every move has an idempotency key, so a retry never duplicates items.
+  Kit and lootbox delivery are unchanged until L20 moves them here. Also: placement rule **P-3** for production areas
+  (#883): an area stays inside its structure's district or, for a rural structure, its town's territory (a warning by
+  default, returned on save as on structures); and names on the transport reads, the structure kind on the lanes due
+  for measuring and the unit types on survey overlaps (#890, #875).
+  knk-web-api: entities `ItemDelivery` and `ItemDeliveryLine` (the inbox lots); `ItemDeliveryService` (deliver, claim,
+  stash moves, the hourly reminder and expiry sweep `InboxMaintenanceService`); endpoints `api/ItemDeliveries`
+  (`search`, `{id}`: World area or `knk.economy.admin`; `POST`: the game server or `knk.economy.admin`) and `api/Inbox`
+  (`{userId}` and `{userId}/stash`: the game server, the player or `knk.economy.admin`; `{userId}/claim`: the game
+  server for the player in `X-Acting-User-Id`; `{userId}/stash/deposit` and `.../withdraw`: the game server for that
+  player or `knk.economy.admin`; `sweep`: `knk.economy.admin`); player notification `InboxUpdated` (events Delivered with
+  lost units and a warning level, ExpiryReminder, Expired); ledger reasons RewardInbox, InboxOverflow, InboxClaim,
+  InboxExpired, Deposit and Withdraw; game settings section `production.delivery`; validation method
+  `ProductionAreaPlacement`; form and display seeds `ItemDelivery`; form seed `ProductionArea` v3; read fields
+  `destinationWarehouseName`, `carrierStructureName`, `productionStructureName`, `fromKind`/`toKind` and `unitTypes`.
+  Every move needs `Production:Enabled` (409 while off); the reads work while it is off. Smoke test:
+  [production smoke test § 8](guides/production-storage-transport-smoke-test.md#8-phase-p7-item-delivery-reward-inbox-depositwithdraw-60-api-684-plugin-tier3).
+  Admin steps:
+  1. Apply the migration `AddItemDelivery` (`dotnet ef database update`; additive: two tables).
+  2. Import the form and display seeds `ItemDelivery` and the form seed `ProductionArea` (seed v3); make them the
+     default.
+  3. Set the inbox rules in the game settings, production section `delivery` (defaults: inbox cap 2304 units, stash
+     cap 0, 30 days, reminders 7 and 1 days before, warnings at 80 % and 95 %), and give each premium tier its caps:
+     ```json
+     "delivery": {
+       "inboxBaseCapUnits": 2304,
+       "stashBaseCapUnits": 0,
+       "expiryDays": 30,
+       "reminderDaysBefore": [7, 1],
+       "warnAtPercent": [80, 95],
+       "premiumTiers": [ { "permissionGroupId": 12, "inboxCapUnits": 6912, "stashCapUnits": 2304 } ]
+     }
+     ```
+  4. Grant `knk.economy.admin` to staff who may gift items or use players' stashes from the web app.
 - **Terminals, displays and structure menus: the API** ([PandiO/knk-workspace#683](https://github.com/PandiO/knk-workspace/issues/683),
   link L17 of the production, storage and transport chain; [design](specs/production-storage-transport/DESIGN.md)
   § 6 and § 11.2, decision record § 15.1 M1-M5). The game server part (binding chests, the terminal and display
