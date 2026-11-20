@@ -1,7 +1,8 @@
 # Overview map — smoke test
 
-**Status:** Draft · **Last updated:** 2026-11-19 (§ 1 step 8: sub-region outlines at startup, #750; fix link F1); 2026-11-19 (§ 3 step 4, § 5 step 7: Escape also after a click inside the map, #757; § 9 steps 1, 3 and 4: "Open profile" disabled with a tooltip without `knk.admin.user.manage`, #809; fix link F2); 2026-11-18 (§ 3 step 1: opening `/bluemap` itself goes to `/map`, #737); 2026-11-18 (§ 3 step 4: Escape only with the focus on the page, #757; docs #766)
-**Coverage:** Written from the design 2026-11-18; no steps run. § 1 updated to what L1 built (7 steps, all partly automated, tagged) and F1 (#750, step 8, partly automated), § 2 to what L2 built (7 steps: 2 automated, 5 partly automated, tagged), § 3 to what L3 built (11 steps: 1 automated, 9 partly automated, 1 manual only, tagged), § 4 to what L4 built (9 steps: 1 automated, 5 partly automated, 3 manual visibility steps), § 5 to what L5 built (8 steps: 1 automated, 7 partly automated, tagged), § 6 to what L6 built (7 steps: 2 automated, 5 partly automated, tagged), § 7 to what L7 built (10 steps: 4 automated, 6 partly automated), § 8 to what L8 built (9 steps: 3 automated, 6 partly automated), § 9 to what L9 built (8 steps: 3 automated, 4 partly automated, 1 manual only; since F2, #809: 3 automated, 5 partly automated); every section is now updated to what was built.
+**Status:** Current · **Last updated:** 2026-11-20 (live results: §§ 1–9 passed on dev 2026-11-19, § 3 step 1 on the alpha; § 3.0 BlueMap settings; § 4.1 step 3 `/ownermode` case accepted; docs #767); 2026-11-19 (§ 1 step 8: sub-region outlines at startup, #750; fix link F1); 2026-11-19 (§ 3 step 4, § 5 step 7: Escape also after a click inside the map, #757; § 9 steps 1, 3 and 4: "Open profile" disabled with a tooltip without `knk.admin.user.manage`, #809; fix link F2); 2026-11-18 (§ 3 step 1: opening `/bluemap` itself goes to `/map`, #737); 2026-11-18 (§ 3 step 4: Escape only with the focus on the page, #757; docs #766)
+**Results:** run live by the developer: §§ 1–9 passed on dev on 2026-11-19 (local stack from `next`, BlueMap's static `web/` in the web app's `public/bluemap/`; run report on [#732](https://github.com/PandiO/knk-workspace/issues/732)), and § 3 step 1 passed on the alpha on 2026-11-19 after the promotion. No findings in the code. § 4.1 step 3's `/ownermode` case was not run live; the developer accepted it on 2026-11-20 (the API's automated tests cover it). The run report itemises §§ 1, 3 (steps 2–9), 4, 5, 6 and 9; §§ 2, 7 and 8 are recorded as passed from the coordinator's summary.
+**Coverage:** Written from the design 2026-11-18. § 1 updated to what L1 built (7 steps, all partly automated, tagged) and F1 (#750, step 8, partly automated), § 2 to what L2 built (7 steps: 2 automated, 5 partly automated, tagged), § 3 to what L3 built (11 steps: 1 automated, 9 partly automated, 1 manual only, tagged), § 4 to what L4 built (9 steps: 1 automated, 5 partly automated, 3 manual visibility steps), § 5 to what L5 built (8 steps: 1 automated, 7 partly automated, tagged), § 6 to what L6 built (7 steps: 2 automated, 5 partly automated, tagged), § 7 to what L7 built (10 steps: 4 automated, 6 partly automated), § 8 to what L8 built (9 steps: 3 automated, 6 partly automated), § 9 to what L9 built (8 steps: 3 automated, 4 partly automated, 1 manual only; since F2, #809: 3 automated, 5 partly automated); every section is now updated to what was built.
 **Design:** [specs/in-game-maps/OVERVIEW_MAP_DESIGN.md](../specs/in-game-maps/OVERVIEW_MAP_DESIGN.md) · **Issue:**
 [PandiO/knk-workspace#732](https://github.com/PandiO/knk-workspace/issues/732)
 **Guides:** [player](users/overview-map-player-guide.md), [admin](admin/overview-map-admin-guide.md)
@@ -23,7 +24,7 @@ gate structure with two doors.
 *Built by link L1 (knk-plugin and knk-web-api branches `claude/overview-map-outlines`, PRs into `next`); step 8 by fix
 F1 ([#750](https://github.com/PandiO/knk-workspace/issues/750), knk-plugin branch `claude/overview-map-f1-subregions`,
 PR into `next`). 8 steps, all partly automated (tagged): the suites cover the plugin's reports, the hub method and the table; a real Paper server
-with WorldGuard, the game hub and MySQL is checked by hand. Every step can still be run by hand; not run yet. Full manual
+with WorldGuard, the game hub and MySQL is checked by hand. Every step can still be run by hand. **Passed on dev 2026-11-19**, step 8 included (`Region outlines (sub-regions): 3 outline(s)` at startup). Full manual
 run about 30 minutes.*
 
 Tests named below: knk-plugin `knk-core` `MapReportingServiceTest`, `MapReportingServiceSubRegionsTest`,
@@ -99,7 +100,7 @@ Tests named below: knk-plugin `knk-core` `MapReportingServiceTest`, `MapReportin
 *Built by link L2 (knk-web-api branch `claude/overview-map-public-api`, PR into `next`). 7 steps: 2 automated, 5
 partly automated (tagged); the by-hand parts need a real API with MySQL behind Nginx. The suites cover the routes, the flag, the
 rate limit and the exact public field sets; a real database with the phase 1 outlines and a real client IP are checked
-by hand. Every step can still be run by hand; not run yet. Full manual run about 20 minutes.*
+by hand. Every step can still be run by hand. **Passed on dev 2026-11-19.** Full manual run about 20 minutes.*
 
 Tests named below, all in knk-web-api `Tests/knkwebapi_v2.Tests`: `Api/MapControllerPipelineTests`,
 `Api/MapPublicDtoFieldTests`, `Services/Map/MapPublicServiceTests`, `Security/EndpointAccessRulesTests`,
@@ -169,9 +170,10 @@ Tests named below, all in knk-web-api `Tests/knkwebapi_v2.Tests`: `Api/MapContro
 *Built by link L3 (knk-web-app branch `claude/overview-map-page`, deploy notes on knk-workspace
 `claude/overview-map-page`; PRs into `next`). 11 steps: 1 automated, 9 partly automated, 1 manual only (tagged). The
 suites run the page against a mocked API and a fake BlueMap web app that loads the real bridge script; a real render,
-real zooming and a real phone are checked by hand. **The live run waits for the developer's NAS change** (runbook
-Phase 10: the `bluemap-test` container moved into the `knk-alpha` stack, `/bluemap/` served, the full-world render).
-Not run yet. Full manual run about 20 minutes.*
+real zooming and a real phone are checked by hand. Runbook Phase 10 was applied on the NAS on 2026-11-18 (the
+`bluemap` service in the `knk-alpha` stack, `/bluemap/` served); the full-world render was skipped by the developer's
+decision, the already rendered area is used. **Steps 2–9 passed on dev 2026-11-19; step 1 passed on the alpha
+2026-11-19** after the promotion. Full manual run about 20 minutes.*
 
 Tests named below: knk-web-app `e2e/overview-map.spec.ts` (Playwright, "e2e") and the Jest suites in
 `src/components/map/__tests__/` (`bridgeProtocol`, `mapMarkers`, `mapActionRegistry`, `GateDoorsWidget`,
@@ -183,7 +185,11 @@ Tests named below: knk-web-app `e2e/overview-map.spec.ts` (Playwright, "e2e") an
    [closed-alpha runbook Phase 10](closed-alpha-deployment-runbook.md#phase-10--overview-map-bluemap-in-the-stack-737):
    the render service `bluemap` in the `knk-alpha` stack (BlueMap v5.29), nginx serving `web/` under `/bluemap/`,
    `webapp.conf` with `client-decompression: true` and `scripts: ["/bluemap-bridge/bridge.js?worlds=<map id>:<world>"]`,
-   and a render that covers the test town.
+   and a render that covers the test town. On the alpha the bridge line also carries
+   `&heads=https://minotar.net/helm/{uuid}/16` (player heads, § 5) and `config/maps/overworld.conf` has
+   `start-pos: { x: 1408, z: -522 }` (over Cinix). **No static marker sets:** the BlueMap spike's `wg2bluemap` sets
+   ("Towns"/"Districts") must not be in the map config or `live/markers.json`; every outline comes from the bridge.
+   Leftover static sets look like permanent district volumes that no switch hides (dev run 2026-11-19).
 2. Settings: API `Map__Enabled=true` (`/etc/knk/api.env`, restart the API). Other `Map__*` keys at their defaults.
 3. Data: the test data above, with outlines stored (smoke § 1) and the town's spawn location set.
 
@@ -249,7 +255,9 @@ Tests named below: knk-web-app `e2e/overview-map.spec.ts` (Playwright, "e2e") an
 steps 2, 3 and 5 are full manual steps (the visibility checks: the developer's live run of them on
 [#738](https://github.com/PandiO/knk-workspace/issues/738) gates the merge of phase 4b, L5), the other 5 are partly
 automated (tagged); the by-hand parts need a real Paper server, real accounts and a real siege match. The suites cover
-every audience's response body, the plugin report, the drop rules and the labels. Not run yet. Full manual run about
+every audience's response body, the plugin report, the drop rules and the labels. Steps 2, 3 and 5 passed live on
+2026-11-18 (#738), the whole section on dev 2026-11-19; step 3's `/ownermode` case not run live (accepted by the
+developer 2026-11-20). Full manual run about
 40 minutes.*
 
 Tests named below: knk-web-api `Tests/knkwebapi_v2.Tests` `Api/MapPlayersPipelineTests`,
@@ -345,7 +353,7 @@ Tests named below: knk-web-api `Tests/knkwebapi_v2.Tests` `Api/MapPlayersPipelin
 *Built by link L5 (knk-web-app branch `claude/overview-map-players-page`, PR into `next`). 8 steps: 1 automated, 7
 partly automated (tagged). The suites run the page against a mocked `GET api/Map/players` (answering per audience as
 the API's snapshots do) and the fake BlueMap web app that loads the real bridge script; a real server, real accounts,
-real colours on the real viewer and a real siege match are checked by hand. Not run yet. Full manual run about
+real colours on the real viewer and a real siege match are checked by hand. **Passed on dev 2026-11-19.** Full manual run about
 20 minutes.*
 
 Tests named below: knk-web-app `e2e/overview-map-players.spec.ts` (Playwright, "e2e") and the Jest suites in
@@ -405,7 +413,7 @@ Tests named below: knk-web-app `e2e/overview-map-players.spec.ts` (Playwright, "
 `claude/overview-map-staff-details`; PRs into `next`). 7 steps: 2 automated, 5 partly automated (tagged); every step
 can still be run by hand. The suites run the map page against a mocked API and a fake BlueMap web app (as § 3); real
 display configurations, a real render and a real phone are checked by hand. No flag: the section follows the node
-`knk.admin.world`. The live run waits for § 3 (the NAS render). Not run yet. Full manual run about 10 minutes; the
+`knk.admin.world`. **Passed on dev 2026-11-19** for a gate, a district and a town. Full manual run about 10 minutes; the
 untagged parts about 5.*
 
 Tests named below: knk-web-app `e2e/overview-map-staff-details.spec.ts` (Playwright, "e2e") and the Jest suites
@@ -462,7 +470,7 @@ Tests named below: knk-web-app `e2e/overview-map-staff-details.spec.ts` (Playwri
 *Built by link L7 (knk-web-api and knk-plugin branches `claude/overview-map-gate-commands`, PRs into `next`). 10 steps:
 4 automated, 6 partly automated (tagged); the by-hand parts need a real Paper server with the gate in the world, a
 real siege match and a real audit log. The suites cover the access rule, every refusal, the timeout, the audit entry,
-the hub round trip and the plugin handler with the real gate manager. Not run yet. Full manual run about 30 minutes;
+the hub round trip and the plugin handler with the real gate manager. **Passed on dev 2026-11-19.** Full manual run about 30 minutes;
 without the automated steps about 20.*
 
 Tests named below: knk-web-api `Tests/knkwebapi_v2.Tests` `Services/Map/GateCommandServiceTests`,
@@ -547,7 +555,7 @@ Tests named below: knk-web-api `Tests/knkwebapi_v2.Tests` `Services/Map/GateComm
 `claude/overview-map-gate-buttons`; PRs into `next`). 9 steps: 3 automated, 6 partly automated (tagged); every step
 can still be run by hand. The suites run the map page against a mocked API and a fake BlueMap web app (as § 3); the
 door animating in game, a real siege match and a real phone are checked by hand. Behind the API's
-`Map:GateCommands:Enabled` (§ 7.0), read by the page from `config.gateCommands.enabled`. Not run yet. Full manual run
+`Map:GateCommands:Enabled` (§ 7.0), read by the page from `config.gateCommands.enabled`. **Passed on dev 2026-11-19.** Full manual run
 about 20 minutes; the untagged parts about 12.*
 
 Tests named below: knk-web-app `e2e/overview-map-gate-commands.spec.ts` (Playwright, "e2e") and the Jest suite
@@ -614,7 +622,8 @@ automated, 5 partly automated (tagged);
 every step can still be run by hand. The suites run the map page against a mocked API (live players, the account read by UUID and the
 moderation endpoints) and the fake BlueMap web app with the real bridge script; the kick, ban and freeze in game, the
 profile page behind "Open profile" and a real phone are checked by hand. No flag of its own: it needs the live players
-layer (§ 5, `Map:LivePlayers:Enabled`) and is gated by the viewer's nodes. Not run yet. Full manual run about
+layer (§ 5, `Map:LivePlayers:Enabled`) and is gated by the viewer's nodes. **Passed on dev 2026-11-19** (freeze, kick
+and ban from the panel). Full manual run about
 15 minutes; the untagged parts about 10.*
 
 Tests named below: knk-web-app `e2e/overview-map-moderation.spec.ts` (Playwright, "e2e") and the Jest suite
@@ -674,17 +683,19 @@ Tests named below: knk-web-app `e2e/overview-map-moderation.spec.ts` (Playwright
 
 ## Changes
 
-1. 2026-11-19: § 1 step 8: sub-region outlines reported after the access sync, #750 (fix link F1)
-2. 2026-11-19: § 3 step 4 and § 5 step 7: Escape closes the panel also after a click inside the map, #757; § 9 steps
+1. 2026-11-20: live results recorded (§§ 1–9 on dev 2026-11-19, § 3 step 1 on the alpha, `/ownermode` accepted);
+   § 3.0: the alpha's BlueMap settings and no static marker sets; status Draft → Current; docs #767
+2. 2026-11-19: § 1 step 8: sub-region outlines reported after the access sync, #750 (fix link F1)
+3. 2026-11-19: § 3 step 4 and § 5 step 7: Escape closes the panel also after a click inside the map, #757; § 9 steps
    1, 3 and 4: "Open profile" disabled with a tooltip without `knk.admin.user.manage`, #809 (fix link F2)
-3. 2026-11-18: § 3 step 4: Escape only with the focus on the page, #757; docs #766
-4. 2026-11-18: § 9 to what L9 built, #743
-5. 2026-11-18: § 5 to what L5 built, #739
-6. 2026-11-18: § 8 to what L8 built, #742
-7. 2026-11-18: § 7 to what L7 built, #741
-8. 2026-11-18: § 6 to what L6 built, #740
-9. 2026-11-18: § 4 to what L4 built, #738
-10. 2026-11-18: § 3 to what L3 built, #737
-11. 2026-11-18: § 2 to what L2 built, #736
-12. 2026-11-18: § 1 to what L1 built, #735
-13. 2026-11-18: draft from the design, phases 1, 2, 3, 4a, 4b, 5, 6a, 6b, 7
+4. 2026-11-18: § 3 step 4: Escape only with the focus on the page, #757; docs #766
+5. 2026-11-18: § 9 to what L9 built, #743
+6. 2026-11-18: § 5 to what L5 built, #739
+7. 2026-11-18: § 8 to what L8 built, #742
+8. 2026-11-18: § 7 to what L7 built, #741
+9. 2026-11-18: § 6 to what L6 built, #740
+10. 2026-11-18: § 4 to what L4 built, #738
+11. 2026-11-18: § 3 to what L3 built, #737
+12. 2026-11-18: § 2 to what L2 built, #736
+13. 2026-11-18: § 1 to what L1 built, #735
+14. 2026-11-18: draft from the design, phases 1, 2, 3, 4a, 4b, 5, 6a, 6b, 7
