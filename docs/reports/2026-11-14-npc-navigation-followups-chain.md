@@ -434,6 +434,12 @@ the configuration reference § 4.27), then restart. In test order:
     when a test route with a real narrow place (a one-block door or narrow gate where groups queue) is added and (2)
     when `collidable: true` is tested. If NPCs then get in each other's way where crowd awareness does not help, B gets
     its own link.
+54. **J1 checked and merged; H1 started** (2026-11-19). § 6 held: CI `build` and `paper-boot` (64) green on `7dd44ed9`,
+    12 consecutive local climbs green, no debug code, the climb check unchanged (only a report count added), no edits
+    outside the NPC areas. Merged knk-plugin#95 → `cbac2b6c`, knk-workspace#840 → `1d1cc6f1`. Causes: a queue side spot
+    on a wall top beside flight 1 (the CI flake), and Citizens' move control jumping for walkable steps (the hall-entry
+    jumps and the developer's hop after a stair step); jumps 151–166 → 0, leader 75–81 → 57 s. For the developer's
+    review: J1 decisions 5.1 and 5.2. H1 (#779) started.
 
 ## 4. Link blocks
 
