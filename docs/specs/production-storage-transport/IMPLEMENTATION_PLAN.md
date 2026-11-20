@@ -264,6 +264,14 @@ stops when full.
 
 ## P6 — Plugin: terminals, displays, menus, commands · [#74](https://github.com/PandiO/knk-workspace/issues/74) (`[KNG-88]`)
 
+**Status (2026-11-20):** API part built in link L17 (#683, in review, knk-web-api branch `claude/production-p6a`,
+migration `AddStorageContainers`): `StorageContainer` CRUD (Terminal, Display) with the container-derived cap written to
+the storage's `MaxUnits`; terminal view, take and put (`SYS_WORLD` moves with idempotency keys, reasons Deposit and
+Withdraw) and the display sample for the game server; the caller-filtered structure reads `api/StructureMenus`
+(overview, structure menu, orders list; M3); staff retry `POST api/TransportOrders/{id}/retry`; the three menus and the
+hub's "Structures" tile seeded as menu content (A27). Town membership is the permission node
+`knk.town.member.<townId>` until town roles (#246). Plugin part: link L18 (#74).
+
 All **V1**; Backed mode is Later ([#113](https://github.com/PandiO/knk-workspace/issues/113)).
 
 **API:** `StorageContainer` CRUD (Terminal and Display modes); container-derived capacity = bound slots ×

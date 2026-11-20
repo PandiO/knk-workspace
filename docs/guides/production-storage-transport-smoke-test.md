@@ -17,8 +17,9 @@ still be run by hand; not run. § 5.1 (yield areas API, #138): 17 of 18 steps au
 every step can still be run by hand; not run. § 5.2 (surveys plugin, #679): 7 of 15 steps automated (one through a plugin
 scenario on a real Paper server), 7 partly and 1 manual (tagged); not run. § 5.3 (yield areas web app, #680): 9 of 12 steps automated in CI, 2
 partly (tagged) and 1 by hand; every step can still be run by hand; not run. § 6.1 (transport API, #79): 18 of 20 steps automated in CI
-and 2 partly (tagged); every step can still be run by hand; not run. Other sections not yet automated (the links tag them).
-**Last updated:** 2026-11-20 (§ 6 transport API, link L14, #79; § 6.2 and § 6.3 drafts for L15 and L16); 2026-11-20 (§ 5.2 surveys plugin, link L12, #679); 2026-11-20 (§ 5.3 yield areas web app, link L13, #680); 2026-11-19 (§ 5 yield areas API, link L11, #138; § 5.1 step 18: #831); 2026-11-19 (§ 4.2 production engine web app, link L10, #678); 2026-11-19 (§ 4.1 production engine API, link L9, #86); 2026-11-19 (§ 3 intro, § 3.0, § 3.2 and § 3.3 intros: builds from `next`; § 3.3 precondition 4: `/knk regions repair` needs `knk.admin.regions`, `/knk territory rebuild` `knk.admin.world.territory`; docs #830); 2026-11-19 (§ 3.2 world web app, link L7, #676); 2026-11-19 (§ 3.3 world plugin, link L8, #677); 2026-11-19 (§ 3.1 world API, link L6, #91); 2026-11-19 (§ 2.2 stock web app, link L5, #675); 2026-11-19 (§ 2 stock core API, link L4, #97); 2026-11-19 (§ 1.0 and § 1.3 preconditions: builds from `next` instead of the link branches; guides: [territory admin guide](admin/territory-admin-guide.md), docs #806); 2026-11-19 (§ 1.4 territory web app, link L3, #690); 2026-11-19 (§ 1.3 territory plugin, link L2, #689); 2026-11-19 (§ 1 territory API, link L1, #326); 2026-11-19 (§ 0 item identity, link L0, #141); 2026-11-16 (draft from the design, territory and phases P1-P12)
+and 2 partly (tagged); every step can still be run by hand; not run. § 7.1 (terminals and menus API, #683): 15 of 20 steps automated in CI, 4 partly and 1 by hand
+(tagged); every step can still be run by hand; not run. Other sections not yet automated (the links tag them).
+**Last updated:** 2026-11-20 (§ 7 terminals and menus API, link L17, #683; § 7.2 draft for L18); 2026-11-20 (§ 6 transport API, link L14, #79; § 6.2 and § 6.3 drafts for L15 and L16); 2026-11-20 (§ 5.2 surveys plugin, link L12, #679); 2026-11-20 (§ 5.3 yield areas web app, link L13, #680); 2026-11-19 (§ 5 yield areas API, link L11, #138; § 5.1 step 18: #831); 2026-11-19 (§ 4.2 production engine web app, link L10, #678); 2026-11-19 (§ 4.1 production engine API, link L9, #86); 2026-11-19 (§ 3 intro, § 3.0, § 3.2 and § 3.3 intros: builds from `next`; § 3.3 precondition 4: `/knk regions repair` needs `knk.admin.regions`, `/knk territory rebuild` `knk.admin.world.territory`; docs #830); 2026-11-19 (§ 3.2 world web app, link L7, #676); 2026-11-19 (§ 3.3 world plugin, link L8, #677); 2026-11-19 (§ 3.1 world API, link L6, #91); 2026-11-19 (§ 2.2 stock web app, link L5, #675); 2026-11-19 (§ 2 stock core API, link L4, #97); 2026-11-19 (§ 1.0 and § 1.3 preconditions: builds from `next` instead of the link branches; guides: [territory admin guide](admin/territory-admin-guide.md), docs #806); 2026-11-19 (§ 1.4 territory web app, link L3, #690); 2026-11-19 (§ 1.3 territory plugin, link L2, #689); 2026-11-19 (§ 1 territory API, link L1, #326); 2026-11-19 (§ 0 item identity, link L0, #141); 2026-11-16 (draft from the design, territory and phases P1-P12)
 **Design:** [specs/production-storage-transport/DESIGN.md](../specs/production-storage-transport/DESIGN.md) (§17
 acceptance A01-A27, §18 links) · [territory](../specs/territory/DESIGN.md) · [shops](../specs/shops/DESIGN.md) ·
 **Issue:** [PandiO/knk-workspace#22](https://github.com/PandiO/knk-workspace/issues/22)
@@ -1625,9 +1626,132 @@ the dry run, and the structure's transport view.*
 
 ## 7. Phase P6: terminals, displays, menus, commands (#683 API, #74 plugin; tier:2)
 
-*Draft from the design (2026-11-16); the links update it to what was built and tag the automated steps.*
+Built so far: link L17, the API (knk-web-api, migration `AddStorageContainers`; branch `claude/production-p6a`, PR into
+`next`). The game server part (`/knk storage bind`, the terminal and display views, the Structures menus and their
+buttons) is link L18 (#74); until then § 7.1 runs with a REST client (or Swagger) against the API, sending what the
+game server will send: the plugin key and, for a player, `X-Acting-User-Id: <user id>`. 20 steps in § 7.1: 15 automated
+in CI, 4 partly and 1 by hand (tagged); every step can still be run by hand; not run. § 7.2 is the draft for L18. Full
+manual run about 30 minutes; the untagged parts about 10 minutes. The tests are in knk-web-api
+`Tests/.../Services/Production/TerminalsAndMenusTests.cs` (`TerminalsAndMenusTests`, `ProductionAreaRegionBoundsTests`),
+`Services/MenuTemplateProductionSeedTests.cs` and `Migrations/AddStorageContainersTests.cs`. Tier:2; the developer's
+waiver of the smoke gates (2026-11-19) is read by the coordinator as covering the later links.
 
-### 7.1 Steps
+### 7.0 Preconditions
+
+1. knk-web-api with the migrations up to `AddStorageContainers` applied (`dotnet ef database update`), restarted once
+   (the production menus and the main menu's "Structures" tile are seeded at startup).
+2. Everything of § 6.0: the rural quarry **Quarry** in Phoenix with its Output storage, the warehouses **North** and
+   **South** with their delivery storages, the blueprints **Cobblestone** and **Coal**, `Production:Enabled` on except
+   in step 8 and 14.
+3. Accounts: **Staff** (`knk.admin.world`, `knk.admin.content`), **Member** (no staff node; give it
+   `knk.town.member.<Phoenix id>`, the town membership until town roles, #246) and **Visitor** (nothing). Note their
+   user ids. The game server's calls are the plugin key (`X-API-Key`) with `X-Acting-User-Id` naming the player.
+4. North's delivery storage: `PUT api/Storages/<id>` with `unitsPerSlot` 200 and no cap.
+
+### 7.1 Steps (API)
+
+1. [partly automated: knk-web-api `FormConfigurationSeedFilesTests`, `DisplayConfigurationSeedFilesTests` (every seed
+   dry-runs and imports); by hand: open the forms in the web app]
+   As Staff, import the form and display seeds `StorageContainer`, and the form seeds `StockTransaction` (seed v2) and
+   `ProductionArea` (seed v2), each with "make default". **Expected:** all import; the StorageContainer form asks for
+   the storage and the mode, then the world, the block position, the block type and "Double chest". (A23)
+2. [automated: `TerminalsAndMenusTests.BindingContainers_SetsTheCapToSlotsTimesUnitsPerSlot_AndUnbindingTheLastKeepsIt`]
+   As Staff, `POST api/StorageContainers` with `{ "storageId": <North delivery>, "mode": "Terminal", "containerType":
+   "Chest", "isDouble": true, "worldName": "world", "x": 1, "y": 64, "z": 0 }`. **Expected:** 201, `slots` 54,
+   `storageContainerSlots` 54, `storageMaxUnits` 10800 (54 × 200). Bind a barrel at x 3 as a Display. **Expected:** North's
+   delivery storage is capped at 16200. Delete the barrel: 10800 again; delete the chest too: the cap stays 10800 (a
+   fixed cap again, nothing trimmed). Bind the chest again and set the storage's `unitsPerSlot` to 300: the cap becomes
+   54 × 300 = 16200. A storage without `unitsPerSlot` keeps its own cap when a chest is bound. (DESIGN § 4.4)
+3. [automated: `TerminalsAndMenusTests.Binding_RefusesSystemStorages_ATakenBlock_AndADoubleBarrel`]
+   Bind a container to a system storage (`SYS_WORLD`), a second container on the same block, and a double barrel.
+   **Expected:** 400, 409 ("That block is already bound"), 400. `GET api/StorageContainers/by-block?world=world&x=1&y=64&z=0`
+   returns the chest; an unbound block is 404.
+4. [automated: `TerminalsAndMenusTests.ATerminal_PutsAndTakesThroughTheLedger_OnceperKey_ForMembersAndStaffOnly`]
+   With the plugin key and `X-Acting-User-Id: <Member>`, `POST api/StorageContainers/<chest>/put` with `{
+   "itemBlueprintId": <Cobblestone>, "amount": 10, "idempotencyKey": "click-1" }`, twice. **Expected:** the first is
+   Applied, the second `replayed` true; North holds 10. Then `POST .../take` with 4 and key "click-2" as Staff.
+   **Expected:** North holds 6; the ledger has one Deposit (actor Member) and one Withdraw (actor Staff) transaction with
+   source `StorageContainer <chest id>`, `SYS_WORLD` on the other side; the reconciler is clean. `GET
+   .../<chest>/terminal` as Member: one entry, Cobblestone 6. (A14)
+5. [automated: `TerminalsAndMenusTests.ATerminalTake_OfMoreThanThereIs_MovesWhatThereIs_AndADisplayIsNoTerminal`]
+   Take 5 when the storage holds 3. **Expected:** `accepted` 3, the line rejects 2 with `NotEnoughStock`. A put without
+   `idempotencyKey` is 400; `GET .../<display>/terminal` is 409 (a display is no terminal).
+6. [partly automated: `TerminalsAndMenusTests.ATerminal_PutsAndTakesThroughTheLedger_OnceperKey_ForMembersAndStaffOnly`
+   (the viewer check); by hand: the 400]
+   As Visitor (`X-Acting-User-Id: <Visitor>`), `GET .../<chest>/terminal` and `POST .../take`. **Expected:** 403 for
+   both, nothing moves. A put or take without `X-Acting-User-Id` is 400 `ActingUserRequired`; a web user's token on
+   these routes is 403 (game server only).
+7. [automated: `TerminalsAndMenusTests.ADisplay_ShowsASampleProportionalToTheFillLevel`]
+   Cap North's delivery storage at 1000 (unbind the chest first, or set `unitsPerSlot` back to none), put 300
+   Cobblestone and 200 Coal into it, bind a Display chest and `GET api/StorageContainers/<display>/display` with the
+   plugin key. **Expected:** `fillRatio` 0.5, `filledSlots` 14 of 27, items Cobblestone 8 stacks and Coal 6. An empty
+   storage's display: `fillRatio` 0, no items. (A14)
+8. [automated: `TerminalsAndMenusTests.WithTheFlagOff_TerminalsMoveNothing_ButBindingAndReadsWork`]
+   Switch `Production:Enabled` off. **Expected:** put and take are 409 `ProductionDisabled`; binding, the terminal view
+   and the display still work. Switch it back on. (A21)
+9. [automated: `TerminalsAndMenusTests.TheOverview_ListsProducersAndWarehouses_WithStatuses_AndFilters`,
+   `TerminalsAndMenusTests.ThePublicStatus`]
+   As Visitor, `POST api/StructureMenus/search` with `{ "pageSize": 50 }`. **Expected:** one row per production
+   structure and warehouse: name, `structureType`, `kindName` ("Warehouse" for a warehouse), town, level, `products`,
+   `status` and `statusText`. A rural producer that is not Connected is `NoRoad`; one with a line blocked full is
+   `Full`; switched off, without a running line or with no worker present is `Stalled`. Filters `townId`,
+   `structureType`, `status` and `productionKindId` and the search term narrow the list (Rivertown: none). (A24, API
+   side)
+10. [automated: `TerminalsAndMenusTests.AVisitor_GetsOnlyThePublicFields_AndTheResponseHoldsNoStockRatesWorkersOrOrders`]
+    Put 40 into Quarry's Output. As Visitor, `GET api/StructureMenus/<Quarry>`. **Expected:** name, kind, town, level,
+    products and status; `viewerSeesDetails` false and `detail` null: the body holds no stock, rates, workers or
+    orders. `GET api/StructureMenus/<Quarry>/orders` is 403. The game server without `X-Acting-User-Id` gets the same
+    public view. (A25)
+11. [automated: `TerminalsAndMenusTests.MembersAndStaff_SeeRatesStorageWorkersWarningsAndOrders_OnlyStaffAreStaff`]
+    Make a manual order of 10 from Quarry to North. As Member, then as Staff, `GET api/StructureMenus/<Quarry>`.
+    **Expected:** `viewerSeesDetails` true, `detail` with 2 of 2 workers present and 0 away, the Cobblestone rate, the
+    Output storage with Cobblestone 40, the warnings and `openOrderCount` 1; `viewerIsStaff` is false for Member and
+    true for Staff. `GET .../orders` lists the order, newest first. North's menu lists its delivery storage and the
+    order bound for it. (A26)
+12. [automated: same as step 11]
+    As Member, look for anything in the responses that changes something. **Expected:** none: the menu routes are
+    reads; the staff buttons call the staff routes (step 13-15), which need `knk.admin.world` (403 for Member). (A26)
+13. [automated: `TerminalsAndMenusTests.Retry_RunsAWaitingOrderNow_AndSendsACancelledOneAgainOnce`]
+    As Staff, make a manual order with `executeAfter` an hour ahead and `POST api/TransportOrders/<id>/retry`.
+    **Expected:** the order runs now (InTransit, event "Retried now by user <Staff>"); a second retry is 409 (on the
+    road). Cancel another order and retry it twice. **Expected:** one new manual order with the same stops and amounts
+    ("Retry of transport #<id>", client key `retry-of-<id>`), the same one both times. A delivered order's retry is 409.
+    (M4)
+14. [automated: `TerminalsAndMenusTests.Retry_Is409WhileTheFlagIsOff`]
+    With `Production:Enabled` off, retry is 409 ("Production is switched off"). (A21)
+15. [by hand]
+    As Staff, the other staff buttons' routes: `POST api/ProductionStructures/<Quarry>/survey` (survey now, P4), `GET
+    api/ProductionStructures/<Quarry>/transport` (the transport dry run, P5) and `POST api/TransportOrders/<id>/cancel`.
+    **Expected:** each answers as in § 5.1 and § 6.1; as Member each is 403. (A26)
+16. [automated: `MenuTemplateProductionSeedTests` (all)]
+    On a fresh database, start the API and `GET api/MenuTemplates` (or open the menu editor). **Expected:**
+    `structures.overview` (searchable, facets Town, Kind and Status, rows open `structures.structure` with
+    `ctx.structureId`), `structures.structure` (details header; Productions, Workers, Warnings and Transport orders
+    shown only when `structure.getSeesDetails` is true; Storages list; a Staff row behind `knk.admin.world` with survey
+    now, dry run and area outline) and `structures.orders` (staff cancel or retry with a confirm); the main menu has the
+    "Structures" tile in slot 18. On a database seeded before, a restart adds the tile once. (A27)
+17. [automated: `ProductionAreaRegionBoundsTests.ARegionArea_WithoutBounds_TakesThemFromTheRegionOutline`,
+    `FormConfigurationSeedFilesTests`]
+    With the game server's outline of a region `pit_region` stored (`map_region_outlines`), `POST api/ProductionAreas`
+    with shape Region, `wgRegionId` "Pit_Region" and no bounds. **Expected:** the bounds are the region's (x and z from
+    its points, y from its height) and the size follows; a region without an outline still needs the bounds (400). The
+    ProductionArea form seed v2 has "Send to Minecraft" on the region (RegionClaim) and the radius (CaptureRadius, a
+    known world task type now). (#877)
+18. [automated: `ProductionAreaRegionBoundsTests.TheStructureList_HasTheYieldSource`]
+    `POST api/ProductionStructures/search`. **Expected:** each row has `yieldSource` (Configured, Derived or Hybrid).
+    (#877)
+19. [partly automated: `FormConfigurationSeedFilesTests`; by hand: open a transaction in the web app]
+    Open a ledger transaction with reason Upgrade in the StockTransaction form (seed v2). **Expected:** the Reason shows
+    Upgrade. (#881)
+20. [partly automated: `ReadAccessRulesTests`, `EndpointAccessRulesTests`, `DashboardChangeAccessRulesTests`,
+    `DeleteAccessRulesTests` (the rules are pinned); by hand: the calls below]
+    As Visitor with a web token, `POST api/StorageContainers` and `DELETE api/StorageContainers/<id>`. **Expected:** 403
+    (writes need `knk.admin.world`, delete also `knk.admin.delete`). `POST api/StructureMenus/search` without any token
+    is 401.
+
+### 7.2 Steps (plugin #74, draft)
+
+*Draft for link L18: `/knk storage bind`, the terminal and display views, the menus above and their buttons.*
 
 1. As Staff, bind a chest in the warehouse as a terminal and another as a display. Open the terminal as Member.
    **Expected:** a paged menu of the storage; taking and putting items are ledger moves; the chest stays empty. Open
