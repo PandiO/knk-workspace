@@ -30,6 +30,7 @@
    import the updated `SiegeWeaponSpot` seed (or turn on "Requires in-game action" on Min X with type
    `SiegeWeaponSpot` in the form designer on a database that imported it before). Say so if `/knk weaponspot`
    should come back as a second way (removed as the coordinator's reversible default).
+4. 2026-11-20 (update): siege shop L1–L3 (#866–#868) are merged into `next` (plugin `c7e2ad4b`, API `57277cdc`); shop L3 added the `ShopPurchaseHandler` port that L3 #784 implements (register with `SiegeShopService.registerHandler`, see shop report § 4.3). L3 #784 now waits only for #614 (schematic pipeline, no design).
 
 ## 2. Summary
 
