@@ -94,7 +94,7 @@ Scope: the Siege minigame (PvP). Siege Survival may get siege weapons later; not
 |---|---|
 | W30 | **Spots are the main limit.** On the scenario, the admin sets **per team how many of its spots are active**. |
 | W31 | **No per-player limit:** a player who can afford it may fill every active spot of their team. A built weapon belongs to the **whole team**; the purchase is one player's, the use is everyone's. |
-| W32 | **Unlocks are per weapon type** (trebuchet, catapult, ballista) and are only needed to **buy** a weapon, not to operate one, so a new player can fire a teammate's trebuchet. |
+| W32 | **Unlocks are per weapon type** (trebuchet, catapult, ballista) and are only needed to **buy** a weapon, not to operate one, so a new player can fire a teammate's trebuchet. *Extended 2026-11-20 by [siege shop](../siege-shop/DESIGN.md) P09: an optional minimum title level besides the coin price; unlocks are bought from the main menu and the web app (P08).* |
 | W33 | **"Siege coins" are renamed "siege points"**, so they aren't confused with the coins on the player's account. |
 | W34 | **Siege points come from personal play:** kills, assists, a **small amount per death** (catch-up), a **kill-streak multiplier** that is **capped** and **resets on death**, gate damage, a small trickle over time, and **notable events** (#612). Capture progress was on the first list; see § 15 question 2. Amounts are configured and tuned in the alpha (#356). |
 | W35 | **Operator rules:** if the operator dies, they are dismounted or their targeting session ends and the weapon is free. **Enemies can only damage a weapon, never fire it** (its facing and range assume the owning side). |
