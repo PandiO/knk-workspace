@@ -1,12 +1,12 @@
 # Siege shop chain — charter
 
-**Status:** Ready to start (2026-11-20)
+**Status:** Running (2026-11-20)
 **Last updated:** 2026-11-20 (drafted by the design session; the coordinator completes it at its first run)
 **Issues:** parent [PandiO/knk-workspace#611](https://github.com/PandiO/knk-workspace/issues/611) (with
 [#356](https://github.com/PandiO/knk-workspace/issues/356), built by L1, and
 [#859](https://github.com/PandiO/knk-workspace/issues/859), parent of L5–L6); sub-issues per link below. Reference
 issues as `PandiO/knk-workspace#n` in component repos.
-**Progress report:** _(the coordinator creates it at its first run)_
+**Progress report:** [reports/2026-11-20-siege-shop-chain.md](../../reports/2026-11-20-siege-shop-chain.md) (coordinator: the Siege weapons coordinator session, on the developer's instruction of 2026-11-20).
 **Skills:** coordinator `.claude/skills/knk-coordinator/`, links `.claude/skills/knk-link/` (knk-workspace).
 
 ## 0. Binding documents
@@ -56,4 +56,4 @@ finished its plugin part; otherwise one after the other).
 3. Existing PvP behaviour stays unchanged with `siege.points.enabled` and `siege.shop.enabled` off; L1's per-player
    scoreboard split (P18) must look the same as today with the flag off.
 4. Migrations: L1, L2, L4 and L5 may each add one additive migration; L3 and L6 none.
-5. Model for link sessions: _(the coordinator sets it)_.
+5. Model for link sessions: the coordinator's own model, set explicitly in every start.
