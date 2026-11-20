@@ -11,7 +11,7 @@ merged into `next` (knk-web-api `fcfced27`, migration `AddProductionWorld`, 2026
 [DESIGN §14](DESIGN.md#14-decisions), [PRODUCTION_KINDS §9](PRODUCTION_KINDS.md#9-decisions) and
 [TOWN_LOGISTICS §8](TOWN_LOGISTICS.md#8-decisions); the few still open are listed there. Every item is marked
 **V1** or **Later**. The production structures work and the garrison/guard NPC work ship in the **same test phase**.
-**Last updated:** 2026-11-20 (P5 transport API #79 in review, link L14); 2026-11-20 (P4c yield areas web app #680 in review); 2026-11-19 (P4 yield areas API #138 in review); 2026-11-19 (P3b production engine web app #678 in review); 2026-11-19 (P3 production engine API #86 merged into `next`); 2026-11-19 (P2c world plugin #677 in review); 2026-11-19 (P2 world API #91 merged into `next`); 2026-11-19 (P1b stock web app #675 in review; P1 API #97 merged into `next`); 2026-11-19 (P1 stock core API #97 in review); 2026-11-19 (territory plugin #689 and web app #690 merged into `next`); 2026-11-19 (territory API #326 in review); 2026-11-19 (item identity #141 merged into `next`, docs #796); 2026-11-19 (item identity #141 in review); 2026-11-11 (open questions answered, [decision record §11](DECISIONS_2026-11-05.md#11-follow-up-decisions-2026-11-11); issues #324, #325)
+**Last updated:** 2026-11-20 (P5c transport web app #682 in review, link L16); 2026-11-20 (P5 transport API #79 in review, link L14); 2026-11-20 (P4c yield areas web app #680 in review); 2026-11-19 (P4 yield areas API #138 in review); 2026-11-19 (P3b production engine web app #678 in review); 2026-11-19 (P3 production engine API #86 merged into `next`); 2026-11-19 (P2c world plugin #677 in review); 2026-11-19 (P2 world API #91 merged into `next`); 2026-11-19 (P1b stock web app #675 in review; P1 API #97 merged into `next`); 2026-11-19 (P1 stock core API #97 in review); 2026-11-19 (territory plugin #689 and web app #690 merged into `next`); 2026-11-19 (territory API #326 in review); 2026-11-19 (item identity #141 merged into `next`, docs #796); 2026-11-19 (item identity #141 in review); 2026-11-11 (open questions answered, [decision record §11](DECISIONS_2026-11-05.md#11-follow-up-decisions-2026-11-11); issues #324, #325)
 **Design:** [DESIGN.md](DESIGN.md), [PRODUCTION_KINDS.md](PRODUCTION_KINDS.md), [TOWN_LOGISTICS.md](TOWN_LOGISTICS.md),
 [shops DESIGN](../shops/DESIGN.md), [NPC platform](../npc-platform/DESIGN.md) (lifecycle).
 **Evidence:** [V2 scan](../../reports/2026-10-09-v2-production-storage-transport-scan.md).
@@ -235,7 +235,14 @@ endpoint for the plugin (#681) and can be typed in by staff; a structure's trans
 api/ProductionStructures/{id}/transport`) is the automatic trigger's dry run. Agent decisions on knk-web-api PR
 `claude/production-p5` (e.g. the walking speed 4.317 blocks/s as a game setting; the worker is away from loading until
 the order ends; at a full stop the carrier waits 30 minutes, re-routes within the town, else carries on and brings the
-rest back; manual orders through the API, the TransportOrder form seed read only). Plugin: #681. Web app: #682.
+rest back; manual orders through the API, the TransportOrder form seed read only). Plugin built in link L15 (merged
+into `next`, knk-plugin `7116f1a5`, #681): the lane measurer over the road snapshot, road connections,
+`/knk logistics lanes measure|status` and the headless job (`production.logistics.lanes.*`); agent decisions on the
+knk-plugin PR (e.g. the road distance includes the walk to and from the road; a structure more than 48 blocks from a
+road is Unconnected; the road connection is judged on every lane measured since the server started).
+Web app built in link L16 (#682): the order list and detail
+(timeline, cargo, route, cancel), the manual order page with the dry run, a structure's transport panel with its lanes,
+lanes on the dashboard, the transport settings card with Run transport now, and the #838 reads.
 
 **API**
 

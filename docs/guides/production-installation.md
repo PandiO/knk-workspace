@@ -692,8 +692,8 @@ promotes `next` lists them here with its tag:
     `TransportLane`, and set the rural producers' road connections until the lane measurer (#681) does
     ([changelog](../CHANGELOG.md) entry of #79).
 
-13. `20261120184128_AddStorageContainers` (#683, terminals and menus P6a; on its branch `claude/production-p6a` until
-    merged; after `20261120131558_AddSiegePointsEarning` of the siege shop chain): additive; one new table
+13. `20261120185936_AddStorageContainers` (#683, terminals and menus P6a; on its branch `claude/production-p6a` until
+    merged; after `20261120183543_AddSiegeShopCatalogue` of the siege shop chain): additive; one new table
     `storage_containers` (a block bound to a storage, unique per world and position, deleted with its storage), nothing
     else changed and no data written. No `api.env` key. Set-up afterwards: import the seeds `StorageContainer` (form
     and display), `StockTransaction` v2 and `ProductionArea` v2, grant `knk.town.member.<town id>` to each town's
