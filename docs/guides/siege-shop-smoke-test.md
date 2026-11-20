@@ -1,7 +1,7 @@
 # Siege shop and siege points — smoke test
 
-**Status:** Draft from the design (2026-11-20); no steps run. Steps not yet automated (the links tag them).
-**Last updated:** 2026-11-20 (draft from the design, phases 1–4, 5a, 5b)
+**Status:** Draft (2026-11-20): § 1 built and tagged (L1, #866), §§ 2–5 draft from the design; no steps run by hand.
+**Last updated:** 2026-11-20 (§ 1 updated to what L1 built, steps tagged, #866); 2026-11-20 (draft from the design, phases 1–4, 5a, 5b)
 **Design:** [specs/siege-shop/DESIGN.md](../specs/siege-shop/DESIGN.md) · **Issue:**
 [PandiO/knk-workspace#611](https://github.com/PandiO/knk-workspace/issues/611),
 [#356](https://github.com/PandiO/knk-workspace/issues/356), [#859](https://github.com/PandiO/knk-workspace/issues/859)
@@ -12,49 +12,93 @@ fails, with the server log lines.
 
 ## 1. Phase 1: shared match ledger and siege points earning (#866, tier:3)
 
-*Draft from the design (2026-11-20); the link updates it to what was built and tags the automated steps.*
+*Built by L1 (2026-11-20, branches `claude/siege-shop-l1` in knk-plugin and knk-web-api). 17 of 19 steps fully or partly
+automated (tagged; plugin tests in knk-core and knk-paper, API tests in xUnit); every step can still be run by hand;
+manual steps not run yet. A full manual run takes about 40 minutes; the untagged steps and the by-hand parts about 25.*
 
 ### 1.0 Preconditions
 
-1. Deployed: knk-web-api from `next` with the phase 1 migration applied; knk-plugin built from `next`.
-2. Settings: `siege.points.enabled: true` in the plugin's `config.yml`; `SiegeConfiguration` with the default earn
-   amounts (kill 100, streak step 0.1 cap 1.5, assist 40 with 4 damage in 10 s, death 15, 1 point per 5 gate HP, 3
-   per capture %, capture 100, trickle 10 per 60 s) and **Allow teammate transfers** off.
-3. Accounts and data: A1, A2, D1; a Ready Siege scenario with at least one gate and one capturable objective; a lobby
-   that can start with three players.
+1. Deployed: knk-web-api from the branch (or `next` once merged) with the migration `AddSiegePointsEarning` applied;
+   knk-plugin built from the same branch.
+2. Settings: in the plugin's `config.yml` under `siege:`
+   ```yaml
+   siege:
+     points:
+       enabled: true
+   ```
+   then restart. `SiegeConfiguration` with the default earn amounts (kill 100, streak step 0.1 cap 1.5, assist 40 with
+   4 damage in 10 s, death 15, 1 point per 5 gate HP, 3 per capture %, capture 100, trickle 10 per 60 s) and
+   `pointTransfersEnabled` false. The web app's siege settings page does not show these fields yet: check them with
+   `GET api/SiegeConfiguration` and change them with `PUT api/SiegeConfiguration` (Swagger, signed in as Admin), for
+   example `{ "pointTransfersEnabled": true }`. The migration gives an existing configuration row the defaults.
+3. Accounts and data: A1, A2, D1; a Ready Siege scenario with at least one gate and one capturable (non-instant-victory)
+   objective; a lobby that can start with three players. Optional: diagnostic telemetry on, to check step 15.
 
 ### 1.1 Steps
 
-1. A1, A2 and D1 join and the match starts. **Expected:** each player's sidebar shows "Siege points: 0"; each sees
-   only their own number. (A04, A10)
-2. A1 kills D1 with a sword. **Expected:** A1's action bar shows "+100 kill · 100"; D1's shows "+15 death · 15". (A05,
-   A07)
-3. A2 hits D1 for at least 2 hearts, then within 10 s A1 kills D1. **Expected:** A1 gets the kill (×1.1 as the 2nd of
-   the streak: 110), A2 gets "+40 assist". (A05, A06)
-4. A2 hits D1 for half a heart only, then A1 kills D1 within 10 s. **Expected:** no assist for A2. (A06)
-5. A2 hits D1 for 2 hearts, waits 15 s, then A1 kills D1. **Expected:** no assist for A2. (A06)
-6. A1 keeps killing D1 until six kills in a row. **Expected:** kills 2–6 pay 110, 120, 130, 140, 150; a 7th still pays
-   150. (A05)
-7. D1 kills A1. **Expected:** A1's next kill pays 100 again (streak reset). (A05)
-8. Friendly fire is off; A1 jumps from a height and dies. **Expected:** A1 gets "+15 death"; no kill points to anyone.
-   (A07)
-9. A1 damages a gate door by 50 HP. **Expected:** A1 earns 10 points. (A08)
-10. A1 and A2 stand in an objective's capture radius while it moves 10 % towards the attackers. **Expected:** each
-    earns 30 points; D1, standing outside the radius, earns nothing. D1 then enters and pushes it back 5 %. **Expected:**
-    D1 earns 15. (A08)
-11. The attackers capture the objective with A1 inside and A2 outside. **Expected:** A1 earns 100 for the capture; A2
-    does not. (A08)
-12. A2 stands still at spawn for two minutes while A1 keeps playing. **Expected:** A1 gets "+10" each minute; A2 gets
-    nothing. (A09)
-13. `/siege points` as A1. **Expected:** balance, earned and spent this match, matching the action bar totals. (A10)
-14. `/siege pay A2 50` as A1. **Expected:** refused, transfers are off in PvP Siege. Admin turns **Allow teammate
-    transfers** on and a new match starts; repeat. **Expected:** A1 −50, A2 +50; `/siege pay A2 999999` is refused
-    and nothing changes; `/siege pay D1 10` is refused (not a teammate). (A01, A03)
-15. The match ends. **Expected:** the result shows siege points earned and spent per participant; in the next match
-    everyone starts at 0. (A04, A11)
-16. Admin sets `siege.points.enabled: false` and restarts; play a kill. **Expected:** no siege points line, no action
-    bar points, `/siege points` says the feature is off. (A12)
-17. Retry safety (A02) is checked by the ledger tests only: a charge repeated with the same retry id debits once.
+1. [automated: knk-paper `SiegeScoreboardPresenterPointsTest`, `SiegePointsServiceTest.everyMemberStartsAtZeroWithTheirOwnScoreboardLine_A04_A10`]
+   A1, A2 and D1 join and the match starts. **Expected:** each player's sidebar shows the usual lines (team, time
+   left, objectives) plus "Siege points: 0" right under the time; each sees only their own number; team colours on
+   name tags and `[K/D]` in the tab list are as before. (A04, A10)
+2. [automated: knk-paper `SiegePointsServiceTest.killsPayWithTheStreakAndTheActionBarShowsEachChange_A05_A07_A10`]
+   A1 kills D1 with a sword. **Expected:** A1's action bar shows "+100 kill · 100"; D1's shows "+15 death · 15"; the
+   sidebars show 100 and 15. (A05, A07)
+3. [automated: knk-paper `SiegePointsServiceTest.enemyDamageInTheWindowEarnsAnAssist_A06`, knk-core `SiegePointsEarnCalculatorTest``.anAssistPays40ToEveryEnemyAssisterButNeverTheKiller`]
+   A2 hits D1 for at least 2 hearts, then within 10 s A1 kills D1. **Expected:** A1 gets "+110 kill ×1.1" (the 2nd
+   kill of the streak), A2 gets "+40 assist". (A05, A06)
+4. [automated: knk-core `SiegePointsEarnCalculatorTest``.assistsNeedFourDamageWithinTenSeconds`] A2 hits D1 for half a heart only, then A1 kills
+   D1 within 10 s. **Expected:** no assist for A2. (A06)
+5. [automated: knk-core `SiegePointsEarnCalculatorTest``.assistsNeedFourDamageWithinTenSeconds`] A2 hits D1 for 2 hearts, waits 15 s, then A1 kills
+   D1. **Expected:** no assist for A2. (A06)
+6. [automated: knk-core `SiegePointsEarnCalculatorTest``.aKillPays100AndTheStreakRaisesItByATenthUpToTheCap`] A1 keeps killing D1 until six kills
+   in a row. **Expected:** kills 2–6 pay 110, 120, 130, 140, 150 (the action bar shows "×1.2" … "×1.5"); a 7th still
+   pays 150. (A05)
+7. [automated: knk-paper `SiegePointsServiceTest.killsPayWithTheStreakAndTheActionBarShowsEachChange_A05_A07_A10`]
+   D1 kills A1. **Expected:** A1 gets "+15 death"; A1's next kill pays 100 again (streak reset). (A05)
+8. [partly automated: knk-core `SiegePointsEarnCalculatorTest``.anEnvironmentDeathPaysTheVictimTheDeathAmount`, `.friendlyFireAndSuicidePayNobody`; by hand: the real fall]
+   Friendly fire is off; A1 jumps from a height and dies without being hit first. **Expected:** A1 gets "+15 death"; no
+   kill points to anyone. (A07)
+9. [partly automated: knk-core `SiegePointsEarnCalculatorTest``.gateDamagePaysOnePointPerFiveHpAndKeepsTheFractions`, `SiegePointsServiceTest.gateDamagePaysOnePointPerFiveHp_A08`; by hand: real gate hits]
+   A1 damages a gate door by 50 HP (watch the gate's health bar). **Expected:** A1 earns 10 points in total, shown as
+   "+N gate" on the action bar as the hits land. (A08)
+10. [partly automated: knk-core `SiegePointsCaptureTest.attackersEarnPerPercentTheyMoveAndDefendersEarnForPushingBack`; by hand: the radius in the world]
+    A1 and A2 stand in an objective's capture radius while it moves 10 % towards the attackers. **Expected:** each
+    earns about 30 points ("+N objective" every second); D1, standing outside the radius, earns nothing. D1 then
+    enters alone and pushes it back 5 %. **Expected:** D1 earns about 15. (A08)
+11. [partly automated: knk-core `SiegePointsCaptureTest.aCapturePays100ToTheCapturingSideInsideAndTheLastPercentsCount`; by hand: the capture in the world]
+    The attackers capture the objective with A1 inside and A2 outside. **Expected:** A1's action bar shows "+100
+    capture"; A2 gets no capture points. (A08)
+12. [partly automated: knk-core `SiegePointsEarnCalculatorTest``.theTricklePaysOnlyMembersActiveInTheInterval`, `SiegePointsServiceTest.theTricklePaysActiveMembersOnly_andNeverAnAfkOne_A09`; by hand: real movement]
+    A2 stands still at spawn for two minutes while A1 keeps playing (fighting, walking or standing on an objective).
+    **Expected:** A1 gets "+10 activity" once a minute; A2 gets nothing. Walking at least 10 blocks in a minute,
+    fighting, damaging a gate or standing in a capture radius counts as active; an AFK player (statistics AFK) never
+    is. (A09)
+13. [automated: knk-paper `SiegePointsServiceTest.siegePointsCommandPrintsBalanceEarnedAndSpent_A10`] `/siege points`
+    as A1. **Expected:** "Siege points: B (earned E, spent S this match)", matching the sidebar and the action bar
+    totals. (A10)
+14. [automated: knk-paper `SiegePointsServiceTest.payIsRefusedWhileTransfersAreOff_A03`, `.payMovesPointsToATeammateOnlyAndNeverOverdraws_A01_A03`, knk-core `SiegePointsEconomyTest`]
+    `/siege pay A2 50` as A1. **Expected:** refused, "Sending siege points to teammates is turned off in this game
+    mode."; nothing changes. Admin sets `pointTransfersEnabled` true (`PUT api/SiegeConfiguration`) and a new match
+    starts (settings are frozen per match); repeat. **Expected:** A1 −50, A2 +50, both told; `/siege pay A2 999999` is
+    refused ("Not enough siege points: …") and nothing changes; `/siege pay D1 10` is refused (not a teammate). Set
+    `pointTransfersEnabled` back to false afterwards. (A01, A03)
+15. [partly automated: knk-paper `SiegePointsServiceTest.theMatchResultCarriesEarnedAndSpent_andTheEndStopsEarning_A04_A11`, `SiegePointsTelemetryTest`, knk-api-client `SiegeMatchesCommandApiImplTest.complete_sendsSiegePointsOnlyWhenTheyWereCounted_866`, API `SiegeMatchServiceTests.Complete_StoresSiegePointsEarnedAndSpent_AndZeroWhenNotSent`; by hand: the live result]
+    The match ends. **Expected:** each member gets "Siege points this match: earned E, spent S."; `GET
+    api/siege-matches/{id}` shows `siegePointsEarned` and `siegePointsSpent` per participant; with telemetry on, the
+    owner timeline has `siege.points_earned` events (kills one each, capture progress and gate damage summed per
+    minute). In the next match everyone starts at 0. (A04, A11)
+16. [partly automated: knk-paper `SiegeScoreboardPresenterPointsTest.withSiegePointsOffTheBoardsStayOnePerTeamWithoutAPointsLine_A12`, `SiegeCommandPointsTest`, knk-api-client `SiegeMatchesCommandApiImplTest.complete_sendsSiegePointsOnlyWhenTheyWereCounted_866`; by hand: a real match]
+    Admin sets `siege.points.enabled: false` and restarts; play a match with a kill. **Expected:** no siege points line
+    (the sidebar looks exactly as before this feature), no points on the action bar ("You killed …" as before),
+    `/siege points` says "Siege points are not enabled on this server.", `points` and `pay` are not suggested after
+    `/siege `, and the match result has 0 siege points. (A12)
+17. [automated: knk-core `MatchLedgerTest.retriesAreIdempotentAndConflictingReuseIsRejected`, `SiegePointsEconomyTest.aRetriedTransferOrChargeIsAppliedOnce_A02`]
+    Retry safety (A02) is checked by the ledger tests only: a charge or transfer repeated with the same retry id
+    debits once and returns the first result. (A02)
+18. A1 leaves the match with `/siege leave` and rejoins a new match later. **Expected:** their balance is gone at the
+    leave (§ 5.1.3); the result still lists what they earned. Manual: needs a real leave. (A04)
+19. Server restart during a match. **Expected:** the match ends without rewards as before and no balance comes back
+    (P12). Manual: needs a real restart. (A04)
 
 ## 2. Phase 2: shop catalogue entities, scenario overrides and web app forms (#867, tier:2)
 
