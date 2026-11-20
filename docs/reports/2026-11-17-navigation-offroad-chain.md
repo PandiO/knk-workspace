@@ -36,6 +36,7 @@ on `next` (Decided 2026-11-17).
 | L10 Phase 7 plaza lines | #712 | Merged into next (step 1 and step 2, 2026-11-18); waits for the developer's smoke § 10.2 | knk-plugin `claude/offroad-plaza-lines` `28ad18c5`; knk-workspace `d7e4e834` | step 1: [knk-plugin#73](https://github.com/PandiO/knk-plugin/pull/73) → `ce0f65ec`, [#723](https://github.com/PandiO/knk-workspace/pull/723) → `c7f61e9e`; step 2: [knk-plugin#84](https://github.com/PandiO/knk-plugin/pull/84) → `4daa0c84`, [#769](https://github.com/PandiO/knk-workspace/pull/769) → `2e0c04d4` | green (build, paper-boot) | create_session `session_01R1w2Ussca79jpGCPqzcTf8` (2026-11-18) |
 | F1 walk-search fixes (#771 items 1, 2) | #771 | Merged into next (2026-11-19); waits for the developer's smoke § 12; the storage hall by road stays open (#780) | knk-plugin `claude/offroad-walk-fixes-771` `321daf6b`; knk-workspace `8fdfe392` | [knk-plugin#88](https://github.com/PandiO/knk-plugin/pull/88) → `cee53213`, [#778](https://github.com/PandiO/knk-workspace/pull/778) → `d1850c7a` | green (build, paper-boot) | create_session `session_01R1w2Ut7LKtBrvQw9bA3mVQ` (2026-11-19) |
 | F2 road goal and route ends (#780 b, #771 items 3–5) | #780, #771 | Merged into next (2026-11-19); waits for the developer's smoke § 13 | knk-plugin `claude/offroad-route-ends-f2` `ebc63265`; knk-workspace `441dd7cc` | [knk-plugin#94](https://github.com/PandiO/knk-plugin/pull/94) → `6311de11`, [#813](https://github.com/PandiO/knk-workspace/pull/813) → `05b8edc3` | green (build, paper-boot) | create_session `session_01R1w2UtLzNFzgycUAEB8mVd` (2026-11-19; resumed once after the usage limit) |
+| F3 smoke-test failures of 2026-11-19 (#780, #771, #710) | #780, #771, #710 | Running (started 2026-11-20 09:09 from plugin `next` `4e296797`) | `claude/offroad-smoke-fixes-f3` | — | — | create_session `session_01R1w2UsZsisbttfNE2dkTV3` (2026-11-20) |
 | F2 road goal and route ends (#780 b, #771 items 3–5) | #780, #771 | Merged into next (2026-11-19); waits for the developer's smoke § 13 | knk-plugin `claude/offroad-route-ends-f2` `ebc63265`; knk-workspace `441dd7cc` | [knk-plugin#94](https://github.com/PandiO/knk-plugin/pull/94) → `6311de11`, [#813](https://github.com/PandiO/knk-workspace/pull/813) → `05b8edc3` | green (build, paper-boot) | create_session `session_01R1w2UtLzNFzgycUAEB8mVd` (2026-11-19; resumed once after the usage limit) |
 
 ## 3. Coordinator decisions
@@ -252,6 +253,19 @@ on `next` (Decided 2026-11-17).
     Codex findings (usage limit). C1's NPC join is private and could not leave the dead end; F2 applies the same
     principle for players (NPC coordinator told; a shared rule is their call). #780 closes on promotion; #771 stays
     open until the developer's test tells which cause of item 5 they saw. The plugin slot is free.
+39. **Developer's live smoke test, 2026-11-19 evening (summary on #698).** Passed: #780 (b) (storage hall reached by
+    road with the key on), #771 item 2 (hatch both ways; closed hatch never passed), #771 item 3 (`trail-leg-spacing`,
+    developer chose 2.0 for the dev server), #710 shape on the spiral stair and a corridor corner. Failed: (1) the
+    road-goal rule stops the road too early (Keep Tower Roof walk 202 vs 161; watchtower goal not moved) and repeats
+    the first turn message 4× with the keys on; (2) a 0-expansion first walk search from plain roof floor on the
+    Garrison Watchtower Roof; (3, provisional) with `guidance-v2` on, an open normal door near 1404 104 -494 is not
+    crossed. Developer kept `road-goal-reachable` and `road-to-its-end` off until fixed. Not run: § 8 steps 6–7, § 9,
+    § 10.2, § 3, § 5, § 6, § 7, L1's open items.
+40. **Fix link F3 started (2026-11-20 09:09)** for the four failures (skill § 8: a failed live test gets a fix link).
+    The NPC coordinator is told that #710's spiral shape passed (their wait) but the flag-on door crossing is a
+    provisional failure, and that G1 (#814) should wait for F3's `RoadGoalChoice` change. Non-navigation findings of
+    the session (SignalR `TerritoryChanged` bind error, InventoryMenu validation for duel/arena menus) are reported to
+    the developer for the owning chains.
 
 ## 4. Link blocks
 
