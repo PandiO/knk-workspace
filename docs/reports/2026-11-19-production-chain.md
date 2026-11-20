@@ -83,7 +83,7 @@ of what is already in `next`.
 | L15 P5b lanes plugin | #681 | Merged into next (2026-11-20) | plugin `796f1127`, workspace `77ebdc07`; merges: plugin `7116f1a5`, workspace `e0bf327e` (after a coordinator merge of `next`, `8be418b6`) | [plugin#108](https://github.com/PandiO/knk-plugin/pull/108), [ws#886](https://github.com/PandiO/knk-workspace/pull/886) | CI green (build + paper-boot) on `796f1127` | create_session `session_01R1w2Ux1xEr3Um5M3f3UysM` (prompt says start without asking), started 2026-11-20 |
 | L16 P5c transport web app | #682 | Merged into next (2026-11-20) | web app `e36d39f`, workspace `77b3d4f5`; merges: web app `5ad5029f`, workspace `9eae7f48` | [web-app#68](https://github.com/PandiO/knk-web-app/pull/68), [ws#887](https://github.com/PandiO/knk-workspace/pull/887) | green on `e36d39f` (build-and-test, e2e) | create_session `session_01R1w2Uu8TpsSchsfou5i63j` (prompt says start without asking), started 2026-11-20 |
 | L17 P6a API: StorageContainer, caller-filtered reads, menu seeds | #683 | Merged into next (2026-11-20) | api `a2b8a98`, workspace `bd4d7949`; merges: api `a2865d75`, workspace `3dc4267c` | [api#67](https://github.com/PandiO/knk-web-api/pull/67), [ws#889](https://github.com/PandiO/knk-workspace/pull/889) | green (build-and-test, mysql-tests, fresh-database) | create_session `session_01R1w2UukTGdahr4dAwQTutW` (prompt says start without asking), started 2026-11-20 |
-| L18 P6 plugin: terminals, displays, Structures menu, structure menu, orders list | #74 | Running | — | — | — | create_session `session_01R1w2UxMM4WEwxxedAe11ji` (prompt says start without asking), started 2026-11-20 |
+| L18 P6 plugin: terminals, displays, Structures menu, structure menu, orders list | #74 | In review (2026-11-20) | plugin `a9ee8bf1`, workspace `f947c84b` | [plugin#110](https://github.com/PandiO/knk-plugin/pull/110), [ws#898](https://github.com/PandiO/knk-workspace/pull/898) | green (plugin build + paper-boot, 69 scenarios) | create_session `session_01R1w2UxMM4WEwxxedAe11ji` (prompt says start without asking), started 2026-11-20 |
 | L19 P7 delivery and inbox API | #60 | Running | — | — | — | create_session `session_01R1w2UwpK1NtaZLrA8k2uhP` (prompt says start without asking), started 2026-11-20 |
 | L20 P7b inbox plugin, kit/lootbox migration | #684 | Not started | — | — | — | — |
 | L21 P8a harvest API | #685 | Not started | — | — | — | — |
@@ -1760,3 +1760,99 @@ _(Each link appends its block here when it finishes.)_
     3. #246 (town roles): replace `PermissionTownMembershipResolver` (one class behind `ITownMembershipResolver`).
     4. L19 (P7): Player storages with Purpose Inbox or Stash can be bound to containers the same way; the terminal rule
        already lets a player use their own player storage.
+
+### 4.18 L18 — P6 plugin: terminals, displays, Structures menu, structure menu, orders list (#74)
+
+1. **Scope done** (knk-plugin, plus essential docs in knk-workspace). Everything runs only with `production.enabled:
+   true` (A21).
+    1. `/knk storage bind <storage id> <terminal|display> [label]|unbind|info|reload` (`commands/StorageAdminCommand`,
+       node `knk.admin.world.production`). It binds the block the sender looks at through `POST api/StorageContainers`,
+       using the left half of a double chest; the container must be empty.
+    2. Terminals (A14), `production/terminal/StorageTerminalModule`. Right-clicking opens a paged view (`TerminalView`)
+       of `GET {id}/terminal` as the player. Left-click on an entry takes a stack, right-click one, shift-click what
+       fits. Clicking an item in the player's own inventory puts it. Each click is one `take` or `put` with its own
+       idempotency key. A put resolves the item with item identity (#141), holds the items back until the API answers,
+       returns what the API refused, and resends once with the same key when no answer came.
+    3. Displays: the block's own inventory holds the API's sample, with the stacks tagged
+       `knightsandkings:knk_display_sample` (`DisplayWriter`). It is written on chunk load and after terminal moves on
+       the same storage, at most once per `display-refresh-seconds`. Opening it shows a read-only copy (`DisplayView`).
+    4. Bound blocks can't be broken, explosions leave them, and hoppers move nothing in or out. The bindings index
+       (`ContainerIndex`) is the API's list (`POST api/StorageContainers/search`), read at start, every
+       `refresh-minutes` and after `/knk storage`.
+    5. Structures menus (M1-M5, A24-A27): `menu/content/StructuresMenuFeature` serves the seeded menus of #683.
+        1. Roots `structures`, `structure` and `structureOrders`.
+        2. Sources `structures.overview`, `structures.storages` and `structures.orders`. They act for the viewer, so
+           the API filters the detail.
+        3. Staff actions: survey, dry run, outline, and order cancel and retry.
+        4. Condition `structures.pending`.
+        5. The Town filter is preset from the territory lookup.
+        6. With the flag off the three menus are blocked, so the hub tile hides.
+    6. knk-core holds `production/terminal` (index, layouts, throttle, messages) and `production/menu` (text, facets,
+       rows), plus the ports `StorageContainersApi` and `StructureMenusApi`. knk-api-client holds their implementations.
+       `content-seeds.json` was regenerated from knk-web-api `a2865d7`.
+    7. Config `production.storage.refresh-minutes` (5) and `display-refresh-seconds` (30). A new scenario,
+       `storage-display-double-chest`, raises `MIN_SCENARIOS` to 69.
+    8. #877: the plugin's `CaptureRadius` handler (#679) already matches the API's task type and form seed v2, and
+       `CaptureRadiusTest` pins its output, so no code change was needed. The PR closes #877.
+    9. knk-workspace (branch from `next`) has these docs:
+        1. Smoke guide § 7.2: 20 steps, 7 automated, 11 partly and 2 by hand.
+        2. The changelog entry.
+        3. Plugin configuration § 4.31.
+        4. The commands guide row.
+        5. Menus player guide § Structures and § Storage terminals and displays.
+        6. The plan status for P6.
+2. **Commits and heads.**
+    1. knk-plugin `claude/production-p6` at `a9ee8bf1`: 10 commits, base `next` `7116f1a5`, which has not moved since.
+    2. knk-workspace `claude/production-p6` at `f947c84b`: 2 commits plus merges of `next` `a59eda2d` and `094495c4`.
+       In the second merge both changelog entries were kept.
+3. **PRs.** [knk-plugin#110](https://github.com/PandiO/knk-plugin/pull/110) (Closes #74, Closes #877) and
+   [knk-workspace#898](https://github.com/PandiO/knk-workspace/pull/898) (Part of #74 and #877), base `next`. Not merged.
+4. **Tests, baseline → result.**
+    1. knk-plugin, baseline on `next` `7116f1a5`: knk-core 3643, knk-api-client 378 (2 skipped), knk-paper 3312
+       (18 skipped).
+    2. Branch: knk-core 3656, knk-api-client 393, knk-paper 3339 (skips unchanged). The 55 new tests:
+        1. knk-core: `TerminalLogicTest`, `StructureMenuTextTest`.
+        2. knk-api-client: `StorageContainersApiImplTest`, `StructureMenusApiImplTest`.
+        3. knk-paper: `StructuresMenuFeatureTest` (the three seeded menus and the hub validate),
+           `StorageTerminalModuleTest` (MockBukkit), `StorageAdminCommandTest`, `StorageTerminalConfigTest`.
+    3. MockBukkit first marked 9 terminal tests "Not implemented" (skipped, not passed) for `getState(false)` and
+       `getHolder(false)`. Switched to the plain calls; all now run.
+    4. Broken on purpose: a put that doesn't return refused items. Two tests caught it.
+    5. CI on `a9ee8bf1`: build and paper-boot green on both the push and the PR runs. A local Paper run passed
+       `storage-display-double-chest` and the log check. Known reds: none.
+5. **Decisions (DESIGN § 4.3).** All 12, each with alternatives, are in knk-plugin#110. The main ones:
+    1. *Facet values.* Chosen: names, mapped to ids (a number is taken as an id, for the territory preset).
+       Alternatives: (a) ids shown to players; (b) a chat prompt.
+    2. *Flag off.* Chosen: the feature is always registered and the menus are blocked. Alternatives: (a) register
+       only with the flag (a validation failure on every start); (b) leave them open (A21).
+    3. *Finding bindings.* Chosen: an index of the API's list. Alternatives: (a) `by-block` per click (too late to
+       cancel the event); (b) scanning (DESIGN § 6.2 forbids it).
+    4. *Put safety.* Chosen: hold the items back, then one retry on the same key. Alternatives: (a) remove after the
+       answer (dupe window); (b) no retry.
+    5. *Items that change on the way.* Chosen: damaged and enchanted-vanilla items are refused. Alternatives: (a)
+       accept (free repairs, lost enchantments).
+    6. *Unique items.* Chosen: refused both ways in game (#897). Alternatives: (a) put only (one-way).
+    7. *Command node.* Chosen: `knk.admin.world.production`, as for `/knk logistics`. Alternatives: (a) a new
+       `knk.admin.world.storage`.
+6. **Out of scope, noted.** #897 lists four things:
+    1. The worker NPC can't open the structure menu, because no production worker NPC entity exists (A25 partly).
+    2. Unique items in terminals in game.
+    3. Notifications and Bukkit events.
+    4. `/knk transport` and watch on/off.
+
+   Codex: the connector hit its usage limit on both PRs, so there are no inline findings; this is noted on each PR.
+7. **Blockers.** None.
+8. **At merge / what the developer must do.**
+    1. Plugin `config.yml` (Restart): `production:` → `storage:` → `refresh-minutes: 5`, `display-refresh-seconds: 30`.
+    2. Grant `knk.admin.world.production` (binding) and `knk.admin.world` (the staff buttons). Town members need
+       `knk.town.member.<town id>` (#683). Terminal puts need `items.identity.enabled: true`.
+    3. Smoke test [§ 7.2](../guides/production-storage-transport-smoke-test.md) (tier:2): 7 of 20 steps automated, 11
+       partly; about 15 minutes for the untagged parts.
+    4. At merge into `next`, the `documentation` sub-issue covers:
+        1. The terminals and structure menus architecture page.
+        2. The production admin guides (binding, displays).
+        3. The register row and the guides index.
+9. **Notes for later links.**
+    1. L19/L20 (P7): inbox and stash storages bind with `/knk storage bind` the same way, and the terminal works for a
+       player's own storage. Unique items still need an instance-to-item builder (#897).
+    2. Worker NPCs: open `structures.structure` with `ctx.structureId` and `ctx.name`. The feature needs no change.
