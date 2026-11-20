@@ -63,7 +63,7 @@ of what is already in `next`.
 | L11 P4 yield areas API | #138 | Merged into next (2026-11-19) | api `06b11ca`, workspace `b467e15a`; merges: api `e26c7d88`, workspace `e846be50` | [api#60](https://github.com/PandiO/knk-web-api/pull/60), [ws#837](https://github.com/PandiO/knk-workspace/pull/837) | green on `06b11ca` (build-and-test, mysql-tests, fresh-database) | create_session `session_01R1w2UuXh4wtTxPhhZUpLGF` (prompt says start without asking), started 2026-11-19 |
 | L12 P4b surveys plugin | #679 | Running | — | — | — | create_session `session_01R1w2Utt8cigo5ND98ZqXzC` (prompt says start without asking), started 2026-11-19 |
 | L13 P4c yield areas web app | #680 | Merged into next (2026-11-20) | web app `6da700c`, workspace `638e5c3c`; merges: web app `eaf0467d`, workspace `2159952e` | [web-app#67](https://github.com/PandiO/knk-web-app/pull/67), [ws#873](https://github.com/PandiO/knk-workspace/pull/873) | green on `6da700c` (build-and-test, e2e) | create_session `session_01R1w2UwYw3NNQSSBoP7XaBk` (prompt says start without asking), started 2026-11-19 |
-| L14 P5 transport API (simulated carrying, G14) | #79 | Running | — | — | — | create_session `session_01R1w2UtGLZrUEAUNFYvkqGB` (prompt says start without asking), started 2026-11-19 |
+| L14 P5 transport API (simulated carrying, G14) | #79 | Done, in review (2026-11-20) | api `ef61cd1`, workspace `ae26c88b` | [api#65](https://github.com/PandiO/knk-web-api/pull/65), [ws#880](https://github.com/PandiO/knk-workspace/pull/880) | api build-and-test, fresh-database green; mysql-tests green on push run | create_session `session_01R1w2UtGLZrUEAUNFYvkqGB` (prompt says start without asking), started 2026-11-19 |
 | L15 P5b lanes plugin | #681 | Not started | — | — | — | — |
 | L16 P5c transport web app | #682 | Not started | — | — | — | — |
 | L17 P6a API: StorageContainer, caller-filtered reads, menu seeds | #683 | Not started | — | — | — | — |
@@ -1278,3 +1278,98 @@ _(Each link appends its block here when it finishes.)_
     1. L12 (#679): when the `CaptureRadius` handler ships, add it to `WORLD_TASK_TYPES_WITH_HANDLER` (`src/utils/forms/worldTaskTypes.ts`) and to the API's `KnownWorldTaskTypes`.
     2. Strict e2e specs that open a production structure page now need a `ProductionStructures/<id>/yield` mock (`mockConfiguredYield` in `e2e/fixtures/productionYield.ts`); a kind's page reads `ProductionKinds/<id>` for the yield table too.
     3. L21/L22 (harvest): `SurveyTrendTable` and `SurveyCompositionTable` take any survey; a pool view can reuse them.
+
+### 4.14 L14 — P5 transport API (simulated carrying, G14) (#79)
+
+1. **Scope done** (knk-web-api, plus essential docs in knk-workspace).
+    1. `TransportOrder` (origin, status lifecycle, carrier structure and capacity, timing, `NextActionAt` index) with
+       `TransportStop`s and per-stop `TransportStopLine`s (V2 defect 3), `TransportOrderLine`s (requested, loaded,
+       delivered, returned, lost), one `Transit` storage per order (unique), `TransportAssignment` (Simulated) and the
+       `TransportEvent` log.
+    2. Lifecycle Planned → Assigned → Loading → InTransit ⇄ AtStop → Delivered. A full stop goes AwaitingSpace (30 min),
+       then re-routes within the town (max 2), else the carrier carries on and the rest goes back: Returning → Returned,
+       with ReturnBlocked while the source is full (V2 defect 2). Every step runs in one transaction with the order row
+       locked, and every move goes through `IStockService` (TransportLoad, TransportDeliver, TransportReturn) with an
+       idempotency key per try. The ledger reconciles after every step, and a restart continues mid-transit (V2
+       defects 4, 11).
+    3. Simulated carrying (G14, § 7.7): one of the producer's workers is away from loading until the order ends
+       (`WorkersPresent` ±1, the carrier's production settled first), so the engine runs at 50% / 0%. An order waits
+       without a free worker; the level's `TransportCapacity` bounds it. A leg takes the lane's road length ÷ walking
+       speed; without a lane the straight distance × 1.4, without positions 200 blocks.
+    4. Automatic trigger (V2 defects 7-9): it fires on occupancy ≥ threshold (75% of the cap), a line BlockedFull or
+       the distinct cap. Sizing is by stock up to the worker's capacity, largest line first. The destination is the
+       preferred warehouse if it has room, else the nearest by road in the effective town, with room first. One open
+       automatic order per source (structure row lock). Rural producers that are not `Connected` are held (D5).
+    5. `TransportLane` read model with `GET api/TransportLanes/due` and `POST report` for L15, plus staff CRUD.
+       `TransportSweepService` runs every 60 s with `Production:Enabled` only (A21). Manual orders (`POST
+       api/TransportOrders`, `clientKey` replay), `dry-run`, `{id}/cancel` (a loaded order turns back) and `run-now`
+       (409 while off).
+    6. `GET api/ProductionStructures/{id}/transport` is the trigger's dry run: warnings (missing road, full Output,
+       A13), trigger and held reasons, open orders, workers away. The structure DTO also warns about a full Output.
+       Game setting section `production.transport`; a save without it keeps the stored values.
+    7. #838 (additive extra, closed by the PR): `productionKindName` on `ProductionWorldListDto`, `itemBlueprintName` on
+       `ConsumedInputDto` (read, never stored), `ProductionCycleRecord` as a listable dashboard type with a lookup and an
+       `itemBlueprintId` filter.
+    8. Seeds (G17): form and display `TransportOrder` (form read only) and `TransportLane`; the child rows are view-only.
+       World area registry, lookups, pinned access tests. One additive migration `AddTransportCore` (seven tables),
+       generated last on `next` `4f4580b`; `KnKDbContext` edits in one DbSet block and one model block.
+    9. knk-workspace (branch from `next`): smoke guide § 6 (§ 6.1 20 API steps, 18 automated, 2 partly; § 6.2 and
+       § 6.3 drafts for L15 and L16), changelog entry, production installation § 5.3 item 12, implementation plan status.
+2. **Commits and heads.** knk-web-api `claude/production-p5` at `ef61cd1` (6 commits plus two merges of `next`, the
+   last at `4f4580b`; migration generated after it). knk-workspace `claude/production-p5` at `ae26c88b` (1 commit plus a
+   merge of `next` `2159952e`).
+3. **PRs.** [knk-web-api#65](https://github.com/PandiO/knk-web-api/pull/65) (Closes #79, Closes #838) and
+   [knk-workspace#880](https://github.com/PandiO/knk-workspace/pull/880) (Part of #79, #838), base `next`. Not merged.
+4. **Tests, baseline → result.**
+    1. knk-web-api: baseline on `next` `e26c7d8` 4801 passed / 117 skipped / 0 failed; branch (with `next` `4f4580b`)
+       4865 passed / 119 skipped / 0 failed. New: `TransportTests` (33), `TransportLanesAndSettingsTests` (4),
+       `TransportControllersTests` (2), `AddTransportCoreTests` (3), `TransportMySqlTests` (1, requires-mysql).
+    2. MySQL 8.0.46 locally with `KNK_TEST_MYSQL`: 4983 passed, 1 failed = the known red #285. The new race test
+       (four transport sweeps) makes one automatic order and applies each step once.
+    3. Broken on purpose: the worker decrement and the per-stop shortfall (3 tests red), and the order and structure
+       row locks (the MySQL race test red with two orders).
+    4. Migration applied, rolled back to `SeedNavigateDefaultNode` and re-applied; `has-pending-model-changes` clean.
+    5. CI on `ef61cd1`: build-and-test, fresh-database and mysql-tests green on the push run; on the PR run
+       build-and-test and fresh-database green, mysql-tests still running when this block was written.
+    6. Known reds: #285 (MySQL run only).
+5. **Decisions (DESIGN § 4.3).** All 14, each with alternatives, are in knk-web-api#65. The main ones:
+    1. *Walking speed.* Chosen: game setting `production.transport.walkingSpeedBlocksPerSecond` 4.317 (a player's walk;
+       the NPC plan's abstract mover names no number). Alternatives: (a) a constant; (b) sprint 5.6 b/s.
+    2. *Worker away.* Chosen: from loading until the order ends. Alternatives: (a) also the empty walk back; (b) the
+       outbound leg only.
+    3. *Worker accounting.* Chosen: `WorkersPresent` ±1 after settling the carrier. Alternatives: (a) a `WorkersAway`
+       column; (b) the engine derives presence from assignments.
+    4. *Full stop.* Chosen: wait 30 min, re-route within the town (max 2), else carry on and return the rest;
+       ReturnBlocked waits. Alternatives: (a) return at once; (b) overflow to `SYS_LOSS` (V2 defect 2).
+    5. *Cancel after loading.* Chosen: turn back and end Returned. Alternatives: (a) end Cancelled; (b) refuse.
+    6. *No lane.* Chosen: straight × 1.4, else 200 blocks, with a dry-run warning. Alternatives: (a) refuse until #681.
+    7. *Unmeasured road.* Chosen: held like Unconnected (D5). Alternatives: (a) hold only Unconnected.
+    8. *Manual orders.* Chosen: `knk.admin.world` or the plugin key (they create no goods). Alternatives: (a)
+       `knk.economy.admin`.
+    9. *Seeds.* Chosen: `TransportOrder` form read only, manual orders through the API and #682's form; child rows
+       without seeds (developer's G17 clarification). Alternatives: (a) a flat single-stop create form.
+    10. *Smoke gate.* The developer's 2026-11-19 waiver of the L4 and L6 smoke gates, read by the coordinator as
+        covering this link (it builds on L9, whose smoke test is open).
+6. **Out of scope, noted.** #881 filed (the `StockTransaction` form seed's Reason list lacks `Upgrade`). Comments on
+   #681 (due/report contract, road connection, trip time) and #682 (endpoints, DTOs, the structure's transport view,
+   settings, #838). Codex: the connector hit its code-review usage limit on both PRs (review "failed", usage-limit
+   comment); no inline findings; noted on each PR.
+7. **Blockers.** None.
+8. **At merge / what the developer must do.**
+    1. Apply migration `AddTransportCore` (additive, seven tables).
+    2. Import the seeds `TransportOrder` and `TransportLane` (form and display, "make default").
+    3. Until L15 (#681) measures lanes: type in lanes or accept estimated routes, and set rural producers' road
+       connections (`PUT api/ProductionStructures/<id>/road-connection`); automatic transport is held until Connected.
+    4. No `api.env` key, no plugin `config.yml` change; game setting `production.transport` has defaults.
+    5. Smoke test [§ 6](../guides/production-storage-transport-smoke-test.md) (tier:3): 18 of 20 steps automated, about
+       10 minutes for the untagged parts.
+    6. At merge into `next`: the `documentation` sub-issue (transport architecture page and API contract, admin guide
+       for orders, lanes and settings, feature register row).
+9. **Notes for later links.**
+    1. L15 (#681), L16 (#682): see the comments on #681 and #682.
+    2. L17 (P6a): the caller-filtered structure view can reuse `TransportService.StructureViewAsync` and the order search
+       filter `structureId` for the orders list.
+    3. L23 (P9): `TransportOrigin.Distribution` exists. Collection orders can be made with the internal insert path: a
+       consumer's worker as carrier (`CarrierStructureId` is a `ProductionStructure` today; consumers that are not
+       production structures need it widened) and the warehouse storage as source. The automatic trigger only looks at
+       production structures.
