@@ -72,7 +72,7 @@ of what is already in `next`.
 | L12 P4b surveys plugin | #679 | Merged into next (2026-11-20) | plugin `3472e32d`, workspace `c6f53e07`; merges: plugin `d36001b2`, workspace `496ed6fa` | [plugin#105](https://github.com/PandiO/knk-plugin/pull/105), [ws#876](https://github.com/PandiO/knk-workspace/pull/876) | green (plugin build + paper-boot, 68 scenarios) | create_session `session_01R1w2Utt8cigo5ND98ZqXzC` (prompt says start without asking), started 2026-11-19 |
 | L13 P4c yield areas web app | #680 | Merged into next (2026-11-20) | web app `6da700c`, workspace `638e5c3c`; merges: web app `eaf0467d`, workspace `2159952e` | [web-app#67](https://github.com/PandiO/knk-web-app/pull/67), [ws#873](https://github.com/PandiO/knk-workspace/pull/873) | green on `6da700c` (build-and-test, e2e) | create_session `session_01R1w2UwYw3NNQSSBoP7XaBk` (prompt says start without asking), started 2026-11-19 |
 | L14 P5 transport API (simulated carrying, G14) | #79 | Merged into next (2026-11-20) | api `ef61cd1`, workspace `ae26c88b`; merges: api `bf8633fb`, workspace `66cd37f0` (after a coordinator merge of `next`, `9a4de0b9`) | [api#65](https://github.com/PandiO/knk-web-api/pull/65), [ws#880](https://github.com/PandiO/knk-workspace/pull/880) | api build-and-test, fresh-database green; mysql-tests green on push run | create_session `session_01R1w2UtGLZrUEAUNFYvkqGB` (prompt says start without asking), started 2026-11-19 |
-| L15 P5b lanes plugin | #681 | In review (2026-11-20) | plugin `796f1127`, workspace `77ebdc07` | [plugin#108](https://github.com/PandiO/knk-plugin/pull/108), [ws#886](https://github.com/PandiO/knk-workspace/pull/886) | plugin build green (push run); paper-boot running | create_session `session_01R1w2Ux1xEr3Um5M3f3UysM` (prompt says start without asking), started 2026-11-20 |
+| L15 P5b lanes plugin | #681 | In review (2026-11-20) | plugin `796f1127`, workspace `77ebdc07` | [plugin#108](https://github.com/PandiO/knk-plugin/pull/108), [ws#886](https://github.com/PandiO/knk-workspace/pull/886) | CI green (build + paper-boot) on `796f1127` | create_session `session_01R1w2Ux1xEr3Um5M3f3UysM` (prompt says start without asking), started 2026-11-20 |
 | L16 P5c transport web app | #682 | In review (PRs open, not merged) | web app `e36d39f`, workspace `77b3d4f5` | [web-app#68](https://github.com/PandiO/knk-web-app/pull/68), [ws#887](https://github.com/PandiO/knk-workspace/pull/887) | green on `e36d39f` (build-and-test, e2e) | create_session `session_01R1w2Uu8TpsSchsfou5i63j` (prompt says start without asking), started 2026-11-20 |
 | L17 P6a API: StorageContainer, caller-filtered reads, menu seeds | #683 | Running | — | — | — | create_session `session_01R1w2UukTGdahr4dAwQTutW` (prompt says start without asking), started 2026-11-20 |
 | L18 P6 plugin: terminals, displays, Structures menu, structure menu, orders list | #74 | Not started | — | — | — | — |
@@ -1543,8 +1543,8 @@ _(Each link appends its block here when it finishes.)_
        (3), `TransportLanesApiImplTest` (4), `LaneConfigTest` (3), `LogisticsAdminCommandTest` (4, MockBukkit),
        `SurveyCounterTest` +1, `ProductionSurveyApiImplTest` +1. `TransportLanesApiImplTest` caught that the
        road-connection PUT must accept a 204 (fixed in the test's expectations; `BaseApiImpl` already does).
-    4. CI on `796f1127`: build green on the push run; paper-boot running when this block was written. No plugin scenario
-       added (`MIN_SCENARIOS` stays 68).
+    4. CI on `796f1127`: green (build + paper-boot, push and PR runs; paper-boot finished 18:57 UTC). No plugin
+       scenario added (`MIN_SCENARIOS` stays 68).
     5. Known reds: none.
 5. **Decisions (DESIGN § 4.3).** All 11 with alternatives are in knk-plugin#108. The main ones:
     1. *Road distance.* Chosen: walk to the road + road route + walk from it. Alternatives: (a) road route only:
