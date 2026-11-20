@@ -190,6 +190,10 @@
     tested) and that #845 runs as a small link after L5. Alternatives: (a) treat the failure as a gate blocker and fix
     first — needs an API seed migration the charter did not plan; (b) fold #845 into L5 — mixes a permission-model
     change into a removal link. Still to run before L5: § 3.3 s1, § 4.4 s1–s2, § 3.1 s2 siege part.
+28. **Off-road F3 takes the slot (2026-11-20 09:09).** Fixes from the developer's off-road live test of 2026-11-19
+    (road-goal choice, route-replacement announcements, walk start cell, door clearance; `core/roads`,
+    `NavigationService`), reading `HandleDestinations`/`Destination` only. Agreed: L5 still waits for the rest of the
+    live test and the #845 decision. Alternatives: none.
 
 ## 4. Link blocks
 
