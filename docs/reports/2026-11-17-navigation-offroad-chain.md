@@ -37,9 +37,9 @@ on `next` (Decided 2026-11-17).
 | L10 Phase 7 plaza lines | #712 | Merged into next (step 1 and step 2, 2026-11-18); waits for the developer's smoke § 10.2 | knk-plugin `claude/offroad-plaza-lines` `28ad18c5`; knk-workspace `d7e4e834` | step 1: [knk-plugin#73](https://github.com/PandiO/knk-plugin/pull/73) → `ce0f65ec`, [#723](https://github.com/PandiO/knk-workspace/pull/723) → `c7f61e9e`; step 2: [knk-plugin#84](https://github.com/PandiO/knk-plugin/pull/84) → `4daa0c84`, [#769](https://github.com/PandiO/knk-workspace/pull/769) → `2e0c04d4` | green (build, paper-boot) | create_session `session_01R1w2Ussca79jpGCPqzcTf8` (2026-11-18) |
 | F1 walk-search fixes (#771 items 1, 2) | #771 | Merged into next (2026-11-19); waits for the developer's smoke § 12; the storage hall by road stays open (#780) | knk-plugin `claude/offroad-walk-fixes-771` `321daf6b`; knk-workspace `8fdfe392` | [knk-plugin#88](https://github.com/PandiO/knk-plugin/pull/88) → `cee53213`, [#778](https://github.com/PandiO/knk-workspace/pull/778) → `d1850c7a` | green (build, paper-boot) | create_session `session_01R1w2Ut7LKtBrvQw9bA3mVQ` (2026-11-19) |
 | F2 road goal and route ends (#780 b, #771 items 3–5) | #780, #771 | Merged into next (2026-11-19); waits for the developer's smoke § 13 | knk-plugin `claude/offroad-route-ends-f2` `ebc63265`; knk-workspace `441dd7cc` | [knk-plugin#94](https://github.com/PandiO/knk-plugin/pull/94) → `6311de11`, [#813](https://github.com/PandiO/knk-workspace/pull/813) → `05b8edc3` | green (build, paper-boot) | create_session `session_01R1w2UtLzNFzgycUAEB8mVd` (2026-11-19; resumed once after the usage limit) |
-| F3 smoke-test failures of 2026-11-19 (#780, #771, #710) | #780, #771, #710 | Running (started 2026-11-20 09:09 from plugin `next` `4e296797`) | `claude/offroad-smoke-fixes-f3` | — | — | create_session `session_01R1w2UsZsisbttfNE2dkTV3` (2026-11-20) |
+| F3 smoke-test failures of 2026-11-19 (#780, #771, #710) | #780, #771, #710 | Merged into next (2026-11-20); waits for the developer's smoke § 14; spacing default 2.0 follow-up running | knk-plugin `claude/offroad-smoke-fixes-f3` `64b4de3b`; knk-workspace `e7e6d306` | [knk-plugin#100](https://github.com/PandiO/knk-plugin/pull/100) → `6878d584`, [#851](https://github.com/PandiO/knk-workspace/pull/851) → `c1e078ba` | green (build, paper-boot) | create_session `session_01R1w2UsZsisbttfNE2dkTV3` (2026-11-20) |
 | F2 road goal and route ends (#780 b, #771 items 3–5) | #780, #771 | Merged into next (2026-11-19); waits for the developer's smoke § 13 | knk-plugin `claude/offroad-route-ends-f2` `ebc63265`; knk-workspace `441dd7cc` | [knk-plugin#94](https://github.com/PandiO/knk-plugin/pull/94) → `6311de11`, [#813](https://github.com/PandiO/knk-workspace/pull/813) → `05b8edc3` | green (build, paper-boot) | create_session `session_01R1w2UtLzNFzgycUAEB8mVd` (2026-11-19; resumed once after the usage limit) |
-| F3 smoke-test failures of 2026-11-19 (#780, #771, #710) | #780, #771, #710 | In review (2026-11-20); waits for the coordinator's merge and the developer's smoke § 14; § 12 step 3a not reproduced (diagnostics added) | knk-plugin `claude/offroad-smoke-fixes-f3` `64b4de3b`; knk-workspace `e7e6d306` | [knk-plugin#100](https://github.com/PandiO/knk-plugin/pull/100), [#851](https://github.com/PandiO/knk-workspace/pull/851) | green (build, paper-boot, push and PR runs, on `64b4de3b`) | create_session `session_01R1w2UsZsisbttfNE2dkTV3` (2026-11-20) |
+| F3 smoke-test failures of 2026-11-19 (#780, #771, #710) | #780, #771, #710 | Merged into next (2026-11-20); waits for the developer's smoke § 14; spacing default 2.0 follow-up running | knk-plugin `claude/offroad-smoke-fixes-f3` `64b4de3b`; knk-workspace `e7e6d306` | [knk-plugin#100](https://github.com/PandiO/knk-plugin/pull/100) → `6878d584`, [#851](https://github.com/PandiO/knk-workspace/pull/851) → `c1e078ba` | green (build, paper-boot) | create_session `session_01R1w2UsZsisbttfNE2dkTV3` (2026-11-20) |
 
 ## 3. Coordinator decisions
 
@@ -274,6 +274,14 @@ on `next` (Decided 2026-11-17).
     schema; additive migration); (4) L8: `knk.admin.world` does not include the landmark node, granted separately;
     (5) the docs session starts after the live tests. L7b step A (API, web app) runs now beside F3 (no shared files);
     its plugin step B takes the plugin slot after F3.
+42. **F3 merged into `next` (2026-11-20 10:10).** § 6 checks held (clean merges, CI green on both runs, no NPC,
+    destinations, production or siege file, goldens and flag-off tests unchanged, no Codex findings). Results: road
+    goal scored road + 4 × walk (`road-goal-walk-weight` 4.0) with the road's onward nodes as candidates, reproduced
+    and fixed on the snapshots; repeated turn messages fixed; the roof 0-expansion search not reproduced (INFO
+    diagnostics added; suspect the sheared "Keep Stair House" gate door); the #710 door was a WorldGuard door check
+    on open doors for a player without door rights, not guidance-v2, now only closed doors are checked (players
+    only, unflagged). The spacing default 2.0 (developer, 09:25) missed F3; a small follow-up PR from the same session.
+    NPC and engine coordinators told (G1 may build on `RoadGoalChoice`).
 
 ## 4. Link blocks
 
