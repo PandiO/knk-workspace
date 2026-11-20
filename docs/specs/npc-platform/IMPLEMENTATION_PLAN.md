@@ -1297,7 +1297,8 @@ CI now and then, and holds back the engine's stair hop (item 6).
         3. Before the climb fix (item 3.6), trip 1 failed in about 1 run in 3: 1 or 2 stuck spells, arriving in 21 to
            24 s. In CI the full suite failed on it twice, with the other 64 scenarios green. After the fix: 6 runs out
            of 6 pass with the numbers above, and on the ladder the body stays between x 23.46 and 23.61.
-        4. RESULTS_FULL_RUN
+        4. The whole suite in one local run on the climb fix (`abb997e9`): 65 of 65 pass in 24 min, `npc-ladder-hatch`
+           within it as in item 2. Before the fix, the same run had 64 of 65, with only this scenario failing.
     8. **Known limits:**
         1. `BukkitNavWorld`, the hatch opener and the route line use the default climbables (`LADDER`). A climbable added
            in `navigation.walk.climbables` (vines, scaffolding) is climbed by the walk search and passed by the body
