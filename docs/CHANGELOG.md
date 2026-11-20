@@ -4,6 +4,18 @@ This is a human-readable record of capabilities merged into the V3 default branc
 
 ## Unreleased — on feature branches, not merged
 
+- **Off-road navigation: the smoke-test failures of 2026-11-19** ([PandiO/knk-workspace#780](https://github.com/PandiO/knk-workspace/issues/780),
+  [#771](https://github.com/PandiO/knk-workspace/issues/771), [#710](https://github.com/PandiO/knk-workspace/issues/710);
+  fix link F3 of the off-road chain, #698). For players: with `navigation.road-goal-reachable` on, the road part of a
+  route now goes as far as the road usefully carries it and the walk starts as late as it can (Keep Tower Roof: through
+  the Keep Garrison into the Keep Gate instead of stopping at the garrison exit; Garrison Watchtower Roof: no longer
+  under the watchtower with a long walk back); the first turn is said once, not again on every silent route
+  replacement; an open door is walked through even where the player may not open doors (the keep's spiral-stair door
+  stopped the walk trail). For staff: new key `navigation.road-goal-walk-weight` (4.0); one INFO line per road-goal
+  choice with every candidate's road and walk lengths, and one per walk search that never left its start naming the
+  unusable end. knk-plugin branch `claude/offroad-smoke-fixes-f3`; config key in
+  [plugin configuration § 4.15](guides/admin/plugin-configuration.md). Smoke test:
+  [off-road smoke test § 14](guides/navigation-offroad-smoke-test.md#14-f3-smoke-test-failures-of-2026-11-19-780-771-710-tier2).
 - **Yield areas API: areas, surveys, yield tables and Derived/Hybrid yields** ([PandiO/knk-workspace#138](https://github.com/PandiO/knk-workspace/issues/138),
   link L11 of the production, storage and transport chain; [production kinds](specs/production-storage-transport/PRODUCTION_KINDS.md)
   § 2-4). Production structures can now produce what their land holds. A structure has **yield areas** (a WorldGuard
