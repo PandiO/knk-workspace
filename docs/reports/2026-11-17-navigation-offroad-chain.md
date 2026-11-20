@@ -1,6 +1,6 @@
 # Off-road navigation and landmarks chain — progress report
 
-**Status:** Running, waiting for the developer (2026-11-18) · **Last updated:** 2026-11-20 (L7b step A block); 2026-11-19 (F2 block); 2026-11-18 (L9 block); 2026-11-18 (L5 block); 2026-11-18 (L8 step A block)
+**Status:** Running, waiting for the developer (2026-11-18) · **Last updated:** 2026-11-20 (L7b step A merged); 2026-11-19 (F2 block); 2026-11-18 (L9 block); 2026-11-18 (L5 block); 2026-11-18 (L8 step A block)
 
 **Issue:** [PandiO/knk-workspace#698](https://github.com/PandiO/knk-workspace/issues/698), links
 [#703](https://github.com/PandiO/knk-workspace/issues/703) (L1), [#704](https://github.com/PandiO/knk-workspace/issues/704) (L2),
@@ -31,7 +31,7 @@ on `next` (Decided 2026-11-17).
 | L5 Phase 2 walk links | #705 | Merged into next (2026-11-18); waits for the developer's live test (tier:3, smoke § 3) and confirmation of the road-first defaults | knk-plugin `claude/offroad-walk-links` `5b4f666d`; knk-workspace `06b3f92a` | [knk-plugin#85](https://github.com/PandiO/knk-plugin/pull/85) → `3977329c`, [#774](https://github.com/PandiO/knk-workspace/pull/774) → `e2cac646` | green (build, paper-boot) | create_session `session_01R1w2UsbXwf6jzEc33aVwLL` (2026-11-18) |
 | L6 Phase 3 hierarchical walk search | #706 | On hold as the fallback (developer, 2026-11-19, O32: option A and a better rural road network) | `claude/offroad-hierarchical` | — | — | — |
 | L7 Phase 4 route modes | #707 | Merged into next (2026-11-18); waits for the developer's smoke § 5 (steps 2, 3, 9) and the node grants | knk-plugin `claude/offroad-route-modes` `d374b016`; knk-workspace `ed01ab75` | [knk-plugin#86](https://github.com/PandiO/knk-plugin/pull/86) → `a94332d9`, [#775](https://github.com/PandiO/knk-workspace/pull/775) → `dd09f782` | green (build, paper-boot) | create_session `session_01R1w2UveW7t8KTUAYeD5kAa` (2026-11-18) |
-| L7b default route mode per permission group | #852 | Step A in review (2026-11-20); waits for the coordinator's merge and the developer's smoke § 15.1 to § 15.3; step B (plugin) after F3 | knk-web-api `68feaa2`, knk-web-app `84690c3`, knk-workspace `3ad5ddff` (`claude/offroad-group-route-mode`) | [knk-web-api#62](https://github.com/PandiO/knk-web-api/pull/62), [knk-web-app#65](https://github.com/PandiO/knk-web-app/pull/65), [#855](https://github.com/PandiO/knk-workspace/pull/855) | green (API build-and-test, mysql-tests, fresh-database on `68feaa2`; web build-and-test, e2e on `84690c3`; workspace has no CI) | subagent of the coordinator (three component repos) |
+| L7b default route mode per permission group | #852 | Step A merged into `next` (2026-11-20); waits for the developer's smoke § 15.1 to § 15.3; step B (plugin) starting | knk-web-api `5e16ea04`, knk-web-app `88d6f663`, knk-workspace `428bcd9e` (merges into `next`) | [knk-web-api#62](https://github.com/PandiO/knk-web-api/pull/62), [knk-web-app#65](https://github.com/PandiO/knk-web-app/pull/65), [#855](https://github.com/PandiO/knk-workspace/pull/855) | green (API build-and-test, mysql-tests, fresh-database on `68feaa2`; web build-and-test, e2e on `84690c3`; workspace has no CI) | subagent of the coordinator (three component repos) |
 | L8 Phase 5.1 landmark entity | #708 | Merged into next (2026-11-18); waits for the developer's live test (tier:3, smoke § 6) | knk-web-api `d331bdf4`, knk-web-app `b50c4134`, knk-plugin `be9e3a74`, knk-workspace `eb3321a9` (`claude/offroad-landmarks`) | [knk-web-api#50](https://github.com/PandiO/knk-web-api/pull/50) → `935fe8cc`, [knk-web-app#54](https://github.com/PandiO/knk-web-app/pull/54) → `3432e6ef`, [knk-plugin#83](https://github.com/PandiO/knk-plugin/pull/83) → `5fd81466`, [#763](https://github.com/PandiO/knk-workspace/pull/763) → `7722cc76` | green (all jobs) | subagent of the coordinator (three component repos; resumed once after the usage limit) |
 | L9 Phase 5.2 landmark weights | #709 | Merged into next (2026-11-18); waits for the developer's smoke § 7 steps 1–3 | knk-plugin `claude/offroad-landmark-weights` `636c9f32`; knk-workspace `9d0c926f` | [knk-plugin#87](https://github.com/PandiO/knk-plugin/pull/87) → `c7be34fb`, [#776](https://github.com/PandiO/knk-workspace/pull/776) → `99fef23d` | green (build; paper-boot after one #695 flake on the PR run) | create_session `session_01R1w2Ut1P9c2jGxRYC3weCJ` (2026-11-18) |
 | L10 Phase 7 plaza lines | #712 | Merged into next (step 1 and step 2, 2026-11-18); waits for the developer's smoke § 10.2 | knk-plugin `claude/offroad-plaza-lines` `28ad18c5`; knk-workspace `d7e4e834` | step 1: [knk-plugin#73](https://github.com/PandiO/knk-plugin/pull/73) → `ce0f65ec`, [#723](https://github.com/PandiO/knk-workspace/pull/723) → `c7f61e9e`; step 2: [knk-plugin#84](https://github.com/PandiO/knk-plugin/pull/84) → `4daa0c84`, [#769](https://github.com/PandiO/knk-workspace/pull/769) → `2e0c04d4` | green (build, paper-boot) | create_session `session_01R1w2Ussca79jpGCPqzcTf8` (2026-11-18) |
@@ -282,6 +282,14 @@ on `next` (Decided 2026-11-17).
     on open doors for a player without door rights, not guidance-v2, now only closed doors are checked (players
     only, unflagged). The spacing default 2.0 (developer, 09:25) missed F3; a small follow-up PR from the same session.
     NPC and engine coordinators told (G1 may build on `RoadGoalChoice`).
+43. **L7b step A merged into `next` (2026-11-20).** § 6 checks held: heads matched, branches contained `next`, the
+    migration `20261120101407_AddPermissionGroupDefaultRouteMode` only adds and drops the nullable `DefaultRouteMode`
+    column (the one migration L8 rule covers schema of navigation data; this column is the developer's L7b decision,
+    decision 41), CI green (API build-and-test, mysql-tests, fresh-database; web build-and-test, e2e), no review
+    findings (Codex at its usage limit). Merged in dependency order: knk-web-api#62 `5e16ea04`, knk-web-app#65
+    `88d6f663`, #855 `428bcd9e`. A local MySQL server the subagent left running was stopped. Deploy note: apply the
+    migration; on databases seeded before this change add the form field by hand (smoke § 15). Step B (plugin) takes
+    the plugin navigation slot next; engine L5 (#747) follows once the developer opens its gate.
 
 ## 4. Link blocks
 
