@@ -39,8 +39,8 @@ names and players on top of it are current.
 1. **Pins and names.** Every town, district and building with a known place has a pin with its name.
    1. Town names show at every zoom.
    2. District names appear when you zoom in (about 1500 blocks away); building names closer still (about 600).
-      The names fade by distance; the pins (dots) stay at every zoom, so a zoomed-out map shows many dots without
-      names. Hiding or grouping the dots when zoomed out is an idea for later
+      District and building dots fade out together with their names when you zoom out; town dots stay at every
+      zoom. Grouping nearby dots into one is an idea for later
       ([#825](https://github.com/PandiO/knk-workspace/issues/825)), not part of the map yet.
    3. A building's label has its name over its type, for example "Structure" or "Structure, Gate".
 2. **Click a town** (its pin or its name). Its outline flashes three times and disappears, and a panel opens with the
@@ -48,8 +48,9 @@ names and players on top of it are current.
 3. **Show region.** In the town's panel, turn on **Show region**: the town's outline and every district of the town
    stay on the map, each district with its name. They stay when you close the panel; click the town again and turn
    the switch off to hide them. Outlines only show this way (the flash or Show region); the map has no other
-   permanent region shapes. Drawing a town's region as a flat shape with a single outline along the top is an idea
-   for later ([#826](https://github.com/PandiO/knk-workspace/issues/826)).
+   permanent region shapes. The town shows as a flat, see-through surface with one outline, with openings where its
+   districts are (a click there opens the district); districts show as see-through volumes with one outline along the
+   top.
 4. **Click a district** for its name, description and town.
 5. **Click a building** for its name, type, district, town, street address and description.
 6. **Gates.** A gate's panel also lists its **Doors**: each door is Open, Closed, Opening, Closing or Jammed, says
