@@ -699,8 +699,8 @@ promotes `next` lists them here with its tag:
     and display), `StockTransaction` v2 and `ProductionArea` v2, grant `knk.town.member.<town id>` to each town's
     members, and restart the API once so the production menus and the main menu's "Structures" tile are seeded
     ([changelog](../CHANGELOG.md) entry of #683).
-14. `20261120201334_AddItemDelivery` (#60, item delivery and reward inbox P7; on its branch `claude/production-p7` until
-    merged; after `20261120185936_AddStorageContainers`): additive; two new tables `item_deliveries` (one per
+14. `20261120204203_AddItemDelivery` (#60, item delivery and reward inbox P7; on its branch `claude/production-p7` until
+    merged; after `20261120193455_AddMenuItemSettings` of the siege shop chain): additive; two new tables `item_deliveries` (one per
     delivery, unique idempotency key) and `item_delivery_lines` (the inbox lots, deleted with their delivery), nothing
     else changed and no data written. No `api.env` key. Set-up afterwards: import the seeds `ItemDelivery` (form and
     display) and `ProductionArea` v3, set the game settings section `production.delivery` (inbox and stash caps,

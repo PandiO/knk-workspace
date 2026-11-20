@@ -47,6 +47,35 @@ This is a human-readable record of capabilities merged into the V3 default branc
      }
      ```
   4. Grant `knk.economy.admin` to staff who may gift items or use players' stashes from the web app.
+
+- **Siege shop in PvP Siege** ([PandiO/knk-workspace#868](https://github.com/PandiO/knk-workspace/issues/868); link
+  L3 of the siege shop chain, #611). For players, with `siege.shop.enabled: true` and `siege.points.enabled: true` in
+  the plugin's `config.yml` (both default `false`): during a running match `/siege shop` or the new **Shop** button in
+  `/siege menu` opens the siege shop anywhere on the map. It lists the match's categories (Consumables; Siege weapons
+  only with `siege.weapons.enabled`) with each offer's current price, "bought n/cap", cooldown left and why it can't be
+  bought now; a click buys at once when every check passes (match live and alive, unlock, cap, cooldown, room for the
+  whole stack, enough points), then charges, then gives. Prices rise per purchase and cooldowns grow along each
+  entry's curve; caps and counters reset each match. Each match reads its catalogue once at the start, so admin edits
+  apply from the next match; purchases are final and bought items go with the gear restore. A locked weapon says
+  "Locked: unlock it in /menu → Minigames → Siege unlocks."; unlocked weapons are bought from siege weapons phase 3 on
+  (#784, through the shop's `ShopPurchaseHandler` port). Bought potions carry their blueprint's potion type. knk-plugin:
+  knk-core `core/siege/shop/` (`ShopCatalogue`, `ShopBrakes`, `ShopPurchaseService`, `ShopPurchaseHandler`, views),
+  `SiegeShopApi`; knk-paper `siege/shop/` (`SiegeShopService`, `ItemPurchaseHandler`, `SiegeShopMenuFeature`,
+  telemetry `siege.shop_purchase`), `/siege shop`, `KnkItemBlueprint.potionType`. knk-web-api: menu seeds `siege.shop`,
+  `siege.shop.category` and the Shop button in `siege.information` (added once to databases seeded before), the
+  telemetry catalog line; no migration. Branches `claude/siege-shop-l3` in knk-plugin, knk-web-api and knk-workspace.
+  Admin steps: deploy the plugin **before** the API (an older plugin blocks `siege.information` once the API seeds the
+  Shop button), restart the API once, then set in `config.yml` (Restart):
+
+  ```yaml
+  siege:
+    points:
+      enabled: true
+    shop:
+      enabled: true
+  ```
+
+  Smoke test: [siege shop smoke test § 3](guides/siege-shop-smoke-test.md#3-phase-3-shop-menus-and-purchases-in-the-plugin-868-tier3).
 - **Terminals, displays and structure menus: the API** ([PandiO/knk-workspace#683](https://github.com/PandiO/knk-workspace/issues/683),
   link L17 of the production, storage and transport chain; [design](specs/production-storage-transport/DESIGN.md)
   § 6 and § 11.2, decision record § 15.1 M1-M5). The game server part (binding chests, the terminal and display
@@ -145,6 +174,21 @@ This is a human-readable record of capabilities merged into the V3 default branc
   `claude/siege-shop-l2` in knk-web-api, knk-web-app and knk-workspace. Admin steps: apply the migration; restart the
   API once (seed); import the form seeds `SiegeShopCategory`, `SiegeShopEntry`, `SiegeScenarioShopOverride` and the
   updated `SiegeScenario` and `ItemBlueprint`. Smoke test: [siege shop smoke test § 2](guides/siege-shop-smoke-test.md#2-phase-2-shop-catalogue-entities-scenario-overrides-and-web-app-forms-867-tier2).
+- **Menu item settings on the game settings page** ([PandiO/knk-workspace#870](https://github.com/PandiO/knk-workspace/issues/870),
+  phase 5a of the siege shop design, link L5 of the siege shop chain; parent [#859](https://github.com/PandiO/knk-workspace/issues/859)).
+  For staff: the web app's game settings page gets a **Menu item** card: enabled, who gets it (all players or Bedrock
+  only), give on join, keep on death, material, name and lore with a preview, slot, droppable, movable, and a click
+  table (left, right, shift-left, shift-right, click in the inventory → Open menu with a menu key, Run command, or
+  Nothing), plus partial click tables per situation (Siege hub, Siege match, Siege Survival match) where "Use default"
+  keeps the default click. Seeded: today's `menus.menu-item.*` look with every click opening `main`; in a siege or Siege
+  Survival match left and right click open `siege.information` and shift-right `siege.shop`; in a siege hub left and
+  right click open `siege.information` (DESIGN § 4.3.4). Nothing changes in game yet: the plugin keeps using its
+  `config.yml` keys until phase 5b (#871) reads the section. knk-web-api: `GameSettings.MenuItem` in
+  `GET`/`PUT api/GameSettings` (`menuItem`; null on update keeps it), validated (click types, situations, action types,
+  menu key and command format, slot 0–35, material name, name and lore lengths), a save sends `GameSettingsChanged`;
+  migration `AddMenuItemSettings` (additive: nullable `game_settings.MenuItemSettingsJson`; null reads the defaults).
+  Branches `claude/siege-shop-l5` in knk-web-api, knk-web-app and knk-workspace. Admin steps: apply the migration.
+  Smoke test: [siege shop smoke test § 5](guides/siege-shop-smoke-test.md#5-phases-5a-and-5b-menu-item-settings-870-871-tier2).
 - **Production P4b: yield-area surveys in the plugin** ([PandiO/knk-workspace#679](https://github.com/PandiO/knk-workspace/issues/679),
   link L12 of the production chain, #22; the API half is #138). For staff: with `production.enabled: true` the game
   server surveys every `Derived` and `Hybrid` production area the API queues (on creation, once a day while its chunks
