@@ -1,6 +1,6 @@
 # API Contract: Production engine (kinds, levels, lines, modifiers, weather, cycles, upgrades)
 
-**Status:** Current · **Last updated:** 2026-11-19 (first version, production P3 #86, docs PandiO/knk-workspace#839)
+**Status:** Current · **Last updated:** 2026-11-20 (P4: rateSource rule, area fields, the survey/yield fields in the yield contract; docs #882); 2026-11-19 (first version, production P3 #86, docs PandiO/knk-workspace#839)
 **Checked against:** knk-web-api `next` `6c648f60` (PR PandiO/knk-web-api#58; `Controllers/Production*Controller.cs`,
 `Controllers/ClimateZonesController.cs`, `Controllers/WeatherTypesController.cs`, the P3 actions of
 `Controllers/ProductionStructuresController.cs`, `Dtos/ProductionEngineDtos.cs`, `Services/Production/`). Not released.
@@ -44,11 +44,11 @@ A missing node is 401/403 as for every staff endpoint. Pinned by `EndpointAccess
 | `description` | string? | ≤ 1000 |
 | `icon` | string? | Minecraft material name, ≤ 100 |
 | `areaModel` | string | `BorderedField`, `ExclusiveVolume`, `SharedRadius`, `Pasture`, `HuntingGround`; required on create |
-| `exclusiveAreas` | bool | areas may not overlap (P4) |
+| `exclusiveAreas` | bool | areas may not overlap ([yield contract](API_CONTRACT_PRODUCTION_YIELD.md)) |
 | `allowsDerived`, `allowsConfigured`, `allowsHybrid` | bool | at least one true |
 | `resourceCategory` | string | `Crops`, `Wood`, `Stone`, `Ore`, `Fish`, `Flowers`, `Animals`; required on create |
 | `defaultWorkers` | int | 0–100, default 2 |
-| `cycleVariation` | bool | stored; used from P4 |
+| `cycleVariation` | bool | ±10% per line and hour from P4 |
 | `defaultStoragesJson` | string? | JSON list of `{ "purpose", "name", "maxUnits" }`; "" clears it |
 | `isActive` | bool | default true |
 | `createdAt` | DateTime | read only |
@@ -102,7 +102,7 @@ name. `sortBy` `name` (default) or `id`.
 | `id`, `productionKindId`, `productionKind` (`{ id, name }`), `level` | | read only; level 1–10 |
 | `yieldMultiplier` | decimal | 0–100; the Level modifier |
 | `cycleSpeedMultiplier` | decimal | above 0, at most 100; cycle = base cycle ÷ speed |
-| `maxAreaSize` | int? | P4's area cap; 0 clears it |
+| `maxAreaSize` | int? | the areas' cap ([yield contract](API_CONTRACT_PRODUCTION_YIELD.md) § 3); 0 clears it |
 | `outputMaxUnits`, `unitsPerSlot` | int? | written to the structure's Output storage on a level change; 0 clears (= leave the storage) |
 | `transportCapacity` | int? | written to the structure on a level change; 0 clears |
 | `upkeepReduction` | decimal | 0–1; no effect in V1 |
@@ -158,8 +158,8 @@ name; sorted by kind name, then level (`sortDescending` reverses both).
 
 `201`: `status` `Running`, `accrued` 0, `anchorAt` now, `nextSettleAt` one cycle later. 400: "productionStructureId is
 required.", "itemBlueprintId is required.", "ProductionStructure with id N not found.", "ItemBlueprint with id N not
-found.", "The structure already has a line for this blueprint.", "rateSource: only Configured exists yet; Derived and
-Hybrid come with the yield areas (P4).", "configuredRatePerHour must be 0 to 1000000.", "A line has at most 10
+found.", "The structure already has a line for this blueprint.", "rateSource: a Derived line needs a Derived structure (the
+structure is Hybrid)." (P4), "configuredRatePerHour must be 0 to 1000000.", "A line has at most 10
 inputs.", "An input's amountPerHour must be above 0 and at most 1000000.", "Input blueprint N is listed twice.".
 
 ### 4.3 `PUT api/ProductionLines/{id}`
@@ -414,3 +414,4 @@ yet.
 ## Changes
 
 1. 2026-11-19: first version (docs PandiO/knk-workspace#839).
+2. 2026-11-20: P4 changes point to the [yield contract](API_CONTRACT_PRODUCTION_YIELD.md) (kind's yield fields, `rateSource` rule; docs PandiO/knk-workspace#882).

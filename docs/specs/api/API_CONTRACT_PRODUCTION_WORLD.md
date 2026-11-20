@@ -1,6 +1,6 @@
 # API Contract: Production world (`api/Warehouses`, `api/ProductionStructures`, structure placement)
 
-**Status:** Current · **Last updated:** 2026-11-19 (P3 fields `productionKindId`, `workersPresent` point to the engine contract; docs #839); 2026-11-19 (first version, production P2 #91, docs PandiO/knk-workspace#830)
+**Status:** Current · **Last updated:** 2026-11-20 (PUT answers 200 with placement warnings (#831), yieldSource and areas (P4); docs #882); 2026-11-19 (P3 fields `productionKindId`, `workersPresent` point to the engine contract; docs #839); 2026-11-19 (first version, production P2 #91, docs PandiO/knk-workspace#830)
 **Checked against:** knk-web-api `next` `fcfced27` (PR PandiO/knk-web-api#57; `Controllers/WarehousesController.cs`,
 `Controllers/ProductionStructuresController.cs`, `Dtos/ProductionWorldDtos.cs`, `Dtos/StructureDtos.cs`,
 `Services/Production/`), knk-plugin `next` `8ebb30be` (PR PandiO/knk-plugin#96; the territory lookup, § 6). Not released.
@@ -90,8 +90,9 @@ or "priority must be 0 to 1000.".
 
 ### 3.3 `PUT api/Warehouses/{id}`
 
-Body: `WarehouseDto`; null keeps. `204`; `404`; 400 as in § 2, "priority must be 0 to 1000." or "defaultStorageId must
-be a storage this warehouse holds.". Placement warnings are not returned.
+Body: `WarehouseDto`; null keeps. `200` with the saved DTO and its `placementWarnings`, as create (since P4,
+[#831](https://github.com/PandiO/knk-workspace/issues/831); `204` before); `404`; 400 as in § 2, "priority must be 0 to
+1000." or "defaultStorageId must be a storage this warehouse holds.".
 
 ### 3.4 `DELETE api/Warehouses/{id}`
 
@@ -125,6 +126,8 @@ be a storage this warehouse holds.". Placement warnings are not returned.
 | `workersPresent` | int? | read only here; `PUT …/workers` writes it ([engine contract § 9.3](API_CONTRACT_PRODUCTION_ENGINE.md#93-put-apiproductionstructuresidworkers)) |
 | `warnings` | string[] | read only (single read): "Not connected to its town's road network: automatic transport is held.", "Its land is contested: it keeps its town and keeps producing.", "Outside its town's territory: it keeps its town and keeps producing." |
 | `storages` | `{ id, name, purpose }[]` | read only (single read) |
+| `yieldSource` | string? | `Derived`, `Configured`, `Hybrid` (P4; [yield contract § 2.2](API_CONTRACT_PRODUCTION_YIELD.md#22-productionstructuredto-apiproductionstructures)) |
+| `areas` | `ProductionAreaListDto[]` | read only (single read; P4) |
 
 ### 4.2 `POST api/ProductionStructures`
 
@@ -196,3 +199,4 @@ key>`. Holder parameters: `holderKind` (`Town` or `Kingdom`) and `holderId`; `wo
 
 1. 2026-11-19: first version (docs PandiO/knk-workspace#830).
 2. 2026-11-19: `productionKindId` and `workersPresent` point to the [production engine contract](API_CONTRACT_PRODUCTION_ENGINE.md) (docs PandiO/knk-workspace#839).
+3. 2026-11-20: `PUT` answers 200 with the placement warnings (#831), `yieldSource` and `areas` from P4 (docs PandiO/knk-workspace#882).

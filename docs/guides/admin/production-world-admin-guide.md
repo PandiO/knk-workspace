@@ -1,6 +1,6 @@
 # Warehouses and Production Structures — Admin Guide
 
-**Status:** Current · **Last updated:** 2026-11-19 (P3 pointers to the production engine admin guide; docs #839); 2026-11-19 (first version, production P2 #91/#676/#677, docs PandiO/knk-workspace#830)
+**Status:** Current · **Last updated:** 2026-11-20 (P-3 not built with P4's areas, #883, docs #882); 2026-11-19 (P3 pointers to the production engine admin guide; docs #839); 2026-11-19 (first version, production P2 #91/#676/#677, docs PandiO/knk-workspace#830)
 **Checked against:** knk-web-api `next` `fcfced27`, knk-web-app `next` `18385344`, knk-plugin `next` `8ebb30be` (not
 released; the game side is off until `production.enabled` is on; the manual steps of the
 [smoke test § 3](../production-storage-transport-smoke-test.md#3-phase-p2-world-rural-structures-warehouse-production-structure-91-api-676-web-app-677-plugin-tier3)
@@ -113,7 +113,8 @@ The seeded forms carry two rules on the **Region** field, both **warnings** (the
    dependency to the form's town field. The help line says the game server answers it and that it never blocks a save
    while it can't be checked. A rule on the structure's region checks every block column of the region and its
    sub-regions.
-6. P-3 (production areas inside their structure's district or territory) comes with phase P4.
+6. P-3 (production areas inside their structure's district or territory) is not built yet: P4 added the areas
+   ([yield areas admin guide](production-yield-areas-admin-guide.md)) without the rule ([#883](https://github.com/PandiO/knk-workspace/issues/883)).
 
 ## 4. The dashboard and the structure pages
 
@@ -219,3 +220,4 @@ The full checks are the [smoke test § 3](../production-storage-transport-smoke-
 
 1. 2026-11-19: first version (docs PandiO/knk-workspace#830).
 2. 2026-11-19: pointers to the [production engine admin guide](production-engine-admin-guide.md) (docs PandiO/knk-workspace#839).
+3. 2026-11-20: P-3 points to P4's areas and #883 (docs PandiO/knk-workspace#882).

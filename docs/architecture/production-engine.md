@@ -1,6 +1,6 @@
 # Production engine: kinds, lines, modifiers, weather and cycles (knk-web-api and knk-web-app)
 
-**Status:** Current · **Last updated:** 2026-11-19 (first version, production P3 #86/#678, docs PandiO/knk-workspace#839)
+**Status:** Current · **Last updated:** 2026-11-20 (P4 pointers: Derived and Hybrid providers, area caps, variation; docs #882); 2026-11-19 (first version, production P3 #86/#678, docs PandiO/knk-workspace#839)
 **Checked against:** knk-web-api `next` `6c648f60` (PR PandiO/knk-web-api#58), knk-web-app `next` `4e4ca39a` (PR
 PandiO/knk-web-app#63). Not released; the manual steps of the
 [smoke test § 4](../guides/production-storage-transport-smoke-test.md#4-phase-p3-production-engine-86-api-678-web-app-tier3)
@@ -46,7 +46,7 @@ server and players see nothing of P3 yet. The engine knows nothing of Minecraft 
    material name), area model (`BorderedField`, `ExclusiveVolume`, `SharedRadius`, `Pasture`, `HuntingGround`),
    exclusive areas, the yield sources it allows (Derived, Configured, Hybrid; at least one), resource category (`Crops`,
    `Wood`, `Stone`, `Ore`, `Fish`, `Flowers`, `Animals`), default workers (0–100, default 2), cycle variation (stored,
-   used from P4), `DefaultStoragesJson` and active. The name is unique.
+   used from P4: the Variation step, [yield areas § 4.4](production-yield-areas.md#44-primary-outputs-and-variation-production_kinds--42)), `DefaultStoragesJson` and active. The name is unique.
 2. **Seeded catalogue** (migration `AddProductionEngine`, ids 1–8): Farm, Logger, Quarry, Mine, Fishery, Flower farm,
    Florist, Animal farm. Hunter is not in V1 (P-D10). The area model, category and level-1 area size follow
    PRODUCTION_KINDS § 2.1.
@@ -58,7 +58,7 @@ server and players see nothing of P3 yet. The engine knows nothing of Minecraft 
    |---|---|---|
    | `YieldMultiplier` | 1 + 0.15 × (n − 1): 1 … 2.35 | the **Level** modifier (§ 4) |
    | `CycleSpeedMultiplier` | 1 + 0.05 × (n − 1): 1 … 1.45 | the cycle is base cycle ÷ speed; the rate per hour does not change (§ 3.2) |
-   | `MaxAreaSize` | seeded kinds: level-1 size + step × (n − 1); new kinds: none | stored for P4's areas (blocks, volume or radius by area model) |
+   | `MaxAreaSize` | seeded kinds: level-1 size + step × (n − 1); new kinds: none | caps P4's areas (blocks, volume or radius by area model; [yield areas § 2.1](production-yield-areas.md#21-model-shape-and-bounding-box)) |
    | `OutputMaxUnits`, `UnitsPerSlot`, `TransportCapacity` | none | written to the structure on a level change (§ 2.5) |
    | `UpkeepReduction` | 0 | no effect in V1 (upkeep is Later) |
    | `UpgradeCoins` | 250 × (n − 1)²: 0, 250, 1000 … 20 250 | paid to reach the level (§ 8) |
@@ -82,7 +82,7 @@ server and players see nothing of P3 yet. The engine knows nothing of Minecraft 
 A `ProductionLine` is one output of one structure (one line per blueprint per structure):
 
 1. **Rate source.** `Configured` only in P3: the base rate is `ConfiguredRatePerHour` (0 to 1 000 000 units per hour,
-   at level multiplier 1 with every worker present). `Derived` and `Hybrid` are refused until P4 (§ 9).
+   at level multiplier 1 with every worker present). `Derived` and `Hybrid` come with P4 (§ 9, [yield areas § 4](production-yield-areas.md#4-from-surveys-to-base-rates)).
 2. **Resource category** (optional) overrides the kind's for weather and category modifiers.
 3. **Enabled** is staff's switch; **Status** is `Running`, `Paused`, `BlockedFull`, `BlockedInputs` or `Error`, with a
    **StatusReason** in words.
@@ -296,9 +296,10 @@ public interface IProductionBaseRateProvider
    registers only `ConfiguredBaseRateProvider`.
 2. `ProductionSettleContext` carries the structure, the line, the level row, the effective town and kingdom, the line's
    category, the moment and the engine settings.
-3. P4 (#138) adds `Derived` and `Hybrid` providers from the yield areas and surveys (P-D2) and lifts the refusal in
-   `ProductionLineService` ("rateSource: only Configured exists yet; Derived and Hybrid come with the yield areas (P4).").
-   A line with a source no provider serves stops with `Error` "Rate source X is not available yet (P4)." until then.
+3. P4 (#138, knk-web-api `next` `e26c7d88`) registers `DerivedBaseRateProvider` and `HybridBaseRateProvider` and the
+   modifier sources `Primary` and `Variation`; a Derived or Hybrid line is accepted on a structure of that yield source
+   ([yield areas architecture § 4–5](production-yield-areas.md#4-from-surveys-to-base-rates)). A line with a source no
+   provider serves would stop with `Error` "Rate source X is not available yet (P4).".
 4. New rate factors are new `IProductionModifierSource`s; P8's pool factor goes next to unlock and workers as a built-in
    step (`ProductionRate.Compute`).
 
@@ -389,8 +390,8 @@ import the six form and display seeds and make the v2 seeds of `ProductionStruct
 
 ## 15. Limitations (P3)
 
-1. Only `Configured` rates; areas, surveys and Derived/Hybrid yields are P4 (#138); `MaxAreaSize` and cycle variation
-   are stored but unused.
+1. P3 alone has only `Configured` rates; areas, surveys, Derived/Hybrid yields, `MaxAreaSize` and cycle variation are
+   used from P4 ([yield areas architecture](production-yield-areas.md), knk-web-api `next` `e26c7d88`).
 2. No retention or roll-up of cycle records ([#828](https://github.com/PandiO/knk-workspace/issues/828)).
 3. Upkeep and upgrade duration are stored without effect; workers are set by staff or the plugin key until P5.
 4. `MapArea` modifiers never match (the painted map is Later).
@@ -403,3 +404,4 @@ import the six form and display seeds and make the v2 seeds of `ProductionStruct
 ## Changes
 
 1. 2026-11-19: first version (docs PandiO/knk-workspace#839).
+2. 2026-11-20: pointers to the yield areas (P4) where P3 said "P4" (docs PandiO/knk-workspace#882).
