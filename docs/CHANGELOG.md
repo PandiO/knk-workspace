@@ -4,6 +4,24 @@ This is a human-readable record of capabilities merged into the V3 default branc
 
 ## Unreleased — on feature branches, not merged
 
+- **Siege points in PvP Siege** ([PandiO/knk-workspace#866](https://github.com/PandiO/knk-workspace/issues/866),
+  builds [#356](https://github.com/PandiO/knk-workspace/issues/356); link L1 of the siege shop chain, #611). For
+  players, with `siege.points.enabled: true` in the plugin's `config.yml` (default `false`): every member of a PvP
+  match starts at 0 siege points and earns them from kills (100, the 2nd–6th kill of a streak 110–150, reset on
+  death), assists (40 for at least 2 hearts of damage in the last 10 s), deaths (15), gate damage (1 per 5 HP),
+  capture progress (3 per percent to the side moving it, inside the radius), captures (100 to the capturing side
+  inside) and an activity trickle (10 a minute, only for players who fought, worked an objective or moved). Each
+  member's sidebar shows "Siege points: N" on their own board, the action bar shows each change ("+130 kill ×1.3 ·
+  830"), `/siege points` prints balance, earned and spent, and `/siege pay <player> <amount>` sends points to a
+  teammate when the siege settings allow transfers (off in PvP by default). Balances end with the match; the match
+  result stores earned and spent per participant. Nothing is spent yet (the shop is L3, #868). knk-plugin: Survival's
+  `MatchLedger` moved unchanged into knk-core `core/siege/economy` (P11), the earn calculator, assist tracker and
+  economy there, the `SiegePointsService` observer, per-player boards, telemetry `siege.points_earned`. knk-web-api:
+  earn settings and `PointTransfersEnabled` on `SiegeConfiguration`, `SiegePointsEarned`/`SiegePointsSpent` on
+  `SiegeMatchParticipant`, migration `AddSiegePointsEarning` (additive). Branches `claude/siege-shop-l1` in
+  knk-plugin, knk-web-api and knk-workspace. Admin steps: apply the migration; set `siege:` → `points:` →
+  `enabled: true` to turn it on (Restart). The web app's siege settings page does not show the new fields yet
+  (edit them with `PUT api/SiegeConfiguration`; web app fields: #878). Smoke test: [siege shop smoke test § 1](guides/siege-shop-smoke-test.md#1-phase-1-shared-match-ledger-and-siege-points-earning-866-tier3).
 - **Production P4b: yield-area surveys in the plugin** ([PandiO/knk-workspace#679](https://github.com/PandiO/knk-workspace/issues/679),
   link L12 of the production chain, #22; the API half is #138). For staff: with `production.enabled: true` the game
   server surveys every `Derived` and `Hybrid` production area the API queues (on creation, once a day while its chunks
