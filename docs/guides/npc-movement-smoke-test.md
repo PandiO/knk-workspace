@@ -281,7 +281,8 @@ Steps:
    `/knk npc nav route save keep-hall`. Then `/knk npc nav route load keep-hall`, `/knk npc nav clear`,
    `/knk npc nav stats reset`, `/knk npc nav spawn 1`. The NPC walks into the hall and stops there. In the
    `npc-logs/` run log you see one line "road goal for 1417 59 −489, N candidates (walk weight 4.0): …" with one
-   candidate marked `CHOSEN`, then "off-road walk to the goal … from the road at …"; no "walked in hops".
+   candidate marked `CHOSEN` (on the snapshot of 2026-11-19 it is today's goal, `#1 … (today's)`, 2 blocks from the
+   hall), then "off-road walk to the goal … from the road at …"; no "walked in hops".
    `stats`: `orders failed 0`.
 2. [partly automated: the same scenario's group of 5 in a column; by hand: a larger group] **A group to the hall.**
    `/knk npc nav clear`, then `/knk npc nav group 10 column`. The leader takes the same road goal as in step 1 (one

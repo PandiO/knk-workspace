@@ -785,6 +785,33 @@ This is a human-readable record of capabilities merged into the V3 default branc
      Steps: [overview map smoke test § 1](guides/overview-map-smoke-test.md#1-phase-1-region-outlines-735-tier3),
      [plugin configuration § 4.29](guides/admin/plugin-configuration.md#429-map).
 
+- **NPC navigation: an NPC reaches a building whose nearest road end is a dead end** ([PandiO/knk-workspace#814](https://github.com/PandiO/knk-workspace/issues/814),
+  link G1 of the NPC navigation follow-ups chain). With the new key on, an NPC sent to a point off the road (a
+  storehouse, a workshop) no longer heads for the road point nearest it in a straight line when no walk leads on from
+  there; it takes the road from which the walk is shortest, by the off-road chain's rule for players (F2/F3, #780).
+  knk-plugin and knk-workspace branches `claude/npc-movement-g1` (PRs into `next`). Behind `npc.navigation.enabled` and
+  the new `npc.navigation.road-goal-reachable` (both off by default); no migration.
+  1. Candidates: today's goal, the nearest point of each road edge within `navigation.max-snap-distance` of the
+     destination and the road's nodes onward (`RoadGoalChoice.candidatesAlongRoad`, unchanged), at most 12. Each gets a
+     road route and one walk search with the NPC's access (`NpcWalkPlanner`), one after another, off the main thread.
+     The least road plus `road-goal-walk-weight` (4.0) times walk wins; the order keeps it for its replans. None
+     reached: today's goal with C1's join, as before. A group takes its leader's choice. The run log has one
+     "road goal for …" line per choice with every candidate's numbers.
+  2. Admin steps: add under `npc.navigation` (YAML in [plugin configuration § 4.27](guides/admin/plugin-configuration.md#427-npc)),
+     then restart:
+
+     ```yaml
+     road-goal-reachable: true
+     road-goal-walk-weight: 4.0
+     ```
+
+  3. New scenarios (CI `MIN_SCENARIOS` 67): `npc-road-goal-dead-end` (a road end on a causeway 6 blocks above the
+     destination, another road on the ground: with the key off the NPC walks up the dead end; with it on, an NPC and a
+     group of 5 arrive by the other road in about 30 s) and `npc-replay-keep-hall` (the developer's snapshot of
+     2026-11-19 routed on its own road graph to the keep storage hall at 1417 59 −489: the leader in about 53 s, a group
+     of 5 in about 64 s; on that snapshot the road reaches the hall, so today's goal wins there with the key on and off).
+     Smoke test: [Link G1](guides/npc-movement-smoke-test.md#link-g1-the-road-goal-by-walk-reachability-keep-storage-hall).
+
 - **NPC navigation: NPCs climb a ladder through a roof hatch, and open a closed one** ([PandiO/knk-workspace#779](https://github.com/PandiO/knk-workspace/issues/779),
   link H1 of the NPC navigation follow-ups chain). An NPC whose off-road leg goes up a tower's ladder now climbs it and
   passes through the roof hatch above it. Before, the NPC stalled at the ladder's foot: its own checks treated the
