@@ -3,7 +3,7 @@
 **Status:** Written 2026-11-16 for knk-plugin `next` `cc5262ff` (links M1–M7 merged into `next`, behind
 `npc.navigation.enabled` and each link's own key, all off by default); only the steps no plugin scenario checks; not
 run yet (the developer's run with every key on is planned for 2026-11-16)
-**Last updated:** 2026-11-20 (link H1 section, [#779](https://github.com/PandiO/knk-workspace/issues/779)); 2026-11-18 (link R1 section, [#724](https://github.com/PandiO/knk-workspace/issues/724)); 2026-11-18 (link E1 section, [#701](https://github.com/PandiO/knk-workspace/issues/701)); 2026-11-18 (link C1 section, [#700](https://github.com/PandiO/knk-workspace/issues/700)); 2026-11-17 (link B5 section, [#699](https://github.com/PandiO/knk-workspace/issues/699)); 2026-11-16 (assembled from the developer tests of implementation plan 4c.4, PandiO/knk-workspace#658)
+**Last updated:** 2026-11-20 (link G1 section, [#814](https://github.com/PandiO/knk-workspace/issues/814)); 2026-11-20 (link H1 section, [#779](https://github.com/PandiO/knk-workspace/issues/779)); 2026-11-18 (link R1 section, [#724](https://github.com/PandiO/knk-workspace/issues/724)); 2026-11-18 (link E1 section, [#701](https://github.com/PandiO/knk-workspace/issues/701)); 2026-11-18 (link C1 section, [#700](https://github.com/PandiO/knk-workspace/issues/700)); 2026-11-17 (link B5 section, [#699](https://github.com/PandiO/knk-workspace/issues/699)); 2026-11-16 (assembled from the developer tests of implementation plan 4c.4, PandiO/knk-workspace#658)
 **Issue:** [PandiO/knk-workspace#358](https://github.com/PandiO/knk-workspace/issues/358) (links
 [#621](https://github.com/PandiO/knk-workspace/issues/621)–[#627](https://github.com/PandiO/knk-workspace/issues/627));
 post results on the link's sub-issue or [#603](https://github.com/PandiO/knk-workspace/issues/603)
@@ -255,6 +255,52 @@ Steps:
 6. **Game feel** (manual: needs a real client). Watch steps 1 and 3 from the roof and from the ladder's foot. The climb
    looks like a player's: no hopping on the ladder and no sliding back down. The hatch opens before the head touches
    it, not while the NPC is still on the ground.
+
+## Link G1: the road goal by walk reachability (keep storage hall)
+
+Added 2026-11-20 for knk-plugin `claude/npc-movement-g1` ([#814](https://github.com/PandiO/knk-workspace/issues/814));
+run it on `next` once G1 is merged. Same setup as above; the movement keys don't matter for this section. 3 of 6 steps
+automated or partly automated (tagged); every step can still be run by hand; not run yet. About 25 minutes; 15 minutes
+for the untagged steps only.
+
+Setup: add the two keys under `npc.navigation` in `config.yml` (an existing file never gets new keys by itself), then
+restart:
+
+```yaml
+npc:
+  navigation:
+    road-goal-reachable: true
+    road-goal-walk-weight: 4.0
+```
+
+Steps:
+
+1. [partly automated: `npc-replay-keep-hall`, a leader alone on the replayed snapshot of 2026-11-19 with its own road
+   graph; by hand: the live road data] **One NPC to the keep storage hall.** Stand on the keep's road at 1420 82 −531
+   and run `/knk npc nav from`; stand in the storage hall at 1417 59 −489 and run `/knk npc nav to` and
+   `/knk npc nav route save keep-hall`. Then `/knk npc nav route load keep-hall`, `/knk npc nav clear`,
+   `/knk npc nav stats reset`, `/knk npc nav spawn 1`. The NPC walks into the hall and stops there. In the
+   `npc-logs/` run log you see one line "road goal for 1417 59 −489, N candidates (walk weight 4.0): …" with one
+   candidate marked `CHOSEN`, then "off-road walk to the goal … from the road at …"; no "walked in hops".
+   `stats`: `orders failed 0`.
+2. [partly automated: the same scenario's group of 5 in a column; by hand: a larger group] **A group to the hall.**
+   `/knk npc nav clear`, then `/knk npc nav group 10 column`. The leader takes the same road goal as in step 1 (one
+   "road goal for" line, for the leader only); the followers come into the hall behind it. `stats` groups line:
+   `lost 0`.
+3. [automated: `npc-road-goal-dead-end`] **A dead-end road end.** Pick a destination whose nearest road point is a dead
+   end the NPC cannot walk down from (a road on a wall or a causeway above it, as #780's case), with another road
+   reaching it on foot. Save a route from a road to it and spawn 1. The NPC arrives by the other road and never walks
+   to the dead end; the log's "road goal for" line shows today's goal "not reached on foot" and the other one
+   `CHOSEN`.
+4. **The key off** (manual: compares a live config). Set `road-goal-reachable: false`, restart, run step 1 again. The
+   log has no "road goal for" line: the route ends at the road point nearest the hall, as before G1. Note whether the
+   NPC still arrives and how long it takes; then set the key back to `true`.
+5. **The pause before the first step** (manual: game feel). Watch step 1 from the start. With up to 12 candidates, each
+   with a walk search, the NPC may stand still a moment before it starts walking. Note how long (seconds), with one NPC
+   and with the group of step 2.
+6. **A real transport destination** (manual: needs the live building data). Send one NPC to another building
+   destination of your resource transports (a storehouse or a workshop inside a district) and check it arrives
+   inside, as in step 1.
 
 ## After the run
 
