@@ -130,6 +130,21 @@ This is a human-readable record of capabilities merged into the V3 default branc
   `claude/siege-shop-l2` in knk-web-api, knk-web-app and knk-workspace. Admin steps: apply the migration; restart the
   API once (seed); import the form seeds `SiegeShopCategory`, `SiegeShopEntry`, `SiegeScenarioShopOverride` and the
   updated `SiegeScenario` and `ItemBlueprint`. Smoke test: [siege shop smoke test § 2](guides/siege-shop-smoke-test.md#2-phase-2-shop-catalogue-entities-scenario-overrides-and-web-app-forms-867-tier2).
+- **Menu item settings on the game settings page** ([PandiO/knk-workspace#870](https://github.com/PandiO/knk-workspace/issues/870),
+  phase 5a of the siege shop design, link L5 of the siege shop chain; parent [#859](https://github.com/PandiO/knk-workspace/issues/859)).
+  For staff: the web app's game settings page gets a **Menu item** card: enabled, who gets it (all players or Bedrock
+  only), give on join, keep on death, material, name and lore with a preview, slot, droppable, movable, and a click
+  table (left, right, shift-left, shift-right, click in the inventory → Open menu with a menu key, Run command, or
+  Nothing), plus partial click tables per situation (Siege hub, Siege match, Siege Survival match) where "Use default"
+  keeps the default click. Seeded: today's `menus.menu-item.*` look with every click opening `main`; in a siege or Siege
+  Survival match left and right click open `siege.information` and shift-right `siege.shop`; in a siege hub left and
+  right click open `siege.information` (DESIGN § 4.3.4). Nothing changes in game yet: the plugin keeps using its
+  `config.yml` keys until phase 5b (#871) reads the section. knk-web-api: `GameSettings.MenuItem` in
+  `GET`/`PUT api/GameSettings` (`menuItem`; null on update keeps it), validated (click types, situations, action types,
+  menu key and command format, slot 0–35, material name, name and lore lengths), a save sends `GameSettingsChanged`;
+  migration `AddMenuItemSettings` (additive: nullable `game_settings.MenuItemSettingsJson`; null reads the defaults).
+  Branches `claude/siege-shop-l5` in knk-web-api, knk-web-app and knk-workspace. Admin steps: apply the migration.
+  Smoke test: [siege shop smoke test § 5](guides/siege-shop-smoke-test.md#5-phases-5a-and-5b-menu-item-settings-870-871-tier2).
 - **Production P4b: yield-area surveys in the plugin** ([PandiO/knk-workspace#679](https://github.com/PandiO/knk-workspace/issues/679),
   link L12 of the production chain, #22; the API half is #138). For staff: with `production.enabled: true` the game
   server surveys every `Derived` and `Hybrid` production area the API queues (on creation, once a day while its chunks
