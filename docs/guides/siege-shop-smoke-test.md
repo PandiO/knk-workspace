@@ -1,7 +1,7 @@
 # Siege shop and siege points — smoke test
 
-**Status:** Draft (2026-11-20): §§ 1–2 built and tagged (L1 #866, L2 #867), §§ 3–5 draft from the design; no steps run by hand.
-**Last updated:** 2026-11-20 (§ 2 updated to what L2 built, steps tagged, #867, #878); 2026-11-20 (§ 1 updated to what L1 built, steps tagged, #866); 2026-11-20 (draft from the design, phases 1–4, 5a, 5b)
+**Status:** Draft (2026-11-20): §§ 1–3 built and tagged (L1 #866, L2 #867, L3 #868), §§ 4–5 draft from the design; no steps run by hand.
+**Last updated:** 2026-11-20 (§ 3 updated to what L3 built, steps tagged, #868); 2026-11-20 (§ 2 updated to what L2 built, steps tagged, #867, #878); 2026-11-20 (§ 1 updated to what L1 built, steps tagged, #866); 2026-11-20 (draft from the design, phases 1–4, 5a, 5b)
 **Design:** [specs/siege-shop/DESIGN.md](../specs/siege-shop/DESIGN.md) · **Issue:**
 [PandiO/knk-workspace#611](https://github.com/PandiO/knk-workspace/issues/611),
 [#356](https://github.com/PandiO/knk-workspace/issues/356), [#859](https://github.com/PandiO/knk-workspace/issues/859)
@@ -182,42 +182,108 @@ until phase 3.*
 
 ## 3. Phase 3: shop menus and purchases in the plugin (#868, tier:3)
 
-*Draft from the design (2026-11-20); the link updates it to what was built and tags the automated steps.*
+*Built by L3 (2026-11-20, branches `claude/siege-shop-l3` in knk-plugin and knk-web-api). 16 of 19 steps fully or partly
+automated (tagged; plugin tests in knk-core, knk-api-client and knk-paper with MockBukkit, API tests in xUnit); every
+step can still be run by hand; manual steps not run yet. A full manual run takes about 45 minutes; the untagged steps
+and the by-hand parts about 25.*
 
 ### 3.0 Preconditions
 
-1. Deployed: phases 1 and 2; knk-plugin from `next` with this phase.
-2. Settings: `siege.points.enabled: true`, `siege.shop.enabled: true`; to test weapon entries also
-   `siege.weapons.enabled: true`.
-3. Accounts and data: A1, A2, D1; the seeded catalogue with the ender pearl at 300, +50 linear, cooldown 20 s +10 s
-   exponential ×1.5, cap 8; A1 has not unlocked the trebuchet. A Siege Survival scenario for step 13.
+1. Deployed, **in this order**: knk-plugin from the branch (or `next` once merged), then knk-web-api from the branch
+   (or `next`), restarted once. The API seeds the menus `siege.shop` and `siege.shop.category` and adds the **Shop**
+   button to `siege.information` (also on a database seeded before, once); a plugin without this phase would block
+   `siege.information` at its menu validation, so the plugin goes first. Phases 1 and 2 are deployed (migrations
+   `AddSiegePointsEarning` and `AddSiegeShopCatalogue` applied, the default catalogue seeded).
+2. Settings: in the plugin's `config.yml` under `siege:`
+   ```yaml
+   siege:
+     points:
+       enabled: true
+     shop:
+       enabled: true
+   ```
+   then restart. For steps 7 and 8 also `weapons:` → `enabled: true`. The shop needs siege points: with
+   `shop.enabled: true` and `points.enabled: false` the log says so and the shop stays off (step 18).
+3. Accounts and data: A1, A2, D1; the seeded PvP catalogue (§ 2 step 2: ender pearl 300, +50 linear, cooldown 20 s
+   +10 s exponential ×1.5, cap 8; splash potion of healing II 150; golden apple 200; regeneration 250); for steps 7
+   and 8 one weapon entry (§ 2 step 7) whose template A1 has **not** unlocked; a Ready Siege scenario. To have points
+   to spend quickly, let A1 kill D1 a few times, or lower the prices of a test scenario with overrides (§ 2 step 10).
+   A Siege Survival scenario for step 17 (after the Survival branch has merged). Optional: diagnostic telemetry on,
+   for step 15.
 
 ### 3.1 Steps
 
-1. In a running match A1 types `/siege shop`, then opens `/siege menu` → Shop. **Expected:** the shop opens both
-   ways, anywhere on the map, with the balance in the title, categories Siege weapons and Consumables, no empty Magic
-   category. (A17)
-2. A1 with 400 points buys an ender pearl. **Expected:** 300 charged, 1 pearl in the inventory, the line now shows
-   350, "bought 1/8" and a 20 s cooldown. (A18, A20, A21)
-3. A1 clicks the pearl again during the cooldown. **Expected:** "Cooldown: N s"; nothing charged. (A19)
-4. After the cooldown, A1 with 100 points clicks the pearl. **Expected:** "Not enough siege points: 100/350";
-   nothing charged. (A19)
-5. A1 earns enough and buys pearls until the cap. **Expected:** prices 350, 450, 600, 800, …; cooldowns 30, 45, 67.5 s
-   …; after the 8th, "Limit reached: 8 per match". (A20, A21, A22)
-6. A1 fills every inventory slot and buys a healing potion. **Expected:** "Inventory full"; nothing charged. (A19)
-7. A1 clicks the trebuchet entry. **Expected:** shown as locked with "unlock in /menu → Minigames → Siege unlocks";
-   nothing charged, no spot picker. (A26)
-8. During the match Admin changes the pearl's price in the web app. **Expected:** the shop keeps the old price; the
-   next match uses the new one. (A23)
-9. The match ends while A1 holds 3 unused pearls. **Expected:** the pearls are gone after the gear restore; no
-   refund; the result shows spent points. (A11, A24)
-10. In a new match A1's pearl price, cooldown and count start over. **Expected:** 300, no cooldown, 0/8. (A22)
-11. A1 throws a bought pearl over the castle wall. **Expected:** vanilla behaviour, A1 lands inside. (P04)
-12. The telemetry for the test run shows a `siege.shop.purchase` event per purchase with entry, price and purchase
-    number. (A11)
-13. In a Siege Survival match (after the Survival branch has merged): A1 earns siege points from NPC kills, buys a
-    pearl in `/siege shop`, then buys at a purchase point and rolls the Mystery Box. **Expected:** all three charge the
-    same balance; `/siege shop` opens the siege shop even next to a purchase point. (A17, A25)
+1. [partly automated: knk-paper `SiegeShopServiceTest.theShopOpensAnywhereDuringTheMatch_withItsCategoriesAndNoWeaponsWhileTheyAreOff_A17`, `SiegeCommandShopTest.withTheShopOnTheSubcommandOpensTheShop_A17`, `SiegeShopMenuFeatureTest.withTheShopOnTheButtonFollowsTheMatch_andBuyingReachesTheService`, knk-web-api `MenuTemplateSiegeSeedTests.Information_HasAShopButton_ShownOnlyWhileTheViewerCanUseAShop_868`, knk-api-client `SiegeMenuSeedContractTest`; by hand: the real menus]
+   In a running match A1 types `/siege shop`, closes it, then opens `/siege menu` and clicks **Shop** (emerald, top
+   left), once at spawn and once far out on the map. **Expected:** the shop opens all four times. Its gold header item
+   shows "Siege points: N" (the menu engine's titles are fixed text, so the balance is there, not in the title) and
+   "Purchases are final; bought items end with the match."; the categories are Consumables, plus Siege weapons only
+   with `siege.weapons.enabled: true`; no Magic category. Outside a match `/siege shop` says "The siege shop is open only
+   during a running siege match." and `/siege menu` has no Shop button. (A17)
+2. [automated: knk-paper `SiegeShopServiceTest.aPurchaseChargesTheCurrentPriceAndGivesTheFullQuantity_A18_A20_A21`, knk-core `ShopPurchaseServiceTest.aPurchaseChargesTheCurrentPriceAndGivesTheFullQuantity_A18`]
+   A1 with 400 points opens Consumables and clicks the Ender Pearl. **Expected:** "Bought Ender Pearl for 300 siege
+   points. Balance: 100."; one ender pearl in the inventory; the sidebar shows 100; the pearl's line now shows "Price:
+   350 siege points", "Bought: 1/8" and "Cooldown: 20 s" counting down, greyed out. (A18, A20, A21)
+3. [automated: knk-core `ShopPurchaseServiceTest.eachRefusalChargesNothingAndNamesItsReason_A19`, knk-paper `SiegeShopServiceTest.eachRefusalChargesNothing_andAFullInventoryIsRefused_A19`]
+   A1 clicks the pearl again during the cooldown. **Expected:** "Cooldown: N s."; nothing charged. (A19)
+4. [automated: knk-core `ShopPurchaseServiceTest.eachRefusalChargesNothingAndNamesItsReason_A19`, knk-paper `SiegeShopServiceTest.eachRefusalChargesNothing_andAFullInventoryIsRefused_A19`]
+   After the cooldown, A1 with 100 points clicks the pearl. **Expected:** "Not enough siege points: 100/350."; the line
+   says the same in red; nothing charged. (A19)
+5. [automated: knk-core `ShopPurchaseServiceTest.pricesAndCooldownsGrowUntilTheCap_A20_A21_A22`, `ShopBrakesTest.theDesignExample_pearlPricesAndCooldowns_A20_A21`, `.priceGrowsPerCurve_A20`, `.theMaximumPriceHolds_andNoStepIsAFixedPrice_A20`, `.cooldownGrowsPerCurve_andTheMaximumHolds_A21`]
+   A1 earns enough and buys pearls until the cap, waiting out each cooldown. **Expected:** prices 350, 450, 600, 800,
+   1050, 1350, 1700; cooldowns after the 2nd, 3rd and 4th purchase 30, 45 and 67.5 s (shown rounded up); after the
+   8th the line says "Limit reached: 8 per match" and a click says "Limit reached: 8 per match.". (A20, A21, A22)
+6. [automated: knk-paper `SiegeShopServiceTest.eachRefusalChargesNothing_andAFullInventoryIsRefused_A19`, knk-core `ShopPurchaseServiceTest.eachRefusalChargesNothingAndNamesItsReason_A19`]
+   A1 fills every main inventory slot (hotbar included) with full stacks and buys a Splash Potion of Healing II.
+   **Expected:** "Inventory full: make room for the whole stack first."; nothing charged, nothing dropped. (A19, P22)
+7. [automated: knk-paper `SiegeShopServiceTest.aLockedWeaponShowsWhereToUnlockIt_andCantBeBought_A26`, knk-core `ShopPurchaseServiceTest.aLockedWeaponIsRefusedAndShownLocked_andWeaponsWaitForTheirHandler_A26`, `ShopCatalogueTest.anEntryRowShowsPriceBoughtCooldownAndWhyNot_A26`]
+   With `siege.weapons.enabled: true`, A1 opens Siege weapons and clicks the weapon entry. **Expected:** the line is
+   greyed out and says "Locked: unlock it in /menu → Minigames → Siege unlocks."; the click says the same; nothing
+   charged, no spot picker. (A26)
+8. [automated: knk-paper `SiegeShopServiceTest.aLockedWeaponShowsWhereToUnlockIt_andCantBeBought_A26`]
+   Admin grants A1 the weapon's unlock in the web app (UserSiegeWeaponUnlock); in the **next** match A1 clicks the
+   entry. **Expected:** "Siege weapons can't be bought yet."; nothing charged (placing weapons comes with siege weapons
+   phase 3, #784, which plugs into the shop's purchase port). Unlocks are read at the match start. (A26)
+9. [automated: knk-paper `SiegeShopServiceTest.theCatalogueIsReadOnceAtTheStart_editsApplyFromTheNextMatch_andCountersStartOver_A22_A23`, knk-core `ShopPurchaseServiceTest.theCatalogueIsTheOneTheMatchStartedWith_A23`]
+   During the match Admin changes the PvP Ender Pearl's price to 999 in the web app. **Expected:** the shop keeps the
+   old price for the rest of the match; the next match shows 999. Set it back afterwards. (A23)
+10. [partly automated: knk-paper `SiegeShopServiceTest.afterTheMatchNothingIsSold_andTheSpentPointsAreInTheResult_A11_A24`, `SiegePointsServiceTest.theMatchResultCarriesEarnedAndSpent_andTheEndStopsEarning_A04_A11`; by hand: the gear restore]
+    The match ends while A1 holds 3 unused pearls. **Expected:** after the post-match wait the pearls are gone with
+    the gear restore (A1 gets their own inventory back); no points come back; "Siege points this match: earned E,
+    spent S." counts the purchases, and `GET api/siege-matches/{id}` shows the same `siegePointsSpent`. (A11, A24)
+11. [automated: knk-paper `SiegeShopServiceTest.theCatalogueIsReadOnceAtTheStart_editsApplyFromTheNextMatch_andCountersStartOver_A22_A23`, knk-core `ShopPurchaseServiceTest.pricesAndCooldownsGrowUntilTheCap_A20_A21_A22`]
+    In a new match A1 opens Consumables. **Expected:** the pearl at 300 again, no cooldown, "Bought: 0/8". (A22)
+12. A1 throws a bought pearl over the castle wall. **Expected:** vanilla behaviour: A1 lands inside, no siege rule stops
+    it. Manual: needs real terrain. (P04)
+13. [automated: knk-paper `SiegeShopServiceTest.aDeadMemberCantBuy`]
+    A1 dies and clicks an offer in a shop menu still open on the death screen, or types `/siege shop` and buys right
+    after respawning. **Expected:** while dead: "You can buy only while you are alive in the match."; after the respawn
+    the purchase works. (P22)
+14. [automated: knk-paper `ItemPotionTypeTest.theBlueprintsPotionTypeIsOnTheBuiltItem`, knk-api-client `ItemAppearanceMapperTest.blueprintJsonCarriesThePotionType_868`]
+    A1 buys a Splash Potion of Healing II and a Potion of Regeneration and looks at them. **Expected:** a pink splash
+    potion "Splash Potion of Healing II" (Instant Health II) and a regeneration potion, both usable; they are gone at the
+    match end like the pearls. (§ 9.4)
+15. [automated: knk-paper `SiegeShopTelemetryTest.aPurchaseIsOneEventWithEntryPriceAndPurchaseNumber_A11`, knk-web-api `TelemetryEventCatalogTests.EveryBaselineFamilyOfTheDesign_IsListedAsBaseline`]
+    With diagnostic telemetry on, open the owner timeline for the test run. **Expected:** one `siege.shop_purchase`
+    event per purchase with `entryId`, `categoryId`, `kind`, `price` and `purchaseNo` (the player's n-th purchase of
+    that entry); refusals send none. (A11, P27)
+16. [automated: knk-paper `SiegeShopMenuFeatureTest.withTheShopOffTheButtonIsHiddenAndTheActionsSaySo`, `SiegeCommandShopTest.withTheShopOffTheSubcommandIsHiddenAndSaysSo`, knk-api-client `SiegeMenuSeedContractTest`]
+    Admin sets `siege.shop.enabled: false` (points stay on) and restarts; play a match. **Expected:** `/siege menu`
+    looks exactly as before this phase (no Shop button), `/siege shop` says "The siege shop is not enabled on this
+    server.", `shop` is not suggested after `/siege ` and not in `/siege help`; siege points work as in § 1. (flag off)
+17. [partly automated: knk-paper `SiegeShopServiceTest.anotherModesShopIsUsedThroughTheSurvivalHook_P21`; by hand: everything, after the Survival merge]
+    In a Siege Survival match (after the Survival branch has merged and registered its shop with the hook): A1 earns
+    siege points from NPC kills, buys a pearl in `/siege shop`, then buys at a purchase point (clicking its block, or
+    `/siege buy` in range) and rolls the Mystery Box. **Expected:** all three charge the same balance; `/siege shop`
+    opens the siege shop even next to a purchase point. Manual: Survival is not merged. (A17, A25)
+18. Admin sets `siege.shop.enabled: true` and `siege.points.enabled: false`, restarts. **Expected:** the server log
+    says "siege.shop.enabled is on but siege.points.enabled is off: the siege shop needs siege points, so it stays off";
+    the game behaves as in step 16. Manual: needs a restart.
+19. Stop the API for a moment right before a match starts (or block its catalogue route), start the match, bring the
+    API back within 10 s. **Expected:** `/siege shop` first says "The siege shop is still opening; try again in a
+    moment.", then opens once the catalogue was read (two retries 5 s apart); if the API stays down, "The siege shop
+    isn't available in this match." and the log has one warning. Manual: needs a real outage
+    (`SiegeShopServiceTest.aFailedCatalogueReadIsRetriedTwice_thenTheMatchHasNoShop` covers the logic).
 
 ## 4. Phase 4: siege weapon unlocks with coins and title level (#869, tier:2)
 
