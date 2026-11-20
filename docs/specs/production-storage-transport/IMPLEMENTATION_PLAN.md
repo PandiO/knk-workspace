@@ -277,7 +277,15 @@ the storage's `MaxUnits`; terminal view, take and put (`SYS_WORLD` moves with id
 Withdraw) and the display sample for the game server; the caller-filtered structure reads `api/StructureMenus`
 (overview, structure menu, orders list; M3); staff retry `POST api/TransportOrders/{id}/retry`; the three menus and the
 hub's "Structures" tile seeded as menu content (A27). Town membership is the permission node
-`knk.town.member.<townId>` until town roles (#246). Plugin part: link L18 (#74).
+`knk.town.member.<townId>` until town roles (#246). Plugin part built in link L18 (#74, in review, knk-plugin branch
+`claude/production-p6`, behind `production.enabled`): `/knk storage bind|unbind|info|reload`; terminals (a paged view of
+the storage, take and put as ledger moves as the player, puts resolved with item identity and held back until the API
+answers); displays (a tagged sample written on chunk load and after terminal moves, throttled; read-only); bound blocks
+protected from breaking, explosions and hoppers; the structures overview with the Town filter preset from the territory
+lookup, the structure menu and the orders list with the staff buttons (survey now, dry run, area outline, cancel and
+retry). Not built: opening the structure menu from a worker NPC (production structures have no worker NPC entity yet),
+unique items in terminals in game, notifications and Bukkit events (`ProductionCycleEvent`,
+`TransportOrderStatusEvent`), `/knk transport` and watch on/off (issues filed by L18).
 
 All **V1**; Backed mode is Later ([#113](https://github.com/PandiO/knk-workspace/issues/113)).
 
