@@ -1,7 +1,7 @@
 # Siege shop and siege points — smoke test
 
-**Status:** Draft (2026-11-20): §§ 1–2 built and tagged (L1 #866, L2 #867), §§ 3–5 draft from the design; no steps run by hand.
-**Last updated:** 2026-11-20 (§ 2 updated to what L2 built, steps tagged, #867, #878); 2026-11-20 (§ 1 updated to what L1 built, steps tagged, #866); 2026-11-20 (draft from the design, phases 1–4, 5a, 5b)
+**Status:** Draft (2026-11-20): §§ 1–2 built and tagged (L1 #866, L2 #867), § 5.1 built and tagged (L5 #870), §§ 3–4 and § 5.2 draft from the design; no steps run by hand.
+**Last updated:** 2026-11-20 (§ 5 updated to what L5 built, § 5.1 steps tagged, #870); 2026-11-20 (§ 2 updated to what L2 built, steps tagged, #867, #878); 2026-11-20 (§ 1 updated to what L1 built, steps tagged, #866); 2026-11-20 (draft from the design, phases 1–4, 5a, 5b)
 **Design:** [specs/siege-shop/DESIGN.md](../specs/siege-shop/DESIGN.md) · **Issue:**
 [PandiO/knk-workspace#611](https://github.com/PandiO/knk-workspace/issues/611),
 [#356](https://github.com/PandiO/knk-workspace/issues/356), [#859](https://github.com/PandiO/knk-workspace/issues/859)
@@ -244,16 +244,60 @@ until phase 3.*
 
 ## 5. Phases 5a and 5b: menu item settings (#870, #871, tier:2)
 
-*Draft from the design (2026-11-20); the link updates it to what was built and tags the automated steps.*
+*Phase 5a built by L5 (2026-11-20, branches `claude/siege-shop-l5` in knk-web-api and knk-web-app): § 5.1, 7 steps, all
+fully or partly automated (tagged; API tests in xUnit, web app tests in Jest and Playwright with a mocked API); every
+step can still be run by hand; manual steps not run yet. A full manual run of § 5.1 takes about 10 minutes. § 5.2 (in
+game) is the draft for phase 5b (#871): until then the plugin keeps reading its `config.yml` keys and nothing changes in
+game.*
 
 ### 5.0 Preconditions
 
-1. Deployed: knk-web-api and knk-web-app with phase 5a; knk-plugin with phase 5b (and phase 3 for the shop target).
-2. Settings: the seeded menu item settings (default clicks open `main`; siege match overrides open
-   `siege.information` and, on shift-right, `siege.shop`).
-3. Accounts and data: Admin; A1 online in the hub.
+1. Deployed: knk-web-api from the branch (or `next` once merged) with the migration `AddMenuItemSettings` applied;
+   knk-web-app from the same branch. For § 5.2: knk-plugin with phase 5b (#871) and phase 3 (#868) for the shop target.
+2. Settings: none to set. The menu item section starts at the seeded defaults: today's `menus.menu-item.*` look
+   (nether star, `&6&lMenu &7(click to open)`, slot 8) with every click opening `main`; overrides for Siege match and
+   Siege Survival match (left and right click → `siege.information`, shift + right click → `siege.shop`) and Siege hub
+   (left and right click → `siege.information`).
+3. Accounts and data: Admin (web app staff with `knk.admin.config`); for § 5.2 A1 online in the hub.
 
-### 5.1 Steps
+### 5.1 Steps: the Menu item card (phase 5a)
+
+1. [automated: knk-web-api `MenuItemSettingsTests.FreshDatabase_ReadsTodaysConfigDefaults_AndTheSiegeOverrides_A29`, `.ExistingRowWithoutTheColumn_OrUnreadableJson_ReadsTheDefaults`; knk-web-app e2e `menu-item-settings.spec.ts` "shows the seeded menu item …"; Jest `menuItemSettings.test.ts`]
+   Admin opens Game settings and scrolls to the **Menu item** card. **Expected:** "Menu item enabled", "Give on join"
+   and "Keep on death" on, "Droppable" and "Movable" off; Who gets it "All players"; Material `NETHER_STAR`; Name
+   `&6&lMenu &7(click to open)`; Lore `&7Opens the Knights & Kings menu (&e/menu&7).`; Slot 8; the preview shows the
+   coloured name and lore. Under **Clicks** all five clicks (Left click, Right click, Shift + left click, Shift + right
+   click, Click in the inventory) are "Open menu" `main`. Under **Situation overrides**: Siege Survival match and Siege
+   match with Left and Right click "Open menu" `siege.information`, Shift + right click `siege.shop`, the other clicks
+   "Use default"; Siege hub with Left and Right click `siege.information`. (A29)
+2. [automated: knk-web-api `MenuItemSettingsTests.Save_StoresLookClicksAndOverrides_AndReadsThemBack_A29`; knk-web-app e2e `menu-item-settings.spec.ts` "saves the look, a click and an override …"]
+   Admin changes the Name to `&bKnK menu`, sets Shift + left click to "Run command" with `siege points`, sets Siege
+   hub's Shift + right click to "Open menu" `siege.shop` (the key field offers `main`, `siege.information`,
+   `siege.shop` and `siege.overview`), sets Siege match's Left click to "Use default", and saves. **Expected:** the card
+   heading said "(changed)" before saving; "Game settings saved." and "No unsaved changes."; after a page reload the
+   four changes are still there (Siege match keeps Right click and Shift + right click only). (A29)
+3. [automated: knk-web-api `MenuItemSettingsTests.Save_DropsEmptyOverrides_AndAClickTableMayBeEmpty`; knk-web-app e2e `menu-item-settings.spec.ts` "removes an override and adds it back empty …"]
+   Admin clicks **Remove Siege hub**, picks Siege hub under Situation, clicks **Add override** and saves without
+   setting a click. **Expected:** the Siege hub override is shown with every click on "Use default"; after a reload
+   it is gone (an empty override is not stored). Put it back as in precondition 2 and save. (A29)
+4. [automated: knk-web-app e2e `menu-item-settings.spec.ts` "says what the API would refuse and keeps Save off"; Jest `menuItemSettings.test.ts` "lists what the API would refuse"]
+   Admin types `Siege Shop` as Left click's menu key and 40 as Slot. **Expected:** under the card "Slot must be 0 to
+   35." and "Left click: "Siege Shop" is not a menu key (…)"; Save is off. Discard the changes.
+5. [automated: knk-web-api `MenuItemSettingsTests.Save_WithABadValue_IsRefusedWithTheReason_AndNothingChanges` (15 cases); knk-web-app e2e `menu-item-settings.spec.ts` "a refused save shows the API reason in the header"]
+   As Admin, send `PUT api/GameSettings` (Swagger) with the current settings and `menuItem.clicks` containing
+   `"MIDDLE_CLICK": {"type": "OpenMenu", "menuKey": "main"}`. **Expected:** 400 with "menuItem.clicks: 'MIDDLE_CLICK'
+   is not a click type (…)"; nothing saved. The same for an unknown situation (`arena.duel`), an action type
+   `Teleport`, Run command without a command, Who gets it `java`, or a material `nether star`.
+6. [automated: knk-web-api `MenuItemSettingsTests.SavingTheSection_TellsTheGameServerToReload_A29`; by hand: the plugin's reload is § 5.2 step 1]
+   Admin saves a change on the card while a game server is connected. **Expected:** the API sends
+   `GameSettingsChanged` (scope `Game`) over the realtime channel, the event the plugin already reloads the game
+   settings on. What players see is § 5.2 step 1, after phase 5b. (A29)
+7. [automated: knk-web-api `AddMenuItemSettingsTests.Up_AddsOneNullableJsonColumnOnGameSettings_AndNothingElse`, `.Down_DropsOnlyThatColumn`]
+   On a copy of a database from before the migration, apply `AddMenuItemSettings` and open Game settings.
+   **Expected:** the migration only adds the nullable `game_settings.MenuItemSettingsJson`; the card shows the seeded
+   defaults of step 1.
+
+### 5.2 Steps in game (phase 5b, #871; draft from the design)
 
 1. Admin opens the game settings page → Menu item, changes the name and sets shift-left to run `siege points`, then
    saves. **Expected:** A1's item shows the new name within seconds, without a restart, in the same slot. (A29)
