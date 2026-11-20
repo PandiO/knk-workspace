@@ -1,7 +1,7 @@
 # Siege shop and siege points — smoke test
 
-**Status:** Draft (2026-11-20): §§ 1–3 built and tagged (L1 #866, L2 #867, L3 #868), § 5.1 built and tagged (L5 #870), § 4 and § 5.2 draft from the design; no steps run by hand.
-**Last updated:** 2026-11-20 (§ 3 updated to what L3 built, steps tagged, #868); 2026-11-20 (§ 5 updated to what L5 built, § 5.1 steps tagged, #870); 2026-11-20 (§ 2 updated to what L2 built, steps tagged, #867, #878); 2026-11-20 (§ 1 updated to what L1 built, steps tagged, #866); 2026-11-20 (draft from the design, phases 1–4, 5a, 5b)
+**Status:** Draft (2026-11-20): §§ 1–4 built and tagged (L1 #866, L2 #867, L3 #868, L4 #869), § 5.1 built and tagged (L5 #870), § 5.2 draft from the design; no steps run by hand.
+**Last updated:** 2026-11-20 (§ 4 updated to what L4 built, steps tagged, #869); 2026-11-20 (§ 3 updated to what L3 built, steps tagged, #868); 2026-11-20 (§ 5 updated to what L5 built, § 5.1 steps tagged, #870); 2026-11-20 (§ 2 updated to what L2 built, steps tagged, #867, #878); 2026-11-20 (§ 1 updated to what L1 built, steps tagged, #866); 2026-11-20 (draft from the design, phases 1–4, 5a, 5b)
 **Design:** [specs/siege-shop/DESIGN.md](../specs/siege-shop/DESIGN.md) · **Issue:**
 [PandiO/knk-workspace#611](https://github.com/PandiO/knk-workspace/issues/611),
 [#356](https://github.com/PandiO/knk-workspace/issues/356), [#859](https://github.com/PandiO/knk-workspace/issues/859)
@@ -287,26 +287,65 @@ and the by-hand parts about 25.*
 
 ## 4. Phase 4: siege weapon unlocks with coins and title level (#869, tier:2)
 
-*Draft from the design (2026-11-20); the link updates it to what was built and tags the automated steps.*
+*Built by L4 (2026-11-20, branches `claude/siege-shop-l4` in knk-web-api, knk-plugin and knk-web-app). 8 of 9 steps
+fully or partly automated (tagged; API tests in xUnit, plugin tests in knk-core, knk-api-client and knk-paper, web app
+tests in Playwright with a mocked API); every step can still be run by hand; manual steps not run yet. A full manual
+run takes about 25 minutes; the untagged step and the by-hand parts about 15.*
 
 ### 4.0 Preconditions
 
-1. Deployed: phase 2; knk-web-api, knk-web-app and knk-plugin from `next` with this phase.
-2. Settings: the trebuchet template with unlock price 1000 coins and minimum title level set to A1's title + 1; the
-   ballista with 500 coins and no minimum.
-3. Accounts and data: A1 with 1200 coins and a web account.
+1. Deployed: knk-web-api from the branch (or `next` once merged) with the migration `AddSiegeWeaponUnlockMinTitle`
+   applied and restarted once (it seeds the menu `siege.unlocks` and adds the **Siege unlocks** button to
+   `siege.overview`, also on a database seeded before, once); knk-plugin and knk-web-app from the same branch. No
+   deploy order: the button uses only engine ids and stays hidden until the plugin has validated `siege.unlocks`.
+   In the web app's Entity setup, import the form seed **SiegeWeaponTemplate - Default (seed v2)** and make it the
+   default (it adds "Minimum title to unlock").
+2. Settings: none in `config.yml` (no flag). The trebuchet template with unlock price 1000 coins and **Minimum title to
+   unlock** set to the title above A1's; the ballista with 500 coins and no minimum; a third template (for example the
+   catapult) with 800 coins and no minimum. For step 6 a Ready Siege scenario and a shop entry for the ballista (§ 2
+   step 7), with `siege.points.enabled`, `siege.shop.enabled` and `siege.weapons.enabled` on.
+3. Accounts and data: A1 with 1200 coins, a linked web account, and none of the three types unlocked.
 
 ### 4.1 Steps
 
-1. Outside a match A1 opens the main menu → Minigames → Siege unlocks. **Expected:** each template with price,
-   minimum title and state; the trebuchet says "Needs title …". (A27)
-2. A1 clicks the trebuchet. **Expected:** refused for the title level; coins unchanged. (A27)
-3. A1 clicks the ballista and confirms, double-clicking fast. **Expected:** one charge of 500 coins, the ballista shows
-   "Unlocked". (A27)
-4. A1 joins a match and opens the main menu's Siege unlocks. **Expected:** unlocking is refused during a match; the
-   shop's ballista entry is no longer locked. (A26, A28)
-5. On the web app A1 opens their profile → Siege unlocks. **Expected:** the same list; the ballista unlocked;
-   unlocking another type there charges coins once. (A27)
+1. [partly automated: knk-web-api `MenuTemplateSiegeSeedTests.Overview_HasASiegeUnlocksButton_OpeningTheUnlocksMenu_869`, `SiegeWeaponUnlockPurchaseServiceTests.Overview_ListsEveryTemplate_WithPriceMinimumTitleAndState`, knk-core `SiegeUnlockRowViewTest.anUnlockableRowSaysThePrice_andAsksToConfirm`, `SiegeUnlockRowViewTest.theOtherStatesSayWhy_andGoStraightToTheAction`, knk-paper `SiegeUnlocksMenuFeatureTest.rowsListEveryTemplateWithTheViewersState_A27`, knk-api-client `SiegeMenuSeedContractTest`; by hand: the real menus]
+   Outside a match A1 types `/menu`, clicks the **Siege Minigame** tile (the minigames tile), then **Siege unlocks**
+   (anvil, top left). **Expected:** the Siege unlocks menu: the header says "Coins: 1200" and A1's title; one line per
+   template with "Unlock price: N coins", "Minimum title: …" and its state: the ballista "Unlock for 500 coins", the
+   catapult "Unlock for 800 coins", the trebuchet "Needs title <title>". (A27)
+2. [automated: knk-web-api `SiegeWeaponUnlockPurchaseServiceTests.Purchase_BelowTheMinimumTitle_IsRefused_AndChargesNothing_A27`, knk-paper `SiegeUnlocksMenuFeatureTest.aRefusalIsShown_A27`]
+   A1 clicks the trebuchet. **Expected:** no confirmation; chat says "You need the title <title> to unlock the
+   Trebuchet."; A1 still has 1200 coins. (A27)
+3. [partly automated: knk-web-api `SiegeWeaponUnlockPurchaseServiceTests.Purchase_ChargesTheUnlockPriceOnce_UnderTheSpecKey_AndWritesTheUnlock`, `SiegeWeaponUnlockPurchaseServiceTests.Purchase_ADoubleClick_ChargesOnce_A27`, knk-paper `SiegeUnlocksMenuFeatureTest.aPurchaseGoesToTheApi_andDropsTheCachedRows`, `SiegeUnlocksMenuFeatureTest.aSecondClickWhileTheFirstRunsSendsNothing_A27`; by hand: the confirm buttons]
+   A1 clicks the ballista. **Expected:** chat asks "Unlock the Ballista for 500 coins? Click Confirm in the menu." and
+   Confirm (lime) and Cancel (red) appear in the header. A1 double-clicks **Confirm** fast. **Expected:** chat says
+   "Unlocked the Ballista for 500 coins. You can buy it in siege matches now."; the ballista line says "Unlocked";
+   the header says "Coins: 700"; in the web app's balance log A1 has one `SIEGE_UNLOCK` posting of 500 with key
+   `siege-unlock:<ballista id>:<A1 id>`, and the catapult now says "Not enough coins: 700/800". (A27)
+4. [automated: knk-web-api `SiegeWeaponUnlockPurchaseServiceTests.Purchase_WithoutEnoughCoins_IsRefused_AndChargesNothing_A27`, `SiegeWeaponUnlockPurchaseServiceTests.Purchase_ADoubleClick_ChargesOnce_A27`]
+   A1 clicks the catapult, then the ballista again. **Expected:** "Not enough coins to unlock the Catapult: 700/800."
+   and "You have already unlocked the Ballista."; nothing charged (still 700). (A27)
+5. [automated: knk-paper `SiegeUnlocksMenuFeatureTest.duringAMatchNothingIsBought_andTheMenuSaysSo_A28`, knk-core `SiegeUnlockRowViewTest.duringAMatchNothingIsUnlockable_A28`]
+   Give A1 another 800 coins (staff grant). A1 joins a match and, once it is running, opens `/menu` → Siege Minigame →
+   Siege unlocks and clicks the catapult. **Expected:** the header and the catapult line say "Siege weapons can't be
+   unlocked during a match. Unlock them after it."; no confirmation; the same line in chat; coins unchanged. (A28)
+6. [partly automated: knk-paper `SiegeShopServiceTest.aLockedWeaponShowsWhereToUnlockIt_andCantBeBought_A26`, knk-core `ShopPurchaseServiceTest.aLockedWeaponIsRefusedAndShownLocked_andWeaponsWaitForTheirHandler_A26`; by hand: the real shop]
+   In that match A1 opens `/siege shop` → Siege weapons. **Expected:** the ballista entry is not locked (unlocks are
+   read at match start; until siege weapons phase 3, #784, a click says "Siege weapons can't be bought yet."); an entry
+   for a type A1 hasn't unlocked says "Locked: unlock it in /menu → Minigames → Siege unlocks." (A26)
+7. [automated: knk-web-app `e2e/siege-unlocks.spec.ts` "lists every weapon type with price, minimum title and state (A27)", knk-web-api `SiegeWeaponUnlockPurchaseServiceTests.Controller_Mine_NeedsAWebUser`]
+   After the match, on the web app A1 opens their account page (`/account`). **Expected:** a **Siege
+   unlocks** panel with "Coins: …", A1's title and the same list: the ballista "Unlocked", the trebuchet "Needs title
+   …", the catapult with an "Unlock for 800 coins" button. (A27)
+8. [automated: knk-web-app `e2e/siege-unlocks.spec.ts` "unlocking asks to confirm, then charges once even on a double click (A27)", "cancel leaves everything as it was", "the API's refusal is shown and nothing changes (A27)", knk-web-api `SiegeWeaponUnlockPurchaseServiceTests.Controller_AWebUser_BuysForThemselves`, `SiegeWeaponUnlockPurchaseServiceTests.Controller_AWebUser_CannotBuyForAnotherPlayer`]
+   A1 clicks **Unlock for 800 coins**, then **Cancel**; then again, and double-clicks **Confirm: unlock for 800
+   coins**. **Expected:** Cancel charges nothing; the confirm charges 800 coins once, says "Unlocked the Catapult for
+   800 coins. You can buy it in siege matches now." and the catapult says "Unlocked". In game, the Siege unlocks menu
+   shows the catapult unlocked as well (within 5 seconds of reopening). (A27)
+9. [manual]
+   Admin opens the trebuchet template in the web app, clears **Minimum title to unlock**, and saves; A1 reopens the
+   in-game Siege unlocks menu. **Expected:** the trebuchet says "Minimum title: none" and, with enough coins,
+   "Unlock for 1000 coins".
 
 ## 5. Phases 5a and 5b: menu item settings (#870, #871, tier:2)
 
