@@ -1,6 +1,6 @@
 # Knights and Kings — production installation guide (admin)
 
-**Status:** Draft · **Last updated:** 2026-11-20 (§ 5.3 item 11: `SeedNavigateDefaultNode` of #845 on its branch, before the plugin); 2026-11-20 (§ 5.3 item 10: `AddPermissionGroupDefaultRouteMode` of #852 on its branch); 2026-11-19 (§ 5.3 item 7: link to the warehouses and production structures admin guide, `/knk regions repair` once, docs #830); 2026-11-19 (§ 5.3: `AddSiegeWeapons` and `AddTerritory` both in `next` `0d6e369a`, in order; link to the territory admin guide, docs #806); 2026-11-19 (§ 5.3: `AddTerritory` of #326 on its branch); 2026-11-19 (§ 5.3: the migrations waiting in `next`, with `AddItemIdentity`, docs PandiO/knk-workspace#796); 2026-11-18 (§ 4.3: the `Map__GateCommands__*` keys, PandiO/knk-workspace#741); 2026-11-18 (§ 4.3: the `Map__LivePlayers__*` keys, PandiO/knk-workspace#738); 2026-11-18 (§ 4.3: `Map__Enabled` also shows the web map, #737; the `Map__*` and `RateLimiting__Map__*` keys, PandiO/knk-workspace#736); 2026-11-16 (§ 10.4: `actions/checkout@v7` in the release plan, #426); 2026-11-15 (header and § 5.3: the migrations of releases v0.1 to v0.3 on knk-web-api `main` `2cc8254`, PandiO/knk-workspace#577)
+**Status:** Draft · **Last updated:** 2026-11-20 (§ 5.3 item 12: `AddTransportCore` of #79 on its branch); 2026-11-20 (§ 5.3 item 11: `SeedNavigateDefaultNode` of #845 on its branch, before the plugin); 2026-11-20 (§ 5.3 item 10: `AddPermissionGroupDefaultRouteMode` of #852 on its branch); 2026-11-19 (§ 5.3 item 7: link to the warehouses and production structures admin guide, `/knk regions repair` once, docs #830); 2026-11-19 (§ 5.3: `AddSiegeWeapons` and `AddTerritory` both in `next` `0d6e369a`, in order; link to the territory admin guide, docs #806); 2026-11-19 (§ 5.3: `AddTerritory` of #326 on its branch); 2026-11-19 (§ 5.3: the migrations waiting in `next`, with `AddItemIdentity`, docs PandiO/knk-workspace#796); 2026-11-18 (§ 4.3: the `Map__GateCommands__*` keys, PandiO/knk-workspace#741); 2026-11-18 (§ 4.3: the `Map__LivePlayers__*` keys, PandiO/knk-workspace#738); 2026-11-18 (§ 4.3: `Map__Enabled` also shows the web map, #737; the `Map__*` and `RateLimiting__Map__*` keys, PandiO/knk-workspace#736); 2026-11-16 (§ 10.4: `actions/checkout@v7` in the release plan, #426); 2026-11-15 (header and § 5.3: the migrations of releases v0.1 to v0.3 on knk-web-api `main` `2cc8254`, PandiO/knk-workspace#577)
 **State:** Draft v1 — written for review. Not yet followed on a real production host. The database, API, seed and
 web-server steps were rehearsed in a scratch environment on 2026-10-07 (see [Appendix A](#appendix-a--what-was-verified-and-how)).
 The Paper server steps and the release and deploy workflows are untested drafts; the CI workflows (§ 10.3) run on GitHub.
@@ -680,6 +680,17 @@ promotes `next` lists them here with its tag:
     group or a parent already grants, denies or wildcards it. Down removes nothing. **Apply it before deploying the
     plugin build with `knk.navigate` as `default: false`** (PandiO/knk-plugin#106), or every player loses `/navigate` until it is applied. No
     `api.env` key ([changelog](../CHANGELOG.md) entry of #845).
+
+12. `20261120123016_AddTransportCore` (#79, transport core P5; on its branch `claude/production-p5` until merged):
+    additive; seven new tables (`transport_orders`, `transport_stops`, `transport_stop_lines`,
+    `transport_order_lines`, `transport_assignments`, `transport_events`, `transport_lanes`), nothing else changed and
+    no data written. Each order creates its own `Transit` storage when it is made. No `api.env` key: the timing and
+    sizing are the game setting `production.transport` (`walkingSpeedBlocksPerSecond` 4.317, `defaultCarrierCapacity`
+    64, `defaultThresholdPercent` 75, `defaultThresholdUnits` 64, `unmeasuredRouteFactor` 1.4,
+    `fallbackDistanceBlocks` 200, `awaitingSpaceMinutes` 30, `maxReroutes` 2, `laneMaxAgeHours` 24), and the
+    transport sweep runs only with `Production:Enabled` on. Set-up afterwards: import the seeds `TransportOrder` and
+    `TransportLane`, and set the rural producers' road connections until the lane measurer (#681) does
+    ([changelog](../CHANGELOG.md) entry of #79).
 
 Earlier: `v0.2` (`58e3218`, 2026-11-14) added `20261109081203_AddTempRegionReleases` (#269), and `v0.1` (`6d5e9c1`,
 2026-11-13) added `20261113161725_SeedStaffFreezeNodes` (gives the Staff group `knk.freeze` and `knk.unfreeze`, #367).

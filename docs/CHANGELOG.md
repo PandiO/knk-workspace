@@ -22,6 +22,40 @@ This is a human-readable record of capabilities merged into the V3 default branc
   knk-plugin, knk-web-api and knk-workspace. Admin steps: apply the migration; set `siege:` → `points:` →
   `enabled: true` to turn it on (Restart). The web app's siege settings page does not show the new fields yet
   (edit them with `PUT api/SiegeConfiguration`; web app fields: #878). Smoke test: [siege shop smoke test § 1](guides/siege-shop-smoke-test.md#1-phase-1-shared-match-ledger-and-siege-points-earning-866-tier3).
+- **Production P4b: yield-area surveys in the plugin** ([PandiO/knk-workspace#679](https://github.com/PandiO/knk-workspace/issues/679),
+  link L12 of the production chain, #22; the API half is #138). For staff: with `production.enabled: true` the game
+  server surveys every `Derived` and `Hybrid` production area the API queues (on creation, once a day while its chunks
+  are loaded, on `/knk production survey <structure> [area]` and after a notable change of 64 blocks) and reports what
+  it holds: trees by species and size class, saplings, rock and ores, crops, flowers, water per biome (depth, open
+  sky), pasture animals; units inside other structures' shared areas are reported with their `sharedBy` (G7). Blocks
+  waiting to regenerate count as present once harvesting (P8) adds them. `/knk production survey status` shows the
+  queue and the last results; `/knk production area show <structure> [area] [seconds]` draws the areas with particles;
+  the `CaptureRadius` world task (stand at the centre, `radius <blocks>`, `confirm`) gives a radius area's centre and
+  radius. Node `knk.admin.world.production`. Chunk snapshots are taken on the main thread within `chunks-per-tick`
+  (metric `production.survey.capture`); counting runs on its own thread. knk-plugin: knk-core
+  `production/survey/` (`SurveyCounter` over the `BlockSnapshotSource` port, `PlaceholderOverlay`, `AreaShape`,
+  `SurveyProfile`, `NotableChangeTracker`), knk-api-client `ProductionSurveyApiImpl`, knk-paper `production/`
+  (`SurveyModule`, `SurveyRunner`, `ChunkSnapshotBlocks`, `CaptureRadiusTaskHandler`, `AreaOutlineRenderer`) and
+  `commands/ProductionAdminCommand`; plugin scenario `production-area-survey`. Branch `claude/production-p4b`. Smoke
+  test: [production smoke test § 5.2](guides/production-storage-transport-smoke-test.md#52-steps-plugin-679). Admin
+  steps: merge the `surveys` keys into the plugin's `production` block (nothing runs while `production.enabled` is
+  false), restart; grant `knk.admin.world.production` to staff who survey (in `knk.admin.world.*`):
+
+  ```yaml
+  production:
+    surveys:
+      poll-minutes: 5
+      batch: 20
+      chunks-per-tick: 2
+      max-area-blocks: 16000000
+      max-area-chunks: 256
+      scheduled-loads-chunks: false
+      notable-change-blocks: 64
+      notable-cooldown-minutes: 30
+      areas-refresh-minutes: 10
+  ```
+
+
 - **`/navigate` can be taken away from a rank or player** ([PandiO/knk-workspace#845](https://github.com/PandiO/knk-workspace/issues/845),
   developer decision option A, 2026-11-19; found in the destination engine live test, #25). For staff: a deny of
   `knk.navigate` in the in-house permission system (on a group or an account) now refuses `/navigate` and the
@@ -95,6 +129,39 @@ This is a human-readable record of capabilities merged into the V3 default branc
   unusable end. knk-plugin branch `claude/offroad-smoke-fixes-f3`; config key in
   [plugin configuration § 4.15](guides/admin/plugin-configuration.md). Smoke test:
   [off-road smoke test § 14](guides/navigation-offroad-smoke-test.md#14-f3-smoke-test-failures-of-2026-11-19-780-771-710-tier2).
+- **Transport API: production structures send their goods to the town's warehouses** ([PandiO/knk-workspace#79](https://github.com/PandiO/knk-workspace/issues/79),
+  link L14 of the production, storage and transport chain; [design](specs/production-storage-transport/DESIGN.md)
+  § 7, decisions D5, D6 and G14). When a producer's Output storage fills up (75% of its cap by default), one of its
+  two workers loads the goods and walks them to the nearest warehouse of its town by road, or to its preferred one.
+  The trip takes the road length divided by walking speed (4.317 blocks per second, a player's walk); while the worker
+  is away the producer makes half as much, with both away nothing, and full output resumes when it is back. A rural
+  producer that is not connected to its town's road network keeps producing until it is full and then stops; its
+  transport waits, and the dashboard warns about the missing road and the full storage. Goods are never dropped: at a
+  full warehouse the carrier waits 30 minutes, goes on to another warehouse of the town, and otherwise brings the rest
+  back (waiting at a full source until there is room). Staff can make manual orders (one or more stops, each with its
+  own amounts) with a dry run first, cancel an order (a loaded one turns back), and read each order's stops, cargo
+  and event log. Carriers are simulated in V1 and robbery is off; caravans and couriers come later. Also #838: the
+  production structure list shows the kind's name, a cycle record's consumed inputs show their blueprint names, and
+  the dashboard lists cycle records. knk-web-api: entities `TransportOrder` (with `TransportStop`,
+  `TransportStopLine`, `TransportOrderLine`, `TransportAssignment`, `TransportEvent`) and `TransportLane`; a `Transit`
+  storage per order; `TransportService` (lifecycle, automatic trigger, sizing and destination), `TransportLaneService`,
+  `TransportSweepService` (every 60 s); endpoints `api/TransportOrders` (read, search, manual create, `dry-run`,
+  `{id}/cancel`, `run-now`), `api/TransportLanes` (CRUD, `due` and `report` for the game server's lane measurer
+  #681), `GET api/ProductionStructures/{id}/transport` (the automatic trigger's dry run, warnings, open orders); game
+  setting section `production.transport`; form and display seeds `TransportOrder` (read only) and `TransportLane`.
+  Writes need `knk.admin.world` or the plugin key (lane delete also `knk.admin.delete`); reads the World area node or
+  the plugin key. The sweep and the automatic trigger run only with `Production:Enabled` on; manual orders, dry runs,
+  cancel and lanes work while it is off. Smoke test:
+  [production smoke test § 6](guides/production-storage-transport-smoke-test.md#6-phase-p5-transport-core-simulated-79-api-681-plugin-682-web-app-tier3).
+  Admin steps:
+  1. Apply the migration `AddTransportCore` (`dotnet ef database update`; additive: seven tables).
+  2. Import the form and display seeds `TransportOrder` and `TransportLane` ("make default").
+  3. Until the lane measurer (#681) runs, either type in lanes (`api/TransportLanes`) or accept estimated routes
+     (straight distance × 1.4, or 200 blocks without positions), and set each rural producer's road connection
+     (`PUT api/ProductionStructures/<id>/road-connection`): automatic transport is held while it is not Connected.
+  4. No `api.env` key and no plugin `config.yml` change; the timing and sizing are the game setting
+     `production.transport` (defaults above; a settings save that leaves the section out keeps the stored values).
+
 - **Yield areas in the web app: areas, the survey viewer, "Survey now" and the Hybrid override editor** ([PandiO/knk-workspace#680](https://github.com/PandiO/knk-workspace/issues/680),
   link L13 of the production, storage and transport chain; [production kinds](specs/production-storage-transport/PRODUCTION_KINDS.md)
   § 3-4). Staff can now see and steer where a production structure's rates come from. A production structure's page
