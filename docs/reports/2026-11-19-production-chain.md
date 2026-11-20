@@ -44,14 +44,22 @@ of what is already in `next`.
    1. Apply migration `AddTransportCore`.
    2. Import the seeds `TransportOrder` and `TransportLane`.
    3. Until L15 measures lanes, type in lanes or accept the estimated routes, and set rural producers' road connections.
-8. **Smoke test of territory (L1 § 1.1–1.2, L2 § 1.3, L3 § 1.4).**
+8. **Smoke test of L15/L16 (transport plugin and web app):** guide § 6.2 (merge the `production.logistics.lanes` keys,
+   restart; the road network must be built) and § 6.3 (deploy the web app).
+9. **Smoke test of L17 (terminals and menus API, tier:2):** guide § 7.1. Apply migration `AddStorageContainers`,
+   import the seeds `StorageContainer` (form and display), `StockTransaction` v2 and `ProductionArea` v2, restart the
+   API once (menus and the hub tile are seeded).
+10. **Decision (L17, agent):** town membership for the caller-filtered structure reads (M3) is the permission node
+    `knk.town.member.<town id>` (one permission group per town), a stand-in until town runtime management #246. Confirm,
+    or name the membership source you want.
+11. **Smoke test of territory (L1 § 1.1–1.2, L2 § 1.3, L3 § 1.4).**
    1. Apply migration `AddTerritory`.
    2. Import the four territory form and display seeds (`Kingdom` first).
    3. Merge the plugin `production` block into `config.yml`.
    4. To test, turn on `production.enabled` in the plugin and in the API game settings.
-9. **Review:** the agent decisions in blocks 4.0–4.14 (L6's are listed in knk-web-api#57) (L0's retag rule; L1 server-side territory and loyalty as a town
+12. **Review:** the agent decisions in blocks 4.0–4.17 (L6's are listed in knk-web-api#57) (L0's retag rule; L1 server-side territory and loyalty as a town
    id; L2's crown land region kind) and coordinator decision 15 (Town/District seed fields).
-10. Later: the shop menu templates for L26 (#687).
+13. Later: the shop menu templates for L26 (#687).
 
 ## 2. Summary
 
@@ -74,9 +82,9 @@ of what is already in `next`.
 | L14 P5 transport API (simulated carrying, G14) | #79 | Merged into next (2026-11-20) | api `ef61cd1`, workspace `ae26c88b`; merges: api `bf8633fb`, workspace `66cd37f0` (after a coordinator merge of `next`, `9a4de0b9`) | [api#65](https://github.com/PandiO/knk-web-api/pull/65), [ws#880](https://github.com/PandiO/knk-workspace/pull/880) | api build-and-test, fresh-database green; mysql-tests green on push run | create_session `session_01R1w2UtGLZrUEAUNFYvkqGB` (prompt says start without asking), started 2026-11-19 |
 | L15 P5b lanes plugin | #681 | Merged into next (2026-11-20) | plugin `796f1127`, workspace `77ebdc07`; merges: plugin `7116f1a5`, workspace `e0bf327e` (after a coordinator merge of `next`, `8be418b6`) | [plugin#108](https://github.com/PandiO/knk-plugin/pull/108), [ws#886](https://github.com/PandiO/knk-workspace/pull/886) | CI green (build + paper-boot) on `796f1127` | create_session `session_01R1w2Ux1xEr3Um5M3f3UysM` (prompt says start without asking), started 2026-11-20 |
 | L16 P5c transport web app | #682 | Merged into next (2026-11-20) | web app `e36d39f`, workspace `77b3d4f5`; merges: web app `5ad5029f`, workspace `9eae7f48` | [web-app#68](https://github.com/PandiO/knk-web-app/pull/68), [ws#887](https://github.com/PandiO/knk-workspace/pull/887) | green on `e36d39f` (build-and-test, e2e) | create_session `session_01R1w2Uu8TpsSchsfou5i63j` (prompt says start without asking), started 2026-11-20 |
-| L17 P6a API: StorageContainer, caller-filtered reads, menu seeds | #683 | In review (2026-11-20) | api `a2b8a98`, workspace `bd4d7949` | [api#67](https://github.com/PandiO/knk-web-api/pull/67), [ws#889](https://github.com/PandiO/knk-workspace/pull/889) | green (build-and-test, mysql-tests, fresh-database) | create_session `session_01R1w2UukTGdahr4dAwQTutW` (prompt says start without asking), started 2026-11-20 |
-| L18 P6 plugin: terminals, displays, Structures menu, structure menu, orders list | #74 | Not started | — | — | — | — |
-| L19 P7 delivery and inbox API | #60 | Not started | — | — | — | — |
+| L17 P6a API: StorageContainer, caller-filtered reads, menu seeds | #683 | Merged into next (2026-11-20) | api `a2b8a98`, workspace `bd4d7949`; merges: api `a2865d75`, workspace `3dc4267c` | [api#67](https://github.com/PandiO/knk-web-api/pull/67), [ws#889](https://github.com/PandiO/knk-workspace/pull/889) | green (build-and-test, mysql-tests, fresh-database) | create_session `session_01R1w2UukTGdahr4dAwQTutW` (prompt says start without asking), started 2026-11-20 |
+| L18 P6 plugin: terminals, displays, Structures menu, structure menu, orders list | #74 | Running | — | — | — | create_session `session_01R1w2UxMM4WEwxxedAe11ji` (prompt says start without asking), started 2026-11-20 |
+| L19 P7 delivery and inbox API | #60 | Running | — | — | — | create_session `session_01R1w2UwpK1NtaZLrA8k2uhP` (prompt says start without asking), started 2026-11-20 |
 | L20 P7b inbox plugin, kit/lootbox migration | #684 | Not started | — | — | — | — |
 | L21 P8a harvest API | #685 | Not started | — | — | — | — |
 | L22 P8 harvest plugin | #134 | Not started | — | — | — | — |
@@ -357,6 +365,19 @@ of what is already in `next`.
    after L17. #883 needs no developer decision, because DESIGN § 3.4 already defines the rule. Alternatives: (a) a
    separate small link: overhead.
 53. **P4 docs #882:** done (#884 holds the promotion-time leftovers).
+
+54. **L17 merge (2026-11-20).** § 6 checks held:
+   1. Heads matched.
+   2. The API branch contained `next`, including both siege shop migrations. L17 merged them and generated
+      `AddStorageContainers` on top.
+   3. CI was green (build-and-test, mysql-tests, fresh-database). Codex was at its usage limit, so there were no
+      findings.
+   4. The scope matched #683 plus the API part of #877 (`ProductionArea` v2 with `RegionClaim`, `CaptureRadius`,
+      `yieldSource`) and #881 (`StockTransaction` v2).
+   Merged API #67 `a2865d75` and workspace #889 `3dc4267c`. The P6 docs start when L18 is merged.
+55. **After L17: L18 (#74) and L19 (#60, with #890 and #883) in parallel.** Both gates are open and each runs in its
+   own repo. The weekly usage limit reset at 17:00, so two links at once is affordable. L18 takes the plugin
+   `CaptureRadius` handler (#877).
 
 ## 4. Link blocks
 
