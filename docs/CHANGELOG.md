@@ -22,6 +22,26 @@ This is a human-readable record of capabilities merged into the V3 default branc
   knk-plugin, knk-web-api and knk-workspace. Admin steps: apply the migration; set `siege:` → `points:` →
   `enabled: true` to turn it on (Restart). The web app's siege settings page does not show the new fields yet
   (edit them with `PUT api/SiegeConfiguration`; web app fields: #878). Smoke test: [siege shop smoke test § 1](guides/siege-shop-smoke-test.md#1-phase-1-shared-match-ledger-and-siege-points-earning-866-tier3).
+- **Siege shop catalogue in the API and web app** ([PandiO/knk-workspace#867](https://github.com/PandiO/knk-workspace/issues/867),
+  link L2 of the siege shop chain, #611; with [#878](https://github.com/PandiO/knk-workspace/issues/878)). For staff:
+  the web app's dashboard and form wizard edit shop categories (seeded: Siege weapons, Consumables, Magic), shop
+  entries per game mode (PvP Siege, Siege Survival) selling an item blueprint in a quantity or a siege weapon type, with
+  a siege-point price and the brakes of DESIGN § 5.4 (price step and maximum, cooldown step and maximum, each with
+  None/Linear/Logarithmic/Exponential growth, cap per match), and on a scenario's new "Siege shop" step its overrides
+  (hide a default entry or change its price, quantity, cap, cooldown, steps or order) and scenario-only entries.
+  `GET api/SiegeShop/catalogue?mode=&scenarioId=` returns what a match sells: enabled defaults minus hidden ones, with
+  overrides applied, plus the scenario's own entries; a weapon entry without a price uses the template's
+  `MatchPrice`. The default catalogue of DESIGN § 12.2 is seeded at API start while a mode has no entries (ender pearl,
+  splash potion of healing II, golden apple, potion of regeneration; Survival at ×10 prices; one PvP entry per existing
+  weapon template). Item blueprints gain a potion type (`minecraft:strong_healing`). The Siege settings page gets a
+  "Siege points" section with L1's earn amounts and the teammate transfer switch (#878). Nothing in game reads the
+  catalogue yet (the shop is L3, #868). knk-web-api: `SiegeShopCategory`, `SiegeShopEntry`,
+  `SiegeScenarioShopOverride`, CRUD under `knk.siege.admin.manage` (overrides under
+  `api/SiegeScenarios/{id}/shop-overrides`), dashboard registry, lookups, form seeds, migration
+  `AddSiegeShopCatalogue` (additive: three tables, the categories, `item_blueprints.PotionType`). Branches
+  `claude/siege-shop-l2` in knk-web-api, knk-web-app and knk-workspace. Admin steps: apply the migration; restart the
+  API once (seed); import the form seeds `SiegeShopCategory`, `SiegeShopEntry`, `SiegeScenarioShopOverride` and the
+  updated `SiegeScenario` and `ItemBlueprint`. Smoke test: [siege shop smoke test § 2](guides/siege-shop-smoke-test.md#2-phase-2-shop-catalogue-entities-scenario-overrides-and-web-app-forms-867-tier2).
 - **Production P4b: yield-area surveys in the plugin** ([PandiO/knk-workspace#679](https://github.com/PandiO/knk-workspace/issues/679),
   link L12 of the production chain, #22; the API half is #138). For staff: with `production.enabled: true` the game
   server surveys every `Derived` and `Hybrid` production area the API queues (on creation, once a day while its chunks

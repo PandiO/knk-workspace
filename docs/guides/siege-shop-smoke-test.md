@@ -1,7 +1,7 @@
 # Siege shop and siege points — smoke test
 
-**Status:** Draft (2026-11-20): § 1 built and tagged (L1, #866), §§ 2–5 draft from the design; no steps run by hand.
-**Last updated:** 2026-11-20 (§ 1 updated to what L1 built, steps tagged, #866); 2026-11-20 (draft from the design, phases 1–4, 5a, 5b)
+**Status:** Draft (2026-11-20): §§ 1–2 built and tagged (L1 #866, L2 #867), §§ 3–5 draft from the design; no steps run by hand.
+**Last updated:** 2026-11-20 (§ 2 updated to what L2 built, steps tagged, #867, #878); 2026-11-20 (§ 1 updated to what L1 built, steps tagged, #866); 2026-11-20 (draft from the design, phases 1–4, 5a, 5b)
 **Design:** [specs/siege-shop/DESIGN.md](../specs/siege-shop/DESIGN.md) · **Issue:**
 [PandiO/knk-workspace#611](https://github.com/PandiO/knk-workspace/issues/611),
 [#356](https://github.com/PandiO/knk-workspace/issues/356), [#859](https://github.com/PandiO/knk-workspace/issues/859)
@@ -102,26 +102,83 @@ manual steps not run yet. A full manual run takes about 40 minutes; the untagged
 
 ## 2. Phase 2: shop catalogue entities, scenario overrides and web app forms (#867, tier:2)
 
-*Draft from the design (2026-11-20); the link updates it to what was built and tags the automated steps.*
+*Built by L2 (2026-11-20, branches `claude/siege-shop-l2` in knk-web-api and knk-web-app; it also built #878, the
+siege settings page fields of § 1). 11 of 14 steps fully or partly automated (tagged; API tests in xUnit, web app tests
+in Jest and Playwright with a mocked API); every step can still be run by hand; manual steps not run yet. A full manual
+run takes about 30 minutes; the untagged steps and the by-hand parts about 15. Nothing in game reads the catalogue
+until phase 3.*
 
 ### 2.0 Preconditions
 
-1. Deployed: knk-web-api from `next` with the phase 2 migration and seeds; knk-web-app from `next`.
-2. Settings: none.
-3. Accounts and data: Admin; one Siege scenario; the siege weapon templates of the weapons phase 1.
+1. Deployed: knk-web-api from the branch (or `next` once merged) with the migration `AddSiegeShopCatalogue` applied
+   and the API restarted once (the startup seed `SiegeShopSeed` fills the default catalogue); knk-web-app from the same
+   branch.
+2. Form configurations imported from knk-web-api `Data/FormConfigurationSeeds/`: `SiegeShopCategory`,
+   `SiegeShopEntry`, `SiegeScenarioShopOverride`, and the updated `SiegeScenario` (new "Siege shop" step) and
+   `ItemBlueprint` (new "Potion type" field). On a database that imported the old two, add the step and the field in
+   the form designer (the seeds README says how).
+3. Settings: none. No plugin change in this phase.
+4. Accounts and data: Admin; one Siege scenario (call it S, id `<id>`); for step 3, at least one siege weapon template
+   created **before** the API's first start with the migration (a fresh database has no templates, so its shop has no
+   weapon entries until Admin adds them, step 7).
 
 ### 2.1 Steps
 
-1. Admin opens Siege → Shop entries. **Expected:** the seeded PvP Siege entries (ender pearl, splash healing II, golden
-   apple, regeneration, three weapons) and their Survival copies, under the seeded categories. (A13)
-2. Admin edits the ender pearl's price to 350 and saves. **Expected:** saved; the list shows 350. (A13)
-3. Admin creates an Item entry with a weapon template instead of an item blueprint. **Expected:** refused with a clear
-   message; nothing saved. (A14)
-4. On the scenario, Admin hides the golden apple, overrides the pearl's cap to 4 and adds a scenario-only entry. Open
-   `GET api/SiegeShop/catalogue?mode=Siege&scenarioId=<id>`. **Expected:** no golden apple, the pearl with cap 4 and
-   the other fields from the default, the scenario-only entry present. (A15)
-5. In the same response, look at a weapon entry with an empty price. **Expected:** its price is the template's
-   `MatchPrice` (200 by default). (A16)
+1. [automated: knk-web-api `SiegeShopServiceTests.Categories_AreSeeded_WithStableKeys`, `AddSiegeShopCatalogueTests.Up_SeedsTheThreeCategories`; knk-web-app e2e `siege-shop.spec.ts` "lists the seeded categories with their keys"]
+   Admin opens the dashboard → SiegeShopCategory. **Expected:** three categories: Siege weapons (`siege-weapons`),
+   Consumables (`consumables`), Magic (`magic`). (A13)
+2. [automated: knk-web-api `SiegeShopSeedTests.FreshDatabase_GetsTheSection12Catalogue`; knk-web-app e2e `siege-shop.spec.ts` "lists the shop entries of both modes with category, kind, price and cap"]
+   Admin opens the dashboard → SiegeShopEntry. **Expected:** for PvP Siege, under Consumables: Ender Pearl 300 (max 8),
+   Splash Potion of Healing II 150 (max 10), Golden Apple 200 (max 6), Potion of Regeneration 250 (max 4); the same
+   four for Siege Survival at 3000, 1500, 2000 and 2500. The Scenario column says "Default". (A13)
+3. [automated: knk-web-api `SiegeShopSeedTests.FreshDatabase_GetsTheSection12Catalogue`; knk-web-app e2e `siege-shop.spec.ts` "lists the shop entries of both modes …"]
+   In the same list (database with templates, precondition 4). **Expected:** one PvP Siege entry per weapon template,
+   under Siege weapons, Price "Template price". No weapon entries for Siege Survival. (A13, A16)
+4. [automated: knk-web-api `SiegeShopSeedTests.FreshDatabase_GetsTheSection12Catalogue`, `PotionTypeKeysTests.Blueprint_SavesReadsAndClearsItsPotionType`]
+   Admin opens the item blueprint "Splash Potion of Healing II". **Expected:** material splash potion, Potion type
+   `minecraft:strong_healing`; "Potion of Regeneration" has `minecraft:regeneration`. Typing `healing_iii` as a potion
+   type and saving is refused with "not a vanilla potion type". (DESIGN § 9.4)
+5. [partly automated: knk-web-api `SiegeShopServiceTests.Entry_Update_ChangesTheFields`; knk-web-app e2e `siege-shop.spec.ts` "saves a shop entry with its price and brakes …"; by hand: the seeded form's steps]
+   Admin edits the PvP Ender Pearl: price 350, saves. **Expected:** saved; the list shows 350. The form shows the
+   "Item" step (blueprint, quantity) and not "Siege weapon" while Kind is Item; the "Price" and "Cooldown and cap" steps
+   show the step growth choices None, Linear, Logarithmic, Exponential. (A13)
+6. [automated: knk-web-api `SiegeShopServiceTests.Entry_WhoseTargetDoesNotMatchItsKind_IsRefused`, `.Entry_WithABadValue_IsRefused`]
+   Admin creates an entry with Kind Item, a price and a weapon template instead of an item blueprint (set Kind to
+   SiegeWeapon, pick the template, switch Kind back to Item, pick a blueprint too). **Expected:** refused with "An Item
+   entry sells an item blueprint, not a siege weapon template."; nothing saved. An exponential growth factor of 1, a
+   cooldown step without a cooldown, or a maximum price below the price are refused the same way. (A14)
+7. [partly automated: knk-web-api `SiegeShopServiceTests.WeaponEntry_SellsOneWeaponPerPurchase`; knk-web-app e2e `siege-shop.spec.ts` "saves a shop entry …"; by hand: the weapon picker]
+   Admin creates a PvP Siege entry, Kind SiegeWeapon, category Siege weapons, a weapon template, price empty.
+   **Expected:** saved; the list shows "Template price". (A16)
+8. [automated: knk-web-api `SiegeShopServiceTests.Category_WithEntries_CannotBeDeleted_ButAnEmptyOneCan`, `.Category_CreateUpdate_AndKeyRules`; knk-web-app e2e `siege-shop.spec.ts` "saves a shop category …"]
+   Admin creates a category key `traps`, name Traps, and tries to delete Consumables. **Expected:** Traps saved; the
+   delete of Consumables is refused ("has 8 shop entries"). Delete Traps again. (A13)
+9. Admin opens scenario S in the form wizard and goes to the "Siege shop" step. **Expected:** two lists, "Shop
+   overrides" and "Scenario-only entries", both empty, with Create New. Manual: the scenario form is a seeded form with
+   owned lists. (A13)
+10. [partly automated: knk-web-api `SiegeShopServiceTests.Override_SavesAndReadsBack_ThroughTheScenario`, `.Override_OnePerScenarioAndEntry_OnlyForDefaultEntries`; knk-web-app Jest `siegeShopClients.test.ts`; by hand: the wizard]
+    Under "Shop overrides", Create New: entry PvP Golden Apple, Hide in this scenario on; save. Create New again: entry
+    PvP Ender Pearl, Max per match 4; save. Try a third override for the Ender Pearl. **Expected:** the first two are
+    listed with their entry names; the entry picker lists default entries only; the third is refused ("This scenario
+    already overrides that entry"). (A13)
+11. [partly automated: knk-web-api `SiegeShopServiceTests.Scenario_ReadDto_ListsItsOverridesAndOwnEntries`; by hand: the wizard]
+    Under "Scenario-only entries", Create New: Kind Item, category Consumables, any blueprint (say Arrow), quantity 16,
+    price 40; the Scenario field is already S. Save. **Expected:** listed on the scenario; on the dashboard the entry
+    shows Scenario S. (A13)
+12. [automated: knk-web-api `SiegeShopServiceTests.Catalogue_ForAScenario_HidesAppliesOverridesAndAddsItsOwnEntries_A15`, `.Catalogue_AnEmptyOverride_KeepsTheDefault`]
+    As Admin (signed in), open `GET api/SiegeShop/catalogue?mode=Siege&scenarioId=<id>` (Swagger or the browser).
+    **Expected:** no Golden Apple; the Ender Pearl with `maxPerMatch` 4, `source` "Overridden" and its other fields
+    from the default (price 350, cooldown 20, exponential cooldown growth); the arrows with `source` "Scenario";
+    categories only where something is visible (no Magic). (A15)
+13. [automated: knk-web-api `SiegeShopServiceTests.Catalogue_WeaponEntryWithoutPrice_UsesTheTemplatesMatchPrice_A16`]
+    In the same response, look at the weapon entry of step 7. **Expected:** its `price` is the template's `MatchPrice`
+    (200 by default). Without `scenarioId` the response has the mode's defaults only; `mode` missing answers 400.
+    (A16)
+14. [automated: knk-web-app Jest `SiegeConfigurationPage.test.tsx` "shows the siege points section (#878) …"; e2e `settings-pages.spec.ts` "the siege points section shows the earn amounts …"]
+    Admin opens Siege settings. **Expected:** a "Siege points" section with the earn amounts of § 1.0 (kill 100, streak
+    step 0.1, cap 1.5, assist 40, 4 damage, 10 s, death 15, 5 HP per point, 3 per capture %, capture 100, trickle 10 per
+    60 s) and "Allow teammate transfers" off. Change the kill points to 120 and save: "Saved 1 setting."; a value the
+    API refuses (streak cap 0.5) shows its reason. (#878)
 
 ## 3. Phase 3: shop menus and purchases in the plugin (#868, tier:3)
 
