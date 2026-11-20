@@ -73,7 +73,7 @@ of what is already in `next`.
 | L13 P4c yield areas web app | #680 | Merged into next (2026-11-20) | web app `6da700c`, workspace `638e5c3c`; merges: web app `eaf0467d`, workspace `2159952e` | [web-app#67](https://github.com/PandiO/knk-web-app/pull/67), [ws#873](https://github.com/PandiO/knk-workspace/pull/873) | green on `6da700c` (build-and-test, e2e) | create_session `session_01R1w2UwYw3NNQSSBoP7XaBk` (prompt says start without asking), started 2026-11-19 |
 | L14 P5 transport API (simulated carrying, G14) | #79 | Merged into next (2026-11-20) | api `ef61cd1`, workspace `ae26c88b`; merges: api `bf8633fb`, workspace `66cd37f0` (after a coordinator merge of `next`, `9a4de0b9`) | [api#65](https://github.com/PandiO/knk-web-api/pull/65), [ws#880](https://github.com/PandiO/knk-workspace/pull/880) | api build-and-test, fresh-database green; mysql-tests green on push run | create_session `session_01R1w2UtGLZrUEAUNFYvkqGB` (prompt says start without asking), started 2026-11-19 |
 | L15 P5b lanes plugin | #681 | In review (2026-11-20) | plugin `796f1127`, workspace `77ebdc07` | [plugin#108](https://github.com/PandiO/knk-plugin/pull/108), [ws#886](https://github.com/PandiO/knk-workspace/pull/886) | plugin build green (push run); paper-boot running | create_session `session_01R1w2Ux1xEr3Um5M3f3UysM` (prompt says start without asking), started 2026-11-20 |
-| L16 P5c transport web app | #682 | Running | — | — | — | create_session `session_01R1w2Uu8TpsSchsfou5i63j` (prompt says start without asking), started 2026-11-20 |
+| L16 P5c transport web app | #682 | In review (PRs open, not merged) | web app `e36d39f`, workspace `77b3d4f5` | [web-app#68](https://github.com/PandiO/knk-web-app/pull/68), [ws#887](https://github.com/PandiO/knk-workspace/pull/887) | see block 4.16 | create_session `session_01R1w2Uu8TpsSchsfou5i63j` (prompt says start without asking), started 2026-11-20 |
 | L17 P6a API: StorageContainer, caller-filtered reads, menu seeds | #683 | Running | — | — | — | create_session `session_01R1w2UukTGdahr4dAwQTutW` (prompt says start without asking), started 2026-11-20 |
 | L18 P6 plugin: terminals, displays, Structures menu, structure menu, orders list | #74 | Not started | — | — | — | — |
 | L19 P7 delivery and inbox API | #60 | Not started | — | — | — | — |
@@ -1590,3 +1590,45 @@ _(Each link appends its block here when it finishes.)_
        change, but the road connection PUT targets `ProductionStructures` only (non-producers get 404 and are skipped).
     3. NPC carriers (#251): `LaneMeasurer` routes with `AccessPolicy.ALL_OPEN`; rendered carriers will need the gate
        rules.
+
+### 4.16 L16 — P5c transport web app (#682)
+
+1. **Scope done** (knk-web-app, plus the essential docs in knk-workspace).
+    1. Types and clients: `src/types/dtos/production/TransportDtos.ts` (mirrors `TransportDtos.cs` and `TransportEnums.cs`), `transportOrderClient` (read, search, create, `dry-run`, `cancel`, `run-now`), `transportLaneClient` (CRUD, search), `productionStructureClient.getTransport`. Registry additions, additive and grouped: `Controllers`, `entityApiMapping` (orders search and fetch only, lanes all five), `objectConfigs` columns, two routes in the World group (`transportOrders`, `transportOrderNew`) and their `App.tsx` entries.
+    2. Order list: `TransportOrdersPage` (`/admin/transport/orders`, `knk.admin.world`), filters open, status, origin, structure and storage in the URL, pager, New manual order.
+    3. Order detail: `TransportOrderPanel` on `/display/TransportOrder/<id>` (A12): status and reason, source, carrier, times, cargo per blueprint and in transit, route per stop with distance and its source, carriers, the event log as a timeline (oldest first) with stock transaction links, Cancel with the outcome said first.
+    4. Manual order and dry run: `TransportOrderNewPage` (`/admin/transport/orders/new`): source, optional carrier, stops with items, start time, note; Dry run renders `TransportPlanView` (errors, warnings, cargo against stock, legs with distance, time and room); Make the order only after a dry run of the same request, with a `clientKey`; prefilled from a structure.
+    5. Lanes: dashboard columns and the seeded form; the structure's lane table and Add a lane.
+    6. Structure transport: `StructureTransportPanel` on production structure pages (A13, #65): warnings, Output fill against the threshold, workers away, trigger and held reasons, the order the trigger would make, open orders, lanes, links to its orders and a new order.
+    7. Settings: `TransportSettingsCard` (`production.transport`, kept on every save by `normalizeProductionSettings`) with Run transport now.
+    8. #838 reads: Kind column on the production structure list, blueprint names on consumed inputs in `ProductionCycleTable`, an "All cycle records" link (the list itself existed since L10).
+    9. knk-workspace (branch from `next`): smoke guide § 6.3 (16 steps in full: 10 automated, 5 partly, 1 by hand), § 6 intro and status header, changelog entry, implementation plan P5 status.
+2. **Commits and heads.**
+    1. knk-web-app `claude/production-p5c` at `e36d39f`: 6 commits, base `next` at `eaf0467`, which had not moved at the last fetch.
+    2. knk-workspace `claude/production-p5c` at `77b3d4f5`: 1 commit on `next` `35e95fbb` (merged before the commit, no conflicts).
+3. **PRs.** [knk-web-app#68](https://github.com/PandiO/knk-web-app/pull/68) (Closes #682) and [knk-workspace#887](https://github.com/PandiO/knk-workspace/pull/887) (Part of #682), both into `next`. Not merged.
+4. **Tests, baseline → result.**
+    1. knk-web-app baseline on `next` `eaf0467`: Jest 2882 passed (338 suites), Playwright 296 passed, `tsc` clean, build OK.
+    2. Branch: Jest 2894 passed (340 suites). New: `src/utils/__tests__/transport.test.ts` (7), `src/apiClients/__tests__/transportClients.test.ts` (4), one test in `territory.test.ts`; `routeTable.test.ts` lists the two new routes.
+    3. Branch: Playwright 312 passed. New `e2e/transport.spec.ts` (16 tests, strict API, DTO-typed fixtures `e2e/fixtures/transport.ts`, `mockNoTransport`); `production-world`, `production-engine` and `production-yield` specs mock the transport panel; `territory.spec.ts` expects `transport` in the saved section. `tsc` and `typecheck:e2e` clean, `CI=true npm run build` OK.
+    4. Seen failing: with `transport` dropped from `normalizeProductionSettings`, the five game settings tests failed.
+    5. CI on `e36d39f`: build-and-test and e2e (see the PR's checks).
+    6. Known reds: none.
+5. **Decisions (DESIGN § 4.3).**
+    1. *Order list.* Chosen: a page of its own with URL filters, plus dashboard columns. Alternatives: (a) the dashboard only: no filters by status, structure or storage, and no link from a structure.
+    2. *Manual order form.* Chosen: a page of its own (the seed is read only, G17), Make enabled only after a dry run of the exact request. Alternatives: (a) the dry run optional: staff could make an order they never saw planned; (b) a form seed: the API's is read only.
+    3. *Idempotency.* Chosen: one `clientKey` per page visit, renewed after a made order. Alternatives: (a) none: a double click could make two orders.
+    4. *Cancel.* Chosen: shown while the API would accept it (not final, not returning), with a confirm step naming the outcome. Alternatives: (a) always shown, relying on the 409.
+    5. *Structure view.* Chosen: a panel below the Yield panel (the L7/L10/L13 pattern). Alternatives: (a) a separate page.
+    6. *Run transport now.* Chosen: on the Transport settings card, like Run production now. Alternatives: (a) on the order list: the settings page is where the feature flag is.
+6. **Out of scope, noted.** [#682 comment](https://github.com/PandiO/knk-workspace/issues/682#issuecomment-7047671628): no name for the structure view's destination warehouse, the plan's carrier or a cycle record's structure (API), and the generic dashboard can't take URL filters (web app). No new issues. Codex: the connector hit its code-review usage limit on both PRs (review "failed", usage-limit comment); no inline findings or threads; noted on each PR.
+7. **Blockers.** None.
+8. **At merge / what the developer must do.**
+    1. Deploy the web app with the transport API (#79, in `next`) and its imported seeds `TransportOrder` and `TransportLane`. No migration, setting or plugin change.
+    2. Smoke test [§ 6.3](../guides/production-storage-transport-smoke-test.md) (tier:2): about 40 minutes in full, about 15 minutes for the untagged parts.
+    3. At merge into `next`: the `documentation` sub-issue (transport admin guide: order list, order page, manual orders, structure transport, lanes, settings card; feature register row).
+    4. Coordinator: decide on the API points of the #682 comment.
+9. **Notes for later links.**
+    1. Strict e2e specs that open a production structure page now need `mockNoTransport(api)` (`e2e/fixtures/transport.ts`): `ProductionStructures/<id>/transport` and `TransportLanes/search`.
+    2. The game settings page sends `production.transport` back; a later setting under `production` goes into `normalizeProductionSettings` the same way.
+    3. L23 (P9, town logistics): `TransportOrderTable` and `TransportPlanView` take any order rows and plan; the order list's `structureId` and `storageId` filters cover consumers and warehouses.
