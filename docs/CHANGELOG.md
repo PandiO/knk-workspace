@@ -4,6 +4,16 @@ This is a human-readable record of capabilities merged into the V3 default branc
 
 ## Unreleased — on feature branches, not merged
 
+- **Overview map: cleaner region drawing and fewer dots when zoomed out** ([PandiO/knk-workspace#826](https://github.com/PandiO/knk-workspace/issues/826),
+  [#825](https://github.com/PandiO/knk-workspace/issues/825); fix link F3 of the overview map chain, #732). A town's
+  flash and "Show region" now look like the spike's static markers: outlines without extra corners on straight edges,
+  the town as a flat surface with one clean outline and openings where its districts are (a click there opens the
+  district), districts as see-through volumes without vertical edge lines and one outline along the top, heights
+  clamped to y 20..120. District and structure dots now disappear with their labels when zoomed out; town dots stay.
+  Grouping dots into clusters is not built (#825 keeps it as an idea). Web app only, no new setting; the bridge
+  protocol is unchanged. knk-web-app branch `claude/overview-map-f3-map-drawing` (`public/bluemap-bridge/bridge.js`),
+  spec [OVERVIEW_MAP_DESIGN.md](specs/in-game-maps/OVERVIEW_MAP_DESIGN.md) O36–O42. Smoke test:
+  [overview map smoke test § 3](guides/overview-map-smoke-test.md#3-phase-3-map-page-737-tier2) steps 2–4.
 - **Off-road navigation: the smoke-test failures of 2026-11-19** ([PandiO/knk-workspace#780](https://github.com/PandiO/knk-workspace/issues/780),
   [#771](https://github.com/PandiO/knk-workspace/issues/771), [#710](https://github.com/PandiO/knk-workspace/issues/710);
   fix link F3 of the off-road chain, #698). For players: with `navigation.road-goal-reachable` on, the road part of a

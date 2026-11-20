@@ -1,7 +1,7 @@
 # Overview map — smoke test
 
-**Status:** Draft · **Last updated:** 2026-11-19 (§ 1 step 8: sub-region outlines at startup, #750; fix link F1); 2026-11-19 (§ 3 step 4, § 5 step 7: Escape also after a click inside the map, #757; § 9 steps 1, 3 and 4: "Open profile" disabled with a tooltip without `knk.admin.user.manage`, #809; fix link F2); 2026-11-18 (§ 3 step 1: opening `/bluemap` itself goes to `/map`, #737); 2026-11-18 (§ 3 step 4: Escape only with the focus on the page, #757; docs #766)
-**Coverage:** Written from the design 2026-11-18; no steps run. § 1 updated to what L1 built (7 steps, all partly automated, tagged) and F1 (#750, step 8, partly automated), § 2 to what L2 built (7 steps: 2 automated, 5 partly automated, tagged), § 3 to what L3 built (11 steps: 1 automated, 9 partly automated, 1 manual only, tagged), § 4 to what L4 built (9 steps: 1 automated, 5 partly automated, 3 manual visibility steps), § 5 to what L5 built (8 steps: 1 automated, 7 partly automated, tagged), § 6 to what L6 built (7 steps: 2 automated, 5 partly automated, tagged), § 7 to what L7 built (10 steps: 4 automated, 6 partly automated), § 8 to what L8 built (9 steps: 3 automated, 6 partly automated), § 9 to what L9 built (8 steps: 3 automated, 4 partly automated, 1 manual only; since F2, #809: 3 automated, 5 partly automated); every section is now updated to what was built.
+**Status:** Draft · **Last updated:** 2026-11-20 (§ 3 steps 2–4: far district and structure dots hide, regions drawn like the spike's markers, #825 and #826; fix link F3); 2026-11-19 (§ 1 step 8: sub-region outlines at startup, #750; fix link F1); 2026-11-19 (§ 3 step 4, § 5 step 7: Escape also after a click inside the map, #757; § 9 steps 1, 3 and 4: "Open profile" disabled with a tooltip without `knk.admin.user.manage`, #809; fix link F2); 2026-11-18 (§ 3 step 1: opening `/bluemap` itself goes to `/map`, #737); 2026-11-18 (§ 3 step 4: Escape only with the focus on the page, #757; docs #766)
+**Coverage:** Written from the design 2026-11-18; no steps run. § 1 updated to what L1 built (7 steps, all partly automated, tagged) and F1 (#750, step 8, partly automated), § 2 to what L2 built (7 steps: 2 automated, 5 partly automated, tagged), § 3 to what L3 built (11 steps: 1 automated, 9 partly automated, 1 manual only, tagged; steps 2–4 updated by F3, #825 and #826, counts unchanged), § 4 to what L4 built (9 steps: 1 automated, 5 partly automated, 3 manual visibility steps), § 5 to what L5 built (8 steps: 1 automated, 7 partly automated, tagged), § 6 to what L6 built (7 steps: 2 automated, 5 partly automated, tagged), § 7 to what L7 built (10 steps: 4 automated, 6 partly automated), § 8 to what L8 built (9 steps: 3 automated, 6 partly automated), § 9 to what L9 built (8 steps: 3 automated, 4 partly automated, 1 manual only; since F2, #809: 3 automated, 5 partly automated); every section is now updated to what was built.
 **Design:** [specs/in-game-maps/OVERVIEW_MAP_DESIGN.md](../specs/in-game-maps/OVERVIEW_MAP_DESIGN.md) · **Issue:**
 [PandiO/knk-workspace#732](https://github.com/PandiO/knk-workspace/issues/732)
 **Guides:** [player](users/overview-map-player-guide.md), [admin](admin/overview-map-admin-guide.md)
@@ -167,15 +167,17 @@ Tests named below, all in knk-web-api `Tests/knkwebapi_v2.Tests`: `Api/MapContro
 ## 3. Phase 3: map page (#737, tier:2)
 
 *Built by link L3 (knk-web-app branch `claude/overview-map-page`, deploy notes on knk-workspace
-`claude/overview-map-page`; PRs into `next`). 11 steps: 1 automated, 9 partly automated, 1 manual only (tagged). The
+`claude/overview-map-page`; PRs into `next`); steps 2–4 updated by fix link F3
+([#825](https://github.com/PandiO/knk-workspace/issues/825), [#826](https://github.com/PandiO/knk-workspace/issues/826),
+branch `claude/overview-map-f3-map-drawing` in knk-web-app and knk-workspace). 11 steps: 1 automated, 9 partly automated, 1 manual only (tagged). The
 suites run the page against a mocked API and a fake BlueMap web app that loads the real bridge script; a real render,
 real zooming and a real phone are checked by hand. **The live run waits for the developer's NAS change** (runbook
 Phase 10: the `bluemap-test` container moved into the `knk-alpha` stack, `/bluemap/` served, the full-world render).
 Not run yet. Full manual run about 20 minutes.*
 
 Tests named below: knk-web-app `e2e/overview-map.spec.ts` (Playwright, "e2e") and the Jest suites in
-`src/components/map/__tests__/` (`bridgeProtocol`, `mapMarkers`, `mapActionRegistry`, `GateDoorsWidget`,
-`useMapAvailability`).
+`src/components/map/__tests__/` (`bridgeProtocol`, `bridgeGeometry`, `mapMarkers`, `mapActionRegistry`,
+`GateDoorsWidget`, `useMapAvailability`).
 
 ### 3.0 Preconditions
 
@@ -196,21 +198,30 @@ Tests named below: knk-web-app `e2e/overview-map.spec.ts` (Playwright, "e2e") an
    request for `/bluemap/` answers 200 with `X-Frame-Options: SAMEORIGIN` (developer tools, Network), any other page
    `DENY`; `/bluemap/settings.json` opened in a tab lists the bridge script under `scripts`.
 2. [partly automated: e2e `the start page links to the map, and /map shows pins with labels by zoom (A07)`,
+   `district and structure dots hide with their labels when zoomed out; town dots always show (#825)`,
    `logged in with the map on: the bar has a Map entry that opens the map`; by hand: the real render and zoom] As
    **anonymous**, open the start page. **Expected:** "Explore the world on the map" with a link; it opens `/map` with
    the 3D map, no login. As the **player**, the top bar has a "Map" entry that opens it. Town pins have their names at
-   every zoom. Zoom out far: district and structure labels fade out, their pins stay; zoom in on the town: district
-   names appear (within about 1500 blocks), structure labels (name over "Structure" or "Structure, Gate") within about
-   600. Pins of another world are not on this map. (A07)
+   every zoom. Zoom out far: district and structure labels fade out and their dots with them
+   ([#825](https://github.com/PandiO/knk-workspace/issues/825), O37); town dots stay; zoom in on the town: district
+   dots and names appear (within about 1500 blocks), structure dots and labels (name over "Structure" or "Structure,
+   Gate") within about 600. A dot you can see still opens its place on a click. Pins of another world are not on this
+   map. Note whether grouping dots (clusters) is still wanted for #825. (A07)
 3. [partly automated: e2e `clicking a town flashes its outline three times and opens its public panel (A08)`,
    Jest `mapActionRegistry` "shows the town panel ..."; by hand: the real flash] Click the town pin (or its label).
-   **Expected:** the town's outline flashes three times (about 0.4 s each) and disappears. The panel on the right
+   **Expected:** the town's outline flashes three times (about 0.4 s each) and disappears: a flat surface with one
+   clean outline line, open where its districts are, not a jagged volume
+   ([#826](https://github.com/PandiO/knk-workspace/issues/826), O36). The panel on the right
    shows the town's name, description and number of districts. (A08)
 4. [partly automated: e2e `"Show region" shows the town and all its districts by name, and hides them again (A08)`,
-   `Escape closes the panel after a click inside the map frame (#757)`, Jest `bridgeProtocol` "accepts escapePressed
-   ..."; by hand: the verdict, Escape on the real BlueMap viewer] Turn on "Show region". **Expected:** the town outline
-   and every district of that town stay visible, each district labelled with its name, never a region id
-   (`domain_...`). Close the panel with the ×: the regions stay. Click the town again: the switch is on. Click once on
+   `"Show region" draws the town flat with holes for its districts and one outline line each (#826)`,
+   Jest `bridgeGeometry`, `Escape closes the panel after a click inside the map frame (#757)`, Jest `bridgeProtocol` "accepts escapePressed
+   ..."; by hand: the verdict, the look on the real render, Escape on the real BlueMap viewer] Turn on "Show region".
+   **Expected:** the town and every district of that town stay visible, each district labelled with its name, never a
+   region id (`domain_...`). The town is a flat surface with one outline line, open where its districts are; each
+   district is a see-through volume without vertical edge lines, with one outline line along its top; outlines have
+   no extra corners on straight edges ([#826](https://github.com/PandiO/knk-workspace/issues/826), O36). Click inside
+   a district: its panel opens, not the town's. Compare with the spike's static markers and note what still differs. Close the panel with the ×: the regions stay. Click the town again: the switch is on. Click once on
    the map itself (inside the map, not on the panel) and press Escape: the panel closes, also with the keyboard focus
    inside the map ([#757](https://github.com/PandiO/knk-workspace/issues/757), O35); the regions stay. Click the town
    again and turn the switch off: the regions disappear. Judge whether showing all districts at once works and note
