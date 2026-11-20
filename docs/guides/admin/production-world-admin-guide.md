@@ -1,6 +1,6 @@
 # Warehouses and Production Structures — Admin Guide
 
-**Status:** Current · **Last updated:** 2026-11-20 (P-3 not built with P4's areas, #883, docs #882); 2026-11-19 (P3 pointers to the production engine admin guide; docs #839); 2026-11-19 (first version, production P2 #91/#676/#677, docs PandiO/knk-workspace#830)
+**Status:** Current · **Last updated:** 2026-11-20 (P5 pointers to the transport admin guide, warehouse priority is a tie-break; docs #891); 2026-11-20 (P-3 not built with P4's areas, #883, docs #882); 2026-11-19 (P3 pointers to the production engine admin guide; docs #839); 2026-11-19 (first version, production P2 #91/#676/#677, docs PandiO/knk-workspace#830)
 **Checked against:** knk-web-api `next` `fcfced27`, knk-web-app `next` `18385344`, knk-plugin `next` `8ebb30be` (not
 released; the game side is off until `production.enabled` is on; the manual steps of the
 [smoke test § 3](../production-storage-transport-smoke-test.md#3-phase-p2-world-rural-structures-warehouse-production-structure-91-api-676-web-app-677-plugin-tier3)
@@ -68,10 +68,12 @@ seed you imported.
    entry, Allow exit and the entry rule on roads work as for any structure.
 4. **The type's own step** (**Warehouse** or **Production**):
     1. Warehouse: **Accepts deliveries** (on by default) and **Priority** (0–1000; a town's warehouse with the higher
-       priority is chosen first for deliveries, from phase P5 on).
+       priority wins a tie between warehouses with as much room and as far away; transport picks warehouses with room
+       first, then the nearest by road, [transport admin guide § 4.1](production-transport-admin-guide.md#41-when-an-order-is-made)).
     2. Production structure: **Level** (1–10), **Production on**, **Workers** (0–100, default 2), **Automatic
        transport**, **Transport threshold** and **Transport capacity** (empty = the planner's default), **Deliver to**
-       (Nearest, or Preferred with a **Preferred warehouse**).
+       (Nearest, or Preferred with a **Preferred warehouse**); what transport does with them: [transport admin guide
+       § 2](production-transport-admin-guide.md#2-before-goods-move-structures-and-warehouses).
 5. Spawn point, Navigate to and Sub-regions as for any structure. Press **Submit**.
 
 **After the save** you see "Warehouse created." (or "ProductionStructure created."). A failed placement rule that is a
@@ -198,8 +200,8 @@ The full checks are the [smoke test § 3](../production-storage-transport-smoke-
    create one.
 2. Existing structure regions are not touched until `production.enabled` is on and the repair runs; then only regions
    of production structures get the `entry` flag.
-3. Nothing in game uses the warehouses' or production structures' settings yet (P5); the API's production engine uses
-   the level, workers and Production switch ([production engine admin guide](production-engine-admin-guide.md)).
+3. The API's production engine uses the level, workers and Production switch ([production engine admin guide](production-engine-admin-guide.md));
+   transport (P5, in `next`) uses the warehouses' and the transport settings ([transport admin guide](production-transport-admin-guide.md)).
 
 ## 9. Troubleshooting
 

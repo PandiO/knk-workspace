@@ -1,6 +1,6 @@
 # Production engine: kinds, lines, modifiers, weather and cycles (knk-web-api and knk-web-app)
 
-**Status:** Current · **Last updated:** 2026-11-20 (P4 pointers: Derived and Hybrid providers, area caps, variation; docs #882); 2026-11-19 (first version, production P3 #86/#678, docs PandiO/knk-workspace#839)
+**Status:** Current · **Last updated:** 2026-11-20 (P5: transport sends workers away, docs #891); 2026-11-20 (P4 pointers: Derived and Hybrid providers, area caps, variation; docs #882); 2026-11-19 (first version, production P3 #86/#678, docs PandiO/knk-workspace#839)
 **Checked against:** knk-web-api `next` `6c648f60` (PR PandiO/knk-web-api#58), knk-web-app `next` `4e4ca39a` (PR
 PandiO/knk-web-app#63). Not released; the manual steps of the
 [smoke test § 4](../guides/production-storage-transport-smoke-test.md#4-phase-p3-production-engine-86-api-678-web-app-tier3)
@@ -393,7 +393,8 @@ import the six form and display seeds and make the v2 seeds of `ProductionStruct
 1. P3 alone has only `Configured` rates; areas, surveys, Derived/Hybrid yields, `MaxAreaSize` and cycle variation are
    used from P4 ([yield areas architecture](production-yield-areas.md), knk-web-api `next` `e26c7d88`).
 2. No retention or roll-up of cycle records ([#828](https://github.com/PandiO/knk-workspace/issues/828)).
-3. Upkeep and upgrade duration are stored without effect; workers are set by staff or the plugin key until P5.
+3. Upkeep and upgrade duration are stored without effect. Since P5 transport sends workers away and back
+   ([transport architecture § 5.1](production-transport.md#51-the-carrier-design--77)); staff and the plugin key can still set them.
 4. `MapArea` modifiers never match (the painted map is Later).
 5. The structure search row has no kind name, a cycle record's inputs have no blueprint name, cycle records have no
    dashboard list, and the new-line form isn't pre-filled with the structure (points on
