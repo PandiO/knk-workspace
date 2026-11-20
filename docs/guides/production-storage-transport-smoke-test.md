@@ -16,8 +16,9 @@ run. § 4.2 (production engine web app, #678): 13 of 16 steps automated in CI an
 still be run by hand; not run. § 5.1 (yield areas API, #138): 17 of 18 steps automated in CI and 1 partly (tagged);
 every step can still be run by hand; not run. § 5.2 (surveys plugin, #679): 7 of 15 steps automated (one through a plugin
 scenario on a real Paper server), 7 partly and 1 manual (tagged); not run. § 5.3 (yield areas web app, #680): 9 of 12 steps automated in CI, 2
-partly (tagged) and 1 by hand; every step can still be run by hand; not run. Other sections not yet automated (the links tag them).
-**Last updated:** 2026-11-20 (§ 5.2 surveys plugin, link L12, #679); 2026-11-20 (§ 5.3 yield areas web app, link L13, #680); 2026-11-19 (§ 5 yield areas API, link L11, #138; § 5.1 step 18: #831); 2026-11-19 (§ 4.2 production engine web app, link L10, #678); 2026-11-19 (§ 4.1 production engine API, link L9, #86); 2026-11-19 (§ 3 intro, § 3.0, § 3.2 and § 3.3 intros: builds from `next`; § 3.3 precondition 4: `/knk regions repair` needs `knk.admin.regions`, `/knk territory rebuild` `knk.admin.world.territory`; docs #830); 2026-11-19 (§ 3.2 world web app, link L7, #676); 2026-11-19 (§ 3.3 world plugin, link L8, #677); 2026-11-19 (§ 3.1 world API, link L6, #91); 2026-11-19 (§ 2.2 stock web app, link L5, #675); 2026-11-19 (§ 2 stock core API, link L4, #97); 2026-11-19 (§ 1.0 and § 1.3 preconditions: builds from `next` instead of the link branches; guides: [territory admin guide](admin/territory-admin-guide.md), docs #806); 2026-11-19 (§ 1.4 territory web app, link L3, #690); 2026-11-19 (§ 1.3 territory plugin, link L2, #689); 2026-11-19 (§ 1 territory API, link L1, #326); 2026-11-19 (§ 0 item identity, link L0, #141); 2026-11-16 (draft from the design, territory and phases P1-P12)
+partly (tagged) and 1 by hand; every step can still be run by hand; not run. § 6.1 (transport API, #79): 18 of 20 steps automated in CI
+and 2 partly (tagged); every step can still be run by hand; not run. Other sections not yet automated (the links tag them).
+**Last updated:** 2026-11-20 (§ 6 transport API, link L14, #79; § 6.2 and § 6.3 drafts for L15 and L16); 2026-11-20 (§ 5.2 surveys plugin, link L12, #679); 2026-11-20 (§ 5.3 yield areas web app, link L13, #680); 2026-11-19 (§ 5 yield areas API, link L11, #138; § 5.1 step 18: #831); 2026-11-19 (§ 4.2 production engine web app, link L10, #678); 2026-11-19 (§ 4.1 production engine API, link L9, #86); 2026-11-19 (§ 3 intro, § 3.0, § 3.2 and § 3.3 intros: builds from `next`; § 3.3 precondition 4: `/knk regions repair` needs `knk.admin.regions`, `/knk territory rebuild` `knk.admin.world.territory`; docs #830); 2026-11-19 (§ 3.2 world web app, link L7, #676); 2026-11-19 (§ 3.3 world plugin, link L8, #677); 2026-11-19 (§ 3.1 world API, link L6, #91); 2026-11-19 (§ 2.2 stock web app, link L5, #675); 2026-11-19 (§ 2 stock core API, link L4, #97); 2026-11-19 (§ 1.0 and § 1.3 preconditions: builds from `next` instead of the link branches; guides: [territory admin guide](admin/territory-admin-guide.md), docs #806); 2026-11-19 (§ 1.4 territory web app, link L3, #690); 2026-11-19 (§ 1.3 territory plugin, link L2, #689); 2026-11-19 (§ 1 territory API, link L1, #326); 2026-11-19 (§ 0 item identity, link L0, #141); 2026-11-16 (draft from the design, territory and phases P1-P12)
 **Design:** [specs/production-storage-transport/DESIGN.md](../specs/production-storage-transport/DESIGN.md) (§17
 acceptance A01-A27, §18 links) · [territory](../specs/territory/DESIGN.md) · [shops](../specs/shops/DESIGN.md) ·
 **Issue:** [PandiO/knk-workspace#22](https://github.com/PandiO/knk-workspace/issues/22)
@@ -1445,23 +1446,182 @@ about 15 minutes (the in-game parts wait for the survey runner of #679).
 
 ## 6. Phase P5: transport core, simulated (#79 API, #681 plugin, #682 web app; tier:3)
 
-*Draft from the design (2026-11-16); the links update it to what was built and tag the automated steps.*
+Built so far: link L14, the API (knk-web-api, migration `AddTransportCore`; branch `claude/production-p5`, PR into
+`next`). The lane measurer (`/knk logistics lanes measure`, the headless job, road connection updates) is link L15
+(#681); the order list and detail, the manual order form and the dry run in the web app are link L16 (#682). Until then
+§ 6.1 runs with a REST client (or Swagger) against the API; lanes are typed in by Staff and the road connection is set
+with `PUT api/ProductionStructures/<id>/road-connection`, as the plugin will. 20 steps in § 6.1: 18 automated in CI
+and 2 partly (tagged); every step can still be run by hand; manual steps not run. § 6.2 (plugin) and § 6.3 (web app)
+are drafts for L15 and L16. Full manual run about 45 minutes (most of it waiting for trips, or `POST
+api/TransportOrders/run-now`); the untagged parts of the partly tagged steps about 10 minutes. The tests are in
+knk-web-api `Tests/.../Services/Production/TransportTests.cs`, `TransportLanesAndSettingsTests.cs`,
+`Api/TransportControllersTests.cs`, `Migrations/AddTransportCoreTests.cs` and, with `KNK_TEST_MYSQL`,
+`MySql/TransportMySqlTests.cs`. The developer waived the smoke gates of L4 and L6 on 2026-11-19; the coordinator reads
+that as covering this link too (it builds on L9, whose smoke test is open).
 
 ### 6.0 Preconditions
 
-1. The quarry connected by road to the Phoenix warehouse; lanes measured with `/knk logistics lanes measure`. A second
-   producer with no road.
+1. knk-web-api with the migrations up to `AddTransportCore` applied (`dotnet ef database update`).
+2. Everything of § 4.0, with `Production:Enabled` on except in step 19: the rural quarry **Quarry** in Phoenix (kind
+   Quarry, its Cobblestone line, Output storage capped at 100, two workers), a **Staff** token (`knk.admin.world`,
+   `knk.admin.content`), a **Visitor** token and the plugin key. Note the ids of Quarry, its Output storage, and the
+   blueprints **Cobblestone** and **Coal**.
+3. Two rural warehouses of Phoenix: **North** and **South** (`POST api/Warehouses` with `"townId": <Phoenix>`); note
+   their ids and their delivery storages (`defaultStorageId`). Cap North's delivery storage at 1,000 units (`PUT
+   api/Storages/<id>` with `maxUnits` 1000); South stays uncapped.
+4. A second rural producer **Bare quarry** in Phoenix (kind Quarry) with no road: `PUT
+   api/ProductionStructures/<Bare quarry>/road-connection` with `{ "roadConnection": "Unconnected" }`.
+5. Game setting section `production.transport` at its defaults (`GET api/GameSettings`): `walkingSpeedBlocksPerSecond`
+   4.317 (a vanilla player's walk), `defaultCarrierCapacity` 64, `defaultThresholdPercent` 75, `defaultThresholdUnits`
+   64, `unmeasuredRouteFactor` 1.4, `fallbackDistanceBlocks` 200, `awaitingSpaceMinutes` 30, `maxReroutes` 2,
+   `laneMaxAgeHours` 24.
+6. To keep the numbers below exact, pause Quarry's Cobblestone line (`PUT api/ProductionLines/<id>` with `"enabled":
+   false`) except in steps 6 and 7, and switch Quarry's automatic transport off (`PUT api/ProductionStructures/<id>`
+   with `"automaticTransport": false`) except in steps 8-10. Put stock into an Output storage with `POST
+   api/StockTransactions/adjust` (needs `knk.economy.admin`).
 
-### 6.1 Steps
+### 6.1 Steps (API)
 
-1. As Staff, create a manual order of 40 cobblestone from the quarry to the warehouse. **Expected:** the order goes
-   through its lifecycle; the goods sit in transit storage while carried; the ledger balances at every step. (A12)
-2. While one of the two workers carries the order, read the quarry's trace. **Expected:** output at 50%. (A12)
-3. Create two orders at once. **Expected:** both workers away; output 0% until one returns. (A12)
-4. Compare the trip time with the measured route length ÷ walking speed. **Expected:** they match. (A12, G14)
-5. Fill the producer without a road. **Expected:** it stops when full; no automatic transport; warnings for the missing
-   road and the full storage. (A13)
-6. Cancel an order midway. **Expected:** goods return to the sender; ledger balanced. (A12)
+1. [partly automated: knk-web-api `FormConfigurationSeedFilesTests`, `DisplayConfigurationSeedFilesTests` (every seed
+   dry-runs and imports); by hand: open the forms and pages in the web app]
+   As Staff, import the form and display seeds `TransportOrder` and `TransportLane` with "make default".
+   **Expected:** both import; the TransportOrder form is read only (manual orders are made through the API or the
+   web app's manual order form, #682); the TransportLane form asks for From, To and the road distance. (A23)
+2. [automated: `TransportLanesAndSettingsTests.TheDueList_HasEveryProducerToWarehousePair_AndWarehousePairs_UntilMeasured_ThenStaleAfterTheMaxAge`]
+   With the plugin key, `GET api/TransportLanes/due`. **Expected:** the pairs Quarry → North, Quarry → South, Bare
+   quarry → North, Bare quarry → South and North → South, each `"reason": "Missing"` with both structures' positions
+   (null when a structure has no location). Then `POST api/TransportLanes/report` with `{ "lanes": [ {
+   "fromStructureId": <Quarry>, "toStructureId": <North>, "roadDistance": 431.7, "straightDistance": 300,
+   "routeEdgeIds": [5, 6, 7] }, { "fromStructureId": <South>, "toStructureId": <Quarry>, "roadDistance": 863.4 }, {
+   "fromStructureId": <North>, "toStructureId": <South>, "roadDistance": 215.85 } ] }`. **Expected:** `{ "created": 3,
+   "updated": 0 }`; the due list no longer has those three pairs (a lane counts in both directions); `POST
+   api/TransportLanes/search` lists them with `source` Plugin.
+3. [automated: `TransportLanesAndSettingsTests.LaneValidation`, `TransportControllersTests.Create_400_Cancel_409_And_404s`]
+   As Staff, `POST api/TransportLanes` with the Quarry → North pair again. **Expected:** 409 (one lane per direction;
+   edit it instead). A lane from a structure to itself, or a reachable lane without `roadDistance`, is 400. A lane
+   with `"reachable": false` and no road distance is saved and is never used as a route.
+4. [automated: `TransportTests.AManualOrder_MovesSourceToTransitToStop_WithTheLedgerBalancedAtEveryStep_AndTakesRoadLengthOverSpeed`,
+   `TransportTests.ADryRun_WritesNothing_AndExplainsThePlan`]
+   Put 50 Cobblestone into Quarry's Output storage. `POST api/TransportOrders/dry-run` with `{ "sourceStorageId":
+   <Quarry output>, "stops": [ { "storageId": <North delivery>, "lines": [ { "itemBlueprintId": <Cobblestone>,
+   "amount": 40 } ] } ] }`. **Expected:** `valid` true, `carrierStructureId` Quarry, `carrierCapacity` 64, one leg of
+   431.7 blocks, `distanceSource` Lane, 100 seconds; no order, storage or ledger row is written. (G14)
+5. [automated: same as step 4; `GET api/StockTransactions/reconcile` is clean]
+   `POST api/TransportOrders` with the same body. **Expected:** 201, status Planned, an event "Created". Then `POST
+   api/TransportOrders/run-now`. **Expected:** the order is InTransit; `GET api/TransportOrders/<id>`: `inTransit`
+   holds 40 Cobblestone in the order's own transit storage ("Transport #<id> cargo"), Quarry's Output holds 10, North
+   0; `etaAt` = `departedAt` + 100 s; events Created, Assigned, Loaded, Departed; Quarry has 1 of 2 workers present.
+   After 100 seconds, run-now again. **Expected:** Delivered; North holds 40; the cargo line reads requested 40, loaded
+   40, delivered 40; events ArrivedAtStop, Delivered, WorkerReturned, Completed; 2 of 2 workers present. The
+   reconciler (`GET api/StockTransactions/reconcile`) is clean after each run, and the ledger shows one TransportLoad
+   and one TransportDeliver transaction with source `TransportOrder <id>`. (A12)
+6. [automated: `TransportTests.AWorkerCarryingAnOrder_LowersOutputTo50Percent_BothAway_StopIt_AndItRecoversOnReturn`]
+   Un-pause Quarry's line, uncap its Output storage, and make the Quarry → North lane 25,900 blocks (an hour and 40
+   minutes at walking speed). Create a manual order of 10 Cobblestone to North and run-now. Wait an hour (or set the
+   clock) and run `POST api/Production/run-now`; read `GET api/ProductionStructures/<Quarry>/production`. **Expected:**
+   1 of 2 workers present; the latest cycle record has worker factor 0.5 and half the output. (A12)
+7. [automated: same as step 6]
+   Create a second manual order of 10 to South and run-now. **Expected:** 0 of 2 workers present; the next settle has
+   worker factor 0 ("All workers are away"). When both orders are Delivered, 2 of 2 are present again and the next
+   settle has worker factor 1. Pause the line again and set the lane back to 431.7. (A12)
+8. [automated: `TransportTests.TheThreshold_FiresOneAutomaticOrder_SizedByTheWorkersCapacity_ToTheNearestWarehouseByRoad`]
+   Switch Quarry's automatic transport on. Put 74 Cobblestone into its Output storage and read `GET
+   api/ProductionStructures/<Quarry>/transport`. **Expected:** no trigger reason (threshold 75 of the cap of 100), and
+   no order after run-now. Add 6 Coal. **Expected:** the view's trigger reasons say the Output holds 80 units, at or
+   over the threshold of 75; `destinationWarehouseId` is North (the nearest by road); `wouldCreate` is a plan of 64
+   Cobblestone (the worker's capacity, largest line first). Nothing is written by the view. Run-now. **Expected:** one
+   order, origin Automatic, 64 Cobblestone to North. Add 60 more and run-now again: **Expected:** no second order; the
+   view's held reasons say "Automatic order #<id> is still under way (one at a time per structure)". (V2 defects 7-9)
+9. [automated: `TransportTests.ABlockedFullLine_AndTheDistinctCap_AreTriggersToo`,
+   `TransportTests.ThePreferredWarehouse_WinsOverTheNearest_WhenItHasRoom`]
+   With Quarry's Output below the threshold: set its line's status to BlockedFull (the engine does this when the
+   Output is full), or cap the Output's distinct items at the number it holds. **Expected:** the view lists "Line(s)
+   blocked full" or "as many different items as it may" as a trigger. Set Quarry's warehouse preference to Preferred
+   with South. **Expected:** `destinationWarehouseId` South. With preference Nearest and North's delivery storage
+   capped below the cargo, South is chosen (a warehouse with room comes first).
+10. [automated: `TransportTests.AnUnconnectedRuralProducer_HoldsTransport_FillsUp_AndStops_WithBothWarnings`,
+    `TransportTests.ADistrictProducer_NeedsNoRoadConnection`]
+    Let Bare quarry produce for three hours (`POST api/Production/run-now`) and run the transport sweep. **Expected:**
+    its Output holds 100 and its line is BlockedFull; no automatic order; `GET
+    api/ProductionStructures/<Bare quarry>/transport` warns "Not connected to its town's road network: automatic
+    transport is held (D5)" and "The Output storage is full"; `GET api/ProductionStructures/<Bare quarry>` has both
+    warnings too. A rural structure whose road connection is Unmeasured is held the same way. Set its road connection
+    to Connected: the next sweep plans its order. A producer in a district needs no road connection. (A13, D5)
+11. [automated: `TransportTests.AFullStop_WaitsThenReroutesToAnotherWarehouseOfTheTown`]
+    Switch Quarry's automatic transport off again. Cap North's delivery storage at 30 (empty it first). Put 50 into
+    Quarry's Output and create a manual order of 50 to North; run-now, wait 100 s, run-now. **Expected:** AwaitingSpace
+    ("Stop 1 has no room for 20 unit(s)"); North holds 30, the transit storage 20; nothing is dropped. After 30 minutes
+    (`awaitingSpaceMinutes`) and a run-now: **Expected:** Rerouted to South with a new stop of 20 (stop 1 Partial),
+    InTransit with a 50-second leg (North → South 215.85 blocks). After it: Delivered, South holds 20, the reconciler
+    is clean. (V2 defect 2)
+12. [automated: `TransportTests.WithNowhereToGo_TheCargoComesBack_AndAFullSourceBlocksTheReturnUntilItHasRoom`]
+    Repeat step 11 with South's `acceptsDeliveries` off. **Expected:** after the wait the carrier carries on and,
+    with no stop left, turns back: Returning with a 100-second leg. Fill Quarry's Output to 95 before it arrives.
+    **Expected:** ReturnBlocked: 5 go back, 15 stay in the transit storage (never dropped). Take 50 out of the Output
+    and run-now. **Expected:** Returned; the cargo line reads loaded 50, delivered 30, returned 20; 2 of 2 workers
+    present; the reconciler is clean. (V2 defect 2)
+13. [automated: `TransportTests.EachStopGetsItsOwnPlannedAmounts_AndAShortLoadServesTheFirstStopsFirst`]
+    Put 25 into Quarry's Output and create an order with two stops: 20 to North, then 10 to South. Run-now.
+    **Expected:** loaded 25 (the source held less than asked); the stops' planned amounts are 20 and 5. After each
+    arrival North gets 20 and South 5, never more. (V2 defect 3)
+14. [automated: `TransportTests.CancelWhilePlanned_EndsCancelled_WithoutStockMoves`,
+    `TransportTests.NothingToLoad_CancelsTheOrder_AndTheWorkerStays`]
+    Create an order with `"executeAfter"` an hour ahead and `POST api/TransportOrders/<id>/cancel` with `{ "reason":
+    "test" }`. **Expected:** Cancelled with the reason; no stock moved; a second cancel is 409. An order whose source
+    holds none of the cargo ends Cancelled at loading ("Nothing to load"), the worker never leaves.
+15. [automated: `TransportTests.CancelInTransit_TurnsBack_TakingAsLongAsItWalked_AndReturnsEverything`,
+    `TransportTests.CancelWhileAwaitingSpace_ReturnsTheRest_FromTheStop`]
+    Create an order of 10 to North, run-now, wait 30 seconds and cancel it. **Expected:** Returning, back in 30 seconds
+    (the way it came); cancel again is 409 "already returning"; after it: Returned with "Cancelled: the cargo is back
+    in the source", the Output holds its 10 again, 2 of 2 workers present, the reconciler is clean. An order cancelled
+    while AwaitingSpace brings back what it could not deliver over the lane. (A12)
+16. [automated: `TransportTests.ARestartMidTransit_ContinuesWhereItWas_WithoutMovingAnythingTwice`]
+    Create an order of 10 to North, run-now, and restart the API while it is in transit; wait an hour and run-now.
+    **Expected:** Delivered once (North 10, the Output 10), exactly one TransportLoad and one TransportDeliver
+    transaction for the order.
+17. [automated: `TransportTests.InvalidManualOrders_AreRefusedWithTheirReasons`, `TransportTests.AWorkerCarriesAtMostItsCapacity`,
+    `TransportTests.AFromAWarehouse_IsCarriedWithoutAWorker_AndARepeatedClientKeyMakesOneOrder`]
+    Try manual orders: no stop; a stop that is the source or a system storage; an amount of 0; an unknown blueprint;
+    origin Automatic; 65 units with Quarry as carrier. **Expected:** each is 400 with its reason ("carries at most
+    64" for the last). An order from North's delivery storage to South with `"origin": "Quest"` and `"clientKey":
+    "quest-42"`, sent twice: **Expected:** one order; it is carried without a worker (no production structure holds
+    the source); it is delivered after 50 seconds.
+18. [automated: `TransportTests.WithoutALane_TheRouteIsTheStraightDistanceTimesTheFactor_AndWithoutPositionsTheFallback`,
+    `TransportTests.ALaneIsReadInBothDirections_AndAnUnreachableLaneIsNotARoute`]
+    Dry-run an order between two structures without a lane. **Expected:** without locations the leg is the fallback
+    200 blocks ("Fallback"); with both locations 500 blocks apart it is 700 blocks ("Estimated", × 1.4), with a
+    warning "no measured lane". (G14)
+19. [automated: `TransportTests.WithTheFlagOff_NothingMoves_ButManualOrdersAndCancelWork`,
+    `TransportControllersTests.RunNow_Is409WhileOff_And200WhileOn`]
+    Switch `Production:Enabled` off. **Expected:** `POST api/TransportOrders/run-now` is 409; the background sweep
+    makes no automatic order and moves no order (a Planned one stays Planned); `GET api/TransportLanes/due` is empty;
+    manual orders, dry runs, lanes and cancel still work. Switch it back on. (A21)
+20. [partly automated: `ReadAccessRulesTests`, `EndpointAccessRulesTests`, `DashboardChangeAccessRulesTests`,
+    `DeleteAccessRulesTests` (the rules are pinned); by hand: the calls below]
+    As Visitor, `POST api/TransportOrders`, `POST api/TransportOrders/<id>/cancel`, `POST api/TransportLanes/report`
+    and `GET api/TransportOrders/<id>`. **Expected:** 403 for each (writes need `knk.admin.world` or the plugin key,
+    reads the World area); with the plugin key `GET api/TransportLanes/due` and `POST api/TransportLanes/report` work.
+
+### 6.2 Steps (plugin #681, draft)
+
+*Draft for link L15: the lane measurer reads `GET api/TransportLanes/due`, measures each pair with `AStarRouter` over
+the road snapshot and reports with `POST api/TransportLanes/report`; it sets road connections with `PUT
+api/ProductionStructures/<id>/road-connection`.*
+
+1. Run `/knk logistics lanes measure`. **Expected:** every due pair of § 6.1 step 2 is measured and reported; the
+   reported road distances match the road route between the structures. (A12)
+2. Move Bare quarry's road away. **Expected:** the headless job reports it Unconnected; its transport is held. (A13)
+
+### 6.3 Steps (web app #682, draft)
+
+*Draft for link L16: the order list and detail (timeline from the event log, cargo, route), the manual order form with
+the dry run, and the structure's transport view.*
+
+1. Open the transport order list and an order. **Expected:** the lifecycle as a timeline, the cargo per blueprint,
+   the stops with their distances and route source. (A12)
+2. Make a manual order with the form; run the dry run first. **Expected:** the plan's legs, warnings and errors are
+   shown before the order is made.
+3. Open Bare quarry. **Expected:** the warnings for the missing road and the full storage. (A13)
 
 ## 7. Phase P6: terminals, displays, menus, commands (#683 API, #74 plugin; tier:2)
 
