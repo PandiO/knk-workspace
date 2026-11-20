@@ -62,7 +62,7 @@ of what is already in `next`.
 | L10 P3b production web app | #678 | Merged into next (2026-11-19) | web-app `9e5a2ca`, workspace `eaf1f1a1`; merges: web app `4e4ca39a`, workspace `9eef39cf` | [web-app#63](https://github.com/PandiO/knk-web-app/pull/63), [ws#834](https://github.com/PandiO/knk-workspace/pull/834) | green (build-and-test, e2e) | create_session `session_01R1w2UvmqQ34HGVHXxDfmwW` (prompt says start without asking), started 2026-11-19 |
 | L11 P4 yield areas API | #138 | Merged into next (2026-11-19) | api `06b11ca`, workspace `b467e15a`; merges: api `e26c7d88`, workspace `e846be50` | [api#60](https://github.com/PandiO/knk-web-api/pull/60), [ws#837](https://github.com/PandiO/knk-workspace/pull/837) | green on `06b11ca` (build-and-test, mysql-tests, fresh-database) | create_session `session_01R1w2UuXh4wtTxPhhZUpLGF` (prompt says start without asking), started 2026-11-19 |
 | L12 P4b surveys plugin | #679 | Running | — | — | — | create_session `session_01R1w2Utt8cigo5ND98ZqXzC` (prompt says start without asking), started 2026-11-19 |
-| L13 P4c yield areas web app | #680 | Running | — | — | — | create_session `session_01R1w2UwYw3NNQSSBoP7XaBk` (prompt says start without asking), started 2026-11-19 |
+| L13 P4c yield areas web app | #680 | In review (2026-11-20) | web app `6da700c`, workspace `638e5c3c` | [web-app#67](https://github.com/PandiO/knk-web-app/pull/67), [ws#873](https://github.com/PandiO/knk-workspace/pull/873) | green on `6da700c` (build-and-test, e2e) | create_session `session_01R1w2UwYw3NNQSSBoP7XaBk` (prompt says start without asking), started 2026-11-19 |
 | L14 P5 transport API (simulated carrying, G14) | #79 | Running | — | — | — | create_session `session_01R1w2UtGLZrUEAUNFYvkqGB` (prompt says start without asking), started 2026-11-19 |
 | L15 P5b lanes plugin | #681 | Not started | — | — | — | — |
 | L16 P5c transport web app | #682 | Not started | — | — | — | — |
@@ -1230,3 +1230,45 @@ _(Each link appends its block here when it finishes.)_
        area with `size`, `sizeUnit` and the level's `maxSize`.
     3. L21 (P8a): the pool factor is still not in the engine; the latest survey's `TotalUnits` can seed a pool's
        capacity.
+
+### 4.13 L13 — P4c yield areas web app (#680)
+
+1. **Scope done** (knk-web-app, plus the essential docs in knk-workspace).
+    1. Types and clients: `src/types/dtos/production/ProductionYieldDtos.ts` (mirrors `ProductionYieldDtos.cs` and the P4 enums); P4 fields on `ProductionKindDto` and `ProductionStructureDto` (`yieldSource`, read-only `areas`); `productionAreaClient` (CRUD, search, overlaps), `areaSurveyClient` (read, search, trend), `productionYieldOverrideClient` (CRUD, search); `productionStructureClient.getYield`, `requestSurvey`, `materialize`. Registry additions, additive and grouped: `Controllers`, `entityApiMapping` (areas and overrides all five, surveys search and fetch), `objectConfigs` columns.
+    2. Production structure page, `StructureYieldPanel` (A10, #65): the yield source in words; the areas with size against the level's cap; Add area (the seeded form); Survey now (hidden for Configured, G5) and Make lines again; every output with why its rate is what it is (surveyed rate, override, base, primary, line; per survey unit the area, unit, matched yield row, count, shared split, rate and chance); the unmatched unit keys.
+    3. Hybrid override editor on the same panel: Pin, Exclude, Scale or None per output, and a pin for an output the survey doesn't yield.
+    4. Survey viewer: `ProductionAreaPanel` on an area's page (size and cap, a 2D plot from above with the overlapping areas `AreaPlot`, the overlaps table, the latest composition `SurveyCompositionTable`, the trend over 30 surveys `SurveyTrendTable`, the history, Survey this area now); `AreaSurveyPanel` on a survey's page.
+    5. Kind page: `ProductionKindYieldTablePanel` edits the yield table and the primary outputs (sends `{ id, yieldTable, primaryOutputs }`; checks match the API's). Survey profile and multiplier stay on the seeded form.
+    6. Form wizard: a refused ProductionArea or ProductionYieldOverride save shows the API's `{ error }` sentence (area over the cap, A11; exclusive overlap; a second override), as the P2 types did.
+    7. Area capture via WorldTask: the seeded ProductionArea form has no world task and the API needs a Region's bounds typed in; `CaptureRadius` is neither in the API's known types nor handled by the plugin yet. Filed on #680 (out of scope, knk-web-api); smoke step 5.3.3 does it by hand with `RegionClaim` turned on in the form builder.
+    8. knk-workspace (branch from `next`): smoke guide § 5.3 (12 web app steps in full: 9 automated, 2 partly, 1 by hand), § 5 intro and status header, changelog entry, implementation plan P4 status.
+2. **Commits and heads.**
+    1. knk-web-app `claude/production-p4c` at `6da700c`: 7 commits plus merges of `next` (`2c177be`, then `287bb2c`, which had not moved at the last fetch).
+    2. knk-workspace `claude/production-p4c` at `638e5c3c`: 1 commit plus a merge of `next` (no conflicts).
+3. **PRs.** [knk-web-app#67](https://github.com/PandiO/knk-web-app/pull/67) (Closes #680) and [knk-workspace#873](https://github.com/PandiO/knk-workspace/pull/873) (Part of #680), both into `next`. Not merged.
+4. **Tests, baseline → result.**
+    1. knk-web-app baseline on `next` `4e4ca39`: Jest 2845 passed (333 suites), Playwright 280 passed, `tsc` clean, build OK.
+    2. Branch after merging `next` `287bb2c`: Jest 2882 passed (338 suites; `next` brought its own new tests); new `src/utils/__tests__/productionYield.test.ts` (9) and `src/apiClients/__tests__/productionYieldClients.test.ts` (6). `tsc` and `typecheck:e2e` clean.
+    3. Playwright: 296 passed (full run); the three production specs repeated 5×: 185 passed, none flaky. New `e2e/production-yield.spec.ts` (11 tests, strict API, DTO-typed fixtures `e2e/fixtures/productionYield.ts`); `production-world.spec.ts` and `production-engine.spec.ts` mock the new yield panel.
+    4. Seen failing: the override test failed while the toast came before the reload (a fast second edit was reset); fixed in the panel.
+    5. CI on `6da700c`: build-and-test and e2e green (PR runs 44734961691 and 44734961655, push runs 44734955024 and 44734955138).
+    6. Known reds: none.
+5. **Decisions (DESIGN § 4.3).**
+    1. *Area capture.* Chosen: the seeded form; the seed's `RegionClaim` and Region bounds asked of the API on #680; `CaptureRadius` after #679. Alternatives: (a) a world-task default hard-coded in `FormWizard`: changes the shared wizard for one seed and still leaves bounds to type; (b) offer `CaptureRadius` now: no handler, the task would hang (#180).
+    2. *Where the screens live.* Chosen: panels below the generic detail pages (the L3/L5/L7/L10 pattern). Alternatives: (a) custom pages: duplicate the seeded forms (G17).
+    3. *Trend.* Chosen: one small line per unit key, each on its own scale, in a table with first, latest and change. Alternatives: (a) one multi-series chart: needs a categorical palette for many unit keys, and small units vanish.
+    4. *Override editing.* Chosen: one select per output (None deletes), plus one row to pin a new output; the success message after the re-read. Alternatives: (a) a separate override list: away from the rate it changes.
+    5. *Make lines again.* Chosen: shown to World staff. Alternatives: (a) hidden: staff need it after fixing a yield table.
+    6. *Refusal sentence on the P4 forms.* Chosen: extend the P2 `{ error }` reading to the two P4 form types. Alternatives: (a) change `describeErrorBody` app-wide: outside this link.
+6. **Out of scope, noted.** [#680 comment](https://github.com/PandiO/knk-workspace/issues/680#issuecomment-7039235466): the area seed's missing `RegionClaim`, Region bounds from the region, `CaptureRadius` (API known types and #679 handler), no `yieldSource` on `ProductionWorldListDto`, and Add area without the structure prefilled (web app). No new issues. Codex: the connector hit its code-review usage limit on both PRs (review "failed", usage-limit comment); no inline findings or threads; noted on each PR.
+7. **Blockers.** None.
+8. **At merge / what the developer must do.**
+    1. Deploy the web app with the P4 API (#138, in `next`) and its imported seeds. No migration, setting or plugin change.
+    2. Until the seed carries it, turn on `RegionClaim` on the ProductionArea form's WorldGuard region field in the form builder.
+    3. Smoke test [§ 5.3](../guides/production-storage-transport-smoke-test.md) (tier:2): about 40 minutes in full, about 15 minutes for the untagged parts.
+    4. At merge into `next`: the `documentation` sub-issue (yield areas admin guide: areas, the survey viewer, yield tables, overrides, Survey now; feature register row).
+    5. Coordinator: decide on the API points of the #680 comment.
+9. **Notes for later links.**
+    1. L12 (#679): when the `CaptureRadius` handler ships, add it to `WORLD_TASK_TYPES_WITH_HANDLER` (`src/utils/forms/worldTaskTypes.ts`) and to the API's `KnownWorldTaskTypes`.
+    2. Strict e2e specs that open a production structure page now need a `ProductionStructures/<id>/yield` mock (`mockConfiguredYield` in `e2e/fixtures/productionYield.ts`); a kind's page reads `ProductionKinds/<id>` for the yield table too.
+    3. L21/L22 (harvest): `SurveyTrendTable` and `SurveyCompositionTable` take any survey; a pool view can reuse them.
