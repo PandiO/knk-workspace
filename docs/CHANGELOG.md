@@ -37,6 +37,21 @@ This is a human-readable record of capabilities merged into the V3 default branc
       areas-refresh-minutes: 10
   ```
 
+
+- **`/navigate` can be taken away from a rank or player** ([PandiO/knk-workspace#845](https://github.com/PandiO/knk-workspace/issues/845),
+  developer decision option A, 2026-11-19; found in the destination engine live test, #25). For staff: a deny of
+  `knk.navigate` in the in-house permission system (on a group or an account) now refuses `/navigate` and the
+  navigation compass with "You don't have permission to use /navigate." and, with `navigation.destination-engine` on,
+  ends a running route within about 2 seconds. Players without a deny keep `/navigate` as before. knk-plugin ([PandiO/knk-plugin#106](https://github.com/PandiO/knk-plugin/pull/106)):
+  `knk.navigate` is `default: false` in `plugin.yml` (was `default: true`, so Bukkit said yes for everyone and the
+  in-house deny was never asked); `knk.navigate.any` stays `default: false`. knk-web-api: data-only seed migration
+  `20261120120805_SeedNavigateDefaultNode` gives the Default group `knk.navigate` (skipped where the group or a parent already grants, denies
+  or wildcards the node; Down keeps the grant). Branches `claude/navigate-permission-default` in knk-plugin,
+  knk-web-api and knk-workspace. **Deploy order: apply the API migration before deploying the plugin, or every player
+  loses `/navigate`** (with the new plugin and no seed, only an explicit grant gives the node). Open: which staff rank(s) get
+  `knk.navigate.any`; that seed waits for the developer. Smoke test:
+  [destination engine smoke test § 4.0 item 4](guides/navigation-destination-engine-smoke-test.md#40-preconditions),
+  § 4.1 step 4 and § 4.2 step 3.
 - **Off-road navigation: a default route mode per permission group, step B (plugin)**
   ([PandiO/knk-workspace#852](https://github.com/PandiO/knk-workspace/issues/852), link L7b of the off-road chain,
   #698). For players: `/navigate <dest>` without a mode word now follows the default route mode of the player's
