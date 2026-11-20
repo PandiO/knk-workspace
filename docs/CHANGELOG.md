@@ -32,6 +32,39 @@ This is a human-readable record of capabilities merged into the V3 default branc
   ```
 
   Smoke test: [siege shop smoke test § 3](guides/siege-shop-smoke-test.md#3-phase-3-shop-menus-and-purchases-in-the-plugin-868-tier3).
+- **Terminals, displays and structure menus: the API** ([PandiO/knk-workspace#683](https://github.com/PandiO/knk-workspace/issues/683),
+  link L17 of the production, storage and transport chain; [design](specs/production-storage-transport/DESIGN.md)
+  § 6 and § 11.2, decision record § 15.1 M1-M5). The game server part (binding chests, the terminal and display
+  views, the menus) is link L18 (#74); this entry is what the API offers it and staff. Staff bind a block to a
+  storage as a **terminal** (opening it shows the storage as a paged menu; taking and putting items are ledger moves,
+  the chest stays empty) or a **display** (filled read-only with a sample of the stock, as full as the storage is).
+  Every bound chest adds its slots × the storage's units per slot to the storage's cap (a double chest 54 slots, a
+  chest or barrel 27), so placing a chest adds room. Every player can open a **structures overview** from the main menu
+  (a new "Structures" tile) with search and Town, Kind and Status filters, and a **structure menu** per production
+  structure or warehouse: name, kind, town, level, what it produces and a status (working, stalled, no road, full).
+  Members of the structure's town and staff also see rates, storage contents, workers present or away, warnings and
+  the structure's **transport orders**; the API leaves those out for everyone else. Staff get buttons for survey now,
+  the transport dry run, showing the area outline, and cancelling or retrying an order. Until town roles exist
+  (#246), a town's members are the players holding `knk.town.member.<town id>` (or `knk.town.member.*`). Also: the
+  `StockTransaction` form lists the reason Upgrade (#881); the production area form captures a region or a radius in
+  game, a region area takes its bounds from the region, and the structure list shows the yield source (#877).
+  knk-web-api: entity `StorageContainer`; `StorageContainerService` (CRUD, terminal view, take and put, display
+  sample), `StorageContainerCapacity`, `StructureMenuService`, `ProductionViewerResolver` and
+  `PermissionTownMembershipResolver`; endpoints `api/StorageContainers` (CRUD and search: World area to read,
+  `knk.admin.world` to write, delete also `knk.admin.delete`; `by-block`; the game server's `{id}/terminal`,
+  `{id}/put`, `{id}/take`, `{id}/display`), `api/StructureMenus` (`search`, `{id}`, `{id}/orders`: any logged-in user or
+  the game server, filtered by viewer) and `POST api/TransportOrders/{id}/retry` (`knk.admin.world`); menu seeds
+  `structures.overview`, `structures.structure`, `structures.orders` and the hub tile (added to an existing hub at
+  startup); form and display seeds `StorageContainer`; form seeds `StockTransaction` v2 and `ProductionArea` v2;
+  world task type `CaptureRadius`. Terminal take and put and the retry need `Production:Enabled`; binding, the reads and
+  the menus work while it is off. Smoke test:
+  [production smoke test § 7](guides/production-storage-transport-smoke-test.md#7-phase-p6-terminals-displays-menus-commands-683-api-74-plugin-tier2).
+  Admin steps:
+  1. Apply the migration `AddStorageContainers` (`dotnet ef database update`; additive: one table).
+  2. Import the form and display seeds `StorageContainer`, and the form seeds `StockTransaction` (seed v2) and
+     `ProductionArea` (seed v2); make them the default.
+  3. Give town members `knk.town.member.<town id>` (a permission group per town) so they see their structures' details.
+  4. Restart the API once: the menus are seeded and the main menu gets its "Structures" tile.
 - **Siege points in PvP Siege** ([PandiO/knk-workspace#866](https://github.com/PandiO/knk-workspace/issues/866),
   builds [#356](https://github.com/PandiO/knk-workspace/issues/356); link L1 of the siege shop chain, #611). For
   players, with `siege.points.enabled: true` in the plugin's `config.yml` (default `false`): every member of a PvP
