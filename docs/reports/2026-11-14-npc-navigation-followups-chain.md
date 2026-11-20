@@ -1,6 +1,6 @@
 # NPC navigation follow-ups chain — progress report
 
-**Status:** In review: every link merged into `next`; developer smoke tests, the option-B decision and promotion open (2026-11-16) · **Last updated:** 2026-11-20 (block 4.26, link H1)
+**Status:** In review: every link merged into `next`; developer smoke tests, the option-B decision and promotion open (2026-11-16) · **Last updated:** 2026-11-20 (block 4.27, link G1); 2026-11-20 (block 4.26, link H1)
 
 **Issue:** [PandiO/knk-workspace#358](https://github.com/PandiO/knk-workspace/issues/358), links
 [#519](https://github.com/PandiO/knk-workspace/issues/519) (L1),
@@ -64,6 +64,7 @@ the configuration reference § 4.27), then restart. In test order:
 | R1 Fix: held NPCs stay held through `/knk cache refresh` | #724 | In review (PRs open, not merged) | knk-plugin `836ddf62`; knk-workspace `3f1ec0c5` | PandiO/knk-plugin#75, PandiO/knk-workspace#730 | `build` and `paper-boot` (62) green on `836ddf62` (push and PR runs); the new scenario and core test fail on `next`, pass with R1; docs no CI; Codex at its usage limit | create_session (2026-11-18) |
 | J1 Fix: no jumps toward a waypoint on the stair house (the climb's CI flake) | #695 | In review (PRs open, not merged) | knk-plugin `7dd44ed9`; knk-workspace `874e7510` | PandiO/knk-plugin#95, PandiO/knk-workspace#840 | `build` and `paper-boot` (63) green on `5521b833` (push and PR runs); 12/12 local climbs and 34/34 `npc-*`; docs no CI; Codex at its usage limit | create_session (2026-11-19) |
 | H1 Fix: ladders and roof hatches on an NPC's off-road leg | #779 | In review (PRs open, not merged) | knk-plugin `d6b3c0f0`; knk-workspace `644945d5` (`next` `6878d584` merged in) | PandiO/knk-plugin#99, PandiO/knk-workspace#850 | `build` and `paper-boot` (65) green on `d6b3c0f0` (push and PR runs); red on `18e39020` (the climb's creep, fixed); 6/6 local runs, 65/65 local suite; docs no CI; Codex at its usage limit | create_session (2026-11-19) |
+| G1 The road goal by walk reachability for point destinations | #814 | In review (PRs open, not merged) | knk-plugin `03b41285`; knk-workspace `d7168714` (`next` `c7e36e6e` and the workspace `next` merged in) | PandiO/knk-plugin#104, PandiO/knk-workspace#872 | `build` and `paper-boot` (67) green on `03b41285` (push and PR runs 44731931086/44731930975, 44731937912/44731937797); `npc-road-goal-dead-end` fails with the key off; 67/67 locally; Codex at its usage limit | create_session (2026-11-20) |
 
 ## 3. Coordinator decisions
 
@@ -2227,3 +2228,57 @@ _(Each link appends its block here when it finishes.)_
 9. **Notes for later links.**
     1. Citizens' NPCs climb a ladder on a waypoint list by themselves. Minecraft's move control lets a body creep sideways under a waypoint right overhead, and `ClimbHold` corrects that. Any climbable added later (vines, scaffolding) needs `NpcClimbables.DEFAULT` or the walk settings' list passed through: `BukkitNavWorld`, the hatch opener and the route line use the default (plan 4c.8 item 7.8.1).
     2. Group followers on a ladder are not proven (plan item 7.8.2).
+
+### 4.27 G1 — The road goal by walk reachability for point destinations (#814)
+
+1. **Scope done** (#814 with its three comments; prompt § 2). New keys `npc.navigation.road-goal-reachable` (false) and `road-goal-walk-weight` (4.0), layered like every per-NPC key; no migration. No hunk in `core/roads`, `paper/navigation`, `core/roads/walk`, `core/navigation/shape` or `siege/`, so the coordinator OK of prompt § 4.3 was never needed (told the coordinator at 11:03 and after its § 4 addition).
+    1. **Candidates** (knk-core port `RoadGoals`, knk-paper `NpcRoadGoals`): today's goal is the router's road end snapped on the network, then `RoadGoalChoice.candidatesAlongRoad` (called as it is) within `navigation.max-snap-distance`'s code value of the destination, at most 12 (`ROAD_GOAL_CANDIDATES`). `KnKPlugin` passes the live `max-snap-distance` through `NpcNavigationModule.setRoadGoalReach`.
+    2. **The choice** (`NpcNavigationService.chooseRoadGoal`): one candidate after another, a road route through the `RoadPlanner` port (`planRoadFor`, today's is the plan in hand) and one walk search from its end through `OffRoadWalks` (`NpcWalkPlanner`, the NPC's access and profile, off the main thread). `RoadGoalChoice.best(options, road-goal-walk-weight)` picks; road length is the route line's 3D length, walk the path's. The winner's route and walk go into C1's `walkRoute` as they are (the tail walk is not searched again).
+    3. **Fallback:** none reached, fewer than two candidates, or no `RoadGoals`/walk port: C1's join (the end and up to 3 points back), unchanged.
+    4. **Replans:** the order keeps the chosen road point (`Nav.roadGoal`) and routes there, with C1's tail walk; a new order chooses again.
+    5. **Groups:** the leader's order makes the choice; followers walk the leader's path, so the leader's goal is the group's (scenario: the group's followers end at the destination, never on the dead end).
+    6. **Log:** one line per choice, "<npc> road goal for <goal>, N candidates (walk weight W): #1 edge … road R + walk W = score S (today's); … CHOSEN"; counters `roadGoalChoices()`, `roadGoalsMoved()`.
+    7. **Scenario harness:** `ScenarioRoadNpcs.router(scene, network)` (the router factory, extracted), `ScenarioNpcs.startOnRoads(scene, network, settings, rules)` (the plugin's router and `NpcRoadGoals` on a real road graph), `SnapshotReplay.roads(scene)` (a snapshot's road graph), `-Dknk.scenario.roadGoalOff=true` (the before run).
+    8. **Scenarios** (`MIN_SCENARIOS` and `PaperScenariosTest` 67; L7b step B added none):
+        1. `npc-road-goal-dead-end`: road A climbs onto a causeway 6 up and ends 4 blocks from the destination (today's goal; no walk down: `max-drop` 3, the ramp outside the capture box); road B reaches it across open ground. One NPC, then a group of 5 in a column.
+        2. `npc-replay-keep-hall`: the developer's snapshot of 2026-11-19 (box 1271 36 −633 to 1429 125 −481, **covers the hall**), trimmed to x 1380..1429, y 36..100, z −560..−481 (`keep-hall.zip`, 281 KB), routed on its own road graph from the keep's road (1420 82 −531) to the hall (1417 59 −489). A leader alone, then a group of 5.
+2. **Commits and heads.**
+    1. knk-plugin `claude/npc-movement-g1` at **`03b41285`** (base `next` `3fd493e8`; 3 G1 commits; `origin/next` merged at `c7e36e6e`, L7b step B, clean).
+    2. knk-workspace `claude/npc-movement-g1` at **`d7168714`** (base `next`; `origin/next` merged twice; one mechanical conflict in the configuration page's header and changes list, both sides kept).
+3. **PRs** (base `next`, not merged).
+    1. PandiO/knk-plugin#104 (`Part of #814`).
+    2. PandiO/knk-workspace#872 (`Closes #814`).
+4. **Tests, baseline → result.**
+    1. `./gradlew build -x deployToDevServer`. Baseline on `next` `3fd493e8`: core 3552, api-client 366 (2 skipped), paper 3254 (18 skipped). Result before the last merge: core 3561, api-client 366, paper 3258; on `03b41285` (with L7b step B): core 3567, api-client 367 (2 skipped), paper 3271 (18 skipped); 0 failures.
+    2. G1's own tests: core +9 (`NpcNavigationRoadGoalTest`; 7 fail with the choice switched off, the two that pass are "off" and "no port"), paper +4 (`NpcRoadGoalsTest` 3, `NpcNavigationConfigTest` +1).
+    3. F2/F3's `RoadGoalChoiceTest` (7) and `NavigationServiceRouteEndsTest` (18): files unchanged, green.
+    4. **Scenarios, before (key off) → after** (local, Paper 26.3 b205, Citizens b4269):
+        1. `npc-road-goal-dead-end`: **fails** with the key off: the NPC walks up onto the dead end (C1's cut-back walk then gets it down in 76 blocks) → one NPC arrives by road B in 30.1 s and a group of 5 in 30.4 s; 1 choice each, goal moved, 0 stuck, never on the causeway.
+        2. `npc-replay-keep-hall`: passes **with the key off too** (leader 52.1 s, group 63.1 s) → leader 53.1 s, group 64.1 s, 0 stuck. On this snapshot edge 2000000033 runs into the hall: today's goal is 2 blocks of walk away and wins (score 200; next best 255, 12 candidates). It does **not** reproduce #780's case (see 9.1).
+        3. Whole suite in one local run: 67/67 in 27 min 46 s, all 37 `npc-*` green.
+    5. **CI** on `03b41285`: `build` (44731931086, 44731937912) and `paper-boot` with 67 scenarios (44731930975, 44731937797) green, push and PR runs. On `90323c25` the push run's `paper-boot` (44725758383) was green too.
+    6. Known reds: none. Codex: at its usage limit (said on both PRs); finished without its review.
+5. **Decisions (DESIGN § 4.3).**
+    1. *Where the choice lives.* Chosen: NPC-side, a core port and its paper implementation, `RoadGoalChoice` called as it is (prompt § 4.2). Alternatives: (a) lift candidate collection from `NavigationService` into core (the players' path, edited by L7b at the time); (b) a new `NavigationService` method (a `paper/navigation` hunk with no need).
+    2. *Replans.* Chosen: keep the chosen road point for the order and route there with C1's tail walk. Alternatives: (a) choose again every replan (up to 12 searches each time); (b) keep the whole walk (stale after a reroute).
+    3. *Search order.* Chosen: one candidate after another per NPC (one walk search in flight). Alternative: (a) all at once (up to 12 captures in one tick).
+    4. *Walk weight.* Chosen: its own layered NPC key, default 4.0 like players. Alternative: (a) read the players' `navigation.road-goal-walk-weight` (no per-region override for NPCs).
+    5. *Road length.* Chosen: the route line's 3D length (what the NPC walks; the port has no router length). Alternative: (a) add the router's length to `RoadPlan` (a `paper/navigation` hunk).
+    6. *The hall replay.* Chosen: keep it as a regression check of the choice on real data; the dead-end scene is the proof that fails on `next`. Alternatives: (a) drop it; (b) edit the snapshot's road graph to cut edge 2000000033 (fake evidence).
+    7. *The scenario's "at the destination" radius.* Chosen: 10 blocks (a column of 4 at 1.5 ends 7.5 back). Alternative: (a) 6 (failed on the column's tail, not on behaviour).
+6. **Out of scope, noted.** None filed.
+7. **Blockers.** None.
+8. **At merge / what the developer must do.**
+    1. `config.yml`, under `npc.navigation`, then restart (off by default; per world, region, template or assignment):
+
+       ```yaml
+       road-goal-reachable: false
+       road-goal-walk-weight: 4.0
+       ```
+
+    2. The smoke test: `docs/guides/npc-movement-smoke-test.md`, section "Link G1" (6 steps, 3 tagged), with `road-goal-reachable: true`.
+    3. Review decisions 5.1, 5.2 and 5.6, and item 9.1.
+9. **Notes for later links.**
+    1. #780's hall case is not on the 2026-11-19 snapshot: its road graph reaches the hall. If the live data still sends NPCs to the stair house's lower landing, a fresh `/knk npc nav snapshot` of a route to the hall (from the developer's dev server) would show it; the replay scenario takes the new zip as it is.
+    2. Up to 12 captures (main thread) and searches run before the NPC starts; not measured for many orders at once (plan 4c.8 item 8.4.2).
+    3. `ScenarioNpcs.startOnRoads` and `SnapshotReplay.roads` let any later replay route on the snapshot's own road graph instead of the stored line.
