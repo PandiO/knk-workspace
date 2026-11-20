@@ -77,6 +77,30 @@ This is a human-readable record of capabilities merged into the V3 default branc
   unusable end. knk-plugin branch `claude/offroad-smoke-fixes-f3`; config key in
   [plugin configuration § 4.15](guides/admin/plugin-configuration.md). Smoke test:
   [off-road smoke test § 14](guides/navigation-offroad-smoke-test.md#14-f3-smoke-test-failures-of-2026-11-19-780-771-710-tier2).
+- **Yield areas in the web app: areas, the survey viewer, "Survey now" and the Hybrid override editor** ([PandiO/knk-workspace#680](https://github.com/PandiO/knk-workspace/issues/680),
+  link L13 of the production, storage and transport chain; [production kinds](specs/production-storage-transport/PRODUCTION_KINDS.md)
+  § 3-4). Staff can now see and steer where a production structure's rates come from. A production structure's page
+  gets a **Yield** panel: its yield source in words (a Configured structure is never surveyed and has no Survey now,
+  G5), its areas with their size against the level's cap, **Add area** (the seeded ProductionArea form; an area over
+  the cap or overlapping an exclusive area is refused with the API's sentence), **Survey now** and **Make lines
+  again**, and every output with how its base rate comes about: the surveyed rate, the override, the base rate, the
+  primary multiplier, its line, and per survey unit the area, unit key, matched yield row, count, shared split, rate
+  and chance; units no yield row matches are listed. On a Hybrid structure each output can be pinned, excluded or
+  scaled, and an output the survey doesn't yield can be pinned. An area's page shows its size and cap, a plot from
+  above with the areas that overlap it, the latest survey's composition, the trend per unit key over the last 30
+  surveys and the survey history, with "Survey this area now"; a survey's page shows its composition. A kind's page
+  gets a **Yield table** editor (unit key or prefix, output, rate per unit per hour, chance, from level) and its
+  primary outputs. The dashboard lists areas, overrides and surveys. knk-web-app: `productionAreaClient`,
+  `areaSurveyClient`, `productionYieldOverrideClient`, `StructureYieldPanel`, `ProductionAreaPanel`, `AreaPlot`,
+  `SurveyCompositionTable`, `SurveyTrendTable`, `AreaSurveyPanel`, `ProductionKindYieldTablePanel`,
+  `src/utils/productionYield.ts`; `e2e/production-yield.spec.ts`. Smoke test:
+  [production smoke test § 5.3](guides/production-storage-transport-smoke-test.md#53-steps-web-app-680). Admin steps:
+  1. Deploy the web app with the yield areas API (#138, in `next`) and its imported seeds (`ProductionArea`,
+     `ProductionYieldOverride`, `AreaSurvey`, `ProductionKind` v2, `ProductionStructure` v3). No migration, setting or
+     plugin change.
+  2. Area capture in game: until the ProductionArea seed carries a world task, turn on `RegionClaim` on its WorldGuard
+     region field in the form builder (#680); the `CaptureRadius` task comes with #679.
+
 - **Yield areas API: areas, surveys, yield tables and Derived/Hybrid yields** ([PandiO/knk-workspace#138](https://github.com/PandiO/knk-workspace/issues/138),
   link L11 of the production, storage and transport chain; [production kinds](specs/production-storage-transport/PRODUCTION_KINDS.md)
   § 2-4). Production structures can now produce what their land holds. A structure has **yield areas** (a WorldGuard
