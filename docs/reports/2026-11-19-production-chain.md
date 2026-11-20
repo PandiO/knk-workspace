@@ -36,14 +36,22 @@ of what is already in `next`.
    2. Import the seeds `ProductionArea` and `ProductionYieldOverride` (form and display) and `AreaSurvey` (display).
    3. Make `ProductionKind` v2, `ProductionStructure` v3 (form and display) and `Structure` v3 (form) the default.
    4. Fill each kind's `yieldTable`; none is seeded, and #836 proposes defaults.
-6. **Smoke test of territory (L1 § 1.1–1.2, L2 § 1.3, L3 § 1.4).**
+6. **Smoke test of L12 (surveys plugin, tier:3):** guide § 5.2.
+   1. Merge the `production.surveys` block into the plugin `config.yml`. The YAML is in the changelog and knk-plugin#105.
+   2. Grant `knk.admin.world.production`.
+   3. Yield table rows (#836) are needed for the rates.
+7. **Smoke test of L14 (transport API, tier:3):** guide § 6.1 (18 of 20 steps automated).
+   1. Apply migration `AddTransportCore`.
+   2. Import the seeds `TransportOrder` and `TransportLane`.
+   3. Until L15 measures lanes, type in lanes or accept the estimated routes, and set rural producers' road connections.
+8. **Smoke test of territory (L1 § 1.1–1.2, L2 § 1.3, L3 § 1.4).**
    1. Apply migration `AddTerritory`.
    2. Import the four territory form and display seeds (`Kingdom` first).
    3. Merge the plugin `production` block into `config.yml`.
    4. To test, turn on `production.enabled` in the plugin and in the API game settings.
-7. **Review:** the agent decisions in blocks 4.0–4.11 (L6's are listed in knk-web-api#57) (L0's retag rule; L1 server-side territory and loyalty as a town
+9. **Review:** the agent decisions in blocks 4.0–4.14 (L6's are listed in knk-web-api#57) (L0's retag rule; L1 server-side territory and loyalty as a town
    id; L2's crown land region kind) and coordinator decision 15 (Town/District seed fields).
-8. Later: the shop menu templates for L26 (#687).
+10. Later: the shop menu templates for L26 (#687).
 
 ## 2. Summary
 
@@ -61,12 +69,12 @@ of what is already in `next`.
 | L9 P3 production engine API | #86 | Merged into next (2026-11-19) | api `20dcfb7`, workspace `ea01df32`; merges: api `6c648f60`, workspace `7b1495d0` (after a coordinator merge of `next`, `50497cc8`) | [api#58](https://github.com/PandiO/knk-web-api/pull/58), [ws#827](https://github.com/PandiO/knk-workspace/pull/827) | green (build-and-test, mysql-tests, fresh-database) | create_session `session_01R1w2Uvi8uaBqDwjJDADicL` (one repo besides knk-workspace), started 2026-11-19 |
 | L10 P3b production web app | #678 | Merged into next (2026-11-19) | web-app `9e5a2ca`, workspace `eaf1f1a1`; merges: web app `4e4ca39a`, workspace `9eef39cf` | [web-app#63](https://github.com/PandiO/knk-web-app/pull/63), [ws#834](https://github.com/PandiO/knk-workspace/pull/834) | green (build-and-test, e2e) | create_session `session_01R1w2UvmqQ34HGVHXxDfmwW` (prompt says start without asking), started 2026-11-19 |
 | L11 P4 yield areas API | #138 | Merged into next (2026-11-19) | api `06b11ca`, workspace `b467e15a`; merges: api `e26c7d88`, workspace `e846be50` | [api#60](https://github.com/PandiO/knk-web-api/pull/60), [ws#837](https://github.com/PandiO/knk-workspace/pull/837) | green on `06b11ca` (build-and-test, mysql-tests, fresh-database) | create_session `session_01R1w2UuXh4wtTxPhhZUpLGF` (prompt says start without asking), started 2026-11-19 |
-| L12 P4b surveys plugin | #679 | In review (2026-11-20) | plugin `3472e32d`, workspace `c6f53e07` | [plugin#105](https://github.com/PandiO/knk-plugin/pull/105), [ws#876](https://github.com/PandiO/knk-workspace/pull/876) | green (plugin build + paper-boot, 68 scenarios) | create_session `session_01R1w2Utt8cigo5ND98ZqXzC` (prompt says start without asking), started 2026-11-19 |
+| L12 P4b surveys plugin | #679 | Merged into next (2026-11-20) | plugin `3472e32d`, workspace `c6f53e07`; merges: plugin `d36001b2`, workspace `496ed6fa` | [plugin#105](https://github.com/PandiO/knk-plugin/pull/105), [ws#876](https://github.com/PandiO/knk-workspace/pull/876) | green (plugin build + paper-boot, 68 scenarios) | create_session `session_01R1w2Utt8cigo5ND98ZqXzC` (prompt says start without asking), started 2026-11-19 |
 | L13 P4c yield areas web app | #680 | Merged into next (2026-11-20) | web app `6da700c`, workspace `638e5c3c`; merges: web app `eaf0467d`, workspace `2159952e` | [web-app#67](https://github.com/PandiO/knk-web-app/pull/67), [ws#873](https://github.com/PandiO/knk-workspace/pull/873) | green on `6da700c` (build-and-test, e2e) | create_session `session_01R1w2UwYw3NNQSSBoP7XaBk` (prompt says start without asking), started 2026-11-19 |
-| L14 P5 transport API (simulated carrying, G14) | #79 | Done, in review (2026-11-20) | api `ef61cd1`, workspace `ae26c88b` | [api#65](https://github.com/PandiO/knk-web-api/pull/65), [ws#880](https://github.com/PandiO/knk-workspace/pull/880) | api build-and-test, fresh-database green; mysql-tests green on push run | create_session `session_01R1w2UtGLZrUEAUNFYvkqGB` (prompt says start without asking), started 2026-11-19 |
-| L15 P5b lanes plugin | #681 | Not started | — | — | — | — |
-| L16 P5c transport web app | #682 | Not started | — | — | — | — |
-| L17 P6a API: StorageContainer, caller-filtered reads, menu seeds | #683 | Not started | — | — | — | — |
+| L14 P5 transport API (simulated carrying, G14) | #79 | Merged into next (2026-11-20) | api `ef61cd1`, workspace `ae26c88b`; merges: api `bf8633fb`, workspace `66cd37f0` (after a coordinator merge of `next`, `9a4de0b9`) | [api#65](https://github.com/PandiO/knk-web-api/pull/65), [ws#880](https://github.com/PandiO/knk-workspace/pull/880) | api build-and-test, fresh-database green; mysql-tests green on push run | create_session `session_01R1w2UtGLZrUEAUNFYvkqGB` (prompt says start without asking), started 2026-11-19 |
+| L15 P5b lanes plugin | #681 | Running | — | — | — | create_session `session_01R1w2Ux1xEr3Um5M3f3UysM` (prompt says start without asking), started 2026-11-20 |
+| L16 P5c transport web app | #682 | Running | — | — | — | create_session `session_01R1w2Uu8TpsSchsfou5i63j` (prompt says start without asking), started 2026-11-20 |
+| L17 P6a API: StorageContainer, caller-filtered reads, menu seeds | #683 | Running | — | — | — | create_session `session_01R1w2UukTGdahr4dAwQTutW` (prompt says start without asking), started 2026-11-20 |
 | L18 P6 plugin: terminals, displays, Structures menu, structure menu, orders list | #74 | Not started | — | — | — | — |
 | L19 P7 delivery and inbox API | #60 | Not started | — | — | — | — |
 | L20 P7b inbox plugin, kit/lootbox migration | #684 | Not started | — | — | — | — |
@@ -305,6 +313,24 @@ of what is already in `next`.
    `eaf0467d` and workspace #873 `2159952e`. The API points L13 raised (area seed `RegionClaim` and bounds,
    `CaptureRadius`, `yieldSource` on the structure list) are #877 (tier:1). They fold into L17 (#683), the next API link,
    and the plugin part of `CaptureRadius` goes into a later plugin link. P4 docs start when L12 is merged.
+
+48. **L12 and L14 merge (2026-11-20).** § 6 checks held for both:
+   1. Heads matched.
+   2. CI was green: plugin build and paper-boot (68 scenarios); API build-and-test, mysql-tests and fresh-database.
+   3. Codex was at its usage limit, so there were no findings.
+   4. The scope matched #679 and #79 (with #838).
+   Plugin `next` had moved 2 commits (navigate permission default, #845). The only shared file was `plugin.yml`, with
+   different lines that merged cleanly, so the coordinator merged without re-running CI. Merged: plugin #105
+   `d36001b2`, workspace #876 `496ed6fa`, API #65 `bf8633fb`. Workspace #880 then conflicted in the smoke guide header;
+   the coordinator merged `origin/next` (`9a4de0b9`) and then merged it as `66cd37f0`. P4 (L11–L13) is complete:
+   `documentation` sub-issue #882 under #138, docs session started. Follow-ups filed by the links: #875 (survey
+   `sharedBy` per unit type, tier:2) and #881 (`StockTransaction` seed Reason `Upgrade`).
+49. **After L14: L15 (#681), L16 (#682) and L17 (#683) in parallel.** Each runs in its own repo and each gate is
+   open. Extras:
+   1. L15 takes #875 and the plugin `CaptureRadius` handler of #877.
+   2. L17 takes the API part of #877 and #881.
+   3. L16 takes the #838 reads in the web app.
+   L19 (P7 delivery API) has an open gate (L4 merged) but comes after L17 in charter order on knk-web-api.
 
 ## 4. Link blocks
 
