@@ -1,7 +1,7 @@
 # Overview map — BlueMap in the web app for players, staff and moderation
 
 **Status:** **Decided 2026-11-18** (developer). Proposed the same day; no open questions.
-**Last updated:** 2026-11-19 (fix link F2, #757 and #809, built on `claude/overview-map-f2-panel-fixes` in knk-web-app and knk-workspace, in review: O34, O35, § 5 rules 12 and 14, as built in § 6.3.5 and § 6.3.8); 2026-11-18 (phase 7, #743, built on `claude/overview-map-moderation` in knk-web-app and knk-workspace, in review; as built in § 6.3.8); 2026-11-18 (phase 6b, #742, built on `claude/overview-map-gate-buttons` in knk-web-app and knk-workspace, in review; as built in § 6.3.6); 2026-11-18 (phase 6a, #741, built on `claude/overview-map-gate-commands` in knk-web-api and knk-plugin, in review; as built in § 6.2.10 and § 7.5); 2026-11-18 (phase 4b, #739, built on `claude/overview-map-players-page` in knk-web-app and knk-workspace, in review; as built in § 6.3.6); 2026-11-18 (phase 5, #740, built on `claude/overview-map-staff-details` in knk-web-app and knk-workspace, in review; as built in § 6.3.3); 2026-11-18 (phase 4a, #738, built on `claude/overview-map-players-api` in knk-plugin and knk-web-api, in review; as built in § 6.2.9 and § 7.4); 2026-11-18 (phase 3, #737, built on `claude/overview-map-page` in knk-web-app and knk-workspace, in review; as built in § 6.3.5, deploy notes in the closed-alpha runbook Phase 10); 2026-11-18 (phase 2, #736, built on `claude/overview-map-public-api` in knk-web-api, in review; as built in § 6.2.8); 2026-11-18 (phase 1, #735, built on `claude/overview-map-outlines` in knk-plugin and knk-web-api, in review, not in `next` yet; stored shape in § 6.1.1); 2026-11-18 (§ 3.1.10: existing NAS render container, migration to the alpha stack; Decided; phases filed as #735–#743; first version from the working draft of 2026-11-17 and the design session of 2026-11-18)
+**Last updated:** 2026-11-20 (fix link F3, #826 and #825, built on `claude/overview-map-f3-map-drawing` in knk-web-app and knk-workspace, in review: O36–O42, § 4 items 1–2, § 5 rules 4–5, as built in § 6.3.5); 2026-11-19 (fix link F2, #757 and #809, built on `claude/overview-map-f2-panel-fixes` in knk-web-app and knk-workspace, in review: O34, O35, § 5 rules 12 and 14, as built in § 6.3.5 and § 6.3.8); 2026-11-18 (phase 7, #743, built on `claude/overview-map-moderation` in knk-web-app and knk-workspace, in review; as built in § 6.3.8); 2026-11-18 (phase 6b, #742, built on `claude/overview-map-gate-buttons` in knk-web-app and knk-workspace, in review; as built in § 6.3.6); 2026-11-18 (phase 6a, #741, built on `claude/overview-map-gate-commands` in knk-web-api and knk-plugin, in review; as built in § 6.2.10 and § 7.5); 2026-11-18 (phase 4b, #739, built on `claude/overview-map-players-page` in knk-web-app and knk-workspace, in review; as built in § 6.3.6); 2026-11-18 (phase 5, #740, built on `claude/overview-map-staff-details` in knk-web-app and knk-workspace, in review; as built in § 6.3.3); 2026-11-18 (phase 4a, #738, built on `claude/overview-map-players-api` in knk-plugin and knk-web-api, in review; as built in § 6.2.9 and § 7.4); 2026-11-18 (phase 3, #737, built on `claude/overview-map-page` in knk-web-app and knk-workspace, in review; as built in § 6.3.5, deploy notes in the closed-alpha runbook Phase 10); 2026-11-18 (phase 2, #736, built on `claude/overview-map-public-api` in knk-web-api, in review; as built in § 6.2.8); 2026-11-18 (phase 1, #735, built on `claude/overview-map-outlines` in knk-plugin and knk-web-api, in review, not in `next` yet; stored shape in § 6.1.1); 2026-11-18 (§ 3.1.10: existing NAS render container, migration to the alpha stack; Decided; phases filed as #735–#743; first version from the working draft of 2026-11-17 and the design session of 2026-11-18)
 **Issue:** [PandiO/knk-workspace#732](https://github.com/PandiO/knk-workspace/issues/732); phases as sub-issues in § 11.
 **Dependencies:** the offline BlueMap tile pipeline ([BLUEMAP_EVALUATION.md](BLUEMAP_EVALUATION.md) § 5–7); the SignalR
 game hub (#66, built); managed WorldGuard regions (`docs/architecture/managed-worldguard-regions.md`, built); gate
@@ -75,6 +75,13 @@ Related: [DESIGN.md](DESIGN.md) (in-game maps, M2–M5), [DECISION-map-data-sour
 | O33 | 2026-11-18 | developer | Teleport from the map is filed as idea #733 for its own design pass. |
 | O34 | 2026-11-19 | developer | "Open profile" in the player context panel stays visible for every viewer of the panel, but is **disabled, with a tooltip** that says why ("You need access to player profiles (knk.admin.user.manage) to open this.") for a viewer without the profile page's node `knk.admin.user.manage`; viewers with it keep the working link. A deliberate exception to the map's staff-action rule (actions a viewer may not take are hidden, not disabled: § 6.3.5, § 6.3.8), because a kick-only moderator otherwise lands on a no-access page (#809). |
 | O35 | 2026-11-19 | agent | Escape inside BlueMap's iframe: the bridge reports it to the page as the new v1 map → page type `escapePressed` (empty payload; additive under O14, no v1 meaning changed), and the page closes the open panel on it, the same as its own Escape listener (#757). (alternatives in 2.1) |
+| O36 | 2026-11-19 | developer | Regions are drawn like the spike's `wg2bluemap` markers (#826), for the town flash and "Show region": outlines simplified (points on a straight line dropped), volumes without edge lines plus one line marker along the top of each outline, and a town as a flat shape with holes where its districts are, so a click inside a district reaches the district; districts stay see-through volumes. Replaces "extrude markers" for the town in O05. ("I found the default extrude marker jagged and overwhelming … Maybe we can re-use that when we show the town region marker.") |
+| O37 | 2026-11-19 | developer | Fewer dots when zoomed out (#825): district and structure dots hide beyond their label's distance (O19), as their labels do; town dots always show. Grouping nearby dots into clusters is not built and stays an idea for a design pass (#825). |
+| O38 | 2026-11-20 | agent | A town's holes are the district regions on the same world whose outline centre lies inside the town outline; the bridge decides by position because the v1 region payload has no town of a district (O14 keeps v1 unchanged). (alternatives in 2.1) |
+| O39 | 2026-11-20 | agent | A town's flat shape lies at the town pin's height (its spawn location), else the terrain height under the outline's centre, else y 64. (alternatives in 2.1) |
+| O40 | 2026-11-20 | agent | The town flash uses the same style as "Show region" (flat shape and outline line), and the bridge keeps its own colours (`COLORS`) and `depthTest: false`, so a region shows through hills. (alternatives in 2.1) |
+| O41 | 2026-11-20 | agent | District and structure volumes are clamped to y 20..120 (the spike's default); a region entirely outside that range keeps its own range. Outline line width 3 for towns, 2 for the others. (alternatives in 2.1) |
+| O42 | 2026-11-20 | agent | Arena dots (#739) always show, like town dots: the arena is the one live pin and has no other marker; O37 names districts and structures only. (alternatives in 2.1) |
 
 ### 2.1 Agent decisions: alternatives
 
@@ -129,6 +136,32 @@ Related: [DESIGN.md](DESIGN.md) (in-game maps, M2–M5), [DECISION-map-data-sour
        on another pin of the same panel) puts the focus back in the iframe and Escape stops working again; it would
        also take the keyboard away from BlueMap's own controls on every open.
     2. (b) A new protocol version for it: v2 for one additive type breaks the older side for nothing.
+15. **O38 town holes.** Chosen: by position (a district outline whose centre lies inside the town outline), because
+    it works for the flash and "Show region" alike and needs no protocol change.
+    1. (a) A `townId` on the region payload: a change to the v1 `setMarkers` message the link may not make (O14).
+    2. (b) The other regions of the same "Show region" group: the flash shows the town alone and would get no holes,
+       so a click inside a district during the flash would open the town.
+16. **O39 flat town height.** Chosen: the town pin's height, else the terrain under the centre, else 64, because the
+    spawn location is a known ground-level point the API already sends.
+    1. (a) The outline's `minY`: a full-height WorldGuard region has `minY` -64, under the world.
+    2. (b) The terrain height under the centre only: unknown until that tile has loaded, and the centre of a town on
+       a hill or by the sea can be far off its streets.
+    3. (c) A fixed height in `webapp.conf` like the spike's `town-y`: one height for every town, and a deploy step.
+17. **O40 flash style, colours and depth.** Chosen: the flash looks like "Show region", the bridge's colours stay, and
+    `depthTest` stays off, because one look for one region is easier to read and the colours already match the pin
+    dots.
+    1. (a) Flash as a volume: the jagged look the developer asked to replace.
+    2. (b) The spike's gold (230, 180, 40) and blue (60, 140, 255): no clear gain, and the pin dots would no longer
+       match their regions.
+    3. (c) `depthTest` on as in the spike: the flat town shape would hide under hills and buildings.
+18. **O41 volume heights.** Chosen: clamp to 20..120 and keep the own range of a region entirely outside it, because a
+    full-height region otherwise becomes a wall into the sky, while a district high in the mountains still shows where
+    it is.
+    1. (a) No clamp: full-height districts stand 384 blocks tall.
+    2. (b) The spike's fallback to 20..120 for a region outside the range: draws it where it is not.
+19. **O42 arena dots.** Chosen: always shown, because an arena pin is the live match marker and O37 names districts
+    and structures only.
+    1. (a) Hide by the arena label distance: a running match would vanish from the zoomed-out map.
 
 ## 3. Current state and legacy behaviour
 
@@ -174,11 +207,12 @@ Related: [DESIGN.md](DESIGN.md) (in-game maps, M2–M5), [DECISION-map-data-sour
 ## 4. Player and admin experience
 
 1. **Anyone (no login).** The header has a "Map" entry. `/map` shows the 3D BlueMap view. Town pins with names are
-   visible at every zoom; district and structure labels appear when zoomed in. Online players move with their head
+   visible at every zoom; district and structure pins and their labels appear when zoomed in (O37). Online players move with their head
    and name label. Where a siege runs, one pin reads "[Siege] 12 players" instead of the participants (O31).
-2. **Clicking a town.** Its region flashes as an extrude volume two or three times and disappears. A side panel
-   (bottom sheet on a phone) shows the public town fields and a "Show region" toggle. On: the town region and all its
-   districts stay visible, districts labelled with their names.
+2. **Clicking a town.** Its region flashes two or three times and disappears: a flat surface with a clean outline,
+   open where its districts are (O36). A side panel (bottom sheet on a phone) shows the public town fields and a "Show
+   region" toggle. On: the town region and all its districts stay visible, the districts as see-through volumes with
+   an outline along the top, labelled with their names.
 3. **Clicking a structure.** The panel shows name, description, type and subtype; for a gate, each door with
    open/closed, destroyed and a health bar.
 4. **Clicking a player.** Anonymous and ordinary viewers get the name card (label and tags). A moderator gets the
@@ -203,10 +237,12 @@ Related: [DESIGN.md](DESIGN.md) (in-game maps, M2–M5), [DECISION-map-data-sour
 3. **Pins (O18, O20).** Every town, district and structure with a pin position gets a pin; label = `Domain.Name`;
    structures add type and subtype ("Structure, Gate"). Domains without a region outline and without a location get
    no pin and are listed in the API log once per start.
-4. **Labels (O04, O19).** Label distances come from the API configuration.
+4. **Labels (O04, O19, O37).** Label distances come from the API configuration. District and structure dots use
+   their label's distance too; town and arena dots always show (O42).
 5. **Town flash and toggle (O05, O30).** A click flashes the town outline two or three times (configurable,
    default 3, 400 ms each); the toggle shows the town's outline and all its districts until switched off or another
-   town is toggled.
+   town is toggled. Both draw the town as a flat shape with holes for its districts and the districts as volumes,
+   each with one outline line (O36, O38–O41).
 6. **Live players (O07, O15, O21).** The plugin reports, per online player, uuid, world, x, y, z, yaw, AFK, active
    mode and minigame id every `map.reporting.interval-ticks`; the API keeps the latest report per player and drops a
    player on `PlayerLeft` or after three missed intervals.
@@ -329,7 +365,8 @@ Related: [DESIGN.md](DESIGN.md) (in-game maps, M2–M5), [DECISION-map-data-sour
        top bar, so the "Map" entry is a link on the start page; signed in it is in the bar; both only while the map is on.
        The bridge (`public/bluemap-bridge/bridge.js`, BlueMap v5.29, spike result on #737) uses its own marker sets
        `knk-pins`, `knk-regions`, `knk-players`, keeps them through BlueMap's 10 s `live/markers.json` reload, draws pins
-       as HTML markers (a dot always, the label with `maxDistance`), regions as extrude markers, picks a centroid pin's
+       as HTML markers (a dot always, the label with `maxDistance`; since F3 the dot too for districts and structures),
+       regions as extrude markers (since F3 as below), picks a centroid pin's
        height with `terrainHeightAt`, and maps BlueMap map ids to game worlds with `bridge.js?worlds=<mapId>:<world>`
        (a map id equal to the world name needs none). `setPlayers` draws name labels and reports `playerClicked`, for
        #739. The specs run the real bridge in a fake BlueMap web app (`e2e/fixtures/map.ts`). Hosting: nginx serves
@@ -340,6 +377,19 @@ Related: [DESIGN.md](DESIGN.md) (in-game maps, M2–M5), [DECISION-map-data-sour
        and `MapPage` closes the open panel on it, as its own `window` Escape listener does while the focus is on the
        page. Tests: Jest `bridgeProtocol`; e2e `overview-map.spec.ts` (place panel) and `overview-map-players.spec.ts`
        (name card), both pressing Escape after a click inside the map frame.
+       **Region drawing and far dots (fix link F3, #826 and #825; O36–O42):** the bridge's `regionMarkers`, used by the
+       flash and "Show region", draws each outline the way the spike's `scripts/bluemap/wg2bluemap.py` did. Points on a
+       straight line between their neighbours are dropped (`simplifyOutline`). A town outline is a `shape` marker at
+       `shapeY` = the town pin's `y`, else `terrainHeightAt` of the outline's centre, else 64, with `holes` for every
+       district outline on the same world whose centre lies inside it (`districtHoles`), and `lineWidth: 0`. Any other
+       kind is an `extrude` marker with `lineWidth: 0`, its `shapeMinY`/`shapeMaxY` clamped to 20..120 (`clampVolume`;
+       a range entirely outside keeps its own). Each outline also gets one `line` marker (`<id>|outline`) closed along
+       the top (the shape's height or the volume's `maxY`), width 3 for towns and 2 otherwise; both markers report the
+       region's click. Colours stay `COLORS`, `depthTest: false`. In `renderPins` the dot of a `district` or
+       `structure` pin carries the pin's `maxDistance` like its label; town and arena dots carry none. The pure helpers
+       are exposed as `window.__knkBridgeGeometry` for Jest. Protocol v1 unchanged. Tests: Jest `bridgeGeometry`; e2e
+       `overview-map.spec.ts` ("Show region" draws the town flat …, district and structure dots hide …, the flash's
+       marker types; the fake BlueMap keeps each marker's data, `__fake.markerData`).
     6. **As built (#739):** `components/map/useLivePlayers.ts` polls `GET api/Map/players` (`mapClient.getPlayers`,
        the JWT when logged in) only while `config.livePlayers.enabled`: at once, then every `intervalMs` of the last
        answer (else `pollIntervalMs`), clamped to 0.5–60 s, one request at a time, skipped while the tab is hidden;
@@ -501,3 +551,4 @@ None: 12.1 (anonymous minigame tag) became O31, the public field list O32, telep
 1. District fade-in, if the review of O30 asks for it.
 2. Teleport from the map (PandiO/knk-workspace#733).
 3. Other structure subtypes' widgets and actions through the registry.
+4. Grouping nearby pin dots into cluster markers when zoomed out (#825, O37): needs a design pass.

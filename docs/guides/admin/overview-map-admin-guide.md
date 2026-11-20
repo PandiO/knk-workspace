@@ -112,10 +112,12 @@ steps themselves stay in [runbook Phase 10](../closed-alpha-deployment-runbook.m
    [managed WorldGuard regions § 7 "Overview map outlines"](../../architecture/managed-worldguard-regions.md#overview-map-outlines-pandioknk-workspace735-on-trunk-since-knk-plugin-v03).
 5. Changes (a rename, a new outline) reach open map pages within about 90 seconds (the 30 s marker cache and the
    page's 60 s check) without a reload.
-6. **Labels and dots.** Each label fades out beyond its type's `Map__Labels__<Type>__MaxDistance` (§ 2 item 2); the
-   pin's dot stays at every zoom, so a zoomed-out map shows many dots. Hiding or grouping the dots when zoomed out is
-   idea [#825](https://github.com/PandiO/knk-workspace/issues/825), and drawing a town's region as a flat shape with
-   one outline along the top is idea [#826](https://github.com/PandiO/knk-workspace/issues/826); neither is built.
+6. **Labels and dots.** Each label fades out beyond its type's `Map__Labels__<Type>__MaxDistance` (§ 2 item 2), and
+   since #825 (fix link F3) the dots of districts and structures fade with it; town and arena dots stay at every zoom.
+   Grouping dots into clusters is still an idea ([#825](https://github.com/PandiO/knk-workspace/issues/825)).
+   Regions are drawn like the spike's static markers since #826: a town is a flat surface with one outline and
+   openings where its districts are, districts are see-through volumes without vertical edge lines and one outline
+   along the top, heights clamped to y 20..120.
 
 ## 4. Staff details (`knk.admin.world`)
 

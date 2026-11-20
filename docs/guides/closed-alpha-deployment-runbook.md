@@ -579,7 +579,7 @@ current testers join without a code; the whitelist is off; `/admin/invitations` 
 
 ## Phase 10 — overview map: BlueMap in the stack (#737)
 
-**Applied on 2026-11-19** by the developer: steps 1–3 and 5–8. The full-world render (steps 4 and 9) was skipped on purpose,
+**Applied on 2026-11-19 and 2026-11-20** by the developer: steps 1–3 and 5–8 (the web image and § 3 step 1 on 2026-11-20). The full-world render (steps 4 and 9) was skipped on purpose,
 because only the area that is already rendered is used for now. The overview map was promoted alone to trunk and deployed
 the same day (#732). These are the deploy notes of [PandiO/knk-workspace#737](https://github.com/PandiO/knk-workspace/issues/737),
 overview map L3; spec [OVERVIEW_MAP_DESIGN § 3.1.10, O26](../specs/in-game-maps/OVERVIEW_MAP_DESIGN.md)). The
@@ -654,7 +654,12 @@ Steps (root shell on the NAS: `sudo -i` on its own line first, as in
    `knk-deploy`, the build uses `/srv/docker/build/knk-web-app/_files/nginx.conf`, so put this repo's file there first.
    Then, from the PC, run `scripts/nas-ops/stage-b/pc/knk-release.sh web` and `ssh knk-deploy deploy-web <commit>`.
    `deploy-web` only accepts an `image: knk-web-app:alpha-<8 hex>` line in `compose.yaml`. A hand-built tag such as
-   `alpha-<sha>-bluemap` must be set back first. Nginx must read the tiles as UID 101: `find /mnt/fast/knk-alpha/bluemap/web ! -perm -o+r | head`
+   `alpha-<sha>-bluemap` must be set back first. Two traps from the 2026-11-20 deploy: (1) check `_files/nginx.conf` before building
+   (`grep -c 'location /bluemap/'` prints 1); a file without the `/bluemap/` block gives the frame `X-Frame-Options:
+   DENY`; (2) `deploy-web` with the same commit after a build-file change rebuilds the image but refuses with "the new
+   compose file changes no service", so recreate the container by hand: `docker compose up -d --force-recreate web`.
+   Check: `docker compose exec web wget -qS -O /dev/null http://127.0.0.1:8080/bluemap/` answers `200` with
+   `X-Frame-Options: SAMEORIGIN`. Nginx must read the tiles as UID 101: `find /mnt/fast/knk-alpha/bluemap/web ! -perm -o+r | head`
    prints nothing (else `chmod -R a+rX /mnt/fast/knk-alpha/bluemap/web`).
 7. **Regenerate the web app files** with the new `webapp.conf` (no render):
    `docker compose --profile bluemap run --rm bluemap -g`. Then
