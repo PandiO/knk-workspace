@@ -37,7 +37,7 @@ developer's instruction of 2026-11-20; its own report is [2026-11-19-siege-weapo
    the developer asked this session; (b) fold the shop links into the weapons charter, rejected (two parents, two
    smoke guides).
 2. **Rule set.** Chosen: the `next` branch model (CI on `main` of knk-web-api and knk-web-app, unchanged since
-   2026-11-19). Bases on 2026-11-20: API `next` see the first commit of this report, plugin and web app likewise.
+   2026-11-19). Bases at the first run: API `next` `5e16ea0`, web app `287bb2c`, plugin `c7e36e6e`, workspace `5e4fb7b7`.
    Alternatives: none (the old rules apply only without CI).
 3. **Link model.** Chosen: the coordinator's model for every link, set explicitly. Alternatives: a smaller model for
    tier:2 links, rejected for consistency.
