@@ -757,7 +757,9 @@ This is a human-readable record of capabilities merged into the V3 default branc
   `config.yml` key, no migration.
   1. A ladder and an open trapdoor right above one are climbed, never a wall or a floor, in every NPC check: the
      planner's body check, headroom, and "blocks a body" (knk-core `NpcClimbables`, knk-paper `BukkitNavWorld`). The
-     route line and its waypoints keep the walk's ladder cells (`RouteFollower`, `WaypointChain`).
+     route line and its waypoints keep the walk's ladder cells (`RouteFollower`, `WaypointChain`). A climbing body is
+     kept in its ladder column. Minecraft let it creep sideways until its head caught on the roof beside the hatch
+     (`ClimbHold`).
   2. An NPC whose access profile has `open-doors` opens a closed wooden hatch on its way, as it opens doors, and closes
      it again once nobody is in the shaft (`NpcHatches`; Citizens' own door opener skips trapdoors). Without
      `open-doors` the closed hatch blocks, and an iron hatch always does.

@@ -1252,8 +1252,17 @@ CI now and then, and holds back the engine's stair hop (item 6).
            below to a block above it) or right above the head, within 2.5 blocks of the body. It opens that hatch with
            the wooden trapdoor sound. It closes it again once nobody has been in its shaft (the hatch, two blocks below
            it and one above) for 1.5 s. A hatch someone else closed or opened in between is left as it is.
+        6. Keeping a climbing body in its ladder column (`NpcMover.holdOnClimb`, knk-paper `ClimbHold`). With its
+           waypoint right overhead, Minecraft's move control let the body creep sideways on the ladder: about 0.005 a
+           tick, from x 23.55 to 23.10 under a waypoint at 23.50. Once the body's side entered the next column, its
+           head caught on the roof block beside the hatch at the ladder's top, and the body hung until the watchdog
+           replanned. That caused 1 or 2 stuck spells in about 1 run in 3, locally and in CI `paper-boot` on
+           `18e39020`. Now, each tick while the body climbs toward a waypoint in its own column, its sideways speed
+           draws it back to the waypoint's middle (half the distance a tick, at most 0.1). Every NPC gets this, with
+           or without `open-doors`.
     4. **Citizens climbs.** Citizens follows a waypoint list straight up a ladder. The move control jumps for a waypoint
-       a block up, and in a ladder block Minecraft turns that jump into climbing. No change was needed.
+       a block up, and in a ladder block Minecraft turns that jump into climbing. Only the sideways creep needed a fix
+       (item 3.6).
     5. **J1's hold-back does not stop the climb** (prompt § 2.4). A waypoint straight above is in the body's own cell,
        so `walksOn` keeps the jump. On a ladder the body is off the ground, so jump power does not apply. In the scenario
        no jump was held back on any of the four trips.
@@ -1270,6 +1279,8 @@ CI now and then, and holds back the engine's stair hop (item 6).
                leg. The first fails with the overlay off. C1's profile test was changed to the new decision.
             3. `NpcHatchesTest` (5, MockBukkit): opened on the way up and on the way down; iron, no ladder and too far
                stay closed; closed again once the shaft is empty; one someone else closed is left alone.
+            4. `ClimbHoldTest` (2): a body that crept to x 23.28 under a waypoint at 23.50 is drawn back. Nothing is
+               done close to the middle, off a ladder, or for a waypoint in another column.
         3. Scenario `npc-ladder-hatch` (`MIN_SCENARIOS` 65): a tower with a ladder and a roof hatch, four trips from the
            road to the roof. It fails on `next`.
     7. **Before (`next` `cbac2b6c`) → after** (local runs, Paper 26.3 b205 with Citizens b4269):
@@ -1283,7 +1294,10 @@ CI now and then, and holds back the engine's stair hop (item 6).
                stays closed.
 
            Every trip has 0 stuck spells, 0 jumps held back, and one off-road walk where it arrives.
-        3. RESULTS_FULL_RUN
+        3. Before the climb fix (item 3.6), trip 1 failed in about 1 run in 3: 1 or 2 stuck spells, arriving in 21 to
+           24 s. In CI the full suite failed on it twice, with the other 64 scenarios green. After the fix: 6 runs out
+           of 6 pass with the numbers above, and on the ladder the body stays between x 23.46 and 23.61.
+        4. RESULTS_FULL_RUN
     8. **Known limits:**
         1. `BukkitNavWorld`, the hatch opener and the route line use the default climbables (`LADDER`). A climbable added
            in `navigation.walk.climbables` (vines, scaffolding) is climbed by the walk search and passed by the body
