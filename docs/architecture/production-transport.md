@@ -1,6 +1,6 @@
 # Production transport: orders, transit storage, simulated carriers and road-measured lanes (knk-web-api, knk-plugin and knk-web-app)
 
-**Status:** Current · **Last updated:** 2026-11-20 (header: P6 adds the staff retry and the in-game orders menu, docs #903); 2026-11-20 (first version, production P5 #79/#681/#682, docs PandiO/knk-workspace#891)
+**Status:** Current · **Last updated:** 2026-11-21 (§ 2.1 and § 11.3: `Distribution` orders made by the town logistics planner, P9, docs #929); 2026-11-20 (header: P6 adds the staff retry and the in-game orders menu, docs #903); 2026-11-20 (first version, production P5 #79/#681/#682, docs PandiO/knk-workspace#891)
 **Checked against:** knk-web-api `next` `bf8633fb` (PR PandiO/knk-web-api#65), knk-plugin `next` `7116f1a5` (PR
 PandiO/knk-plugin#108), knk-web-app `next` `5ad5029f` (PR PandiO/knk-web-app#68). Not released; the manual steps of the
 [smoke test § 6](../guides/production-storage-transport-smoke-test.md#6-phase-p5-transport-core-simulated-79-api-681-plugin-682-web-app-tier3)
@@ -58,7 +58,7 @@ off; nothing moves until it is on again.
 
 | Field | Meaning |
 |---|---|
-| `Origin` | `Automatic` (the sweep), `Manual` (staff), `Quest` (a quest script); `Distribution` (P9) and `Trade` (later) are reserved |
+| `Origin` | `Automatic` (the sweep), `Manual` (staff), `Quest` (a quest script), `Distribution` (the town logistics planner's collection orders, P9, [town logistics](town-logistics.md) § 5.5); `Trade` (later) is reserved |
 | `Status`, `StatusReason` | The lifecycle (§ 3) and why it waits, re-routed, returned or was cancelled |
 | `SourceStorageId`, `SourceStructureId` | Where the cargo starts; the structure is the source storage's holder (a `Domain` storage whose domain is a structure), used for lanes |
 | `CargoStorageId` | The order's own Transit storage (§ 4), unique per order |
@@ -433,7 +433,8 @@ The rules are pinned by `EndpointAccessRulesTests`, `ReadAccessRulesTests`, `Das
 
 1. Carriers are simulated only (`Simulated`); NPC caravans (#251) and player couriers are later. No route risk and no
    robbery (D6); `Lost` stays 0.
-2. `Distribution` (P9) and `Trade` orders are not made yet.
+2. `Trade` orders are not made yet. `Distribution` orders are made by the town logistics planner since P9 (in `next`;
+   [town logistics](town-logistics.md)).
 3. The automatic trigger makes one order with one stop per structure at a time, from the Output storage only.
 4. The sweep interval (60 s) and the waiting retry (1 min) are fixed.
 5. Lanes are measured only between producers and the warehouses of their own town and among a town's warehouses; a
