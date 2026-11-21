@@ -1,7 +1,7 @@
 # Siege shop and siege points — smoke test
 
 **Status:** Draft (2026-11-21): §§ 1–4 built and tagged (L1 #866, L2 #867, L3 #868, L4 #869), § 5.1 built and tagged (L5 #870), § 5.2 built and tagged (L6 #871); no steps run by hand.
-**Last updated:** 2026-11-21 (§ 5.2 updated to what L6 built, steps tagged; locked-weapon text in §§ 3–4 names /menu → Siege Minigame → Siege unlocks, #871); 2026-11-20 (§ 4 updated to what L4 built, steps tagged, #869); 2026-11-20 (§ 3 updated to what L3 built, steps tagged, #868); 2026-11-20 (§ 5 updated to what L5 built, § 5.1 steps tagged, #870); 2026-11-20 (§ 2 updated to what L2 built, steps tagged, #867, #878); 2026-11-20 (§ 1 updated to what L1 built, steps tagged, #866); 2026-11-20 (draft from the design, phases 1–4, 5a, 5b)
+**Last updated:** 2026-11-21 (§ 1.0 precondition 2 and § 1.1 step 14: the siege points fields are on the Siege settings page since L2 (#878), docs #908); 2026-11-21 (§ 5.2 updated to what L6 built, steps tagged; locked-weapon text in §§ 3–4 names /menu → Siege Minigame → Siege unlocks, #871); 2026-11-20 (§ 4 updated to what L4 built, steps tagged, #869); 2026-11-20 (§ 3 updated to what L3 built, steps tagged, #868); 2026-11-20 (§ 5 updated to what L5 built, § 5.1 steps tagged, #870); 2026-11-20 (§ 2 updated to what L2 built, steps tagged, #867, #878); 2026-11-20 (§ 1 updated to what L1 built, steps tagged, #866); 2026-11-20 (draft from the design, phases 1–4, 5a, 5b)
 **Design:** [specs/siege-shop/DESIGN.md](../specs/siege-shop/DESIGN.md) · **Issue:**
 [PandiO/knk-workspace#611](https://github.com/PandiO/knk-workspace/issues/611),
 [#356](https://github.com/PandiO/knk-workspace/issues/356), [#859](https://github.com/PandiO/knk-workspace/issues/859)
@@ -28,9 +28,10 @@ manual steps not run yet. A full manual run takes about 40 minutes; the untagged
    ```
    then restart. `SiegeConfiguration` with the default earn amounts (kill 100, streak step 0.1 cap 1.5, assist 40 with
    4 damage in 10 s, death 15, 1 point per 5 gate HP, 3 per capture %, capture 100, trickle 10 per 60 s) and
-   `pointTransfersEnabled` false. The web app's siege settings page does not show these fields yet (#878): check them with
-   `GET api/SiegeConfiguration` and change them with `PUT api/SiegeConfiguration` (Swagger, signed in as Admin), for
-   example `{ "pointTransfersEnabled": true }`. The migration gives an existing configuration row the defaults.
+   `pointTransfersEnabled` false. Check and change them on the web app's Siege settings page, section "Siege points"
+   (#878, built by L2, § 2 step 14; the field for `pointTransfersEnabled` is "Allow teammate transfers"), or with
+   `GET api/SiegeConfiguration` and `PUT api/SiegeConfiguration` (Swagger, signed in as Admin), for example
+   `{ "pointTransfersEnabled": true }`. The migration gives an existing configuration row the defaults.
 3. Accounts and data: A1, A2, D1; a Ready Siege scenario with at least one gate and one capturable (non-instant-victory)
    objective; a lobby that can start with three players. Optional: diagnostic telemetry on, to check step 15.
 
@@ -78,8 +79,9 @@ manual steps not run yet. A full manual run takes about 40 minutes; the untagged
     totals. (A10)
 14. [automated: knk-paper `SiegePointsServiceTest.payIsRefusedWhileTransfersAreOff_A03`, `.payMovesPointsToATeammateOnlyAndNeverOverdraws_A01_A03`, knk-core `SiegePointsEconomyTest`]
     `/siege pay A2 50` as A1. **Expected:** refused, "Sending siege points to teammates is turned off in this game
-    mode."; nothing changes. Admin sets `pointTransfersEnabled` true (`PUT api/SiegeConfiguration`) and a new match
-    starts (settings are frozen per match); repeat. **Expected:** A1 −50, A2 +50, both told; `/siege pay A2 999999` is
+    mode."; nothing changes. Admin sets `pointTransfersEnabled` true (Siege settings page, "Allow teammate
+    transfers", or `PUT api/SiegeConfiguration`) and a new match starts (settings are frozen per match); repeat.
+    **Expected:** A1 −50, A2 +50, both told; `/siege pay A2 999999` is
     refused ("Not enough siege points: …") and nothing changes; `/siege pay D1 10` is refused (not a teammate). Set
     `pointTransfersEnabled` back to false afterwards. (A01, A03)
 15. [partly automated: knk-paper `SiegePointsServiceTest.theMatchResultCarriesEarnedAndSpent_andTheEndStopsEarning_A04_A11`, `SiegePointsTelemetryTest`, knk-api-client `SiegeMatchesCommandApiImplTest.complete_sendsSiegePointsOnlyWhenTheyWereCounted_866`, API `SiegeMatchServiceTests.Complete_StoresSiegePointsEarnedAndSpent_AndZeroWhenNotSent`; by hand: the live result]
