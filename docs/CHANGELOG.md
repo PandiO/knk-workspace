@@ -4,6 +4,39 @@ This is a human-readable record of capabilities merged into the V3 default branc
 
 ## Unreleased — on feature branches, not merged
 
+- **NPC navigation: after a push, an NPC walks back once and goes on with its trip**
+  ([PandiO/knk-workspace#953](https://github.com/PandiO/knk-workspace/issues/953), found in the smoke run of 2026-11-21,
+  part of [#358](https://github.com/PandiO/knk-workspace/issues/358), link M7 #627). With bodies on, an NPC on its way no
+  longer stops for good after a push it can't explain: it walks back once and walks on. Before, one NPC on
+  `northern-wearway-upper-keep-tower` walked back to the same spot 390 times and twice teleported home. knk-plugin and
+  knk-workspace branches `claude/npc-push-return-loop-953` (PRs into `next`). Only with `npc.navigation.enabled` and
+  `collidable: true` (both off by default); no new `config.yml` key, no migration.
+  1. **Cause.** The push watch judged a walking NPC's move only against the road line's next point after the one nearest
+     it. Where the line doubles back at a junction (this route at 1338 44 −623: 1321 −624, 1338 −623, 1337 −625,
+     1340 −622), that point lies behind the NPC while its waypoints lead it on, so its own walk read as a push "by
+     something unknown". After the walk back, the push stayed open: walking on round the junction read as the same push
+     carrying it on, and it walked back again, with no new `pushed` line. A second false push, found by the new
+     scenario on Paper: when the engine ends a waypoint list, the NPC stops walking while its body takes its last steps
+     and slides to a stop, and that read as 0.4 blocks off its standing spot (at a trip's end, and where an off-road
+     walk joins the road). The same false push, then the same loop, showed on the tower's spiral stair in the smoke run
+     of 2026-11-21 (`hatch-tower`, collision on: a 0.4-block push at almost every one-block turn going down, 19 pushes
+     and 1757 walks back in three trips).
+  2. **Fix.** A walking NPC's move is also its own when it goes towards the waypoint the engine walks it to (knk-core
+     `PushWatch`, `Trail.aheadOf`). The look where a walking NPC comes to stand is its own walk ending, unless faster than
+     a walk or right after an attack; it stands where it stopped. A finished walk back ends the push, as the teleport
+     home already did (`PushWatch.endEpisode`): only a new push, counted and logged, walks the NPC back again. Real
+     pushes are handled as before: players with `players-push-npcs`, pushes towards a drop, attacks, the walk back and
+     the teleport home.
+  3. **Tests.** knk-core `NpcNavigationPushTest` (a walk through a hairpin of the line is no push; after one push of
+     unknown kind one walk back, then on to the goal; a shove right after a walk back is a new push; the last steps of a
+     walk that ends are no push), `PushWatchTest`,
+     `TrailTest`; new scenario `npc-push-return-hairpin` (CI `MIN_SCENARIOS` 74): a Citizens NPC with collision on, on a
+     line with the same hairpin, untouched (code defaults, then the movement keys) and knocked once before it. The
+     spiral stair is checked by hand: a replay of the developer's tower snapshot does not get an NPC down the stair yet
+     ([#963](https://github.com/PandiO/knk-workspace/issues/963)).
+     Smoke test: [Fix #953](guides/npc-movement-smoke-test.md#fix-953-after-a-push-the-npc-goes-on-with-its-trip-keep-tower-route).
+  4. **Admin steps:** none beyond deploying the jar.
+
 - **Off-road navigation: a group's default route mode is now a fixed choice (Enum field)**
   ([PandiO/knk-workspace#852](https://github.com/PandiO/knk-workspace/issues/852) follow-up, developer decision
   2026-11-21). For staff: the permission group form's "Default route mode" is an Enum field with Shortest, Efficient

@@ -3,7 +3,7 @@
 **Status:** Written 2026-11-16 for knk-plugin `next` `cc5262ff` (links M1–M7 merged into `next`, behind
 `npc.navigation.enabled` and each link's own key, all off by default); only the steps no plugin scenario checks; not
 run yet (the developer's run with every key on is planned for 2026-11-16)
-**Last updated:** 2026-11-20 (link G1 section, [#814](https://github.com/PandiO/knk-workspace/issues/814)); 2026-11-20 (link H1 section, [#779](https://github.com/PandiO/knk-workspace/issues/779)); 2026-11-18 (link R1 section, [#724](https://github.com/PandiO/knk-workspace/issues/724)); 2026-11-18 (link E1 section, [#701](https://github.com/PandiO/knk-workspace/issues/701)); 2026-11-18 (link C1 section, [#700](https://github.com/PandiO/knk-workspace/issues/700)); 2026-11-17 (link B5 section, [#699](https://github.com/PandiO/knk-workspace/issues/699)); 2026-11-16 (assembled from the developer tests of implementation plan 4c.4, PandiO/knk-workspace#658)
+**Last updated:** 2026-11-21 (fix #953 section, [#953](https://github.com/PandiO/knk-workspace/issues/953)); 2026-11-20 (link G1 section, [#814](https://github.com/PandiO/knk-workspace/issues/814)); 2026-11-20 (link H1 section, [#779](https://github.com/PandiO/knk-workspace/issues/779)); 2026-11-18 (link R1 section, [#724](https://github.com/PandiO/knk-workspace/issues/724)); 2026-11-18 (link E1 section, [#701](https://github.com/PandiO/knk-workspace/issues/701)); 2026-11-18 (link C1 section, [#700](https://github.com/PandiO/knk-workspace/issues/700)); 2026-11-17 (link B5 section, [#699](https://github.com/PandiO/knk-workspace/issues/699)); 2026-11-16 (assembled from the developer tests of implementation plan 4c.4, PandiO/knk-workspace#658)
 **Issue:** [PandiO/knk-workspace#358](https://github.com/PandiO/knk-workspace/issues/358) (links
 [#621](https://github.com/PandiO/knk-workspace/issues/621)–[#627](https://github.com/PandiO/knk-workspace/issues/627));
 post results on the link's sub-issue or [#603](https://github.com/PandiO/knk-workspace/issues/603)
@@ -302,6 +302,55 @@ Steps:
 6. **A real transport destination** (manual: needs the live building data). Send one NPC to another building
    destination of your resource transports (a storehouse or a workshop inside a district) and check it arrives
    inside, as in step 1.
+
+## Fix #953: after a push, the NPC goes on with its trip (keep tower route)
+
+Added 2026-11-21 for knk-plugin `claude/npc-push-return-loop-953`
+([#953](https://github.com/PandiO/knk-workspace/issues/953)); run it on `next` once the fix is merged. It retests the
+smoke run of 2026-11-21, where one NPC on this route logged "pushed 0.4 blocks … by something unknown" at
+1337 45 −624 with nothing touching it, then "returns straight back" and "is back at" 390 times and never went on; the
+same happened on the hatch tower's spiral stair. 2 of 5 steps partly automated and 1 automated (tagged); every step
+can still be run by hand; not run yet. About 30 minutes; 20 minutes for the untagged steps only.
+
+Setup: the setup above with the movement keys of step 3, and `collidable: true`, `players-push-npcs: false`,
+`push-return: true` (the config of 2026-11-21). Restart.
+
+Steps:
+
+1. [partly automated: `npc-push-return-hairpin` trips 1 and 2 (a road line that doubles back as this route's does at
+   1338 44 −623, collision on, nothing touching the NPC) and knk-core
+   `NpcNavigationPushTest.walkingThroughAHairpinOfItsLineIsNoPush`; by hand: the live road] **One NPC, untouched.**
+   `/knk npc nav route load northern-wearway-upper-keep-tower`, `/knk npc nav clear`, `/knk npc nav stats reset`,
+   `/knk npc nav spawn 1`, and stay more than 10 blocks from it. It walks from the off-road start onto the road at
+   1309 51 −621, past the junction at 1338 44 −623 without stopping, and on to the keep and up the tower. The run log
+   in `npc-logs/` has no `pushed … by something unknown` line and no `returns` line. After it arrives,
+   `/knk npc nav stats`: `trips` 1 or more, `pushes: 0`, `returned 0`, `teleported 0`.
+2. [partly automated: `npc-push-return-hairpin` trip 3 (a knock of unknown kind before the junction: one push, one walk
+   back, on to the goal) and knk-core
+   `NpcNavigationPushTest.afterOnePushOfUnknownKindTheNpcWalksBackOnceAndGoesOnWithItsTrip`; by hand: a real player's
+   push] **Nudged while it walks.** Set `players-push-npcs: true`, restart, and repeat step 1's commands. Walk into the
+   NPC once from behind or the side while it walks on the road between 1321 −624 and 1338 −623, then step away. The log
+   has a `pushed … by player <you>` line, then one `returns straight back to …` and one `is back at …`, and the NPC
+   walks on round the junction and arrives. `stats`: `pushes` (players) as many as the times you walked into it,
+   `returned` the same, and `trips` grows by one when it arrives. Set `players-push-npcs: false` again afterwards.
+3. **Down the tower's spiral stair** (manual: a replay of the developer's tower snapshot does not get an NPC down the
+   stair yet, [#963](https://github.com/PandiO/knk-workspace/issues/963); the same false push is covered by step 1's
+   tests). `/knk npc nav route load hatch-tower-reverse` (the
+   route you saved on 2026-11-21 from the tower's top floor at 1398 107 −542 to the keep's road at 1419 82 −545; or
+   link H1's `hatch-tower-down`), `/knk npc nav clear`,
+   `/knk npc nav stats reset`, `/knk npc nav spawn 1`. Once the NPC is down the ladder (a stall at the hatch is
+   [#956](https://github.com/PandiO/knk-workspace/issues/956), not this fix), it walks down the spiral stair
+   (x 1403–1404, z −539 to −536, feet 94 down to 86) without stopping or turning back up. The run log has no
+   `pushed … by something unknown` line on the stair; `stats`: `pushes: 0`, `returned 0`.
+4. [automated: knk-core `NpcNavigationPushTest.aShoveRightAfterAWalkBackIsANewPush`] **No walk back without a push.**
+   In the run logs of steps 1 to 3, the line after an `is back at …` line for this NPC is never `returns …` unless a
+   `pushed …` line for it came first. A loop as on 2026-11-21 shows as `returns straight back` and `is back at` taking
+   turns every 0.6 s.
+5. **Hit while it walks** (manual: needs a way to make the NPC unprotected,
+   [#954](https://github.com/PandiO/knk-workspace/issues/954); until then the attack's knockback and walk back are
+   checked by `npc-guard-ledge-push`'s knockback trip). Once #954 gives a command for it, make the NPC unprotected and
+   hit it once while it walks before the junction: `pushed … by attack <you>`, one walk back, then on to the goal;
+   `trips` grows.
 
 ## After the run
 
