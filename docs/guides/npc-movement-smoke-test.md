@@ -308,9 +308,9 @@ Steps:
 Added 2026-11-21 for knk-plugin `claude/npc-push-return-loop-953`
 ([#953](https://github.com/PandiO/knk-workspace/issues/953)); run it on `next` once the fix is merged. It retests the
 smoke run of 2026-11-21, where one NPC on this route logged "pushed 0.4 blocks … by something unknown" at
-1337 45 −624 with nothing touching it, then "returns straight back" and "is back at" 390 times and never went on. 2 of
-4 steps partly automated and 1 automated (tagged); every step can still be run by hand; not run yet. About 20
-minutes; 10 minutes for the untagged steps only.
+1337 45 −624 with nothing touching it, then "returns straight back" and "is back at" 390 times and never went on; the
+same happened on the hatch tower's spiral stair. 3 of 5 steps partly automated and 1 automated (tagged); every step
+can still be run by hand; not run yet. About 30 minutes; 10 minutes for the untagged steps only.
 
 Setup: the setup above with the movement keys of step 3, and `collidable: true`, `players-push-npcs: false`,
 `push-return: true` (the config of 2026-11-21). Restart.
@@ -333,11 +333,19 @@ Steps:
    has a `pushed … by player <you>` line, then one `returns straight back to …` and one `is back at …`, and the NPC
    walks on round the junction and arrives. `stats`: `pushes` (players) as many as the times you walked into it,
    `returned` the same, and `trips` grows by one when it arrives. Set `players-push-npcs: false` again afterwards.
-3. [automated: knk-core `NpcNavigationPushTest.aShoveRightAfterAWalkBackIsANewPush`] **No walk back without a push.**
-   In the run logs of steps 1 and 2, the line after an `is back at …` line for this NPC is never `returns …` unless a
+3. [partly automated: `npc-replay-hatch-tower-stair` (the developer's snapshot of the tower, collision on); by hand: the
+   live tower and its ladder] **Down the tower's spiral stair.** `/knk npc nav route load hatch-tower-reverse` (the
+   route you saved on 2026-11-21 from the tower's top floor at 1398 107 −542 to the keep's road at 1419 82 −545; or
+   link H1's `hatch-tower-down`), `/knk npc nav clear`,
+   `/knk npc nav stats reset`, `/knk npc nav spawn 1`. Once the NPC is down the ladder (a stall at the hatch is
+   [#956](https://github.com/PandiO/knk-workspace/issues/956), not this fix), it walks down the spiral stair
+   (x 1403–1404, z −539 to −536, feet 94 down to 86) without stopping or turning back up. The run log has no
+   `pushed … by something unknown` line on the stair; `stats`: `pushes: 0`, `returned 0`.
+4. [automated: knk-core `NpcNavigationPushTest.aShoveRightAfterAWalkBackIsANewPush`] **No walk back without a push.**
+   In the run logs of steps 1 to 3, the line after an `is back at …` line for this NPC is never `returns …` unless a
    `pushed …` line for it came first. A loop as on 2026-11-21 shows as `returns straight back` and `is back at` taking
    turns every 0.6 s.
-4. **Hit while it walks** (manual: needs a way to make the NPC unprotected,
+5. **Hit while it walks** (manual: needs a way to make the NPC unprotected,
    [#954](https://github.com/PandiO/knk-workspace/issues/954); until then the attack's knockback and walk back are
    checked by `npc-guard-ledge-push`'s knockback trip). Once #954 gives a command for it, make the NPC unprotected and
    hit it once while it walks before the junction: `pushed … by attack <you>`, one walk back, then on to the goal;

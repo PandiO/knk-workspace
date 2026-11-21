@@ -18,7 +18,9 @@ This is a human-readable record of capabilities merged into the V3 default branc
      carrying it on, and it walked back again, with no new `pushed` line. A second false push, found by the new
      scenario on Paper: when the engine ends a waypoint list, the NPC stops walking while its body takes its last steps
      and slides to a stop, and that read as 0.4 blocks off its standing spot (at a trip's end, and where an off-road
-     walk joins the road).
+     walk joins the road). The same false push, then the same loop, showed on the tower's spiral stair in the smoke run
+     of 2026-11-21 (`hatch-tower`, collision on: a 0.4-block push at almost every one-block turn going down, 19 pushes
+     and 1757 walks back in three trips).
   2. **Fix.** A walking NPC's move is also its own when it goes towards the waypoint the engine walks it to (knk-core
      `PushWatch`, `Trail.aheadOf`). The look where a walking NPC comes to stand is its own walk ending, unless faster than
      a walk or right after an attack; it stands where it stopped. A finished walk back ends the push, as the teleport
@@ -28,8 +30,10 @@ This is a human-readable record of capabilities merged into the V3 default branc
   3. **Tests.** knk-core `NpcNavigationPushTest` (a walk through a hairpin of the line is no push; after one push of
      unknown kind one walk back, then on to the goal; a shove right after a walk back is a new push; the last steps of a
      walk that ends are no push), `PushWatchTest`,
-     `TrailTest`; new scenario `npc-push-return-hairpin` (CI `MIN_SCENARIOS` 74): a Citizens NPC with collision on, on a
-     line with the same hairpin, untouched (code defaults, then the movement keys) and knocked once before it.
+     `TrailTest`; new scenarios (CI `MIN_SCENARIOS` 75): `npc-push-return-hairpin`, a Citizens NPC with collision on, on
+     a line with the same hairpin, untouched (code defaults, then the movement keys) and knocked once before it; and
+     `npc-replay-hatch-tower-stair`, the developer's snapshot of the tower replayed with collision on, one NPC from the
+     foot of the ladder down the spiral stair to the keep's road with no push and no walk back.
      Smoke test: [Fix #953](guides/npc-movement-smoke-test.md#fix-953-after-a-push-the-npc-goes-on-with-its-trip-keep-tower-route).
   4. **Admin steps:** none beyond deploying the jar.
 
