@@ -1,6 +1,6 @@
 # Town logistics: policies, reserves, service areas and the planner (knk-web-api and knk-web-app)
 
-**Status:** Current · **Last updated:** 2026-11-21 (first version, production P9 #127/#686, docs PandiO/knk-workspace#929)
+**Status:** Current · **Last updated:** 2026-11-21 (P9 API follow-ups #928; first version production P9 #127/#686, docs PandiO/knk-workspace#929)
 **Checked against:** knk-web-api `next` `37be22e5` (PR PandiO/knk-web-api#73), knk-web-app `next` `c12e0e7e` (PR
 PandiO/knk-web-app#72). Not released; the manual steps of the
 [smoke test § 10](../guides/production-storage-transport-smoke-test.md#10-phase-p9-town-logistics-127-api-686-web-app-tier3)
@@ -110,9 +110,12 @@ Per scope:
 
 `POST api/LogisticsPolicies/{templateId}/apply` with `{ townId, reason }` copies the template's rules into the town's
 policy: a new version of the current one (keeping its name), or version 1 named "<town> logistics". `BasedOnPolicyId`
-points at the template and the default reason is `From template "<name>" v<n>.` Towns carry no size or specialization
-yet, so nothing is matched automatically: admins pick a template (L23 decision 5; town fields are asked for in
-[#928](https://github.com/PandiO/knk-workspace/issues/928)).
+points at the template and the default reason is `From template "<name>" v<n>.` Admins pick the template (L23
+decision 5). Since [#928](https://github.com/PandiO/knk-workspace/issues/928) a town carries an optional size and
+specialization (`towns.LogisticsTownSize`, `towns.LogisticsSpecialization`, read and set with
+`GET`/`PUT api/LogisticsPolicies/towns/{id}/profile`), and the profile suggests the current template with both labels
+equal, else the same size with a general specialization, else the default template. The suggestion only helps the
+picker: nothing is applied automatically, and the planner still uses the town's policy or the default template (§ 4.1).
 
 ## 4. The rules in force (`LogisticsRuleSet`, `LogisticsTownState`)
 
@@ -255,8 +258,11 @@ for staff with `knk.admin.world` and read nothing otherwise (L24 decision 5). Th
 when nothing is available or it has under 3 days of cover.
 
 The seeded form's Edit of a policy saves a new version that keeps the current rules (`updateKeepingRules`), because a
-`PUT` without rules would empty the policy (L24 decision 3). Template labels are sent on every save, since the API
-takes them from the request (L24 decision 4; [#928](https://github.com/PandiO/knk-workspace/issues/928) item 2).
+`PUT` without rules would empty the policy (L24 decision 3). Template labels are sent on every save (L24 decision 4);
+since [#928](https://github.com/PandiO/knk-workspace/issues/928) the API also keeps a label left out (null) and clears
+it on an empty string, so another client can't clear one by accident. Plan entries, collection orders, reservations,
+service-area entries and the consumer view carry the consumer's structure type (`Shop`, `ProductionStructure`,
+`Warehouse`, `GateStructure`, `Structure`), so a consumer can link to its own page.
 
 ## 7. Settings
 

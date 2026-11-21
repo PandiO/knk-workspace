@@ -1,6 +1,6 @@
 # API Contract: Town logistics (policies, rules, consumer settings, reservations, the planner)
 
-**Status:** Current · **Last updated:** 2026-11-21 (first version, production P9 #127, docs PandiO/knk-workspace#929)
+**Status:** Current · **Last updated:** 2026-11-21 (P9 follow-ups #928: town profile, labels on `PUT`, structure types, names, `townId` lookups)
 **Checked against:** knk-web-api `next` `37be22e5` (PR PandiO/knk-web-api#73; `Controllers/LogisticsControllers.cs`,
 `Dtos/LogisticsDtos.cs`, `Enums/LogisticsEnums.cs`, `Services/Logistics/*.cs`, `Models/Logistics/Logistics.cs`,
 `Services/Territory/ProductionSettings.cs`). Not released.
@@ -36,6 +36,7 @@ a town that already has a policy, a reservation that is not open or already load
 | `DELETE api/ConsumerReplenishments/{id}` | yes | — | yes |
 | `POST api/LogisticsReservations/{id}/release` | yes | yes | — |
 | `POST api/Logistics/towns/{id}/dry-run`, `…/run-now` | yes | yes | — |
+| `PUT api/LogisticsPolicies/towns/{townId}/profile` | yes | yes | — |
 
 Dashboard types (World area, with lookups): `LogisticsPolicy` and `ConsumerReplenishment` editable;
 `LogisticsRule`, `LogisticsReservation`, `LogisticsPlannerRun` and `LogisticsPlanEntry` view only. Pinned in
@@ -52,17 +53,17 @@ Dashboard types (World area, with lookups): `LogisticsPolicy` and `ConsumerReple
 | `scope` | `Town` \| `Warehouse` \| `Template` | Required on create; can't change |
 | `townId` / `town` | int? | Required for `Town`; can't change |
 | `warehouseId` / `warehouse` | int? | Required for `Warehouse`; can't change |
-| `specialization` | string? | Templates only: `Crops`, `Wood`, `Stone`, `Ore`, `Fish`, `Flowers`, `Animals`, or empty (general) |
-| `townSize` | string? | Templates only: `Village`, `Town`, `City`, or empty |
-| `isDefaultTemplate` | bool? | Templates only; saving one as default clears the others |
+| `specialization` | string? | Templates only: `Crops`, `Wood`, `Stone`, `Ore`, `Fish`, `Flowers`, `Animals`; on `PUT` null keeps it and `""` clears it (general) |
+| `townSize` | string? | Templates only: `Village`, `Town`, `City`; on `PUT` null keeps it and `""` clears it |
+| `isDefaultTemplate` | bool? | Templates only; saving one as default clears the others; on `PUT` null keeps it |
 | `version`, `lineageId`, `isCurrent`, `basedOnPolicyId`, `supersededByPolicyId`, `supersededAt` | | Read only |
 | `author` | `Admin` \| `ClanCouncil` | Default `Admin` |
 | `reason` | string? | Up to 500; default "Created." / "Edited." |
 | `createdAt`, `createdByUserId` | | Read only |
 | `rules` | `LogisticsRuleDto[]` | The whole list of the version (at most 200); a save replaces it |
 
-Template labels are taken from the request on every save: a `PUT` without them clears them
-([#928](https://github.com/PandiO/knk-workspace/issues/928) item 2; the web app always sends them).
+Template labels left out of a `PUT` (null) are kept, like `name`; an empty string clears a label
+([#928](https://github.com/PandiO/knk-workspace/issues/928) item 2).
 
 ### 2.2 `LogisticsRuleDto`
 
@@ -101,10 +102,22 @@ no warehouse rules, service areas, structures or districts.
 | `PUT {id}` | `LogisticsPolicyDto` → 200 `LogisticsPolicyDto` | Writes version n + 1 and returns it (a new id); 409 unless `{id}` is current, or when another save got in first |
 | `DELETE {id}` | → 204 | Deletes every version |
 | `POST {id}/apply` | `{ "townId": 5, "reason": "…" }` → `LogisticsPolicyDto` | `{id}` must be a template (400); copies its rules into the town's policy as a new version, or its version 1 |
+| `GET towns/{townId}/profile` | → `TownLogisticsProfileDto` | The town's labels and the template that fits them (§ 2.4); 404 unknown town |
+| `PUT towns/{townId}/profile` | `TownLogisticsProfileDto` → `TownLogisticsProfileDto` | Sets `townSize` and `specialization`: null keeps a field, `""` clears it; 400 unknown label or another `townId`; 404 unknown town |
 
 `LogisticsPolicyListDto`: `id`, `name`, `scope`, `townId`, `townName`, `warehouseId`, `warehouseName`,
 `specialization`, `townSize`, `isDefaultTemplate`, `version`, `lineageId`, `isCurrent`, `ruleCount`, `reason`,
 `createdAt`.
+
+### 2.4 `TownLogisticsProfileDto` (#928)
+
+A town's size and specialization, the labels the default templates key on (TOWN_LOGISTICS § 4.1), stored on the town
+(`towns.LogisticsTownSize`, `towns.LogisticsSpecialization`; not on the town form). Fields: `townId`, `townName`,
+`townSize` (`Village`, `Town`, `City` or null), `specialization` (a resource category or null = general), and read only
+`suggestedTemplateId`, `suggestedTemplateName`, `suggestedTemplateMatch`: the current template with both labels equal
+(`Exact`), else the same size with a general specialization (`Size`), else the default template (`Default`), else
+`None`; the oldest template lineage wins a tie. The suggestion is for the web app's template picker; the planner still
+uses the town's own policy or the default template (§ 7.2 `policySource`).
 
 ## 3. `api/LogisticsRules` (read only)
 
@@ -128,13 +141,14 @@ reorder ≤ target, target 1-100,000,000), `priorityClass` (`Critical` … `Low`
 ## 5. `api/LogisticsReservations`
 
 `LogisticsReservationDto`: `id`, `townId`, `warehouseId`, `warehouseStorageId`, `consumerStructureId`,
-`consumerStorageId`, `itemBlueprintId` (each with its `NamedRefDto`), `amount`, `collected`, `status` (`Open`,
+`consumerStorageId`, `itemBlueprintId` (each with its `NamedRefDto`), `consumerStructureType` (`Shop`, `ProductionStructure`, `Warehouse`, `GateStructure` or `Structure`), `amount`, `collected`, `status` (`Open`,
 `Collected`, `Released`, `Cancelled`), `priorityClass`, `transportOrderId`, `transportOrderStatus`, `plannerRunId`,
 `createdAt`, `expiresAt`, `closedAt`, `explanation`, `statusReason`.
 
 | Route | Notes |
 |---|---|
 | `GET {id}`, `POST search` | Newest first; filters `townId`, `warehouseId`, `consumerStructureId`, `consumerStorageId`, `itemBlueprintId`, `status`, `open`, `transportOrderId`, `plannerRunId` |
+| `POST search` rows | `LogisticsReservationListDto`: `id`, `townId`/`Name`, `warehouseId`/`Name`, `consumerStructureId`/`Name`, `consumerStructureType`, `consumerStorageId`/`Name`, `warehouseStorageId`/`Name`, `itemBlueprintId`/`Name`, `amount`, `collected`, `status`, `priorityClass`, `transportOrderId`, `createdAt`, `expiresAt` |
 | `POST {id}/release` | Body `{ "reason": "…" }` (optional, up to 300). Cancels its collection order when it is not final, sets `Cancelled`. 409 when not open, or when the worker already loaded (the next run marks it `Collected`) |
 
 ## 6. `api/LogisticsPlannerRuns` (read only)
@@ -151,7 +165,7 @@ outcome but `NotNeeded`)). `POST search` → `LogisticsPlannerRunListDto` page.
 | Route | Answer | Notes |
 |---|---|---|
 | `GET towns/{townId}/supply` | `TownSupplyDto` | § 7.3 |
-| `GET towns/{townId}/service-areas` | `TownServiceAreasDto` | `entries[]`: `areaKind` (`District`, `Rural`, `Structure`), `districtId`/`districtName` or `structureId`/`structureName`, `warehouseId`, `warehouseName`, `source` (`Rule` or `Nearest`), `ruleId` |
+| `GET towns/{townId}/service-areas` | `TownServiceAreasDto` | `entries[]`: `areaKind` (`District`, `Rural`, `Structure`), `districtId`/`districtName` or `structureId`/`structureName`/`structureType`, `warehouseId`, `warehouseName`, `source` (`Rule` or `Nearest`), `ruleId` |
 | `POST towns/{townId}/dry-run` | `LogisticsPlanDto` with `dryRun: true` | Writes nothing; works while production is off |
 | `POST towns/{townId}/run-now` | `LogisticsPlanDto` with `runId` | 409 `ProductionDisabled` while off; 404 unknown town |
 | `GET consumers/{structureId}` | `ConsumerViewDto` | 404 unknown structure |
@@ -163,7 +177,7 @@ outcome but `NotNeeded`)). `POST search` → `LogisticsPlannerRunListDto` page.
 `reason`), `collected[]` (reservation ids), `warnings[]`, `summary`.
 
 `LogisticsPlanEntryDto` (one per consumer storage and blueprint): `consumerStructureId`/`Name`,
-`consumerStorageId`/`Name`, `itemBlueprintId`/`Name`, `warehouseId`/`Name`, `priorityClass`, `stock` (stock + on the
+`consumerStructureType` (`Shop`, `ProductionStructure`, `Warehouse`, `GateStructure` or `Structure`), `consumerStorageId`/`Name`, `itemBlueprintId`/`Name`, `warehouseId`/`Name`, `priorityClass`, `stock` (stock + on the
 way), `reorderPoint`, `targetLevel`, `shortfall`, `reserved`, `outcome`, `settingSource` (`Setting`, `Rule`, `Inputs`),
 `ruleIds[]`, `reservationId`, `transportOrderId`, `explanation`.
 
@@ -171,8 +185,9 @@ way), `reorderPoint`, `targetLevel`, `shortfall`, `reserved`, `outcome`, `settin
 `NoWorker`, `NoRoom`, `NotConnected`, `CarrierFull` (meanings in the
 [architecture § 5](../../architecture/town-logistics.md#5-the-planner-logisticsplanner)).
 
-`LogisticsPlannedOrderDto` (one collection order): `consumerStructureId`/`Name`, `consumerStorageId`, `warehouseId`/
-`Name`, `warehouseStorageId`, `lines[]` (`itemBlueprintId`, `amount`), `carrierCapacity`, `workersPresent`,
+`LogisticsPlannedOrderDto` (one collection order): `consumerStructureId`/`Name`, `consumerStructureType`,
+`consumerStorageId`/`Name`, `warehouseId`/`Name`, `warehouseStorageId`/`Name`, `lines[]` (`itemBlueprintId`,
+`itemBlueprintName`, `amount`), `carrierCapacity`, `workersPresent`,
 `workersTotal`, `transportOrderId` (null in a dry run), `warnings[]`.
 
 ### 7.3 `TownSupplyDto`
@@ -188,7 +203,7 @@ way), `reorderPoint`, `targetLevel`, `shortfall`, `reserved`, `outcome`, `settin
 
 ### 7.4 `ConsumerViewDto`
 
-`structureId`, `structureName`, `townId`, `isConsumer`, `hasWorkers`, `workersTotal`, `workersPresent`,
+`structureId`, `structureName`, `structureType`, `townId`, `isConsumer`, `hasWorkers`, `workersTotal`, `workersPresent`,
 `carrierCapacity`, `serviceWarehouseId`, `serviceWarehouseName`, `serviceSource`, `storages[]` (`storageId`,
 `storageName`, `purpose`, `lines[]`: `itemBlueprintId`, `itemBlueprintName`, `stock`, `inbound`, `reorderPoint`,
 `targetLevel`, `priorityClass`, `settingSource`, `consumerReplenishmentId`, `ruleIds[]`), `openReservations[]`,
@@ -216,5 +231,7 @@ defaults). A wrong value is refused with the key, for example `production.logist
    `logistics:<runId>:<consumerStorageId>:<warehouseStorageId>`.
 2. The production view's inbound evaluation (`TransportService.EvaluateAsync`) uses a producer's service area when it
    has no preferred warehouse; a warning says when that warehouse can't take the delivery.
-3. Open points for this contract: [#928](https://github.com/PandiO/knk-workspace/issues/928) (town size and
-   specialization fields, template labels on `PUT`, structure type and names on plan entries, a `townId` lookup filter).
+3. Lookups (`api/Lookup`) with a `townId` filter for the rule editor's and settings' pickers: `Warehouse`, `District`,
+   `Structure`, `ProductionStructure`, `Shop`, `LogisticsPolicy`, `LogisticsReservation`, `LogisticsPlannerRun`, and
+   since [#928](https://github.com/PandiO/knk-workspace/issues/928) `LogisticsRule`, `ConsumerReplenishment` and
+   `Storage` (storages held by the town, one of its districts or a structure in it).
