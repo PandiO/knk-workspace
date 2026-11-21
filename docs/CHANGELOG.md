@@ -4,6 +4,18 @@ This is a human-readable record of capabilities merged into the V3 default branc
 
 ## Unreleased — on feature branches, not merged
 
+- **Shops follow-ups: kind and type on the Shop dashboard, usernames and goods links in the town ledger, a Shops
+  settings card, the town account on the town page**
+  ([PandiO/knk-workspace#938](https://github.com/PandiO/knk-workspace/issues/938), link L27b of the production, storage
+  and transport chain; [shops DESIGN](specs/shops/DESIGN.md) § 3.1, § 4). knk-web-api: the shop search row
+  (`api/Shops/search`, `ProductionWorldListDto`) gains `kind`, `shopTypeId` and `shopTypeName`; a town account's
+  ledger row (`TownAccountEntryDto`) gains the player's `username` and the `stockTransactionId` of a purchase's or
+  buy-back's goods leg (joined on the idempotency key both legs share; no migration). knk-web-app: the Shop dashboard
+  shows Kind and Shop type; the town account's ledger shows the player by name and links each sale and buy-back to its
+  stock transaction; the game settings page has a **Shops** card for `production.shops` (enchantment surcharge per
+  level, trade stats lookback hours) with the API's checks; a town's page shows its **town account** (coins, the ledger
+  check, a link to the ledger), World area only. Admin steps: none (no migration, setting or plugin change).
+
 - **Shops in the web app: shop types with accepted categories and levels, a shop's offer, catalogue editor, sales,
   town account and hourly trade stats chart**
   ([PandiO/knk-workspace#688](https://github.com/PandiO/knk-workspace/issues/688), link L27 of the production, storage
