@@ -52,7 +52,7 @@ of what is already in `next`.
 10. **Decision (L17, agent):** town membership for the caller-filtered structure reads (M3) is the permission node
     `knk.town.member.<town id>` (one permission group per town), a stand-in until town runtime management #246. Confirm,
     or name the membership source you want.
-11. **Review L26's menus (#687):** you chose the legacy menus on 2026-11-21; L26 lists every layout deviation in its PR.
+11. **Review L26's menus (#687):** you chose the legacy menus on 2026-11-21; the layout deviations are in block 4.26 and PandiO/knk-plugin#120 (the sell menu is a plugin-built view: the engine has no deposit slots).
 12. **Review (L22 decision 1):** in a yield area, a player who doesn't meet a harvest rule can't break that rule's
     targets, also in the wilderness (otherwise they'd get full vanilla drops there).
 13. **Not in the charter's links, for the developer or the manager to schedule:** #901 (P7 web app: inbox, stash,
@@ -71,6 +71,7 @@ of what is already in `next`.
    2. Import the six seeds: `ShopType`, `ShopTypeLevel`, `Shop`, `ShopCatalogueEntry`, `ShopTradeStat` and `TownAccount`.
    3. Optionally set the game settings section `production.shops`; create shop types, shops and catalogues.
 
+18. **L28 shopkeepers (#249) gate:** the NPC lifecycle (§6a) isn't in knk-plugin `next` yet. Tell the coordinator if it should wait for #358's chain or build a minimal lifecycle itself.
 
 ## 2. Summary
 
@@ -103,11 +104,11 @@ of what is already in `next`.
 | L24 P9b logistics web app | #686 | Merged into next (2026-11-21) | web app `e392d84`, workspace `926ce973`; merges: web app `c12e0e7e`, workspace `385ec7d3` | [web-app#72](https://github.com/PandiO/knk-web-app/pull/72), [ws#927](https://github.com/PandiO/knk-workspace/pull/927) | green on `e392d84`: build-and-test (push 44863648405, PR 44863833419), e2e push run 44863648392; PR e2e run 44863833359 running | create_session `session_01R1w2UwTStX77ypqswMN3Kz` (prompt says start without asking), started 2026-11-21 |
 | L25 P10 shops API, town account | #248 | Merged into next (2026-11-21) | api `0e15599`, workspace `e5ac443c` (after a coordinator merge of `next`); merges: api `289f4d4b`, workspace `7c7f2de0` | [api#74](https://github.com/PandiO/knk-web-api/pull/74), [ws#933](https://github.com/PandiO/knk-workspace/pull/933) | green on `0e15599` (build-and-test, mysql-tests, fresh-database) | create_session `session_01R1w2Uu45eaJcRwWoXYurUU`, started 2026-11-21 |
 | L25b P9 API follow-ups (coordinator extra) | #928 | Merged into next (2026-11-21) | api `16713a85`, workspace `77f3a022` (after a coordinator merge of `next`); merges: api `e02bf557`, workspace `0c469db3` | [api#75](https://github.com/PandiO/knk-web-api/pull/75), [ws#935](https://github.com/PandiO/knk-workspace/pull/935) | green on `16713a85` (build-and-test, mysql-tests, fresh-database); Codex at its usage limit | create_session `session_01R1w2UwSQPJ4gQDcsTmi8Xt`, branch `claude/production-p9-followups` |
-| L26 P10b shop menus plugin | #687 | In review (2026-11-21), not merged | plugin `23186ca6`, workspace `3b0434b5`, api `b7dadde6` (the #687 patch, applied by the coordinator) | [plugin#120](https://github.com/PandiO/knk-plugin/pull/120), [ws#965](https://github.com/PandiO/knk-workspace/pull/965), [api#79](https://github.com/PandiO/knk-web-api/pull/79) | green on `23186ca6` (build, paper-boot with 74 scenarios); Codex at its usage limit | create_session `session_01R1w2UtuHZc7vYs2cYFbg7C`, branch `claude/production-p10b` |
+| L26 P10b shop menus plugin | #687 | Merged into next (2026-11-21) | api `b7dadde6` (coordinator-applied patch), plugin `23186ca6`, workspace `3b0434b5`; merges: api `7c6dd7f5`, plugin `c349a53c`, workspace `8f85663a` | [api#79](https://github.com/PandiO/knk-web-api/pull/79), [plugin#120](https://github.com/PandiO/knk-plugin/pull/120), [ws#965](https://github.com/PandiO/knk-workspace/pull/965) | green (api build-and-test, mysql-tests, fresh-database; plugin build, paper-boot) | create_session `session_01R1w2UtuHZc7vYs2cYFbg7C`, branch `claude/production-p10b` |
 | L27 P10c shops web app | #688 | Merged into next (2026-11-21) | web app `0100518`, workspace `f46e0de6` (after coordinator merges of `next`); merges: web app `11832d6b`, workspace `ee4ee00b` | [web#73](https://github.com/PandiO/knk-web-app/pull/73), [ws#936](https://github.com/PandiO/knk-workspace/pull/936) | green on `0100518` (build-and-test, e2e) | create_session `session_01R1w2Uwx1cX3dVQ9hS8MdKX`, started 2026-11-21 |
 | L27b P10 shops follow-ups (coordinator extra) | #938 | Merged into next (2026-11-21) | api `3a2e5db5`, web app `c3681765`, workspace `e28a6610`; merges: api `58c06427`, web app `f386e519`, workspace `33b6a583` | [api#76](https://github.com/PandiO/knk-web-api/pull/76), [web#74](https://github.com/PandiO/knk-web-app/pull/74), [ws#941](https://github.com/PandiO/knk-workspace/pull/941) | push runs green on `3a2e5db` (build-and-test, mysql-tests, fresh-database) and `c368176` (build-and-test, e2e); Codex at its usage limit | create_session `session_01R1w2UuaqLDEYWP9TRyxn93`, branch `claude/production-p10-followups` |
-| L28 P11 shopkeepers | #249 | Not started | — | — | — | — |
-| L29 P12 display stalls | #250 | Not started | — | — | — | — |
+| L28 P11 shopkeepers | #249 | Waiting (NPC lifecycle §6a not in knk-plugin `next`; #358) | — | — | — | — |
+| L29 P12 display stalls | #250 | Running (started 2026-11-21 18:45) | — | — | — | create_session `session_01R1w2UtpTbcFHRyyeQhvtTX`, branch `claude/production-p12` |
 
 ## 3. Coordinator decisions
 
@@ -511,6 +512,18 @@ of what is already in `next`.
     additive `MenuTemplateSeed.Shops.cs` (`shops.shop`, `shops.item`, `shops.confirm`), its registration and seed test:
     no migration, endpoint or access rule; its own PR, merged before the plugin PR. The sell menu is a plugin-built view
     (the engine has no deposit slots, legacy G2), logged as a deviation for the developer's review.
+79. **L26 merge (2026-11-21 18:44).** L26 couldn't push knk-web-api (its § 0 granted read only; decision 78's message
+    couldn't widen it), so it posted the seed commit as a patch on #687. The coordinator read the whole patch (one new
+    `MenuTemplateSeed.Shops.cs`, one registration block, three test keys; no migration, endpoint or access rule), applied
+    it unchanged with `git am` on `next` `86463af` and opened knk-web-api#79. § 6 checks held for all three PRs: heads
+    matched, branches contained `next`, CI green (plugin paper-boot included; `MIN_SCENARIOS` 73 → 74), no review
+    threads, Codex at its usage limit, `production.enabled` off by default. Merged API first: `7c6dd7f5`, plugin
+    `c349a53c`, workspace `8f85663a`. Lesson for later prompts: grant knk-web-api push to plugin links that add menus.
+80. **After L26: L29 started, L28 waits; P10b docs.** L28 (#249) needs the NPC lifecycle (§6a: one live entity per id,
+    PDC tag and registry, orphan sweep); knk-plugin `next` has no lifecycle registry yet (only `NpcSpawnQueue`), and the
+    NPC navigation work of #358 is still open, so L28 stays gated. L29 (#250, display stalls) has no NPC dependency and
+    started (knk-plugin, with knk-web-api push for spot storage and menus). Docs sub-issue #966 under #687 and docs
+    session `session_01R1w2Uvqm32Es6wDFvkjoF1` started.
 
 ## 4. Link blocks
 
