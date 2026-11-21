@@ -532,6 +532,9 @@ of what is already in `next`.
     `session_01R1w2UwX1CDHx9mXkzB1tmF` started; P10b docs #966 done (#967 merged).
 82. **Only L28 is left.** L28 (#249, shopkeepers) waits for the NPC lifecycle (decision 80) and the developer's answer in
     § 1 item 18 (no reply on #22 or #249 at 20:15). Check-ins slow to every 3 hours.
+83. **P12 docs done; L28 still gated (23:18).** Docs #970 closed (#971 merged into `next` as `d9511360`; remaining
+    guide checks and screenshots in #972). knk-plugin `next` (`b31fceb6`) has no NPC lifecycle registry or orphan
+    sweep; no developer reply on #22 or #249. Check-ins every 6 hours until the developer answers § 1 item 18.
 
 ## 4. Link blocks
 
