@@ -1,7 +1,8 @@
 # Inventory Menus — Admin Guide
 
 **Status:** Living document — update in place as the code changes
-**Last updated:** 2026-11-11 (first version, PandiO/knk-workspace#302; checked against knk-plugin `main` `121030f`,
+**Last updated:** 2026-11-21 (§ 1: the siege shop and unlock menus and their buttons, § 6: the menu item is set on the game
+settings page, in `next`, siege shop chain #868, #869, #871, docs PandiO/knk-workspace#908); 2026-11-11 (first version, PandiO/knk-workspace#302; checked against knk-plugin `main` `121030f`,
 knk-web-api `master` `b5e57fa` and knk-web-app `main` `9a85238`)
 
 How the in-game menus are defined, changed and checked. What players see is in the
@@ -28,6 +29,17 @@ The built-in menus: `main` (the hub, 3 rows), `kits.overview`, `profile.main`, `
 `discoveries.main`, `teleport.destinations`, `statistics.main`, `statistics.leaderboards`, `statistics.leaderboard`,
 `statistics.visibility`, `users.manager` (+ `.edit`, `.titles`, `.groups`) and the siege menus `siege.overview`,
 `siege.information`, `siege.spawnpoint`.
+
+In `next`, not released (siege shop chain, [#868](https://github.com/PandiO/knk-workspace/issues/868),
+[#869](https://github.com/PandiO/knk-workspace/issues/869)): `siege.shop` (the categories of the viewer's match and their
+balance; content source `siege.shop-categories`), `siege.shop.category` (one category's offers, `ctx.categoryId`;
+`siege.shop-entries`, action `siege.shop.buy`) and `siege.unlocks` (every siege weapon type with the viewer's state;
+`siege.unlocks`, action `siege.unlocks.buy` with a confirmation). The API also adds, once, a **Shop** button
+(`siege.shop.open`, condition `siege.shop-available`) to slot 0 of `siege.information`'s header and a **Siege
+unlocks** button (`menu.open` with `menu-available`) to slot 0 of `siege.overview`'s header on databases seeded
+before; it skips a header where slot 0 is taken. Deploy the plugin before the API restart that adds the Shop
+button, or the older plugin blocks `siege.information`. Set-up and checks:
+[siege shop admin guide](siege-shop-admin-guide.md).
 
 ## 2. What a template contains
 
@@ -99,7 +111,9 @@ menus, and every other menu, are left alone.
   also applies when a Dynamic menu changes size. Keep menu hops and size changes to what is needed.
 - Sizes are 1–6 rows for everyone; there is no Bedrock-specific limit.
 - The menu item (`menus.menu-item.*`, a nether star in slot 8 for every player by default) exists mainly for Bedrock
-  and console players; see the [plugin configuration reference](plugin-configuration.md).
+  and console players; see the [plugin configuration reference](plugin-configuration.md). In `next` its look and what
+  each click does (with overrides in a siege) are set on the web app's game settings page
+  ([game settings § Menu item](../game-settings.md#menu-item), #870, #871); the `config.yml` keys are the fallback.
 
 ## 7. A safe way to add or change a menu
 

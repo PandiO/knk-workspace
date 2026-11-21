@@ -1,6 +1,6 @@
 # Plugin configuration reference (`config.yml`)
 
-**Status:** Current · **Last updated:** 2026-11-19 (§ 4.29 `map` promoted to main alone with the overview map, #732); 2026-11-18 (§ 4.29 `map.reporting.interval-ticks` and the live player report, § 2.1 row, overview map L4, #738); 2026-11-18 (§ 4.29 `map.reporting.enabled`, § 2.1 and § 3 rows, overview map L1, #735); 2026-11-15 (§ 4.3 `realtime.moderation` and § 2.1, web kick/ban, #574); 2026-11-15 (§ 2.1: #522 merged into `next` `deb7ff49`, #589); 2026-11-15 (§ 4.27 `npc`: `group-lateral-spacing`, `group-width-hysteresis-blocks`, `group-followers-finish-trip`, `group-spacing` 2.0 → 1.5, `group-formation` and `group-ranks-width` texts, #522); 2026-11-15 (§ 4.27 `npc`: `corner-clearance`, `waypoint-margin`, `recovery-wait-ticks`, `stationary-ticks` and `no-progress-ticks` 40, `max-retries` reworded, #521); 2026-11-14 (§ 4.28 `testing.scenarios`, test servers only, #421); 2026-11-14 (§ 4.18 `messages.web-account-registered`, #485); 2026-11-14 (§ 2.1: the #377 `group-*` keys are in `next` since 2026-11-13, PandiO/knk-workspace#496); 2026-11-13 (§ 4.11 gates are discovered too; § 4.21 realtime push; § 4.26 the kit cache, PandiO/knk-workspace#300)
+**Status:** Current · **Last updated:** 2026-11-21 (§ 2.1 row of #134: in `next` `6f6c915f`; § 4.31 links the [harvesting admin guide](production-harvesting-admin-guide.md), rules through `api/HarvestRules`, docs #922); 2026-11-21 (§ 4.31 `production.harvest.*`, § 2.1 and § 3 rows, production chain L22, #134); 2026-11-21 (§ 2.1 row of #684: in `next` `bdd8b463`; § 4.31 links the [reward inbox admin guide](reward-inbox-admin-guide.md), docs #915); 2026-11-21 (§ 4.31 `production.inbox.join-summary`, § 2.1 and § 3 rows, production chain L20, #684); 2026-11-21 (§ 2.1 rows of #866, #868 and #871: in `next`; § 4.13 links the [siege shop admin guide](siege-shop-admin-guide.md), docs #908); 2026-11-21 (§ 4.14 `menus.menu-item.*` is the startup fallback of the game settings page's Menu item card, shift-clicks in `open-on`, § 2.1 row, siege shop L6, #871); 2026-11-20 (§ 2.1 row of #74: in `next` `8e672ba6`; § 4.31 bindings through the API, the web app page is #904; link to the [storage terminals admin guide](production-storage-admin-guide.md), docs #903); 2026-11-20 (§ 4.31 `production.storage.*`, § 2.1 and § 3 rows, production chain L18, #74); 2026-11-20 (§ 2.1 rows of #681 and #679: in `next`, docs #891); 2026-11-20 (§ 4.31 `production.logistics.lanes.*`, § 2.1 and § 3 rows, production chain L15, #681); 2026-11-20 (§ 4.13 `siege.points.enabled` and § 2.1 row, siege shop L1, #866); 2026-11-20 (§ 4.31 `production.surveys.*`, § 2.1 and § 3 rows, production chain L12, #679); 2026-11-20 (§ 4.27 `npc.navigation.road-goal-reachable`, `road-goal-walk-weight` and § 2.1 row, NPC follow-ups G1, #814); 2026-11-20 (§ 2.1 `map.reporting.*` rows on trunk since v0.3, docs #767); 2026-11-20 (§ 4.15 `navigation.road-goal-walk-weight`, `road-goal-reachable` text, `trail-leg-spacing` default 3.0 → 2.0, and § 2.1 row, off-road F3, #780, #771, #710); 2026-11-19 (§ 4.31 `production.enabled` also covers P2c, no new key, production chain L8, #677); 2026-11-19 (§ 4.13 `siege.weapons.enabled` and § 2.1 row: the web-form world task replaces `/knk weaponspot`, siege weapons L2b, #799); 2026-11-19 (§ 4.15 `navigation.road-goal-reachable`, `road-goal-candidates`, `road-to-its-end`, `trail-leg-spacing` with `guidance-v2` off, and § 2.1 row, off-road F2, #780, #771); 2026-11-19 (§ 2.1 row of #689: in `next` `55804b11`; § 4.31 links the [territory admin guide](territory-admin-guide.md), docs #806); 2026-11-19 (§ 4.13 `siege.weapons.enabled` and § 2.1 row, siege weapons L2, #783); 2026-11-19 (§ 4.31 `production` (territory), § 2.1 and § 3 rows, production chain L2, #689); 2026-11-19 (§ 4.30 `items.identity`, § 2.1 and § 3 rows, production chain L0, #141); 2026-11-18 (§ 4.15 `navigation.preference-max` and § 2.1 row, off-road L9, #709); 2026-11-18 (§ 4.15: the `/navigate` route mode words add no key, off-road L7, #707); 2026-11-18 (§ 4.15 `navigation.walk-links`, the `walk-link-*` and `road-first-*` keys, and § 2.1, off-road L5, #705); 2026-11-18 (§ 4.15 `navigation.plaza-curve-clearance`, `plaza-lines` draws on the trail, and § 2.1, #712 step 2); 2026-11-18 (§ 4.15 `navigation.landmarks` and § 2.1 row, off-road L8, #708); 2026-11-18 (§ 4.15 `navigation.destination-engine` and § 2.1 row, destination engine L3, #69); 2026-11-18 (§ 4.15 `navigation.destinations.stale-after-days` and § 2.1 row, destination engine L2, #103); 2026-11-18 (§ 4.29 `map.reporting.interval-ticks` and the live player report, § 2.1 row, overview map L4, #738); 2026-11-18 (§ 4.29 `map.reporting.enabled`, § 2.1 and § 3 rows, overview map L1, #735); 2026-11-18 (§ 4.27: every `npc.navigation` key checked against `config.yml` on knk-plugin `next` `7aef3de4`, no key added; texts of `pathfinder`, `hop-blocks`, `recheck-ticks`, `walk-only-blocks` and `stop-on-trespass` for the fix links C1 and E1, region overrides for NPCs since L9, #726); 2026-11-18 (§ 4.15 `navigation.plaza-lines`, `plaza-pull`, `plaza-guide-cost` and § 2.1, #712 step 1); 2026-11-18 (§ 4.15 `navigation.trail-leg-spacing`, `navigation.cursor-jump`, `guidance-v2` text, and § 2.1, #711); 2026-11-17 (§ 4.15 `navigation.guidance-v2`, `walk.clearance-cost`, `walk.wall-clearance`, `walk.curve` and § 2.1, #710); 2026-11-17 (§ 4.15 `navigation.walk.max-chunks-per-request` and § 2.1, #703); 2026-11-16 (§ 4.27 `npc`: the per-NPC table no longer split by the `collidable` note, link to the NPC navigation admin guide, docs #658); 2026-11-16 (§ 4.27 `npc`: push resistance for `collidable` (still false), `players-push-npcs`, `push-return`, `push-exempt-after`, `push-exempt-window-ticks`, `push-exempt-ticks`, `push-teleport-ticks`, #627); 2026-11-16 (§ 4.27 `npc`: `crowd-awareness`, #626); 2026-11-16 (§ 4.27 `npc`: `plaza-lines`, `plaza-corridor-blocks`, #625); 2026-11-15 (§ 4.27 `npc`: `group-formation-keeping`, `group-lateral-spacing-min`, `group-spacing-min`, `group-lookahead-blocks`, #624); 2026-11-15 (§ 4.27 `npc`: `local-legs-clearance`, #623); 2026-11-15 (§ 4.27 `npc`: `corridor-steering`, `corridor-half-width`, `wall-clearance`, #622); 2026-11-15 (§ 4.3 `realtime.moderation` and § 2.1, web kick/ban, #574); 2026-11-15 (§ 2.1: #522 merged into `next` `deb7ff49`, #589); 2026-11-15 (§ 4.27 `npc`: `group-lateral-spacing`, `group-width-hysteresis-blocks`, `group-followers-finish-trip`, `group-spacing` 2.0 → 1.5, `group-formation` and `group-ranks-width` texts, #522); 2026-11-15 (§ 4.27 `npc`: `corner-clearance`, `waypoint-margin`, `recovery-wait-ticks`, `stationary-ticks` and `no-progress-ticks` 40, `max-retries` reworded, #521); 2026-11-14 (§ 4.28 `testing.scenarios`, test servers only, #421); 2026-11-14 (§ 4.18 `messages.web-account-registered`, #485); 2026-11-14 (§ 2.1: the #377 `group-*` keys are in `next` since 2026-11-13, PandiO/knk-workspace#496); 2026-11-13 (§ 4.11 gates are discovered too; § 4.21 realtime push; § 4.26 the kit cache, PandiO/knk-workspace#300)
 **Checked against:** knk-plugin `main` `121030f`; § 4.11, § 4.21 and § 4.26 against `57884e9`; § 4.27 `npc`, the `realtime.erasure` and `realtime.moderation` blocks and `regions.temp-retention.release-interval-minutes` against knk-plugin `next` (not on trunk yet). Update this page in place whenever a `config.yml` key is added, renamed, removed or gets a new default.
 **Source:** knk-plugin `knk-paper/src/main/resources/config.yml` (1,152 lines at `121030f`), read by
 `knk-paper/.../paper/config/ConfigLoader.java`, `EnchantmentConfigManager.java` and `KnKPlugin.java`
@@ -85,9 +85,39 @@ Newest first. Builds before this list: compare the files with the script.
 
 | Merged | Issue | Added (+), removed (−) or changed | Applies |
 |---|---|---|---|
-| in review, not in `next` yet (`claude/overview-map-players-api`) | [#738](https://github.com/PandiO/knk-workspace/issues/738) | + `map.reporting.interval-ticks` (40); with `map.reporting.enabled: true` the plugin also reports its online players (position, AFK, mode, minigame match) for the map's live player layer | Restart |
-| in review, not in `next` yet (`claude/overview-map-outlines`) | [#735](https://github.com/PandiO/knk-workspace/issues/735) | + `map.reporting.enabled` (false): region outlines to the API for the overview map; needs `realtime.enabled: true` | Restart |
+| in `next` (`6f6c915f`, 2026-11-21), not released | [#134](https://github.com/PandiO/knk-workspace/issues/134) | + `production.harvest.catalog-refresh-minutes` (5), `report-flush-seconds` (2), `report-batch` (200), `regen-blocks-per-tick` (64), `regen-retry-seconds` (5), `save-seconds` (10), `deny-at-empty-pool` (false), `tree-max-logs` (256), `tree-max-leaves` (1500), `max-area-chunks` (256), `messages.denied`, `messages.regenerating`, `messages.paid`, `messages.rejected`: player harvesting in yield areas and block regeneration, only with `production.enabled` | Restart |
+| in `next` (`bdd8b463`, 2026-11-21), not released | [#684](https://github.com/PandiO/knk-workspace/issues/684) | + `production.inbox.join-summary` (true): the reward inbox (`/inbox`, kit and lootbox leftovers to the inbox), only with `production.enabled` | Restart |
+| in `next` (`ec02a64a`, 2026-11-21), not on trunk yet | [#871](https://github.com/PandiO/knk-workspace/issues/871) | No key added or removed: `menus.menu-item.*` becomes the fallback while the API is unreachable at startup; the game settings page's **Menu item** card replaces it once the API answers and applies its changes without a restart. `open-on` also accepts `SHIFT_LEFT_CLICK` and `SHIFT_RIGHT_CLICK` (otherwise a shift-click counts as the plain click, as before) | Live (from the API) |
+| in `next` (`8e672ba6`), not released | [#74](https://github.com/PandiO/knk-workspace/issues/74) | + `production.storage.refresh-minutes` (5), + `production.storage.display-refresh-seconds` (30): storage terminals and display containers, only with `production.enabled` | Restart |
+| in `next` (`7116f1a5`, 2026-11-20), not on trunk yet | [#681](https://github.com/PandiO/knk-workspace/issues/681) | + `production.logistics.lanes.interval-minutes` (60), + `batch` (100), + `max-snap-distance` (48), + `road-connections` (true): the transport lane measurer and road connections, only with `production.enabled` | Restart |
+| in `next` (`d36001b2`, 2026-11-20), not on trunk yet | [#679](https://github.com/PandiO/knk-workspace/issues/679) | + `production.surveys.poll-minutes` (5), + `batch` (20), + `chunks-per-tick` (2), + `max-area-blocks` (16000000), + `max-area-chunks` (256), + `scheduled-loads-chunks` (false), + `notable-change-blocks` (64), + `notable-cooldown-minutes` (30), + `areas-refresh-minutes` (10): yield-area surveys, only with `production.enabled` | Restart |
+| in review, not in `next` yet (`claude/npc-movement-g1`) | [#814](https://github.com/PandiO/knk-workspace/issues/814) | + `npc.navigation.road-goal-reachable` (false), + `npc.navigation.road-goal-walk-weight` (4.0): an NPC's road goal for a point destination chosen by walk reachability, as `navigation.road-goal-reachable` does for players; both per world, region, template or assignment | Restart |
+| in `next` (`55804b11`, 2026-11-19), not on trunk yet | [#689](https://github.com/PandiO/knk-workspace/issues/689) | + `production.enabled` (false), + `production.territory.refresh-minutes` (10), + `production.territory.notify-players` (true), + `production.territory.report` (true), + `production.territory.map-outlines` (false), + `production.territory.max-chunks-per-world` (500000), + `production.territory.messages.*` (four lines): the production feature flag (G16) and territory, the chunk cache, the lookup on chunk crossings and the conflict report | Restart |
+| in review, not in `next` yet (`claude/offroad-smoke-fixes-f3`) | [#780](https://github.com/PandiO/knk-workspace/issues/780), [#771](https://github.com/PandiO/knk-workspace/issues/771), [#710](https://github.com/PandiO/knk-workspace/issues/710) | + `navigation.road-goal-walk-weight` (4.0): with `road-goal-reachable`, a road-goal candidate's score is road length plus this times walk length; the candidates also include the road's nodes onward from the nearest point. `navigation.trail-leg-spacing` default 3.0 → **2.0** (the developer's choice in the live test of 2026-11-19); an existing `config.yml` keeps the value it has | Restart |
+| in review, not in `next` yet (`claude/offroad-route-ends-f2`) | [#780](https://github.com/PandiO/knk-workspace/issues/780), [#771](https://github.com/PandiO/knk-workspace/issues/771) | + `navigation.road-goal-reachable` (false), + `navigation.road-goal-candidates` (12), + `navigation.road-to-its-end` (false); `navigation.trail-leg-spacing` (3.0, unchanged) now also spaces the walk trail with `guidance-v2: false`; `max-snap-distance` unchanged | Restart |
+| in `next` (`c7e2ad4b`, 2026-11-20), not on trunk yet | [#868](https://github.com/PandiO/knk-workspace/issues/868) | + `siege.shop.enabled` (false): the siege shop in PvP Siege (`/siege shop`, the Shop button in `/siege menu`, item purchases with escalating price, growing cooldown and per-match cap, the catalogue read once per match); needs `siege.points.enabled`; deploy the plugin before the API's menu seeds | Restart |
+| in `next` (`91e3ddb8`, 2026-11-20), not on trunk yet | [#866](https://github.com/PandiO/knk-workspace/issues/866), [#356](https://github.com/PandiO/knk-workspace/issues/356) | + `siege.points.enabled` (false): siege points in PvP Siege (earning, a per-player scoreboard line, the action bar, `/siege points`, `/siege pay`, totals in the match result); the amounts and the transfer switch are siege settings in the API | Restart |
+| in `next` (L2, #783); the web-form task in review (`claude/siege-weapons-l2b`, #799) | [#783](https://github.com/PandiO/knk-workspace/issues/783), [#799](https://github.com/PandiO/knk-workspace/issues/799) | + `siege.weapons.enabled` (false): siege weapons; with `true` the plugin handles the weapon spot form's `SiegeWeaponSpot` world task (create weapon spots from a WorldEdit selection or WorldGuard region, phase 2; L2's `/knk weaponspot` is removed by #799), later phases add placement and firing behind the same switch | Restart |
+| in review, not in `next` yet (`claude/item-identity-141`) | [#141](https://github.com/PandiO/knk-workspace/issues/141) | + `items.identity.enabled` (false), + `items.identity.convert-on-obtain` (false), + `items.identity.map-refresh-minutes` (10), + `items.identity.report-interval-minutes` (10): item identity, every obtained item resolves to a blueprint | Restart |
+| in review, not in `next` yet (`claude/offroad-landmark-weights`) | [#709](https://github.com/PandiO/knk-workspace/issues/709) | + `navigation.preference-max` (4.0): with `navigation.landmarks: true`, the cap of overlapping landmark preference weights on walk cells in the `preferred` route mode (and its inverse the other way); at least 1.0 | Restart |
+| in review, not in `next` yet (`claude/offroad-landmarks`) | [#708](https://github.com/PandiO/knk-workspace/issues/708) | + `navigation.landmarks` (false): `true` loads the landmarks of `api/landmarks` into the navigation model, offers them to `/navigate` through the destination engine (needs `navigation.destination-engine: true` too) and turns `/knk landmark` on | Restart |
+| in review, not in `next` yet (`claude/navigation-destination-engine`) | [#69](https://github.com/PandiO/knk-workspace/issues/69) | + `navigation.destination-engine` (false): `true` switches `/navigate`, its tab completion, the navigation compass and the route start to the destination engine and the road-access answers to the navigation model; removed again in phase 4b (#747) | Restart |
+| in review, not in `next` yet (`claude/navigation-destination-engine`) | [#103](https://github.com/PandiO/knk-workspace/issues/103) | + `navigation.destinations.stale-after-days` (14); the plugin also writes `plugins/KnightsAndKings/offline/navigation-model.json` (the navigation model snapshot), which nothing reads before destination engine phase 3 | Restart |
+| on trunk (knk-plugin v0.3) | [#738](https://github.com/PandiO/knk-workspace/issues/738) | + `map.reporting.interval-ticks` (40); with `map.reporting.enabled: true` the plugin also reports its online players (position, AFK, mode, minigame match) for the map's live player layer | Restart |
+| on trunk (knk-plugin v0.3) | [#735](https://github.com/PandiO/knk-workspace/issues/735) | + `map.reporting.enabled` (false): region outlines to the API for the overview map; needs `realtime.enabled: true` | Restart |
+| in review, not in `next` yet (`claude/offroad-walk-links`) | [#705](https://github.com/PandiO/knk-workspace/issues/705) | + `navigation.walk-links` (false), + `navigation.walk-link-range` (40), + `walk-link-ratio` (2.0), + `walk-link-ttl-seconds` (600), + `walk-link-retry-seconds` (600), + `walk-link-searches-per-route` (4), + `road-first-share` (0.6), + `road-first-max-ratio` (1.5); `max-snap-distance` unchanged | Restart |
+| in review, not in `next` yet (`claude/offroad-plaza-lines`, step 2) | [#712](https://github.com/PandiO/knk-workspace/issues/712) | + `navigation.plaza-curve-clearance` (0.65); `navigation.plaza-lines` now draws the plaza lines on the trail | Restart |
+| `next` (step 1) | [#712](https://github.com/PandiO/knk-workspace/issues/712) | + `navigation.plaza-lines` (false), + `navigation.plaza-pull` (0.35), + `navigation.plaza-guide-cost` (2); step 1: only the staff preview `/knk road plazaline` read them | Restart |
+| in review, not in `next` yet (`claude/offroad-trail-cursor`) | [#711](https://github.com/PandiO/knk-workspace/issues/711) | + `navigation.trail-leg-spacing` (3.0), + `navigation.cursor-jump` (12); both act only with `guidance-v2: true` | Restart |
+| in review, not in `next` yet (`claude/offroad-trail-corners`) | [#710](https://github.com/PandiO/knk-workspace/issues/710) | + `navigation.guidance-v2` (false), + `navigation.walk.clearance-cost` (5), + `walk.wall-clearance` (0.8), + `walk.curve` (true); the three walk keys act only with `guidance-v2: true` | Restart |
+| in review, not in `next` yet (`claude/offroad-measurements`) | [#703](https://github.com/PandiO/knk-workspace/issues/703) | + `navigation.walk.max-chunks-per-request` (64, the limit that was built in; raise it on a test server only, for the off-road phase 0 measurements) | Restart |
 | in review, not in `next` yet (`claude/web-kick-ban-574`) | [#574](https://github.com/PandiO/knk-workspace/issues/574) | + `realtime.moderation` (`kick-default-reason`, `ban-message`; optional, defaults apply when missing) | Restart |
+| in review, not in `next` yet (`claude/npc-movement-m7`) | [#627](https://github.com/PandiO/knk-workspace/issues/627) | `npc.navigation.collidable` text (default still false); + `players-push-npcs` (false), + `push-return` (true), + `push-exempt-after` (3), + `push-exempt-window-ticks` (200), + `push-exempt-ticks` (1200), + `push-teleport-ticks` (600) | Restart |
+| in review, not in `next` yet (`claude/npc-movement-m4`) | [#626](https://github.com/PandiO/knk-workspace/issues/626) | + `npc.navigation.crowd-awareness` (false) | Restart |
+| in `next` (`3f116188`, 2026-11-16), not on trunk yet | [#625](https://github.com/PandiO/knk-workspace/issues/625) | + `npc.navigation.plaza-lines` (false), + `plaza-corridor-blocks` (16) | Restart |
+| in `next` (`138ebc66`, 2026-11-16), not on trunk yet | [#624](https://github.com/PandiO/knk-workspace/issues/624) | + `npc.navigation.group-formation-keeping` (levels), + `group-lateral-spacing-min` (0.6), + `group-spacing-min` (1.0), + `group-lookahead-blocks` (4) | Restart |
+| in `next` (2026-11-15), not on trunk yet | [#623](https://github.com/PandiO/knk-workspace/issues/623) | + `npc.navigation.local-legs-clearance` (false) | Restart |
+| in `next` (`0fa74a67`, 2026-11-15), not on trunk yet | [#622](https://github.com/PandiO/knk-workspace/issues/622) | + `npc.navigation.corridor-steering` (false), + `corridor-half-width` (4), + `wall-clearance` (0.8) | Restart |
 | in `next` (`deb7ff49`, 2026-11-15), not on trunk yet | [#522](https://github.com/PandiO/knk-workspace/issues/522) | + `npc.navigation.group-lateral-spacing` (1.0), + `group-width-hysteresis-blocks` (3), + `group-followers-finish-trip` (false); `group-spacing` default 2.0 → 1.5 (now the gap between rows and in the column). A server whose `config.yml` still says `group-spacing: 2.0` keeps 2.0: change it to 1.5 | Restart |
 | in `next` (`5dc88cfd`, 2026-11-15), not on trunk yet | [#521](https://github.com/PandiO/knk-workspace/issues/521) | + `npc.navigation.corner-clearance` (1.0), + `waypoint-margin` (0.5), + `recovery-wait-ticks` (20); `stationary-ticks` and `no-progress-ticks` default 60 → 40; `max-retries` now counts the recovery steps (back-off, side-step, local leg ahead). A server whose `config.yml` still says 60 keeps 60: change the two lines to 40 | Restart |
 | in `next` (`309d3580`, 2026-11-14), not on trunk yet | [#421](https://github.com/PandiO/knk-workspace/issues/421) | + `testing.scenarios` (`enabled` false, `world`, `origin.x/y/z`). **Don't merge it into real servers:** a missing block means off, which is what they need | Restart |
@@ -147,6 +177,8 @@ Newest first. Builds before this list: compare the files with the script.
 | 4.27 | `npc` | NPC navigation on Citizens (off by default) |
 | 4.28 | `testing` | In-plugin test scenarios, test servers only (off by default) |
 | 4.29 | `map` | Overview map reports to the API (off by default) |
+| 4.30 | `items` | Item identity: blueprint tags and the conversion hooks (off by default) |
+| 4.31 | `production` | Production feature flag; territory chunk cache, lookup and conflict report; yield-area surveys; transport lanes; storage terminals, displays and the structures menus; the reward inbox; player harvesting and block regeneration (off by default) |
 
 ## 4. Key reference
 
@@ -365,11 +397,15 @@ privacy menu) works with either value of `enabled`.
 
 ### 4.13 `siege`
 
-Lobbies, scenarios and the siege configuration are edited in the web app.
+Lobbies, scenarios and the siege configuration are edited in the web app. Siege points, the shop catalogue and
+weapon unlocks (in `next`): [siege shop admin guide](siege-shop-admin-guide.md).
 
 | Key | Default | What it does, safe values | Applies | Added by |
 |---|---|---|---|---|
 | `rejoin-window-seconds` | `300` | A member who disconnects at the hub or in a match keeps their place this long and counts as present at the end. `0` = a disconnect is a leave | Restart | #150 |
+| `weapons.enabled` | `false` | Siege weapons ([SIEGE_WEAPONS.md](../../specs/siege-minigame/SIEGE_WEAPONS.md)). `false`: nothing of the feature is registered and matches and world tasks behave as before. `true`: the plugin handles the weapon spot form's `SiegeWeaponSpot` world task ("Send to Minecraft" on Min X, claimed with `/knk task <code>`), which reads a WorldEdit selection or WorldGuard region and fills the form's bounds, facing, size class and region (phase 2; with `false` such a task is failed as having no handler); later phases add placement and firing behind the same switch. Leave `false` on live servers until the [smoke test](../siege-weapons-smoke-test.md) has been run | Restart | [#783](https://github.com/PandiO/knk-workspace/issues/783), [#799](https://github.com/PandiO/knk-workspace/issues/799) |
+| `points.enabled` | `false` | Siege points ([siege shop DESIGN](../../specs/siege-shop/DESIGN.md) § 5.1–5.2): a per-match balance earned in PvP Siege from kills (with a capped streak multiplier), assists, deaths, gate damage, capture progress, captures and an activity trickle, on each member's own scoreboard line ("Siege points: N") and the action bar, with `/siege points` and `/siege pay <player> <amount>` (only when the siege settings allow teammate transfers, off by default). The amounts are siege settings in the API (`SiegeConfiguration`, migration `AddSiegePointsEarning`). `false`: nothing is earned or shown, `/siege points` says the feature is off and the scoreboards stay one per team, as before. Leave `false` on live servers until the [smoke test § 1](../siege-shop-smoke-test.md#1-phase-1-shared-match-ledger-and-siege-points-earning-866-tier3) has been run | Restart | [#866](https://github.com/PandiO/knk-workspace/issues/866) |
+| `shop.enabled` | `false` | The siege shop ([siege shop DESIGN](../../specs/siege-shop/DESIGN.md) § 4.1, § 5.3–5.5): during a running match `/siege shop` and the **Shop** button in `/siege menu` open the shop; each match reads its catalogue (shop entries and scenario overrides, edited in the web app) once at the start; a purchase checks match, alive, unlock, cap, cooldown, inventory room and balance before charging siege points, with escalating prices, growing cooldowns and per-match caps. Weapon entries need `weapons.enabled` and are bought from siege weapons phase 3 on (#784). Needs `points.enabled` (with it off the log warns and the shop stays off). The menus `siege.shop` and `siege.shop.category` and the Shop button are API menu seeds: deploy the plugin before the API. `false`: nothing of the shop is registered, `/siege shop` says it is off and `/siege menu` looks as before. Leave `false` on live servers until the [smoke test § 3](../siege-shop-smoke-test.md#3-phase-3-shop-menus-and-purchases-in-the-plugin-868-tier3) has been run | Restart | [#868](https://github.com/PandiO/knk-workspace/issues/868) |
 
 ### 4.14 `lore`, `menus`, `crossplay`
 
@@ -377,12 +413,12 @@ Lobbies, scenarios and the siege configuration are edited in the web app.
 |---|---|---|---|---|
 | `lore.max-width` | `40` | Lore lines wider than this many visible characters wrap between words, keeping their colour (blueprint items and every menu). At least 10 | Restart | #212 |
 | `menus.bedrock-transition-delay-ticks` | `3` | Bedrock (Floodgate) players: a menu-to-menu click closes the menu first and opens the next this many ticks later, so Geyser's late close doesn't close the new one. `0` = off; at most 20. Java players are never delayed | Restart | Bedrock menus |
-| `menus.menu-item.enabled` | `true` | An inventory item that opens `/menu`, for console and Bedrock players. It never drops, can't be stored or placed | Restart | #160 |
+| `menus.menu-item.enabled` | `true` | An inventory item that opens `/menu`, for console and Bedrock players. It never drops, can't be stored or placed. Since #871 every `menus.menu-item.*` key is only the **fallback**: the game settings page's **Menu item** card (web app, #870) replaces them as soon as the API answers and applies its changes without a restart (a new look at once, a new slot or a first give at the next join or respawn), with an action per click and siege overrides ([siege shop DESIGN](../../specs/siege-shop/DESIGN.md) § 4.3, § 5.7). With the API unreachable at startup these keys work exactly as before | Restart | #160, #871 |
 | `menus.menu-item.give-to` | `all` | `all`, or `bedrock` (Floodgate players only) | Restart | #160 |
 | `menus.menu-item.give-on-join` / `.keep-on-death` | `true` / `true` | Put it back at every join when missing; give it back at respawn | Restart | #160 |
 | `menus.menu-item.material` / `.name` / `.lore` | `NETHER_STAR` / (text) / (1 line) | Its look | Restart | #160 |
 | `menus.menu-item.slot` | `8` | 0–8 hotbar (8 = right-most), 9–35 main inventory. A player's own item there is moved; with a full inventory nothing is given | Restart | #160 |
-| `menus.menu-item.open-on` | `[RIGHT_CLICK, LEFT_CLICK, INVENTORY_CLICK]` | What opens the menu. `INVENTORY_CLICK` only works while `movable` is `false` | Restart | #160 |
+| `menus.menu-item.open-on` | `[RIGHT_CLICK, LEFT_CLICK, INVENTORY_CLICK]` | What opens the menu. `INVENTORY_CLICK` only works while `movable` is `false`. A shift-click counts as the plain click unless `SHIFT_LEFT_CLICK` / `SHIFT_RIGHT_CLICK` is listed itself (#871) | Restart | #160 |
 | `menus.menu-item.droppable` / `.movable` | `false` / `false` | Allow dropping it (gone until the next join or respawn) or moving it in the own inventory | Restart | #160 |
 | `crossplay.block-resync.enabled` | `true` | Bedrock ghost blocks: a refused break is sent to the player again while they keep swinging. Needs Floodgate | Restart | #161 |
 | `crossplay.block-resync.all-players` | `false` | Also for Java players (only for testing) | Restart | #161 |
@@ -392,6 +428,12 @@ Lobbies, scenarios and the siege configuration are edited in the web app.
 
 Road navigation ([design § 4](../../specs/navigation/DESIGN.md)); road materials live in the API's road profiles.
 Every key has a default, and the defaults are tuned from live tests: change them only with a reason.
+
+The route mode words of `/navigate` (`shortest`, `efficient`, `preferred`, off-road phase 4,
+[#707](https://github.com/PandiO/knk-workspace/issues/707)) add no key: they use `class-cost` (in `efficient` and
+`preferred`), the walk costs of `walk:` (in `efficient` and `preferred`) and the road profiles' and edges' cost
+multipliers (in `preferred`, the default); who may type a word is the nodes `knk.navigate.mode.<word>`
+([commands](../users/commands.md)).
 
 | Key | Default | What it does, safe values | Applies | Added by |
 |---|---|---|---|---|
@@ -422,6 +464,27 @@ Every key has a default, and the defaults are tuned from live tests: change them
 | `walk.capture-margin` / `.chunk-ttl-seconds` | `16` / `10` | Blocks captured around the box (loaded chunks only); how long a captured chunk is reused | Restart | KNG-51 |
 | `walk.recompute-distance` / `.max-concurrent-searches` | `6` / `2` | Recompute after straying this far; searches at once, server-wide | Restart | KNG-51 |
 | `walk.climbables` / `.wall-cost` | `[LADDER]` / `1.0` | Materials climbed like a ladder; extra cost beside a wall (0 = hug walls) | Restart | KNG-51 |
+| `guidance-v2` | `false` | Off-road trail-quality pass. Phase 6.1: walk paths keep `walk.wall-clearance` from walls, are shaped off the main thread and drawn with checked curves. Phase 6.2: walk-trail particles on fixed anchors; the trail, the HUD distance and the maneuver ahead follow the player back along the route; a player off the road walks to the join point with the least remaining cost; a walk leg stays while the player is within `walk.recompute-distance` of it (no "heading away"). `false` = walk paths, the search and the trail exactly as before (kill switch). Keep `false` until the live test ([off-road smoke test § 8](../navigation-offroad-smoke-test.md#8-phase-61-walk-trail-corners-710-tier3)) signs it off (and [§ 9](../navigation-offroad-smoke-test.md#9-phase-62-anchored-particles-and-winding-back-711-tier3) for phase 6.2) | Restart | [#710](https://github.com/PandiO/knk-workspace/issues/710), [#711](https://github.com/PandiO/knk-workspace/issues/711) |
+| `walk.clearance-cost` / `.wall-clearance` | `5` / `0.8` | With `guidance-v2`: extra cost per block of clearance a step lacks to `wall-clearance`, in place of `wall-cost` (0 = keep `wall-cost`); the clearance the trail keeps from walls, posts and drops where there is room (0.35 to 2) | Restart | [#710](https://github.com/PandiO/knk-workspace/issues/710) |
+| `walk.curve` | `true` | With `guidance-v2`: corners of the shaped walk trail drawn as curves checked against the walls (`false` = straight pieces) | Restart | [#710](https://github.com/PandiO/knk-workspace/issues/710) |
+| `trail-leg-spacing` | `2.0` | Blocks between a walk trail's particles (0.5 to 16; 2.0 since off-road F3, the developer's choice in the live test of 2026-11-19; 3.0 before). With `guidance-v2`: the fixed anchors, counted from the walk path's start. Since off-road F2 ([#771](https://github.com/PandiO/knk-workspace/issues/771) item 3) also the spacing of the walk trail with `guidance-v2: false`. 3.0 gives the sparser trail of before; 1.5 a denser one | Restart | [#711](https://github.com/PandiO/knk-workspace/issues/711), [#771](https://github.com/PandiO/knk-workspace/issues/771) |
+| `cursor-jump` | `12` | With `guidance-v2`: how far along the route the player's place may move in one tick; a place farther along (the other pass of a loop, the other arm of a switchback) is taken only when the player is more than `reroute-distance` from the stretch they were on | Restart | [#711](https://github.com/PandiO/knk-workspace/issues/711) |
+| `plaza-lines` | `false` | Off-road phase 7: where a route enters a plaza on one road and leaves on another, the road trail is drawn along a rounded line from road to road, pulled towards the plaza node and checked against walls, objects, regions and floor (an A* line round an obstacle when the curve does not fit). Plazas only: a designed plaza, or a junction whose open floor is wider than `npc.navigation.corridor-half-width` (`npc.navigation.plaza-corridor-blocks` caps the radius). Only the drawn trail changes: route length, ETA, HUD and maneuvers never change. `/knk road plazaline` shows the lines to staff, on or off. `false` = today's trail ([off-road smoke test § 10.2](../navigation-offroad-smoke-test.md#102-step-2-the-trail-draws-the-plaza-lines)) | Restart | [#712](https://github.com/PandiO/knk-workspace/issues/712) |
+| `plaza-pull` / `plaza-guide-cost` / `plaza-curve-clearance` | `0.35` / `2` / `0.65` | How far the curve's middle is pulled from the straight entry-to-exit line towards the plaza node (0 = the straight line with rounded ends, 1 = through the node; 0 to 1); the A* fallback's cost per block it strays from the curve (0 or more); the least clearance in blocks the curve keeps from a wall or object to be taken (0.35 to 2; a player is 0.6 wide; the developer's 0.65, O33); under it the A* line is drawn, which keeps `walk.wall-clearance` where it can, never under 0.35 | Restart | [#712](https://github.com/PandiO/knk-workspace/issues/712) |
+| `walk-links` | `false` | Off-road navigation phase 2 ([design § 5.1, § 5.2](../../specs/navigation-offroad/DESIGN.md)): `true` lets a road route leave the road for a walk path between two road nodes (a courtyard shortcut, drawn in the walk-leg colour, "Leave the road and walk across") where the road between them is much longer, and turns on the road-first rule below. Links are searched off the main thread with the player's walk access after the first route (one at a time beside the walk legs, at most `walk-link-searches-per-route` per route), cached per player, judged by the player's gate and region rules at every route, and dropped within a second when blocks change within a block of them. Needs `walk.enabled: true`. Read at start-up. `false` = routes, trails and sessions exactly as before. Leave `false` on live servers until the [off-road smoke test § 3](../navigation-offroad-smoke-test.md#3-phase-2-walk-links-and-mixed-routes-705-tier3) has passed | Restart | [#705](https://github.com/PandiO/knk-workspace/issues/705) |
+| `walk-link-range` / `walk-link-ratio` | `40` / `2.0` | With `walk-links`: a link joins two road junctions (or end points) at most this many blocks apart in a straight line (2 to 128) whose road is more than this times as long (above 1); the developer's O28, tuned in the live test | Restart | [#705](https://github.com/PandiO/knk-workspace/issues/705) |
+| `walk-link-ttl-seconds` / `walk-link-retry-seconds` | `600` / `600` | With `walk-links`: a found link is kept this long unless blocks change near it (the block-change hook drops it at once; WorldEdit edits are only caught by this time); "no link" is kept this long, or until a gate or access rule changes (at least 1 each) | Restart | [#705](https://github.com/PandiO/knk-workspace/issues/705) |
+| `walk-link-searches-per-route` | `4` | With `walk-links`: the most link searches one route asks for, the most promising first (0 to 32; 0 = links found earlier are still used, no new ones are searched) | Restart | [#705](https://github.com/PandiO/knk-workspace/issues/705) |
+| `road-first-share` / `road-first-max-ratio` | `0.6` / `1.5` | With `walk-links`, the road-first rule (the developer's wish of 2026-11-18): a target within `max-snap-distance` (one walk path today) is reached over the road instead when the road carries at least this part of the way (0 to 1) and the whole way (the walks to and from the road estimated at 1.5 times their straight distance) is at most this times the walk path (at least 1). Agent defaults for the developer to confirm in the live test. `max-snap-distance` itself is not changed | Restart | [#705](https://github.com/PandiO/knk-workspace/issues/705) |
+| `road-goal-reachable` | `false` | Off-road fix link F2 ([#780](https://github.com/PandiO/knk-workspace/issues/780) option (b), [#771](https://github.com/PandiO/knk-workspace/issues/771) item 4): `true` chooses a point destination's road goal (where the road part of a route ends and the last walk leg starts) by walk reachability instead of the straight-line nearest road point. Up to `road-goal-candidates` road points (one per road edge, within `max-snap-distance` of the destination, nearest first, today's point among them) are each searched on foot to the destination within the `walk:` limits, one search at a time off the main thread; among the reached ones the least road length plus `road-goal-walk-weight` times walk length wins (F3: the walk weighs above the road, so the road carries the route as far as it usefully goes; the candidates also include the road's nodes onward from today's point within `max-snap-distance`). Every choice writes one INFO line with each candidate's road and walk lengths. The first route is today's; the chosen one replaces it once the searches answer (usually within a second or two). None reached: today's point. Fixes the keep storage hall (today's goal is a dead end in the keep stair house) and the road overshoot before a walk leg. NPC road plans are not affected. `max-snap-distance` itself is not changed | Restart | [#780](https://github.com/PandiO/knk-workspace/issues/780) |
+| `road-goal-candidates` | `12` | With `road-goal-reachable`: the most road points searched per navigation (1 to 32); each costs one walk search | Restart | [#780](https://github.com/PandiO/knk-workspace/issues/780) |
+| `road-goal-walk-weight` | `4.0` | Off-road fix link F3 (smoke test of 2026-11-19, [#780](https://github.com/PandiO/knk-workspace/issues/780), [#771](https://github.com/PandiO/knk-workspace/issues/771) items 4 and 5): with `road-goal-reachable`, a candidate's score is its road length plus this many times its walk length, the least winning; a block walked counts this many blocks of road, so the walk starts as late as the road usefully carries the route (1 to 100; 1 is F2's road plus walk, which stopped the road at the Keep Garrison's exit on the way to the Keep Tower Roof) | Restart | [#780](https://github.com/PandiO/knk-workspace/issues/780) |
+| `road-to-its-end` | `false` | Off-road fix link F2 ([#771](https://github.com/PandiO/knk-workspace/issues/771) item 5): `true` keeps a road route the player follows when the road network is swapped (live edge tags, a rebuild) while the player is within `max-snap-distance` of the destination; the last walk leg then starts at the road's end. `false` (today): such a swap switches to direct mode, a walk leg from where the player stands, partway along the road | Restart | [#771](https://github.com/PandiO/knk-workspace/issues/771) |
+| `walk.max-chunks-per-request` | `64` | A walk leg whose capture box covers more chunks gets no walk path (1 to 1024). Keep 64; raise it on a test server only, to measure long legs ([off-road smoke test § 1](../navigation-offroad-smoke-test.md#1-phase-0-measurements-703-tier1)) | Restart | [#703](https://github.com/PandiO/knk-workspace/issues/703) |
+| `destinations.stale-after-days` | `14` | Destination engine ([design § 7.3](../../specs/navigation-destination-engine/DESIGN.md)): the navigation model (domain places, Locations, compass settings) is kept in `offline/navigation-model.json` in the plugin folder and loaded at start-up, so navigation can work with the API down after a restart. A model older than this many days adds "may be out of date" to the destination lists (at least 1). Nothing reads the model before phase 3 (#69, behind `navigation.destination-engine`); the file is written from phase 2 on and holds no player data | Restart | [#103](https://github.com/PandiO/knk-workspace/issues/103) |
+| `destination-engine` | `false` | Destination engine phase 3 ([design § 9, E17](../../specs/navigation-destination-engine/DESIGN.md)): `true` makes `/navigate`, its tab completion and the navigation compass use one list per player from the navigation model above (`type:name` and the `spawn`/`region` words also work in a siege match; nothing is looked up when a destination is chosen, so it works with the API down after a restart), starts routes only from that list, and reads the road-access answers ("Ignored" domains) and the compass settings from the model. `false` keeps today's paths exactly. Read at start-up (`/knk reload` does not switch it). Leave `false` on live servers until the developer has run the [smoke test § 3 and § 4](../navigation-destination-engine-smoke-test.md#3-phase-3-switch-over-behind-the-flag-69-tier3) with it on; removed in phase 4b ([#747](https://github.com/PandiO/knk-workspace/issues/747)) | Restart | [#69](https://github.com/PandiO/knk-workspace/issues/69) |
+| `landmarks` | `false` | Off-road navigation phase 5.1 ([design § 6](../../specs/navigation-offroad/DESIGN.md)): `true` loads the landmarks staff made in the web app or with `/knk landmark` (`api/landmarks`) into the navigation model (its `landmarks` section, kept in `offline/navigation-model.json`), offers them to `/navigate`, its tab completion and the compass as `landmark:<name>` (only while `destination-engine` is `true` as well; hidden in a siege match and in other worlds), and turns `/knk landmark` on. `false`: nothing about landmarks runs and `/knk landmark` says it is off. Read at start-up. Leave `false` on live servers until the [off-road smoke test § 6.3](../navigation-offroad-smoke-test.md#63-in-game-step-b-a12-to-a14) has passed | Restart | [#708](https://github.com/PandiO/knk-workspace/issues/708) |
+| `preference-max` | `4.0` | Off-road navigation phase 5.2 ([design § 5.4.3](../../specs/navigation-offroad/DESIGN.md)), only with `landmarks: true`: in the `preferred` route mode (the default; `shortest` and `efficient` ignore it) a landmark with an extent (region or radius) and a `Preference` other than 1.0 multiplies the walk cost of every cell inside it, so a walk leg avoids an area above 1.0 and prefers one below. Overlapping landmarks multiply; the product is capped at this value, and at its inverse the other way (4.0: between 0.25 and 4), so one bad overlap cannot block a hall. A value below 1.0 or not a number is read as 4.0. Read at start-up. See the [off-road smoke test § 7](../navigation-offroad-smoke-test.md#7-phase-52-landmark-preference-weights-709-tier2) | Restart | [#709](https://github.com/PandiO/knk-workspace/issues/709) |
 
 ### 4.16 `currency`
 
@@ -640,34 +703,60 @@ Global switches:
 
 Per-NPC settings. The values under `npc.navigation` are the global layer; `worlds.<world>` and
 `regions.<WorldGuard region or domain id>` (innermost region wins) override single keys, and `/knk npc status` shows
-each value with the layer it came from. A wrong value is reported at startup and skipped.
+each value with the layer it came from. A wrong value is reported at startup and skipped. The region layer applies to
+NPCs since link L9 ([#668](https://github.com/PandiO/knk-workspace/issues/668)); before, NPC navigation saw no
+WorldGuard region.
 
 | Key | Default | What it does, safe values | Applies | Added by |
 |---|---|---|---|---|
-| `pathfinder` | `citizens` | Citizens' path search for off-road legs and recovery: `citizens` or `citizens_async` | Restart | #359 |
+| `pathfinder` | `citizens` | Citizens' path search for local legs and recovery, and for off-road hops when the walk search finds no off-road walk (since #700): `citizens` or `citizens_async` | Restart | #359 |
 | `stretch-blocks` | `32` | Blocks of the route handed to the NPC at once; 8–128 | Restart | #359 |
-| `hop-blocks` | `16` | Blocks between the hops of an off-road or recovery leg (one Citizens search each); 4–48 | Restart | #360 |
-| `recheck-ticks` | `40` | Ticks between rechecks of a walking NPC's way ahead against the current gate and access rules; a denied region or a closed gate ahead plans the route again. 0 = off: gate and access events still reach the NPCs and the trespass guard still looks every 40 ticks; 0–1200 | Restart | #359, used from #361 |
+| `hop-blocks` | `16` | Blocks between the hops of a recovery leg, or of an off-road part when the walk search found no walk (one Citizens search each; since #700 off-road starts and ends use the walk search of `navigation.walk` first); 4–48 | Restart | #360 |
+| `recheck-ticks` | `40` | Ticks between rechecks of a walking NPC's way ahead against the current gate and access rules; a denied region, a region the NPC stands in and may not leave (since #701) or a closed gate ahead plans the route again. 0 = off: gate and access events still reach the NPCs and the trespass guard still looks every 40 ticks; 0–1200 | Restart | #359, used from #361 |
 | `stationary-ticks` | `40` | Ticks in one block before Citizens reports stuck; the first recovery step starts then; 10–1200 (60 before #521) | Restart | #359, #521 |
 | `no-progress-ticks` | `40` | Ticks without progress along the route before K&K's watchdog steps in; 20–1200 (60 before #521) | Restart | #359, #521 |
 | `max-retries` | `3` | Recovery steps of a stuck NPC before its route is planned again: 1 back-off (walk back along its last footsteps), 2 side-step (one block away from the wall), 3 local leg ahead (one Citizens search to a point ahead on its own floor). Steps that cannot be taken are skipped and not counted; after two replans without getting free the order fails; 0–10 | Restart | #360, #521 |
 | `recovery-wait-ticks` | `20` | Ticks between two recovery steps of a stuck NPC (back-off, side-step, local leg, replan); 0–200 | Restart | #521 |
-| `corner-clearance` | `1.0` | Blocks an NPC keeps between itself and a wall on the inside of a turn of its route, as far as the road allows; straight stretches may run along a wall; 0–2, 0 = off | Restart | #521 |
-| `waypoint-margin` | `0.5` | How close an NPC comes to a route waypoint before it heads for the next one; smaller walks turns through the corner point instead of cutting it (Citizens' own default is 1); 0.2–1.5 | Restart | #521 |
+| `corner-clearance` | `1.0` | Blocks an NPC keeps between itself and a wall on the inside of a turn of its route, as far as the road allows; straight stretches may run along a wall unless `corridor-steering` is on; 0–2, 0 = off | Restart | #521 |
+| `waypoint-margin` | `0.5` | How close an NPC comes to a route waypoint before it heads for the next one; smaller walks turns through the corner point instead of cutting it (Citizens' own default is 1); 0.2–1.5. A stretch with a doorway that corridor steering lined up is walked with 0.35 | Restart | #521, #622 |
+| `corridor-steering` | `false` | Corridor steering (off until the developer has tested it): each stretch of the route line is re-placed in the walkable corridor around it before the NPC walks it: away from walls, posts and drops by `wall-clearance` where the road is wide enough (on straights too), straightened where the corridor allows, and through the middle of doorways and entrances on their axis (a waypoint 1.5 blocks before, one in it, one after). Corner clearance and the other safety steps still run on the shaped line. A stretch's corridor is built once and shared by every NPC on it | Restart | #622 |
+| `corridor-half-width` | `4` | Blocks either side of the route line the corridor looks at; 1–8 | Restart | #622 |
+| `wall-clearance` | `0.8` | Blocks from the NPC's centre to a wall, post or drop that corridor steering keeps where the road allows (the body's half width is 0.3); narrower places are walked through their middle, so one-block doors stay open; also the preferred margin of `local-legs-clearance`; 0.35–2 | Restart | #622 |
+| `local-legs-clearance` | `false` | Clearance-aware local legs (off until the developer has tested it): short trips, a group follower's own leg back to its group and the recovery ladder's local leg are searched by K&K on its own walk grid with the corridor's clearance per cell (the body's width as the hard minimum, so one-block doors stay open; `wall-clearance` as a preferred margin), smoothed into a few straight steps and walked as waypoints. When K&K's search finds nothing within its cell budget, Citizens' own search walks the leg as before. `/knk npc nav stats` counts `local legs: k&k N, engine N, none N` | Restart | #623 |
+| `plaza-lines` | `false` | Plaza lines (off until the developer has tested it). The road graph collapses a plaza into one junction, so a route across it runs to the plaza's middle and out again. With this on, where a route passes a plaza junction the corridor widens to the plaza (a designed plaza's radius, or the open floor measured round the junction when it is wider than `corridor-half-width`, ending `wall-clearance` short of its edge) and the NPC walks the straight line from where the route enters the plaza to where it leaves, round wells, stalls and trees with `wall-clearance`, never into a region its line does not pass. A group's path and its leader take the same line, kept the formation's half width plus `wall-clearance` from obstacles. Works with or without `corridor-steering`; the players' trail is unchanged | Restart | #625 |
+| `plaza-corridor-blocks` | `16` | The largest plaza radius, in blocks, that `plaza-lines` widens the corridor to; 4–32 | Restart | #625 |
+| `crowd-awareness` | `false` | Crowd awareness (off until the developer has tested it). Narrow places on an NPC's way (a door, an arch, a passage under 2 blocks wide) are taken in turns: one direction at a time, an NPC already in it first, then first come. The others wait in a queue a block apart before it, a block to the side of the line, so the way out stays free; a group's leader keeps its turn until its followers are through. Two NPCs that meet head-on in a narrow place: the second to enter steps back out and waits. Waiting behind another NPC, in a queue or stepping aside counts as waiting, not as being stuck, and recovery steps never end on a cell where another NPC stands. `/knk npc nav stats` shows `crowd: waits N, yields N, longest queue N` | Restart | #626 |
 | `no-route-wait-ticks` | `100` | Ticks an NPC waits before asking again while the rules allow no route or the way ahead is not loaded; 20–6000. An NPC waiting at a closed gate or a district edge is woken by the gate or access change itself; this is the fallback | Restart | #360 |
-| `walk-only-blocks` | `64` | With an end too far from a road: the longest trip walked as off-road hops; further, the order fails; 0–256 (0 = never) | Restart | #360 |
-| `stop-on-trespass` | `false` | The trespass guard always logs and counts an NPC that entered a region its current rules deny. `true`: also stop that NPC and plan its route again; for dev servers | Restart | #361 |
-| `collidable` | `false` | Whether NPCs push and block each other | Restart | #359 |
+| `walk-only-blocks` | `64` | With an end too far from a road: the longest trip walked off-road (with the walk search since #700, in hops when it finds nothing); further, the order fails; 0–256 (0 = never) | Restart | #360, #700 |
+| `road-goal-reachable` | `false` | A point destination off the road: the road goal is chosen as for players with `navigation.road-goal-reachable` (#780). Today's goal, the nearest point of each road edge within `navigation.max-snap-distance` of the destination and the road's nodes onward (at most 12) each get a road route and one walk search with the NPC's access; the least road plus `road-goal-walk-weight` times walk wins and the order keeps it for its replans. None reached: today's goal, as before. A group takes its leader's choice. Needs `navigation.walk.enabled`. Off until tested | Restart | #814 |
+| `road-goal-walk-weight` | `4.0` | With `road-goal-reachable`: a block walked counts as this many blocks of road (the players' `navigation.road-goal-walk-weight` default); 1–100 | Restart | #814 |
+| `stop-on-trespass` | `false` | The trespass guard always logs and counts an NPC that entered a region its current rules deny, or (since #701) left a region it may not leave (`TRESPASS <npc> entered <region> …` or `… left <region> …`). `true`: also stop that NPC and plan its route again; for dev servers | Restart | #361, #701 |
+| `collidable` | `false` | Whether NPCs have bodies: they push and block each other, or walk through everything (`false`). With it on, players never move an NPC unless `players-push-npcs` is on (each NPC is exempt from every player's collision through Paper's per-entity collidable exemptions; no scoreboard team is touched), and push resistance runs: a displacement the NPC's own walk doesn't explain (a body, an attack's knockback, water, a piston) is detected, counted and logged with who did it, and the NPC walks back to its line or post; queue spots never stand on a cell next to a drop of 3 blocks or more. A real client still feels a slight nudge from an NPC's body; the NPC doesn't move. `/knk npc nav stats` shows `pushes: N (players N, attacks N), returned N, exempted N (now N), teleported N` | Restart | #359, #627 |
+| `players-push-npcs` | `false` | With `collidable` on: whether players' bodies push NPCs too. `true`: players bump NPCs, a pushed NPC walks back, and a player who keeps pushing one (below) stops colliding with it for a while, at once when the push goes towards a drop | Restart | #627 |
+| `push-return` | `true` | With `collidable` on: a pushed or knocked-back NPC walks back to its line or post: straight back where that is a straight walk, else along its own footsteps, else a local leg (K&K's search with `local-legs-clearance`, else Citizens'), last a teleport home. Another NPC's jostle on its way, in a queue or at its goal is the crowd's business (no walk back) unless it goes towards a drop; an NPC standing at its post is walked back when another NPC moves it a block or more; a group's follower is left to its group | Restart | #627 |
+| `push-exempt-after` | `3` | With `players-push-npcs` on: pushes by one player within `push-exempt-window-ticks` before that player stops colliding with that NPC for `push-exempt-ticks`; 1–20 | Restart | #627 |
+| `push-exempt-window-ticks` | `200` | The window in which `push-exempt-after` pushes count; 20–6000 | Restart | #627 |
+| `push-exempt-ticks` | `1200` | How long a player who kept pushing an NPC stops colliding with it; 20–72000 | Restart | #627 |
+| `push-teleport-ticks` | `600` | Ticks a pushed NPC may take to walk back before it teleports home, and only while no player (within 64 blocks with a line of sight) sees it where it stands or where it goes; 0 = never; 0–12000 | Restart | #627 |
 | `chunk-loading` | `load` | Outside player-loaded areas: `load` or `simulate` (read now, used in Phase 7b) | Restart | #359 |
 | `group-formation` | `column` | The formation of a group of NPCs (a leader plans the route once, the followers walk it in slots): `column` (single file), `ranks` (rows behind the leader), `cluster` (a loose crowd, 3 abreast) or `escort-ring` (an octagon around the leader, then wider rings). Where the road is too narrow a formation narrows before it folds: `ranks` one fewer abreast at a time down to 2, a `cluster` 3 then 2, the `escort-ring` rows of 3 with the leader in the middle of the second row, then 2 abreast; only where 2 abreast do not fit (a gate, stairs, a wall walk) the group walks as a column, and it takes up the widest width that fits again after | Restart | #377, #522 |
 | `group-spacing` | `1.5` | Blocks between the rows of a formation and between NPCs in a column; 1–8 (was 2.0 and also the gap in a row before #522) | Restart | #377, #522 |
 | `group-lateral-spacing` | `1.0` | Blocks between neighbours in a row of a group's formation (1 = shoulder to shoulder); 1–8. 3 abreast need a road 1 + 2 × this wide, rounded down to whole blocks (3 at 1.0 and 1.25, 4 at 1.5); the escort ring's first ring has a radius of 1.25 × this | Restart | #522 |
 | `group-ranks-width` | `2` | NPCs per row in the `ranks` formation (2 = pairs), its widest width; it narrows one by one down to 2 before it folds into a column; 2–8 | Restart | #377, #522 |
-| `group-width-hysteresis-blocks` | `3` | A group changes to a narrower width (still 2 abreast or more) or a wider one only when it lasts this many blocks along the path; a column at a gate or a stair is taken at once; 0–16 | Restart | #522 |
+| `group-width-hysteresis-blocks` | `3` | A group changes to a narrower width (still 2 abreast or more) or a wider one only when it lasts this many blocks along the path; with `group-formation-keeping: levels` a column at a gate or a stair is taken at once, with `elastic` the column needs it too (shorter tight places are passed by merging lanes); 0–16 | Restart | #522, #624 |
+| `group-formation-keeping` | `levels` | How a group keeps its formation (off until the developer has tested it). `levels`: fixed widths as above. `elastic`: the width is fitted from the free width across the path (walls, drops and regions the group's access rules deny end it); neighbours squeeze to `group-lateral-spacing-min` and the rows close up to `group-spacing-min` before the group narrows; it decides its width `group-lookahead-blocks` past its depth ahead of the leader; every width change, the column included, needs the tight place to last `group-width-hysteresis-blocks`, and shorter ones are passed with the lanes merged (counted as `merges` in `/knk npc nav stats` with their reason); the column only where 2 abreast squeezed don't fit; stairs as wide as the flight allows when each lane has its own steps; followers get the new slots by their place on every width change; the outer lanes keep `wall-clearance` from a wall where the road allows | Restart | #624 |
+| `group-lateral-spacing-min` | `0.6` | Blocks between neighbours in a row that an `elastic` formation squeezes to before it narrows (0.6 = the body's width, shoulders touch). 3 abreast then fit a 2-wide road (2 × 0.6 + 2 × 0.35 = 1.9), 2 abreast a road 1.3 wide; 0.5–8 | Restart | #624 |
+| `group-spacing-min` | `1.0` | Blocks between the rows that an `elastic` formation closes up to while it is squeezed (the body's depth plus 0.4), and the gap in its column; 0.6–8 | Restart | #624 |
+| `group-lookahead-blocks` | `4` | Blocks an `elastic` formation looks ahead of its leader past its own depth when it decides its width (the decided "depth + 4"), so it starts squeezing or narrowing before the tight place; 0–32 | Restart | #624 |
 | `group-followers-finish-trip` | `false` | When the leader has arrived and the group turns back, followers still on their way (held at a gate or a district edge, behind) finish their trip to the goal first and then rejoin the group (couriers); `false`: they follow the leader at once | Restart | #522 |
 | `group-rejoin-blocks` | `4.0` | A follower further than this from its lane plans its own leg back to the group's path (one local leg, never the whole route). A follower without progress for `no-progress-ticks` takes the recovery steps first (back-off, side-step), then its own leg back to a point ahead of it on its own floor; 2–16 | Restart | #377, #521 |
 | `group-regroup-blocks` | `24.0` | The leader waits when a follower is this many blocks behind its slot, until the group has closed up to half of it (30 seconds at most); 0–256, 0 = the leader never waits | Restart | #377 |
 | `group-catch-up-speed` | `1.3` | Walking speed, as a factor, of a follower that is behind its slot; 1–2, 1 = followers never walk faster | Restart | #377 |
+
+`collidable` stays `false` by default after #627: with bodies on, NPCs walking a 1-wide flight next to a drop can shove
+each other off it (the #491 stair corner scene, `npc-ledge-corner`), which push resistance cannot undo; see
+[implementation plan 4c.4 item 7.4.10](../../specs/npc-platform/IMPLEMENTATION_PLAN.md) for what is still missing. Turn it
+on per world or region where NPCs don't walk such places, after the developer test there. What each movement key does on a server, and the stats lines they add: [NPC navigation admin guide](npc-navigation-admin-guide.md).
 
 The `group-*` keys are per-NPC settings like the others, but a group takes them once, for its leader: a world, a
 region, an NPC template or an assignment can give groups their own formation and toggle.
@@ -687,7 +776,11 @@ pass a closed gate.
 The block to paste (the Phase 1 keys with the Phase 2, 3 and 4 additions; Phase 4, #377, adds the six `group-*`
 lines; #521 adds `recovery-wait-ticks`, `corner-clearance` and `waypoint-margin` and sets `stationary-ticks` and
 `no-progress-ticks` to 40; #522 adds `group-lateral-spacing`, `group-width-hysteresis-blocks` and
-`group-followers-finish-trip` and sets `group-spacing` to 1.5):
+`group-followers-finish-trip` and sets `group-spacing` to 1.5; #622 adds `corridor-steering`,
+`corridor-half-width` and `wall-clearance`; #623 adds `local-legs-clearance`; #624 adds `group-formation-keeping`,
+`group-lateral-spacing-min`, `group-spacing-min` and `group-lookahead-blocks`; #625 adds `plaza-lines` and
+`plaza-corridor-blocks`; #626 adds `crowd-awareness`; #627 adds `players-push-npcs`,
+`push-return`, `push-exempt-after`, `push-exempt-window-ticks`, `push-exempt-ticks` and `push-teleport-ticks`):
 
 ```yaml
 npc:
@@ -706,16 +799,35 @@ npc:
     recovery-wait-ticks: 20
     corner-clearance: 1.0
     waypoint-margin: 0.5
+    corridor-steering: false
+    corridor-half-width: 4
+    wall-clearance: 0.8
+    local-legs-clearance: false
+    plaza-lines: false
+    plaza-corridor-blocks: 16
+    crowd-awareness: false
     no-route-wait-ticks: 100
     walk-only-blocks: 64
+    road-goal-reachable: false
+    road-goal-walk-weight: 4.0
     stop-on-trespass: false
     collidable: false
+    players-push-npcs: false
+    push-return: true
+    push-exempt-after: 3
+    push-exempt-window-ticks: 200
+    push-exempt-ticks: 1200
+    push-teleport-ticks: 600
     chunk-loading: load
     group-formation: column
     group-spacing: 1.5
     group-lateral-spacing: 1.0
     group-ranks-width: 2
     group-width-hysteresis-blocks: 3
+    group-formation-keeping: levels
+    group-lateral-spacing-min: 0.6
+    group-spacing-min: 1.0
+    group-lookahead-blocks: 4
     group-followers-finish-trip: false
     group-rejoin-blocks: 4.0
     group-regroup-blocks: 24.0
@@ -774,6 +886,222 @@ map:
     interval-ticks: 40       # live player report interval (40 ticks = 2 s; 10..1200)
 ```
 
+### 4.30 `items`
+
+Item identity ([PandiO/knk-workspace#141](https://github.com/PandiO/knk-workspace/issues/141),
+[production DESIGN § 8](../../specs/production-storage-transport/DESIGN.md#8-item-identity-note-9)): every item a
+player obtains resolves to one item blueprint, in this order: the `knightsandkings:knk_item_instance` tag (unique
+items), the `knightsandkings:knk_blueprint` tag, the material's vanilla match from knk-web-api
+(`GET api/ItemIdentity/material-map`, generated "Uncurated" shadows until curated). Items that don't resolve
+(custom-named, custom-lored, another plugin's data) are logged once and left alone. A plain vanilla item never carries
+a blueprint tag, so stacking stays exactly vanilla's. With both switches `false` nothing of this runs.
+
+| Key | Default | What it does, safe values | Applies | Added by |
+|---|---|---|---|---|
+| `identity.enabled` | `false` | Load the material map, stamp `knk_blueprint` on blueprint items that differ from the plain vanilla item (kits, lootboxes, `/knk itemblueprints give`), send the conversion counts | Restart | #141 |
+| `identity.convert-on-obtain` | `false` | The conversion hooks: pickup, block and mob drops, fishing, crafting, trades, the first open of a container block since the start. Resolve, count, remove a stale blueprint tag from an otherwise plain item. Needs `identity.enabled` | Restart | #141 |
+| `identity.map-refresh-minutes` | `10` | How often the material map is fetched again (never per event); at least 1 | Restart | #141 |
+| `identity.report-interval-minutes` | `10` | How often the counts go to `POST api/ItemIdentity/conversion-counts` and a summary line to the log; at least 1 | Restart | #141 |
+
+```yaml
+items:
+  identity:
+    enabled: false
+    convert-on-obtain: false
+    map-refresh-minutes: 10
+    report-interval-minutes: 10
+```
+
+### 4.31 `production`
+
+The production, storage and transport feature ([PandiO/knk-workspace#22](https://github.com/PandiO/knk-workspace/issues/22),
+flag G16) and, since [#689](https://github.com/PandiO/knk-workspace/issues/689), territory
+([territory DESIGN § 1-4](../../specs/territory/DESIGN.md)). With `enabled: false` nothing of the feature runs (A21):
+no cache, no listener, no report, no realtime handler, and crown land regions are not managed. `/knk territory` then
+answers that territory is off. How staff set territory up and use it: [territory admin guide](territory-admin-guide.md).
+
+Since [#677](https://github.com/PandiO/knk-workspace/issues/677) (P2c, no new key) the switch also covers the world side
+of production phase P2: the region kinds of production structures and warehouses, rural structure regions without a
+parent (PvP allowed, no town flags), and the territory lookup the API's `InsideTerritory` placement rule calls on the
+region HTTP server (`region-http`, plugin key). While it is off the lookup answers HTTP 503 ("territory unavailable",
+shown as "not checked" in the API) and the repair treats these structures as before.
+
+With `enabled: true` the plugin reads `GET api/Territory/inputs` (every district and crown land with its holder, rank
+and range, already computed by the API) a few seconds after start, reads those regions' shapes from WorldGuard, and
+builds the territory chunk cache: a chunk wholly owned by one holder (or contested by two) is one entry, a chunk a
+border crosses is **split** and kept per block column. It rebuilds on the realtime event `TerritoryChanged` (also after
+a hub reconnect), every `refresh-minutes`, and on `/knk territory rebuild`; it skips the rebuild when the inputs'
+`version` and the region shapes are unchanged. Players' territory is looked up on every chunk crossing (per block in a
+split chunk). After a rebuild the plugin sends one full report per world (`PUT api/Territory/report`: equal-rank
+overlaps and flagged structures) when `report` is on and the API's `Production:Enabled` is on.
+
+| Key | Default | What it does, safe values | Applies | Added by |
+|---|---|---|---|---|
+| `enabled` | `false` | The production feature flag (plugin side of G16). Territory, and every later production link, runs only with it on. Also adds crown land regions (domain type `CrownLand`) to the managed-region repair (kind `CROWN_LAND`, no parent, priority 10). Since #677 also: production structures get the region kind `RESOURCE_PRODUCTION` and warehouses `STRUCTURE`; rural structures (no district) get a region with no parent at priority 30; the region HTTP server answers the territory lookup (`/api/territory/contains-region/{regionId}`, `/api/territory/contains-location`; 503 while off) | Restart | #689, #677 |
+| `territory.refresh-minutes` | `10` | How often the inputs and region shapes are read again besides the `TerritoryChanged` event, so a region redrawn in place is picked up; `0` = only on the event and `/knk territory rebuild` | Restart | #689 |
+| `territory.notify-players` | `true` | An action bar line when a player enters or leaves territory or contested land (`messages`) | Restart | #689 |
+| `territory.report` | `true` | Send the conflict report after each rebuild. The API also needs `Production:Enabled`, else it refuses (409, logged); `/knk territory status` shows the last result | Restart | #689 |
+| `territory.map-outlines` | `false` | Send territory outlines over the game hub (`ReportTerritoryOutlines`) for the overview map. Leave off until the API and the map bridge accept them ([#802](https://github.com/PandiO/knk-workspace/issues/802)); also needs `realtime.enabled` | Restart | #689 |
+| `territory.max-chunks-per-world` | `500000` | Safety limit of the cache per world; a district or crown land that would pass it is left out and logged. A range of 300 blocks takes about 1,300 chunks | Restart | #689 |
+| `territory.messages.enter-town` | `&7Entering the territory of &f{name}` | Action bar on entering a town's territory; `{name}` the town | Restart | #689 |
+| `territory.messages.enter-crown-land` | `&7Entering the crown land of &f{name}` | On entering crown land; `{name}` the kingdom | Restart | #689 |
+| `territory.messages.enter-contested` | `&6Entering contested land: &f{holders}` | On entering contested land; `{holders}` the contesting towns or kingdoms, `/`-separated | Restart | #689 |
+| `territory.messages.enter-wilderness` | `&7Leaving &f{name}&7: wilderness` | On leaving all territory; `{name}` the holder left (or "contested land") | Restart | #689 |
+
+```yaml
+production:
+  enabled: false
+  territory:
+    refresh-minutes: 10
+    notify-players: true
+    report: true
+    map-outlines: false
+    max-chunks-per-world: 500000
+    messages:
+      enter-town: "&7Entering the territory of &f{name}"
+      enter-crown-land: "&7Entering the crown land of &f{name}"
+      enter-contested: "&6Entering contested land: &f{holders}"
+      enter-wilderness: "&7Leaving &f{name}&7: wilderness"
+  surveys:
+    poll-minutes: 5
+    batch: 20
+    chunks-per-tick: 2
+    max-area-blocks: 16000000
+    max-area-chunks: 256
+    scheduled-loads-chunks: false
+    notable-change-blocks: 64
+    notable-cooldown-minutes: 30
+    areas-refresh-minutes: 10
+  logistics:
+    lanes:
+      interval-minutes: 60
+      batch: 100
+      max-snap-distance: 48
+      road-connections: true
+  storage:
+    refresh-minutes: 5
+    display-refresh-seconds: 30
+```
+
+Command: `/knk territory here|status|rebuild`, node `knk.admin.world.territory` (in `knk.admin.*` and
+`knk.admin.world.*`).
+
+Since [#679](https://github.com/PandiO/knk-workspace/issues/679) (P4b, yield-area surveys) the switch also runs the
+surveys: the plugin reads the API's survey queue (`GET api/ProductionAreas/survey-due`; requested areas first, then
+never surveyed, then a day old; `Configured` structures never), counts what each area holds (trees by species and size,
+rock and ores, crops, flowers, water per biome, pasture animals) from chunk snapshots and reports it
+(`POST api/ProductionAreas/{id}/surveys`). Snapshots are taken on the main thread within `chunks-per-tick` (timed as
+`production.survey.capture` in the metrics); counting and reporting run on their own thread. Block breaks and places in
+an area ask for a `NotableChange` survey after `notable-change-blocks`. Also the `CaptureRadius` world task. Commands:
+`/knk production survey <structure> [area]|survey status|area show <structure> [area] [seconds]`, node
+`knk.admin.world.production` (in `knk.admin.*` and `knk.admin.world.*`).
+
+| Key | Default | What it does, safe values | Applies | Added by |
+|---|---|---|---|---|
+| `surveys.poll-minutes` | `5` | How often the survey queue is read; `0` = only on `/knk production survey` and after a notable change | Restart | #679 |
+| `surveys.batch` | `20` | Queue items read per poll (1-200) | Restart | #679 |
+| `surveys.chunks-per-tick` | `2` | Chunk snapshots per server tick, the main-thread budget (1-64); higher surveys faster at a higher tick cost | Restart | #679 |
+| `surveys.max-area-blocks` | `16000000` | An area with more blocks (columns × height) is not surveyed (logged, shown in `/knk production survey status`) | Restart | #679 |
+| `surveys.max-area-chunks` | `256` | An area spanning more chunks is not surveyed. A radius of 64 spans about 81 chunks | Restart | #679 |
+| `surveys.scheduled-loads-chunks` | `false` | `false`: the daily survey waits until the area's chunks are loaded (P-D2); requested surveys (creation, `/knk production survey`, notable change) always load them, without generating new chunks | Restart | #679 |
+| `surveys.notable-change-blocks` | `64` | Block breaks and places in one area that ask the API for a `NotableChange` survey; `0` = off | Restart | #679 |
+| `surveys.notable-cooldown-minutes` | `30` | At most one notable-change survey per area this often | Restart | #679 |
+| `surveys.areas-refresh-minutes` | `10` | How often the area list is read again (notable-change counters, `area show`) | Restart | #679 |
+
+Since [#681](https://github.com/PandiO/knk-workspace/issues/681) (P5b, transport lanes) the switch also runs the lane
+measurer: every `interval-minutes` the plugin reads the API's lane list (`GET api/TransportLanes/due`: each producer to
+each warehouse of its town that accepts deliveries, and a town's warehouses among themselves, when missing or older than
+the game setting `production.transport.laneMaxAgeHours`), measures each pair with the road router over its road network
+(the navigation road snapshot, read-only; off the main thread, timed as `production.lanes.measure`) and reports the lanes
+(`POST api/TransportLanes/report`). A structure more than `max-snap-distance` blocks from a road, or on roads that do not
+join, gives an unreachable lane. With `road-connections` it then sets each producer's road connection (`PUT
+api/ProductionStructures/{id}/road-connection`): `Connected` with a reachable lane, `Unconnected` when every lane it has
+is unreachable (automatic transport is then held, D5). A pair whose structure has no location, or in a world without a
+loaded road network, is skipped and stays due. Needs the road network (`navigation`, § 4.15). Commands:
+`/knk logistics lanes measure|status`, node `knk.admin.world.production`.
+
+| Key | Default | What it does, safe values | Applies | Added by |
+|---|---|---|---|---|
+| `logistics.lanes.interval-minutes` | `60` | How often the headless job reads the lane list; `0` = only on `/knk logistics lanes measure`. The first run is two minutes after start | Restart | #681 |
+| `logistics.lanes.batch` | `100` | Lane pairs read per run (1-1000); reports go in chunks of 500 | Restart | #681 |
+| `logistics.lanes.max-snap-distance` | `48` | Blocks (3D) from a structure's location to the nearest road; farther = no road (`Unconnected`). Navigation's player snap distance is 48 too | Restart | #681 |
+| `logistics.lanes.road-connections` | `true` | `false` reports lanes only and leaves the road connections to staff | Restart | #681 |
+
+Since [#74](https://github.com/PandiO/knk-workspace/issues/74) (P6, storage terminals, displays and the structures
+menus) the switch also runs the storage terminals: chests, trapped chests and barrels bound to a storage (`/knk storage
+bind`, or through the API; never found by scanning; the web app has no page for them yet,
+[#904](https://github.com/PandiO/knk-workspace/issues/904)). The plugin reads every binding (`POST api/StorageContainers/search`)
+at start, every `refresh-minutes` and after `/knk storage bind|unbind|reload`. Right-clicking a **terminal** opens a paged
+view of its storage: a click on an entry takes (left a stack, right one, shift as much as fits), a click on an item in
+the player's own inventory puts it (right click one); each is one ledger move (`POST api/StorageContainers/{id}/take|put`,
+one idempotency key per click) as the player, so the API decides who may (members of the storage's town, its player,
+staff). Putting items in also needs `items.identity.enabled` (the item is resolved to its blueprint). A **display** holds
+a read-only sample of the stock (`GET api/StorageContainers/{id}/display`), written when its chunk loads and after a
+terminal move on the same storage, at most once per `display-refresh-seconds`; opening it shows a read-only copy. Bound
+blocks can't be broken, explosions leave them and hoppers move nothing in or out. With the switch off the structures
+menus (`structures.overview`, `structures.structure`, `structures.orders`) are blocked, so the main menu hides its
+"Structures" tile. Command: `/knk storage bind <storage id> <terminal|display> [label]|unbind|info|reload`, node
+`knk.admin.world.production`. Set-up, displays and the menus: the
+[storage terminals admin guide](production-storage-admin-guide.md).
+
+| Key | Default | What it does, safe values | Applies | Added by |
+|---|---|---|---|---|
+| `storage.refresh-minutes` | `5` | How often the bound containers are read again, so a binding made through the API shows after at most this long (at least 1); `/knk storage reload` reads them at once | Restart | #74 |
+| `storage.display-refresh-seconds` | `30` | At most one refresh of a display this often (at least 1); a refresh asked for sooner runs once the time has passed | Restart | #74 |
+
+Since [#684](https://github.com/PandiO/knk-workspace/issues/684) (P7b, the reward inbox) the switch also runs the reward
+inbox. Kit and lootbox items that don't fit in the player's inventory go to the player's inbox (`POST
+api/ItemDeliveries`, one idempotency key per reward) instead of dropping at their feet: `/kit get|give`, kits granted
+from the web app (#261), the starter kits, and lootbox openings and redeliveries. A kit for a player who went offline
+before it was placed goes to the inbox whole. Items are resolved with item identity when `items.identity.enabled` is on,
+else by the blueprint they were built from. Unique items (an instance) still drop owner-locked (#897), and when the API
+refuses (its `Production:Enabled` off, 409 `ProductionDisabled`) the plugin falls back to today's drop; a delivery with
+no answer is sent once more with the same key. `/inbox` (every player, no node) opens the player's inbox; a click claims
+what fits (`POST api/Inbox/{userId}/claim` as the player, one key per click) and places exactly what the API moved. The
+`InboxUpdated` notices (loss, near-cap warning, expiry reminders, expiry) show in chat. Not during a siege. The cap,
+expiry and warning levels are the API's game settings `production.delivery`. With the switch off kits and lootboxes
+deliver as before and `/inbox` says the inbox is off.
+
+| Key | Default | What it does, safe values | Applies | Added by |
+|---|---|---|---|---|
+| `inbox.join-summary` | `true` | About five seconds after a player joins with items in their inbox, tell them how many, whether some expire within 7 days, and the near-cap warning; `false` = only the notices | Restart | #684 |
+
+Since [#134](https://github.com/PandiO/knk-workspace/issues/134) (P8, player harvesting) the switch also runs harvesting
+in yield areas (PRODUCTION_KINDS § 6-§ 7). The plugin reads the harvest catalogue (`GET api/Harvest/catalog`: the enabled
+harvest rules and the areas of their production kinds) and, inside such an area, lets a player who meets a rule (its
+permission node or title bracket, tool class and tier, crop age and cooldown) break or kill the rule's targets, also
+inside a production region that denies `block-break` (WorldGuard) and outside every region (the global-region
+protection). The vanilla drops are replaced: the harvest is reported (`POST api/Harvest/reports`, batched, one
+idempotency key per entry, sent again with the same key after a failure) and the player gets the answer's worker's share
+of the rule's blueprint in the inventory (an offline player when they join). The block gets the rule's placeholder (a
+depleted block, by default stone, netherrack in the nether, end stone in the end; the crop replanted at age 0; air; a
+sapling for a whole felled tree) and comes back after the answer's regeneration time: only when its chunks are loaded,
+only where the placeholder still stands, never into a player or mob. Other players are refused the rule's targets with
+the reason; every other block is left to WorldGuard as before; holders of `knk.admin.world.production` are left to
+WorldGuard (not refused, not harvested). Regeneration jobs, unanswered reports and owed shares are kept in
+`plugins/KnightsAndKings/production/harvest/` (`regen.txt`, `outbox.txt`, `owed.txt`) and survive restarts; surveys count
+blocks waiting to regenerate as their original. While the API's `Production:Enabled` is off the catalogue is empty and
+nothing is harvested. Status: `/knk production harvest status|refresh`, node `knk.admin.world.production`. Rules are
+written through `api/HarvestRules` (web app pages: #913); see the
+[harvesting admin guide](production-harvesting-admin-guide.md).
+
+| Key | Default | What it does, safe values | Applies | Added by |
+|---|---|---|---|---|
+| `harvest.catalog-refresh-minutes` | `5` | How often the rules, areas and pool fill are read again (at least 1); `/knk production harvest refresh` reads them at once | Restart | #134 |
+| `harvest.report-flush-seconds` | `2` | How often waiting harvests are sent (at least 1); the worker's share is paid when the API answers | Restart | #134 |
+| `harvest.report-batch` | `200` | Entries per report, 1-200 (the API takes at most its `production.harvest.maxEntriesPerReport`, 200 by default) | Restart | #134 |
+| `harvest.regen-blocks-per-tick` | `64` | Blocks restored per server tick at most (the main-thread budget, timed as `production.harvest.regen`) | Restart | #134 |
+| `harvest.regen-retry-seconds` | `5` | A restore blocked by a player or mob standing in one of the blocks is tried again after this | Restart | #134 |
+| `harvest.save-seconds` | `10` | How often changed regeneration jobs, reports and owed shares are written to disk (also at once after each report answer and at shutdown) | Restart | #134 |
+| `harvest.deny-at-empty-pool` | `false` | `true` refuses harvests in an area whose resource pool is empty; `false` lets them through (the API books them and the structure produces at its floor) | Restart | #134 |
+| `harvest.tree-max-logs` | `256` | A log cluster with more logs is not felled whole (a log building or a giant tree): only the broken log is harvested | Restart | #134 |
+| `harvest.tree-max-leaves` | `1500` | Leaves taken with a felled tree at most | Restart | #134 |
+| `harvest.max-area-chunks` | `256` | An area spanning more chunks is left out of harvesting (listed by `/knk production harvest status`) | Restart | #134 |
+| `harvest.messages.denied` | `"&cYou can't harvest this here: {reason}."` | A refused harvest; `{reason}` is the first unmet condition | Restart | #134 |
+| `harvest.messages.regenerating` | `"&7This block is regenerating."` | A break of a block waiting to regenerate (refused) | Restart | #134 |
+| `harvest.messages.paid` | `"&a+{amount} {item} &7(your share of the harvest)"` | The worker's share arrived | Restart | #134 |
+| `harvest.messages.rejected` | `"&cYour harvest at {area} was not booked: {reason}."` | The API refused an entry (nothing paid) | Restart | #134 |
+
 ## 5. Maintaining this page
 
 - A change that adds, renames or removes a key, or changes a default, updates § 2.1 and the section's table in the
@@ -785,14 +1113,36 @@ map:
 
 ## Changes
 
+1. 2026-11-21: § 2.1 row of #134 in `next` `6f6c915f`, § 4.31 link to the harvesting admin guide (docs #922)
+1. 2026-11-21: § 4.31 `production.harvest.*` (#134), § 2.1 and § 3 rows; checked against knk-plugin `claude/production-p8`, not merged into `next` yet
+1. 2026-11-21: § 2.1 row of #684 in `next` `bdd8b463`, § 4.31 link to the reward inbox admin guide (docs #915)
+1. 2026-11-21: § 4.31 `production.inbox.join-summary` (#684), § 2.1 and § 3 rows; checked against knk-plugin `claude/production-p7b`, not merged into `next` yet
+1. 2026-11-20: § 4.31 `production.storage.*` (#74), § 2.1 and § 3 rows; checked against knk-plugin `claude/production-p6`, not merged into `next` yet
+1. 2026-11-20: § 4.31 `production.logistics.lanes.*` (#681), § 2.1 and § 3 rows; checked against knk-plugin `claude/production-p5b`, not merged into `next` yet
+1. 2026-11-20: § 4.31 `production.surveys.*` (#679), § 2.1 and § 3 rows; checked against knk-plugin `claude/production-p4b`, not merged into `next` yet
+1. 2026-11-20: § 4.27 `npc.navigation.road-goal-reachable` and `road-goal-walk-weight` (#814, NPC follow-ups G1), § 2.1 row; checked against knk-plugin `claude/npc-movement-g1`, not merged into `next` yet
+1. 2026-11-20: § 2.1: the `map.reporting.*` rows (#735, #738) on trunk since knk-plugin v0.3 (docs #767)
+1. 2026-11-19: § 4.31 `production.enabled` also switches the P2c region kinds, rural structure regions and the territory lookup (#677); no new key; checked against knk-plugin `claude/production-p2c`, not merged into `next` yet
+1. 2026-11-19: § 4.15 `navigation.road-goal-reachable`, `road-goal-candidates`, `road-to-its-end` (#780, #771 items 4 and 5), `trail-leg-spacing` also with `guidance-v2` off (#771 item 3), § 2.1 row; checked against knk-plugin `claude/offroad-route-ends-f2`, not merged into `next` yet
+1. 2026-11-19: § 4.31 `production` (`enabled`, `territory.refresh-minutes`, `notify-players`, `report`, `map-outlines`, `max-chunks-per-world`, `messages.*`, #689), § 2.1 and § 3 rows; checked against knk-plugin `claude/production-t-b`, not merged into `next` yet
+1. 2026-11-19: § 4.30 `items.identity` (`enabled`, `convert-on-obtain`, `map-refresh-minutes`, `report-interval-minutes`, #141), § 2.1 and § 3 rows; checked against knk-plugin `claude/item-identity-141` `a6c5a2bc`; unchanged in the merge into `next` `2ef256e7` (checked 2026-11-19, docs #796). Admin guide: [item identity](item-identity-admin-guide.md)
+1. 2026-11-18: § 4.15 `navigation.walk-links`, `walk-link-range`, `walk-link-ratio`, `walk-link-ttl-seconds`, `walk-link-retry-seconds`, `walk-link-searches-per-route`, `road-first-share`, `road-first-max-ratio` (#705), § 2.1 row; checked against knk-plugin `claude/offroad-walk-links` `de44d58b`, not merged into `next` yet
+1. 2026-11-18: § 4.15 `navigation.plaza-curve-clearance`, the `plaza-lines` text (#712 step 2), § 2.1 row; checked against knk-plugin `claude/offroad-plaza-lines` `28ad18c5`, not merged into `next` yet
 1. 2026-11-18: § 4.29 `map.reporting.interval-ticks` and the live player report (#738), § 2.1 row; checked against knk-plugin `claude/overview-map-players-api`, not merged into `next` yet
 1. 2026-11-18: § 4.29 `map.reporting.enabled` (#735), § 2.1 and § 3 rows; checked against knk-plugin `claude/overview-map-outlines`, not merged into `next` yet
-1. 2026-11-15: § 4.27 `npc`: `group-lateral-spacing`, `group-width-hysteresis-blocks`, `group-followers-finish-trip`, `group-spacing` 2.0 → 1.5, the `group-formation` and `group-ranks-width` texts (#522), § 2.1 row (and the #521 row now in `next`); checked against knk-plugin `claude/npc-followups-l4`, not merged into `next` yet
-2. 2026-11-15: § 4.27 `npc`: `corner-clearance`, `waypoint-margin`, `recovery-wait-ticks`, `stationary-ticks` and `no-progress-ticks` 40, `max-retries` and `group-rejoin-blocks` reworded (#521), § 2.1 row; checked against knk-plugin `claude/npc-followups-l3`, not merged into `next` yet
-3. 2026-11-14: § 4.28 `testing.scenarios` (#421), § 2.1 and § 3 rows; checked against knk-plugin `next` `309d3580`
-4. 2026-11-14: § 4.18 `messages.web-account-registered` (#485), § 2.1 row; checked against knk-plugin `claude/smoke-fixes-484-485-487`, not merged into `next` yet
-5. 2026-11-13: § 4.3 `realtime.erasure` (#184) and the regions `temp-retention.release-interval-minutes` (#269), PR into `next` from `claude/plugin-chains-into-next`
-6. 2026-11-13: § 4.27 `npc`: six `group-*` keys, PandiO/knk-workspace#377
-7. 2026-11-13: § 4.27 `npc`: `rule-checks-per-tick`, `stop-on-trespass`, PandiO/knk-workspace#361
-8. 2026-11-13: § 4.27 `npc`, PandiO/knk-workspace#359 and #360; checked against knk-plugin `claude/npc-navigation`, not merged into trunk yet
-9. 2026-11-10: first version, PandiO/knk-workspace#295; checked against knk-plugin `main` `121030f`
+1. 2026-11-18: § 4.15 `navigation.plaza-lines`, `plaza-pull`, `plaza-guide-cost` (#712 step 1), § 2.1 row; checked against knk-plugin `claude/offroad-plaza-lines`, not merged into `next` yet
+1. 2026-11-16: § 4.27 `npc`: push resistance with `collidable` (default still false), `players-push-npcs`, `push-return`, `push-exempt-after`, `push-exempt-window-ticks`, `push-exempt-ticks`, `push-teleport-ticks` (#627), § 2.1 row; checked against knk-plugin `claude/npc-movement-m7`, not merged into `next` yet
+1. 2026-11-16: § 4.27 `npc`: `crowd-awareness` (#626), § 2.1 row (and the #625 row now in `next`); checked against knk-plugin `claude/npc-movement-m4`, not merged into `next` yet
+2. 2026-11-16: § 4.27 `npc`: `plaza-lines`, `plaza-corridor-blocks` (#625), § 2.1 row (and the #624 row now in `next`); checked against knk-plugin `claude/npc-movement-m5`, not merged into `next` yet
+3. 2026-11-15: § 4.27 `npc`: `group-formation-keeping`, `group-lateral-spacing-min`, `group-spacing-min`, `group-lookahead-blocks` and the `group-width-hysteresis-blocks` text (#624), § 2.1 row (and the #623 row now in `next`); checked against knk-plugin `claude/npc-movement-m3`, not merged into `next` yet
+4. 2026-11-15: § 4.27 `npc`: `local-legs-clearance` and the `wall-clearance` text (#623), § 2.1 row (and the #622 row now in `next`); checked against knk-plugin `claude/npc-movement-m6`, not merged into `next` yet
+5. 2026-11-15: § 4.27 `npc`: `corridor-steering`, `corridor-half-width`, `wall-clearance`, the `corner-clearance` and `waypoint-margin` texts (#622), § 2.1 row; checked against knk-plugin `claude/npc-movement-m2`, not merged into `next` yet
+6. 2026-11-15: § 4.27 `npc`: `group-lateral-spacing`, `group-width-hysteresis-blocks`, `group-followers-finish-trip`, `group-spacing` 2.0 → 1.5, the `group-formation` and `group-ranks-width` texts (#522), § 2.1 row (and the #521 row now in `next`); checked against knk-plugin `claude/npc-followups-l4`, not merged into `next` yet
+7. 2026-11-15: § 4.27 `npc`: `corner-clearance`, `waypoint-margin`, `recovery-wait-ticks`, `stationary-ticks` and `no-progress-ticks` 40, `max-retries` and `group-rejoin-blocks` reworded (#521), § 2.1 row; checked against knk-plugin `claude/npc-followups-l3`, not merged into `next` yet
+8. 2026-11-14: § 4.28 `testing.scenarios` (#421), § 2.1 and § 3 rows; checked against knk-plugin `next` `309d3580`
+9. 2026-11-14: § 4.18 `messages.web-account-registered` (#485), § 2.1 row; checked against knk-plugin `claude/smoke-fixes-484-485-487`, not merged into `next` yet
+10. 2026-11-13: § 4.3 `realtime.erasure` (#184) and the regions `temp-retention.release-interval-minutes` (#269), PR into `next` from `claude/plugin-chains-into-next`
+11. 2026-11-13: § 4.27 `npc`: six `group-*` keys, PandiO/knk-workspace#377
+12. 2026-11-13: § 4.27 `npc`: `rule-checks-per-tick`, `stop-on-trespass`, PandiO/knk-workspace#361
+13. 2026-11-13: § 4.27 `npc`, PandiO/knk-workspace#359 and #360; checked against knk-plugin `claude/npc-navigation`, not merged into trunk yet
+14. 2026-11-10: first version, PandiO/knk-workspace#295; checked against knk-plugin `main` `121030f`

@@ -490,7 +490,7 @@ anything, and a bad or empty argument is ignored.
    2. The API (`Services/Map/MapRegionOutlineService`) upserts table `map_region_outlines` by world and region id and
       links each row to the domain or domain sub-region that names it; removed names are deleted. Log: `Game server
       <id> reported region outlines: <n> stored, <u> unchanged, <r> removed, <x> rejected`.
-   3. Architecture: [managed WorldGuard regions § 7 "Overview map outlines"](../../architecture/managed-worldguard-regions.md#overview-map-outlines-pandioknk-workspace735-in-next).
+   3. Architecture: [managed WorldGuard regions § 7 "Overview map outlines"](../../architecture/managed-worldguard-regions.md#overview-map-outlines-pandioknk-workspace735-on-trunk-since-knk-plugin-v03).
 2. **`ReportMapPlayers(MapPlayersReportDto)`**, game server → API (L4). Sent with `map.reporting.enabled: true` every
    `map.reporting.interval-ticks` (default 40 = 2 s, clamped 10..1200; snapshot on the main thread, send off it).
    1. Argument: `intervalMs` and `players[]` of `{uuid, world, x, y, z (0.1 block), yaw (whole degrees), afk, mode
