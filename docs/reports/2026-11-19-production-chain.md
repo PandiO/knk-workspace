@@ -52,14 +52,20 @@ of what is already in `next`.
 10. **Decision (L17, agent):** town membership for the caller-filtered structure reads (M3) is the permission node
     `knk.town.member.<town id>` (one permission group per town), a stand-in until town runtime management #246. Confirm,
     or name the membership source you want.
-11. **Smoke test of territory (L1 § 1.1–1.2, L2 § 1.3, L3 § 1.4).**
+11. **Shop menu templates for L26 (#687):** the charter gate for the plugin shop menus. Asked on #687 on 2026-11-21.
+    The alternative offered there: start from the legacy V1/V2 shop menus and review the result.
+12. **Review (L22 decision 1):** in a yield area, a player who doesn't meet a harvest rule can't break that rule's
+    targets, also in the wilderness (otherwise they'd get full vanilla drops there).
+13. **Not in the charter's links, for the developer or the manager to schedule:** #901 (P7 web app: inbox, stash,
+    gifting) and #913 (P8 web app: harvest rules, pools, history).
+14. **Smoke test of territory (L1 § 1.1–1.2, L2 § 1.3, L3 § 1.4).**
    1. Apply migration `AddTerritory`.
    2. Import the four territory form and display seeds (`Kingdom` first).
    3. Merge the plugin `production` block into `config.yml`.
    4. To test, turn on `production.enabled` in the plugin and in the API game settings.
-12. **Review:** the agent decisions in blocks 4.0–4.17 (L6's are listed in knk-web-api#57) (L0's retag rule; L1 server-side territory and loyalty as a town
+15. **Review:** the agent decisions in blocks 4.0–4.23 (L6's are listed in knk-web-api#57) (L0's retag rule; L1 server-side territory and loyalty as a town
    id; L2's crown land region kind) and coordinator decision 15 (Town/District seed fields).
-13. Later: the shop menu templates for L26 (#687).
+
 
 ## 2. Summary
 
@@ -87,11 +93,11 @@ of what is already in `next`.
 | L19 P7 delivery and inbox API | #60 | Merged into next (2026-11-21) | api `a389259`, workspace `fbe4ded6`; merges: api `2952d0c7`, workspace `e2c6f45b` | [api#70](https://github.com/PandiO/knk-web-api/pull/70), [ws#899](https://github.com/PandiO/knk-workspace/pull/899) | build-and-test, fresh-database green; mysql-tests running (green locally) | create_session `session_01R1w2UwpK1NtaZLrA8k2uhP` (prompt says start without asking), started 2026-11-20 |
 | L20 P7b inbox plugin, kit/lootbox migration | #684 | Merged into next (2026-11-21) | plugin `823ebf09`, workspace `e48c9d0e`; merges: plugin `bdd8b463`, workspace `bb127457` | [plugin#113](https://github.com/PandiO/knk-plugin/pull/113), [ws#911](https://github.com/PandiO/knk-workspace/pull/911) | green on `1952a5b9` (build + paper-boot, 71 scenarios); `823ebf09` running | create_session `session_01R1w2Ux3iuWqjcAV5HQdPvM` (prompt says start without asking), started 2026-11-21 |
 | L21 P8a harvest API | #685 | Merged into next (2026-11-21) | api `e89e396`, workspace `00fab16d` (merged `next` `12804469`); merges: api `9ad32c23`, workspace `69f2b108` (after a coordinator merge of `next`, `944a443b`) | [api#72](https://github.com/PandiO/knk-web-api/pull/72), [ws#914](https://github.com/PandiO/knk-workspace/pull/914) | push runs on `e89e396` green (build-and-test, mysql-tests, fresh-database); PR runs running | create_session `session_01R1w2Ux7jFcMxYzkwej4qY4` (prompt says start without asking), started 2026-11-21 |
-| L22 P8 harvest plugin | #134 | In review (PRs open, not merged) | plugin `676d6f11`, workspace `e6b8b6ec` | [plugin#114](https://github.com/PandiO/knk-plugin/pull/114), [ws#919](https://github.com/PandiO/knk-workspace/pull/919) | green on `676d6f11` (plugin build + paper-boot, 73 scenarios) | create_session `session_01R1w2UuXe6TVT7QDKeAXdgn` (prompt says start without asking), started 2026-11-21 |
-| L23 P9 town logistics API | #127 | In review (done 2026-11-21) | api `6a8c110`, workspace `3920e67d` | [api#73](https://github.com/PandiO/knk-web-api/pull/73), [ws#920](https://github.com/PandiO/knk-workspace/pull/920) | green on `6a8c110` (build-and-test, mysql-tests, fresh-database) | create_session `session_01R1w2UwWMWgbXsBzScMifEq` (prompt says start without asking), started 2026-11-21 |
-| L24 P9b logistics web app | #686 | Not started | — | — | — | — |
-| L25 P10 shops API, town account | #248 | Not started | — | — | — | — |
-| L26 P10b shop menus plugin | #687 | Not started | — | — | — | — |
+| L22 P8 harvest plugin | #134 | Merged into next (2026-11-21) | plugin `676d6f11`, workspace `e6b8b6ec`; merges: plugin `6f6c915f`, workspace `700ec311` | [plugin#114](https://github.com/PandiO/knk-plugin/pull/114), [ws#919](https://github.com/PandiO/knk-workspace/pull/919) | green on `676d6f11` (plugin build + paper-boot, 73 scenarios) | create_session `session_01R1w2UuXe6TVT7QDKeAXdgn` (prompt says start without asking), started 2026-11-21 |
+| L23 P9 town logistics API | #127 | Merged into next (2026-11-21) | api `6a8c110`, workspace `3920e67d`; merges: api `37be22e5`, workspace `fbf071df` (after a coordinator merge of `next`, `8ebdbb2c`) | [api#73](https://github.com/PandiO/knk-web-api/pull/73), [ws#920](https://github.com/PandiO/knk-workspace/pull/920) | green on `6a8c110` (build-and-test, mysql-tests, fresh-database) | create_session `session_01R1w2UwWMWgbXsBzScMifEq` (prompt says start without asking), started 2026-11-21 |
+| L24 P9b logistics web app | #686 | Running | — | — | — | create_session `session_01R1w2UwTStX77ypqswMN3Kz` (prompt says start without asking), started 2026-11-21 |
+| L25 P10 shops API, town account | #248 | Running | — | — | — | create_session `session_01R1w2Uu45eaJcRwWoXYurUU` (prompt says start without asking), started 2026-11-21 |
+| L26 P10b shop menus plugin | #687 | Waiting (developer's shop menu templates, asked on #687) | — | — | — | — |
 | L27 P10c shops web app | #688 | Not started | — | — | — | — |
 | L28 P11 shopkeepers | #249 | Not started | — | — | — | — |
 | L29 P12 display stalls | #250 | Not started | — | — | — | — |
@@ -428,6 +434,26 @@ of what is already in `next`.
    Alternatives: (a) ask the developer first: the design's Decided status already answers it, and the point stays open
    for review in report § 1.
 63. **P6 docs #903:** done.
+
+64. **L22 and L23 merge (2026-11-21).** § 6 checks held for both:
+   1. Heads matched, and both branches merged cleanly with `next`.
+   2. CI was green: plugin build and paper-boot (73 scenarios, including the two harvest scenarios); API
+      build-and-test, mysql-tests and fresh-database.
+   3. Codex was at its usage limit, so there were no findings.
+   4. The scope matched #134 and #127.
+   L22 changes the world. Its change to the global `GlobalRegionProtectionListener` is an additive `allowedBreaks`
+   hook, false by default, so global protection is unchanged unless L22's harvest module installs the hook. Its
+   regeneration queue is persisted across restarts.
+   Merged: plugin #114 `6f6c915f`, workspace #919 `700ec311`, API #73 `37be22e5`. Workspace #920 conflicted with #919
+   in the changelog and the smoke-guide header. The coordinator merged `origin/next` (`8ebdbb2c`), then merged #920 as
+   `fbf071df`. P8 (L21–L22) is complete: `documentation` sub-issue #922 under #134, docs session started.
+65. **After L23: L24 (#686) and L25 (#248) started; L26 waits for the developer.**
+   1. L24 and L25 have open gates. L25's restocking needs L23, which is merged.
+   2. L25 adds the town account as a currency `AccountKind`. Charter § 3.1 asks to coordinate with the currency owner,
+      so L25 checks the board for currency work and keeps its change additive.
+   3. L26 waits for the developer's shop menu templates (charter § 2.3), asked on #687. L28 and L29 depend on L26.
+   4. With L22 done, the plugin is idle until L26.
+66. **P7 docs #915:** done (#916 bug, #917 promotion steps).
 
 ## 4. Link blocks
 
