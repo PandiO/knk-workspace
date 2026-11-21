@@ -1,6 +1,6 @@
 # Siege shop chain — charter
 
-**Status:** Running (2026-11-20)
+**Status:** In review (all links in `next`, 2026-11-21) 
 **Last updated:** 2026-11-20 (drafted by the design session; the coordinator completes it at its first run)
 **Issues:** parent [PandiO/knk-workspace#611](https://github.com/PandiO/knk-workspace/issues/611) (with
 [#356](https://github.com/PandiO/knk-workspace/issues/356), built by L1, and

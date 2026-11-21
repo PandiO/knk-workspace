@@ -1,6 +1,6 @@
 # Siege shop chain — progress report
 
-**Status:** Running (2026-11-20) · **Last updated:** 2026-11-20
+**Status:** In review (all links in `next`, 2026-11-21) · **Last updated:** 2026-11-21
 
 **Issue:** [PandiO/knk-workspace#611](https://github.com/PandiO/knk-workspace/issues/611) (with
 [#356](https://github.com/PandiO/knk-workspace/issues/356) and [#859](https://github.com/PandiO/knk-workspace/issues/859)),
@@ -13,8 +13,17 @@ developer's instruction of 2026-11-20; its own report is [2026-11-19-siege-weapo
 
 ## 1. Waiting for the developer
 
-1. Nothing for this chain yet. (Siege weapons L3 #784 also needs #614, the schematic pipeline, which has no design;
-   see the weapons report § 1.)
+1. **Test in `next`** (smoke guide `docs/guides/siege-shop-smoke-test.md`): § 1 siege points (tier:3), § 2 catalogue
+   (tier:2), § 3 shop in the plugin (tier:3), § 4 weapon unlocks (tier:2), § 5 menu item settings (tier:2; § 5.2
+   step 8 waits for Siege Survival #41).
+2. **Deploy steps:** migrations `AddSiegePointsEarning`, `AddSiegeShopCatalogue`, `AddMenuItemSettings`,
+   `AddSiegeWeaponUnlockMinTitle`; restart the API once (catalogue and menu seeds); import the form seeds
+   `SiegeShopCategory`, `SiegeShopEntry`, `SiegeScenarioShopOverride`, "SiegeWeaponTemplate - Default (seed v2)" (and add
+   the new step/field by hand where `SiegeScenario` or `ItemBlueprint` forms were imported before); deploy the plugin
+   before the API (L3); turn on `siege.points.enabled` and `siege.shop.enabled` together.
+3. **Agent decisions to review:** § 4.1–4.6 of this report (each with alternatives).
+4. **Docs:** #908, docs session session_01R1w2UvhedVnDCJtzAaf4xa (player and admin guide items gate deploys).
+5. Siege weapons L3 #784 still needs #614 (schematic pipeline, no design); see the weapons report § 1.
 
 ## 2. Summary
 
@@ -25,7 +34,7 @@ developer's instruction of 2026-11-20; its own report is [2026-11-19-siege-weapo
 | L3 Shop in the plugin | #868 | Merged into `next` 2026-11-20 (knk-plugin `c7e2ad4b`, knk-web-api `57277cdc`, knk-workspace `094495c4`) | `claude/siege-shop-l3`: knk-plugin `0620fd51`, knk-web-api `34a684d`, knk-workspace `87aefbbf` | [knk-plugin#109](https://github.com/PandiO/knk-plugin/pull/109), [knk-web-api#69](https://github.com/PandiO/knk-web-api/pull/69), [knk-workspace#896](https://github.com/PandiO/knk-workspace/pull/896) | green (plugin build + paper-boot pull-request run; push run of paper-boot failed once in `npc-road-goal-dead-end` (UNLOADED, not L3), rerun started; API build-and-test, mysql-tests, fresh-database) | subagent of the coordinator (decision 8), started 2026-11-20 |
 | L4 Weapon unlocks | #869 | Merged into `next` 2026-11-20/21 (knk-web-api `fc1a5143`, knk-plugin `02a99b62`, knk-web-app `acff2134`, knk-workspace `28bd67f2`) | `claude/siege-shop-l4`: knk-web-api `3c2b1ba5`, knk-plugin `ab9bab6e`, knk-web-app `af584a77`, knk-workspace `66e22850` | [knk-plugin#111](https://github.com/PandiO/knk-plugin/pull/111), [knk-web-api#71](https://github.com/PandiO/knk-web-api/pull/71), [knk-web-app#71](https://github.com/PandiO/knk-web-app/pull/71), [knk-workspace#902](https://github.com/PandiO/knk-workspace/pull/902) | green | subagent of the coordinator (three component repos), started 2026-11-20 |
 | L5 Menu item settings (API, web app) | #870 | Merged into `next` 2026-11-20 (knk-web-api `af21a10e`, knk-web-app `14ef5d05`, knk-workspace `a59eda2d`) | `claude/siege-shop-l5`: knk-web-api `478d1d61`, knk-web-app `9fa2b791`, knk-workspace `7ec5fa9f` | [knk-web-api#68](https://github.com/PandiO/knk-web-api/pull/68), [knk-web-app#70](https://github.com/PandiO/knk-web-app/pull/70), [knk-workspace#894](https://github.com/PandiO/knk-workspace/pull/894) | web app green; API green in the pull-request run, push run's mysql-tests red only in flaky #805 (rerun once) | subagent of the coordinator, started 2026-11-20 |
-| L6 Menu item in the plugin | #871 | In review (2026-11-21) | `claude/siege-shop-l6`: knk-plugin `6f16b31c`, knk-workspace `15f6eaa8` | [knk-plugin#112](https://github.com/PandiO/knk-plugin/pull/112), [knk-workspace#907](https://github.com/PandiO/knk-workspace/pull/907) | green (plugin build + paper-boot; workspace build); Codex at its usage limit | subagent of the coordinator, started 2026-11-21 |
+| L6 Menu item in the plugin | #871 | Merged into `next` 2026-11-21 (knk-plugin `ec02a64a`, knk-workspace `cf90aefd`) | `claude/siege-shop-l6`: knk-plugin `6f16b31c`, knk-workspace `dbc0789e` | [knk-plugin#112](https://github.com/PandiO/knk-plugin/pull/112), [knk-workspace#907](https://github.com/PandiO/knk-workspace/pull/907) | green (plugin build + paper-boot; workspace build); Codex at its usage limit | subagent of the coordinator, started 2026-11-21 |
 
 ## 3. Coordinator decisions
 
@@ -64,6 +73,7 @@ developer's instruction of 2026-11-20; its own report is [2026-11-19-siege-weapo
 12. 2026-11-20: L4 #869 started (subagent, knk-web-api + knk-plugin + knk-web-app), covering #795. It adds the Minigames → Siege unlocks main-menu entry, which Production L18 #74 also touches; both coordinators told each other and the link keeps its menu in its own seed block. Weapons chain: shop L1–L3 are now in `next`, so weapons L3 #784 waits only for #614.
 13. 2026-11-21: L4 merged into `next` (API `fc1a5143` with migration `20261120231505_AddSiegeWeaponUnlockMinTitle`, closes #795; web app `acff2134`; workspace `28bd67f2`; plugin `02a99b62`). Plugin `next` had moved to Production L18 (`8e672ba6`, regenerated `content-seeds.json`); `git merge-tree` with L4 was clean, so no regeneration was needed. L4 put the Siege unlocks button in `siege.overview` instead of a new main-menu entry (L4 decision 1), so it did not overlap Production L18. Production told about the migration and about L6.
 14. 2026-11-21: L6 #871 started (subagent, plugin only, same route as L3). Production confirmed L18 does not touch the menu item path. L6 also fixes L3's locked-weapon text to name the real path (/menu → Siege Minigame → Siege unlocks); a one-string change, in scope because L6 is the last plugin link.
+15. 2026-11-21: L6 merged into `next` (plugin `ec02a64a`; workspace `cf90aefd` after the link merged `next` again for a changelog conflict). All six links are in `next`; chain status In review. Docs sub-issue #908 and docs session session_01R1w2UvhedVnDCJtzAaf4xa started per "Shipping a change". The feature issues (#611, #356, #859) close when the developer promotes `next`.
 
 ## 4. Link blocks
 
