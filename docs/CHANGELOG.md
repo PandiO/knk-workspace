@@ -4,6 +4,26 @@ This is a human-readable record of capabilities merged into the V3 default branc
 
 ## Unreleased — on feature branches, not merged
 
+- **Shop menus in game: buy with a confirmation, sell for buy-back prices**
+  ([PandiO/knk-workspace#687](https://github.com/PandiO/knk-workspace/issues/687), production P10b, link L26; behind
+  `production.enabled`, default off). For players: a shop's menu shows the shop's information and its catalogue (the
+  real items, price, stock; sold-out items greyed out, featured ones first); an item's information menu sets the
+  amount (1, 8, 16, 32, 64) and shows the total; every purchase asks for a confirmation with the shop's quoted price
+  and goes to the inventory or the reward inbox; a price that changed meanwhile is shown and asked again. The sell
+  menu shows the buy-back price of each picked stack and the total and sells all of them or none; the items leave the
+  inventory only when the sale is sent. The layouts are the legacy V1 shop menus (developer decision 2026-11-21).
+  For staff: `/knk shop <shop id>` (node `knk.admin.world.production`) opens a shop's menu until shopkeepers (P11)
+  arrive. knk-plugin: knk-core `production/shop` (records, `ShopsApi` port, texts, refusal codes, sell basket),
+  knk-api-client `ShopsApiImpl` (`GET api/Shops/{id}/offer`, `quote`, `purchase`, `sell-quote`, `sell`, plugin key),
+  knk-paper `production/shop` (`ShopMenuFeature`, `ShopService`, the plugin-built sell menu `SellModule`), scenario
+  `player-shop-sell-and-buy` (`MIN_SCENARIOS` 74). knk-web-api: menu seeds `shops.shop`, `shops.item` and
+  `shops.confirm` (`MenuTemplateSeed.Shops.cs`). Unique items are listed but not bought in game until #897. Smoke
+  test: [§ 11.2](guides/production-storage-transport-smoke-test.md#112-steps-plugin-687). Admin steps:
+  1. Deploy the plugin first, then the API (the API creates the three menu templates on start when they are missing).
+  2. No new plugin `config.yml` key, no `api.env` key, no migration. Selling needs `items.identity.enabled: true`;
+     everything needs `production.enabled: true` and the API's `Production:Enabled` (selling and inbox delivery).
+  3. Grant `knk.admin.world.production` to the staff who test with `/knk shop`.
+
 - **Off-road navigation: a group's default route mode is now a fixed choice (Enum field)**
   ([PandiO/knk-workspace#852](https://github.com/PandiO/knk-workspace/issues/852) follow-up, developer decision
   2026-11-21). For staff: the permission group form's "Default route mode" is an Enum field with Shortest, Efficient
