@@ -19,8 +19,8 @@ scenario on a real Paper server), 7 partly and 1 manual (tagged); not run. § 5.
 partly (tagged) and 1 by hand; every step can still be run by hand; not run. § 6.1 (transport API, #79): 18 of 20 steps automated in CI
 and 2 partly (tagged); every step can still be run by hand; not run. § 6.2 (transport lanes plugin, #681): 3 of 14
 steps automated, 10 partly and 1 manual (tagged); not run. § 6.3 (transport web app, #682): 10 of 16 steps
-automated in CI, 5 partly (tagged) and 1 by hand; every step can still be run by hand; not run. § 7.1 (terminals and menus API, #683): 15 of 20 steps automated in CI, 4 partly and 1 by hand (tagged); every step can still be run by hand; not run. § 7.2 (terminals, displays and menus plugin, #74): 7 of 20 steps automated (one through a plugin scenario on a real Paper server), 11 partly and 2 by hand (tagged); not run. § 8.1 (delivery and inbox API, #60): 16 of 20 steps automated in CI, 3 partly and 1 by hand (tagged); every step can still be run by hand; not run. § 8.2 (reward inbox plugin, #684): 7 of 17 steps automated (two also through plugin scenarios on a real Paper server) and 10 partly (tagged); every step can still be run by hand; not run. § 9.1 (harvesting API, #685): 18 of 21 steps automated in CI and 3 partly (tagged); every step can still be run by hand; not run. § 9.2 (harvesting plugin, #134): 10 of 22 steps automated (four through plugin scenarios on a real Paper server), 10 partly and 2 by hand (tagged); not run. § 10.1 (town logistics API, #127): 21 of 24 steps automated in CI and 3 partly (tagged); every step can still be run by hand; not run. § 10.2 (town logistics web app, #686): 18 of 22 steps automated in CI, 3 partly and 1 by hand (tagged); every step can still be run by hand; not run. § 11.1 (shops API, #248): 26 of 28 steps automated in CI and 2 partly (tagged); every step can still be run by hand; not run. Other sections not yet automated (the links tag them).
-**Last updated:** 2026-11-21 (§ 11 shops API, link L25, #248; § 11.2 and § 11.3 drafts for L26 and L27); 2026-11-21 (§ 10.2 town logistics web app, link L24, #686); 2026-11-21 (§ 9 and § 9.2 intros and preconditions: L21 and L22 in `next`, rules through the API until #913; § 4 step 14 partly automated by `player-harvest-tree`, docs #922); 2026-11-21 (§ 10 town logistics API, link L23, #127; § 10.2 draft for L24); 2026-11-21 (§ 9.2 harvesting plugin, link L22, #134); 2026-11-21 (§ 8 and § 8.2 intros: L19 and L20 merged into `next`, links to the architecture page and admin guide, docs #915); 2026-11-21 (§ 9 harvesting API, link L21, #685, with #900; § 9.2 draft for L22); 2026-11-21 (§ 8.2 reward inbox plugin, link L20, #684); 2026-11-20 (§ 8 delivery and inbox API, link L19, #60, with #883 and #890; § 8.2 draft for L20); 2026-11-20 (§ 7.2 terminals, displays and menus plugin, link L18, #74); 2026-11-20 (§ 7 terminals and menus API, link L17, #683; § 7.2 draft for L18); 2026-11-20 (§ 6.2 transport lanes plugin, link L15, #681); 2026-11-20 (§ 6.3 transport web app, link L16, #682); 2026-11-20 (§ 6 transport API, link L14, #79; § 6.2 and § 6.3 drafts for L15 and L16); 2026-11-20 (§ 5.2 surveys plugin, link L12, #679); 2026-11-20 (§ 5.3 yield areas web app, link L13, #680); 2026-11-19 (§ 5 yield areas API, link L11, #138; § 5.1 step 18: #831); 2026-11-19 (§ 4.2 production engine web app, link L10, #678); 2026-11-19 (§ 4.1 production engine API, link L9, #86); 2026-11-19 (§ 3 intro, § 3.0, § 3.2 and § 3.3 intros: builds from `next`; § 3.3 precondition 4: `/knk regions repair` needs `knk.admin.regions`, `/knk territory rebuild` `knk.admin.world.territory`; docs #830); 2026-11-19 (§ 3.2 world web app, link L7, #676); 2026-11-19 (§ 3.3 world plugin, link L8, #677); 2026-11-19 (§ 3.1 world API, link L6, #91); 2026-11-19 (§ 2.2 stock web app, link L5, #675); 2026-11-19 (§ 2 stock core API, link L4, #97); 2026-11-19 (§ 1.0 and § 1.3 preconditions: builds from `next` instead of the link branches; guides: [territory admin guide](admin/territory-admin-guide.md), docs #806); 2026-11-19 (§ 1.4 territory web app, link L3, #690); 2026-11-19 (§ 1.3 territory plugin, link L2, #689); 2026-11-19 (§ 1 territory API, link L1, #326); 2026-11-19 (§ 0 item identity, link L0, #141); 2026-11-16 (draft from the design, territory and phases P1-P12)
+automated in CI, 5 partly (tagged) and 1 by hand; every step can still be run by hand; not run. § 7.1 (terminals and menus API, #683): 15 of 20 steps automated in CI, 4 partly and 1 by hand (tagged); every step can still be run by hand; not run. § 7.2 (terminals, displays and menus plugin, #74): 7 of 20 steps automated (one through a plugin scenario on a real Paper server), 11 partly and 2 by hand (tagged); not run. § 8.1 (delivery and inbox API, #60): 16 of 20 steps automated in CI, 3 partly and 1 by hand (tagged); every step can still be run by hand; not run. § 8.2 (reward inbox plugin, #684): 7 of 17 steps automated (two also through plugin scenarios on a real Paper server) and 10 partly (tagged); every step can still be run by hand; not run. § 9.1 (harvesting API, #685): 18 of 21 steps automated in CI and 3 partly (tagged); every step can still be run by hand; not run. § 9.2 (harvesting plugin, #134): 10 of 22 steps automated (four through plugin scenarios on a real Paper server), 10 partly and 2 by hand (tagged); not run. § 10.1 (town logistics API, #127): 21 of 24 steps automated in CI and 3 partly (tagged); every step can still be run by hand; not run. § 10.2 (town logistics web app, #686): 18 of 22 steps automated in CI, 3 partly and 1 by hand (tagged); every step can still be run by hand; not run. § 11.1 (shops API, #248): 26 of 28 steps automated in CI and 2 partly (tagged); every step can still be run by hand; not run. § 11.3 (shops web app, #688): 11 of 15 steps automated in CI and 4 partly (tagged); every step can still be run by hand; not run. Other sections not yet automated (the links tag them).
+**Last updated:** 2026-11-21 (§ 11.3 shops web app, link L27, #688); 2026-11-21 (§ 11 shops API, link L25, #248; § 11.2 and § 11.3 drafts for L26 and L27); 2026-11-21 (§ 10.2 town logistics web app, link L24, #686); 2026-11-21 (§ 9 and § 9.2 intros and preconditions: L21 and L22 in `next`, rules through the API until #913; § 4 step 14 partly automated by `player-harvest-tree`, docs #922); 2026-11-21 (§ 10 town logistics API, link L23, #127; § 10.2 draft for L24); 2026-11-21 (§ 9.2 harvesting plugin, link L22, #134); 2026-11-21 (§ 8 and § 8.2 intros: L19 and L20 merged into `next`, links to the architecture page and admin guide, docs #915); 2026-11-21 (§ 9 harvesting API, link L21, #685, with #900; § 9.2 draft for L22); 2026-11-21 (§ 8.2 reward inbox plugin, link L20, #684); 2026-11-20 (§ 8 delivery and inbox API, link L19, #60, with #883 and #890; § 8.2 draft for L20); 2026-11-20 (§ 7.2 terminals, displays and menus plugin, link L18, #74); 2026-11-20 (§ 7 terminals and menus API, link L17, #683; § 7.2 draft for L18); 2026-11-20 (§ 6.2 transport lanes plugin, link L15, #681); 2026-11-20 (§ 6.3 transport web app, link L16, #682); 2026-11-20 (§ 6 transport API, link L14, #79; § 6.2 and § 6.3 drafts for L15 and L16); 2026-11-20 (§ 5.2 surveys plugin, link L12, #679); 2026-11-20 (§ 5.3 yield areas web app, link L13, #680); 2026-11-19 (§ 5 yield areas API, link L11, #138; § 5.1 step 18: #831); 2026-11-19 (§ 4.2 production engine web app, link L10, #678); 2026-11-19 (§ 4.1 production engine API, link L9, #86); 2026-11-19 (§ 3 intro, § 3.0, § 3.2 and § 3.3 intros: builds from `next`; § 3.3 precondition 4: `/knk regions repair` needs `knk.admin.regions`, `/knk territory rebuild` `knk.admin.world.territory`; docs #830); 2026-11-19 (§ 3.2 world web app, link L7, #676); 2026-11-19 (§ 3.3 world plugin, link L8, #677); 2026-11-19 (§ 3.1 world API, link L6, #91); 2026-11-19 (§ 2.2 stock web app, link L5, #675); 2026-11-19 (§ 2 stock core API, link L4, #97); 2026-11-19 (§ 1.0 and § 1.3 preconditions: builds from `next` instead of the link branches; guides: [territory admin guide](admin/territory-admin-guide.md), docs #806); 2026-11-19 (§ 1.4 territory web app, link L3, #690); 2026-11-19 (§ 1.3 territory plugin, link L2, #689); 2026-11-19 (§ 1 territory API, link L1, #326); 2026-11-19 (§ 0 item identity, link L0, #141); 2026-11-16 (draft from the design, territory and phases P1-P12)
 **Design:** [specs/production-storage-transport/DESIGN.md](../specs/production-storage-transport/DESIGN.md) (§17
 acceptance A01-A27, §18 links) · [territory](../specs/territory/DESIGN.md) · [shops](../specs/shops/DESIGN.md) ·
 **Issue:** [PandiO/knk-workspace#22](https://github.com/PandiO/knk-workspace/issues/22)
@@ -2932,8 +2932,9 @@ every step can still be run by hand; not run. Manual run about 15 minutes.
 ## 11. Phase P10: shops (#248 API, #687 plugin menus, #688 web app; tier:3)
 
 Built so far: link L25, the API (knk-web-api, migration `AddShops`; branch `claude/production-p10`, PR into `next`).
-The shop menus are link L26 (#687, waits for the developer's V1 shop menu templates, § 11.2 draft) and the web app
-pages link L27 (#688, § 11.3 draft); until then § 11.1 runs with a REST client (or Swagger) against the API. 28 steps
+The shop menus are link L26 (#687, waits for the developer's V1 shop menu templates, § 11.2 draft); the web app
+pages are link L27 (#688, § 11.3, branch `claude/production-p10c`). § 11.1 runs with a REST client (or Swagger) against
+the API. 28 steps
 in § 11.1: 26 automated in CI and 2 partly (tagged); every step can still be run by hand; not run. Full manual run
 about 45 minutes; the untagged parts about 10 minutes. The tests are in knk-web-api
 `Tests/.../Services/Shops/ShopTradingTests.cs`, `ShopSupplyTests.cs`, `ShopAdminTests.cs`,
@@ -3111,15 +3112,111 @@ its level's default min/max with the shop's own worker. **Hourly trade stats** a
 4. Sell items in the sell menu. **Expected:** the buy-back price per item and the total (`sell-quote`); confirmation;
    coins paid (`sell`). (A18)
 
-### 11.3 Steps (web app #688, draft)
+### 11.3 Steps (web app #688)
 
-*Draft; L27 updates it to what was built and tags the automated steps.*
+Built in link L27 (knk-web-app, branch `claude/production-p10c`, PR into `next`). The tags name tests in knk-web-app
+`e2e/shops.spec.ts` (Playwright, mocked API; the mocks use the Processing shop "Phoenix bakery" of shop type Bakery at
+level 2 in Market, its Input and Merchandise storages, the categories Food and Tools, Bread and Apple, a bought-back
+enchanted Diamond sword, Phoenix's town account with 1,250 coins and three town legs, two sales and a buy-back in the
+stock ledger, and trade stats for 10:00 and 11:00 UTC) and the Jest tests next to the code
+(`src/utils/__tests__/shops.test.ts`, `src/apiClients/__tests__/shopClients.test.ts`). Extra preconditions: § 11.0 and
+§ 11.1 steps 1, 3-5, 7-8, 12 and 18 (the seeds imported with "make default", the shop types Bakery and Weaponsmith with
+their levels, Bakery shop with its catalogue and stock, a purchase by Ann and a sale by Bob), so the pages below have real rows; for
+step 12 `Production:Enabled` on (the stats job). Log in to the web app as **Staff** (holds `knk.admin.world`,
+`knk.admin.content` and `knk.admin.delete`) unless a step says otherwise. 15 steps: 11 automated, 4 partly (tagged);
+every step can still be run by hand; not run. Full manual run about 30 minutes; the untagged parts about 15 minutes
+(most of it waiting for the hourly stats, or using **Rebuild from the ledger**).
 
-1. As Staff, create a shop type with accepted categories (`acceptedCategoryIds`) and levels, a shop and its catalogue.
-   **Expected:** the forms of § 11.1 step 1; the shop page lists its storages, catalogue, offer and processing view.
-2. Open the shop's sales: the stock ledger filtered by source Shop / the shop id, and the town account's ledger.
-3. Open the trade stats after an hour. **Expected:** hourly stats per shop and blueprint as a chart; they match the
-   ledger. (A18)
+1. [automated: `dashboard › lists the shop types with their categories and levels, the shops and the town accounts
+   (A23)`] Open **Dashboard → ShopType**, then **Shop** and **TownAccount**. **Expected:** the shop types with ID, Name,
+   Default kind, Accepted categories (the count, or "None (buys nothing)"), Levels and Active; the shops with their
+   town, placement, district, Level, Processing (On or Off), territory flag and world; the town accounts with Town,
+   Balance ("<n> coins") and Updated. (A23)
+2. [automated: `a shop type › lists its accepted categories and its levels with multipliers, caps and the default min
+   and max`] Open Bakery's page (`/display/ShopType/<Bakery>`). **Expected:** below the details an **Accepted
+   categories and levels** panel: the accepted categories as chips (each linked to the category's page) and a
+   **Levels** table, one row per level in order: Level (linked to the level's page), Speed, Yield, Input cost and Price
+   ("× 1.5"), Merchandise cap, Input cap, Per slot ("-" for none) and Min / max ("10 / 40").
+3. [automated: `a shop type › a category is added and one removed, and the whole list is saved as
+   acceptedCategoryIds`, `a shop type › the API's refusal of a category list is shown`] On Bakery's panel type "Wea" in
+   **Add a category**, pick **Weapons**, then remove **Food** with its ×. **Save the categories** is off until the
+   list changed. Save. **Expected:** "Accepted categories saved: Weapons."; the request is `PUT api/ShopTypes/<Bakery>`
+   with only `{ "id": <Bakery>, "acceptedCategoryIds": [<Weapons>] }` (the whole list; the other fields kept). A
+   refused save shows the API's sentence (for example "Category 13 not found."). Put Food back the same way and save.
+4. [automated: `a shop type › a level is added after its checks, edited and deleted (levels on the production level
+   pattern)`, `a shop type › without knk.admin.delete a level can be edited but not deleted`, `a shop type › without
+   knk.admin.content the categories and levels are read only, with the node named`] Press **Add a level**:
+   the form offers the next free level (3) with every multiplier 1. Type level 2, price × 0 and a default max below
+   the default min. **Expected:** "Level problems": "The shop type already has level 2.", "The price multiplier is
+   above 0 and at most 100.", "The default max is below the default min."; **Save the level** is off. Correct them
+   (level 3, price × 1.5, Merchandise cap 2560) and save. **Expected:** "Level 3 saved; shops of this type at that level
+   use it now."; the table has a level 3 row; an empty cap is sent as 0 (no cap). **Edit level 2**, clear Units per
+   slot, save: `PUT api/ShopTypeLevels/<id>` with `unitsPerSlot` 0. **Delete level 3**: "Level 3 deleted.". As a staff
+   member without `knk.admin.delete`, Delete is off and Edit works. Without `knk.admin.content` (creates and edits need
+   it with `knk.admin.world`, as on every dashboard type), Add a level, Edit, the category ×, the picker and Save the
+   categories are off with "Requires knk.admin.content"; the same holds for the catalogue's Add an entry and Edit.
+5. [automated: `a shop type › a type without categories buys nothing; without levels its shops use × 1`] Open a shop
+   type without categories or levels (create "General store" with the seeded form). **Expected:** "None: its shops
+   buy nothing from players." and "No levels yet: its shops use × 1 and no caps."
+6. [partly automated: knk-web-app `shopClients.test.ts` (the registry sends the form's create, update and delete to
+   `api/Shops`, `api/ShopTypes`, `api/ShopTypeLevels` and `api/ShopCatalogueEntries`); by hand: run the seeded forms]
+   Create a shop with **Dashboard → Shop → New** (the seeded form of § 11.1 step 1): placement in Market on a street
+   with a house number, shop type Bakery, kind empty (the type's default). Edit Bakery with its form and save.
+   **Expected:** the shop opens on its page with kind Processing; Bakery's save keeps its accepted categories (the form
+   sends none) and its levels. (A23)
+7. [automated: `a shop › shows its kind, type and level, prices, worker, storages, town account and what it offers now
+   (A18)`] Open Bakery shop's page (`/display/Shop/<Bakery shop>`). **Expected:** a **Shop** panel: Kind "Processing
+   (Input → Merchandise, then sells)"; Shop type and level "Bakery, level 1" (the type linked); Prices "tax × 1, buys
+   back at 50%"; Worker "1 of 1 present" (while it is away restocking: "0 of 1 present: away restocking, processing is
+   lowered (selling goes on)"); Storages, the Input and Merchandise storages linked with their purpose; Town account
+   "Phoenix: <n> coins" linked to the account's page. **Offer now**: "What players see in the shop menu; sold-out items
+   are greyed out. It buys from players in its accepted categories." and a table per item: the price in coins, where it
+   comes from (static price, formula, no price), the stock ("Unlimited" for an Unlimited entry) and notes ("Pinned",
+   "Sold out" with the row struck through, "In stock, no entry", "Bought back, resold as this item" with the
+   enchantments after the name). It matches `GET api/Shops/<Bakery shop>/offer` (§ 11.1 step 8). (A18)
+8. [automated: `a shop › the shop without a town account yet says it opens with the first sale`] Open the Weaponsmith
+   (rural, no sale yet). **Expected:** Town account "No account yet: it opens with the first sale".
+9. [automated: `a shop › the catalogue lists pinned entries first and is edited: add, a refused add, edit and
+   delete`] On Bakery shop's page, the **Catalogue** table lists pinned entries first, then by order: Item, Static
+   price ("9 coins" or "Formula"), Stock (Stocked or Unlimited), Pinned, Order, On. Press **Add an entry**: "Pick an
+   item, or give a unique item's instance id."; type a unique item's instance id and pick Unlimited: "A unique item is
+   one item: it can't be Unlimited."; pick Stocked, a static price of 400, save. **Expected:** "Catalogue entry for
+   <item> saved."; the entry and the offer show it. Add Coal again: the API's 409 sentence is shown. **Edit the entry
+   for** Iron ore: price 5, Pinned, save (`PUT` without shop or item: an entry keeps them). **Delete the entry for**
+   Iron ore: "Catalogue entry for Iron ore deleted."
+10. [partly automated: `a shop › lists its sales and buy-backs from the stock ledger filtered by the shop (DESIGN §
+    9)`; by hand: make a purchase and a sale with § 11.1 steps 12 and 18] Make a purchase as Ann and a sale as Bob, then
+    reload Bakery shop's page. **Expected:** **Sales and buy-backs**, newest first: Transaction (linked to its ledger
+    page), When, What ("Sale" or "Buy-back"), Units and Note; the request is `POST api/StockTransactions/search` with
+    `sourceType` Shop and `sourceRef` the shop's id. Pages of 20 with Newer and Older.
+11. [partly automated: `a town account › shows its balance, that it matches the ledger, and every town leg newest first
+    with the shop`, `a town account › a balance that does not match its ledger is flagged`; by hand: compare with the
+    API] Follow the town account link. **Expected:** a **Balance and ledger** panel: Town (linked), Balance "<n> coins",
+    Ledger check "Matches the last ledger entry" (else "Does not match: the ledger says <n> coins" in warning colour);
+    the **Ledger** newest first: When, Reason ("Shop purchase", "Shop buyback"), Amount ("+48", "-20"), Balance after,
+    Player ("User #<id>"), Source ("Shop #<id>" linked to the shop) and the transaction id; pages of 25. By hand: the
+    rows match `GET api/TownAccounts/<id>/ledger` and Ann's coins went down by the purchase. (A18)
+12. [partly automated: `a shop › the hourly trade stats as a chart with totals, per item, over a range, and rebuilt
+    from the ledger (A18)`; by hand: wait for the hourly rollup or press Rebuild, compare with the ledger] After the
+    purchase and sale of step 10, wait for the next 10-minute stats run (or press **Rebuild from the ledger**) and open
+    **Trade stats per hour** on Bakery shop's page. **Expected:** Range "Last 24 hours" and Item "All items": a line
+    "Last 24 hours, all items: <n> sold for <n> coins, <n> bought back for <n> coins, <n> supplied."; a bar chart of
+    every UTC hour (sold, bought back, supplied; hover a bar for its numbers); the rows per hour and item (Hour "2026-11-21
+    10:00 UTC", Item, Sold, Revenue, Bought back, Paid, Supplied, Stock at end). Pick an item: the line, chart and rows
+    show only it. Pick "Last 7 days": the request's `from` is 7 days before the end of the current hour. **Rebuild from
+    the ledger**: "Rebuilt <n> hours from the ledger: <n> rows written, <n> removed." By hand: the units and coins match
+    the ledger of steps 10 and 11 for that hour. (A18)
+13. [automated: `a shop › a range without trade says so`] Open the Weaponsmith's page. **Expected:** "No trade in this
+    range." and a line of zeros.
+14. [automated: `a shop › its processing view and its restocking as a consumer, from the production structure
+    panels`] Scroll below the Shop panel on Bakery shop's page. **Expected:** the **Production** panel of a production
+    structure (the shop's processing view, lines and workers; a Trading shop's lines are paused) and **Supply (as a
+    consumer)**: the Merchandise storage's demand per stocked catalogue item with the min and max from "its shop level's
+    default min and max", what is on the way, the worker who collects and the open reservations with Release
+    (§ 10.2 steps 12-14).
+15. [automated: `a shop › without knk.admin.world the shop panels are not shown and the offer is not read`] Log in as a
+    staff member without `knk.admin.world` who can open the page. **Expected:** no Shop panel; the network tab shows
+    no `offer` or `ShopTradeStats` request.
 
 ## 12. Phase P11: shopkeepers (#249; tier:2)
 

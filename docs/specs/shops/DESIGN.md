@@ -3,10 +3,11 @@
 **Status:** **Decided 2026-11-16** (developer, with the production [DESIGN](../production-storage-transport/DESIGN.md); [decision record §15](../production-storage-transport/DECISIONS_2026-11-05.md#15-design-pass-to-decided-2026-11-16)). Before: draft. Written from the developer's voice design review of 2026-11-05
 ([decision record](../production-storage-transport/DECISIONS_2026-11-05.md) §6-8). Shops, shopkeepers and display
 stalls are **[V1]** of the production, storage and transport feature. Built: the P10 API (link L25, #248, in review:
-knk-web-api `claude/production-p10`, migration `AddShops`; § 2-5 and § 9.1, the town account). Not built yet: the shop
-menus (#687), the web app (#688), shopkeepers (#249) and display stalls (#250). Tags: **[V1]**,
+knk-web-api `claude/production-p10`, migration `AddShops`; § 2-5 and § 9.1, the town account). The web app (link L27, #688, in review:
+knk-web-app `claude/production-p10c`; § 9 except display spots, which come with P12). Not built yet: the
+shop menus (#687), shopkeepers (#249) and display stalls (#250). Tags: **[V1]**,
 **[Later]**, **[Open]** (as in the production [DESIGN](../production-storage-transport/DESIGN.md) header).
-**Last updated:** 2026-11-21 (status: P10 API built in L25, #248); 2026-11-11 (open questions answered, [decision record §11](../production-storage-transport/DECISIONS_2026-11-05.md#11-follow-up-decisions-2026-11-11))
+**Last updated:** 2026-11-21 (status: P10 web app built in L27, #688); 2026-11-21 (status: P10 API built in L25, #248); 2026-11-11 (open questions answered, [decision record §11](../production-storage-transport/DECISIONS_2026-11-05.md#11-follow-up-decisions-2026-11-11))
 **Issues:** parent [#22](https://github.com/PandiO/knk-workspace/issues/22) (`[KNG-83]`); phases
 [#248](https://github.com/PandiO/knk-workspace/issues/248) (P10 Shops),
 [#249](https://github.com/PandiO/knk-workspace/issues/249) (P11 Shopkeepers),

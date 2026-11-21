@@ -448,7 +448,9 @@ migration `AddShops`): shops (a TPT subtype of `ProductionStructure`, for the wo
 types with accepted categories and levels, the static catalogue (Stocked or Unlimited), interim pricing, confirmed
 purchases with the coins to the town account (`AccountKind.Town`), selling to shops, processing on the P3 engine
 (Input → Merchandise), restocking by the P9 planner at the level's default min/max, hourly trade stats and the seeds
-(G17). Shop menus: L26 (#687); web app: L27 (#688). Smoke test: [§ 11](../../guides/production-storage-transport-smoke-test.md#11-phase-p10-shops-248-api-687-plugin-menus-688-web-app-tier3).
+(G17). Shop menus: L26 (#687). Web app built in link L27 (#688, in review, knk-web-app branch
+`claude/production-p10c`): shop type categories and levels, the shop page (offer, catalogue editor, sales, town
+account, hourly trade stats chart), the town account ledger. Smoke test: [§ 11](../../guides/production-storage-transport-smoke-test.md#11-phase-p10-shops-248-api-687-plugin-menus-688-web-app-tier3).
 
 **V1.** Design: [shops DESIGN](../shops/DESIGN.md). One update, built in this order:
 

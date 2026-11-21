@@ -4,6 +4,27 @@ This is a human-readable record of capabilities merged into the V3 default branc
 
 ## Unreleased — on feature branches, not merged
 
+- **Shops in the web app: shop types with accepted categories and levels, a shop's offer, catalogue editor, sales,
+  town account and hourly trade stats chart**
+  ([PandiO/knk-workspace#688](https://github.com/PandiO/knk-workspace/issues/688), link L27 of the production, storage
+  and transport chain; [shops DESIGN](specs/shops/DESIGN.md) § 2-5, § 9, A18, A23). The pages over the shops API of
+  #248. Shop types, levels, shops and catalogue entries use the seeded forms and the dashboard (create, edit, delete);
+  trade stats and town accounts are read only. A **shop type's page** edits the categories its shops buy from players
+  (saved as the whole list) and its **levels** (multipliers, storage caps, default restocking min and max; add, edit,
+  delete with the API's checks first). A **shop's page** shows its kind, type and level, prices, worker, storages and
+  the **town account** its income goes to; the **offer** players see now (price and where it comes from, stock, sold
+  out struck through, bought-back unique items with their enchantments); the **catalogue editor** (a blueprint or one
+  unique item, static price, Stocked or Unlimited, pin, order, on); the **sales and buy-backs** from the stock ledger;
+  and the **hourly trade stats** as a bar chart (sold, bought back, supplied per UTC hour) over the last 24 hours, 7 or
+  30 days, for all items or one, with totals, the rows and **Rebuild from the ledger**. Below it the production panel
+  (processing) and the consumer panel (restocking at the level's default min and max) of the production structure the
+  shop is underneath. A **town account's page** shows its balance, whether it matches the ledger, and every town leg.
+  Everything needs `knk.admin.world`; deletes also `knk.admin.delete`. knk-web-app: DTOs `ShopDtos.ts`; clients
+  `shopTypeClient`, `shopTypeLevelClient`, `shopClient`, `shopCatalogueEntryClient`, `shopTradeStatClient`,
+  `townAccountClient`; panels `ShopTypePanel`, `ShopPanel`, `ShopCatalogueEditor`, `ShopTradeStatsPanel`,
+  `TownAccountPanel`; registry entries for the six types. Smoke test:
+  [production smoke test § 11.3](guides/production-storage-transport-smoke-test.md#113-steps-web-app-688).
+  Admin steps: none beyond #248's (its migration and seeds); deploy the web app with the shops API.
 - **Shops: a static catalogue, buying with coins to the town account, selling to shops, processing and restocking (the
   API)** ([PandiO/knk-workspace#248](https://github.com/PandiO/knk-workspace/issues/248), link L25 of the production,
   storage and transport chain; [shops DESIGN](specs/shops/DESIGN.md) § 2-5, § 9.1, A18, A23). The shop menus are link
