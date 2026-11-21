@@ -87,7 +87,7 @@ of what is already in `next`.
 | L19 P7 delivery and inbox API | #60 | Merged into next (2026-11-21) | api `a389259`, workspace `fbe4ded6`; merges: api `2952d0c7`, workspace `e2c6f45b` | [api#70](https://github.com/PandiO/knk-web-api/pull/70), [ws#899](https://github.com/PandiO/knk-workspace/pull/899) | build-and-test, fresh-database green; mysql-tests running (green locally) | create_session `session_01R1w2UwpK1NtaZLrA8k2uhP` (prompt says start without asking), started 2026-11-20 |
 | L20 P7b inbox plugin, kit/lootbox migration | #684 | Merged into next (2026-11-21) | plugin `823ebf09`, workspace `e48c9d0e`; merges: plugin `bdd8b463`, workspace `bb127457` | [plugin#113](https://github.com/PandiO/knk-plugin/pull/113), [ws#911](https://github.com/PandiO/knk-workspace/pull/911) | green on `1952a5b9` (build + paper-boot, 71 scenarios); `823ebf09` running | create_session `session_01R1w2Ux3iuWqjcAV5HQdPvM` (prompt says start without asking), started 2026-11-21 |
 | L21 P8a harvest API | #685 | Merged into next (2026-11-21) | api `e89e396`, workspace `00fab16d` (merged `next` `12804469`); merges: api `9ad32c23`, workspace `69f2b108` (after a coordinator merge of `next`, `944a443b`) | [api#72](https://github.com/PandiO/knk-web-api/pull/72), [ws#914](https://github.com/PandiO/knk-workspace/pull/914) | push runs on `e89e396` green (build-and-test, mysql-tests, fresh-database); PR runs running | create_session `session_01R1w2Ux7jFcMxYzkwej4qY4` (prompt says start without asking), started 2026-11-21 |
-| L22 P8 harvest plugin | #134 | In review (PRs open, not merged) | plugin `676d6f11`, workspace `e6b8b6ec` | [plugin#114](https://github.com/PandiO/knk-plugin/pull/114), [ws#919](https://github.com/PandiO/knk-workspace/pull/919) | plugin build green on `676d6f11`; paper-boot running (73 scenarios; both new pass on a local Paper 26.3) | create_session `session_01R1w2UuXe6TVT7QDKeAXdgn` (prompt says start without asking), started 2026-11-21 |
+| L22 P8 harvest plugin | #134 | In review (PRs open, not merged) | plugin `676d6f11`, workspace `e6b8b6ec` | [plugin#114](https://github.com/PandiO/knk-plugin/pull/114), [ws#919](https://github.com/PandiO/knk-workspace/pull/919) | green on `676d6f11` (plugin build + paper-boot, 73 scenarios) | create_session `session_01R1w2UuXe6TVT7QDKeAXdgn` (prompt says start without asking), started 2026-11-21 |
 | L23 P9 town logistics API | #127 | Running | — | — | — | create_session `session_01R1w2UwWMWgbXsBzScMifEq` (prompt says start without asking), started 2026-11-21 |
 | L24 P9b logistics web app | #686 | Not started | — | — | — | — |
 | L25 P10 shops API, town account | #248 | Not started | — | — | — | — |
@@ -2251,7 +2251,7 @@ _(Each link appends its block here when it finishes.)_
         1. The join loading hold.
         2. The global-region protection refusing harvests outside regions.
         3. `Tag.DIRT` refusing grass in 26.3; the game's `isSupported` check is used now.
-    5. CI on `676d6f11`: build green; paper-boot running at the time of writing (73 scenarios).
+    5. CI on `676d6f11`: build and paper-boot green (73 scenarios; push and PR runs).
     6. Known reds: none.
 5. **Decisions (DESIGN § 4.3).** All 11, each with its alternatives, are in knk-plugin#114. The main ones:
     1. *Who is refused.* Chosen: in an area, a rule's target the player does not meet is refused with the reason (also
