@@ -436,7 +436,10 @@ a structure, also the producers' inbound preference; replenishment defaults per 
 origin Distribution carried by the consumer's own worker through `TransportService`; a plan explanation per consumer
 line), the town supply, service area and consumer views, the seeds. The planner needs `Production:Enabled`. Consumer
 workers: V1 consumers are production structures (their `WorkersTotal`/`WorkersPresent`); other consumers (shops,
-P10) need workers and the transport carrier widened (note for L25). Web app: link L24 (#686).
+P10) need workers and the transport carrier widened (note for L25). Web app: link L24 (#686, in review, knk-web-app
+branch `claude/production-p9b`): the policy and rule editor with versions and templates, the planner dry-run and run
+view with the explanation per consumer line, the town supply view with reservations and service areas, the consumer
+and warehouse panels, the settings card.
 
 ## P10 — Shops · [#248](https://github.com/PandiO/knk-workspace/issues/248)
 
