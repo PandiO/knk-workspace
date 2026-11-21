@@ -19,8 +19,8 @@ scenario on a real Paper server), 7 partly and 1 manual (tagged); not run. § 5.
 partly (tagged) and 1 by hand; every step can still be run by hand; not run. § 6.1 (transport API, #79): 18 of 20 steps automated in CI
 and 2 partly (tagged); every step can still be run by hand; not run. § 6.2 (transport lanes plugin, #681): 3 of 14
 steps automated, 10 partly and 1 manual (tagged); not run. § 6.3 (transport web app, #682): 10 of 16 steps
-automated in CI, 5 partly (tagged) and 1 by hand; every step can still be run by hand; not run. § 7.1 (terminals and menus API, #683): 15 of 20 steps automated in CI, 4 partly and 1 by hand (tagged); every step can still be run by hand; not run. § 7.2 (terminals, displays and menus plugin, #74): 7 of 20 steps automated (one through a plugin scenario on a real Paper server), 11 partly and 2 by hand (tagged); not run. § 8.1 (delivery and inbox API, #60): 16 of 20 steps automated in CI, 3 partly and 1 by hand (tagged); every step can still be run by hand; not run. § 8.2 (reward inbox plugin, #684): 7 of 17 steps automated (two also through plugin scenarios on a real Paper server) and 10 partly (tagged); every step can still be run by hand; not run. § 9.1 (harvesting API, #685): 18 of 21 steps automated in CI and 3 partly (tagged); every step can still be run by hand; not run. § 9.2 (harvesting plugin, #134): 10 of 22 steps automated (four through plugin scenarios on a real Paper server), 10 partly and 2 by hand (tagged); not run. § 10.1 (town logistics API, #127): 21 of 24 steps automated in CI and 3 partly (tagged); every step can still be run by hand; not run. Other sections not yet automated (the links tag them).
-**Last updated:** 2026-11-21 (§ 10 town logistics API, link L23, #127; § 10.2 draft for L24); 2026-11-21 (§ 9.2 harvesting plugin, link L22, #134); 2026-11-21 (§ 8 and § 8.2 intros: L19 and L20 merged into `next`, links to the architecture page and admin guide, docs #915); 2026-11-21 (§ 9 harvesting API, link L21, #685, with #900; § 9.2 draft for L22); 2026-11-21 (§ 8.2 reward inbox plugin, link L20, #684); 2026-11-20 (§ 8 delivery and inbox API, link L19, #60, with #883 and #890; § 8.2 draft for L20); 2026-11-20 (§ 7.2 terminals, displays and menus plugin, link L18, #74); 2026-11-20 (§ 7 terminals and menus API, link L17, #683; § 7.2 draft for L18); 2026-11-20 (§ 6.2 transport lanes plugin, link L15, #681); 2026-11-20 (§ 6.3 transport web app, link L16, #682); 2026-11-20 (§ 6 transport API, link L14, #79; § 6.2 and § 6.3 drafts for L15 and L16); 2026-11-20 (§ 5.2 surveys plugin, link L12, #679); 2026-11-20 (§ 5.3 yield areas web app, link L13, #680); 2026-11-19 (§ 5 yield areas API, link L11, #138; § 5.1 step 18: #831); 2026-11-19 (§ 4.2 production engine web app, link L10, #678); 2026-11-19 (§ 4.1 production engine API, link L9, #86); 2026-11-19 (§ 3 intro, § 3.0, § 3.2 and § 3.3 intros: builds from `next`; § 3.3 precondition 4: `/knk regions repair` needs `knk.admin.regions`, `/knk territory rebuild` `knk.admin.world.territory`; docs #830); 2026-11-19 (§ 3.2 world web app, link L7, #676); 2026-11-19 (§ 3.3 world plugin, link L8, #677); 2026-11-19 (§ 3.1 world API, link L6, #91); 2026-11-19 (§ 2.2 stock web app, link L5, #675); 2026-11-19 (§ 2 stock core API, link L4, #97); 2026-11-19 (§ 1.0 and § 1.3 preconditions: builds from `next` instead of the link branches; guides: [territory admin guide](admin/territory-admin-guide.md), docs #806); 2026-11-19 (§ 1.4 territory web app, link L3, #690); 2026-11-19 (§ 1.3 territory plugin, link L2, #689); 2026-11-19 (§ 1 territory API, link L1, #326); 2026-11-19 (§ 0 item identity, link L0, #141); 2026-11-16 (draft from the design, territory and phases P1-P12)
+automated in CI, 5 partly (tagged) and 1 by hand; every step can still be run by hand; not run. § 7.1 (terminals and menus API, #683): 15 of 20 steps automated in CI, 4 partly and 1 by hand (tagged); every step can still be run by hand; not run. § 7.2 (terminals, displays and menus plugin, #74): 7 of 20 steps automated (one through a plugin scenario on a real Paper server), 11 partly and 2 by hand (tagged); not run. § 8.1 (delivery and inbox API, #60): 16 of 20 steps automated in CI, 3 partly and 1 by hand (tagged); every step can still be run by hand; not run. § 8.2 (reward inbox plugin, #684): 7 of 17 steps automated (two also through plugin scenarios on a real Paper server) and 10 partly (tagged); every step can still be run by hand; not run. § 9.1 (harvesting API, #685): 18 of 21 steps automated in CI and 3 partly (tagged); every step can still be run by hand; not run. § 9.2 (harvesting plugin, #134): 10 of 22 steps automated (four through plugin scenarios on a real Paper server), 10 partly and 2 by hand (tagged); not run. § 10.1 (town logistics API, #127): 21 of 24 steps automated in CI and 3 partly (tagged); every step can still be run by hand; not run. § 11.1 (shops API, #248): 26 of 28 steps automated in CI and 2 partly (tagged); every step can still be run by hand; not run. Other sections not yet automated (the links tag them).
+**Last updated:** 2026-11-21 (§ 11 shops API, link L25, #248; § 11.2 and § 11.3 drafts for L26 and L27); 2026-11-21 (§ 10 town logistics API, link L23, #127; § 10.2 draft for L24); 2026-11-21 (§ 9.2 harvesting plugin, link L22, #134); 2026-11-21 (§ 8 and § 8.2 intros: L19 and L20 merged into `next`, links to the architecture page and admin guide, docs #915); 2026-11-21 (§ 9 harvesting API, link L21, #685, with #900; § 9.2 draft for L22); 2026-11-21 (§ 8.2 reward inbox plugin, link L20, #684); 2026-11-20 (§ 8 delivery and inbox API, link L19, #60, with #883 and #890; § 8.2 draft for L20); 2026-11-20 (§ 7.2 terminals, displays and menus plugin, link L18, #74); 2026-11-20 (§ 7 terminals and menus API, link L17, #683; § 7.2 draft for L18); 2026-11-20 (§ 6.2 transport lanes plugin, link L15, #681); 2026-11-20 (§ 6.3 transport web app, link L16, #682); 2026-11-20 (§ 6 transport API, link L14, #79; § 6.2 and § 6.3 drafts for L15 and L16); 2026-11-20 (§ 5.2 surveys plugin, link L12, #679); 2026-11-20 (§ 5.3 yield areas web app, link L13, #680); 2026-11-19 (§ 5 yield areas API, link L11, #138; § 5.1 step 18: #831); 2026-11-19 (§ 4.2 production engine web app, link L10, #678); 2026-11-19 (§ 4.1 production engine API, link L9, #86); 2026-11-19 (§ 3 intro, § 3.0, § 3.2 and § 3.3 intros: builds from `next`; § 3.3 precondition 4: `/knk regions repair` needs `knk.admin.regions`, `/knk territory rebuild` `knk.admin.world.territory`; docs #830); 2026-11-19 (§ 3.2 world web app, link L7, #676); 2026-11-19 (§ 3.3 world plugin, link L8, #677); 2026-11-19 (§ 3.1 world API, link L6, #91); 2026-11-19 (§ 2.2 stock web app, link L5, #675); 2026-11-19 (§ 2 stock core API, link L4, #97); 2026-11-19 (§ 1.0 and § 1.3 preconditions: builds from `next` instead of the link branches; guides: [territory admin guide](admin/territory-admin-guide.md), docs #806); 2026-11-19 (§ 1.4 territory web app, link L3, #690); 2026-11-19 (§ 1.3 territory plugin, link L2, #689); 2026-11-19 (§ 1 territory API, link L1, #326); 2026-11-19 (§ 0 item identity, link L0, #141); 2026-11-16 (draft from the design, territory and phases P1-P12)
 **Design:** [specs/production-storage-transport/DESIGN.md](../specs/production-storage-transport/DESIGN.md) (§17
 acceptance A01-A27, §18 links) · [territory](../specs/territory/DESIGN.md) · [shops](../specs/shops/DESIGN.md) ·
 **Issue:** [PandiO/knk-workspace#22](https://github.com/PandiO/knk-workspace/issues/22)
@@ -2762,22 +2762,195 @@ town (a save is a new version); admins keep **default templates** per town size 
 
 ## 11. Phase P10: shops (#248 API, #687 plugin menus, #688 web app; tier:3)
 
-*Draft from the design (2026-11-16); the links update it to what was built and tag the automated steps.*
+Built so far: link L25, the API (knk-web-api, migration `AddShops`; branch `claude/production-p10`, PR into `next`).
+The shop menus are link L26 (#687, waits for the developer's V1 shop menu templates, § 11.2 draft) and the web app
+pages link L27 (#688, § 11.3 draft); until then § 11.1 runs with a REST client (or Swagger) against the API. 28 steps
+in § 11.1: 26 automated in CI and 2 partly (tagged); every step can still be run by hand; not run. Full manual run
+about 45 minutes; the untagged parts about 10 minutes. The tests are in knk-web-api
+`Tests/.../Services/Shops/ShopTradingTests.cs`, `ShopSupplyTests.cs`, `ShopAdminTests.cs`,
+`Migrations/AddShopsTests.cs` and, with `KNK_TEST_MYSQL`, `MySql/ShopsMySqlTests.cs` (two players racing for the last
+units: one is charged; a purchase whose goods can't be taken rolls its payment back). Tier:3 (money); the developer's
+waiver of the smoke gates (2026-11-19) is read by the coordinator as covering the later links.
+
+How it works, in short ([shops DESIGN](../specs/shops/DESIGN.md) § 2-5, § 9.1): a **shop** is a structure with a
+**Merchandise** and an **Input** storage, a **shop type** (its accepted categories and levels), a kind (**Trading** or
+**Processing**), a level, a tax modifier and a buy-back percentage (default 50). In the API a shop is a production
+structure underneath, so it has its own **worker** (restocking) and can run **processing lines** (Input → Merchandise)
+on the production engine. Admins fill a **static catalogue**: a blueprint or one unique item, an optional static price,
+Stocked (from Merchandise) or Unlimited (never sold out, the fallback before the supply chain is live). The **sell price**
+is the static price, else the blueprint's midpoint base price × tax modifier × level price multiplier (a unique item
+adds 10% of the base price per enchantment level). A **purchase** is confirmed by the player and runs in one database
+transaction: the coins go from the player to the town's **town account** (currency `AccountKind.Town`), the goods leave
+Merchandise. Players **sell** items of the accepted categories for sell price × buy-back %, paid from the town account;
+a sold unique item is resold as that exact item. The town planner **restocks** a shop's stocked catalogue blueprints at
+its level's default min/max with the shop's own worker. **Hourly trade stats** are rolled up from the ledger.
 
 ### 11.0 Preconditions
 
-1. A Phoenix shop with a static catalogue; the developer's V1 shop menu templates imported; Phoenix's town account.
+1. knk-web-api with the migrations up to `AddShops` applied (`dotnet ef database update`), `Production:Enabled` on
+   except where a step turns it off.
+2. Everything of § 10.0: Phoenix with district **Market** and the rural warehouses **North** and **South**, a **Staff**
+   token (`knk.admin.world`, `knk.admin.content`, `knk.economy.admin`), a **Visitor** token and the plugin key.
+3. Categories **Food** and **Weapons**, and **Swords** with Weapons as its parent (`POST api/Categories`).
+   Blueprints: **Coal** ("flour", base price 4-6, category Food), **Iron ore** ("bread", base price 18-22, Food),
+   **Diamond** ("sword", base price 90-110, Swords, max stack 1), **Cobblestone** (no base price). Storage weight 1.
+4. Players **Ann** with 1000 coins and **Bob** with 50 coins (staff grants with `POST api/currency/admin/adjustments`,
+   or the web app's balance editor). Note their user ids.
+5. Put stock into storages with `POST api/StockTransactions/adjust` (`knk.economy.admin`). Between steps, empty what a
+   step left behind the same way, so each step starts from the numbers it names.
+6. The purchase and sale routes (`quote`, `purchase`, `sell-quote`, `sell`) take the plugin key: send them with
+   `X-API-Key`, as the game server does after the player confirmed in the shop menu.
 
-### 11.1 Steps
+### 11.1 Steps (API)
 
-1. As Member, open the shop menu (`/knk shop <id>` until P11). **Expected:** info header and paged catalogue; prices at
-   the midpoint base price with the shop's modifiers. (A18)
-2. Buy an item. **Expected:** a confirmation first; then coins and stock move together; the coins go to Phoenix's town
-   account. (A18)
+1. [partly automated: knk-web-api `FormConfigurationSeedFilesTests`, `DisplayConfigurationSeedFilesTests` (every seed
+   dry-runs and imports); by hand: open the forms and pages in the web app]
+   As Staff, import the form and display seeds `ShopType`, `ShopTypeLevel`, `Shop`, `ShopCatalogueEntry`,
+   `ShopTradeStat` and `TownAccount` with "make default" (in that order). **Expected:** all import; the Shop form has the
+   placement steps of a warehouse plus the shop step (type, kind, level, tax modifier, buy-back %, workers, processing
+   switch, hide sold out, shopkeeper spawn); the ShopTradeStat and TownAccount forms are read only; the Shop page lists
+   its catalogue and the ShopType page its levels. (A23)
+2. [automated: `AddShopsTests.TheShopSettings_HaveTheirDefaults_AndANullSectionKeepsTheStoredOne`,
+   `ShopAdminTests.TheShopSettings_AreValidated`]
+   `GET api/GameSettings`. **Expected:** the production section's `shops`: `enchantmentPercentPerLevel` 10,
+   `statsLookbackHours` 2. A save without the `shops` section keeps it; `enchantmentPercentPerLevel: -1` is 400.
+3. [automated: `ShopAdminTests.AShopType_HasAUniqueName_ItsCategories_AndCantBeDeletedWhileUsed`]
+   As Staff, `POST api/ShopTypes` with `{ "name": "Bakery", "defaultKind": "Processing", "acceptedCategoryIds":
+   [<Food>] }` and `{ "name": "Weaponsmith", "defaultKind": "Trading", "acceptedCategoryIds": [<Weapons>] }`.
+   **Expected:** 201 each with `acceptedCategories` naming the category. A second "Bakery" is 409; an unknown category
+   id or `defaultKind` "Bank" is 400. As Visitor the same call is 403.
+4. [automated: `ShopAdminTests.ALevel_IsOncePerType_AndItsCapsReachTheShopsAtThatLevel`]
+   `POST api/ShopTypeLevels` for Bakery: level 1 `{ "priceMultiplier": 1, "merchandiseMaxUnits": 200, "inputMaxUnits":
+   300, "reorderPointUnits": 10, "targetUnits": 40 }` and level 2 `{ "priceMultiplier": 1.5, "cycleSpeedMultiplier": 2,
+   "yieldMultiplier": 1.5, "inputCostMultiplier": 0.5, "merchandiseMaxUnits": 400 }`. **Expected:** 201 each. Level 1
+   again is 409; `priceMultiplier` 0 or `targetUnits` below `reorderPointUnits` is 400.
+5. [automated: `ShopTradingTests.AShop_GetsMerchandiseAndInputStorages_CappedByItsLevel_AndItsOwnWorker`]
+   `POST api/Shops` with `{ "name": "Bakery shop", "districtId": <Market>, "streetId": <street>, "houseNumber": 9,
+   "shopTypeId": <Bakery> }` and a rural `{ "name": "Weaponsmith", "townId": <Phoenix>, "shopTypeId": <Weaponsmith> }`.
+   **Expected:** 201; Bakery shop is `Processing`, level 1, `workersTotal` and `workersPresent` 1, `effectiveTownId`
+   Phoenix, `storages` a Merchandise (capped at 200) and an Input storage (300); Weaponsmith is `Trading`. `GET
+   api/ProductionStructures/<Bakery shop>` shows `automaticTransport` false and `yieldSource` Configured. `PUT` with
+   `"level": 2` raises the Merchandise cap to 400.
+6. [automated: `ShopAdminTests.AShop_ValidatesItsPricingFields`]
+   `PUT api/Shops/<Bakery shop>` with `buyBackPercent` 120, `taxModifier` 0 or `kind` "Bank". **Expected:** 400 each;
+   `buyBackPercent` 25 saves (set it back to 50).
+7. [automated: `ShopTradingTests.TheCatalogue_ListsABlueprintOnce_AndAUniqueItemOnce`]
+   `POST api/ShopCatalogueEntries` with `{ "shopId": <Bakery shop>, "itemBlueprintId": <Iron ore> }`. **Expected:** 201,
+   `stockMode` Stocked. The same blueprint again is 409. An entry with an `itemInstanceId` takes the instance's blueprint;
+   the same instance in a second shop is 409; a unique item with `stockMode` Unlimited is 400.
+8. [automated: `ShopTradingTests.TheOffer_ShowsEntriesAndMerchandise_WithPriceAndStock_SoldOutGreyedOrHidden`]
+   Add a Coal entry with `"staticPrice": 9`; put 5 Iron ore and 1 Diamond into Bakery shop's Merchandise. `GET
+   api/Shops/<Bakery shop>/offer`. **Expected:** town Phoenix, `buysFromPlayers` true; Iron ore 20 coins (Formula), stock
+   5; Coal 9 coins (Static), `soldOut` true; Diamond 100 coins (no entry, from Merchandise). With `"hideSoldOut": true`
+   on the shop, Coal is not listed. (A18)
+9. [automated: `ShopTradingTests.AStaticPrice_Wins_AndTheLevelAndTaxModifiersApplyToTheFormula`]
+   Set Bakery shop to level 2 and `taxModifier` 1.1. **Expected:** the offer shows Iron ore at 33 (20 × 1.1 × 1.5) and
+   Coal still at 9. Set it back to level 1, tax 1. (A18)
+10. [automated: `ShopTradingTests.BasePrice_IsTheMidpoint`, `ShopTradingTests.SellPrice_StaticWins_ElseFormulaRounded_AtLeastOne`]
+    Check the price rule on the offer: a blueprint with base price 2-3 sells at 3 (2.5 rounded half away from zero), one
+    with 0.1 at 1, one with no base price is not on offer. (A18)
+11. [automated: `ShopTradingTests.APurchase_MovesCoinsToTheTownAccount_AndTheGoodsOutOfMerchandise_Together`]
+    Put 10 Iron ore into Merchandise. With the plugin key, `POST api/Shops/<Bakery shop>/quote` with `{ "userId": <Ann>,
+    "itemBlueprintId": <Iron ore>, "amount": 3 }`. **Expected:** `unitPrice` 20, `totalPrice` 60, `refusal` null.
+12. [automated: `ShopTradingTests.APurchase_MovesCoinsToTheTownAccount_AndTheGoodsOutOfMerchandise_Together`]
+    `POST api/Shops/<Bakery shop>/purchase` with the same body plus `"expectedUnitPrice": 20, "confirmed": true,
+    "idempotencyKey": "buy-1"`. **Expected:** 200, `totalPrice` 60, `deliverTo` Inventory, `coinsAfter` 940; Merchandise
+    holds 7; `GET api/TownAccounts/by-town/<Phoenix>` shows 60 coins and `reconciled` true; its `ledger` lists one
+    SHOP_PURCHASE leg 0 → 60. The stock transaction has reason ShopSale, source Shop / <Bakery shop id>, actor Ann. (A18)
+13. [automated: `ShopTradingTests.APurchase_IsIdempotent_OnItsKey`]
+    Send step 12's purchase again. **Expected:** 200 with `replayed` true and the same transaction ids; Ann still has
+    940 and Merchandise 7. The key with Bob as `userId` is 409 `IdempotencyKeyReuse`.
+14. [automated: `ShopTradingTests.APurchase_IsRefused_WithoutTakingAnything`]
+    As Bob: a purchase with `"confirmed": false` is 409 `NotConfirmed`; with `expectedUnitPrice` 19 409 `PriceChanged`;
+    11 units 409 `NotEnoughStock`; 3 units (60 coins, Bob has 50) 409 `InsufficientFunds`. **Expected:** every time
+    nothing moves: Bob 50, the town account and Merchandise unchanged. (A18)
+15. [automated: `ShopTradingTests.ASoldOutItem_AndAnItemWithoutPrice_AreRefused`]
+    Quote an entry with no stock, a Cobblestone entry (no price) and a blueprint the shop doesn't list. **Expected:**
+    `refusal` SoldOut, NotForSale, NotForSale.
+16. [automated: `ShopTradingTests.AnUnlimitedEntry_NeverSellsOut_AndWorksWhileProductionIsOff`]
+    Turn `Production:Enabled` off. Add an entry Iron ore `"staticPrice": 15, "stockMode": "Unlimited"` to a shop without
+    stock and buy 4. **Expected:** 200, 60 coins to the town account; the stock move is SYS_ADJUSTMENT → SYS_WORLD. With
+    `"deliverTo": "Inbox"` the purchase is 409 `ProductionDisabled`. Turn it back on. (A21)
+17. [automated: `ShopTradingTests.APurchaseToTheInbox_DeliversIt_ThroughP7`]
+    Buy 2 Iron ore with `"deliverTo": "Inbox"`. **Expected:** 200 with an `itemDeliveryId`; `GET api/Inbox/<Ann>` holds
+    the 2 Iron ore; Merchandise lost 2. A purchase that doesn't fit the inbox is 409 `InboxFull` and nothing moves.
+18. [automated: `ShopTradingTests.SellingToAShop_PaysHalfTheSellPrice_FromTheTownAccount`]
+    `POST api/Shops/<Bakery shop>/sell-quote` with `{ "userId": <Bob>, "lines": [ { "itemBlueprintId": <Iron ore>,
+    "amount": 4 } ] }`. **Expected:** `unitPrice` 10 (half of 20), `total` 40, `accepted` and `townCanPay` true. Then
+    `POST .../sell` with `"confirmed": true, "expectedTotal": 40, "idempotencyKey": "sell-1"`. **Expected:** Bob +40;
+    the town account −40 (`reconciled` true); 4 Iron ore more in Merchandise (reason ShopBuyBack). The same request again
+    is a replay. (A18)
+19. [automated: `ShopTradingTests.AShop_RefusesCategoriesItDoesntBuy_AndAcceptsSubCategories`]
+    Sell-quote a Diamond to Bakery shop and to Weaponsmith. **Expected:** Bakery shop: `CategoryNotAccepted`; Weaponsmith
+    (buys Weapons, Diamond is in Swords under Weapons): 50 coins. A sale with an Iron ore line and a Diamond line at
+    Bakery shop is 409 `CategoryNotAccepted` and nothing moves (all lines or none).
+20. [automated: `ShopTradingTests.ASoldEnchantedItem_BecomesAStockUnit_AndIsResoldAsThatExactItem`]
+    Create a Diamond item instance with Sharpness 2 and Unbreaking 1 (`POST api/ItemInstances`), not in any storage. Bob
+    sells it to Weaponsmith (`"lines": [ { "itemInstanceId": <id> } ]`, `expectedTotal` 65). **Expected:** 65 coins
+    (sell price 100 × 1.3 = 130, half); the instance is a stock unit in Weaponsmith's Merchandise with both
+    enchantments; the offer lists that exact item at 130 with its enchantments. Ann buys it (`"itemInstanceId": <id>`,
+    `expectedUnitPrice` 130): it leaves Merchandise and its owner is Ann; it is no longer on offer.
+21. [automated: `ShopTradingTests.SellingNeedsProductionEnabled_AndATownThatCanPay_AndRoom`]
+    With `Production:Enabled` off, `sell-quote` is 409 `ProductionDisabled`. On again: a sale while the town account
+    can't pay is 409 `TownFundsInsufficient`; 201 Iron ore into a Merchandise capped at 200 is 409 `NoRoom`; nothing
+    moves either time. (A21)
+22. [automated: `ShopTradingTests.TheTownReasons_PostOnlyThroughATownAccount_AndCantBeReversed`]
+    As Staff, try `POST api/currency/admin/transactions/<the purchase's public id>/reverse`. **Expected:** 409
+    `NotReversible` (a town leg can't be reversed yet; a correction is a new shop posting). Postings with SHOP_PURCHASE
+    through any other currency route are refused.
+23. [automated: `ShopSupplyTests.AProcessingShop_TurnsFlourIntoBread_FromInputIntoMerchandise`]
+    `POST api/ProductionLines` for Bakery shop: Iron ore at 10 per hour with the input Coal 20 per hour. Put 100 Coal
+    into its Input storage. An hour later (`POST api/Production/run-now`). **Expected:** Merchandise +10 Iron ore, Input
+    80 Coal; `GET api/ProductionStructures/<Bakery shop>/production` shows the Merchandise storage as the output; the
+    ledger reconciles.
+24. [automated: `ShopSupplyTests.TheShopLevel_SetsProcessingSpeedYieldAndInputCost`]
+    At level 2 the same hour gives 15 Iron ore for 10 Coal (yield × 1.5, inputs × 0.5).
+25. [automated: `ShopSupplyTests.ATradingShop_DoesntProcess_AndNothingRunsWhileProductionIsOff`,
+    `ShopSupplyTests.WhileTheWorkerIsAway_ProcessingSlows_AndSellingGoesOn`]
+    Make Bakery shop `Trading`: its line is `Paused` ("A trading shop doesn't process"). Back to Processing with two
+    workers, one away (`PUT api/ProductionStructures/<Bakery shop>/workers`): the hour gives 5; buying still works. With
+    `Production:Enabled` off nothing settles. (F6, A21)
+26. [automated: `ShopSupplyTests.ARestock_IsReservedAtTheWarehouse_AndCollectedByTheShopsOwnWorker`,
+    `ShopSupplyTests.AnAdminSetting_OverridesTheLevelDefault`]
+    Lane Bakery shop → North 431.7 blocks; put 100 Iron ore into North; keep the Iron ore entry Stocked and Merchandise
+    empty. `POST api/Logistics/towns/<Phoenix>/run-now`. **Expected:** the Merchandise / Iron ore entry is `Reserved` 40
+    (level 1's default max) with `settingSource` ShopLevel; a Distribution order carried by Bakery shop. `POST
+    api/TransportOrders/run-now`: the shop's `workersPresent` 0; 100 seconds later the 40 Iron ore are in Merchandise
+    and the worker is back; the ledger reconciles. A consumer replenishment setting on the Merchandise storage (min 5,
+    max 25) wins over the level default. (A17)
+27. [automated: `ShopSupplyTests.TheHourlyStats_MatchTheLedger_AndARebuildIsIdempotent`,
+    `ShopSupplyTests.TheStats_CountProcessingOutputAsSupply_AndTheJobWaitsForProduction`]
+    After an hour with 5 Iron ore sold (Ann 3, Bob 2) and 1 bought back, wait for the job (every 10 minutes) or `POST
+    api/ShopTradeStats/rebuild` with `{ "shopId": <Bakery shop>, "from": "<hour>", "to": "<hour + 2>" }`. **Expected:**
+    `POST api/ShopTradeStats/search` with `shopId` shows one row for that hour: 5 sold, revenue 100, 1 bought back for
+    10, 2 customers, average price 20, stock at the end 6, `townPlayerCount` null; no rows for the empty hours. A second
+    rebuild gives the same row. Processing output counts as supplied. With `Production:Enabled` off the job writes
+    nothing. (A18)
+28. [partly automated: `ShopsMySqlTests` with `KNK_TEST_MYSQL`; by hand: the real game-server timing]
+    Two players buy the last 3 units 2 each at the same moment. **Expected:** one purchase succeeds; the other is 409
+    `NotEnoughStock` and that player keeps their coins; the town account holds one payment and is reconciled. (A18)
+
+### 11.2 Steps (plugin #687, draft)
+
+*Draft from the design (2026-11-16); L26 updates it to what was built and tags the automated steps.*
+
+1. As Member, open the shop menu (`/knk shop <id>` until P11). **Expected:** info header and paged catalogue
+   (`GET api/Shops/{id}/offer`); prices at the midpoint base price with the shop's modifiers. (A18)
+2. Buy an item. **Expected:** a confirmation first (`quote`); then coins and stock move together (`purchase` with the
+   price the player saw); the coins go to Phoenix's town account. (A18)
 3. Buy with too few coins. **Expected:** refused; nothing moves. (A18)
-4. Sell items in the sell menu. **Expected:** the buy-back price per item and the total; confirmation; coins paid. (A18)
-5. Open the web app trade stats after an hour. **Expected:** hourly stats per shop and blueprint match the ledger.
-   (A18)
+4. Sell items in the sell menu. **Expected:** the buy-back price per item and the total (`sell-quote`); confirmation;
+   coins paid (`sell`). (A18)
+
+### 11.3 Steps (web app #688, draft)
+
+*Draft; L27 updates it to what was built and tags the automated steps.*
+
+1. As Staff, create a shop type with accepted categories (`acceptedCategoryIds`) and levels, a shop and its catalogue.
+   **Expected:** the forms of § 11.1 step 1; the shop page lists its storages, catalogue, offer and processing view.
+2. Open the shop's sales: the stock ledger filtered by source Shop / the shop id, and the town account's ledger.
+3. Open the trade stats after an hour. **Expected:** hourly stats per shop and blueprint as a chart; they match the
+   ledger. (A18)
 
 ## 12. Phase P11: shopkeepers (#249; tier:2)
 

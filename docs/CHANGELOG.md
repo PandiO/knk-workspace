@@ -4,6 +4,53 @@ This is a human-readable record of capabilities merged into the V3 default branc
 
 ## Unreleased — on feature branches, not merged
 
+- **Shops: a static catalogue, buying with coins to the town account, selling to shops, processing and restocking (the
+  API)** ([PandiO/knk-workspace#248](https://github.com/PandiO/knk-workspace/issues/248), link L25 of the production,
+  storage and transport chain; [shops DESIGN](specs/shops/DESIGN.md) § 2-5, § 9.1, A18, A23). The shop menus are link
+  L26 (#687, waiting for the developer's menu templates) and the web app pages link L27 (#688); this entry is what the
+  API offers them. A **shop** is a structure with a Merchandise and an Input storage, a **shop type** (bakery,
+  weaponsmith, …) with the categories it buys from players and its **levels** (price multiplier, processing speed,
+  yield and input cost, storage caps, default restocking min/max), a kind (**Trading** or **Processing**), a tax
+  modifier and a buy-back percentage (default 50). Admins fill a **static catalogue**: a blueprint or one unique item,
+  an optional static price, Stocked (sold from Merchandise) or Unlimited (never sold out: shops work before the supply
+  chain is live). Prices: a static price wins, else the blueprint's midpoint base price × tax modifier × level
+  multiplier; a unique item adds 10% of the base price per enchantment level. A **purchase** needs the player's
+  confirmation and the price they saw, and is one database transaction: the coins go from the player to the town's new
+  **town account** (currency `AccountKind.Town`), the goods leave Merchandise (to the player's inventory, or their inbox
+  through P7). Players **sell** items of the accepted categories (a category accepts its sub-categories) for the
+  buy-back price, paid from the town account; a sold unique item keeps its enchantments and is resold as that exact
+  item. A **processing** shop runs production lines from Input into Merchandise; the town planner **restocks** a shop's
+  stocked catalogue items with the shop's own worker, and processing slows while the worker is away (selling goes on).
+  **Hourly trade stats** per shop, blueprint and hour are rolled up from the ledger for the later pricing model.
+  Buying and admin CRUD work while `Production:Enabled` is off; selling, inbox delivery, processing, restocking and the
+  stats job need it. Town account trade, tax and spending stay Later
+  ([#124](https://github.com/PandiO/knk-workspace/issues/124), [#325](https://github.com/PandiO/knk-workspace/issues/325)).
+  knk-web-api: entities `Shop` (a TPT subtype of `ProductionStructure`), `ShopType` with `ShopTypeCategory` and
+  `ShopTypeLevel`, `ShopCatalogueEntry`, `ShopTradeStat`, `TownAccount`; `currency_entries.TownId` and currency reasons
+  `SHOP_PURCHASE` and `SHOP_BUYBACK` (posted only against a town account, not reversible yet); stock reasons `ShopSale`
+  and `ShopBuyBack`; endpoints `api/ShopTypes`, `api/ShopTypeLevels`, `api/ShopCatalogueEntries` (CRUD, `search`),
+  `api/Shops` (CRUD, `search`, `{id}/offer`; the game server's `{id}/quote`, `{id}/purchase`, `{id}/sell-quote`,
+  `{id}/sell`), `api/ShopTradeStats` (read, `search`, `rebuild`) and `api/TownAccounts` (read, `by-town/{townId}`,
+  `search`, `{id}/ledger`); the stats job (`ShopTradeStatSweepService`, every 10 minutes); game settings section
+  `production.shops`; form and display seeds `ShopType`, `ShopTypeLevel`, `Shop`, `ShopCatalogueEntry`,
+  `ShopTradeStat`, `TownAccount`. Reads: the World area or the plugin key; admin writes: `knk.admin.world` or the
+  plugin key; deletes also `knk.admin.delete`; buying and selling: the plugin key only. Smoke test:
+  [production smoke test § 11](guides/production-storage-transport-smoke-test.md#11-phase-p10-shops-248-api-687-plugin-menus-688-web-app-tier3).
+  Admin steps:
+  1. Apply the migration `AddShops` (`dotnet ef database update`; additive: seven tables, the nullable column
+     `currency_entries.TownId`, and the currency entries' account check widened to allow town legs).
+  2. Import the form and display seeds `ShopType`, `ShopTypeLevel`, `Shop`, `ShopCatalogueEntry`, `ShopTradeStat` and
+     `TownAccount` (in that order); make them the default.
+  3. Optional: set the shop defaults in the game settings, production section `shops` (defaults shown; a missing
+     section keeps the stored values):
+     ```json
+     "shops": {
+       "enchantmentPercentPerLevel": 10,
+       "statsLookbackHours": 2
+     }
+     ```
+  4. Create the shop types with their accepted categories and levels, then the shops and their catalogues. No
+     `api.env` key and no plugin `config.yml` change.
 - **Town logistics: warehouses reserve, consumers collect with their own worker (the API)** ([PandiO/knk-workspace#127](https://github.com/PandiO/knk-workspace/issues/127),
   link L23 of the production, storage and transport chain; [town logistics](specs/production-storage-transport/TOWN_LOGISTICS.md)
   § 2-5, D-L1 to D-L3, A17). The web app (policy and rule editor, planner dry-run view, town supply view) is link L24
