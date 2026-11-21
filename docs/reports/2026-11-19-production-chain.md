@@ -106,7 +106,7 @@ of what is already in `next`.
 | L25b P9 API follow-ups (coordinator extra) | #928 | Merged into next (2026-11-21) | api `16713a85`, workspace `77f3a022` (after a coordinator merge of `next`); merges: api `e02bf557`, workspace `0c469db3` | [api#75](https://github.com/PandiO/knk-web-api/pull/75), [ws#935](https://github.com/PandiO/knk-workspace/pull/935) | green on `16713a85` (build-and-test, mysql-tests, fresh-database); Codex at its usage limit | create_session `session_01R1w2UwSQPJ4gQDcsTmi8Xt`, branch `claude/production-p9-followups` |
 | L26 P10b shop menus plugin | #687 | Waiting (developer's shop menu templates, asked on #687) | — | — | — | — |
 | L27 P10c shops web app | #688 | Merged into next (2026-11-21) | web app `0100518`, workspace `f46e0de6` (after coordinator merges of `next`); merges: web app `11832d6b`, workspace `ee4ee00b` | [web#73](https://github.com/PandiO/knk-web-app/pull/73), [ws#936](https://github.com/PandiO/knk-workspace/pull/936) | green on `0100518` (build-and-test, e2e) | create_session `session_01R1w2Uwx1cX3dVQ9hS8MdKX`, started 2026-11-21 |
-| L27b P10 shops follow-ups (coordinator extra) | #938 | In review (2026-11-21) | api `3a2e5db`, web app `c368176`, workspace `e28a6610` | [api#76](https://github.com/PandiO/knk-web-api/pull/76), [web#74](https://github.com/PandiO/knk-web-app/pull/74), [ws#941](https://github.com/PandiO/knk-workspace/pull/941) | push runs green on `3a2e5db` (build-and-test, mysql-tests, fresh-database) and `c368176` (build-and-test, e2e); Codex at its usage limit | create_session `session_01R1w2UuaqLDEYWP9TRyxn93`, branch `claude/production-p10-followups` |
+| L27b P10 shops follow-ups (coordinator extra) | #938 | Merged into next (2026-11-21) | api `3a2e5db5`, web app `c3681765`, workspace `e28a6610`; merges: api `58c06427`, web app `f386e519`, workspace `33b6a583` | [api#76](https://github.com/PandiO/knk-web-api/pull/76), [web#74](https://github.com/PandiO/knk-web-app/pull/74), [ws#941](https://github.com/PandiO/knk-workspace/pull/941) | push runs green on `3a2e5db` (build-and-test, mysql-tests, fresh-database) and `c368176` (build-and-test, e2e); Codex at its usage limit | create_session `session_01R1w2UuaqLDEYWP9TRyxn93`, branch `claude/production-p10-followups` |
 | L28 P11 shopkeepers | #249 | Not started | — | — | — | — |
 | L29 P12 display stalls | #250 | Not started | — | — | — | — |
 
@@ -496,6 +496,13 @@ of what is already in `next`.
     gated on the developer and get their own docs with P10b.
 74. **L27b (#938) started** as a small API + web app link (both repos idle, L26 still gated: no reply on #687 at 06:15).
     After it, the chain waits for the developer: L26 (#687 templates), then L28 and L29.
+75. **L27b merge (2026-11-21 07:20).** § 6 checks held: heads matched, every branch contained `next`, CI green (API
+    `3a2e5db5`: build-and-test, mysql-tests, fresh-database; web app `c3681765`: build-and-test, e2e), no review threads,
+    Codex at its usage limit, no migration. Merged API first: knk-web-api `58c06427`, knk-web-app `f386e519`,
+    knk-workspace `33b6a583` (#941). P10 docs #939 done (#940 merged).
+76. **The chain is idle on the developer.** Every link whose gate is open is merged (L0–L25, L25b, L27, L27b). L26 (#687)
+    waits for the shop menu templates or the OK for the legacy fallback (no reply at 07:20); L28 (#249) and L29 (#250)
+    depend on L26. Check-ins slow to every 3 hours until the developer answers.
 
 ## 4. Link blocks
 
