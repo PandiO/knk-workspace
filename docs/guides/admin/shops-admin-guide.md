@@ -1,8 +1,9 @@
 # Shops — Admin Guide
 
-**Status:** Current · **Last updated:** 2026-11-21 (the shop menus in game: § 1 items 6-7, § 7.1, § 9; production P10b #687, docs PandiO/knk-workspace#966); 2026-11-21 (first version, production P10 #248/#688, docs PandiO/knk-workspace#939)
+**Status:** Current · **Last updated:** 2026-11-21 (display stalls: § 1 items 1-2 and 6, § 2, new § 3.6, § 4.2, new § 7.2, § 8, § 9; production P12 #250, docs PandiO/knk-workspace#970); 2026-11-21 (the shop menus in game: § 1 items 6-7, § 7.1, § 9; production P10b #687, docs PandiO/knk-workspace#966); 2026-11-21 (first version, production P10 #248/#688, docs PandiO/knk-workspace#939)
 **Checked against:** knk-web-api `next` `289f4d4b` and `7c6dd7f5` (the menu seeds), knk-web-app `next` `11832d6b`,
-knk-plugin `next` `c349a53c` (not released; the manual steps of
+knk-plugin `next` `c349a53c`; display stalls against knk-web-api `next` `d86d6e1a` and knk-plugin `next` `b31fceb6`
+(not released; the manual steps of
 the [smoke test § 11](../production-storage-transport-smoke-test.md#11-phase-p10-shops-248-api-687-plugin-menus-688-web-app-tier3)
 have not been run live yet)
 **Related:** [shops architecture](../../architecture/shops.md) (pricing, the purchase and sale transactions, the town
@@ -23,19 +24,22 @@ settings, a safe test and what to do when a shop misbehaves.
 
 **What players see.** In game a shop has a **shop menu** (its catalogue), an **item information** menu, a **purchase
 confirmation** and a **sell menu** ([#687](https://github.com/PandiO/knk-workspace/issues/687); how players use them:
-[menus player guide § Shops](../users/menus-player-guide.md#shops)). Until shopkeepers and display stalls arrive
-([#249](https://github.com/PandiO/knk-workspace/issues/249), [#250](https://github.com/PandiO/knk-workspace/issues/250))
-only staff open a shop, with `/knk shop <shop id>` (§ 7.1); the purchase and sale routes can also be called with a REST
-client (§ 7).
+[menus player guide § Shops](../users/menus-player-guide.md#shops)). **Display stalls**
+([#250](https://github.com/PandiO/knk-workspace/issues/250), § 3.6) show the shop's items on shelves and stalls you
+register; any player can right-click one for the item information or shift-right-click it to buy, always through the
+confirmation ([menus player guide § Display stalls](../users/menus-player-guide.md#display-stalls)). The full shop menu
+and the sell menu are opened only by staff, with `/knk shop <shop id>` (§ 7.1), until shopkeepers arrive
+([#249](https://github.com/PandiO/knk-workspace/issues/249)); the purchase and sale routes can also be called with a
+REST client (§ 7).
 
 ## 1. What you need
 
 1. **The migration** `AddShops` on the API's database (seven new tables, one new column on the currency ledger, the
    ledger's account check widened; additive, no data written; [production installation § 5.3](../production-installation.md)
-   item 17).
+   item 17). For display stalls also `AddShopDisplaySpots` (one new table, additive; item 20).
 2. **The seeds**, imported with "make default" in this order (Admin → Forms and Displays): form and display
    `ShopType`, `ShopTypeLevel`, `Shop`, `ShopCatalogueEntry`, `ShopTradeStat`, `TownAccount`. The trade stats and town
-   account forms are read only.
+   account forms are read only. For display stalls also form and display `ShopDisplaySpot`.
 3. **The API's switch**, the game setting **Production enabled** (`Production:Enabled`; Admin → Settings, the
    **Production and territory** card, see [Game Settings](../game-settings.md#production-and-territory)):
 
@@ -69,9 +73,13 @@ client (§ 7).
    2. `items.identity.enabled: true` for selling: the sell menu resolves each stack through item identity.
    3. The API's **Production enabled** for selling and for purchases into the reward inbox (item 3); buying into the
       inventory works without it.
-   4. No new `config.yml` key, no API environment key, no migration.
+   4. The shop menus need no new `config.yml` key, no API environment key and no migration (the display stalls do,
+      item 6).
    5. `knk.admin.world.production` (also matched by `knk.admin.world.*`) for the staff who open shops with
-      `/knk shop` ([commands](../users/commands.md#server-tools-knk)).
+      `/knk shop` and register display stalls with `/knk shop display` ([commands](../users/commands.md#server-tools-knk)).
+   6. For display stalls (knk-plugin `next` `b31fceb6`, #250): the `production.shops.displays` block in `config.yml`
+      (restart; the keys are in § 3.6 and the [plugin configuration § 4.31](plugin-configuration.md#431-production)).
+      With WorldGuard installed nothing else: players who aren't members of the town region can still click stalls.
 7. **The menu templates** `shops.shop`, `shops.item` and `shops.confirm` (knk-web-api `next` `7c6dd7f5`). The API
    creates them on start when they are missing, like every menu seed; nothing to import by hand. **Deploy the plugin
    first, then the API**: a game server without the shop menu ids fails the new templates' validation. To change a
@@ -81,7 +89,7 @@ client (§ 7).
 ## 2. Where things are
 
 1. **Dashboard** (World group), types **ShopType**, **ShopTypeLevel**, **Shop**, **ShopCatalogueEntry**,
-   **ShopTradeStat** and **TownAccount**. Shops are also listed under **ProductionStructure**: a shop is a production
+   **ShopTradeStat**, **TownAccount** and **ShopDisplaySpot** (§ 3.6). Shops are also listed under **ProductionStructure**: a shop is a production
    structure underneath (it has a worker and can run lines).
 2. **A shop type's page**, panel **Accepted categories and levels** (§ 3.1, § 3.2).
 3. **A shop's page**, panel **Shop**: the summary, **Offer now**, **Catalogue**, **Sales and buy-backs** and **Trade
@@ -174,6 +182,80 @@ The town planner keeps a shop stocked from the town's warehouses, the same way i
    restocking, processing is lowered (selling goes on)".
 4. A Processing shop's Input storage is restocked from its lines' inputs, as for any production structure.
 
+### 3.6 Display stalls
+
+A **display spot** is one block of a shop (a shelf, a barrel, a slab, a counter) where the game server shows one of the
+shop's items floating on top, with its name and price. Players right-click it for the item information and
+shift-right-click it to buy (the purchase confirmation always opens first). Spots are registered by you, one per block;
+the plugin never looks for them. Needs § 1 items 1, 2 and 6 and the plugin's `production.enabled: true`.
+
+**Registering a spot in game** (node `knk.admin.world.production`):
+
+1. Stand in front of the stall, where customers will stand, and look at the block (within 6 blocks).
+2. `/knk shop display add <shop id> [label]`, for example `/knk shop display add 12 Front shelf left`. The answer:
+   "Display spot #<id> "Front shelf left" (<world> <x> <y> <z>) registered for shop #12, facing <direction>." The item
+   faces you, the way you looked when you registered it. Within a second an item floats on the block.
+3. Repeat for each block. Spots are filled in the order you register them: register the most visible ones first.
+4. Refusals: "Look at the shelf or stall block (within 6 blocks)." (air or too far), "Not registered: That block is
+   already display spot #<id> … of shop #<id>.", "Not registered: A shop has at most 100 display spots.", "Not
+   registered: shopId must name an existing shop.", from the console "Only players can register a display spot (look at
+   the block)."
+
+**In the web app:** **Dashboard → ShopDisplaySpot → Create**: **Shop**, **World**, **X**, **Y** (-64 to 320), **Z**,
+**Facing** (North, East, South or West: the way the item faces, towards the customer), **Pinned entry** (optional, an
+entry of the same shop), **Order** (empty: after the shop's last spot), **Label**, **Enabled**. The game server picks a
+change up within `refresh-minutes` (5), or at once with `/knk shop display reload` ("Display spots re-read: <n>."). A
+spot keeps its shop: to move it to another shop, remove it and register it again. A page with the shop's spots is
+planned ([#968](https://github.com/PandiO/knk-workspace/issues/968)).
+
+**What a spot shows.** The plugin fills a shop's spots in their order:
+
+1. a spot's own **pin** (below);
+2. then the catalogue's **Pinned** entries (§ 4.2), in catalogue order;
+3. then the rest: items in stock before sold-out items, then the **best sellers** (most units sold in the last 7 days,
+   `best-seller-hours`, from the trade stats, § 5.2), then catalogue order;
+4. sold-out items are shown dimmed with "Sold out", or not at all when the shop has **Hide sold-out items**.
+
+Each item is on one spot at most. A shop with more spots than items leaves the last spots empty; a switched-off spot
+shows nothing. The choice is made again every 30 seconds (`selection-refresh-seconds`), when the chunk loads, and right
+after a purchase at the shop. Price and stock changes show within that time.
+
+**Pins.** `/knk shop display pin <spot id> <catalogue entry id>` makes a spot always show that entry ("Display spot
+#<id> … now shows catalogue entry <id>."); `… pin <spot id> none` gives it back to the shop ("… is filled by the shop
+again."). The entry must be one of the spot's own shop ("pinnedCatalogueEntryId must be an entry of the spot's own
+shop."). The entry ids are in the shop page's **Catalogue** or the ShopCatalogueEntry dashboard. **If the pinned item
+can't be shown** (the entry was switched off or deleted, the item is sold out and the shop hides sold-out items, or an
+earlier spot already shows it), the spot is not left empty: the shop fills it like an unpinned spot. Deleting the
+entry clears the pin.
+
+**Listing and removing.**
+
+1. `/knk shop display list <shop id>`: "Display spots of shop #<id>:" and per spot its id, label, block, facing, pin
+   and what it shows now ("Bread", "Flour (sold out)", "nothing", "off"). With no spots: "Shop #<id> has no display
+   spots (last read: <when>)."
+2. `/knk shop display remove` while looking at the spot's block, or `/knk shop display remove <spot id>`: "Display spot
+   #<id> … removed."; its item and label vanish at once. Or delete it on the dashboard (needs `knk.admin.delete`), then
+   `/knk shop display reload`.
+3. To hide a spot for a while, switch **Enabled** off in the web app (then reload).
+
+**What players see** ([menus player guide § Display stalls](../users/menus-player-guide.md#display-stalls)): the item on
+top of the block, not turning, at half a block's size (`item-scale`), and above it the name, "<price> coins each" (or
+"Sold out") and "Right-click: information · Shift: buy". They can't take, push, turn or break it; a left-click does
+nothing. Right-click opens the item information menu (no purchase); shift-right-click opens the purchase confirmation
+for the amount they last chose for that item (1 at first). During a siege the stalls answer "Shops are closed to you
+during a siege." The blocks themselves are untouched and stay protected by their region as before.
+
+**The plugin's keys** (`production.shops.displays`, restart):
+
+| Key | Default | Effect |
+|---|---|---|
+| `refresh-minutes` | 5 | How often the spots are read from the API (a spot made in the web app shows after this) |
+| `selection-refresh-seconds` | 30 | How often what the stalls show is chosen again (stock, prices, best sellers) |
+| `best-seller-hours` | 168 | The best sellers' window (7 days) |
+| `item-scale` | 0.5 | Size of the shown item |
+| `label` | true | The floating name and price |
+| `hints` | true | The label's line with the two clicks |
+
 ## 4. The catalogue and prices
 
 ### 4.1 How a price is made
@@ -200,7 +282,8 @@ These are interim prices; supply and demand pricing comes later
    shops).
 3. **Stock**: **Stocked** sells from Merchandise and is sold out at 0; **Unlimited** never sells out (for a catalogue
    that should sell before the supply chain runs; stackable items only).
-4. **Pinned** and **Order** set the order in the offer; pinned entries will go first on display stalls (P12).
+4. **Pinned** and **Order** set the order in the offer; pinned entries also go first on the display stalls (§ 3.6),
+   after the spots' own pins.
    **Enabled** off takes the entry off the offer.
 5. An entry keeps its shop and item: to change the item, delete the entry and add another.
 6. Goods in Merchandise without an entry (restocked or processed goods, items bought back) are also on sale, at the
@@ -260,7 +343,7 @@ keeps this section.
 | `enchantmentPercentPerLevel` | 10 | 0-1000 | A unique item's price rises by this % of the base price per enchantment level |
 | `statsLookbackHours` | 2 | 0-168 | The stats job also recomputes this many earlier hours |
 
-No API environment key and no game server `config.yml` key.
+No API environment key; the display stalls' `config.yml` keys are in § 3.6.
 
 ## 7. A safe test
 
@@ -282,7 +365,7 @@ server will make later. The full checklist is the [smoke test § 11](../producti
 7. Press **Rebuild from the ledger** under Trade stats: the hour shows 3 sold for 60, 2 bought back for 20.
 8. Clean up: switch the entry off. A shop with ledger history can't be deleted; keep test shops in a test town.
 
-### 7.1 In game
+### 7.1 In game (shop menus)
 
 With the game server set up (§ 1 items 6-7) and the shop from steps 1-4 (give **Bread** an Unlimited entry too, or keep
 Merchandise stock), as a staff member with `knk.admin.world.production` and some coins:
@@ -301,6 +384,23 @@ The full in-game checklist (paging, sold out, a changed price, refusals, the fla
 [smoke test § 11.2](../production-storage-transport-smoke-test.md#112-steps-plugin-687); the layouts and flows are in
 the [shops architecture § 13](../../architecture/shops.md#13-the-game-server-shop-menus-l26-687).
 
+### 7.2 In game (display stalls)
+
+With § 7.1 working and the plugin's `production.shops.displays` block in place (§ 1 item 6), in the test shop with two
+or three free blocks (a barrel, a slab), as a staff member with `knk.admin.world.production`; about 10 minutes:
+
+1. Look at the first block and type `/knk shop display add <shop id> Test shelf`: the answer names the spot, and Bread
+   floats on the block with "Bread", "20 coins each" and "Right-click: information · Shift: buy".
+2. Register a second block; it shows the next item, or nothing when the catalogue has only Bread.
+3. Right-click the Bread: the item information menu opens; nothing is bought. Sneak and right-click: the confirmation
+   for 1 Bread opens; **Cancel** buys nothing, **Confirm** buys it.
+4. `/knk shop display list <shop id>` lists both spots and what they show. Left-click the item: nothing happens.
+5. Clean up: look at each block and type `/knk shop display remove`; the items vanish.
+
+The full checklist (pins, sold out and hidden, best sellers, WorldGuard, respawn after a restart, the API, the flag
+off) is [smoke test § 11.4](../production-storage-transport-smoke-test.md#114-steps-display-stalls-plugin-and-api-250);
+the mechanics are in the [shops architecture § 14](../../architecture/shops.md#14-the-game-server-display-stalls-l29-250).
+
 ## 8. Effects on existing data and limits
 
 1. The migration adds tables and one column only; no existing currency posting, balance or stock line changes. The
@@ -315,7 +415,10 @@ the [shops architecture § 13](../../architecture/shops.md#13-the-game-server-sh
    steps 1, 8, 16, 32, 64).
 6. Unique items are listed in the shop menu but can't be bought in game until
    [#897](https://github.com/PandiO/knk-workspace/issues/897); buy them for a player through the REST client.
-7. Not in V1: shopkeepers, display stalls, upgrade costs for levels, corrections of town accounts, a
+7. `AddShopDisplaySpots` adds one table only. Display stall entities are never saved with the world: they go with
+   their chunk or a restart and are spawned again by the plugin; the blocks are never changed. At most 100 spots per
+   shop, one per block.
+8. Not in V1: shopkeepers, upgrade costs for levels, corrections of town accounts, a
    settings card, the town account on the town's page, the shop's kind and type in the shop list.
 
 ## 9. Troubleshooting
@@ -342,4 +445,12 @@ the [shops architecture § 13](../../architecture/shops.md#13-the-game-server-sh
 | The sell menu says "Item identity is off on this server" | `items.identity.enabled` is off | Switch it on in the plugin's `config.yml` |
 | A player shows a code from "The shop didn't answer" | The purchase or sale got no answer, even after one retry | Look the key up in the town account ledger (source the shop) and the server log; a sale's items went back to the player |
 | The log says a player "left before purchase … was placed" | The player logged out between paying and placing | Give the item back by hand ([stock admin guide](stock-admin-guide.md) or the player's inventory tools) |
+| A display spot shows nothing | It is switched off; the shop has fewer items on offer than spots; its items are sold out and the shop hides them; the game server couldn't read the shop | `/knk shop display list <shop id>` says what it should show ("nothing", "off"); check **Offer now** |
+| A spot made in the web app doesn't show | The game server reads the spots every 5 minutes | `/knk shop display reload` |
+| A stall shows another item than its pin | The pinned entry is switched off, deleted, hidden (sold out with Hide sold-out items) or already shown on an earlier spot | Switch the entry on, or pin another entry; `/knk shop display list` shows the pin |
+| `/knk shop display pin` says "must be an entry of the spot's own shop" | The entry belongs to another shop | Use an id from this shop's Catalogue |
+| A stall's item faces the wrong way | The facing comes from where you looked when you registered it | Change **Facing** in the web app and reload, or remove the spot and register it again from the front |
+| Players in a town region can't click a stall | Stall entities are allowed for everyone in WorldGuard regions, so another plugin is cancelling the click | Check the server log and the other protection plugins; report it with the spot id |
+| Two items float on one spot | A stray copy from before a crash or a reload | Walk away and back (the chunk reload removes strays) or restart; report it if it stays |
+| A shift-right-click says "This item is sold out." or "Unique items can't be bought in game yet." | The quick buy opens only for items that can be bought | Restock the item; unique items wait for #897 |
 | A shop type or shop can't be deleted | The type is used by shops; the shop has stock or ledger history, or its worker is out | Give the shops another type; keep the shop |

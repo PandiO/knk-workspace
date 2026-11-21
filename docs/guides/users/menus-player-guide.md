@@ -1,7 +1,7 @@
 # Menus — Player Guide
 
 **Status:** Living document — update in place as the game changes
-**Last updated:** 2026-11-21 (new § Shops: the shop menus of production P10b in knk-plugin `next` `c349a53c`, PandiO/knk-workspace#687, docs PandiO/knk-workspace#966); 2026-11-21 (§ Reward inbox: in knk-plugin `next` `bdd8b463`, two more messages, a link to the admin guide, docs PandiO/knk-workspace#915); 2026-11-21 (§ Reward inbox and § Kits: items that don't fit go to the reward inbox, production chain L20, PandiO/knk-workspace#684, knk-plugin branch `claude/production-p7b`, not in `next` yet); 2026-11-21 (§ The menu item: what a click does in a siege, set on the game settings page; § Sieges: the
+**Last updated:** 2026-11-21 (new § Display stalls and a pointer to it in § Shops: production P12 in knk-plugin `next` `b31fceb6`, PandiO/knk-workspace#250, docs PandiO/knk-workspace#970); 2026-11-21 (new § Shops: the shop menus of production P10b in knk-plugin `next` `c349a53c`, PandiO/knk-workspace#687, docs PandiO/knk-workspace#966); 2026-11-21 (§ Reward inbox: in knk-plugin `next` `bdd8b463`, two more messages, a link to the admin guide, docs PandiO/knk-workspace#915); 2026-11-21 (§ Reward inbox and § Kits: items that don't fit go to the reward inbox, production chain L20, PandiO/knk-workspace#684, knk-plugin branch `claude/production-p7b`, not in `next` yet); 2026-11-21 (§ The menu item: what a click does in a siege, set on the game settings page; § Sieges: the
 siege shop and Siege unlocks menus; siege shop chain #870, #871, #868, #869 in `next`, docs PandiO/knk-workspace#908); 2026-11-20 (§ Structures and § Storage terminals: in knk-plugin `next` `8e672ba6`, more terminal
 messages, docs PandiO/knk-workspace#903); 2026-11-20 (§ Structures and § Storage terminals and displays, production chain L18,
 PandiO/knk-workspace#74, knk-plugin branch `claude/production-p6`, not in `next` yet); 2026-11-13 (§ Kits: kits a staff member gives you from the web app, PandiO/knk-workspace#261, in
@@ -222,8 +222,9 @@ What a terminal refuses, and why:
 ### Shops
 
 *On servers with production switched on (in knk-plugin `next` `c349a53c`, PandiO/knk-workspace#687; not released
-yet).* Town shops sell goods for coins and buy goods back. **For now only staff can open a shop** (with
-`/knk shop <shop id>`); shopkeepers that open it for every player come next.
+yet).* Town shops sell goods for coins and buy goods back. **For now only staff can open the shop menu** (with
+`/knk shop <shop id>`); shopkeepers that open it for every player come next. Every player can already look at and buy
+the items on a shop's [display stalls](#display-stalls).
 
 **Buying:**
 
@@ -291,6 +292,36 @@ What a shop refuses, and why:
 | `The shop didn't answer. If coins were taken, show staff this code: <code>` | Keep the code; staff can look it up |
 
 Staff: setting shops up and testing them is in the [shops admin guide](../admin/shops-admin-guide.md#7-a-safe-test).
+
+### Display stalls
+
+*On servers with production switched on (in knk-plugin `next` `b31fceb6`, PandiO/knk-workspace#250; not released
+yet).* Shops show some of their goods on **display stalls**: an item floating on top of a shelf, barrel or counter in
+the shop, with a label above it. Anyone can use them; you don't need to open a menu first.
+
+1. **The label** shows the item's name, its price (`20 coins each`) and `Right-click: information · Shift: buy`. A
+   dimmed item with `Sold out` is out of stock for now.
+2. **Right-click the item** to open its information menu (the same as clicking the item in the shop menu, see
+   [Shops](#shops)): the Amount chest, the price, the stock and the description. Nothing is bought.
+3. **Sneak and right-click** (shift-right-click) to **buy**: the purchase confirmation opens for the amount you last
+   chose for that item in its information menu (1 if you never did). Nothing is bought until you click **Confirm** (to
+   your inventory) or **Confirm: to your reward inbox**; **Cancel** buys nothing. The rest is as in [Shops](#shops).
+4. **Which items are shown** is up to the shop: staff pick some, featured items come first, then the items in stock and
+   the shop's best sellers of the last week. What a stall shows can change while you look, as stock and prices change.
+5. You can't take, push, turn or break a stall's item, and hitting it does nothing.
+
+Messages of the stalls:
+
+| Message | Meaning |
+|---|---|
+| `This item is sold out.` | Shift-right-click on a sold-out item: wait for restocking; right-click still shows its information |
+| `Unique items can't be bought in game yet.` | A one-of-a-kind item (for example an enchanted sword): ask staff |
+| `This item is no longer for sale here.` | The shop took it off its catalogue a moment ago |
+| `Nothing is on display here right now.` | The stall is between two items; try again in a few seconds |
+| `Shops are closed to you during a siege.` | Leave the siege first |
+| `Could not open the shop (...)` | The shop couldn't be reached; try again later or tell staff |
+
+Staff: registering stalls is in the [shops admin guide § 3.6](../admin/shops-admin-guide.md#36-display-stalls).
 
 ## Moving around in menus
 
