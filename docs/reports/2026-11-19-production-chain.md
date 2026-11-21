@@ -86,7 +86,7 @@ of what is already in `next`.
 | L18 P6 plugin: terminals, displays, Structures menu, structure menu, orders list | #74 | Merged into next (2026-11-20) | plugin `a9ee8bf1`, workspace `f947c84b`; final head `19f74865` (L18 merged `next` and regenerated `content-seeds.json`); merges: plugin `8e672ba6`, workspace `df27cc18` (after a coordinator merge of `next`, `0f1c8264`) | [plugin#110](https://github.com/PandiO/knk-plugin/pull/110), [ws#898](https://github.com/PandiO/knk-workspace/pull/898) | green (plugin build + paper-boot, 69 scenarios) | create_session `session_01R1w2UxMM4WEwxxedAe11ji` (prompt says start without asking), started 2026-11-20 |
 | L19 P7 delivery and inbox API | #60 | Merged into next (2026-11-21) | api `a389259`, workspace `fbe4ded6`; merges: api `2952d0c7`, workspace `e2c6f45b` | [api#70](https://github.com/PandiO/knk-web-api/pull/70), [ws#899](https://github.com/PandiO/knk-workspace/pull/899) | build-and-test, fresh-database green; mysql-tests running (green locally) | create_session `session_01R1w2UwpK1NtaZLrA8k2uhP` (prompt says start without asking), started 2026-11-20 |
 | L20 P7b inbox plugin, kit/lootbox migration | #684 | In review (2026-11-21) | plugin `823ebf09`, workspace `e48c9d0e` | [plugin#113](https://github.com/PandiO/knk-plugin/pull/113), [ws#911](https://github.com/PandiO/knk-workspace/pull/911) | green on `1952a5b9` (build + paper-boot, 71 scenarios); `823ebf09` running | create_session `session_01R1w2Ux3iuWqjcAV5HQdPvM` (prompt says start without asking), started 2026-11-21 |
-| L21 P8a harvest API | #685 | In review (2026-11-21) | api `e89e396`, workspace `35f9f46b` | [api#72](https://github.com/PandiO/knk-web-api/pull/72), [ws#914](https://github.com/PandiO/knk-workspace/pull/914) | push runs on `e89e396` green (build-and-test, mysql-tests, fresh-database); PR runs running | create_session `session_01R1w2Ux7jFcMxYzkwej4qY4` (prompt says start without asking), started 2026-11-21 |
+| L21 P8a harvest API | #685 | In review (2026-11-21) | api `e89e396`, workspace `00fab16d` (merged `next` `12804469`) | [api#72](https://github.com/PandiO/knk-web-api/pull/72), [ws#914](https://github.com/PandiO/knk-workspace/pull/914) | push runs on `e89e396` green (build-and-test, mysql-tests, fresh-database); PR runs running | create_session `session_01R1w2Ux7jFcMxYzkwej4qY4` (prompt says start without asking), started 2026-11-21 |
 | L22 P8 harvest plugin | #134 | Not started | — | — | — | — |
 | L23 P9 town logistics API | #127 | Not started | — | — | — | — |
 | L24 P9b logistics web app | #686 | Not started | — | — | — | — |
@@ -2118,7 +2118,8 @@ _(Each link appends its block here when it finishes.)_
     10. knk-workspace (branch from `next`): smoke guide § 9 (§ 9.1 21 API steps, 18 automated, 3 partly; § 9.2 plugin
         draft for L22), changelog entry, production installation § 5.3 item 15, implementation plan status.
 2. **Commits and heads.** knk-web-api `claude/production-p8a` at `e89e396` (6 commits on `next` `2952d0c`);
-   knk-workspace `claude/production-p8a` at `35f9f46b` (1 commit on `next` `e2c6f45b`).
+   knk-workspace `claude/production-p8a` at `00fab16d` (1 commit plus a merge of `next` `12804469`, the siege shop docs #908; the
+   changelog and the installation header keep both sides).
 3. **PRs.** [knk-web-api#72](https://github.com/PandiO/knk-web-api/pull/72) (Closes #685, Closes #900) and
    [knk-workspace#914](https://github.com/PandiO/knk-workspace/pull/914) (Part of #685, #900), base `next`. Not merged.
 4. **Tests, baseline → result.**
