@@ -1,6 +1,6 @@
 # API Contract: Production transport orders, lanes and road connections
 
-**Status:** Current · **Last updated:** 2026-11-20 (first version, production P5 #79/#681, docs PandiO/knk-workspace#891)
+**Status:** Current · **Last updated:** 2026-11-20 (P6 adds `POST api/TransportOrders/{id}/retry`, see the storage menus contract § 4, docs #903); 2026-11-20 (first version, production P5 #79/#681, docs PandiO/knk-workspace#891)
 **Checked against:** knk-web-api `next` `bf8633fb` (PR PandiO/knk-web-api#65; `Controllers/TransportOrdersController.cs`,
 `Controllers/TransportLanesController.cs`, the P5 actions of `Controllers/ProductionStructuresController.cs`,
 `Dtos/TransportDtos.cs`, `Services/Production/TransportService.cs`, `TransportLaneService.cs`, `TransportRouting.cs`).
@@ -125,6 +125,9 @@ Body `{ "reason": "…" }` (optional; the first 200 characters are kept). Answer
 
 404 for an unknown order; **409** "The order is already <status>." for a final order and "The order is already
 returning its cargo." for `Returning` or `ReturnBlocked`.
+
+Since P6 (#683) staff can also retry an order: `POST api/TransportOrders/{id}/retry`, in the
+[storage menus API contract § 4](API_CONTRACT_PRODUCTION_STORAGE_MENUS.md#4-post-apitransportordersidretry--transportorderdto).
 
 ### 2.5 `POST api/TransportOrders/run-now` → `TransportSweepResultDto`
 

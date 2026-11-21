@@ -1,6 +1,6 @@
 # Stock — Admin Guide
 
-**Status:** Current · **Last updated:** 2026-11-19 (Storage weight on the ItemBlueprint form seed v2, #819; docs #839); 2026-11-19 (§ 2.2: the default storages of warehouses and production structures, P2 #91, docs #830); 2026-11-19 (first version, stock core P1 #97/#675, docs PandiO/knk-workspace#820)
+**Status:** Current · **Last updated:** 2026-11-20 (§ 2.2: units per container slot sets the cap of a storage with bound containers, P6 #683, docs #903); 2026-11-19 (Storage weight on the ItemBlueprint form seed v2, #819; docs #839); 2026-11-19 (§ 2.2: the default storages of warehouses and production structures, P2 #91, docs #830); 2026-11-19 (first version, stock core P1 #97/#675, docs PandiO/knk-workspace#820)
 **Checked against:** knk-web-api `next` `2e7d4e81`, knk-web-app `next` `9f46cb49` (not released; the manual steps of the
 [smoke test § 2](../production-storage-transport-smoke-test.md#2-phase-p1-stock-core-97-api-675-web-app-tier3) have
 not been run live yet)
@@ -62,7 +62,8 @@ On the Storage dashboard press **Create** (the seeded form, two steps):
    Fill in only that one; a holder that doesn't match the kind is refused ("A Domain storage has only DomainId; remove
    UserId.").
 2. Step **Capacity and lock**: **Max units** (raw units, empty = no cap), **Max distinct items** (how many different
-   items it may hold, empty = no cap), **Units per container slot** (stored for later; no effect yet), **Locked
+   items it may hold, empty = no cap), **Units per container slot** (with containers bound to the storage, its cap becomes their slots × this; see the
+   [storage terminals admin guide § 2.3](production-storage-admin-guide.md#23-room-units-per-slot), P6), **Locked
    until** and **Lock reason**. Transit storages take no cap.
 3. **Submit.**
 

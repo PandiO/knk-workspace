@@ -1,6 +1,6 @@
 # Production Transport — Admin Guide
 
-**Status:** Current · **Last updated:** 2026-11-20 (first version, production P5 #79/#681/#682, docs PandiO/knk-workspace#891)
+**Status:** Current · **Last updated:** 2026-11-20 (§ 3.4: cancel and retry in game since P6, docs #903); 2026-11-20 (first version, production P5 #79/#681/#682, docs PandiO/knk-workspace#891)
 **Checked against:** knk-web-api `next` `bf8633fb`, knk-plugin `next` `7116f1a5`, knk-web-app `next` `5ad5029f` (not
 released; orders move only with Production enabled on in the API, and lanes are measured only with `production.enabled:
 true` on the game server; the manual steps of the
@@ -136,6 +136,10 @@ On an order that is not done and not already returning, press **Cancel the order
    carrier on the road comes back in the time it has walked so far.
 
 A refusal (already returning, already done) shows the API's sentence.
+
+Staff can also cancel, or **retry** an order, in game from a structure's transport orders menu (P6, #683/#74; see the
+[storage terminals admin guide § 4](production-storage-admin-guide.md#4-the-structure-menus)). The retry is API and
+game only: the web app has no button for it.
 
 ### 3.5 Full stops and full sources
 
