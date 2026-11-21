@@ -95,7 +95,7 @@ of what is already in `next`.
 | L21 P8a harvest API | #685 | Merged into next (2026-11-21) | api `e89e396`, workspace `00fab16d` (merged `next` `12804469`); merges: api `9ad32c23`, workspace `69f2b108` (after a coordinator merge of `next`, `944a443b`) | [api#72](https://github.com/PandiO/knk-web-api/pull/72), [ws#914](https://github.com/PandiO/knk-workspace/pull/914) | push runs on `e89e396` green (build-and-test, mysql-tests, fresh-database); PR runs running | create_session `session_01R1w2Ux7jFcMxYzkwej4qY4` (prompt says start without asking), started 2026-11-21 |
 | L22 P8 harvest plugin | #134 | Merged into next (2026-11-21) | plugin `676d6f11`, workspace `e6b8b6ec`; merges: plugin `6f6c915f`, workspace `700ec311` | [plugin#114](https://github.com/PandiO/knk-plugin/pull/114), [ws#919](https://github.com/PandiO/knk-workspace/pull/919) | green on `676d6f11` (plugin build + paper-boot, 73 scenarios) | create_session `session_01R1w2UuXe6TVT7QDKeAXdgn` (prompt says start without asking), started 2026-11-21 |
 | L23 P9 town logistics API | #127 | Merged into next (2026-11-21) | api `6a8c110`, workspace `3920e67d`; merges: api `37be22e5`, workspace `fbf071df` (after a coordinator merge of `next`, `8ebdbb2c`) | [api#73](https://github.com/PandiO/knk-web-api/pull/73), [ws#920](https://github.com/PandiO/knk-workspace/pull/920) | green on `6a8c110` (build-and-test, mysql-tests, fresh-database) | create_session `session_01R1w2UwWMWgbXsBzScMifEq` (prompt says start without asking), started 2026-11-21 |
-| L24 P9b logistics web app | #686 | Running | — | — | — | create_session `session_01R1w2UwTStX77ypqswMN3Kz` (prompt says start without asking), started 2026-11-21 |
+| L24 P9b logistics web app | #686 | In review (done 2026-11-21) | web app `e392d84`, workspace `926ce973` | [web-app#72](https://github.com/PandiO/knk-web-app/pull/72), [ws#927](https://github.com/PandiO/knk-workspace/pull/927) | green on `e392d84`: build-and-test (push 44863648405, PR 44863833419), e2e push run 44863648392; PR e2e run 44863833359 running | create_session `session_01R1w2UwTStX77ypqswMN3Kz` (prompt says start without asking), started 2026-11-21 |
 | L25 P10 shops API, town account | #248 | Running | — | — | — | create_session `session_01R1w2Uu45eaJcRwWoXYurUU` (prompt says start without asking), started 2026-11-21 |
 | L26 P10b shop menus plugin | #687 | Waiting (developer's shop menu templates, asked on #687) | — | — | — | — |
 | L27 P10c shops web app | #688 | Not started | — | — | — | — |
@@ -2443,3 +2443,86 @@ _(Each link appends its block here when it finishes.)_
        before the planner can restock them. Level-based default min/max can be a new source in
        `LogisticsTownState.DemandSettings`.
 
+### 4.24 L24 — P9b logistics web app (#686)
+
+1. **Scope done** (knk-web-app, plus the essential docs in knk-workspace).
+    1. Types and clients: `src/types/dtos/production/LogisticsDtos.ts` (mirrors `LogisticsDtos.cs` and
+       `LogisticsEnums.cs`); `logisticsPolicyClient` (get, search, create, `saveVersion`, delete, versions, apply,
+       `updateKeepingRules`), `logisticsRuleClient`, `consumerReplenishmentClient` (CRUD), `logisticsReservationClient`
+       (release), `logisticsPlannerRunClient`, `logisticsClient` (supply, service areas, dry run, run now, consumer
+       view). Registry additions, additive and grouped: `Controllers`, `entityApiMapping` (policies search, fetch,
+       create, update keeping rules, delete; consumer settings all five; rules, reservations, runs search and fetch),
+       `objectConfigs` columns, one route `logistics` (`/admin/logistics`, World group) and its `App.tsx` entry.
+    2. Policy and rule editor: `LogisticsPolicyPanel` with `LogisticsRuleEditor` on a policy's page (V1 types with only
+       their fields, window, reason; checks before a save; Save as a new version opens it; versions; template labels
+       and Apply to a town; superseded versions read only). New policies through the seeded form.
+    3. Warehouse service areas and consumer settings: `WarehouseLogisticsPanel` (what it serves, its warehouse policy,
+       reservations); `StructureLogisticsPanel` on production structure pages (workers, service warehouse, demand with
+       the min/max source, replenishment settings add, edit, delete; reservations).
+    4. Planner dry-run view: `LogisticsPlanView` on the town panel (Dry run, Run the planner now) and on a run's page
+       (`LogisticsPlannerRunPanel`); `LogisticsReservationPanel` with Release.
+    5. Town supply view and insight #65: `TownLogisticsPanel` (policy in force, warehouses, last and next run, low
+       supply, supply per item and per warehouse with flows and days of cover, open reservations with Release, service
+       areas, recent runs, Apply a template). `LogisticsPage` lists policies and templates.
+    6. Settings: `LogisticsSettingsCard` (`production.logistics`, kept on every save by `normalizeProductionSettings`).
+    7. knk-workspace (branch from `next`): smoke guide § 10.2 (22 steps in full: 18 automated, 3 partly, 1 by hand),
+       § 10 intro and status header, changelog entry, implementation plan P9 status.
+2. **Commits and heads.**
+    1. knk-web-app `claude/production-p9b` at `e392d84`: 4 commits on `next` `acff213`, which had not moved at the last
+       fetch.
+    2. knk-workspace `claude/production-p9b` at `926ce973`: 1 commit on `next` `ddff7457` (merged before the commit,
+       no conflicts).
+3. **PRs.** [knk-web-app#72](https://github.com/PandiO/knk-web-app/pull/72) (Closes #686) and
+   [knk-workspace#927](https://github.com/PandiO/knk-workspace/pull/927) (Part of #686), both into `next`. Not merged.
+4. **Tests, baseline → result.**
+    1. knk-web-app baseline on `next` `acff213`: Jest 2906 passed (342 suites), Playwright 330 passed, `tsc` clean,
+       build OK.
+    2. Branch: Jest 2917 passed (344 suites). New: `src/utils/__tests__/logistics.test.ts` (7),
+       `src/apiClients/__tests__/logisticsClients.test.ts` (4); `routeTable.test.ts` lists the new route,
+       `territory.test.ts` expects the logistics section.
+    3. Branch: Playwright 350 passed. New `e2e/logistics.spec.ts` (20 tests, strict API, DTO-typed fixtures
+       `e2e/fixtures/logistics.ts`); `territory`, `landmarks`, `town-detail`, `production-world`, `production-engine`,
+       `production-yield` and `transport` specs mock the new panels (`mockNoTownLogistics`, `mockNoConsumerLogistics`,
+       `mockNoWarehouseLogistics`); `territory.spec.ts` expects `logistics` in the saved section. `tsc` and
+       `typecheck:e2e` clean, `CI=true npm run build` OK.
+    4. Seen failing: with `logistics` dropped from `normalizeProductionSettings`, two Jest tests went red; an unused
+       import failed the CI build (warnings are errors) and was fixed before the first push of the spec.
+    5. CI on `e392d84`: build-and-test green (push run 44863648405, PR run 44863833419), e2e push run 44863648392
+       green; the PR's e2e run 44863833359 was still running at the report (same head).
+    6. Known reds: none.
+5. **Decisions (DESIGN § 4.3).** All 10, each with alternatives, are in knk-web-app#72. The main ones:
+    1. *Where the screens live.* Chosen: panels below the generic detail pages plus one list page (the L7/L10/L13/L16
+       pattern). Alternatives: (a) a page per town: duplicates its details; (b) the dashboard only.
+    2. *Rule editing.* Chosen: the whole list on the policy's page, saved as a new version with a reason, the API's
+       checks mirrored first. Alternatives: (a) per-rule saves: the API has none; (b) the seeded form: no rules.
+    3. *The seeded form's edit.* Chosen: a new version that keeps the current rules, since a `PUT` without rules
+       empties the policy. Alternatives: (a) no update registered: Edit fails; (b) a plain `PUT`: drops the rules.
+    4. *Template labels.* Chosen: sent on every save (the API takes them from the request). Alternatives: (a) only
+       when changed: a save would clear them.
+    5. *Visibility.* Chosen: the panels show only with `knk.admin.world` and read nothing otherwise. Alternatives: (a)
+       shown with "Requires": a panel of 403s.
+    6. *Consumers.* Chosen: the consumer panel on production structure pages (L23 decision 2). Alternatives: (a) on
+       generic structure pages too: every line NoWorker.
+    7. *Templates on a town page.* Chosen: every template offered with its labels (towns carry no size or
+       specialization). Alternatives: (a) preselect by town labels: no such fields (asked on #686).
+6. **Out of scope, noted.** [#686 comment](https://github.com/PandiO/knk-workspace/issues/686#issuecomment-7056960425):
+   town size and specialization fields, template labels cleared by a `PUT` without them, no structure type on plan
+   entries, missing item and storage names, no `townId` lookup filter (all API). No new issues. Codex: the connector
+   hit its code-review usage limit on both PRs (review "failed", usage-limit comment); no inline findings or threads;
+   noted on each PR.
+7. **Blockers.** None.
+8. **At merge / what the developer must do.**
+    1. Deploy the web app with the town logistics API (#127, in `next`) and its imported seeds. No migration, setting
+       or plugin change.
+    2. Smoke test [§ 10.2](../guides/production-storage-transport-smoke-test.md) (tier:2): about 45 minutes in full,
+       about 20 minutes for the untagged parts.
+    3. At merge into `next`: the `documentation` sub-issue (town logistics admin guide: town panel, policies and
+       templates, consumer settings, warehouse panel, settings card; feature register row).
+    4. Coordinator: decide on the API points of the #686 comment.
+9. **Notes for later links.**
+    1. Strict e2e specs that open a town page as World staff need `mockNoTownLogistics(api, id)`, a production
+       structure page `mockNoConsumerLogistics(api)`, a warehouse page `mockNoWarehouseLogistics(api)`
+       (`e2e/fixtures/logistics.ts`).
+    2. The game settings page sends `production.logistics` back; exact-body tests of the production section include it.
+    3. L27 (#688, shops web app): `StructureLogisticsPanel` reads any structure's consumer view; a shop page can mount
+       it once shops have workers (L25), and `LogisticsReservationTable` and `LogisticsPlanView` take any rows.
