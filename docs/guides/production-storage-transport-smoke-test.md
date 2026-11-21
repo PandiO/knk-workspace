@@ -3105,14 +3105,17 @@ every step can still be run by hand; not run. Full manual run about 30 minutes; 
    with only `{ "id": <Bakery>, "acceptedCategoryIds": [<Weapons>] }` (the whole list; the other fields kept). A
    refused save shows the API's sentence (for example "Category 13 not found."). Put Food back the same way and save.
 4. [automated: `a shop type › a level is added after its checks, edited and deleted (levels on the production level
-   pattern)`, `a shop type › without knk.admin.delete a level can be edited but not deleted`] Press **Add a level**:
+   pattern)`, `a shop type › without knk.admin.delete a level can be edited but not deleted`, `a shop type › without
+   knk.admin.content the categories and levels are read only, with the node named`] Press **Add a level**:
    the form offers the next free level (3) with every multiplier 1. Type level 2, price × 0 and a default max below
    the default min. **Expected:** "Level problems": "The shop type already has level 2.", "The price multiplier is
    above 0 and at most 100.", "The default max is below the default min."; **Save the level** is off. Correct them
    (level 3, price × 1.5, Merchandise cap 2560) and save. **Expected:** "Level 3 saved; shops of this type at that level
    use it now."; the table has a level 3 row; an empty cap is sent as 0 (no cap). **Edit level 2**, clear Units per
    slot, save: `PUT api/ShopTypeLevels/<id>` with `unitsPerSlot` 0. **Delete level 3**: "Level 3 deleted.". As a staff
-   member without `knk.admin.delete`, Delete is off and Edit works.
+   member without `knk.admin.delete`, Delete is off and Edit works. Without `knk.admin.content` (creates and edits need
+   it with `knk.admin.world`, as on every dashboard type), Add a level, Edit, the category ×, the picker and Save the
+   categories are off with "Requires knk.admin.content"; the same holds for the catalogue's Add an entry and Edit.
 5. [automated: `a shop type › a type without categories buys nothing; without levels its shops use × 1`] Open a shop
    type without categories or levels (create "General store" with the seeded form). **Expected:** "None: its shops
    buy nothing from players." and "No levels yet: its shops use × 1 and no caps."
