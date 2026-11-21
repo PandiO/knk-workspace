@@ -103,7 +103,7 @@ of what is already in `next`.
 | L23 P9 town logistics API | #127 | Merged into next (2026-11-21) | api `6a8c110`, workspace `3920e67d`; merges: api `37be22e5`, workspace `fbf071df` (after a coordinator merge of `next`, `8ebdbb2c`) | [api#73](https://github.com/PandiO/knk-web-api/pull/73), [ws#920](https://github.com/PandiO/knk-workspace/pull/920) | green on `6a8c110` (build-and-test, mysql-tests, fresh-database) | create_session `session_01R1w2UwWMWgbXsBzScMifEq` (prompt says start without asking), started 2026-11-21 |
 | L24 P9b logistics web app | #686 | Merged into next (2026-11-21) | web app `e392d84`, workspace `926ce973`; merges: web app `c12e0e7e`, workspace `385ec7d3` | [web-app#72](https://github.com/PandiO/knk-web-app/pull/72), [ws#927](https://github.com/PandiO/knk-workspace/pull/927) | green on `e392d84`: build-and-test (push 44863648405, PR 44863833419), e2e push run 44863648392; PR e2e run 44863833359 running | create_session `session_01R1w2UwTStX77ypqswMN3Kz` (prompt says start without asking), started 2026-11-21 |
 | L25 P10 shops API, town account | #248 | Merged into next (2026-11-21) | api `0e15599`, workspace `e5ac443c` (after a coordinator merge of `next`); merges: api `289f4d4b`, workspace `7c7f2de0` | [api#74](https://github.com/PandiO/knk-web-api/pull/74), [ws#933](https://github.com/PandiO/knk-workspace/pull/933) | green on `0e15599` (build-and-test, mysql-tests, fresh-database) | create_session `session_01R1w2Uu45eaJcRwWoXYurUU`, started 2026-11-21 |
-| L25b P9 API follow-ups (coordinator extra) | #928 | Running (started 2026-11-21 05:11) | — | — | — | create_session `session_01R1w2UwSQPJ4gQDcsTmi8Xt`, branch `claude/production-p9-followups` |
+| L25b P9 API follow-ups (coordinator extra) | #928 | Done, in review (2026-11-21) | api `16713a85`, workspace `eb4858f4` | [api#75](https://github.com/PandiO/knk-web-api/pull/75), [ws#935](https://github.com/PandiO/knk-workspace/pull/935) | green on `16713a85` (build-and-test, mysql-tests, fresh-database); Codex at its usage limit | create_session `session_01R1w2UwSQPJ4gQDcsTmi8Xt`, branch `claude/production-p9-followups` |
 | L26 P10b shop menus plugin | #687 | Waiting (developer's shop menu templates, asked on #687) | — | — | — | — |
 | L27 P10c shops web app | #688 | Running (started 2026-11-21 05:11) | — | — | — | create_session `session_01R1w2Uwx1cX3dVQ9hS8MdKX`, branch `claude/production-p10c` |
 | L28 P11 shopkeepers | #249 | Not started | — | — | — | — |
@@ -2652,3 +2652,67 @@ _(Each link appends its block here when it finishes.)_
        `StructureLogisticsPanel` work on a shop page.
     3. L28/L29: `Shop.ShopkeeperLocationId` and `HideSoldOut` and the entries' `Pinned` are stored; display spots are
        not modelled yet (P12).
+
+### 4.25b L25b — P9 town logistics API follow-ups (#928)
+
+1. **Scope done** (knk-web-api, plus essential docs in knk-workspace), the five points of #928.
+    1. Town size and specialization: nullable `towns.LogisticsTownSize` and `towns.LogisticsSpecialization` (names,
+       one additive migration `AddTownLogisticsProfile`, generated last), read and set with `GET`/`PUT
+       api/LogisticsPolicies/towns/{townId}/profile` (`TownLogisticsProfileDto`; null keeps a field, `""` clears it;
+       400 unknown label, 404 unknown town). The read suggests the current template: `Exact`, `Size` (same size,
+       general), `Default` or `None`. The planner is unchanged; the town form ignores the fields.
+    2. Template labels on `PUT`: `specialization` and `townSize` left out keep the current value (like `name`); `""`
+       clears them.
+    3. Structure type (`Shop`, `ProductionStructure`, `Warehouse`, `GateStructure`, `Structure`, new
+       `LogisticsStructureTypes`): `consumerStructureType` on plan entries (live and stored runs), planned orders and
+       reservations (detail and list); `structureType` on service-area structure entries and the consumer view.
+    4. Names: planned order lines are `LogisticsPlannedOrderLineDto` with `itemBlueprintName` (the transport order
+       still gets plain lines); orders carry `consumerStorageName` and `warehouseStorageName`; reservation rows
+       `consumerStorageName`, `warehouseStorageId`, `warehouseStorageName`.
+    5. `townId` lookups: `Warehouse`, `District`, `Structure` already had one (P2); added to `Storage` (new filter in
+       `StorageService.SearchAsync`: held by the town, its districts or its structures), `ConsumerReplenishment` and
+       `LogisticsRule`.
+    6. knk-workspace (branch from `next`): API contract (§ 2.3, new § 2.4, § 5, § 7, § 9), architecture § 3.3 and § 6,
+       production installation § 5.3 item 18, smoke guide § 10.3 (5 steps, all automated).
+2. **Commits and heads.** knk-web-api `claude/production-p9-followups` at `16713a85` (2 commits, base `next`
+   `289f4d4b`, not moved since). knk-workspace `claude/production-p9-followups` at `eb4858f4` (2 commits, base `next`
+   `7c7f2de0`).
+3. **PRs.** [api#75](https://github.com/PandiO/knk-web-api/pull/75) (closes #928),
+   [ws#935](https://github.com/PandiO/knk-workspace/pull/935) (part of #928), base `next`. Not merged.
+4. **Tests, baseline → result.**
+    1. knk-web-api: baseline on `next` `289f4d4b` 5148 passed, 0 failed, 128 skipped (MySQL, no `KNK_TEST_MYSQL`
+       locally); result on the branch 5155 passed (+7 new in `LogisticsFollowUpsTests`), 0 failed, 128 skipped. Pinned
+       tables updated: `ReadAccessRulesTests` (`LogisticsPoliciesController.TownProfile` = `F LogisticsPolicy`),
+       `LookupFiltersTests` (three `townId` filters). CI on `16713a85` green: build-and-test, mysql-tests (MySQL, covers the TPT type checks), fresh-database (push runs 44870761510/44870761509, PR runs 44871073257/44871073239).
+    2. Known reds (also red on the base): none; #801 did not fail.
+    3. knk-workspace: docs only; added links resolve.
+5. **Decisions (DESIGN § 4.3).**
+    1. *Where the town labels live.* Chosen: two nullable columns on `towns` behind a logistics profile endpoint,
+       because a town without a policy needs them before a template is applied. Alternatives: (a) the town policy's
+       existing label columns (no migration, but no place for them before the first policy); (b) `TownDto` and the
+       town form (generic form flow and seeds; a "null = not on this form" field can't be cleared).
+    2. *Clearing a label on `PUT`.* Chosen: null keeps, `""` clears (the error text already said "or empty").
+       Alternatives: (a) a separate clear flag.
+    3. *Planner use of the labels.* Chosen: a suggestion only, planner unchanged. Alternatives: (a) a town without a
+       policy falls back to the matching template (a planner behaviour change; left for the developer, comment on
+       #928).
+    4. *Access for `PUT …/profile`.* Chosen: the class rule (`knk.admin.world` or the plugin key), like `apply`.
+       Alternatives: (a) `RequireDashboardChange("Town")` (would also ask `knk.admin.content`).
+    5. *Point 5 scope.* Chosen: `townId` on the logistics pickers that lacked it (Storage, ConsumerReplenishment,
+       LogisticsRule); the three L24 named already had it. Alternatives: (a) no change.
+    6. *Structure type values.* Chosen: the dashboard type names. Alternatives: (a) lower-case kinds (one more mapping
+       in the web app).
+    7. *Changelog.* Chosen: no entry; nothing admins see changes until the web app uses the fields. Alternatives: (a)
+       an API-only entry.
+6. **Out of scope, noted.** Comment on #928: the planner's use of the labels (developer decision), the web app
+   follow-ups (labels panel, template preselect, links by type, names, `townId` on the three pickers; to clear a
+   template label the web app now sends `""`), production installation § 5.3 item 17 still says `AddShops` is on its
+   branch.
+7. **Blockers.** None. Codex reached its code-review usage limit on both PRs (noted on each PR); no findings to handle.
+8. **At merge / what the developer must do.**
+    1. Apply `20261121052426_AddTownLogisticsProfile` with `dotnet ef database update` (additive, after `AddShops`, no
+       data written). No setting, secret, seed or `config.yml` key.
+    2. Nothing else; no admin-visible change until the web app uses the fields.
+9. **Notes for later links.**
+    1. L27 / later web app work: `consumerStructureType` and `structureType` give the route of a consumer's own page;
+       the profile endpoint feeds the town panel's template picker (`suggestedTemplateId`).
