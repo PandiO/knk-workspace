@@ -65,6 +65,12 @@ of what is already in `next`.
    4. To test, turn on `production.enabled` in the plugin and in the API game settings.
 15. **Review:** the agent decisions in blocks 4.0–4.23 (L6's are listed in knk-web-api#57) (L0's retag rule; L1 server-side territory and loyalty as a town
    id; L2's crown land region kind) and coordinator decision 15 (Town/District seed fields).
+16. **Review (L25 decision 5.1):** `Shop : ProductionStructure` (a shop's row next to its `production_structures` row)
+    instead of the design's `Shop : Structure`. Block 4.25 gives the reason and the alternative.
+17. **Smoke test of shops (L25 § 11.1).**
+   1. Apply migration `AddShops` (after `AddTownLogistics`).
+   2. Import the six seeds: `ShopType`, `ShopTypeLevel`, `Shop`, `ShopCatalogueEntry`, `ShopTradeStat` and `TownAccount`.
+   3. Optionally set the game settings section `production.shops`; create shop types, shops and catalogues.
 
 
 ## 2. Summary
@@ -96,9 +102,10 @@ of what is already in `next`.
 | L22 P8 harvest plugin | #134 | Merged into next (2026-11-21) | plugin `676d6f11`, workspace `e6b8b6ec`; merges: plugin `6f6c915f`, workspace `700ec311` | [plugin#114](https://github.com/PandiO/knk-plugin/pull/114), [ws#919](https://github.com/PandiO/knk-workspace/pull/919) | green on `676d6f11` (plugin build + paper-boot, 73 scenarios) | create_session `session_01R1w2UuXe6TVT7QDKeAXdgn` (prompt says start without asking), started 2026-11-21 |
 | L23 P9 town logistics API | #127 | Merged into next (2026-11-21) | api `6a8c110`, workspace `3920e67d`; merges: api `37be22e5`, workspace `fbf071df` (after a coordinator merge of `next`, `8ebdbb2c`) | [api#73](https://github.com/PandiO/knk-web-api/pull/73), [ws#920](https://github.com/PandiO/knk-workspace/pull/920) | green on `6a8c110` (build-and-test, mysql-tests, fresh-database) | create_session `session_01R1w2UwWMWgbXsBzScMifEq` (prompt says start without asking), started 2026-11-21 |
 | L24 P9b logistics web app | #686 | Merged into next (2026-11-21) | web app `e392d84`, workspace `926ce973`; merges: web app `c12e0e7e`, workspace `385ec7d3` | [web-app#72](https://github.com/PandiO/knk-web-app/pull/72), [ws#927](https://github.com/PandiO/knk-workspace/pull/927) | green on `e392d84`: build-and-test (push 44863648405, PR 44863833419), e2e push run 44863648392; PR e2e run 44863833359 running | create_session `session_01R1w2UwTStX77ypqswMN3Kz` (prompt says start without asking), started 2026-11-21 |
-| L25 P10 shops API, town account | #248 | In review (done 2026-11-21) | api `0e15599`, workspace `e1d3a9f6` | [api#74](https://github.com/PandiO/knk-web-api/pull/74), [ws#933](https://github.com/PandiO/knk-workspace/pull/933) | push run on `0e15599` green (build-and-test, mysql-tests, fresh-database); PR runs running | create_session `session_01R1w2Uu45eaJcRwWoXYurUU` (prompt says start without asking), started 2026-11-21 |
+| L25 P10 shops API, town account | #248 | Merged into next (2026-11-21) | api `0e15599`, workspace `e5ac443c` (after a coordinator merge of `next`); merges: api `289f4d4b`, workspace `7c7f2de0` | [api#74](https://github.com/PandiO/knk-web-api/pull/74), [ws#933](https://github.com/PandiO/knk-workspace/pull/933) | green on `0e15599` (build-and-test, mysql-tests, fresh-database) | create_session `session_01R1w2Uu45eaJcRwWoXYurUU`, started 2026-11-21 |
+| L25b P9 API follow-ups (coordinator extra) | #928 | Running (started 2026-11-21 05:11) | — | — | — | create_session `session_01R1w2UwSQPJ4gQDcsTmi8Xt`, branch `claude/production-p9-followups` |
 | L26 P10b shop menus plugin | #687 | Waiting (developer's shop menu templates, asked on #687) | — | — | — | — |
-| L27 P10c shops web app | #688 | Not started | — | — | — | — |
+| L27 P10c shops web app | #688 | Running (started 2026-11-21 05:11) | — | — | — | create_session `session_01R1w2Uwx1cX3dVQ9hS8MdKX`, branch `claude/production-p10c` |
 | L28 P11 shopkeepers | #249 | Not started | — | — | — | — |
 | L29 P12 display stalls | #250 | Not started | — | — | — | — |
 
@@ -466,6 +473,16 @@ of what is already in `next`.
    L25, which is already the biggest API link. Alternatives: (a) fold them into L25: they would widen a running link.
 68. **P8 docs #922:** done (PR #926).
 69. **No reply yet on #687 (shop menu templates) at 04:20.** L26, L28 and L29 stay gated.
+70. **L25 merge (2026-11-21 05:10).** § 6 checks held: heads matched, branches contained `next`, CI green on `0e15599`,
+    Codex at its usage limit (merged without its review), `Production:Enabled` off by default. Currency check: the change
+    is additive (`CurrencyAccountKind.Town = 2`, nullable `currency_entries.TownId`, `CK_currency_entries_Account`
+    widened with a third case; every existing row still passes; town legs go through `PostWithTownAsync`, reversing a
+    town leg is refused, filed as #934). knk-web-api `289f4d4b`; the workspace PR #933 conflicted (changelog,
+    installation § 5.3 and header, smoke guide status, plan "Last updated"); resolved mechanically keeping both sides
+    (`e5ac443c`), merged as `7c7f2de0`.
+71. **After L25: L27 (#688) and L25b (#928) started.** L27 (web app) and a small tier:1 API link L25b for the P9 API
+    follow-ups of #928 (decision 68) run in parallel in different repos. L26 still waits for the #687 templates (no
+    reply at 05:10); L28 and L29 depend on it. P10 docs: deferred until L27 merges, as with the other phases.
 
 ## 4. Link blocks
 
