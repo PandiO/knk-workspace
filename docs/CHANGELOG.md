@@ -4,6 +4,39 @@ This is a human-readable record of capabilities merged into the V3 default branc
 
 ## Unreleased — on feature branches, not merged
 
+- **Town logistics in the web app: policy and rule editor, planner dry run, town supply, consumer settings**
+  ([PandiO/knk-workspace#686](https://github.com/PandiO/knk-workspace/issues/686), link L24 of the production, storage
+  and transport chain; [town logistics](specs/production-storage-transport/TOWN_LOGISTICS.md) § 2-5, D-L1 to D-L3,
+  A17, A23). Staff can see and steer how a town's warehouses supply its consumers. A town's page gets a **Town
+  logistics** panel: the policy in force (the town's own, the default template, or none), the warehouses, the last and
+  next planner run, a low-supply warning, the **supply** per item across the warehouses (stock, held by reserves,
+  reserved, available, inflow and outflow per day, days of cover, and per warehouse), the **open reservations** with
+  **Release**, which warehouse serves each district, the rural territory and each structure, and the recent runs.
+  **Dry run** shows what a planner run would do and why for every consumer line ("why did or didn't the bakery get
+  flour": the outcome, stock against min and max and where they came from, the shortfall, what was reserved where, the
+  rules used and the planner's explanation) plus the collection orders, and writes nothing, also while production is
+  off; **Run the planner now** stores a run. **Apply a template** copies a template's rules into the town's policy. A
+  policy's page is the **rule editor**: the V1 rule types (reserves in units or days of cover, town-wide or for one
+  warehouse; priority classes; service areas; replenishment defaults), each with only the fields its type uses, an
+  active window and a reason; the problems the API would refuse are listed before a save; every save is a new version
+  with its reason, and the old versions stay readable; a template also has its specialization, size and default flag
+  and **Apply to a town**. A production structure's page gets a **Supply (as a consumer)** panel (its workers, its
+  service warehouse, its demand per storage and item, the replenishment settings with add, edit and delete, its open
+  reservations), a warehouse's page a **Logistics** panel (what it serves, its warehouse policy, its reservations), and
+  planner runs and reservations get their own pages. **Town logistics** (admin sidebar, World) lists the policies and
+  templates. The game settings page gets a **Town logistics** card (planner interval, reservation expiry, consumption
+  window, default min and max hours; always sent back on save).
+  knk-web-app: `logisticsPolicyClient`, `logisticsRuleClient`, `consumerReplenishmentClient`,
+  `logisticsReservationClient`, `logisticsPlannerRunClient`, `logisticsClient`; `TownLogisticsPanel`,
+  `LogisticsPolicyPanel` with `LogisticsRuleEditor`, `StructureLogisticsPanel`, `WarehouseLogisticsPanel`,
+  `LogisticsPlannerRunPanel`, `LogisticsReservationPanel`, `LogisticsPlanView`; page `LogisticsPage`;
+  `LogisticsSettingsCard`; `src/utils/logistics.ts`; `e2e/logistics.spec.ts`. Smoke test:
+  [production smoke test § 10.2](guides/production-storage-transport-smoke-test.md#102-steps-web-app-686). Admin
+  steps:
+  1. Deploy the web app with the town logistics API (#127, in `next`) and its imported seeds (`LogisticsPolicy`,
+     `ConsumerReplenishment`, `LogisticsRule`, `LogisticsReservation`, `LogisticsPlannerRun`). No migration, setting or
+     plugin change.
+
 - **Town logistics: warehouses reserve, consumers collect with their own worker (the API)** ([PandiO/knk-workspace#127](https://github.com/PandiO/knk-workspace/issues/127),
   link L23 of the production, storage and transport chain; [town logistics](specs/production-storage-transport/TOWN_LOGISTICS.md)
   § 2-5, D-L1 to D-L3, A17). The web app (policy and rule editor, planner dry-run view, town supply view) is link L24
