@@ -3105,7 +3105,7 @@ its level's default min/max with the shop's own worker. **Hourly trade stats** a
 
 ### 11.2 Steps (plugin #687)
 
-Built in link L26 (knk-plugin, branch `claude/production-p10b`, not merged yet). The tags name tests in knk-plugin:
+Built in link L26 (knk-plugin `next` `c349a53c`, PR PandiO/knk-plugin#120; the menu seeds in knk-web-api `next` `7c6dd7f5`, PR PandiO/knk-web-api#79). The tags name tests in knk-plugin:
 knk-core `core/production/shop/*Test` (JUnit), knk-api-client `ShopsApiImplTest`, knk-paper `ShopServiceTest`,
 `SellModuleTest` (MockBukkit, a stand-in shops API with the bakery's bread, flour and a unique sword),
 `ShopMenuSeedsTest` (the seeded menus of `content-seeds.json` against the plugin), `ShopAdminCommandTest`, and the
