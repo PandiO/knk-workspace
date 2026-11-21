@@ -1,7 +1,7 @@
 # Menus — Player Guide
 
 **Status:** Living document — update in place as the game changes
-**Last updated:** 2026-11-21 (§ Reward inbox and § Kits: items that don't fit go to the reward inbox, production chain L20, PandiO/knk-workspace#684, knk-plugin branch `claude/production-p7b`, not in `next` yet); 2026-11-21 (§ The menu item: what a click does in a siege, set on the game settings page; § Sieges: the
+**Last updated:** 2026-11-21 (§ Reward inbox: in knk-plugin `next` `bdd8b463`, two more messages, a link to the admin guide, docs PandiO/knk-workspace#915); 2026-11-21 (§ Reward inbox and § Kits: items that don't fit go to the reward inbox, production chain L20, PandiO/knk-workspace#684, knk-plugin branch `claude/production-p7b`, not in `next` yet); 2026-11-21 (§ The menu item: what a click does in a siege, set on the game settings page; § Sieges: the
 siege shop and Siege unlocks menus; siege shop chain #870, #871, #868, #869 in `next`, docs PandiO/knk-workspace#908); 2026-11-20 (§ Structures and § Storage terminals: in knk-plugin `next` `8e672ba6`, more terminal
 messages, docs PandiO/knk-workspace#903); 2026-11-20 (§ Structures and § Storage terminals and displays, production chain L18,
 PandiO/knk-workspace#74, knk-plugin branch `claude/production-p6`, not in `next` yet); 2026-11-13 (§ Kits: kits a staff member gives you from the web app, PandiO/knk-workspace#261, in
@@ -101,8 +101,8 @@ them again.)
 
 ### Reward inbox
 
-*On servers where staff switched production on (`production.enabled`); knk-plugin branch `claude/production-p7b`,
-PandiO/knk-workspace#684, not live yet.*
+*On servers where staff switched production on (`production.enabled`); in knk-plugin `next` `bdd8b463`,
+PandiO/knk-workspace#684, not released yet. For staff: the [reward inbox admin guide](../admin/reward-inbox-admin-guide.md).*
 
 When a reward doesn't fit in your inventory, it waits for you in your **reward inbox** instead of dropping on the
 ground: kit items (also kits staff give you, and your starter kit), lootbox items, and gifts from staff. If you were
@@ -128,6 +128,8 @@ reward inbox (/inbox).`
 | `The reward inbox is switched off on the server right now.` | Staff switched it off; your items stay in the inbox |
 | `Unique items can't be claimed in game yet; ask a staff member.` | See point 6 |
 | `Your reward inbox is full: 3 items were lost.` | The inbox was at its limit when a reward arrived |
+| `Nothing claimed: your inbox is locked right now.` | Staff locked your inbox for a moment; try again later |
+| `Your inventory filled up meanwhile: the rest was dropped at your feet.` | Something took the room while the claim ran; the rest lies at your feet |
 | `The reward inbox is not switched on on this server.` | This server has no reward inbox; rewards drop at your feet as before |
 
 ### Profile and titles
