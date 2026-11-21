@@ -4,6 +4,29 @@ This is a human-readable record of capabilities merged into the V3 default branc
 
 ## Unreleased — on feature branches, not merged
 
+- **Landmarks can draw their own region in game, like towns and lootbox areas do**
+  ([PandiO/knk-workspace#944](https://github.com/PandiO/knk-workspace/issues/944),
+  [#945](https://github.com/PandiO/knk-workspace/issues/945); follow-up of #708; branch `claude/landmark-regions` in
+  knk-plugin, knk-web-api, knk-web-app and knk-workspace). knk-plugin: the region world task's handler
+  (`WgRegionIdTaskHandler`) is registered by the task types `ReagionCreate`, `RegionCreate` and `RegionClaim` as well as
+  by the field name `WgRegionId`, so it runs on a field of any name: claiming the region task on the Landmark form's
+  Region field no longer fails with "This game server has no handler for task type 'ReagionCreate' (field RegionId)".
+  The temp-region cleanup and the release pass also ask the landmarks (`GET api/landmarks`) before removing a
+  `tempregion_worldtask_<n>`. knk-web-api: a landmark's drawn region is renamed to `landmark_<id>` on create and update
+  (`DomainRegionNameFinalizer.FinalizeLandmarkAsync`, the pin's world, drawn outline and Y range kept, no managed-region
+  setup); a re-run of the region step redefines `landmark_<id>` in place or removes a previous temp region (KNG-103);
+  an existing region id, typed in the form or given to `/knk landmark create <name> region <id>`, is kept as it is;
+  `POST api/Regions/finalize-temp-names` covers landmarks; the release service keeps a region a landmark names and
+  recognises region tasks by task type; the Landmark form seed's Region field has the region world task. No landmark
+  name is reserved. knk-web-app: comment only, plus a test that the result fills a field not named `WgRegionId`.
+  Docs: [managed WorldGuard regions § 7 "Landmarks"](architecture/managed-worldguard-regions.md), off-road smoke test
+  [§ 6.5](guides/navigation-offroad-smoke-test.md). Admin steps: no migration and no `config.yml` key. The seed change
+  (in place, seed v1) reaches only a fresh import of the Landmark form; a database that imported it before (the dev DB,
+  with the developer's edited Landmark form) keeps its configuration: add the world task `ReagionCreate` to the Region
+  field in the form designer if it is not there. Deploy the plugin and the API together; a plugin without #944 still
+  fails the task on `RegionId`, an API without #945 leaves the region on its temp name (kept by the new plugin's
+  cleanup, deleted after 14 days by an older one).
+
 - **Shops follow-ups: kind and type on the Shop dashboard, usernames and goods links in the town ledger, a Shops
   settings card, the town account on the town page**
   ([PandiO/knk-workspace#938](https://github.com/PandiO/knk-workspace/issues/938), link L27b of the production, storage

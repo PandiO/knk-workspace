@@ -1,6 +1,6 @@
 # Managed WorldGuard regions — hierarchy, priority, flags and startup repair
 
-**Status:** Current · **Last updated:** 2026-11-20 (§7 overview map outlines on trunk, docs #767); 2026-11-19 (§3, §4, §5, §6, §7: production P2c region kinds `ProductionStructure` → `RESOURCE_PRODUCTION`, `Warehouse` → `STRUCTURE`, rural structures without a parent, with `production.enabled`; knk-plugin `next` `8ebb30be`, PandiO/knk-workspace#677, docs #830); 2026-11-19 (§7 "Domain sub-regions", "Overview map outlines": sub-region outlines reported after every access sync with `map.reporting.enabled`, PandiO/knk-workspace#750, branch `claude/overview-map-f1-subregions`); 2026-11-19 (§3, §4, §5: kind `CROWN_LAND` for crown land of territory V1, knk-plugin `next` `55804b11`, PandiO/knk-workspace#689, docs #806); 2026-11-18 (§7 "Overview map outlines": the repair and rename also report outlines with `map.reporting.enabled`, PandiO/knk-workspace#735, docs #766)
+**Status:** Current · **Last updated:** 2026-11-21 (§7 "Landmarks": drawn landmark regions renamed to `landmark_<id>`, region task found by task type, PandiO/knk-workspace#944/#945, branch `claude/landmark-regions`, not merged); 2026-11-20 (§7 overview map outlines on trunk, docs #767); 2026-11-19 (§3, §4, §5, §6, §7: production P2c region kinds `ProductionStructure` → `RESOURCE_PRODUCTION`, `Warehouse` → `STRUCTURE`, rural structures without a parent, with `production.enabled`; knk-plugin `next` `8ebb30be`, PandiO/knk-workspace#677, docs #830); 2026-11-19 (§7 "Domain sub-regions", "Overview map outlines": sub-region outlines reported after every access sync with `map.reporting.enabled`, PandiO/knk-workspace#750, branch `claude/overview-map-f1-subregions`); 2026-11-19 (§3, §4, §5: kind `CROWN_LAND` for crown land of territory V1, knk-plugin `next` `55804b11`, PandiO/knk-workspace#689, docs #806); 2026-11-18 (§7 "Overview map outlines": the repair and rename also report outlines with `map.reporting.enabled`, PandiO/knk-workspace#735, docs #766)
 **Implementation:** Implemented, merged to trunk (2026-09-29, [knk-plugin#6](https://github.com/PandiO/knk-plugin/pull/6), [knk-web-api#3](https://github.com/PandiO/knk-web-api/pull/3); KNG-43 follow-up 2026-10-04) and **smoke-tested in game and accepted 2026-10-05** — Linear KNG-46, §9. Region-step re-run replacement (KNG-103) merged 2026-10-18 after its in-game check ([knk-plugin#12](https://github.com/PandiO/knk-plugin/pull/12), [knk-web-api#10](https://github.com/PandiO/knk-web-api/pull/10)). Lootbox spawn areas' drawn regions renamed to `lootbox_area_<id>` (PandiO/knk-workspace#34, §7): **in the PR into `next` from `claude/plugin-chains-into-next`, not merged, not live-tested**. Temp regions of abandoned drafts removed early (PandiO/knk-workspace#269, §7 "Abandoned drafts"): **in the PR into `next` from `claude/plugin-chains-into-next`, not merged, not live-tested**
 **Supersedes:** Linear KNG-12 ("no WG flags on town/district regions"), the assumption noted in `CombatSafezone`'s Javadoc
 **Evidence:** [`reports/2026-09-28-v1-permissions-worldguard-inventory.md`](../reports/2026-09-28-v1-permissions-worldguard-inventory.md) (categorized v1 inventory), the v3 domain model (`Town → District → Structure`, `GateStructure : Structure`), `vision.md` §2
@@ -175,6 +175,54 @@ A `LootboxSpawnArea` form's Region field uses the same region world task (`Reagi
 - **Cleanup:** `TempRegionRetentionTask`'s fresh lookup asks the lootbox areas too (`GET api/LootboxSpawns/runtime-config`, every area, disabled ones included; `TempRegionCleanupPolicy.inUseByAny`): a temp region an area stands on is kept, and one is deleted only when neither a domain nor an area uses it. An unreachable API keeps it, as before. Not world-qualified (like the domain lookup). A domain's or sub-region's re-run no longer removes a previous temp region an area stands on.
 - **Not changed:** a web delete still can't reach WorldGuard and leaves `lootbox_area_<id>` behind (as it does `lootbox_<name>`, lootbox DESIGN §3.4). A region task that completed for a form that was then abandoned kept its temp region for the 14 days (#180 note on #34) until #269 (next section).
 
+### Landmarks (PandiO/knk-workspace#944, #945; branch `claude/landmark-regions`, not merged, not live-tested)
+
+A `Landmark` (off-road navigation phase 5.1, [#708](https://github.com/PandiO/knk-workspace/issues/708)) with Area =
+Region names its extent in `RegionId`. Developer decision 2026-11-21: a landmark can **draw** a new region through the
+form's region task, with exactly what domains have (rename, re-run replacement, cleanup protection), ported the way #34
+did for lootbox spawn areas. Landmark regions are **not managed regions**: no category, parent, priority or flags from
+§4–§5 (the repair never sees them), like spawn areas. They only measure arrival and the walk preference.
+
+- **The region task on any field (#944).** The plugin registers `WgRegionIdTaskHandler` by the field name `WgRegionId`
+  (older form configurations) **and** by the task types `ReagionCreate`, `RegionCreate` and `RegionClaim`
+  (`WgRegionIdTaskHandler.TASK_TYPES`, `registerWith`). `WorldTaskHandlerRegistry.getHandler(taskType, fieldName)` tries
+  the task type first, so `ReagionCreate` on the Landmark form's `RegionId` finds it. Before, every region seed named
+  its field `WgRegionId` and Landmark was the first that didn't: the claim failed with "This game server has no handler
+  for task type 'ReagionCreate' (field RegionId)" (dev server, tasks 41, 42, 44, 45, 2026-11-21). The result still says
+  `fieldName: WgRegionId`; nothing reads it (the API reads `regionId`/`worldName`, the web app maps the task type).
+  The API's release rules (next section) recognise a region task by these task types too.
+- **Name: `landmark_<id>`** (the landmark's id). **No landmark name is reserved**: unlike `/knk lootbox area create`,
+  `/knk landmark create <name> region <id>` never turns the landmark's name into a region id (it takes an existing
+  region), and the plugin refuses to rename onto a region that already holds the name unless it is the one being
+  replaced (a hand-made `landmark_<n>` just leaves landmark `<n>` on its temp name, which the cleanup keeps).
+- **On save** (`LandmarkService` create/update → `IDomainRegionNameFinalizer.FinalizeLandmarkAsync`): only a temp-named
+  region with Area = Region is renamed; an existing region id (a domain's `domain_<id>`, a hand-made one, one given to
+  the in-game command) is kept as it is. `POST /Regions/rename?…&world=<the pin's world>` (the world of the landmark's
+  Location), no `domainType`. The region keeps the drawn outline and Y range (as #487 for spawn areas). The form and the
+  API answer the final name at once.
+- **Re-run of the region step:** as KNG-103. The landmark's `RegionId` before the save is the candidate: its own
+  `landmark_<id>` is redefined in place (new shape, its flags and owners kept), a previous temp-named region is removed
+  after the rename; any other previous region is kept. A previous region a domain, a domain sub-region, a lootbox area
+  or another landmark uses in the same world is kept. A temp region someone else also stands on is not renamed away.
+  Domains, sub-regions and spawn areas in turn keep a previous temp region a landmark stands on.
+- **Failure:** never fails the save. The landmark keeps the temp name; `POST /api/Regions/finalize-temp-names` also
+  renames temp-named landmarks (listed as `Landmark <id> (<temp>)` under `failed` when the plugin refuses), as does the
+  next save.
+- **Cleanup:** the fresh lookup of `TempRegionRetentionTask` and `TempRegionReleasePass` asks the landmarks too
+  (`landmarkUsageVia`: `GET api/landmarks`, every landmark, whatever `navigation.landmarks` says on that server); a
+  temp region a landmark uses is kept. An unreachable API keeps it; a 404 (an API from before landmarks, no such route)
+  counts as no landmarks. The API's release list skips a region a landmark names. Not world-qualified, like the others.
+- **Navigation:** the plugin reads landmarks from the navigation model, which refreshes from the API every 60 s
+  (`NavigationModelRuntime.REFRESH_SECONDS`) or at once with `/knk cache refresh`; region shapes are read live from
+  WorldGuard (`WorldGuardRegionShapes`, no cache). A new landmark arrives with its final name; a re-run that redefines
+  `landmark_<id>` in place is seen at once; a landmark that moves from a temp name to `landmark_<id>` (a retry after a
+  failed rename) points at a removed region until the next refresh. No realtime event for landmarks exists.
+- **Seed:** the Landmark seed's `RegionId` field has the `ReagionCreate` world task (an in-place change of seed v1,
+  [seeds README](https://github.com/PandiO/knk-web-api/blob/next/Data/FormConfigurationSeeds/README.md)). A database
+  that imported the seed earlier keeps its configuration; add the world task in the form designer there.
+- **Not changed:** deleting a landmark, or changing its Area from Region to None/Radius or to another region id, leaves
+  its `landmark_<id>` in WorldGuard, as a web delete leaves `lootbox_area_<id>` (see "Lootbox spawn areas").
+
 ### Abandoned drafts: temp regions released early (PandiO/knk-workspace#269; in `next`)
 
 Before #269 a `tempregion_worldtask_<n>` whose form was abandoned waited for the daily cleanup's 14 days. #180 already removed it at once when the region task itself was cancelled while the game server still ran it (the handler's 409 / heartbeat path). Now the API **releases** the region and the game server removes it within minutes, after the same checks as the cleanup minus the age.
@@ -183,18 +231,18 @@ Before #269 a `tempregion_worldtask_<n>` whose form was abandoned waited for the
   - the **draft is deleted** (Delete in Saved Progress, the web app's "cancel or discard"; `FormSubmissionProgressService.DeleteAsync`, before the delete clears `world_tasks.FormSubmissionProgressId`): every region task of the draft — Completed ones unless the result picked an existing region with "select", open ones (offered once they close), other closed ones a game server held;
   - a region task **closes without a result**: Cancelled (web "Cancel task", "Capture again" replacing it, `POST …/status`), Failed (also a completion the API refused), Expired (the sweep, or a claim after the expiry) — only when a game server ever held it (`ClaimedAt` or `ReleaseCount` > 0: an unclaimed task drew nothing). This covers the case #180 could not: the server crashed or restarted after drawing, the lease lapsed and the task expired;
   - the **world-task sweep removes the task's workflow session** (no draft, 7 days quiet; never a session with a Completed task, unchanged), in the same save as the removal.
-  A "region task" is one with field `WgRegionId` (how the plugin finds `WgRegionIdTaskHandler`) or whose result names its own temp region. Leaving the form ("Cancel" in the wizard) keeps the draft, so it releases nothing.
+  A "region task" is one with task type `ReagionCreate`, `RegionCreate` or `RegionClaim` (#944: the plugin finds `WgRegionIdTaskHandler` by these on any field), with field `WgRegionId` (older configurations), or whose result names its own temp region. Leaving the form ("Cancel" in the wizard) keeps the draft, so it releases nothing.
 - **What the game server is given** (`GET api/WorldTasks/temp-region-releases?serverId=`, plugin key only; a blank or missing `serverId` answers 400, as `GET open` does, [PandiO/knk-workspace#399](https://github.com/PandiO/knk-workspace/issues/399): the plugin always sends `realtime.server-id`): a release only when **all** hold, otherwise it waits (re-checked on every call). The API reads the due rows oldest first in pages of 200 until `max` (default 50) are listed or none is left, so waiting rows never hide later releases (#399; before, only the 200 oldest were looked at):
   - 5 minutes have passed since the release and since the task last changed (`WorldTasks:TempRegionReleaseGraceMinutes`);
   - the task is closed (or gone), and it is not a Completed task of a draft that still exists (a draft delete that failed);
-  - **nothing names the region**, in any world, case-insensitive: a domain's or domain sub-region's `WgRegionId`, a lootbox area's region or exclusions, a road edge's regions, or any draft's step data (text match, so a longer id containing it also keeps it);
+  - **nothing names the region**, in any world, case-insensitive: a domain's or domain sub-region's `WgRegionId`, a lootbox area's region or exclusions, a landmark's `RegionId` (#945), a road edge's regions, or any draft's step data (text match, so a longer id containing it also keeps it);
   - its server is this one or unknown (`ClaimedByServerId`; with several game servers, a release with no server goes to whichever asks first).
   Releases older than 30 days are dropped unsettled (`WorldTasks:TempRegionReleaseKeepDays`); by then the daily cleanup has decided.
 - **What the game server does** (`TempRegionReleasePass`, every `regions.temp-retention.release-interval-minutes`, default 5, 0 = off; started with the retention task, first pass after 2 minutes). Per release, `TempRegionCleanupPolicy.decideRelease`:
-  - only the release's own `tempregion_worldtask_<taskId>` name, in **exactly one** loaded world (the task's world when it is loaded, else all of them): none → settled `Missing` (renamed to `domain_<id>` / `lootbox_area_<id>` already, removed, or never drawn here); several → `Kept`;
+  - only the release's own `tempregion_worldtask_<taskId>` name, in **exactly one** loaded world (the task's world when it is loaded, else all of them): none → settled `Missing` (renamed to `domain_<id>` / `lootbox_area_<id>` / `landmark_<id>` already, removed, or never drawn here); several → `Kept`;
   - waits while a player here still runs that task, or while the last managed-region repair hasn't run / saw a domain use it;
   - needs a creation timestamp (`knk-creation-timestamp`; without one it was not drawn by the region task → `Kept`);
-  - the cleanup's fresh lookup (`regionUsageVia`: domain by region + lootbox runtime config): in use → `Kept`; API unreachable → waits; unused → removed (children keep their place without a parent, as the cleanup does) and settled `Removed`.
+  - the cleanup's fresh lookup (`regionUsageVia`: domain by region + lootbox runtime config + landmarks since #945): in use → `Kept`; API unreachable → waits; unused → removed (children keep their place without a parent, as the cleanup does) and settled `Removed`.
   `POST api/WorldTasks/temp-region-releases/{id}/settle` deletes the release; a failed settle lists it again (then `Missing`). The log says `Removed temp region <world>/<id> (its draft was deleted; …)`.
 - **Not released:** a region task that completed for a draft that was then **completed** without using it (e.g. "Capture again" after a completed capture: the older region stays), a task deleted by hand (`DELETE api/WorldTasks/{id}`), drafts the 90-day retention deletes (long after 14 days). These still go after 14 days. A task still InProgress when its draft is deleted is not cancelled: if the player finishes, the region is removed afterwards.
 - **Backstop unchanged:** the daily `TempRegionRetentionTask` pass (§8 item 5) still runs with its 14 days and catches everything not released (older API, plugin with the pass off, a release dropped after 30 days).
@@ -281,16 +329,17 @@ In-game checklist used (dev server, back up `plugins/WorldGuard/worlds/*/regions
 
 ## Changes
 
-1. 2026-11-20: §7 "Overview map outlines" on trunk since knk-plugin v0.3 (docs #767)
-2. 2026-11-19: §7 "Domain sub-regions", "Overview map outlines": sub-region outlines after every access sync, PandiO/knk-workspace#750
-3. 2026-11-18: §7 "Overview map outlines": the repair and rename also report outlines with `map.reporting.enabled`, PandiO/knk-workspace#735, docs #766
-4. 2026-11-15: #399 of §7 released in knk-web-api v0.3, `main` `2cc8254`, PandiO/knk-workspace#577
-5. 2026-11-15: §7 "What the game server is given": `serverId` required, due rows read in pages, PandiO/knk-workspace#399, knk-web-api#33 into `next`
-6. 2026-11-13: §7 #34 and #269 in the PR into `next` from `claude/plugin-chains-into-next`
-7. 2026-11-09: §7 "Abandoned drafts: temp regions released early", PandiO/knk-workspace#269, on feature branch `claude/temp-region-drafts-269`, not merged; §8 item 5
-8. 2026-11-05: §7 "Lootbox spawn areas", PandiO/knk-workspace#34, on feature branch `claude/lootbox-area-rename-34`, not merged; §8 item 5
-9. 2026-10-23: §7 "Domain sub-regions", KNG-254–KNG-258, merged and live-tested
-10. 2026-10-18: KNG-103 in-game check passed and merged; §7 recovering a domain the old bug left on a temp name, purge keeps what the last repair saw; §9 result
-11. 2026-10-12: §7 "Re-running a domain's region step" and `/knk regions temp`, KNG-103; §9 checklist, not yet run
-12. 2026-10-06: §5 "Rank-dependent access" links the domain entry/exit enforcement, KNG-55/KNG-56
-13. 2026-10-05: KNG-46 in-game smoke test passed; parent-inheritance decision accepted; vanilla spawn-protection note, §8 item 10
+1. 2026-11-21: §7 "Landmarks" (drawn landmark regions renamed to `landmark_<id>`, re-run replacement, cleanup lookup) and the region task found by task type; "Abandoned drafts" release rules; PandiO/knk-workspace#944/#945, branch `claude/landmark-regions`, not merged
+2. 2026-11-20: §7 "Overview map outlines" on trunk since knk-plugin v0.3 (docs #767)
+3. 2026-11-19: §7 "Domain sub-regions", "Overview map outlines": sub-region outlines after every access sync, PandiO/knk-workspace#750
+4. 2026-11-18: §7 "Overview map outlines": the repair and rename also report outlines with `map.reporting.enabled`, PandiO/knk-workspace#735, docs #766
+5. 2026-11-15: #399 of §7 released in knk-web-api v0.3, `main` `2cc8254`, PandiO/knk-workspace#577
+6. 2026-11-15: §7 "What the game server is given": `serverId` required, due rows read in pages, PandiO/knk-workspace#399, knk-web-api#33 into `next`
+7. 2026-11-13: §7 #34 and #269 in the PR into `next` from `claude/plugin-chains-into-next`
+8. 2026-11-09: §7 "Abandoned drafts: temp regions released early", PandiO/knk-workspace#269, on feature branch `claude/temp-region-drafts-269`, not merged; §8 item 5
+9. 2026-11-05: §7 "Lootbox spawn areas", PandiO/knk-workspace#34, on feature branch `claude/lootbox-area-rename-34`, not merged; §8 item 5
+10. 2026-10-23: §7 "Domain sub-regions", KNG-254–KNG-258, merged and live-tested
+11. 2026-10-18: KNG-103 in-game check passed and merged; §7 recovering a domain the old bug left on a temp name, purge keeps what the last repair saw; §9 result
+12. 2026-10-12: §7 "Re-running a domain's region step" and `/knk regions temp`, KNG-103; §9 checklist, not yet run
+13. 2026-10-06: §5 "Rank-dependent access" links the domain entry/exit enforcement, KNG-55/KNG-56
+14. 2026-10-05: KNG-46 in-game smoke test passed; parent-inheritance decision accepted; vanilla spawn-protection note, §8 item 10
