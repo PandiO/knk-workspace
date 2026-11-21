@@ -1,6 +1,6 @@
 # API Contract: Town logistics (policies, rules, consumer settings, reservations, the planner)
 
-**Status:** Current · **Last updated:** 2026-11-21 (P9 follow-ups #928: town profile, labels on `PUT`, structure types, names, `townId` lookups)
+**Status:** Current · **Last updated:** 2026-11-21 (`settingSource` `ShopLevel`, shops P10 #248, docs #939); 2026-11-21 (P9 follow-ups #928: town profile, labels on `PUT`, structure types, names, `townId` lookups)
 **Checked against:** knk-web-api `next` `37be22e5` (PR PandiO/knk-web-api#73; `Controllers/LogisticsControllers.cs`,
 `Dtos/LogisticsDtos.cs`, `Enums/LogisticsEnums.cs`, `Services/Logistics/*.cs`, `Models/Logistics/Logistics.cs`,
 `Services/Territory/ProductionSettings.cs`). Not released.
@@ -178,7 +178,7 @@ outcome but `NotNeeded`)). `POST search` → `LogisticsPlannerRunListDto` page.
 
 `LogisticsPlanEntryDto` (one per consumer storage and blueprint): `consumerStructureId`/`Name`,
 `consumerStructureType` (`Shop`, `ProductionStructure`, `Warehouse`, `GateStructure` or `Structure`), `consumerStorageId`/`Name`, `itemBlueprintId`/`Name`, `warehouseId`/`Name`, `priorityClass`, `stock` (stock + on the
-way), `reorderPoint`, `targetLevel`, `shortfall`, `reserved`, `outcome`, `settingSource` (`Setting`, `Rule`, `Inputs`),
+way), `reorderPoint`, `targetLevel`, `shortfall`, `reserved`, `outcome`, `settingSource` (`Setting`, `Rule`, `ShopLevel` (a shop level's default min/max, [shops contract](API_CONTRACT_SHOPS.md)), `Inputs`),
 `ruleIds[]`, `reservationId`, `transportOrderId`, `explanation`.
 
 `outcome`: `Reserved`, `PartlyReserved`, `NotNeeded`, `AlreadyReserved`, `NoStock`, `HeldByReserve`, `NoWarehouse`,

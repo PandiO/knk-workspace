@@ -1,6 +1,6 @@
 # Town Logistics — Admin Guide
 
-**Status:** Current · **Last updated:** 2026-11-21 (first version, production P9 #127/#686, docs PandiO/knk-workspace#929)
+**Status:** Current · **Last updated:** 2026-11-21 (§ 1, § 4, § 5.3, § 8: shops collect with their own worker and restock at their level's min/max, P10 #248 in `next` `289f4d4b`, docs PandiO/knk-workspace#939); 2026-11-21 (first version, production P9 #127/#686, docs PandiO/knk-workspace#929)
 **Checked against:** knk-web-api `next` `37be22e5`, knk-web-app `next` `c12e0e7e` (not released; the manual steps of the
 [smoke test § 10](../production-storage-transport-smoke-test.md#10-phase-p9-town-logistics-127-api-686-web-app-tier3)
 have not been run live yet)
@@ -45,8 +45,10 @@ inputs, and a consumer's worker is away (its output drops) while it fetches a co
 5. **The world**, from the earlier phases:
    1. At least one **warehouse** in the town (in a district, or rural with the town set). A town without one is not
       planned.
-   2. **Consumers**: production structures with workers and an **Input** storage (Merchandise for shops). Only
-      production structures have workers in V1; any other consumer shows "no worker" and gets nothing (§ 8).
+   2. **Consumers**: production structures with workers and an **Input** storage, and shops (production structures
+      underneath) with their **Merchandise** storage ([shops admin guide § 3.5](shops-admin-guide.md#35-restocking)).
+      Only production structures and shops have workers in V1; any other consumer shows "no worker" and gets nothing
+      (§ 8).
    3. **Lanes** or measured road connections between consumers and warehouses, so distances are known; a rural consumer
       needs road connection **Connected**.
    4. Stock in the warehouses.
@@ -140,9 +142,11 @@ On a production structure's page, panel **Supply (as a consumer)**:
    service area, or the nearest by road. A structure with no Input or Merchandise storage says it is not a consumer:
    add an Input storage first.
 2. **Demand**: per storage and item the **Stock**, **On the way**, **Min**, **Max**, **Priority** and **Min and max
-   from**. The first source wins: its own **setting**, else a **Replenishment rule** of the policy, else the
-   production line inputs: 4 hours of input for the min and 12 hours for the max (the defaults of § 6). A Merchandise
-   storage has no line inputs, so it needs a setting or a rule.
+   from**. The first source wins: its own **setting**, else a **Replenishment rule** of the policy, else for a shop's
+   Merchandise storage its level's **Default min** and **Default max** for each stocked catalogue item (**Shop level**,
+   [shops admin guide § 3.5](shops-admin-guide.md#35-restocking)), else the production line inputs: 4 hours of input
+   for the min and 12 hours for the max (the defaults of § 6). Any other Merchandise storage has no line inputs, so it
+   needs a setting or a rule.
 3. **Replenishment settings**: **New setting** with **Storage**, **Item**, **Min (reorder point)**, **Max (target
    level)**, **Priority class** (empty = from the policy, else Normal) and a **Note**. One setting per storage and item;
    min at most max. **Edit** or **Delete** (with `knk.admin.delete`). All settings are on the **Consumer settings**
@@ -189,7 +193,7 @@ A planner run's page shows the same explanation for any earlier run (runs are ke
 | No stock | No warehouse of the town holds the item | Produce or bring in the item |
 | Held by a reserve | There is stock, but reserves (or higher classes this run) keep it | Lower the reserve, or raise the consumer's priority class |
 | No warehouse | The town has no warehouse | Build one |
-| No worker | Not a production structure, or no workers: consumers collect with their own worker | Give it workers; shops follow later (§ 8) |
+| No worker | Not a production structure or shop, or no workers: consumers collect with their own worker | Give it workers (§ 8) |
 | Not connected | A rural consumer whose road connection is not Connected | Build the road; check the road connection ([transport guide](production-transport-admin-guide.md)) |
 | No room | Its storage is full | Raise the storage's capacity or lower the max |
 | Carrier full | Its workers already have a collection this run, or the trip is full | Next run; more workers or capacity |
@@ -250,8 +254,8 @@ Each step is in full, with its automated test, in [smoke test § 10.1](../produc
 2. Producers without a preferred warehouse now deliver to their service area's warehouse when it has room (before: the
    nearest). Without service-area rules nothing changes.
 3. Collections take the consumer's workers away, so its own production drops during the trip.
-4. Only production structures collect. Shops and other consumers show **No worker** until shops get workers
-   ([#248](https://github.com/PandiO/knk-workspace/issues/248)). Note: the consumer panel's "No workers: the planner
+4. Only production structures and shops collect (shops since P10,
+   [#248](https://github.com/PandiO/knk-workspace/issues/248)); other consumers show **No worker**. Note: the consumer panel's "No workers: the planner
    can reserve but nobody collects" is wrong; the planner makes no reservation for such a consumer
    ([#930](https://github.com/PandiO/knk-workspace/issues/930)).
 5. Warehouses never deliver on their own and goods are not moved between warehouses (rebalancing is Later, #324).
