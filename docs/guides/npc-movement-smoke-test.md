@@ -3,7 +3,7 @@
 **Status:** Written 2026-11-16 for knk-plugin `next` `cc5262ff` (links M1–M7 merged into `next`, behind
 `npc.navigation.enabled` and each link's own key, all off by default); only the steps no plugin scenario checks; not
 run yet (the developer's run with every key on is planned for 2026-11-16)
-**Last updated:** 2026-11-20 (link G1 section, [#814](https://github.com/PandiO/knk-workspace/issues/814)); 2026-11-20 (link H1 section, [#779](https://github.com/PandiO/knk-workspace/issues/779)); 2026-11-18 (link R1 section, [#724](https://github.com/PandiO/knk-workspace/issues/724)); 2026-11-18 (link E1 section, [#701](https://github.com/PandiO/knk-workspace/issues/701)); 2026-11-18 (link C1 section, [#700](https://github.com/PandiO/knk-workspace/issues/700)); 2026-11-17 (link B5 section, [#699](https://github.com/PandiO/knk-workspace/issues/699)); 2026-11-16 (assembled from the developer tests of implementation plan 4c.4, PandiO/knk-workspace#658)
+**Last updated:** 2026-11-21 (link H1 step 5 automated, [#956](https://github.com/PandiO/knk-workspace/issues/956)); 2026-11-20 (link G1 section, [#814](https://github.com/PandiO/knk-workspace/issues/814)); 2026-11-20 (link H1 section, [#779](https://github.com/PandiO/knk-workspace/issues/779)); 2026-11-18 (link R1 section, [#724](https://github.com/PandiO/knk-workspace/issues/724)); 2026-11-18 (link E1 section, [#701](https://github.com/PandiO/knk-workspace/issues/701)); 2026-11-18 (link C1 section, [#700](https://github.com/PandiO/knk-workspace/issues/700)); 2026-11-17 (link B5 section, [#699](https://github.com/PandiO/knk-workspace/issues/699)); 2026-11-16 (assembled from the developer tests of implementation plan 4c.4, PandiO/knk-workspace#658)
 **Issue:** [PandiO/knk-workspace#358](https://github.com/PandiO/knk-workspace/issues/358) (links
 [#621](https://github.com/PandiO/knk-workspace/issues/621)–[#627](https://github.com/PandiO/knk-workspace/issues/627));
 post results on the link's sub-issue or [#603](https://github.com/PandiO/knk-workspace/issues/603)
@@ -204,9 +204,10 @@ by hand; not run yet. About 15 minutes; 5 minutes for the untagged step only.
 ## Link H1: a ladder and a roof hatch on an NPC's off-road leg
 
 Added 2026-11-20 for knk-plugin `claude/npc-movement-h1` ([#779](https://github.com/PandiO/knk-workspace/issues/779));
-run it on `next` once H1 is merged. Same setup as above; the movement keys don't matter for this section. 4 of 6 steps
-automated or partly automated (tagged); every step can still be run by hand; not run yet. About 20 minutes; 10 minutes
-for the untagged steps only.
+run it on `next` once H1 is merged. Same setup as above; the movement keys don't matter for this section. 5 of 6 steps
+automated or partly automated (tagged); every step can still be run by hand; step 5 failed in the developer's run of
+2026-11-21 ([#956](https://github.com/PandiO/knk-workspace/issues/956), fixed on `claude/npc-ladder-down-956`). About
+20 minutes; 5 minutes for the untagged steps only.
 
 Setup:
 
@@ -248,10 +249,13 @@ Steps:
    `/knk npc nav spawn 1 no-doors`. The NPC never opens the hatch and never gets onto the roof. The log shows "off-road
    walk to the goal …: NO_PATH …, walked in hops". Known: the order then ends as arrived under the roof
    ([#848](https://github.com/PandiO/knk-workspace/issues/848)). Note what `stats` says.
-5. **Climbing down** (manual: no scenario walks down). Save the reverse route (`/knk npc nav from` on the roof,
+5. [partly automated: `npc-ladder-hatch`, trips "down, hatch open, open-doors" and "down, hatch closed, open-doors"
+   ([#956](https://github.com/PandiO/knk-workspace/issues/956)); by hand: the dev world's tower] **Climbing down.**
+   Save the reverse route (`/knk npc nav from` on the roof,
    `/knk npc nav to` on the road, `/knk npc nav route save hatch-tower-down`), close the hatch, then
    `/knk npc nav route load hatch-tower-down`, `/knk npc nav clear`, `/knk npc nav spawn 1`. The NPC spawns on the
-   roof, opens the hatch beside it, climbs down the ladder and walks out to the road. It must not fall down the shaft.
+   roof, opens the hatch beside it, climbs down the ladder and walks out to the road. It must not fall down the shaft,
+   bob at the ladder's top or be side-stepped away from it; `stats`: no stuck spell at the ladder, `orders failed 0`.
 6. **Game feel** (manual: needs a real client). Watch steps 1 and 3 from the roof and from the ladder's foot. The climb
    looks like a player's: no hopping on the ladder and no sliding back down. The hatch opens before the head touches
    it, not while the NPC is still on the ground.

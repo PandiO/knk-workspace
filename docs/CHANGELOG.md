@@ -4,6 +4,28 @@ This is a human-readable record of capabilities merged into the V3 default branc
 
 ## Unreleased — on feature branches, not merged
 
+- **NPC navigation: NPCs climb down a ladder through a roof hatch**
+  ([PandiO/knk-workspace#956](https://github.com/PandiO/knk-workspace/issues/956), found in the smoke run of
+  2026-11-21, part of [#358](https://github.com/PandiO/knk-workspace/issues/358), after link H1 #779). An NPC leaving a
+  tower's roof by its hatch now climbs down the ladder and walks on. Before, it bobbed at the ladder's top, was
+  side-stepped away from the shaft, and its order failed; only once it stood idle did it slide down. knk-plugin and
+  knk-workspace branches `claude/npc-ladder-down-956` (PRs into `next`). Behind `npc.navigation.enabled` (off by
+  default); no new `config.yml` key, no migration.
+  1. **Cause.** Citizens steers a body towards its waypoint even when that is straight below it, a few hundredths off
+     in a one-block shaft. Every bump against the shaft makes Minecraft climb the body up again. With no steering a
+     ladder lets a body down by itself.
+  2. **Fix** (knk-paper `ClimbHold`, `CitizensNpcMover`). With the body on a ladder and Citizens' waypoint at least
+     0.9 blocks below it in its own column, the mover pauses Citizens' navigator for the run of waypoints straight down
+     that column, keeps the body in the column's middle, and gives Citizens the rest of the list once the feet land
+     (within 0.5 of the run's last waypoint). Any new order, stop or teleport ends the descent. The way up (H1) is
+     unchanged.
+  3. **Tests.** `ClimbHoldTest` (+3: the run down the column, no run without a climb or too close, landing);
+     `npc-ladder-hatch` gains two trips down from the roof to the road with `open-doors`, hatch open and closed. On
+     `next` the first never got down (CI run 44925252678); with the fix both arrive in 17.8 s with 0 stuck spells, the
+     closed hatch opened from above, and the four trips up arrive as before (17.1 to 17.2 s).
+     Smoke test: [Link H1 step 5](guides/npc-movement-smoke-test.md#link-h1-a-ladder-and-a-roof-hatch-on-an-npcs-off-road-leg).
+  4. **Admin steps:** none beyond deploying the jar.
+
 - **Off-road navigation: a group's default route mode is now a fixed choice (Enum field)**
   ([PandiO/knk-workspace#852](https://github.com/PandiO/knk-workspace/issues/852) follow-up, developer decision
   2026-11-21). For staff: the permission group form's "Default route mode" is an Enum field with Shortest, Efficient
