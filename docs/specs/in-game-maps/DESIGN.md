@@ -26,7 +26,7 @@ The same tables are used for other views as well. Which area and which view a ta
 
 There are **no permanent walls of preloaded maps**.
 
-Out of scope here: the siege engines themselves (projectile, reload, damage to gates and objectives). They have no design or issue yet (#224 "Open points").
+Out of scope here: the siege engines themselves (projectile, reload, damage to gates and objectives). They are designed in [siege-minigame/SIEGE_WEAPONS.md](../siege-minigame/SIEGE_WEAPONS.md) (#354, since 2026-11-12); aiming and firing, where this targeting comes in, is #355.
 
 ## 2. Decisions (developer, 2026-11-03)
 
@@ -40,6 +40,8 @@ Out of scope here: the siege engines themselves (projectile, reload, damage to g
 | M6 | **For the open beta, the browser runs on a separate VPS** (§6.3), not on the Paper host. |
 
 > **Update 2026-11-10, confirmed 2026-11-12: BlueMap replaces Dynmap (M2–M4).** A full high-res Dynmap render of the 22k × 17k world was estimated at 150–300 GB per view angle. A BlueMap test render of the alpha world on the NAS extrapolates to **about 40 GB** with free 3D rotation, built-in level of detail and a standalone Docker renderer (weighted score 4.20 vs 2.65). Where this doc says Dynmap, read BlueMap; the web-based targeting page moves to BlueMap's web app and marker API. The in-game tables use a custom **2D page on BlueMap's low-res tiles**, because BlueMap's 3D viewer needs WebGL, which a GPU-less MapBrowser host would render in software. Details, decision matrix and results: [BLUEMAP_EVALUATION.md](BLUEMAP_EVALUATION.md).
+
+> **Update 2026-11-15 (developer decision, siege weapons sessions, [SIEGE_WEAPONS.md](../siege-minigame/SIEGE_WEAPONS.md) W26–W29, #613): V1 targets in the player's own browser, not on battle map tables.** The first version is a BlueMap web page opened from the game by a one-time token link: a tactical map for every match participant that switches to targeting mode when opened from a siege weapon. It shows the pre-game snapshot tiles with live markers of the player's own team only, locked to the scenario area. The battle map tables in this doc become a later, switchable addition, with the browser page as the fallback; they are not in V1.
 
 ## 3. How it works
 
@@ -149,4 +151,4 @@ Tracked in #224. To be split into sub-issues when picked up:
 3. **Plugin:** a battle-map table model (entity or config), the context switch, and the start/stop rules from §6.2.
 4. **Tile pipeline:** offline render, then copy to production; choose a storage option (§7).
 5. **Hosting:** Chromium host on a VPS (§6.3).
-6. **Separately:** design the siege engines themselves (new issue).
+6. **Separately:** design the siege engines themselves: #354, [SIEGE_WEAPONS.md](../siege-minigame/SIEGE_WEAPONS.md).
