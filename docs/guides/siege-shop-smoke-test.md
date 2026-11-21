@@ -1,7 +1,7 @@
 # Siege shop and siege points — smoke test
 
-**Status:** Draft (2026-11-20): §§ 1–4 built and tagged (L1 #866, L2 #867, L3 #868, L4 #869), § 5.1 built and tagged (L5 #870), § 5.2 draft from the design; no steps run by hand.
-**Last updated:** 2026-11-20 (§ 4 updated to what L4 built, steps tagged, #869); 2026-11-20 (§ 3 updated to what L3 built, steps tagged, #868); 2026-11-20 (§ 5 updated to what L5 built, § 5.1 steps tagged, #870); 2026-11-20 (§ 2 updated to what L2 built, steps tagged, #867, #878); 2026-11-20 (§ 1 updated to what L1 built, steps tagged, #866); 2026-11-20 (draft from the design, phases 1–4, 5a, 5b)
+**Status:** Draft (2026-11-21): §§ 1–4 built and tagged (L1 #866, L2 #867, L3 #868, L4 #869), § 5.1 built and tagged (L5 #870), § 5.2 built and tagged (L6 #871); no steps run by hand.
+**Last updated:** 2026-11-21 (§ 1.0 precondition 2 and § 1.1 step 14: the siege points fields are on the Siege settings page since L2 (#878), docs #908); 2026-11-21 (§ 5.2 updated to what L6 built, steps tagged; locked-weapon text in §§ 3–4 names /menu → Siege Minigame → Siege unlocks, #871); 2026-11-20 (§ 4 updated to what L4 built, steps tagged, #869); 2026-11-20 (§ 3 updated to what L3 built, steps tagged, #868); 2026-11-20 (§ 5 updated to what L5 built, § 5.1 steps tagged, #870); 2026-11-20 (§ 2 updated to what L2 built, steps tagged, #867, #878); 2026-11-20 (§ 1 updated to what L1 built, steps tagged, #866); 2026-11-20 (draft from the design, phases 1–4, 5a, 5b)
 **Design:** [specs/siege-shop/DESIGN.md](../specs/siege-shop/DESIGN.md) · **Issue:**
 [PandiO/knk-workspace#611](https://github.com/PandiO/knk-workspace/issues/611),
 [#356](https://github.com/PandiO/knk-workspace/issues/356), [#859](https://github.com/PandiO/knk-workspace/issues/859)
@@ -28,9 +28,10 @@ manual steps not run yet. A full manual run takes about 40 minutes; the untagged
    ```
    then restart. `SiegeConfiguration` with the default earn amounts (kill 100, streak step 0.1 cap 1.5, assist 40 with
    4 damage in 10 s, death 15, 1 point per 5 gate HP, 3 per capture %, capture 100, trickle 10 per 60 s) and
-   `pointTransfersEnabled` false. The web app's siege settings page does not show these fields yet (#878): check them with
-   `GET api/SiegeConfiguration` and change them with `PUT api/SiegeConfiguration` (Swagger, signed in as Admin), for
-   example `{ "pointTransfersEnabled": true }`. The migration gives an existing configuration row the defaults.
+   `pointTransfersEnabled` false. Check and change them on the web app's Siege settings page, section "Siege points"
+   (#878, built by L2, § 2 step 14; the field for `pointTransfersEnabled` is "Allow teammate transfers"), or with
+   `GET api/SiegeConfiguration` and `PUT api/SiegeConfiguration` (Swagger, signed in as Admin), for example
+   `{ "pointTransfersEnabled": true }`. The migration gives an existing configuration row the defaults.
 3. Accounts and data: A1, A2, D1; a Ready Siege scenario with at least one gate and one capturable (non-instant-victory)
    objective; a lobby that can start with three players. Optional: diagnostic telemetry on, to check step 15.
 
@@ -78,8 +79,9 @@ manual steps not run yet. A full manual run takes about 40 minutes; the untagged
     totals. (A10)
 14. [automated: knk-paper `SiegePointsServiceTest.payIsRefusedWhileTransfersAreOff_A03`, `.payMovesPointsToATeammateOnlyAndNeverOverdraws_A01_A03`, knk-core `SiegePointsEconomyTest`]
     `/siege pay A2 50` as A1. **Expected:** refused, "Sending siege points to teammates is turned off in this game
-    mode."; nothing changes. Admin sets `pointTransfersEnabled` true (`PUT api/SiegeConfiguration`) and a new match
-    starts (settings are frozen per match); repeat. **Expected:** A1 −50, A2 +50, both told; `/siege pay A2 999999` is
+    mode."; nothing changes. Admin sets `pointTransfersEnabled` true (Siege settings page, "Allow teammate
+    transfers", or `PUT api/SiegeConfiguration`) and a new match starts (settings are frozen per match); repeat.
+    **Expected:** A1 −50, A2 +50, both told; `/siege pay A2 999999` is
     refused ("Not enough siege points: …") and nothing changes; `/siege pay D1 10` is refused (not a teammate). Set
     `pointTransfersEnabled` back to false afterwards. (A01, A03)
 15. [partly automated: knk-paper `SiegePointsServiceTest.theMatchResultCarriesEarnedAndSpent_andTheEndStopsEarning_A04_A11`, `SiegePointsTelemetryTest`, knk-api-client `SiegeMatchesCommandApiImplTest.complete_sendsSiegePointsOnlyWhenTheyWereCounted_866`, API `SiegeMatchServiceTests.Complete_StoresSiegePointsEarnedAndSpent_AndZeroWhenNotSent`; by hand: the live result]
@@ -238,7 +240,7 @@ and the by-hand parts about 25.*
    **Expected:** "Inventory full: make room for the whole stack first."; nothing charged, nothing dropped. (A19, P22)
 7. [automated: knk-paper `SiegeShopServiceTest.aLockedWeaponShowsWhereToUnlockIt_andCantBeBought_A26`, knk-core `ShopPurchaseServiceTest.aLockedWeaponIsRefusedAndShownLocked_andWeaponsWaitForTheirHandler_A26`, `ShopCatalogueTest.anEntryRowShowsPriceBoughtCooldownAndWhyNot_A26`]
    With `siege.weapons.enabled: true`, A1 opens Siege weapons and clicks the weapon entry. **Expected:** the line is
-   greyed out and says "Locked: unlock it in /menu → Minigames → Siege unlocks."; the click says the same; nothing
+   greyed out and says "Locked: unlock it in /menu → Siege Minigame → Siege unlocks."; the click says the same; nothing
    charged, no spot picker. (A26)
 8. [automated: knk-paper `SiegeShopServiceTest.aLockedWeaponShowsWhereToUnlockIt_andCantBeBought_A26`]
    Admin grants A1 the weapon's unlock in the web app (UserSiegeWeaponUnlock); in the **next** match A1 clicks the
@@ -332,7 +334,7 @@ run takes about 25 minutes; the untagged step and the by-hand parts about 15.*
 6. [partly automated: knk-paper `SiegeShopServiceTest.aLockedWeaponShowsWhereToUnlockIt_andCantBeBought_A26`, knk-core `ShopPurchaseServiceTest.aLockedWeaponIsRefusedAndShownLocked_andWeaponsWaitForTheirHandler_A26`; by hand: the real shop]
    In that match A1 opens `/siege shop` → Siege weapons. **Expected:** the ballista entry is not locked (unlocks are
    read at match start; until siege weapons phase 3, #784, a click says "Siege weapons can't be bought yet."); an entry
-   for a type A1 hasn't unlocked says "Locked: unlock it in /menu → Minigames → Siege unlocks." (A26)
+   for a type A1 hasn't unlocked says "Locked: unlock it in /menu → Siege Minigame → Siege unlocks." (A26)
 7. [automated: knk-web-app `e2e/siege-unlocks.spec.ts` "lists every weapon type with price, minimum title and state (A27)", knk-web-api `SiegeWeaponUnlockPurchaseServiceTests.Controller_Mine_NeedsAWebUser`]
    After the match, on the web app A1 opens their account page (`/account`). **Expected:** a **Siege
    unlocks** panel with "Coins: …", A1's title and the same list: the ballista "Unlocked", the trebuchet "Needs title
@@ -351,9 +353,11 @@ run takes about 25 minutes; the untagged step and the by-hand parts about 15.*
 
 *Phase 5a built by L5 (2026-11-20, branches `claude/siege-shop-l5` in knk-web-api and knk-web-app): § 5.1, 7 steps, all
 fully or partly automated (tagged; API tests in xUnit, web app tests in Jest and Playwright with a mocked API); every
-step can still be run by hand; manual steps not run yet. A full manual run of § 5.1 takes about 10 minutes. § 5.2 (in
-game) is the draft for phase 5b (#871): until then the plugin keeps reading its `config.yml` keys and nothing changes in
-game.*
+step can still be run by hand; manual steps not run yet. A full manual run of § 5.1 takes about 10 minutes. Phase 5b
+built by L6 (2026-11-21, branch `claude/siege-shop-l6` in knk-plugin): § 5.2, 12 steps, 11 fully or partly automated
+(tagged; plugin tests in knk-core, knk-api-client and knk-paper with Mockito and MockBukkit); every step can still be run
+by hand; manual steps not run yet. A full manual run of § 5.2 takes about 30 minutes (it needs a PvP siege round); the
+untagged step and the by-hand parts about 20.*
 
 ### 5.0 Preconditions
 
@@ -363,7 +367,11 @@ game.*
    (nether star, `&6&lMenu &7(click to open)`, slot 8) with every click opening `main`; overrides for Siege match and
    Siege Survival match (left and right click → `siege.information`, shift + right click → `siege.shop`) and Siege hub
    (left and right click → `siege.information`).
-3. Accounts and data: Admin (web app staff with `knk.admin.config`); for § 5.2 A1 online in the hub.
+3. Accounts and data: Admin (web app staff with `knk.admin.config`); for § 5.2 A1 online in the hub, plus enough
+   players (or the test lobby's minimum) to start a PvP siege round with A1 in it.
+4. For § 5.2 step 6's shop: `siege.points.enabled: true` and `siege.shop.enabled: true` in the plugin's `config.yml`
+   (§ 3.0); without them the shift + right click answers "The siege shop is not enabled on this server.", which is
+   also a pass for the menu item.
 
 ### 5.1 Steps: the Menu item card (phase 5a)
 
@@ -402,12 +410,57 @@ game.*
    **Expected:** the migration only adds the nullable `game_settings.MenuItemSettingsJson`; the card shows the seeded
    defaults of step 1.
 
-### 5.2 Steps in game (phase 5b, #871; draft from the design)
+### 5.2 Steps in game (phase 5b, #871)
 
-1. Admin opens the game settings page → Menu item, changes the name and sets shift-left to run `siege points`, then
-   saves. **Expected:** A1's item shows the new name within seconds, without a restart, in the same slot. (A29)
-2. Outside a match A1 right-clicks the item. **Expected:** the main menu opens. (A30)
-3. In a running PvP match A1 right-clicks, then shift-right-clicks the item. **Expected:** the siege menu, then the
-   siege shop. In a Survival match the same. (A30)
-4. With the API stopped, restart the plugin and join as A1. **Expected:** the menu item is given from the `config.yml`
-   keys and opens the main menu. (A31)
+1. [automated: knk-api-client `GameSettingsMenuItemMapperTest.theSectionIsRead`; knk-paper `GameSettingsManagerMenuItemTest.everyApiAnswerPassesTheSectionOn_A29`, `MenuItemSettingsSyncTest.theApiSettingsReplaceTheFile_AndTheClicksFollowThem_A29`]
+   With the API up and the card at the seeded defaults (§ 5.0 precondition 2), restart the game server and read its log.
+   **Expected:** first `Menu item on (NETHER_STAR in slot 8, for ALL players) from config.yml until the game settings
+   answer`, then within a few seconds `[MenuItem] Settings from the game settings page applied: NETHER_STAR in slot 8,
+   for ALL players, 3 situation override(s)`. No `[MenuItem]` warning. (A29)
+2. [automated: knk-paper `MenuItemSettingsSyncTest.aNewLookReachesOnlinePlayersWithoutARestart_A29`, `MenuOpenerServiceTest.liveAnOutdatedItemIsReplacedWhereItIs_AndNothingIsGivenOrMoved`, `GameSettingsManagerMenuItemTest.everyApiAnswerPassesTheSectionOn_A29`]
+   A1 is online with the item in slot 8 and a sword in slot 0. Admin sets the card's Name to `&bKnK menu` and saves.
+   **Expected:** within a few seconds (the realtime `GameSettingsChanged` event; without the realtime hub at the next
+   game settings re-read) A1's item shows the new name, still in slot 8; the sword stays in slot 0; no restart; the log
+   repeats the "applied" line. (A29)
+3. [automated: knk-paper `MenuItemActionRunnerTest.aCommandIsRunByThePlayer_AndNoneDoesNothing`, `MenuItemSettingsSyncTest.theApiSettingsReplaceTheFile_AndTheClicksFollowThem_A29`]
+   Admin sets Shift + left click to "Run command" `siege points` and saves. Outside a siege A1 sneaks and left-clicks
+   with the item. **Expected:** the same answer as typing `/siege points` (with siege points off or outside a match it
+   says so); the main menu does not open. (A29)
+4. [automated: knk-core `MenuItemActionResolverTest.outsideASiegeEveryClickOpensTheMainMenu_A30`; knk-paper `MenuItemActionRunnerTest.theMainMenuOpensThroughSlashMenuAsBefore`, `MenuOpenerListenerTest.rightAndLeftClicksInTheAirOpenTheMenu`, `.aDoorKeepsWorkingUnlessThePlayerSneaks`, `.aClickOnItInTheOwnInventoryOpensTheMenuAndMovesNothing`]
+   Outside a siege A1 right-clicks in the air, then left-clicks, then opens the inventory and clicks the item, then
+   right-clicks a door (not sneaking). **Expected:** the main menu (as `/menu`) each of the first three times; the door
+   just opens. (A30)
+5. [automated: knk-paper `SiegeMenuItemSituationsTest.aRunningMatchIsSiegeMatch_TheHubAndTheResultAreSiegeHub_AnythingElseIsNone`; knk-core `MenuItemActionResolverTest.atTheSiegeHubLeftAndRightOpenTheSiegeMenu`]
+   A1 joins a PvP siege lobby (`/siege join <lobby>`). While matchmaking A1 right-clicks the item; once the round is at
+   the scenario hub (team split) A1 right-clicks and left-clicks it again. **Expected:** while matchmaking the main
+   menu (no situation yet); at the hub the siege **Information** menu of A1's lobby both times.
+6. [automated: knk-core `MenuItemActionResolverTest.inAPvpMatchClicksOpenTheSiegeMenuAndShiftRightTheShop_A30`; knk-paper `MenuOpenerListenerTest.inAMatchAClickOpensTheSiegeMenuAndShiftRightTheShop_A30`, `MenuItemActionRunnerTest.theSiegeMenusOpenThroughTheirCommands_WhichKnowTheMatch`]
+   In the running match A1 right-clicks the item, left-clicks it, sneaks and right-clicks it (also on a door), then
+   sneaks and left-clicks it. **Expected:** right and left click open the siege **Information** menu; shift + right
+   click opens the **siege shop** (as `/siege shop`: right after the start it may say "The siege shop is still opening;
+   try again in a moment."); shift + left click runs `siege points` from step 3 (with the seeded table it would open
+   the main menu, as `/menu` does in a match). (A30)
+7. [automated: knk-paper `SiegeMenuItemSituationsTest.aRunningMatchIsSiegeMatch_TheHubAndTheResultAreSiegeHub_AnythingElseIsNone`]
+   After the match ends normally A1 is back at the scenario hub with the result; A1 right-clicks the item; after the
+   post-match time (or `/siege leave`) A1 right-clicks it again. **Expected:** first the siege Information menu (the
+   result), then the main menu.
+8. Siege Survival match (#41): **skip until Siege Survival is merged.** Its branch provides the
+   `siege.survival.match` check at its merge; then in a running Survival match right click opens `siege.information`
+   and shift + right click the siege shop, as in step 6 [automated once there: knk-core
+   `MenuItemActionResolverTest.inASurvivalMatchTheSameOverrideApplies_A30`]. (A30)
+9. [automated: knk-paper `MenuOpenerServiceTest.liveSwitchedOffTakesItAway`, `.liveAMissingItemIsNotGiven_AndAnUnchangedOneStays`, `.switchedOffTakesItAway`, `.aJoiningPlayerGetsItInTheConfiguredSlot`]
+   Admin switches "Menu item enabled" off and saves. **Expected:** within a few seconds A1 no longer has the item.
+   Admin switches it on again and saves. **Expected:** nothing is given while A1 plays; A1 gets it back at the next
+   rejoin or respawn, in slot 8. (A29)
+10. [automated: knk-core `MenuOpenerPlacementTest` (a pinned item found in another slot moves back); knk-paper `MenuOpenerServiceTest.thePlayersOwnItemMovesAsideAndIsKept`]
+    Admin sets Slot to 4 and saves. **Expected:** A1's item stays in slot 8 while A1 plays (nothing is moved
+    mid-fight); after A1 rejoins it is in slot 4 and whatever A1 had in slot 4 moved to a free slot. Put Slot back to
+    8 and the Name and Shift + left click back to the seeded values, and save.
+11. [automated: knk-paper `MenuItemSettingsSyncTest.withTheApiDownAtStartupTheConfigFileSettingsStay_AndEveryClickRunsSlashMenu_A31`, `GameSettingsManagerMenuItemTest.withTheApiDownAtStartupTheCachedSectionIsNotUsed_SoConfigYmlStays_A31`, `MenuOpenerListenerTest.withTheConfigFileSettingsAShiftClickOpensTheMenuAsBefore_A31`; knk-core `MenuItemActionResolverTest.theConfigFileSettingsNeverAskForASituation_A31`, `MenuOpenerSettingsTest.theFileShapeOpensTheMainMenuOnItsClicks_AndAShiftClickIsThePlainClick_A31`]
+    Set `menus.menu-item.name` in the plugin's `config.yml` to `&eFile menu` (to tell the two apart), stop the API,
+    restart the game server and join as A1. **Expected:** the log shows `Menu item on (...) from config.yml until the
+    game settings answer` and no "applied" line; A1 has the item named `&eFile menu` in the `config.yml` slot; every
+    click (right, left, either while sneaking, in the inventory) opens the main menu, exactly as before #871. (A31)
+12. Start the API again and wait for the next game settings read (`game-settings.refresh-interval-seconds`, or the
+    realtime reconnect). **Expected:** the "applied" line of step 1; A1's item takes the card's name in place without a
+    rejoin. Put `menus.menu-item.name` back in `config.yml`.

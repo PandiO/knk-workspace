@@ -1,7 +1,8 @@
 # Menus — Player Guide
 
 **Status:** Living document — update in place as the game changes
-**Last updated:** 2026-11-20 (§ Structures and § Storage terminals: in knk-plugin `next` `8e672ba6`, more terminal
+**Last updated:** 2026-11-21 (§ The menu item: what a click does in a siege, set on the game settings page; § Sieges: the
+siege shop and Siege unlocks menus; siege shop chain #870, #871, #868, #869 in `next`, docs PandiO/knk-workspace#908); 2026-11-20 (§ Structures and § Storage terminals: in knk-plugin `next` `8e672ba6`, more terminal
 messages, docs PandiO/knk-workspace#903); 2026-11-20 (§ Structures and § Storage terminals and displays, production chain L18,
 PandiO/knk-workspace#74, knk-plugin branch `claude/production-p6`, not in `next` yet); 2026-11-13 (§ Kits: kits a staff member gives you from the web app, PandiO/knk-workspace#261, in
 knk-plugin `next` `745fcf6`, not yet released); 2026-11-11 (first version, PandiO/knk-workspace#302; checked against knk-plugin `main` `121030f`; menu
@@ -26,6 +27,21 @@ easily.
 - It can't be dropped, moved or put into a chest, and you keep it when you die. If one of your own items was in that
   slot when you joined, it was moved to a free slot. With a completely full inventory you don't get the star until
   there is room (rejoin or respawn).
+
+**In `next`, not released yet** ([#870](https://github.com/PandiO/knk-workspace/issues/870),
+[#871](https://github.com/PandiO/knk-workspace/issues/871)): the staff set the item's look and what each click does on
+the web app's game settings page, so the name, material and slot may differ on your server, and a change reaches you
+without a rejoin (a new slot at your next join or respawn). With the starting settings:
+
+| Where you are | Right or left click | Shift + right click | Shift + left click, or a click in the inventory |
+|---|---|---|---|
+| Anywhere else | The main menu | The main menu | The main menu |
+| At a siege's hub (team split, and the result after the match) | Your siege's **Information** menu | The main menu | The main menu |
+| In a running PvP Siege match | Your siege's **Information** menu | The **siege shop** (as `/siege shop`) | The main menu |
+
+While you are still waiting in matchmaking the item opens the main menu. In Siege Survival it will work as in a PvP
+match once Siege Survival is released. If the game server can't reach the web server when it starts, every click opens
+the main menu, as before.
 
 ### Commands
 
@@ -100,6 +116,14 @@ lists your pending `/tpa` requests.
 The siege overview lists every siege with its scenario, players, stage and timer. Inside a siege, its information
 menu lets you join or leave during matchmaking (leaving needs a second click within 3 seconds), vote, read the
 objectives and change your spawnpoint. See the siege guides for the match itself.
+
+In `next`, not released yet ([#868](https://github.com/PandiO/knk-workspace/issues/868),
+[#869](https://github.com/PandiO/knk-workspace/issues/869)): during a running match the information menu has a
+**Shop** button (emerald, top left) that opens the **siege shop** (its categories, then one category's offers; click an
+offer to buy), on servers with the shop switched on. Outside a match the siege overview has a **Siege unlocks** button
+(anvil, top left): every siege weapon type with its coin price, minimum title and your state; an unlockable one asks
+you to **Confirm** first. Both are explained in the
+[siege guide](siege-player-guide.md#siege-points-the-siege-shop-and-weapon-unlocks).
 
 ### Structures
 

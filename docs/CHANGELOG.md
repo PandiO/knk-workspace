@@ -46,6 +46,29 @@ This is a human-readable record of capabilities merged into the V3 default branc
   4. Write the harvest rules per kind (none are seeded) and check each rule's balance on its page; the game server
      needs L22 before players can harvest. No `api.env` key, no plugin `config.yml` change in this link.
 
+- **The menu item follows the game settings page: siege menu and shop in a match** ([PandiO/knk-workspace#871](https://github.com/PandiO/knk-workspace/issues/871),
+  phase 5b of the siege shop design, link L6 of the siege shop chain; parent [#859](https://github.com/PandiO/knk-workspace/issues/859)).
+  For players: in a running PvP Siege match a click with the menu item (the nether star) opens your siege menu and a
+  shift + right click opens the siege shop; at a siege's scenario hub (team split, and the result after the match) a
+  click opens the siege menu; anywhere else it opens the main menu as before. A Siege Survival match uses its own
+  override once Siege Survival (#41) is merged. For staff: what the game settings page's **Menu item** card (#870) sets
+  (look, who gets it, an action per click, situation overrides) reaches the game server as soon as the API answers and
+  on every save, without a restart: a new name, material or lore replaces the item where it is in online players'
+  inventories; switching it off or to Bedrock only takes it away; a new slot, and giving it to someone who has none,
+  wait for the player's next join or respawn, so nothing is moved mid-fight. With the API unreachable at startup the
+  menu item works exactly as before from `menus.menu-item.*` in `config.yml` (every click in `open-on` opens `/menu`;
+  the cached game settings are not used for it); once the API has answered, an outage keeps its last settings. Open menu
+  `main` runs `/menu`, `siege.information` runs `/siege` (your Information, else the siege overview), `siege.shop` runs
+  `/siege shop` (with its "still opening" and "not available" answers); other keys open that menu; Run command runs the
+  command as the player. Also: the locked-weapon text in the siege shop now names the real path, "Locked: unlock it in
+  /menu → Siege Minigame → Siege unlocks." knk-plugin: knk-core `MenuItemAction`, `MenuItemActionResolver`,
+  `MenuItemSituations` (registers `siege.survival.match`, `siege.match`, `siege.hub`; Survival provides its check at its
+  merge), `MenuItemApiSettings`, `KnkMenuItemSettings` in `KnkGameSettings`; knk-api-client `GameSettingsDto.menuItem`;
+  knk-paper `MenuItemSettingsSync`, `MenuItemActionRunner`, `SiegeMenuItemSituations`, the listener's shift-clicks and
+  `GameSettingsManager.setMenuItemListener`. No migration, no new keys. Branch `claude/siege-shop-l6` in knk-plugin and
+  knk-workspace. Admin steps: none (deploy after knk-web-api with #870; `menus.menu-item.*` stays as the fallback,
+  [plugin configuration](guides/admin/plugin-configuration.md)). Smoke test:
+  [siege shop smoke test § 5.2](guides/siege-shop-smoke-test.md#52-steps-in-game-phase-5b-871).
 - **Item delivery, reward inbox and stash: the API** ([PandiO/knk-workspace#60](https://github.com/PandiO/knk-workspace/issues/60),
   link L19 of the production, storage and transport chain; [design](specs/production-storage-transport/DESIGN.md)
   § 4.6, decision record § 2.4, D7). The game server part (`/inbox`, the inbox menu, kits and lootboxes through the
@@ -153,7 +176,7 @@ This is a human-readable record of capabilities merged into the V3 default branc
   whole stack, enough points), then charges, then gives. Prices rise per purchase and cooldowns grow along each
   entry's curve; caps and counters reset each match. Each match reads its catalogue once at the start, so admin edits
   apply from the next match; purchases are final and bought items go with the gear restore. A locked weapon says
-  "Locked: unlock it in /menu → Minigames → Siege unlocks."; unlocked weapons are bought from siege weapons phase 3 on
+  "Locked: unlock it in /menu → Siege Minigame → Siege unlocks." (the path fixed by #871); unlocked weapons are bought from siege weapons phase 3 on
   (#784, through the shop's `ShopPurchaseHandler` port). Bought potions carry their blueprint's potion type. knk-plugin:
   knk-core `core/siege/shop/` (`ShopCatalogue`, `ShopBrakes`, `ShopPurchaseService`, `ShopPurchaseHandler`, views),
   `SiegeShopApi`; knk-paper `siege/shop/` (`SiegeShopService`, `ItemPurchaseHandler`, `SiegeShopMenuFeature`,
@@ -221,8 +244,8 @@ This is a human-readable record of capabilities merged into the V3 default branc
   earn settings and `PointTransfersEnabled` on `SiegeConfiguration`, `SiegePointsEarned`/`SiegePointsSpent` on
   `SiegeMatchParticipant`, migration `AddSiegePointsEarning` (additive). Branches `claude/siege-shop-l1` in
   knk-plugin, knk-web-api and knk-workspace. Admin steps: apply the migration; set `siege:` → `points:` →
-  `enabled: true` to turn it on (Restart). The web app's siege settings page does not show the new fields yet
-  (edit them with `PUT api/SiegeConfiguration`; web app fields: #878). Smoke test: [siege shop smoke test § 1](guides/siege-shop-smoke-test.md#1-phase-1-shared-match-ledger-and-siege-points-earning-866-tier3).
+  `enabled: true` to turn it on (Restart). The web app's siege settings page shows the new fields since L2 (#867 with
+  #878, also in `next`: section "Siege points"); `PUT api/SiegeConfiguration` works too. Smoke test: [siege shop smoke test § 1](guides/siege-shop-smoke-test.md#1-phase-1-shared-match-ledger-and-siege-points-earning-866-tier3).
 - **Production P5b: transport lanes in the plugin** ([PandiO/knk-workspace#681](https://github.com/PandiO/knk-workspace/issues/681),
   link L15 of the production chain, #22; the API half is #79). For staff: with `production.enabled: true` the game
   server measures the road route between every producer and the warehouses of its town (and between a town's

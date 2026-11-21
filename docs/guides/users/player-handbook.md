@@ -1,6 +1,6 @@
 # Knights and Kings — Player Handbook
 
-**Status:** Current · **Last updated:** 2026-11-20 (The map: on the closed alpha since 2026-11-19, PandiO/knk-workspace#767); 2026-11-19 (Territory: the action bar lines, in `next`, not released, PandiO/knk-workspace#806); 2026-11-18 (The map: the overview map, in `next`, not released, PandiO/knk-workspace#766)
+**Status:** Current · **Last updated:** 2026-11-21 (Siege: siege points, the siege shop and weapon unlocks, in `next`, not released, docs PandiO/knk-workspace#908); 2026-11-20 (The map: on the closed alpha since 2026-11-19, PandiO/knk-workspace#767); 2026-11-19 (Territory: the action bar lines, in `next`, not released, PandiO/knk-workspace#806); 2026-11-18 (The map: the overview map, in `next`, not released, PandiO/knk-workspace#766)
 **Checked against:** knk-plugin `main` `57884e9`, knk-web-api `master` `f445d21`, knk-web-app `main` `3ba747d`
 **Related:** [commands reference](commands.md), [menus](menus-player-guide.md), [guides index](../README.md)
 
@@ -205,8 +205,13 @@ siege allows work; `/siege leave` leaves it (you
 get your items and position back, but no rewards). After a match, `/siege history` shows your results with a link to
 the match page on the website.
 
+In `next`, not released yet: on servers that switch them on, you earn **siege points** during a match and spend them in
+the **siege shop** (`/siege shop`) on ender pearls, potions and golden apples; prices rise as you buy and everything
+you bought ends with the match. Siege weapon types are unlocked once with coins in `/menu` → **Siege Minigame** →
+**Siege unlocks**.
+
 <!-- Guide link (PandiO/knk-workspace#297): add the Siege player guide link on the next line. -->
-> **Full guide:** [Siege player guide](siege-player-guide.md): joining, teams, objectives, gates, rewards and match history.
+> **Full guide:** [Siege player guide](siege-player-guide.md): joining, teams, objectives, gates, rewards, match history, and siege points, the shop and weapon unlocks.
 
 ## The map
 
