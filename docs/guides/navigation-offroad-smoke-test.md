@@ -1,7 +1,7 @@
 # Off-road navigation and landmarks — smoke test
 
-**Status:** Draft from the design (2026-11-17); no steps run. Drawn landmark regions (§ 6.5): 8 of 8 steps automated (2 in part); L7b (§ 15): step A 11 of 11 steps automated (2 in part), step B (§ 15.4) 4 of 7 automated (1 in part); F3 (§ 14): 8 of 8 steps automated (5 in part); F2 (§ 13): 7 of 9 steps automated (4 in part); F1 (§ 12): 5 of 7 steps automated (3 in part); Phase 5.2 (§ 7): 7 of 8 steps automated (3 in part); Phase 4 (§ 5): 8 of 9 steps automated (2 in part); Phase 2 (§ 3): 13 of 14 steps automated (5 in part); Phase 5.1 (§ 6): 21 of 22 steps automated (6 in part); Phase 0 (§ 1): 1 of 9 steps automated; phase 1 (§ 2): 4 of 4 steps automated; phase 6.1 (§ 8): 6 of 8 steps automated (3 of them in part); phase 6.2 (§ 9): 11 of 11 steps automated (3 of them in part); phase 7 step 1 (§ 10.1): 4 of 7 steps automated (3 of them in part), viewed by the developer 2026-11-18; phase 7 step 2 (§ 10.2): 9 of 9 steps automated (3 of them in part); the other phases not yet automated (the links tag them).
-**Last updated:** 2026-11-21 (§ 6.5 drawn landmark regions, #944/#945: eight steps, all automated, two in part); 2026-11-20 (§ 15.4 L7b step B, the plugin uses a group's default route mode, #852: seven steps, four automated, one in part); 2026-11-20 (§ 15 L7b step A, a default route mode per permission group, #852: API, web and migration steps, eleven, all automated, two in part; in-game steps marked step B); 2026-11-20 (§ 14 F3, the smoke-test failures of 2026-11-19, #780, #771, #710: the road goal weighs the walk above the road, no repeated turn message, which end a 0-expansion search could not use, open doors passed without the door check, `trail-leg-spacing` shipped as 2.0: eight steps, all automated, five in part; shipped settings); 2026-11-19 (§ 13 F2, road goal by walk reachability, the road kept to its end and the flag-off walk-trail spacing, #780 and #771 items 3 to 5: nine steps, seven automated, four in part; shipped settings); 2026-11-19 (§ 12 F1, the walk-search fixes of #771 items 1 and 2: seven steps, five automated, three in part; shipped settings first, scene 1 by road recorded as known); 2026-11-18 (§ 7 phase 5.2 built by link L9, #709: eight steps, seven automated, three in part); 2026-11-18 (§ 5 phase 4 built by link L7, #707: nine steps, eight automated, two in part); 2026-11-18 (§ 3 phase 2 built by link L5, #705: fourteen steps, thirteen automated, five in part); 2026-11-18 (§ 10 phase 7: step 1 viewed by the developer, O33; § 10.2 step 2 built by link L10, #712: nine steps, all automated, three in part); 2026-11-18 (§ 6.3 phase 5.1 step B, link L8: the in-game steps); 2026-11-18 (§ 6 phase 5.1 updated to what link L8 step A built, #708: API and web steps, plugin steps marked step B); 2026-11-18 (§ 10 phase 7 split into step 1, built by link L10, #712: the staff preview and the developer's viewing steps on Cinix and Brink, and step 2, the trail, not built yet); 2026-11-18 (§ 9 phase 6.2 updated to what link L4 built, #711: eleven steps, all automated, three in part); 2026-11-17 (§ 8 phase 6.1 updated to what link L3 built, #710: eight steps, six automated); 2026-11-17 (§ 2 phase 1 updated to what link L2 built, #704: every step automated); 2026-11-17 (§ 1 phase 0 updated to what link L1 built, #703: the measurement steps and the `/knk road status` lines); 2026-11-17 (draft from the design, phases 0, 1, 2, 3, 4, 5.1, 5.2, 6.1, 6.2, 7)
+**Status:** Draft from the design (2026-11-17); no steps run. Drawn landmark regions (§ 6.5): 8 of 8 steps automated (2 in part); L7b (§ 15): step A 12 of 12 steps automated (2 in part), step B (§ 15.4) 5 of 8 automated (1 in part); F3 (§ 14): 8 of 8 steps automated (5 in part); F2 (§ 13): 7 of 9 steps automated (4 in part); F1 (§ 12): 5 of 7 steps automated (3 in part); Phase 5.2 (§ 7): 7 of 8 steps automated (3 in part); Phase 4 (§ 5): 8 of 9 steps automated (2 in part); Phase 2 (§ 3): 13 of 14 steps automated (5 in part); Phase 5.1 (§ 6): 21 of 22 steps automated (6 in part); Phase 0 (§ 1): 1 of 9 steps automated; phase 1 (§ 2): 4 of 4 steps automated; phase 6.1 (§ 8): 6 of 8 steps automated (3 of them in part); phase 6.2 (§ 9): 11 of 11 steps automated (3 of them in part); phase 7 step 1 (§ 10.1): 4 of 7 steps automated (3 of them in part), viewed by the developer 2026-11-18; phase 7 step 2 (§ 10.2): 9 of 9 steps automated (3 of them in part); the other phases not yet automated (the links tag them).
+**Last updated:** 2026-11-21 (§ 6.5 drawn landmark regions, #944/#945: eight steps, all automated, two in part); 2026-11-21 (§ 15 enum follow-up of #852: `DefaultRouteMode` holds the enum names Shortest, Efficient and Preferred, the form field is an Enum field, § 15.3 step 2 for the rename migration, § 15.0 item 5 for player D and the road pair, § 15.4 count corrected to 5 of 8 with a clean-up step); 2026-11-20 (§ 15.4 L7b step B, the plugin uses a group's default route mode, #852: seven steps, four automated, one in part); 2026-11-20 (§ 15 L7b step A, a default route mode per permission group, #852: API, web and migration steps, eleven, all automated, two in part; in-game steps marked step B); 2026-11-20 (§ 14 F3, the smoke-test failures of 2026-11-19, #780, #771, #710: the road goal weighs the walk above the road, no repeated turn message, which end a 0-expansion search could not use, open doors passed without the door check, `trail-leg-spacing` shipped as 2.0: eight steps, all automated, five in part; shipped settings); 2026-11-19 (§ 13 F2, road goal by walk reachability, the road kept to its end and the flag-off walk-trail spacing, #780 and #771 items 3 to 5: nine steps, seven automated, four in part; shipped settings); 2026-11-19 (§ 12 F1, the walk-search fixes of #771 items 1 and 2: seven steps, five automated, three in part; shipped settings first, scene 1 by road recorded as known); 2026-11-18 (§ 7 phase 5.2 built by link L9, #709: eight steps, seven automated, three in part); 2026-11-18 (§ 5 phase 4 built by link L7, #707: nine steps, eight automated, two in part); 2026-11-18 (§ 3 phase 2 built by link L5, #705: fourteen steps, thirteen automated, five in part); 2026-11-18 (§ 10 phase 7: step 1 viewed by the developer, O33; § 10.2 step 2 built by link L10, #712: nine steps, all automated, three in part); 2026-11-18 (§ 6.3 phase 5.1 step B, link L8: the in-game steps); 2026-11-18 (§ 6 phase 5.1 updated to what link L8 step A built, #708: API and web steps, plugin steps marked step B); 2026-11-18 (§ 10 phase 7 split into step 1, built by link L10, #712: the staff preview and the developer's viewing steps on Cinix and Brink, and step 2, the trail, not built yet); 2026-11-18 (§ 9 phase 6.2 updated to what link L4 built, #711: eleven steps, all automated, three in part); 2026-11-17 (§ 8 phase 6.1 updated to what link L3 built, #710: eight steps, six automated); 2026-11-17 (§ 2 phase 1 updated to what link L2 built, #704: every step automated); 2026-11-17 (§ 1 phase 0 updated to what link L1 built, #703: the measurement steps and the `/knk road status` lines); 2026-11-17 (draft from the design, phases 0, 1, 2, 3, 4, 5.1, 5.2, 6.1, 6.2, 7)
 **Design:** [specs/navigation-offroad/DESIGN.md](../specs/navigation-offroad/DESIGN.md) · **Issue:**
 [PandiO/knk-workspace#698](https://github.com/PandiO/knk-workspace/issues/698)
 
@@ -1139,35 +1139,52 @@ in the group DTOs (the plugin reads it from `GET api/PermissionGroups`), the fie
 (step Group) and the dashboard's "Default route" column. Changing it is a group edit: `knk.admin.user.perm` (or the
 plugin key) and `PermissionEscalationGuard`'s rank rule, unchanged. Step B (knk-plugin, after F3) makes `/navigate
 <dest>` without a mode word use the default of the player's highest-weight group that has one (§ 15.4).
-API, web and migration steps: 11 of 11 automated (tagged), 2 of them in part. Time: about 15 min for § 15.1 to § 15.3.*
+**Enum follow-up 2026-11-21** (developer decision, branches `claude/group-route-mode-enum`): `DefaultRouteMode` is the
+enum `RouteMode` (`Shortest`, `Efficient`, `Preferred`), stored and sent by name, so the form field is an **Enum** field
+(a String field fails the form's publish check against the entity); the data migration
+`NormalizePermissionGroupDefaultRouteMode` renames stored lowercase words to the names. The plugin reads the name in any
+case, so step B is unchanged. API, web and migration steps: 12 of 12 automated (tagged), 2 of them in part. Time: about
+15 min for § 15.1 to § 15.3.*
 
 ### 15.0 Preconditions
 
-1. Deployed: knk-web-api with the migration `AddPermissionGroupDefaultRouteMode` applied (`dotnet ef database update`)
-   and knk-web-app from the same `next`. For § 15.4 also the plugin build with step B.
+1. Deployed: knk-web-api with the migrations `AddPermissionGroupDefaultRouteMode` and
+   `NormalizePermissionGroupDefaultRouteMode` applied (`dotnet ef database update`) and knk-web-app from the same `next`.
+   For § 15.4 also the plugin build with step B, and the API migration `SeedNavigateDefaultNode` (#845) applied before
+   it: that plugin declares `knk.navigate` as `default: false`, so without the seed players who are not op can't
+   `/navigate` at all.
 2. Settings: none (no `api.env` key, no plugin `config.yml` key).
-3. Data: the PermissionGroup form has the field "Default route mode" (a fresh import of the seed `PermissionGroup`
-   has it; a form imported earlier gets it in the form designer, see the changelog entry's admin step 2). The groups
-   Default (weight 0) and Staff (weight 40) exist.
+3. Data: the PermissionGroup form has the **Enum** field "Default route mode" with the settings JSON
+   `{"enumValues": ["Shortest", "Efficient", "Preferred"], "emptyOptionLabel": "None (default: Preferred)"}` (a fresh
+   import of the seed `PermissionGroup` has it; a form imported earlier gets it in the form designer, step Group, see the
+   changelog entry's admin step 2; a String field added by hand before the follow-up is changed to Enum with these
+   settings). The groups Default (weight 0) and Staff (weight 40) exist.
 4. Accounts: staff **A** with `knk.admin.user.manage` and `knk.admin.user.perm` in a group ranked above Staff (or
    `*`); staff **B** with the same nodes whose highest group is Staff (so Staff is not below B's rank).
+5. For § 15.4: player **D** (also player C), a second Minecraft account that has joined the server and is **not op**
+   (an op holds every node, so a refused typed word can't show), at first only in Default; and a road pair where the
+   modes take different routes (§ 5.0 item 3: an edge of the shorter way set to `cost 3`). Note the three routes once
+   with typed words as an op (`/navigate <dest> shortest`, `efficient`, `preferred`) to compare against.
 
 ### 15.1 API
 
 1. As staff A (logged in, or with the plugin key), `GET <api>/api/PermissionGroups`. **Expected:** `200`; every group
-   has `"defaultRouteMode": null` right after the migration. [automated: knk-web-api
+   has `"defaultRouteMode": null` right after the migrations. [automated: knk-web-api
    `PermissionGroupDefaultRouteModeTests.GetAllAsync_ThePluginsRead_CarriesTheDefault`,
    `ReadDto_SerializesAsDefaultRouteMode_NullWhenUnset`, `AddPermissionGroupDefaultRouteModeTests`]
 2. `PUT <api>/api/PermissionGroups/<Staff id>` with Staff's current fields and `"defaultRouteMode": "Efficient"`, then
-   `GET` it. **Expected:** `204`; the group now reads `"defaultRouteMode": "efficient"` (stored lowercase).
-   [automated: `PermissionGroupDefaultRouteModeTests.UpdateAsync_AModeWord_IsStoredLowercase`]
-3. The same `PUT` with `"defaultRouteMode": "fastest"`. **Expected:** `400` starting "DefaultRouteMode must be one of shortest,
-   efficient, preferred, or empty for no default."; the stored value is unchanged.
-   [automated: `UpdateAsync_AnotherWord_IsRefusedAndNothingIsSaved`, `CreateAsync_AnotherWord_IsRefused`]
+   `GET` it. **Expected:** `204`; the group now reads `"defaultRouteMode": "Efficient"` (the enum name; `"efficient"` or
+   any other case is read as the same mode). [automated: `PermissionGroupDefaultRouteModeTests.UpdateAsync_AModeName_IsStored`,
+   `UpdateAsync_TheFormsBody_SetsOrClears`]
+3. The same `PUT` with `"defaultRouteMode": "fastest"`. **Expected:** `400`, a validation problem for
+   `defaultRouteMode` from the JSON binding (the value is no `RouteMode`); the stored value is unchanged. A number that
+   is no mode (`"defaultRouteMode": 7`) is also a `400`, "DefaultRouteMode must be one of Shortest, Efficient,
+   Preferred, or empty for no default.". [automated: `Binding_AnotherWord_IsRefused`,
+   `UpdateAsync_ANumberThatIsNoMode_IsRefusedAndNothingIsSaved`, `CreateAsync_ANumberThatIsNoMode_IsRefused`]
 4. The same `PUT` without `defaultRouteMode`, then with `"defaultRouteMode": ""`. **Expected:** the first keeps
-   `efficient`; the second clears it (`null`). [automated: `UpdateAsync_Omitted_KeepsTheStoredDefault`,
-   `UpdateAsync_Blank_ClearsTheDefault`]
-5. As staff B, the same `PUT` on Staff with `"defaultRouteMode": "shortest"`. **Expected:** `403` with the rank reason,
+   `Efficient`; the second clears it (`null`), as does `"defaultRouteMode": null`. [automated:
+   `UpdateAsync_Omitted_KeepsTheStoredDefault`, `UpdateAsync_BlankOrNull_ClearsTheDefault`]
+5. As staff B, the same `PUT` on Staff with `"defaultRouteMode": "Shortest"`. **Expected:** `403` with the rank reason,
    as for any other change to a group not ranked below B's own; nothing changes. [automated in part: the rank rule is
    the existing group-edit check (`PermissionEscalationGuardTests`), which this field does not change; not tested for
    this field on its own]
@@ -1175,20 +1192,21 @@ API, web and migration steps: 11 of 11 automated (tagged), 2 of them in part. Ti
 ### 15.2 Web app
 
 1. As staff A open the dashboard and pick **Permission Group**. **Expected:** a "Default route" column, after Parent;
-   Staff shows `efficient` once set, a group without a default shows `-`. [automated: knk-web-app
+   Staff shows `Efficient` once set, a group without a default shows `-`. [automated: knk-web-app
    `e2e/permission-group-route-mode.spec.ts` "the dashboard shows each group's default route mode";
    `permissionGroupRouteMode.test.tsx`]
-2. Edit Staff. **Expected:** on the Group step a "Default route mode" dropdown with "None (default: preferred)",
-   shortest, efficient and preferred; the stored mode is selected. Pick `efficient`, Submit. **Expected:** "Permission
-   Group updated."; the dashboard row shows `efficient`. [automated in part: `e2e/permission-group-route-mode.spec.ts`
-   "editing a group shows its stored mode, and None clears it" (a one-step test form, mocked API);
+2. Edit Staff. **Expected:** on the Group step a "Default route mode" dropdown with "None (default: Preferred)",
+   Shortest, Efficient and Preferred; the stored mode is selected. Pick `Efficient`, Submit. **Expected:** "Permission
+   Group updated."; the dashboard row shows `Efficient`. [automated in part: `e2e/permission-group-route-mode.spec.ts`
+   "editing a group shows its stored mode, and None clears it" (a one-step test form with the Enum field, mocked API);
    `FieldRenderers.emptyOption.test.tsx`]
-3. Edit Staff again, pick "None (default: preferred)", Submit. **Expected:** saved; the dashboard row shows `-` and
+3. Edit Staff again, pick "None (default: Preferred)", Submit. **Expected:** saved; the dashboard row shows `-` and
    `GET api/PermissionGroups/<id>` has `null`. [automated: the same e2e test (sends `""`) and
-   `UpdateAsync_Blank_ClearsTheDefault`]
-4. Create a group "Builders" with `shortest`. **Expected:** "Permission Group created."; the row shows `shortest`.
-   [automated: `e2e/permission-group-route-mode.spec.ts` "a new group saves the picked mode through POST
-   api/PermissionGroups", `CreateAsync_StoresTheDefaultOrNone`]
+   `UpdateAsync_TheFormsBody_SetsOrClears`, `UpdateAsync_BlankOrNull_ClearsTheDefault`]
+4. Create a group "Builders" with weight 50, no "Inherits from" and `Shortest`. **Expected:** "Permission Group
+   created."; the row shows `Shortest`. (Builders is the higher-weight group of § 15.4 step 4.) [automated:
+   `e2e/permission-group-route-mode.spec.ts` "a new group saves the picked mode through POST api/PermissionGroups",
+   `CreateAsync_StoresTheDefaultOrNone`]
 5. With a form configuration that has no "Default route mode" field (an older import), edit a group that has a
    default and Submit. **Expected:** the default stays. [automated: `UpdateAsync_Omitted_KeepsTheStoredDefault`]
 
@@ -1197,38 +1215,52 @@ API, web and migration steps: 11 of 11 automated (tagged), 2 of them in part. Ti
 1. On a copy of the production database, apply the migrations. **Expected:** one new nullable column
    `permission_groups.DefaultRouteMode` (`varchar(16)`), null on every row, no other change; `Down` drops only that
    column. [automated: knk-web-api `AddPermissionGroupDefaultRouteModeTests`; CI "Migrations (fresh DB)" on the API PR]
+2. On the dev database (where groups may hold a lowercase word from before the enum follow-up), apply
+   `NormalizePermissionGroupDefaultRouteMode`. **Expected:** `shortest`, `efficient` and `preferred` become `Shortest`,
+   `Efficient` and `Preferred`; null stays null; nothing else changes; `Down` turns the names back into the words.
+   [automated: knk-web-api `NormalizePermissionGroupDefaultRouteModeTests`, `NormalizePermissionGroupDefaultRouteModeMySqlTests`
+   (real MySQL, CI `mysql-tests`)]
 
 ### 15.4 In game (step B)
 
 *Built 2026-11-20 (link L7b step B, knk-plugin `claude/offroad-group-route-mode`, PandiO/knk-plugin#103): the plugin
 reads `defaultRouteMode` from `GET api/PermissionGroups` and, for `/navigate <dest>` without a mode word, uses the
 default of the player's highest-weight active group that has one (a weight tie goes to the lower group id; an unknown
-word counts as no default and is logged once at INFO). The lookup is cached per player and cleared on
-`PermissionGroupChanged` and on the player's membership changes; on a cold cache the first run uses today's default
-while the cache fills, so no API call blocks the command. No config key, no migration. Not covered: a siege match on
-the legacy path (`navigateInMatch`) passes through no mode, so no group default applies there, as no typed word does
-today; on the destination-engine path a found match destination does take it. In-game steps: 4 of 7 automated (1 in
-part). Time: about 10 min.*
+word counts as no default and is logged once at INFO; the value is read in any case, so the enum names of the 2026-11-21
+follow-up need no plugin change). The lookup is cached per player and cleared on `PermissionGroupChanged` and on the
+player's membership changes; on a cold cache the first run uses today's default while the cache fills, so no API call
+blocks the command: after any group edit or membership change judge the second `/navigate` (pressing Tab after
+`/navigate ` also fills the cache). No config key, no migration. Not covered: a siege match on the legacy path
+(`navigateInMatch`) passes through no mode, so no group default applies there, as no typed word does today; on the
+destination-engine path a found match destination does take it. In-game steps: 5 of 8 automated (1 in part; step 8 is the clean-up). Time:
+about 10 min.*
 
 1. Player C only in groups without a default (every group's default None): `/navigate <dest>`. **Expected:** the same
    route as before step B (`preferred`, L7's golden transcripts). [automated: knk-paper
    `NavigateCommandGroupRouteModeTest`, L7 goldens unchanged]
-2. Set Staff's default to `shortest` in the web app (§ 15.2) and give player D Staff without
-   `knk.navigate.mode.shortest`. D runs `/navigate <dest>` twice (the § 5 road pair shows the difference).
-   **Expected:** the first run after a server start may still use `preferred` while the cache fills; from the second
-   run on the route is the `shortest` one, and no permission message appears. [automated in part: the command part in
-   `NavigateCommandGroupRouteModeTest`, the cache in `GroupRouteModeDefaultsTest`]
+2. Set Staff's default to `Shortest` in the web app (§ 15.2) and give player D Staff without
+   `knk.navigate.mode.shortest` (`/knk user <D> group add Staff`). D runs `/navigate <dest>` twice (the § 5 road pair
+   shows the difference). **Expected:** the first run after the change may still use `preferred` while the cache fills;
+   from the second run on the route is the `shortest` one, and no permission message appears. Then D types
+   `/navigate <dest> ` and presses Tab: if `shortest`, `efficient` and `preferred` are offered, Staff holds the mode
+   nodes and step 3 can't show; use a new group without nodes (weight 45) in place of Staff. [automated in part: the
+   command part in `NavigateCommandGroupRouteModeTest`, the cache in `GroupRouteModeDefaultsTest`]
 3. D types `/navigate <dest> efficient` without `knk.navigate.mode.efficient`. **Expected:** refused with "You don't
    have permission to use this command." as before; the group default does not grant typed words.
    [automated: `NavigateCommandGroupRouteModeTest`]
-4. Change Staff's default to `efficient` in the web app (fires `PermissionGroupChanged`). D runs `/navigate <dest>`
-   (once to warm the cache, then again). **Expected:** the `efficient` route. Then give D a second group of higher
-   weight with default `shortest`. **Expected:** `shortest` wins; a higher group with None is skipped.
-   [automated: knk-core `GroupRouteModeResolverTest`, `RouteModeInvalidationHooksTest`]
-5. Remove D from every group with a default (in game or in the web app), then `/navigate <dest>` twice. **Expected:**
-   the `preferred` route again.
-6. Set `navigation.destination-engine: true` in the plugin `config.yml`, restart, and repeat steps 2 to 5.
-   **Expected:** the same results on the engine path. [automated: the engine path in
+4. Change Staff's default to `Efficient` in the web app (fires `PermissionGroupChanged`). D runs `/navigate <dest>`
+   (once to warm the cache, then again). **Expected:** the `efficient` route. Then set Builders (weight 50, § 15.2 step
+   4) to `Shortest` and `/knk user <D> group add Builders`. **Expected:** `shortest` wins. Then set Builders to None.
+   **Expected:** `efficient` again: a higher group with None is skipped. (If `efficient` and `shortest` take the same
+   route on the road pair, the switches in this step can't be seen there.) [automated: knk-core
+   `GroupRouteModeResolverTest`, `RouteModeInvalidationHooksTest`]
+5. Remove D from every group with a default (`/knk user <D> group remove Builders`, then `remove Staff`, or in the web
+   app), then `/navigate <dest>` twice. **Expected:** the `preferred` route again. (Manual: a real player and the live
+   cache.)
+6. Switch `navigation.destination-engine` in the plugin `config.yml` (the dev server runs with `true`; set `false` to
+   test the legacy path, or the other way round), restart, and repeat steps 2 to 5. Set it back afterwards.
+   **Expected:** the same results on both paths. [automated: the legacy and the engine path in
    `NavigateCommandGroupRouteModeTest`]
 7. Watch an NPC route (any NPC walk from the NPC movement smoke test) while Staff has a default. **Expected:** NPC
-   routes are unchanged; NPCs never take a group default.
+   routes are unchanged; NPCs never take a group default. (Manual: NPC walks in the world.)
+8. Clean-up: `/knk road edge set <id> cost 1` on the test edge, Staff's default back to None, Builders deleted or kept.
