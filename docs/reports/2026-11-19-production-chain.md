@@ -95,7 +95,7 @@ of what is already in `next`.
 | L21 P8a harvest API | #685 | Merged into next (2026-11-21) | api `e89e396`, workspace `00fab16d` (merged `next` `12804469`); merges: api `9ad32c23`, workspace `69f2b108` (after a coordinator merge of `next`, `944a443b`) | [api#72](https://github.com/PandiO/knk-web-api/pull/72), [ws#914](https://github.com/PandiO/knk-workspace/pull/914) | push runs on `e89e396` green (build-and-test, mysql-tests, fresh-database); PR runs running | create_session `session_01R1w2Ux7jFcMxYzkwej4qY4` (prompt says start without asking), started 2026-11-21 |
 | L22 P8 harvest plugin | #134 | Merged into next (2026-11-21) | plugin `676d6f11`, workspace `e6b8b6ec`; merges: plugin `6f6c915f`, workspace `700ec311` | [plugin#114](https://github.com/PandiO/knk-plugin/pull/114), [ws#919](https://github.com/PandiO/knk-workspace/pull/919) | green on `676d6f11` (plugin build + paper-boot, 73 scenarios) | create_session `session_01R1w2UuXe6TVT7QDKeAXdgn` (prompt says start without asking), started 2026-11-21 |
 | L23 P9 town logistics API | #127 | Merged into next (2026-11-21) | api `6a8c110`, workspace `3920e67d`; merges: api `37be22e5`, workspace `fbf071df` (after a coordinator merge of `next`, `8ebdbb2c`) | [api#73](https://github.com/PandiO/knk-web-api/pull/73), [ws#920](https://github.com/PandiO/knk-workspace/pull/920) | green on `6a8c110` (build-and-test, mysql-tests, fresh-database) | create_session `session_01R1w2UwWMWgbXsBzScMifEq` (prompt says start without asking), started 2026-11-21 |
-| L24 P9b logistics web app | #686 | In review (done 2026-11-21) | web app `e392d84`, workspace `926ce973` | [web-app#72](https://github.com/PandiO/knk-web-app/pull/72), [ws#927](https://github.com/PandiO/knk-workspace/pull/927) | green on `e392d84`: build-and-test (push 44863648405, PR 44863833419), e2e push run 44863648392; PR e2e run 44863833359 running | create_session `session_01R1w2UwTStX77ypqswMN3Kz` (prompt says start without asking), started 2026-11-21 |
+| L24 P9b logistics web app | #686 | Merged into next (2026-11-21) | web app `e392d84`, workspace `926ce973`; merges: web app `c12e0e7e`, workspace `385ec7d3` | [web-app#72](https://github.com/PandiO/knk-web-app/pull/72), [ws#927](https://github.com/PandiO/knk-workspace/pull/927) | green on `e392d84`: build-and-test (push 44863648405, PR 44863833419), e2e push run 44863648392; PR e2e run 44863833359 running | create_session `session_01R1w2UwTStX77ypqswMN3Kz` (prompt says start without asking), started 2026-11-21 |
 | L25 P10 shops API, town account | #248 | Running | — | — | — | create_session `session_01R1w2Uu45eaJcRwWoXYurUU` (prompt says start without asking), started 2026-11-21 |
 | L26 P10b shop menus plugin | #687 | Waiting (developer's shop menu templates, asked on #687) | — | — | — | — |
 | L27 P10c shops web app | #688 | Not started | — | — | — | — |
@@ -454,6 +454,18 @@ of what is already in `next`.
    3. L26 waits for the developer's shop menu templates (charter § 2.3), asked on #687. L28 and L29 depend on L26.
    4. With L22 done, the plugin is idle until L26.
 66. **P7 docs #915:** done (#916 bug, #917 promotion steps).
+
+67. **L24 merge (2026-11-21).** § 6 checks held:
+   1. Heads matched, and the branches merged cleanly with `next`.
+   2. CI was green (build-and-test, e2e).
+   3. Codex was at its usage limit, so there were no findings.
+   4. The scope matched #686.
+   Merged web app #72 `c12e0e7e` and workspace #927 `385ec7d3`. P9 (L23–L24) is complete: `documentation` sub-issue
+   #929 under #127, with a docs session.
+   The API points L24 found are #928 (tier:1). Chosen: run them as a small API link after L25 rather than add them to
+   L25, which is already the biggest API link. Alternatives: (a) fold them into L25: they would widen a running link.
+68. **P8 docs #922:** done (PR #926).
+69. **No reply yet on #687 (shop menu templates) at 04:20.** L26, L28 and L29 stay gated.
 
 ## 4. Link blocks
 
