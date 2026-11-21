@@ -4,6 +4,20 @@ This is a human-readable record of capabilities merged into the V3 default branc
 
 ## Unreleased — on feature branches, not merged
 
+- **A production area's field drawn in game keeps its region, and its survey keeps counting**
+  ([PandiO/knk-workspace#946](https://github.com/PandiO/knk-workspace/issues/946); with #944/#945 on branch
+  `claude/landmark-regions`). knk-web-api: a Region-shaped production area's region drawn through the area form's
+  region task is renamed to `production_area_<id>` on create and update (`FinalizeProductionAreaAsync`, the area's
+  world, drawn outline and Y range kept); a re-run redefines it in place or removes a previous temp region; an existing
+  region id is kept; `finalize-temp-names` and the release service cover production areas. Lootbox spawn areas,
+  landmarks and production areas now share one finalize path (`RegionOwnerKind`). knk-plugin: the temp-region cleanup
+  and release pass ask the production areas (`GET api/ProductionAreas`), and each owner list is read at most once a
+  minute instead of once per region; the survey picks the renamed region up at its next poll. Before, the drawn region
+  stayed `tempregion_worldtask_<n>`, was deleted after 14 days and the survey failed with "WorldGuard region ... not
+  found". Docs: [managed WorldGuard regions § 7 "Production areas"](architecture/managed-worldguard-regions.md),
+  [production smoke test § 5.4](guides/production-storage-transport-smoke-test.md). Admin steps: none (no migration,
+  no `config.yml` key, no seed change). Known: the first save of a freshly drawn region needs its bounds typed (#951).
+
 - **Landmarks can draw their own region in game, like towns and lootbox areas do**
   ([PandiO/knk-workspace#944](https://github.com/PandiO/knk-workspace/issues/944),
   [#945](https://github.com/PandiO/knk-workspace/issues/945); follow-up of #708; branch `claude/landmark-regions` in
