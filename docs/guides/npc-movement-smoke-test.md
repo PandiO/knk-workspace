@@ -309,8 +309,8 @@ Added 2026-11-21 for knk-plugin `claude/npc-push-return-loop-953`
 ([#953](https://github.com/PandiO/knk-workspace/issues/953)); run it on `next` once the fix is merged. It retests the
 smoke run of 2026-11-21, where one NPC on this route logged "pushed 0.4 blocks … by something unknown" at
 1337 45 −624 with nothing touching it, then "returns straight back" and "is back at" 390 times and never went on; the
-same happened on the hatch tower's spiral stair. 3 of 5 steps partly automated and 1 automated (tagged); every step
-can still be run by hand; not run yet. About 30 minutes; 10 minutes for the untagged steps only.
+same happened on the hatch tower's spiral stair. 2 of 5 steps partly automated and 1 automated (tagged); every step
+can still be run by hand; not run yet. About 30 minutes; 20 minutes for the untagged steps only.
 
 Setup: the setup above with the movement keys of step 3, and `collidable: true`, `players-push-npcs: false`,
 `push-return: true` (the config of 2026-11-21). Restart.
@@ -333,8 +333,9 @@ Steps:
    has a `pushed … by player <you>` line, then one `returns straight back to …` and one `is back at …`, and the NPC
    walks on round the junction and arrives. `stats`: `pushes` (players) as many as the times you walked into it,
    `returned` the same, and `trips` grows by one when it arrives. Set `players-push-npcs: false` again afterwards.
-3. [partly automated: `npc-replay-hatch-tower-stair` (the developer's snapshot of the tower, collision on); by hand: the
-   live tower and its ladder] **Down the tower's spiral stair.** `/knk npc nav route load hatch-tower-reverse` (the
+3. **Down the tower's spiral stair** (manual: a replay of the developer's tower snapshot does not get an NPC down the
+   stair yet, [#963](https://github.com/PandiO/knk-workspace/issues/963); the same false push is covered by step 1's
+   tests). `/knk npc nav route load hatch-tower-reverse` (the
    route you saved on 2026-11-21 from the tower's top floor at 1398 107 −542 to the keep's road at 1419 82 −545; or
    link H1's `hatch-tower-down`), `/knk npc nav clear`,
    `/knk npc nav stats reset`, `/knk npc nav spawn 1`. Once the NPC is down the ladder (a stall at the hatch is

@@ -30,10 +30,10 @@ This is a human-readable record of capabilities merged into the V3 default branc
   3. **Tests.** knk-core `NpcNavigationPushTest` (a walk through a hairpin of the line is no push; after one push of
      unknown kind one walk back, then on to the goal; a shove right after a walk back is a new push; the last steps of a
      walk that ends are no push), `PushWatchTest`,
-     `TrailTest`; new scenarios (CI `MIN_SCENARIOS` 75): `npc-push-return-hairpin`, a Citizens NPC with collision on, on
-     a line with the same hairpin, untouched (code defaults, then the movement keys) and knocked once before it; and
-     `npc-replay-hatch-tower-stair`, the developer's snapshot of the tower replayed with collision on, one NPC from the
-     foot of the ladder down the spiral stair to the keep's road with no push and no walk back.
+     `TrailTest`; new scenario `npc-push-return-hairpin` (CI `MIN_SCENARIOS` 74): a Citizens NPC with collision on, on a
+     line with the same hairpin, untouched (code defaults, then the movement keys) and knocked once before it. The
+     spiral stair is checked by hand: a replay of the developer's tower snapshot does not get an NPC down the stair yet
+     ([#963](https://github.com/PandiO/knk-workspace/issues/963)).
      Smoke test: [Fix #953](guides/npc-movement-smoke-test.md#fix-953-after-a-push-the-npc-goes-on-with-its-trip-keep-tower-route).
   4. **Admin steps:** none beyond deploying the jar.
 
