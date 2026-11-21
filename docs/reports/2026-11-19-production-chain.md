@@ -85,7 +85,7 @@ of what is already in `next`.
 | L17 P6a API: StorageContainer, caller-filtered reads, menu seeds | #683 | Merged into next (2026-11-20) | api `a2b8a98`, workspace `bd4d7949`; merges: api `a2865d75`, workspace `3dc4267c` | [api#67](https://github.com/PandiO/knk-web-api/pull/67), [ws#889](https://github.com/PandiO/knk-workspace/pull/889) | green (build-and-test, mysql-tests, fresh-database) | create_session `session_01R1w2UukTGdahr4dAwQTutW` (prompt says start without asking), started 2026-11-20 |
 | L18 P6 plugin: terminals, displays, Structures menu, structure menu, orders list | #74 | Merged into next (2026-11-20) | plugin `a9ee8bf1`, workspace `f947c84b`; final head `19f74865` (L18 merged `next` and regenerated `content-seeds.json`); merges: plugin `8e672ba6`, workspace `df27cc18` (after a coordinator merge of `next`, `0f1c8264`) | [plugin#110](https://github.com/PandiO/knk-plugin/pull/110), [ws#898](https://github.com/PandiO/knk-workspace/pull/898) | green (plugin build + paper-boot, 69 scenarios) | create_session `session_01R1w2UxMM4WEwxxedAe11ji` (prompt says start without asking), started 2026-11-20 |
 | L19 P7 delivery and inbox API | #60 | Merged into next (2026-11-21) | api `a389259`, workspace `fbe4ded6`; merges: api `2952d0c7`, workspace `e2c6f45b` | [api#70](https://github.com/PandiO/knk-web-api/pull/70), [ws#899](https://github.com/PandiO/knk-workspace/pull/899) | build-and-test, fresh-database green; mysql-tests running (green locally) | create_session `session_01R1w2UwpK1NtaZLrA8k2uhP` (prompt says start without asking), started 2026-11-20 |
-| L20 P7b inbox plugin, kit/lootbox migration | #684 | Running | — | — | — | create_session `session_01R1w2Ux3iuWqjcAV5HQdPvM` (prompt says start without asking), started 2026-11-21 |
+| L20 P7b inbox plugin, kit/lootbox migration | #684 | In review (2026-11-21) | plugin `823ebf09`, workspace `e48c9d0e` | [plugin#113](https://github.com/PandiO/knk-plugin/pull/113), [ws#911](https://github.com/PandiO/knk-workspace/pull/911) | green on `1952a5b9` (build + paper-boot, 71 scenarios); `823ebf09` running | create_session `session_01R1w2Ux3iuWqjcAV5HQdPvM` (prompt says start without asking), started 2026-11-21 |
 | L21 P8a harvest API | #685 | Running | — | — | — | create_session `session_01R1w2Ux7jFcMxYzkwej4qY4` (prompt says start without asking), started 2026-11-21 |
 | L22 P8 harvest plugin | #134 | Not started | — | — | — | — |
 | L23 P9 town logistics API | #127 | Not started | — | — | — | — |
@@ -1983,3 +1983,109 @@ _(Each link appends its block here when it finishes.)_
        fall back to today's delivery when the API answers 409 `ProductionDisabled`. Claimed unique items need the
        instance-to-item builder (#897, from L18).
     2. A web app link (#901): the `production.delivery` settings card and a player's inbox and stash.
+
+### 4.20 L20 — P7b inbox plugin, kit/lootbox migration (#684)
+
+1. **Scope done** (knk-plugin, plus essential docs in knk-workspace). Everything new runs only with
+   `production.enabled: true`. With it off, kits and lootboxes are delivered exactly as before (A21, #261), and both
+   paths are tested.
+    1. `RewardInbox` (knk-paper `production/inbox`) places what fits first. It sends the rest with
+       `POST api/ItemDeliveries`, under a key that stays the same for each reward:
+        1. `kit-claim-<claimId>` for kits granted from the web app (#261).
+        2. `lootbox-claim-<claimId>` for lootboxes.
+        3. `kit-first-join-u<userId>` for first-join kits.
+        4. A random `kit-<kitId>-u<userId>-…` for each in-game grant.
+       Items are resolved with item identity (#141), or else by the blueprint they were built from. If the API gives no
+       answer or a 5xx error, the plugin retries once with the same key. If the API refuses (409 `ProductionDisabled`
+       or another 4xx), the plugin falls back to today's delivery.
+    2. Kits: `KitGrantPlacer.place(player, items, overflow)`. Without an overflow it is unchanged. It is used by
+       `KitGrantFlow` (`/kit get|give`), `KitGrantDelivery` (#261) and first-join kits. A kit for a player who went
+       offline before it was placed now goes to the inbox (it was lost before).
+    3. Lootboxes (`LootboxDelivery`): leftovers of stackable items go to the inbox. The claim is confirmed after the
+       inbox answers: Inventory or Redelivered, with the note `N to the reward inbox (delivery #id)`. If the inbox
+       refuses, the items drop owner-locked and the claim is DroppedOwned. Unique items still drop owner-locked (#897).
+    4. `/inbox` (`InboxModule`, `InboxScreen`, `InboxCommand`; no permission node):
+        1. A paged view of the inbox: amounts, the first expiry of each entry, and how full the inbox is.
+        2. Left click claims a stack, right click claims one, shift-click claims as much as fits. Each click has its
+           own key, and exactly what the API accepted is placed.
+        3. These are refused without calling the API: a full inventory, unique items, and claims during a siege.
+    5. `InboxUpdated` notices (through a new handler in `PlayerNotificationPoller`): loss, near-cap warning, expiry
+       reminders and expiry. If this server already told the player about a delivery, only the warning is shown again.
+       `production.inbox.join-summary` (default true) tells a player on join what is waiting.
+    6. knk-core `production/inbox` and the port `ItemDeliveryApi`. knk-api-client `ItemDeliveryApiImpl` and the
+       `inbox` payload on `PlayerNotification`.
+    7. Two new scenarios, `player-kit-overflow-inbox` and `player-inbox-claim-partial`. `MIN_SCENARIOS` 69 → 71.
+       `content-seeds.json` is unchanged. Siege, navigation, NPC and the menu item listener are untouched.
+       `KnKPlugin`, `config.yml` and `plugin.yml` additions are in their own blocks.
+    8. knk-workspace (branch from `next`):
+        1. Smoke guide § 8.2: 17 steps, 7 automated and 10 partly.
+        2. The changelog entry.
+        3. Plugin configuration § 4.31.
+        4. `/inbox` in the commands guide.
+        5. Menus player guide § Reward inbox.
+        6. The plan status for P7.
+2. **Commits and heads.**
+    1. knk-plugin `claude/production-p7b` at `823ebf09`: 3 commits plus a merge of `next` `ec02a64a` (siege shop L6).
+    2. knk-workspace `claude/production-p7b` at `e48c9d0e`: 1 commit plus two merges of `next`. The changelog,
+       plugin configuration, commands and menus guide headers kept both sides.
+3. **PRs.** [knk-plugin#113](https://github.com/PandiO/knk-plugin/pull/113) (Closes #684) and
+   [knk-workspace#911](https://github.com/PandiO/knk-workspace/pull/911) (Part of #684), base `next`. Not merged.
+4. **Tests, baseline → result.**
+    1. knk-plugin baseline on `next` `02a99b62`: knk-core 3680, knk-api-client 402 (2 skipped), knk-paper 3364
+       (18 skipped).
+    2. Branch (with `next` merged in): knk-core 3711, knk-api-client 411 (2 skipped), knk-paper 3416 (18 skipped).
+       Nothing fails.
+    3. New tests:
+        1. knk-core: `InboxLogicTest`.
+        2. knk-api-client: `ItemDeliveryApiImplTest`.
+        3. knk-paper: `RewardInboxTest` and `InboxModuleTest`, plus tests for both paths in `KitGrantDeliveryTest`,
+           `KitGrantFlowTest` and `LootboxDeliveryTest`.
+    4. MockBukkit skipped one new test at first, because `ItemMock` doesn't implement `getOwner`. I rewrote that test
+       so it runs. The owner lock is already covered by `LootboxDeliveryTest`.
+    5. Broken on purpose: with the overflow hook in `KitGrantPlacer` turned off, three `RewardInboxTest` tests failed.
+       The scenario `player-kit-overflow-inbox` also checks the flag-off path (the kit drops at the feet).
+    6. A local Paper 26.3 run with Citizens passed all 71 scenarios, including both new ones. CI on `1952a5b9` is
+       green (build and paper-boot). The runs on `823ebf09` (a test-only change) were still going when this block
+       was written.
+    7. Known reds: none.
+5. **Decisions (DESIGN § 4.3).** All 9 are in knk-plugin#113, each with its alternatives. The main ones:
+    1. *A delivery the API refuses or doesn't answer.* Chosen: today's drop, logged with the key. Alternatives:
+       (a) hold the items and retry later (lost on a restart); (b) drop nothing (the items are lost).
+    2. *Unique items.* Chosen: never sent to the inbox; they drop as today until #897. Alternatives: (a) send them
+       and show them as not claimable (one-way).
+    3. *Keys for kits granted in game.* Chosen: a random key per grant. Alternatives: (a) add `claimId` to
+       `KnkKitClaimResult` (the API only sends it for a give).
+    4. *Lootbox confirmation.* Chosen: Inventory with a note, sent after the inbox answers. Alternatives: (a) a new
+       `Inbox` method in the API (filed as #912).
+    5. *Inbox screen.* Chosen: a view built in the plugin, like L18's terminal. Alternatives: (a) a seeded
+       InventoryMenu (it needs an API seed).
+    6. *Siege.* Chosen: `/inbox` is refused during a siege. Alternatives: (a) allow it (the items would be lost when
+       the siege inventory is replaced).
+6. **Out of scope, noted.**
+    1. #912: the lootbox `Inbox` delivery method, claim all, a main-menu tile, and leftover lootbox tokens.
+    2. A comment on #897: the inbox also needs the instance-to-item builder.
+    3. Codex hit its code-review usage limit on both PRs, also on the `@codex review` after the last pushes. There
+       are no inline findings; this is noted on each PR.
+7. **Blockers.** None.
+8. **At merge / what the developer must do.**
+    1. Merge into the plugin `config.yml`, then restart:
+       ```yaml
+       production:
+         inbox:
+           join-summary: true
+       ```
+    2. The API needs `AddItemDelivery`, `Production:Enabled` and the game settings `production.delivery` (#60). No
+       new permission node.
+    3. Smoke test [§ 8.2](../guides/production-storage-transport-smoke-test.md) (tier:3): 7 of 17 steps automated and
+       10 partly. The untagged parts take about 15 minutes.
+    4. At the merge into `next`, open the `documentation` sub-issue for:
+        1. The inbox part of the delivery architecture page.
+        2. An inbox admin guide.
+        3. The plugin scenarios guide (the two new scenarios).
+        4. The register row and the guides index.
+9. **Notes for later links.**
+    1. Other rewards can use the same path: `RewardInbox.send(player, userId, reason, …, key, leftovers, fallback)`
+       (`KnKPlugin.kitRewardRouter()` is null while the flag is off). A quest reward would pass `Reason.QUEST` and a
+       stable key.
+    2. #901 (P7 web app) can show the deliveries with their keys (`kit-claim-`, `lootbox-claim-`,
+       `kit-first-join-`).
