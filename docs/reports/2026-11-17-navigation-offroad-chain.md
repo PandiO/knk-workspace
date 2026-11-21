@@ -1,6 +1,6 @@
 # Off-road navigation and landmarks chain — progress report
 
-**Status:** Running, waiting for the developer (2026-11-18) · **Last updated:** 2026-11-20 (L7b step B merged); 2026-11-20 (L7b step A merged); 2026-11-19 (F2 block); 2026-11-18 (L9 block); 2026-11-18 (L5 block); 2026-11-18 (L8 step A block)
+**Status:** Running, waiting for the developer (2026-11-18) · **Last updated:** 2026-11-21 (live test of 2026-11-20); 2026-11-20 (L7b step B merged); 2026-11-20 (L7b step A merged); 2026-11-19 (F2 block); 2026-11-18 (L9 block); 2026-11-18 (L5 block); 2026-11-18 (L8 step A block)
 
 **Issue:** [PandiO/knk-workspace#698](https://github.com/PandiO/knk-workspace/issues/698), links
 [#703](https://github.com/PandiO/knk-workspace/issues/703) (L1), [#704](https://github.com/PandiO/knk-workspace/issues/704) (L2),
@@ -302,6 +302,16 @@ on `next` (Decided 2026-11-17).
     today's call; same mode, recorded for the § 15.4 test. #852 stays open for the developer's live test. Merges:
     knk-plugin#103 `c7e36e6e`, #862 `5e4fb7b7` (CHANGELOG conflict with overview map F3 resolved by keeping both).
     The plugin navigation slot is free; engine L5 (#747) may take it once the developer opens its gate.
+45. **Developer's live smoke test, 2026-11-20 evening** (knk-plugin `next` `3fd493e8`). All passed, no fix link:
+    (1) § 14 F3, every live step (#780, #771): road goal into the Keep Gate (walk 157, was 202), round the garrison
+    (walk 86, was 124), the first turn said once, no 0-expansion search from the watchtower roof, the #710 door
+    passed for a player without use rights; (2) § 8 L3 steps 6 and 7 (#710, § 8 complete; `shaped` mean 14.5 ms, no
+    tick-time rise); (3) § 9 L4 accepted by the developer (#711). Observations, not failures, kept for later: the walk
+    budget (`walk.max-length` 144) is short for the way back from the upper keep stair house corridors; identical
+    walk recomputes while standing still (path-age refresh, ~16 ms each; an identical-result skip could save it);
+    road edge ids swapped between two goal choices 2 s apart (live tags); in § 14 step 1 the road trail seemed to run
+    on past the goal (not confirmed). Still to run: § 3 (and the L5 defaults), § 5, § 6, § 7, § 10.2, § 15, and L1's
+    concurrency item. NPC coordinator told that #710 is confirmed.
 
 ## 4. Link blocks
 
