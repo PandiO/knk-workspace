@@ -108,7 +108,7 @@ of what is already in `next`.
 | L27 P10c shops web app | #688 | Merged into next (2026-11-21) | web app `0100518`, workspace `f46e0de6` (after coordinator merges of `next`); merges: web app `11832d6b`, workspace `ee4ee00b` | [web#73](https://github.com/PandiO/knk-web-app/pull/73), [ws#936](https://github.com/PandiO/knk-workspace/pull/936) | green on `0100518` (build-and-test, e2e) | create_session `session_01R1w2Uwx1cX3dVQ9hS8MdKX`, started 2026-11-21 |
 | L27b P10 shops follow-ups (coordinator extra) | #938 | Merged into next (2026-11-21) | api `3a2e5db5`, web app `c3681765`, workspace `e28a6610`; merges: api `58c06427`, web app `f386e519`, workspace `33b6a583` | [api#76](https://github.com/PandiO/knk-web-api/pull/76), [web#74](https://github.com/PandiO/knk-web-app/pull/74), [ws#941](https://github.com/PandiO/knk-workspace/pull/941) | push runs green on `3a2e5db` (build-and-test, mysql-tests, fresh-database) and `c368176` (build-and-test, e2e); Codex at its usage limit | create_session `session_01R1w2UuaqLDEYWP9TRyxn93`, branch `claude/production-p10-followups` |
 | L28 P11 shopkeepers | #249 | Waiting (NPC lifecycle §6a not in knk-plugin `next`; #358) | — | — | — | — |
-| L29 P12 display stalls | #250 | In review (2026-11-21), not merged | api `326b6bb`, plugin `107539c9`, workspace `29210229` | [api#80](https://github.com/PandiO/knk-web-api/pull/80), [plugin#121](https://github.com/PandiO/knk-plugin/pull/121), [ws#969](https://github.com/PandiO/knk-workspace/pull/969) | green: api `326b6bb` (build-and-test, fresh-database), plugin `107539c9` (build, paper-boot push run with 75 scenarios); Codex at its usage limit | create_session `session_01R1w2UtpTbcFHRyyeQhvtTX`, branch `claude/production-p12` |
+| L29 P12 display stalls | #250 | Merged into next (2026-11-21) | api `326b6bb4`, plugin `107539c9`, workspace `29210229`; merges: api `d86d6e1a`, plugin `b31fceb6`, workspace `7e2f5a38` | [api#80](https://github.com/PandiO/knk-web-api/pull/80), [plugin#121](https://github.com/PandiO/knk-plugin/pull/121), [ws#969](https://github.com/PandiO/knk-workspace/pull/969) | green (api build-and-test, mysql-tests, fresh-database; plugin build, paper-boot 75/75) | create_session `session_01R1w2UtpTbcFHRyyeQhvtTX`, branch `claude/production-p12` |
 
 ## 3. Coordinator decisions
 
@@ -524,6 +524,14 @@ of what is already in `next`.
     NPC navigation work of #358 is still open, so L28 stays gated. L29 (#250, display stalls) has no NPC dependency and
     started (knk-plugin, with knk-web-api push for spot storage and menus). Docs sub-issue #966 under #687 and docs
     session `session_01R1w2Uvqm32Es6wDFvkjoF1` started.
+81. **L29 merge (2026-11-21 20:15).** § 6 checks held for all three PRs: heads matched, branches contained `next`, CI
+    green (plugin paper-boot 75 of 75 with the new `shop-display-stall`), no review threads, Codex at its usage limit,
+    `production.enabled` off by default. API first (19:48, additive: one new table `shop_display_spots`, migration
+    `AddShopDisplaySpots`, form and display seeds): knk-web-api `d86d6e1a`; then knk-plugin `b31fceb6` and knk-workspace
+    `7e2f5a38`. Out of scope: #968 (web app page for display spots). Docs sub-issue #970 under #250 and docs session
+    `session_01R1w2UwX1CDHx9mXkzB1tmF` started; P10b docs #966 done (#967 merged).
+82. **Only L28 is left.** L28 (#249, shopkeepers) waits for the NPC lifecycle (decision 80) and the developer's answer in
+    § 1 item 18 (no reply on #22 or #249 at 20:15). Check-ins slow to every 3 hours.
 
 ## 4. Link blocks
 
