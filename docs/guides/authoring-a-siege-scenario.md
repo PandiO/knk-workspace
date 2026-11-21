@@ -1,7 +1,7 @@
 # Authoring a siege scenario (admin how-to)
 
 **Status:** Living document — update in place
-**Last updated:** 2026-11-12 (relation fields are a search box, #191; § 4: Siege settings under Admin → Settings with units, help and the settings header, #26/#187 — merged 2026-11-12, not live-tested); 2026-10-27 (after a match: post-match wait at the hub, result hover, match pages, `/siege history`;
+**Last updated:** 2026-11-21 (§ 2 step 10: the Siege shop step; § 4: the Siege points section; siege shop chain #867, #878, in `next`, docs PandiO/knk-workspace#908); 2026-11-12 (relation fields are a search box, #191; § 4: Siege settings under Admin → Settings with units, help and the settings header, #26/#187 — merged 2026-11-12, not live-tested); 2026-10-27 (after a match: post-match wait at the hub, result hover, match pages, `/siege history`;
 alpha run 1 package F, #198/#164/#174, not merged); 2026-10-26 (§ 4: Siege Settings needs `knk.siege.admin.manage`, #185, not merged); 2026-09-26 (siege merged to the default branches after two live smoke-test rounds; area lockdown
 removed, non-member gate view updated)
 
@@ -61,6 +61,10 @@ a saved scenario, and an objective's gate must already be saved in the scenario'
    - Per objective, you also set: the holder at start (a team, or none), capture points (default 500), capture radius
      (2.5), and spawn-when-held (a held objective is a spawn option for its holder).
 9. **Readiness** (last step): must say **Ready**. Fix every error and press Re-check.
+10. **Siege shop** (in `next`: a step before Readiness, after Siege weapons, in the `SiegeScenario` seed that has it; optional): **Shop overrides** hide a
+    default shop entry in this scenario or change its price, quantity, cap, cooldown, steps or order; **Scenario-only
+    entries** sell something only here. Without either, the scenario's matches sell the game mode's default catalogue.
+    See the [siege shop admin guide § 3.3](admin/siege-shop-admin-guide.md#33-per-scenario-overrides-and-scenario-only-entries).
 
 ### Readiness codes
 
@@ -102,6 +106,10 @@ one line of help, and what the typed value means: capture values in points, dela
 (20 ticks "= 1 s"), durations in **s**, the headshot multiplier as **×** (1 disables headshots, up to 10), the book
 drop chance per second in **‰** with the percentage (10 ‰ "= 1%"), and the side-capture reduction as a fraction from
 0 to 1.
+
+In `next`, not released: a **Siege points** section with what PvP Siege pays in siege points (kill, streak, assist,
+death, gate damage, capture, trickle) and **Allow teammate transfers** (#878). The fields and their defaults:
+[siege shop admin guide § 2](admin/siege-shop-admin-guide.md#2-siege-points-the-siege-settings-page).
 
 ## 5. Put it live
 

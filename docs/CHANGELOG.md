@@ -237,8 +237,8 @@ This is a human-readable record of capabilities merged into the V3 default branc
   earn settings and `PointTransfersEnabled` on `SiegeConfiguration`, `SiegePointsEarned`/`SiegePointsSpent` on
   `SiegeMatchParticipant`, migration `AddSiegePointsEarning` (additive). Branches `claude/siege-shop-l1` in
   knk-plugin, knk-web-api and knk-workspace. Admin steps: apply the migration; set `siege:` → `points:` →
-  `enabled: true` to turn it on (Restart). The web app's siege settings page does not show the new fields yet
-  (edit them with `PUT api/SiegeConfiguration`; web app fields: #878). Smoke test: [siege shop smoke test § 1](guides/siege-shop-smoke-test.md#1-phase-1-shared-match-ledger-and-siege-points-earning-866-tier3).
+  `enabled: true` to turn it on (Restart). The web app's siege settings page shows the new fields since L2 (#867 with
+  #878, also in `next`: section "Siege points"); `PUT api/SiegeConfiguration` works too. Smoke test: [siege shop smoke test § 1](guides/siege-shop-smoke-test.md#1-phase-1-shared-match-ledger-and-siege-points-earning-866-tier3).
 - **Production P5b: transport lanes in the plugin** ([PandiO/knk-workspace#681](https://github.com/PandiO/knk-workspace/issues/681),
   link L15 of the production chain, #22; the API half is #79). For staff: with `production.enabled: true` the game
   server measures the road route between every producer and the warehouses of its town (and between a town's

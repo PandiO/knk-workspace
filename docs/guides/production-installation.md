@@ -1,6 +1,6 @@
 # Knights and Kings — production installation guide (admin)
 
-**Status:** Draft · **Last updated:** 2026-11-20 (§ 5.3 item 14: `AddItemDelivery` of #60 on its branch); 2026-11-20 (§ 5.3 item 13: `AddStorageContainers` of #683 on its branch); 2026-11-20 (§ 5.3 item 12: `AddTransportCore` of #79 on its branch); 2026-11-20 (§ 5.3 item 11: `SeedNavigateDefaultNode` of #845 on its branch, before the plugin); 2026-11-20 (§ 5.3 item 10: `AddPermissionGroupDefaultRouteMode` of #852 on its branch); 2026-11-19 (§ 5.3 item 7: link to the warehouses and production structures admin guide, `/knk regions repair` once, docs #830); 2026-11-19 (§ 5.3: `AddSiegeWeapons` and `AddTerritory` both in `next` `0d6e369a`, in order; link to the territory admin guide, docs #806); 2026-11-19 (§ 5.3: `AddTerritory` of #326 on its branch); 2026-11-19 (§ 5.3: the migrations waiting in `next`, with `AddItemIdentity`, docs PandiO/knk-workspace#796); 2026-11-18 (§ 4.3: the `Map__GateCommands__*` keys, PandiO/knk-workspace#741); 2026-11-18 (§ 4.3: the `Map__LivePlayers__*` keys, PandiO/knk-workspace#738); 2026-11-18 (§ 4.3: `Map__Enabled` also shows the web map, #737; the `Map__*` and `RateLimiting__Map__*` keys, PandiO/knk-workspace#736); 2026-11-16 (§ 10.4: `actions/checkout@v7` in the release plan, #426); 2026-11-15 (header and § 5.3: the migrations of releases v0.1 to v0.3 on knk-web-api `main` `2cc8254`, PandiO/knk-workspace#577)
+**Status:** Draft · **Last updated:** 2026-11-21 (§ 5.3: the four siege shop migrations in `next`, docs #908); 2026-11-20 (§ 5.3 item 14: `AddItemDelivery` of #60 on its branch); 2026-11-20 (§ 5.3 item 13: `AddStorageContainers` of #683 on its branch); 2026-11-20 (§ 5.3 item 12: `AddTransportCore` of #79 on its branch); 2026-11-20 (§ 5.3 item 11: `SeedNavigateDefaultNode` of #845 on its branch, before the plugin); 2026-11-20 (§ 5.3 item 10: `AddPermissionGroupDefaultRouteMode` of #852 on its branch); 2026-11-19 (§ 5.3 item 7: link to the warehouses and production structures admin guide, `/knk regions repair` once, docs #830); 2026-11-19 (§ 5.3: `AddSiegeWeapons` and `AddTerritory` both in `next` `0d6e369a`, in order; link to the territory admin guide, docs #806); 2026-11-19 (§ 5.3: `AddTerritory` of #326 on its branch); 2026-11-19 (§ 5.3: the migrations waiting in `next`, with `AddItemIdentity`, docs PandiO/knk-workspace#796); 2026-11-18 (§ 4.3: the `Map__GateCommands__*` keys, PandiO/knk-workspace#741); 2026-11-18 (§ 4.3: the `Map__LivePlayers__*` keys, PandiO/knk-workspace#738); 2026-11-18 (§ 4.3: `Map__Enabled` also shows the web map, #737; the `Map__*` and `RateLimiting__Map__*` keys, PandiO/knk-workspace#736); 2026-11-16 (§ 10.4: `actions/checkout@v7` in the release plan, #426); 2026-11-15 (header and § 5.3: the migrations of releases v0.1 to v0.3 on knk-web-api `main` `2cc8254`, PandiO/knk-workspace#577)
 **State:** Draft v1 — written for review. Not yet followed on a real production host. The database, API, seed and
 web-server steps were rehearsed in a scratch environment on 2026-10-07 (see [Appendix A](#appendix-a--what-was-verified-and-how)).
 The Paper server steps and the release and deploy workflows are untested drafts; the CI workflows (§ 10.3) run on GitHub.
@@ -706,6 +706,21 @@ promotes `next` lists them here with its tag:
     display) and `ProductionArea` v3, set the game settings section `production.delivery` (inbox and stash caps,
     premium tier caps) and grant `knk.economy.admin` to the staff who gift items ([changelog](../CHANGELOG.md) entry of
     #60).
+
+The siege shop chain ([#611](https://github.com/PandiO/knk-workspace/issues/611), merged into knk-web-api `next`
+`fc1a5143`, 2026-11-20/21) adds four more, all additive. By timestamp they fall between items 12 and 14 above
+(`dotnet ef database update` applies them in timestamp order); no `api.env` key. Set-up afterwards (form seeds, the
+deploy order of the plugin, the `config.yml` switches): [siege shop admin guide § 1](admin/siege-shop-admin-guide.md#1-what-you-need).
+
+1. `20261120131558_AddSiegePointsEarning` (#866): thirteen defaulted columns on `siege_configurations` (the earn
+   amounts and `PointTransfersEnabled`), `SiegePointsEarned` and `SiegePointsSpent` (0) on `siege_match_participants`.
+2. `20261120183543_AddSiegeShopCatalogue` (#867): new tables `siege_shop_categories` (data written: the categories
+   `siege-weapons`, `consumables`, `magic`), `siege_shop_entries` and `siege_scenario_shop_overrides`; nullable
+   `item_blueprints.PotionType`. The default entries come from the startup seed at the next API start.
+3. `20261120193455_AddMenuItemSettings` (#870): nullable `game_settings.MenuItemSettingsJson` (null reads the
+   defaults).
+4. `20261120231505_AddSiegeWeaponUnlockMinTitle` (#869): nullable `siege_weapon_templates.UnlockMinTitleLevel` with a
+   foreign key to the title brackets.
 
 Earlier: `v0.2` (`58e3218`, 2026-11-14) added `20261109081203_AddTempRegionReleases` (#269), and `v0.1` (`6d5e9c1`,
 2026-11-13) added `20261113161725_SeedStaffFreezeNodes` (gives the Staff group `knk.freeze` and `knk.unfreeze`, #367).

@@ -1,6 +1,6 @@
 # Currency, kits, lootboxes and discoveries — Admin Guide
 
-**Status:** Current · **Last updated:** 2026-11-13 (first version, PandiO/knk-workspace#300)
+**Status:** Current · **Last updated:** 2026-11-21 (§ 2: reason code `SIEGE_UNLOCK`, knk-web-api `next` `fc1a5143`, #869, docs PandiO/knk-workspace#908); 2026-11-13 (first version, PandiO/knk-workspace#300)
 **Checked against:** knk-plugin `main` `57884e9`, knk-web-api `master` `75b5a00`, knk-web-app `main` `3ba747d` (desk
 check of the code, not a live test; the settings pages of #26 are not live-tested either)
 **Related:** [economy player guide](../users/economy-player-guide.md) (what players see; not repeated here),
@@ -60,7 +60,8 @@ grant is what counts):
 ## 2. Currency
 
 Every change of coins, gems or XP is a **ledger** transaction with a reason code (`SALARY`, `PLAYER_TRANSFER`,
-`DISCOVERY_REWARD`, `SIEGE_REWARD`, `KIT_CLAIM_COST`, `KIT_PURCHASE`, `TELEPORT_FEE`, `ADMIN_GRANT`, …). Balances are
+`DISCOVERY_REWARD`, `SIEGE_REWARD`, `SIEGE_UNLOCK` (a siege weapon unlock, in `next`, see the
+[siege shop admin guide § 4](siege-shop-admin-guide.md#4-siege-weapon-unlocks)), `KIT_CLAIM_COST`, `KIT_PURCHASE`, `TELEPORT_FEE`, `ADMIN_GRANT`, …). Balances are
 never edited directly.
 
 ### 2.1 Currency policy
