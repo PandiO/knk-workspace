@@ -94,7 +94,7 @@ Dashboard types (World area, with lookups): `ShopType`, `ShopTypeLevel`, `Shop`,
 |---|---|---|
 | `GET` | — | Every `ShopDto` |
 | `GET` | `{id}` | `ShopDto` |
-| `POST` | `search` | `ProductionWorldListDto` (the structure list row); filters `districtId`, `townId`, `isRural`, `shopTypeId`, `kind`; term = name or description |
+| `POST` | `search` | `ProductionWorldListDto` (the structure list row, with the shop's `kind`, `shopTypeId` and `shopTypeName`, #938); filters `districtId`, `townId`, `isRural`, `shopTypeId`, `kind`; term = name or description |
 | `POST` | — | 201 `ShopDto`, with the Merchandise and Input storages |
 | `PUT` | `{id}` | 200 `ShopDto` |
 | `DELETE` | `{id}` | 204; 409 while its storages hold stock or have ledger history, or its worker is out collecting |
@@ -258,7 +258,9 @@ Read only: balances change through the currency ledger only.
 
 `TownAccountEntryDto`: `entryId`, `transactionPublicId`, `reasonCode` (`SHOP_PURCHASE`, `SHOP_BUYBACK`), `amount` (+ in,
 − out), `balanceBefore`, `balanceAfter`, `sourceType` (`ShopPurchase`, `ShopBuyBack`), `sourceRef` (the shop id),
-`userId` (the player), `createdAt`.
+`userId` (the player), `username` (the player's, null when the user is gone; #938), `stockTransactionId` (the goods leg
+of the same purchase or buy-back, joined on the shared plugin idempotency key; null for any other leg; #938),
+`createdAt`.
 
 **Currency.** A town leg is a `currency_entries` row with `accountKind` `Town` (2) and `townId`. The reasons
 `SHOP_PURCHASE` (kind Spend) and `SHOP_BUYBACK` (kind Grant) post only through the shop routes; any other currency route
