@@ -87,7 +87,7 @@ of what is already in `next`.
 | L19 P7 delivery and inbox API | #60 | Merged into next (2026-11-21) | api `a389259`, workspace `fbe4ded6`; merges: api `2952d0c7`, workspace `e2c6f45b` | [api#70](https://github.com/PandiO/knk-web-api/pull/70), [ws#899](https://github.com/PandiO/knk-workspace/pull/899) | build-and-test, fresh-database green; mysql-tests running (green locally) | create_session `session_01R1w2UwpK1NtaZLrA8k2uhP` (prompt says start without asking), started 2026-11-20 |
 | L20 P7b inbox plugin, kit/lootbox migration | #684 | Merged into next (2026-11-21) | plugin `823ebf09`, workspace `e48c9d0e`; merges: plugin `bdd8b463`, workspace `bb127457` | [plugin#113](https://github.com/PandiO/knk-plugin/pull/113), [ws#911](https://github.com/PandiO/knk-workspace/pull/911) | green on `1952a5b9` (build + paper-boot, 71 scenarios); `823ebf09` running | create_session `session_01R1w2Ux3iuWqjcAV5HQdPvM` (prompt says start without asking), started 2026-11-21 |
 | L21 P8a harvest API | #685 | Merged into next (2026-11-21) | api `e89e396`, workspace `00fab16d` (merged `next` `12804469`); merges: api `9ad32c23`, workspace `69f2b108` (after a coordinator merge of `next`, `944a443b`) | [api#72](https://github.com/PandiO/knk-web-api/pull/72), [ws#914](https://github.com/PandiO/knk-workspace/pull/914) | push runs on `e89e396` green (build-and-test, mysql-tests, fresh-database); PR runs running | create_session `session_01R1w2Ux7jFcMxYzkwej4qY4` (prompt says start without asking), started 2026-11-21 |
-| L22 P8 harvest plugin | #134 | Running | — | — | — | create_session `session_01R1w2UuXe6TVT7QDKeAXdgn` (prompt says start without asking), started 2026-11-21 |
+| L22 P8 harvest plugin | #134 | In review (PRs open, not merged) | plugin `676d6f11`, workspace `e6b8b6ec` | [plugin#114](https://github.com/PandiO/knk-plugin/pull/114), [ws#919](https://github.com/PandiO/knk-workspace/pull/919) | plugin build green on `676d6f11`; paper-boot running (73 scenarios; both new pass on a local Paper 26.3) | create_session `session_01R1w2UuXe6TVT7QDKeAXdgn` (prompt says start without asking), started 2026-11-21 |
 | L23 P9 town logistics API | #127 | Running | — | — | — | create_session `session_01R1w2UwWMWgbXsBzScMifEq` (prompt says start without asking), started 2026-11-21 |
 | L24 P9b logistics web app | #686 | Not started | — | — | — | — |
 | L25 P10 shops API, town account | #248 | Not started | — | — | — | — |
@@ -2190,3 +2190,129 @@ _(Each link appends its block here when it finishes.)_
        stable key per entry; deny every break while the catalogue says `featureEnabled` false; requirement, tool and
        cooldown are checked by the game server; `placeholderMaterial` null = the world's default (stone, netherrack).
     2. #913 (P8 web app): `GET api/HarvestRules/{id}/balance` has the numbers and warnings for the rule editor.
+
+### 4.22 L22 — P8 harvest plugin (#134)
+
+1. **Scope done** (knk-plugin, plus the essential docs in knk-workspace). Everything runs only with `production.enabled:
+   true`; with it off nothing is built or registered (A21).
+    1. knk-core `production/harvest/` (Bukkit-free):
+        1. `HarvestRule`, `HarvestArea`, `HarvestCatalog` and `HarvestAreaIndex` (the catalogue's areas by chunk).
+        2. `HarvestGate`: target, crop age, `RequirementEvaluator` (the design's `IRequirementEvaluator`: permission node
+           and title bracket), tool class and tier, cooldown, the structure's switch, the empty pool (optional).
+        3. `RegenQueue` / `RegenJob`: restores only with loaded chunks and only where each placeholder's material still
+           stands, never into a living entity, within a per-tick budget. The queue is also the survey `PlaceholderOverlay`.
+        4. `HarvestOutbox`: stable keys `harvest-<server>-<uuid>`, entries grouped per player, rule, area and fortune,
+           resent with the same key.
+        5. `OwedPay`, `TreeFeller` (the whole tree for the P-D8 snapshot) and `HarvestTools`.
+        6. The port `HarvestApi`.
+    2. knk-api-client `HarvestApiImpl` (`GET api/Harvest/catalog`, `POST api/Harvest/reports`).
+    3. knk-paper `production/harvest/`:
+        1. `HarvestModule`: the break decision at LOW, the drops off at HIGHEST, and at MONITOR the job, the placeholder
+           on the next tick and the report entry. It also covers entity kills, sapling growth cancelled, chunk loads, the
+           report flush, the share paid into the inventory (offline players on join), and the files
+           `production/harvest/{regen,outbox,owed}.txt`.
+        2. `HarvestWorldGuardListener` (WorldGuard `BreakBlockEvent` / `DamageEntityEvent` set to ALLOW for a qualified
+           harvest).
+        3. `HarvestRequirements` and `HarvestConfig`.
+    4. Wiring, each an additive block:
+        1. `KnKPlugin`: `initializeHarvesting`, the getter, `onDisable`, the survey overlay and the global-protection hook.
+        2. `SurveyModule`: a new constructor with the overlay.
+        3. `GlobalRegionProtectionListener.setAllowedBreaks`.
+        4. `/knk production harvest status|refresh` (existing node).
+        5. `config.yml` `production.harvest.*` (14 keys).
+        6. No `plugin.yml` change and no change to `content-seeds.json`.
+    5. Scenarios `player-harvest-regenerate` and `player-harvest-tree`; `MIN_SCENARIOS` 71 → 73.
+    6. knk-workspace (branch from `next`):
+        1. Smoke guide § 9.2: 22 steps, 10 automated, 10 partly, 2 by hand.
+        2. Plugin configuration § 4.31 `production.harvest.*` with the § 2.1 and § 3 rows.
+        3. A changelog entry with the YAML.
+        4. A new player guide `guides/users/harvesting-player-guide.md`.
+        5. The implementation plan's § P8 status.
+2. **Commits and heads.**
+    1. knk-plugin `claude/production-p8` at `676d6f11`: 6 commits on `next` `bdd8b463`, which had not moved at the last
+       fetch.
+    2. knk-workspace `claude/production-p8` at `e6b8b6ec`: 1 commit plus a merge of `next` (docs #915). The conflicts
+       were header lines and the § 2.1 table; both sides were kept.
+3. **PRs.** [knk-plugin#114](https://github.com/PandiO/knk-plugin/pull/114) (Closes #134) and
+   [knk-workspace#919](https://github.com/PandiO/knk-workspace/pull/919) (Part of #134), base `next`. Not merged.
+4. **Tests, baseline → result** (`./gradlew build -x deployToDevServer`, Gradle on JDK 21, JDK 25 toolchain).
+    1. Baseline on `next` `bdd8b463`: knk-core 3711, knk-api-client 411 (2 skipped), knk-paper 3416 (18 skipped), 0
+       failures.
+    2. Branch `676d6f11`: knk-core 3746, knk-api-client 415 (2 skipped), knk-paper 3432 (18 skipped), 0 failures.
+    3. New tests:
+        1. knk-core: `HarvestGateTest` (9), `RegenQueueTest` (11), `HarvestOutboxTest` (5), `TreeFellerTest` (5),
+           `HarvestRuleTest` (4), `HarvestAreaIndexTest` (1).
+        2. knk-api-client: `HarvestApiImplTest` (4).
+        3. knk-paper: `HarvestModuleTest` (14, MockBukkit), `GlobalRegionProtectionListenerTest` (+1),
+           `ProductionAdminCommandTest` (+1); `PaperScenariosTest` updated.
+    4. A real Paper server ran here: Paper 26.3-205, WorldGuard 7.0.20 and WorldEdit 7.4.6 with `tools/paper-boot`,
+       running `player-harvest*`. Both scenarios PASS (about 90 and 46 ticks). The first runs found three bugs, all
+       fixed before the PR:
+        1. The join loading hold.
+        2. The global-region protection refusing harvests outside regions.
+        3. `Tag.DIRT` refusing grass in 26.3; the game's `isSupported` check is used now.
+    5. CI on `676d6f11`: build green; paper-boot running at the time of writing (73 scenarios).
+    6. Known reds: none.
+5. **Decisions (DESIGN § 4.3).** All 11, each with its alternatives, are in knk-plugin#114. The main ones:
+    1. *Who is refused.* Chosen: in an area, a rule's target the player does not meet is refused with the reason (also
+       outside regions). Every other block is left to WorldGuard and the global protection, and holders of
+       `knk.admin.world.production` are left to WorldGuard. Alternatives: (a) leave unqualified breaks to WorldGuard:
+       in a wilderness radius they would get full vanilla drops; (b) refuse every block in an area.
+    2. *Empty pool.* Chosen: `deny-at-empty-pool: false` (the API books at the floor, L21 decision 1); the local fill
+       follows each answer. Alternatives: (a) always deny at 0; (b) no setting.
+    3. *Pay.* Chosen: the share goes into the inventory when the API answers (§ 6.2); offline players get it on join.
+       Alternatives: (a) pay at once from the rule's numbers; (b) drop it at the block.
+    4. *Trees.* Chosen: a Sapling rule fells the whole tree (26-connected logs inside the area plus the natural leaves
+       nearest to it) and reports breaks = logs. A sapling goes at the base where the game allows one; more than 256
+       logs is not felled. Alternatives: (a) a sapling per log with no felling; (b) the tree as one break.
+    5. *Restore safety.* Chosen: the whole job restores, or the whole job is dropped when a position changed; an entity
+       in a block postpones it. Alternatives: (a) a partial restore; (b) overwrite anyway.
+    6. *Report failures.* Chosen: 409, 400, 403 and 404 drop the batch (nobody paid, players told); any other failure is
+       resent with the same key. The outbox is saved at once after each answer, so a Replayed answer can't pay twice.
+       Alternatives: (a) keep 409 entries until the flag is on again.
+    7. *Outside regions.* Chosen: an allowed-breaks hook on `GlobalRegionProtectionListener`. Alternatives: (a)
+       un-cancel afterwards, which can override other plugins' refusals.
+6. **Out of scope, noted.** A comment on #134:
+    1. Harvest breaks also feed the survey NotableChange counter (a wasted survey at most every 30 min per area); a
+       tier:1 fix is proposed there.
+    2. Whether #105 (KNG-48) closes; it is covered for harvesting.
+    Codex: the connector hit its code-review usage limit on both PRs (review "failed", no inline findings); this is
+    noted on each PR.
+7. **Blockers.** None.
+8. **At merge / what the developer must do.**
+    1. Merge into the plugin's `production` block and restart (nothing runs while `production.enabled` is false):
+
+       ```yaml
+       production:
+         harvest:
+           catalog-refresh-minutes: 5
+           report-flush-seconds: 2
+           report-batch: 200
+           regen-blocks-per-tick: 64
+           regen-retry-seconds: 5
+           save-seconds: 10
+           deny-at-empty-pool: false
+           tree-max-logs: 256
+           tree-max-leaves: 1500
+           max-area-chunks: 256
+           messages:
+             denied: "&cYou can't harvest this here: {reason}."
+             regenerating: "&7This block is regenerating."
+             paid: "&a+{amount} {item} &7(your share of the harvest)"
+             rejected: "&cYour harvest at {area} was not booked: {reason}."
+       ```
+    2. The API needs `AddPlayerHarvesting`, `Production:Enabled` and harvest rules per kind (none are seeded). A stone
+       rule needs a `placeholderMaterial` other than stone (for example `BEDROCK`).
+    3. Grant each rule's permission node. Back up `plugins/KnightsAndKings/production/harvest/` with the world.
+    4. Smoke test [§ 9.2](../guides/production-storage-transport-smoke-test.md) (tier:3): about 25 minutes for the
+       untagged and partly tagged parts.
+    5. Review decision 1 (who is refused: unqualified players can't break a rule's targets in a wilderness area either).
+    6. At merge into `next`, the `documentation` sub-issue: a harvesting architecture page (plugin side, files, restore
+       rules), an admin guide for harvest rules, the commands guide (`/knk production harvest`), the plugin scenarios
+       guide (the two scenarios), the player handbook link, the production installation backup note, and the feature
+       register row.
+9. **Notes for later links.**
+    1. `HarvestModule.overlay()` is the survey overlay; `HarvestModule.anyAllowsBreak` is the question for other
+       protections.
+    2. `RequirementEvaluator` is the place for skills, professions and knowledge unlocks later (F12).
+    3. Entity rules have no population regulation yet (§ 8.7).
