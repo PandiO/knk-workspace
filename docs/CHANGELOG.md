@@ -4,6 +4,48 @@ This is a human-readable record of capabilities merged into the V3 default branc
 
 ## Unreleased — on feature branches, not merged
 
+- **Player harvesting: the API** ([PandiO/knk-workspace#685](https://github.com/PandiO/knk-workspace/issues/685),
+  link L21 of the production, storage and transport chain; [production kinds](specs/production-storage-transport/PRODUCTION_KINDS.md)
+  § 6-7, decision record § 3.6 and § 11 F9-F10). The game server part (the harvest listener, placeholders and the
+  regeneration queue) is link L22 (#134); this entry is what the API offers it and staff. Players may harvest in a
+  production structure's yield areas what the kind's **harvest rules** allow (blocks or entities, a permission node or
+  a lowest title, a tool). Harvesting counts as **working for the town**: each harvest is split at once, the player
+  keeps the **worker's share** (25 % by default) and the rest goes into the structure's Output storage. If Output is
+  full the town's share is lost and the player is still paid. Each break draws from the area's shared **resource
+  pool**; while the pool is low the structure produces less, down to half (the pool floor, 0.5 per kind), and never
+  stops; the pool refills over time and takes its size from the latest survey. A **net-output check** per rule shows
+  whether a harvest gives the town more than the production it costs until the pool refills. Every harvest has an
+  idempotency key, so a retried report never pays twice. Also: placement rule P-3 now checks **Polygon** production
+  areas by each of their points (#900).
+  knk-web-api: entities `HarvestRule`, `ResourcePool`, `PlayerHarvest` (the harvest history) and `HarvestAccrual` (the
+  unpaid fractions per player and rule); `ProductionKind.PoolFloor`; the built-in pool step in the production engine
+  (`poolFactor` on the production view and the cycle records); endpoints `api/HarvestRules` (CRUD, `search`,
+  `{id}/balance`), `api/ResourcePools` (CRUD, `search`), `api/PlayerHarvests` (`{id}`, `search`; read only), `GET
+  api/Harvest/catalog` (the enabled rules and their areas with the pool fill: the World area or the plugin key) and
+  `POST api/Harvest/reports` (the game server only: batched entries, each booked once per key, answering the units for
+  the player and the regeneration time); ledger reason PlayerHarvest (`SYS_PRODUCTION` → `SYS_WORLD` for the worker's
+  share, `SYS_PRODUCTION` → Output for the town's); game settings section `production.harvest`; form and display seeds
+  `HarvestRule` and `ResourcePool`, display seed `PlayerHarvest`, `ProductionKind` seed v3. Harvest reports need
+  `Production:Enabled` (409 while off) and the catalogue is empty while it is off; rules and pools can be edited while
+  it is off. Smoke test:
+  [production smoke test § 9](guides/production-storage-transport-smoke-test.md#9-phase-p8-player-harvesting-and-block-regeneration-685-api-134-plugin-tier3).
+  Admin steps:
+  1. Apply the migration `AddPlayerHarvesting` (`dotnet ef database update`; additive: four tables and two columns
+     with defaults).
+  2. Import the form and display seeds `HarvestRule` and `ResourcePool`, the display seed `PlayerHarvest` and
+     `ProductionKind` seed v3 (form and display); make them the default.
+  3. Optional: set the harvest defaults in the game settings, production section `harvest` (defaults shown; a missing
+     section keeps the stored values):
+     ```json
+     "harvest": {
+       "defaultPoolCapacity": 1000,
+       "defaultRegenHoursToFull": 12,
+       "maxEntriesPerReport": 200
+     }
+     ```
+  4. Write the harvest rules per kind (none are seeded) and check each rule's balance on its page; the game server
+     needs L22 before players can harvest. No `api.env` key, no plugin `config.yml` change in this link.
+
 - **Item delivery, reward inbox and stash: the API** ([PandiO/knk-workspace#60](https://github.com/PandiO/knk-workspace/issues/60),
   link L19 of the production, storage and transport chain; [design](specs/production-storage-transport/DESIGN.md)
   § 4.6, decision record § 2.4, D7). The game server part (`/inbox`, the inbox menu, kits and lootboxes through the
