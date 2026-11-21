@@ -4,6 +4,56 @@ This is a human-readable record of capabilities merged into the V3 default branc
 
 ## Unreleased — on feature branches, not merged
 
+- **Town logistics: warehouses reserve, consumers collect with their own worker (the API)** ([PandiO/knk-workspace#127](https://github.com/PandiO/knk-workspace/issues/127),
+  link L23 of the production, storage and transport chain; [town logistics](specs/production-storage-transport/TOWN_LOGISTICS.md)
+  § 2-5, D-L1 to D-L3, A17). The web app (policy and rule editor, planner dry-run view, town supply view) is link L24
+  (#686); this entry is what the API offers it. A **consumer** is a structure with an Input or Merchandise storage
+  (in V1 a production structure, which has workers). Staff give a consumer storage a **min and max** per blueprint (or
+  the planner takes them from the structure's production line inputs). Every 10 minutes per town, while
+  `Production:Enabled` is on, the **planner** reserves stock at a warehouse for every consumer line at or below its
+  min, up to its max: by **priority class** first (Critical, High, Normal, Low), then by road distance, at the
+  warehouse of the consumer's **service area** (else the nearest one with stock). **Reserves** (saving rules in units
+  or days of cover, town-wide or per warehouse) are never handed out. The consumer's own worker collects the
+  reservation as a transport order (origin Distribution), so its output drops while the worker is away, as at a
+  producer; a reservation not collected within 30 minutes is released at the next run. Every decision has a **plan
+  explanation** ("why did or didn't the bakery get flour"), and a **dry run** shows the plan without writing anything,
+  also while the flag is off. Rules live in a **versioned policy** per town (every save is a new version; the old ones
+  stay readable), with optional per-warehouse policies; admins keep **default templates** per town size and
+  specialization and copy one into a town. A producer's service area is also where its automatic deliveries go when it
+  has no preferred warehouse. The Later rules (ceilings, quotas, rebalance, export/import, emergency modes, tax) are
+  [#324](https://github.com/PandiO/knk-workspace/issues/324).
+  knk-web-api: entities `LogisticsPolicy` (versions), `LogisticsRule` (V1 types Reserve, PriorityClass, ServiceArea,
+  Replenishment), `ConsumerReplenishment`, `LogisticsReservation`, `LogisticsPlannerRun` and `LogisticsPlanEntry`;
+  endpoints `api/LogisticsPolicies` (get, `search`, create, `PUT` = a new version, delete with every version,
+  `{id}/versions`, `{id}/apply` for templates), `api/LogisticsRules` (read only), `api/ConsumerReplenishments` (CRUD,
+  `search`), `api/LogisticsReservations` (read, `search`, `{id}/release`), `api/LogisticsPlannerRuns` (read, `search`)
+  and `api/Logistics` (`towns/{id}/supply`, `towns/{id}/service-areas`, `towns/{id}/dry-run`, `towns/{id}/run-now`,
+  `consumers/{id}`); `TransportService.CreatePlannedAsync` for collection orders; the planner schedule
+  (`LogisticsPlannerSweepService`, every minute, each town every 10); game settings section `production.logistics`;
+  form and display seeds `LogisticsPolicy`, `LogisticsRule`, `ConsumerReplenishment`, `LogisticsReservation`,
+  `LogisticsPlannerRun`. Reads: the World area or the plugin key; writes: `knk.admin.world` or the plugin key; deletes
+  also `knk.admin.delete`. A run now is 409 `ProductionDisabled` while the flag is off; policies, settings and dry runs
+  work while it is off. Smoke test:
+  [production smoke test § 10](guides/production-storage-transport-smoke-test.md#10-phase-p9-town-logistics-127-api-686-web-app-tier3).
+  Admin steps:
+  1. Apply the migration `AddTownLogistics` (`dotnet ef database update`; additive: six tables).
+  2. Import the form and display seeds `LogisticsPolicy`, `ConsumerReplenishment`, `LogisticsRule`,
+     `LogisticsReservation` and `LogisticsPlannerRun`; make them the default.
+  3. Optional: set the planner defaults in the game settings, production section `logistics` (defaults shown; a
+     missing section keeps the stored values):
+     ```json
+     "logistics": {
+       "plannerIntervalMinutes": 10,
+       "reservationMinutes": 30,
+       "consumptionWindowDays": 7,
+       "defaultReorderHours": 4,
+       "defaultTargetHours": 12,
+       "runRetentionDays": 14
+     }
+     ```
+  4. Write a default template (none are seeded: rules name blueprints) or a policy per town, and give consumers an
+     Input storage and min/max settings. No `api.env` key, no plugin `config.yml` change in this link.
+
 - **Player harvesting: the API** ([PandiO/knk-workspace#685](https://github.com/PandiO/knk-workspace/issues/685),
   link L21 of the production, storage and transport chain; [production kinds](specs/production-storage-transport/PRODUCTION_KINDS.md)
   § 6-7, decision record § 3.6 and § 11 F9-F10). The game server part (the harvest listener, placeholders and the

@@ -403,6 +403,18 @@ The developer reviewed TOWN_LOGISTICS §4 on 2026-11-05; the V1 subset is below.
 consumer's worker lowers its output while away; expired reservations are released at the next run; explanation
 content.
 
+**Status (2026-11-21):** API part built in link L23 (#127, in review, knk-web-api branch `claude/production-p9`,
+migration `AddTownLogistics`): versioned `LogisticsPolicy` (town, warehouse, default templates per size and
+specialization, applied to a town) with `LogisticsRule`s of the V1 types (reserves in units or days of cover, town-wide
+or per warehouse; priority classes per consumer or production kind; service areas per district, the rural territory or
+a structure, also the producers' inbound preference; replenishment defaults per consumer group), `ConsumerReplenishment`
+(min/max and priority per consumer storage and blueprint; without one, the line inputs × 4 h / 12 h), the planner every
+10 minutes per town with dry runs (reservations with a 30-minute expiry, released at the next run; collection orders with
+origin Distribution carried by the consumer's own worker through `TransportService`; a plan explanation per consumer
+line), the town supply, service area and consumer views, the seeds. The planner needs `Production:Enabled`. Consumer
+workers: V1 consumers are production structures (their `WorkersTotal`/`WorkersPresent`); other consumers (shops,
+P10) need workers and the transport carrier widened (note for L25). Web app: link L24 (#686).
+
 ## P10 — Shops · [#248](https://github.com/PandiO/knk-workspace/issues/248)
 
 **V1.** Design: [shops DESIGN](../shops/DESIGN.md). One update, built in this order:

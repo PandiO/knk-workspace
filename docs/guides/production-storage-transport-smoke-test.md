@@ -19,8 +19,8 @@ scenario on a real Paper server), 7 partly and 1 manual (tagged); not run. § 5.
 partly (tagged) and 1 by hand; every step can still be run by hand; not run. § 6.1 (transport API, #79): 18 of 20 steps automated in CI
 and 2 partly (tagged); every step can still be run by hand; not run. § 6.2 (transport lanes plugin, #681): 3 of 14
 steps automated, 10 partly and 1 manual (tagged); not run. § 6.3 (transport web app, #682): 10 of 16 steps
-automated in CI, 5 partly (tagged) and 1 by hand; every step can still be run by hand; not run. § 7.1 (terminals and menus API, #683): 15 of 20 steps automated in CI, 4 partly and 1 by hand (tagged); every step can still be run by hand; not run. § 7.2 (terminals, displays and menus plugin, #74): 7 of 20 steps automated (one through a plugin scenario on a real Paper server), 11 partly and 2 by hand (tagged); not run. § 8.1 (delivery and inbox API, #60): 16 of 20 steps automated in CI, 3 partly and 1 by hand (tagged); every step can still be run by hand; not run. § 8.2 (reward inbox plugin, #684): 7 of 17 steps automated (two also through plugin scenarios on a real Paper server) and 10 partly (tagged); every step can still be run by hand; not run. § 9.1 (harvesting API, #685): 18 of 21 steps automated in CI and 3 partly (tagged); every step can still be run by hand; not run. Other sections not yet automated (the links tag them).
-**Last updated:** 2026-11-21 (§ 9 harvesting API, link L21, #685, with #900; § 9.2 draft for L22); 2026-11-21 (§ 8.2 reward inbox plugin, link L20, #684); 2026-11-20 (§ 8 delivery and inbox API, link L19, #60, with #883 and #890; § 8.2 draft for L20); 2026-11-20 (§ 7.2 terminals, displays and menus plugin, link L18, #74); 2026-11-20 (§ 7 terminals and menus API, link L17, #683; § 7.2 draft for L18); 2026-11-20 (§ 6.2 transport lanes plugin, link L15, #681); 2026-11-20 (§ 6.3 transport web app, link L16, #682); 2026-11-20 (§ 6 transport API, link L14, #79; § 6.2 and § 6.3 drafts for L15 and L16); 2026-11-20 (§ 5.2 surveys plugin, link L12, #679); 2026-11-20 (§ 5.3 yield areas web app, link L13, #680); 2026-11-19 (§ 5 yield areas API, link L11, #138; § 5.1 step 18: #831); 2026-11-19 (§ 4.2 production engine web app, link L10, #678); 2026-11-19 (§ 4.1 production engine API, link L9, #86); 2026-11-19 (§ 3 intro, § 3.0, § 3.2 and § 3.3 intros: builds from `next`; § 3.3 precondition 4: `/knk regions repair` needs `knk.admin.regions`, `/knk territory rebuild` `knk.admin.world.territory`; docs #830); 2026-11-19 (§ 3.2 world web app, link L7, #676); 2026-11-19 (§ 3.3 world plugin, link L8, #677); 2026-11-19 (§ 3.1 world API, link L6, #91); 2026-11-19 (§ 2.2 stock web app, link L5, #675); 2026-11-19 (§ 2 stock core API, link L4, #97); 2026-11-19 (§ 1.0 and § 1.3 preconditions: builds from `next` instead of the link branches; guides: [territory admin guide](admin/territory-admin-guide.md), docs #806); 2026-11-19 (§ 1.4 territory web app, link L3, #690); 2026-11-19 (§ 1.3 territory plugin, link L2, #689); 2026-11-19 (§ 1 territory API, link L1, #326); 2026-11-19 (§ 0 item identity, link L0, #141); 2026-11-16 (draft from the design, territory and phases P1-P12)
+automated in CI, 5 partly (tagged) and 1 by hand; every step can still be run by hand; not run. § 7.1 (terminals and menus API, #683): 15 of 20 steps automated in CI, 4 partly and 1 by hand (tagged); every step can still be run by hand; not run. § 7.2 (terminals, displays and menus plugin, #74): 7 of 20 steps automated (one through a plugin scenario on a real Paper server), 11 partly and 2 by hand (tagged); not run. § 8.1 (delivery and inbox API, #60): 16 of 20 steps automated in CI, 3 partly and 1 by hand (tagged); every step can still be run by hand; not run. § 8.2 (reward inbox plugin, #684): 7 of 17 steps automated (two also through plugin scenarios on a real Paper server) and 10 partly (tagged); every step can still be run by hand; not run. § 9.1 (harvesting API, #685): 18 of 21 steps automated in CI and 3 partly (tagged); every step can still be run by hand; not run. § 10.1 (town logistics API, #127): 21 of 24 steps automated in CI and 3 partly (tagged); every step can still be run by hand; not run. Other sections not yet automated (the links tag them).
+**Last updated:** 2026-11-21 (§ 10 town logistics API, link L23, #127; § 10.2 draft for L24); 2026-11-21 (§ 9 harvesting API, link L21, #685, with #900; § 9.2 draft for L22); 2026-11-21 (§ 8.2 reward inbox plugin, link L20, #684); 2026-11-20 (§ 8 delivery and inbox API, link L19, #60, with #883 and #890; § 8.2 draft for L20); 2026-11-20 (§ 7.2 terminals, displays and menus plugin, link L18, #74); 2026-11-20 (§ 7 terminals and menus API, link L17, #683; § 7.2 draft for L18); 2026-11-20 (§ 6.2 transport lanes plugin, link L15, #681); 2026-11-20 (§ 6.3 transport web app, link L16, #682); 2026-11-20 (§ 6 transport API, link L14, #79; § 6.2 and § 6.3 drafts for L15 and L16); 2026-11-20 (§ 5.2 surveys plugin, link L12, #679); 2026-11-20 (§ 5.3 yield areas web app, link L13, #680); 2026-11-19 (§ 5 yield areas API, link L11, #138; § 5.1 step 18: #831); 2026-11-19 (§ 4.2 production engine web app, link L10, #678); 2026-11-19 (§ 4.1 production engine API, link L9, #86); 2026-11-19 (§ 3 intro, § 3.0, § 3.2 and § 3.3 intros: builds from `next`; § 3.3 precondition 4: `/knk regions repair` needs `knk.admin.regions`, `/knk territory rebuild` `knk.admin.world.territory`; docs #830); 2026-11-19 (§ 3.2 world web app, link L7, #676); 2026-11-19 (§ 3.3 world plugin, link L8, #677); 2026-11-19 (§ 3.1 world API, link L6, #91); 2026-11-19 (§ 2.2 stock web app, link L5, #675); 2026-11-19 (§ 2 stock core API, link L4, #97); 2026-11-19 (§ 1.0 and § 1.3 preconditions: builds from `next` instead of the link branches; guides: [territory admin guide](admin/territory-admin-guide.md), docs #806); 2026-11-19 (§ 1.4 territory web app, link L3, #690); 2026-11-19 (§ 1.3 territory plugin, link L2, #689); 2026-11-19 (§ 1 territory API, link L1, #326); 2026-11-19 (§ 0 item identity, link L0, #141); 2026-11-16 (draft from the design, territory and phases P1-P12)
 **Design:** [specs/production-storage-transport/DESIGN.md](../specs/production-storage-transport/DESIGN.md) (§17
 acceptance A01-A27, §18 links) · [territory](../specs/territory/DESIGN.md) · [shops](../specs/shops/DESIGN.md) ·
 **Issue:** [PandiO/knk-workspace#22](https://github.com/PandiO/knk-workspace/issues/22)
@@ -2462,16 +2462,195 @@ block comes back.
 
 ## 10. Phase P9: town logistics (#127 API, #686 web app; tier:3)
 
-*Draft from the design (2026-11-16); the links update it to what was built and tag the automated steps.*
+Built so far: link L23, the API (knk-web-api, migration `AddTownLogistics`; branch `claude/production-p9`, PR into
+`next`). The policy and rule editor, the planner dry-run view and the town supply view are link L24 (#686, § 10.2
+draft); until then § 10.1 runs with a REST client (or Swagger) against the API. 24 steps in § 10.1: 21 automated in
+CI and 3 partly (tagged); every step can still be run by hand; not run. Full manual run about 50 minutes (most of it
+setting up stock and waiting for trips, or `POST api/TransportOrders/run-now`); the untagged parts about 15 minutes.
+The tests are in knk-web-api `Tests/.../Services/Logistics/LogisticsPlannerTests.cs`, `LogisticsPolicyTests.cs`,
+`Migrations/AddTownLogisticsTests.cs` and, with `KNK_TEST_MYSQL`, `MySql/LogisticsMySqlTests.cs` (four planner runs of
+one town racing make one reservation and one collection order). Tier:3; the developer's waiver of the smoke gates
+(2026-11-19) is read by the coordinator as covering the later links.
 
-### 10.1 Steps
+How it works, in short ([TOWN_LOGISTICS](../specs/production-storage-transport/TOWN_LOGISTICS.md) § 2-5): a
+**consumer** is a structure with an Input or Merchandise storage. A **replenishment setting** gives a consumer storage
+a min (reorder point) and max (target level) per blueprint. Every 10 minutes per town (and on demand) the **planner**
+finds the consumer lines at or below their min (stock plus what is on the way), serves them by **priority class**
+(Critical, High, Normal, Low) and then by road distance, and **reserves** up to the max at the warehouse of the
+consumer's **service area** (else the nearest one with stock). **Reserves** (saving rules, in units or days of cover,
+town-wide or per warehouse) are never reserved. The consumer's **own worker** collects the reservation as a transport
+order with origin Distribution (P5), so its output drops while the worker is away. A reservation not collected within
+30 minutes is released at the next run. Every decision has an explanation. The rules sit in a **versioned policy** per
+town (a save is a new version); admins keep **default templates** per town size and specialization and apply them.
 
-1. As Staff, apply the town policy template for Phoenix's size. **Expected:** rules shown in the editor. (A17)
-2. Run a planner dry run. **Expected:** a plan with an explanation per decision; nothing moves. (A17)
-3. Wait for the 10-minute planner run. **Expected:** warehouses reserve stock; a consumer collects with its own worker
+### 10.0 Preconditions
+
+1. knk-web-api with the migrations up to `AddTownLogistics` applied (`dotnet ef database update`), `Production:Enabled`
+   on except in step 5.
+2. Everything of § 6.0: Phoenix with the rural warehouses **North** and **South** (note their delivery storages), the
+   rural **Quarry** with its road connection `Connected`, a **Staff** token (`knk.admin.world`, `knk.economy.admin`), a
+   **Visitor** token and the plugin key. Blueprints **Coal** (used as "flour" below) and **Iron ore** ("bread"), storage
+   weight 1.
+3. Two consumers in Phoenix's district **Market**: production structures **Bakery** and **Garrison** (`POST
+   api/ProductionStructures` with `"districtId": <Market>`, a street and house number), two workers each, no lines. Give
+   each an Input storage: `POST api/Storages` with `{ "name": "Bakery inputs", "kind": "Domain", "domainId": <Bakery>,
+   "purpose": "Input", "maxUnits": 500 }` (and the same for Garrison). Note both storage ids.
+4. Lanes (`POST api/TransportLanes`): Bakery → North 431.7 blocks (100 s at the default walking speed), Bakery → South
+   863.4, Garrison → North 431.7, Garrison → South 215.85.
+5. Put stock into a warehouse with `POST api/StockTransactions/adjust` (`knk.economy.admin`). Between steps, empty what
+   a step left behind the same way, or release open reservations (step 20), so each step starts from the numbers it
+   names.
+
+### 10.1 Steps (API)
+
+1. [partly automated: knk-web-api `FormConfigurationSeedFilesTests`, `DisplayConfigurationSeedFilesTests` (every seed
+   dry-runs and imports); by hand: open the forms and pages in the web app]
+   As Staff, import the form and display seeds `LogisticsPolicy`, `ConsumerReplenishment`, `LogisticsRule`,
+   `LogisticsReservation` and `LogisticsPlannerRun` with "make default". **Expected:** all import; the
+   ConsumerReplenishment form asks for the storage, blueprint, min, max, priority class and the switch; the rule,
+   reservation and planner run forms are read only; the planner run page lists its plan explanation. (A23)
+2. [automated: `AddTownLogisticsTests.TheLogisticsSettings_HaveTheirDefaults_AndAreChecked`]
+   `GET api/GameSettings`. **Expected:** the production section's `logistics`: `plannerIntervalMinutes` 10,
+   `reservationMinutes` 30, `consumptionWindowDays` 7, `defaultReorderHours` 4, `defaultTargetHours` 12,
+   `runRetentionDays` 14. A save without the `logistics` section keeps it; `plannerIntervalMinutes: 0` is 400.
+3. [automated: `LogisticsPolicyTests.ReplenishmentSettings_AreForConsumerStoragesOnly_OnePerBlueprint`]
+   As Staff, `POST api/ConsumerReplenishments` with `{ "storageId": <Bakery inputs>, "itemBlueprintId": <Coal>,
+   "reorderPoint": 20, "targetLevel": 60 }`. **Expected:** 201 with `structureId` = Bakery and `priorityClass` null.
+   The same storage and blueprint again is 409; North's delivery storage or Bakery's Output storage as `storageId` is
+   400 ("Input or Merchandise"); `reorderPoint` 9 with `targetLevel` 5 is 400.
+4. [automated: `LogisticsPolicyTests.OnlyTheV1RuleTypes_AndEachRuleIsChecked`]
+   `POST api/LogisticsPolicies` with `{ "name": "Phoenix logistics", "scope": "Town", "townId": <Phoenix>, "rules": [ {
+   "type": "Ceiling" } ] }`. **Expected:** 400 naming the V1 types and "Later, #324". Also 400: a Reserve without
+   `units` or `daysOfCover`, a warehouse Reserve without `warehouseId`, `priorityClass` "Urgent", a ServiceArea without
+   `areaKind` or with a district of another town, a Replenishment rule with min above max, `activeUntil` before
+   `activeFrom`. Nothing is saved.
+5. [automated: `LogisticsPlannerTests.WithTheFlagOff_TheDryRunWorks_ButNothingRuns`]
+   Turn `Production:Enabled` off. Put 100 Coal into North. `POST api/Logistics/towns/<Phoenix>/dry-run`.
+   **Expected:** 200, `featureEnabled` false, `dryRun` true, the entry for Bakery inputs and Coal `Reserved` 60 at
+   North; nothing is written (no reservation, order or run). `POST api/Logistics/towns/<Phoenix>/run-now` is 409
+   `ProductionDisabled`; the supply view's `nextRunAt` is null. Turn `Production:Enabled` back on. (A21)
+6. [automated: `LogisticsPlannerTests.AConsumerAtItsReorderPoint_GetsAReservation_AndItsOwnWorkerCollectsIt`]
+   `POST api/Logistics/towns/<Phoenix>/run-now`. **Expected:** 200 with a `runId`; Bakery's Coal entry `Reserved`,
+   shortfall 60, reserved 60, warehouse North, the explanation names "replenishment setting #<id>". `POST
+   api/LogisticsReservations/search` with `townId` lists one `Open` reservation of 60 at North's delivery storage for
+   Bakery inputs. North still holds 100 Coal (a reservation holds stock without moving it). `POST
+   api/TransportOrders/search` with `origin` Distribution lists one order: source North's delivery storage, carrier
+   Bakery, one stop Bakery inputs with 60 Coal; the reservation names it. (A17)
+7. [automated: `LogisticsPlannerTests.AReservationCantBeTakenTwice_ASecondRunSeesItWaiting`]
+   `run-now` again. **Expected:** the entry is `AlreadyReserved` ("An open reservation is waiting for its worker"); still
+   one reservation and one Distribution order. (A17)
+8. [automated: `LogisticsPlannerTests.AConsumerAtItsReorderPoint_GetsAReservation_AndItsOwnWorkerCollectsIt`]
+   `POST api/TransportOrders/run-now`. **Expected:** the collection order is `InTransit`; Bakery's `workersPresent` is
+   1; North holds 40 Coal. After 100 seconds `run-now` again: `Delivered`, Bakery inputs hold 60 Coal, Bakery's
+   `workersPresent` is 2. The ledger reconciles (`GET api/StockTransactions/reconcile` clean). (A17)
+9. [automated: `LogisticsPlannerTests.TheWorkerAway_LowersTheConsumersOutput_LikeAProducers`]
+   Give Bakery a Configured line (Cobblestone, 60 per hour) and its lane to North 25,920 blocks (100 minutes), empty
+   Bakery inputs and repeat steps 6 and 8 up to the departure. Wait an hour of game time (or `POST
+   api/Production/run-now` an hour later). **Expected:** Bakery's newest cycle record has `workerFactor` 0.5 while its
+   worker is away (DESIGN § 7.7). (A17)
+10. [automated: `LogisticsPlannerTests.AConsumerAtItsReorderPoint_GetsAReservation_AndItsOwnWorkerCollectsIt`]
+    After the delivery of step 8, `run-now` 10 minutes later. **Expected:** the result's `collected` lists the
+    reservation; it is `Collected` with `collected` 60 and no open key; the Coal entry is `NotNeeded` (60 is above the
+    min). (A17)
+11. [automated: `LogisticsPlannerTests.ARunStoresItsExplanation_ADryRunWritesNothing`]
+    With 100 Coal in North, Bakery inputs empty and Garrison inputs holding 50 Coal (setting min 0, max 10), `run-now`
+    and `GET api/LogisticsPlannerRuns/<runId>`. **Expected:** trigger `Manual`, `demandLines` 1, `reservationsCreated` 1,
+    `ordersCreated` 1, `shortfalls` 0; one entry (lines above their min are not stored): Bakery, Coal, North,
+    `Reserved`; the explanation reads "min 20, max 60", "short 60; Normal priority (the default)", "Reserved 60 of 60 at
+    North" and "collected by its own worker"; the summary "1 reserved (60 units) in 1 collection order(s)". (A17)
+12. [automated: `LogisticsPlannerTests.ATownReserve_IsNeverBreached_AndTheRestGoesToTheNextConsumer`]
+    With 100 Coal in North and settings 20/60 for both Bakery and Garrison, `POST api/LogisticsPolicies` with `{ "name":
+    "Phoenix logistics", "scope": "Town", "townId": <Phoenix>, "rules": [ { "type": "Reserve", "itemBlueprintId": <Coal>,
+    "units": 70, "reason": "Keep some back" } ] }`, then `run-now`. **Expected:** 30 reserved in all (100 − 70); the
+    consumer that got nothing is `HeldByReserve` and its explanation names "town reserve 70 (rule #<id>)"; the plan's
+    `policySource` is `Town`. Another run 10 minutes later still holds 30 in all.
+13. [automated: `LogisticsPlannerTests.AReserveInDaysOfCover_UsesTheAverageDailyOutflow`]
+    Put 170 Coal into North, then take 70 out again (adjust −70: 10 a day over the 7-day window). Replace the policy's
+    rule with `{ "type": "Reserve", "itemBlueprintId": <Coal>, "daysOfCover": 3 }` (step 14) and set both consumers to
+    20/50. Dry run, then `GET api/Logistics/towns/<Phoenix>/supply`. **Expected:** 70 reserved in all (100 − 30); the
+    supply line for Coal has stock 100, `reserveUnits` 30, `available` 70, `outflowPerDay` 10, `daysOfCover` 10, and a
+    line per warehouse.
+14. [automated: `LogisticsPolicyTests.ASave_MakesANewVersion_TheOldOneStaysForTheHistory`]
+    `PUT api/LogisticsPolicies/<v1>` with `{ "reason": "Bread reserve 14 days", "rules": [ { "type": "Reserve",
+    "itemBlueprintId": <Iron ore>, "daysOfCover": 14 }, { "type": "Reserve", "itemBlueprintId": <Coal>, "units": 50 } ]
+    }`. **Expected:** 200 with version 2 (current, `basedOnPolicyId` v1, the reason), rules numbered 1 and 2; `GET
+    api/LogisticsPolicies/<v1>` is no longer current, names v2 as `supersededByPolicyId` and still has its one rule;
+    `GET api/LogisticsPolicies/<v1>/versions` lists 2 then 1. `PUT` on v1 again is 409 ("not the current version"); a
+    second town policy for Phoenix is 409; the dry run uses v2 (`policyVersion` 2).
+15. [automated: `LogisticsPlannerTests.UnderScarcity_TheHigherClassIsServedFirst`]
+    With 50 Coal in North, settings 20/60 for both consumers and a town rule `{ "type": "PriorityClass", "structureId":
+    <Garrison>, "priorityClass": "Critical" }`, `run-now`. **Expected:** Garrison `Critical`, `PartlyReserved` 50;
+    Bakery `Normal`, `HeldByReserve` 0 with "50 already reserved" in its explanation; Garrison is listed first. Setting
+    Garrison's replenishment `priorityClass` to Low makes the setting win over the rule. (A17)
+16. [automated: `LogisticsPlannerTests.AWarehousesLocalReserve_SendsTheConsumerToAWarehouseThatCanCoverIt`,
+    `LogisticsPolicyTests.AWarehousePolicy_HoldsLocalReservesForItsWarehouse`]
+    With 100 Coal in North, 50 in South and Bakery at 0/40, add a warehouse reserve (in the town policy: `{ "type":
+    "Reserve", "scope": "Warehouse", "warehouseId": <North>, "itemBlueprintId": <Coal>, "units": 90 }`, or as a
+    warehouse policy `{ "scope": "Warehouse", "warehouseId": <North>, ... }`). Dry run. **Expected:** Bakery is
+    `Reserved` 40 at South (North can spare only 10); the explanation names "local reserve 90". A warehouse policy only
+    takes local reserves and service areas (a PriorityClass rule in it is 400).
+17. [automated: `LogisticsPlannerTests.AServiceArea_ChoosesTheWarehouse_AndTheNearestStepsInWhenItHasNone`]
+    With 100 Coal in each warehouse and Bakery at 0/40, a town rule `{ "type": "ServiceArea", "areaKind": "District",
+    "districtId": <Market>, "warehouseId": <South> }`, dry run. **Expected:** Bakery is served from South (North is
+    nearer), "its service area (rule #<id>)". Empty South: served from North. `GET
+    api/Logistics/towns/<Phoenix>/service-areas`: Market → South (`Rule`), the rural territory `Nearest`, Quarry →
+    North (nearest by road).
+18. [automated: `LogisticsPlannerTests.AProducersServiceArea_IsItsInboundPreference`]
+    With a town rule `{ "type": "ServiceArea", "areaKind": "Rural", "warehouseId": <South> }`, Quarry's automatic
+    transport on and 80 Cobblestone in its Output, `POST api/TransportOrders/run-now`. **Expected:** the automatic order
+    goes to South (without the rule: North, § 6.1).
+19. [automated: `LogisticsPlannerTests.TheWorkersCapacity_BoundsTheCollection_OneOrderCarriesSeveralLines`]
+    With 100 Coal and 100 Iron ore in North and Bakery at 0/50 for both, `run-now`. **Expected:** one collection order
+    with 50 Coal and 14 Iron ore (the worker carries 64 by default); Iron ore `PartlyReserved` with "carries at most 64".
+20. [automated: `LogisticsPlannerTests.StaffRelease_CancelsTheReservationAndItsOrder_OnlyBeforeLoading`]
+    With two open reservations (Bakery and Garrison), `POST api/LogisticsReservations/<Bakery's>/release` with `{
+    "reason": "test" }`. **Expected:** `Cancelled`, its order `Cancelled`, the status reason names the user and "test";
+    releasing it again is 409. After `POST api/TransportOrders/run-now` loads Garrison's order, releasing Garrison's is
+    409 ("already loaded").
+21. [automated: `LogisticsPlannerTests.AReservationNotCollectedBeforeItsExpiry_IsReleasedAtTheNextRun_AndItsOrderCancelled`]
+    Set Bakery's `workersPresent` to 0 (`PUT api/ProductionStructures/<Bakery>/workers`), 100 Coal in North, Bakery at
+    20/60, `run-now`. **Expected:** the planned order warns "No worker of Bakery is free now" and waits (`Planned`). A
+    run 20 minutes later releases nothing; a run 31 minutes after the first lists one released reservation ("Not
+    collected within 30 minutes … (F11)"), its order is `Cancelled`, and the same run reserves again (a new open
+    reservation). North still holds 100 Coal; the ledger reconciles.
+22. [automated: `LogisticsPlannerTests.WithoutSettings_MinAndMaxComeFromTheLinesInputs`,
+    `LogisticsPlannerTests.ARuralConsumerWithoutARoad_IsHeld_AndNoStockIsSaid`,
+    `LogisticsPolicyTests.ARuleOutsideItsWindow_DoesNotApply_AndAReplenishmentRuleSetsDefaultsForAGroup`]
+    Without a replenishment setting, give Bakery a line that consumes 2.5 Coal per hour; dry run and `GET
+    api/Logistics/consumers/<Bakery>`. **Expected:** min 10, max 30 (4 and 12 hours of input), `settingSource`
+    `Inputs`. A town Replenishment rule for Bakery (min 5, max 25) gives `Rule`; a setting gives `Setting` (the setting
+    wins, then the rule, then the inputs). A rule with `activeFrom` tomorrow does not apply. A rural consumer
+    without a road connection is `NotConnected`; with no Coal anywhere a line is `NoStock`.
+23. [automated: `LogisticsPolicyTests.ADefaultTemplate_IsUsedWithoutATownPolicy_AndApplyingOneCopiesItsRules`]
+    Delete Phoenix's policy (`DELETE api/LogisticsPolicies/<id>`, every version goes). `POST api/LogisticsPolicies` with
+    `{ "name": "Farming village", "scope": "Template", "specialization": "Crops", "townSize": "Village",
+    "isDefaultTemplate": true, "rules": [ { "type": "Reserve", "itemBlueprintId": <Coal>, "units": 80 } ] }` and a
+    second default template "Mining town" (specialization Ore, reserve 90). **Expected:** only Mining town is the
+    default now; a template with a service area is 400. A dry run uses it (`policySource` `DefaultTemplate`). `POST
+    api/LogisticsPolicies/<Farming village>/apply` with `{ "townId": <Phoenix> }` makes Phoenix's policy v1 with its
+    rule ("From template \"Farming village\" v1"); applying Mining town makes v2; the dry run now says `Town`.
+24. [partly automated: `LogisticsPlannerTests.TheSchedule_PlansEachTownWithAWarehouseEvery10Minutes_AndPrunesOldRuns`,
+    `LogisticsPolicyTests.TheRoutes_CarryTheirAccessRules`, `Results_MapTo400_404_And409WhileOff`, the pinned
+    `ReadAccessRulesTests`, `DashboardChangeAccessRulesTests`, `DeleteAccessRulesTests`, with `KNK_TEST_MYSQL`
+    `LogisticsMySqlTests.RacingRuns_ReserveOnce_AndMakeOneCollectionOrder`; by hand: wait for the schedule on a running
+    API] With `Production:Enabled` on, leave the API running 25 minutes and `POST api/LogisticsPlannerRuns/search` with
+    `townId` Phoenix. **Expected:** `Scheduled` runs about 10 minutes apart (a town without a warehouse gets none); the
+    supply view's `nextRunAt` is the last run + 10 minutes. With the Visitor token, every logistics read and write is 403;
+    a write without a token is 401. (A17, A21)
+
+### 10.2 Steps (web app #686, draft)
+
+*Draft from the design (2026-11-16) and the API above; L24 updates it to what was built and tags the automated steps.*
+
+1. As Staff, open Phoenix's logistics policy and apply the template for Phoenix's size and specialization.
+   **Expected:** the rules shown in the editor; saving makes a new version and the history lists both. (A17)
+2. Run a planner dry run from the town page. **Expected:** a plan with an explanation per consumer line ("why did or
+   didn't the bakery get flour"); nothing moves. (A17)
+3. Open the town supply view. **Expected:** stock per blueprint across the warehouses, reserves, open reservations,
+   available, inflow and outflow per day and days of cover; the last run and the next. (A17)
+4. Wait for the 10-minute planner run. **Expected:** warehouses reserve stock; a consumer collects with its own worker
    (worker away, as in § 6). (A17)
-4. Try to collect the same reservation twice. **Expected:** refused. (A17)
-5. Make a good scarce. **Expected:** higher-priority consumers are served first. (A17)
+5. Make a good scarce. **Expected:** higher-priority consumers are served first; the others show why not. (A17)
 
 ## 11. Phase P10: shops (#248 API, #687 plugin menus, #688 web app; tier:3)
 
