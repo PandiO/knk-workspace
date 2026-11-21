@@ -292,8 +292,7 @@ after the draw)`: up to twice as long at an empty pool. The game server moves th
 ### 8.3 Limitations
 
 1. No web app pages for rules (with the balance), pools, the history or the `production.harvest` card (#913); staff use
-   the REST API ([admin guide](../guides/admin/production-harvesting-admin-guide.md)) or the generic dashboard pages
-   from the seeds.
+   the REST API ([admin guide](../guides/admin/production-harvesting-admin-guide.md)); the seeds are ready for the pages.
 2. Harvest breaks also count toward the survey's NotableChange counter, so heavy harvesting can ask for a survey whose
    result doesn't change (at most once per 30 min per area) (#923).
 3. Cooldowns live in the game server's memory: a restart clears them.
