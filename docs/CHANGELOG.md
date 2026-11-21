@@ -46,6 +46,41 @@ This is a human-readable record of capabilities merged into the V3 default branc
   4. Write the harvest rules per kind (none are seeded) and check each rule's balance on its page; the game server
      needs L22 before players can harvest. No `api.env` key, no plugin `config.yml` change in this link.
 
+- **Reward inbox in game: `/inbox`, kits and lootboxes through the inbox** ([PandiO/knk-workspace#684](https://github.com/PandiO/knk-workspace/issues/684),
+  link L20 of the production, storage and transport chain; the API is #60; [design](specs/production-storage-transport/DESIGN.md)
+  § 4.6, decision record § 2.4, D7, A15). With `production.enabled: true` in the plugin, kit and lootbox items that
+  don't fit in the player's inventory no longer drop at their feet: the plugin places what fits and sends the rest to the
+  player's **reward inbox** (`POST api/ItemDeliveries`, one key per reward, so a retry applies once), and tells them
+  (`25 items didn't fit and went to your reward inbox (/inbox).`, the loss first when the full inbox lost some). This
+  covers `/kit get` and `/kit give`, kits granted from the web app (#261, key `kit-claim-<claim id>`), the starter kits,
+  and lootbox openings and redeliveries (key `lootbox-claim-<claim id>`; the claim is confirmed with a note once the
+  inbox has the items). A kit for a player who went offline before it was placed now goes to their inbox instead of being
+  lost. **`/inbox`** opens the inbox: left-click claims a stack, right-click one, shift-click as much as fits, and exactly
+  what the API moved lands in the inventory (claim with partial space; a full inventory claims nothing); each entry shows
+  when its first part expires, the bottom item how full the inbox is. The inbox notices show in chat: the near-cap
+  warning, the loss message, expiry reminders and expired items; with `production.inbox.join-summary` a player who joins
+  with items waiting is told. Not during a siege. Still dropped at the feet, as before: unique items (an instance, for
+  example a lootbox sword), because the plugin can't rebuild them from the inbox yet (#897), and everything when the
+  API's `Production:Enabled` is off or refuses (the plugin falls back to today's delivery). With `production.enabled:
+  false` kits and lootboxes deliver exactly as before (#261, A21) and `/inbox` says the inbox is off. knk-plugin: knk-core
+  `production/inbox` (inbox view, texts, layout, keys) and the port `ItemDeliveryApi` with knk-api-client
+  `ItemDeliveryApiImpl` and the `InboxUpdated` payload; knk-paper `production/inbox` (`RewardInbox`, `InboxModule`,
+  `InboxScreen`, `InboxConfig`), `commands/InboxCommand`, the inbox hooks in `KitGrantPlacer`, `KitGrantFlow`,
+  `KitGrantDelivery`, first-join kits and `LootboxDelivery`; the scenarios `player-kit-overflow-inbox` and
+  `player-inbox-claim-partial`. Branch `claude/production-p7b` in knk-plugin and knk-workspace. Smoke test:
+  [production smoke test § 8.2](guides/production-storage-transport-smoke-test.md#82-steps-plugin-684).
+  Admin steps:
+  1. Merge into the plugin's `config.yml` (Restart; [plugin configuration § 4.31](guides/admin/plugin-configuration.md#431-production)):
+     ```yaml
+     production:
+       inbox:
+         join-summary: true
+     ```
+  2. The API needs migration `AddItemDelivery` and `Production:Enabled` (#60); the inbox cap, expiry and warnings are the
+     game settings `production.delivery`. No new permission node: every player opens their own inbox.
+  3. Kits and lootboxes resolve items with item identity when `items.identity.enabled` is on (#141); without it the
+     blueprint the item was built from is used.
+
 - **The menu item follows the game settings page: siege menu and shop in a match** ([PandiO/knk-workspace#871](https://github.com/PandiO/knk-workspace/issues/871),
   phase 5b of the siege shop design, link L6 of the siege shop chain; parent [#859](https://github.com/PandiO/knk-workspace/issues/859)).
   For players: in a running PvP Siege match a click with the menu item (the nether star) opens your siege menu and a
