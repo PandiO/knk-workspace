@@ -506,6 +506,11 @@ of what is already in `next`.
     started from the legacy V1/V2 shop menus (`docs/specs/legacy/inventory-menus.md`, `inventory-menu-screens.md`, the V1
     code), listing every deviation for the developer's review; recorded on #687. The open knk-plugin PRs into `next`
     (#115 landmark regions, #116–#119 NPC navigation) don't touch the menu engine. Check-ins back to hourly.
+78. **L26 menu seeds (17:45).** Menu templates are seeded in knk-web-api (`Models/Menu/MenuTemplateSeed.<Feature>.cs`,
+    exported to the plugin's `content-seeds.json`), so L26 may push to knk-web-api on `claude/production-p10b`. Only the
+    additive `MenuTemplateSeed.Shops.cs` (`shops.shop`, `shops.item`, `shops.confirm`), its registration and seed test:
+    no migration, endpoint or access rule; its own PR, merged before the plugin PR. The sell menu is a plugin-built view
+    (the engine has no deposit slots, legacy G2), logged as a deviation for the developer's review.
 
 ## 4. Link blocks
 
