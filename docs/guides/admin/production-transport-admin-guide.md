@@ -1,6 +1,6 @@
 # Production Transport — Admin Guide
 
-**Status:** Current · **Last updated:** 2026-11-20 (§ 3.4: cancel and retry in game since P6, docs #903); 2026-11-20 (first version, production P5 #79/#681/#682, docs PandiO/knk-workspace#891)
+**Status:** Current · **Last updated:** 2026-11-21 (§ 3.1: Distribution orders of the town logistics planner, docs #929); 2026-11-20 (§ 3.4: cancel and retry in game since P6, docs #903); 2026-11-20 (first version, production P5 #79/#681/#682, docs PandiO/knk-workspace#891)
 **Checked against:** knk-web-api `next` `bf8633fb`, knk-plugin `next` `7116f1a5`, knk-web-app `next` `5ad5029f` (not
 released; orders move only with Production enabled on in the API, and lanes are measured only with `production.enabled:
 true` on the game server; the manual steps of the
@@ -76,6 +76,8 @@ Origin, From, To (the stops joined with " → "), Units ("20 of 20 delivered", p
 Created and ETA. A waiting order shows its reason under the status. Filter by **Open or final**, **Status**, **Origin**
 and **Storage id**, then **Apply filters**; the filters stay in the URL, **Clear** removes them. "All orders of this
 structure" on a structure's Transport panel opens the list for that structure (source, stop or carrier).
+Orders with origin **Distribution** are collections the town logistics planner made: the consumer's own worker fetches
+reserved goods from a warehouse ([town logistics admin guide](town-logistics-admin-guide.md)).
 
 The statuses in words:
 

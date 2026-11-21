@@ -1,6 +1,6 @@
 # Knights and Kings — Player Handbook
 
-**Status:** Current · **Last updated:** 2026-11-21 (Siege: siege points, the siege shop and weapon unlocks, in `next`, not released, docs PandiO/knk-workspace#908); 2026-11-20 (The map: on the closed alpha since 2026-11-19, PandiO/knk-workspace#767); 2026-11-19 (Territory: the action bar lines, in `next`, not released, PandiO/knk-workspace#806); 2026-11-18 (The map: the overview map, in `next`, not released, PandiO/knk-workspace#766)
+**Status:** Current · **Last updated:** 2026-11-21 (Harvesting: work in a structure's yield areas, in `next`, not released, docs PandiO/knk-workspace#922); 2026-11-21 (Siege: siege points, the siege shop and weapon unlocks, in `next`, not released, docs PandiO/knk-workspace#908); 2026-11-20 (The map: on the closed alpha since 2026-11-19, PandiO/knk-workspace#767); 2026-11-19 (Territory: the action bar lines, in `next`, not released, PandiO/knk-workspace#806); 2026-11-18 (The map: the overview map, in `next`, not released, PandiO/knk-workspace#766)
 **Checked against:** knk-plugin `main` `57884e9`, knk-web-api `master` `f445d21`, knk-web-app `main` `3ba747d`
 **Related:** [commands reference](commands.md), [menus](menus-player-guide.md), [guides index](../README.md)
 
@@ -27,8 +27,9 @@ Everything described here is in the released game unless it says otherwise.
 12. [Siege](#siege)
 13. [The map](#the-map)
 14. [Territory](#territory)
-15. [Building and protection](#building-and-protection)
-16. [Getting help](#getting-help)
+15. [Harvesting](#harvesting)
+16. [Building and protection](#building-and-protection)
+17. [Getting help](#getting-help)
 
 ## Getting started
 
@@ -231,6 +232,16 @@ changes for players yet. Not released yet.
 
 Full guide: [Territory](territory-player-guide.md).
 
+## Harvesting
+
+Mines, quarries, farms and loggers have yield areas you can work in once staff switch production on and write the
+structure's harvest rules. Break the blocks (or kill the animals) a rule names, with the right tool: nothing drops, and
+a moment later your share of the harvest arrives in your inventory; the rest goes to the structure for the town. The
+block grows back after a while (a felled tree comes back whole). If you don't meet a rule you see why, for example
+"You can't harvest this here: needs a pickaxe." Not released yet.
+
+Full guide: [Harvesting](harvesting-player-guide.md).
+
 ## Building and protection
 
 Most of the world is protected. Outside towns and other areas you can't break or place blocks, or use crafting
@@ -250,9 +261,10 @@ allowed there.
 
 ## Changes
 
-1. 2026-11-20: The map: on the closed alpha since 2026-11-19 (PandiO/knk-workspace#767)
-2. 2026-11-19: Territory: the action bar lines, link to the territory player guide (PandiO/knk-workspace#806)
-3. 2026-11-18: The map: link to the overview map player guide (PandiO/knk-workspace#766)
-4. 2026-11-14: Siege: link to the Siege player guide (PandiO/knk-workspace#297)
-5. 2026-11-14: Getting around: link to the navigation and teleports player guide (PandiO/knk-workspace#298)
-6. 2026-11-13: first version, replaces the archived Dutch v1 manual (PandiO/knk-workspace#296)
+1. 2026-11-21: Harvesting: new section, link to the harvesting player guide (PandiO/knk-workspace#922)
+2. 2026-11-20: The map: on the closed alpha since 2026-11-19 (PandiO/knk-workspace#767)
+3. 2026-11-19: Territory: the action bar lines, link to the territory player guide (PandiO/knk-workspace#806)
+4. 2026-11-18: The map: link to the overview map player guide (PandiO/knk-workspace#766)
+5. 2026-11-14: Siege: link to the Siege player guide (PandiO/knk-workspace#297)
+6. 2026-11-14: Getting around: link to the navigation and teleports player guide (PandiO/knk-workspace#298)
+7. 2026-11-13: first version, replaces the archived Dutch v1 manual (PandiO/knk-workspace#296)

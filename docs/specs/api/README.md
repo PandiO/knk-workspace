@@ -10,6 +10,7 @@ Define public API contracts (domain ports, DTOs, endpoints) that abstract the im
 - `health.yaml` / `health.json`: Per-endpoint OpenAPI schemas.
 - `API_CONTRACT_STOCK.md`: stock core (`api/Storages`, `api/StockTransactions`), current for knk-web-api `next`.
 - `API_CONTRACT_ITEM_DELIVERY.md`: item delivery and the reward inbox P7 (`api/ItemDeliveries`, `api/Inbox` with claim, stash deposit/withdraw and sweep, the `InboxUpdated` notification, game settings `production.delivery`), current for knk-web-api `next`.
+- `API_CONTRACT_HARVESTING.md`: player harvesting P8a (`api/HarvestRules` with the net-output check `balance`, `api/ResourcePools`, `api/PlayerHarvests`, `GET api/Harvest/catalog`, `POST api/Harvest/reports`, game settings `production.harvest`), current for knk-web-api `next`.
 - `API_CONTRACT_PRODUCTION_WORLD.md`: production world P2 (`api/Warehouses`, `api/ProductionStructures`, the structure placement fields and search, `InsideTerritory`, the game server's territory lookup), current for knk-web-api and knk-plugin `next`.
 - `API_CONTRACT_PRODUCTION_ENGINE.md`: production engine P3 (`api/ProductionKinds`, `ProductionKindLevels`, `ProductionLines`, `ProductionModifiers`, `ClimateZones`, `WeatherTypes`, `ProductionCycleRecords`, `POST api/Production/run-now`, `ProductionStructures/{id}/production|workers|upgrade`, game setting `production.engine`), current for knk-web-api `next`.
 - Port contracts: Interfaces in `knk-core` defining service boundaries.

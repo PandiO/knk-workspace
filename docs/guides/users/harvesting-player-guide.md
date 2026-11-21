@@ -1,10 +1,11 @@
 # Harvesting — Player Guide
 
-**Status:** Draft · **Last updated:** 2026-11-21 (first version, player harvesting P8 #134, production chain L22)
-**Checked against:** knk-plugin `claude/production-p8` (in review, not in `next` yet; you see nothing of this until staff
-switch production on and write harvest rules, and it has not been tried on a live server yet)
+**Status:** Current · **Last updated:** 2026-11-21 (in `next`; § 4 tool-tier reason as the game writes it, docs PandiO/knk-workspace#922); 2026-11-21 (first version, player harvesting P8 #134, production chain L22)
+**Checked against:** knk-plugin `next` `6f6c915f`, knk-web-api `next` `9ad32c23` (not released; you see nothing of this
+until staff switch production on and write harvest rules, and it has not been tried on a live server yet)
 **Related:** [player handbook](player-handbook.md), [territory player guide](territory-player-guide.md),
 [production kinds § 6-§ 7](../../specs/production-storage-transport/PRODUCTION_KINDS.md) (the design),
+[harvesting admin guide](../admin/production-harvesting-admin-guide.md) and
 [plugin configuration § 4.31](../admin/plugin-configuration.md#431-production) (for staff)
 
 Mines, quarries, farms and loggers are production structures. Each has one or more **yield areas**: the rock it digs,
@@ -60,7 +61,7 @@ You see **"You can't harvest this here:"** followed by the reason:
 | "you need the permission ..." | The rule is for players with that permission (a job or role). Ask your town or staff |
 | "you need the title ... or higher" | Earn the title first |
 | "needs a pickaxe" (or another tool) | Hold the right tool |
-| "needs an iron tool or better" | Use a better tool |
+| "needs a iron tool or better" (the game's wording until #924) | Use a better tool |
 | "it isn't ripe yet" | Wait until the crop is fully grown |
 | "wait 10 s" | The rule has a cooldown in this area |
 | "production at ... is switched off" | The structure is paused by its owners or staff |

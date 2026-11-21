@@ -1,7 +1,7 @@
 # Game Settings — admin guide
 
 **Status:** Current. Describes trunk since the KNG-52 merge of 2026-10-10 (see the [plan](../specs/game-settings/IMPLEMENTATION_PLAN.md)); the page header, units and help (§ Before you start, § Hub) describe knk-web-app `main` `1371951` (merged 2026-11-12, not live-tested).
-**Last updated:** 2026-11-21 (§ Menu item: the Menu item card, knk-web-app `next` `acff2134`, knk-web-api `next` `fc1a5143`, knk-plugin `next` `ec02a64a`, #870, #871, docs PandiO/knk-workspace#908); 2026-11-19 (Production and territory card, knk-web-app `next` `89751315`, docs PandiO/knk-workspace#806); 2026-11-12 (settings header with unsaved changes, Discard and Save (n); units and one line of help per field; Hub section; reached through Admin → Settings — #339, #342, #340); 2026-10-26 (route gated on `knk.admin.config`, #185, branch `claude/route-gates-185`, not merged); 2026-10-15 (`game-settings.server-id`, KNG-118, branch `wt/kng-118`, not merged)
+**Last updated:** 2026-11-21 (§ Production and territory: the Town logistics card, knk-web-app `next` `c12e0e7e`, #686, docs PandiO/knk-workspace#929); 2026-11-21 (§ Menu item: the Menu item card, knk-web-app `next` `acff2134`, knk-web-api `next` `fc1a5143`, knk-plugin `next` `ec02a64a`, #870, #871, docs PandiO/knk-workspace#908); 2026-11-19 (Production and territory card, knk-web-app `next` `89751315`, docs PandiO/knk-workspace#806); 2026-11-12 (settings header with unsaved changes, Discard and Save (n); units and one line of help per field; Hub section; reached through Admin → Settings — #339, #342, #340); 2026-10-26 (route gated on `knk.admin.config`, #185, branch `claude/route-gates-185`, not merged); 2026-10-15 (`game-settings.server-id`, KNG-118, branch `wt/kng-118`, not merged)
 
 The Game Settings page sets server-wide rules for joining, respawning, each world's game mode, time,
 weather and spawn point, and the server-list MOTD. It also sets exceptions per permission group. The plugin picks up a saved change within about 30 seconds. To apply it at once, run
@@ -64,6 +64,12 @@ holds the API's production switch (**Production enabled**, off by default) and t
 (blocks)** (100), **Blocks per power point** (2) and **Capital multiplier** (1.5), with a worked example. A value
 outside the allowed range turns red and Save stays off. What they do and how to switch territory on in game:
 [territory admin guide § 3–4](admin/territory-admin-guide.md#3-range-settings).
+
+The **Town logistics** card (knk-web-app `next`, not released; [#686](https://github.com/PandiO/knk-workspace/issues/686))
+holds the planner's timing and defaults (`production.logistics`): **Planner interval (minutes)** (10), **Reservation
+expiry (minutes)** (30), **Consumption window (days)** (7), **Default min (hours of input)** (4), **Default max (hours of
+input)** (12) and **Keep planner runs (days)** (14). Problems are listed under the card and block Save. What they do:
+[town logistics admin guide § 6](admin/town-logistics-admin-guide.md#6-settings).
 
 ## Menu item
 

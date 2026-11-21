@@ -19,8 +19,8 @@ scenario on a real Paper server), 7 partly and 1 manual (tagged); not run. § 5.
 partly (tagged) and 1 by hand; every step can still be run by hand; not run. § 6.1 (transport API, #79): 18 of 20 steps automated in CI
 and 2 partly (tagged); every step can still be run by hand; not run. § 6.2 (transport lanes plugin, #681): 3 of 14
 steps automated, 10 partly and 1 manual (tagged); not run. § 6.3 (transport web app, #682): 10 of 16 steps
-automated in CI, 5 partly (tagged) and 1 by hand; every step can still be run by hand; not run. § 7.1 (terminals and menus API, #683): 15 of 20 steps automated in CI, 4 partly and 1 by hand (tagged); every step can still be run by hand; not run. § 7.2 (terminals, displays and menus plugin, #74): 7 of 20 steps automated (one through a plugin scenario on a real Paper server), 11 partly and 2 by hand (tagged); not run. § 8.1 (delivery and inbox API, #60): 16 of 20 steps automated in CI, 3 partly and 1 by hand (tagged); every step can still be run by hand; not run. § 8.2 (reward inbox plugin, #684): 7 of 17 steps automated (two also through plugin scenarios on a real Paper server) and 10 partly (tagged); every step can still be run by hand; not run. § 9.1 (harvesting API, #685): 18 of 21 steps automated in CI and 3 partly (tagged); every step can still be run by hand; not run. § 9.2 (harvesting plugin, #134): 10 of 22 steps automated (four through plugin scenarios on a real Paper server), 10 partly and 2 by hand (tagged); not run. § 10.1 (town logistics API, #127): 21 of 24 steps automated in CI and 3 partly (tagged); every step can still be run by hand; not run. § 11.1 (shops API, #248): 26 of 28 steps automated in CI and 2 partly (tagged); every step can still be run by hand; not run. Other sections not yet automated (the links tag them).
-**Last updated:** 2026-11-21 (§ 11 shops API, link L25, #248; § 11.2 and § 11.3 drafts for L26 and L27); 2026-11-21 (§ 10 town logistics API, link L23, #127; § 10.2 draft for L24); 2026-11-21 (§ 9.2 harvesting plugin, link L22, #134); 2026-11-21 (§ 8 and § 8.2 intros: L19 and L20 merged into `next`, links to the architecture page and admin guide, docs #915); 2026-11-21 (§ 9 harvesting API, link L21, #685, with #900; § 9.2 draft for L22); 2026-11-21 (§ 8.2 reward inbox plugin, link L20, #684); 2026-11-20 (§ 8 delivery and inbox API, link L19, #60, with #883 and #890; § 8.2 draft for L20); 2026-11-20 (§ 7.2 terminals, displays and menus plugin, link L18, #74); 2026-11-20 (§ 7 terminals and menus API, link L17, #683; § 7.2 draft for L18); 2026-11-20 (§ 6.2 transport lanes plugin, link L15, #681); 2026-11-20 (§ 6.3 transport web app, link L16, #682); 2026-11-20 (§ 6 transport API, link L14, #79; § 6.2 and § 6.3 drafts for L15 and L16); 2026-11-20 (§ 5.2 surveys plugin, link L12, #679); 2026-11-20 (§ 5.3 yield areas web app, link L13, #680); 2026-11-19 (§ 5 yield areas API, link L11, #138; § 5.1 step 18: #831); 2026-11-19 (§ 4.2 production engine web app, link L10, #678); 2026-11-19 (§ 4.1 production engine API, link L9, #86); 2026-11-19 (§ 3 intro, § 3.0, § 3.2 and § 3.3 intros: builds from `next`; § 3.3 precondition 4: `/knk regions repair` needs `knk.admin.regions`, `/knk territory rebuild` `knk.admin.world.territory`; docs #830); 2026-11-19 (§ 3.2 world web app, link L7, #676); 2026-11-19 (§ 3.3 world plugin, link L8, #677); 2026-11-19 (§ 3.1 world API, link L6, #91); 2026-11-19 (§ 2.2 stock web app, link L5, #675); 2026-11-19 (§ 2 stock core API, link L4, #97); 2026-11-19 (§ 1.0 and § 1.3 preconditions: builds from `next` instead of the link branches; guides: [territory admin guide](admin/territory-admin-guide.md), docs #806); 2026-11-19 (§ 1.4 territory web app, link L3, #690); 2026-11-19 (§ 1.3 territory plugin, link L2, #689); 2026-11-19 (§ 1 territory API, link L1, #326); 2026-11-19 (§ 0 item identity, link L0, #141); 2026-11-16 (draft from the design, territory and phases P1-P12)
+automated in CI, 5 partly (tagged) and 1 by hand; every step can still be run by hand; not run. § 7.1 (terminals and menus API, #683): 15 of 20 steps automated in CI, 4 partly and 1 by hand (tagged); every step can still be run by hand; not run. § 7.2 (terminals, displays and menus plugin, #74): 7 of 20 steps automated (one through a plugin scenario on a real Paper server), 11 partly and 2 by hand (tagged); not run. § 8.1 (delivery and inbox API, #60): 16 of 20 steps automated in CI, 3 partly and 1 by hand (tagged); every step can still be run by hand; not run. § 8.2 (reward inbox plugin, #684): 7 of 17 steps automated (two also through plugin scenarios on a real Paper server) and 10 partly (tagged); every step can still be run by hand; not run. § 9.1 (harvesting API, #685): 18 of 21 steps automated in CI and 3 partly (tagged); every step can still be run by hand; not run. § 9.2 (harvesting plugin, #134): 10 of 22 steps automated (four through plugin scenarios on a real Paper server), 10 partly and 2 by hand (tagged); not run. § 10.1 (town logistics API, #127): 21 of 24 steps automated in CI and 3 partly (tagged); every step can still be run by hand; not run. § 10.2 (town logistics web app, #686): 18 of 22 steps automated in CI, 3 partly and 1 by hand (tagged); every step can still be run by hand; not run. § 11.1 (shops API, #248): 26 of 28 steps automated in CI and 2 partly (tagged); every step can still be run by hand; not run. Other sections not yet automated (the links tag them).
+**Last updated:** 2026-11-21 (§ 11 shops API, link L25, #248; § 11.2 and § 11.3 drafts for L26 and L27); 2026-11-21 (§ 10.2 town logistics web app, link L24, #686); 2026-11-21 (§ 9 and § 9.2 intros and preconditions: L21 and L22 in `next`, rules through the API until #913; § 4 step 14 partly automated by `player-harvest-tree`, docs #922); 2026-11-21 (§ 10 town logistics API, link L23, #127; § 10.2 draft for L24); 2026-11-21 (§ 9.2 harvesting plugin, link L22, #134); 2026-11-21 (§ 8 and § 8.2 intros: L19 and L20 merged into `next`, links to the architecture page and admin guide, docs #915); 2026-11-21 (§ 9 harvesting API, link L21, #685, with #900; § 9.2 draft for L22); 2026-11-21 (§ 8.2 reward inbox plugin, link L20, #684); 2026-11-20 (§ 8 delivery and inbox API, link L19, #60, with #883 and #890; § 8.2 draft for L20); 2026-11-20 (§ 7.2 terminals, displays and menus plugin, link L18, #74); 2026-11-20 (§ 7 terminals and menus API, link L17, #683; § 7.2 draft for L18); 2026-11-20 (§ 6.2 transport lanes plugin, link L15, #681); 2026-11-20 (§ 6.3 transport web app, link L16, #682); 2026-11-20 (§ 6 transport API, link L14, #79; § 6.2 and § 6.3 drafts for L15 and L16); 2026-11-20 (§ 5.2 surveys plugin, link L12, #679); 2026-11-20 (§ 5.3 yield areas web app, link L13, #680); 2026-11-19 (§ 5 yield areas API, link L11, #138; § 5.1 step 18: #831); 2026-11-19 (§ 4.2 production engine web app, link L10, #678); 2026-11-19 (§ 4.1 production engine API, link L9, #86); 2026-11-19 (§ 3 intro, § 3.0, § 3.2 and § 3.3 intros: builds from `next`; § 3.3 precondition 4: `/knk regions repair` needs `knk.admin.regions`, `/knk territory rebuild` `knk.admin.world.territory`; docs #830); 2026-11-19 (§ 3.2 world web app, link L7, #676); 2026-11-19 (§ 3.3 world plugin, link L8, #677); 2026-11-19 (§ 3.1 world API, link L6, #91); 2026-11-19 (§ 2.2 stock web app, link L5, #675); 2026-11-19 (§ 2 stock core API, link L4, #97); 2026-11-19 (§ 1.0 and § 1.3 preconditions: builds from `next` instead of the link branches; guides: [territory admin guide](admin/territory-admin-guide.md), docs #806); 2026-11-19 (§ 1.4 territory web app, link L3, #690); 2026-11-19 (§ 1.3 territory plugin, link L2, #689); 2026-11-19 (§ 1 territory API, link L1, #326); 2026-11-19 (§ 0 item identity, link L0, #141); 2026-11-16 (draft from the design, territory and phases P1-P12)
 **Design:** [specs/production-storage-transport/DESIGN.md](../specs/production-storage-transport/DESIGN.md) (§17
 acceptance A01-A27, §18 links) · [territory](../specs/territory/DESIGN.md) · [shops](../specs/shops/DESIGN.md) ·
 **Issue:** [PandiO/knk-workspace#22](https://github.com/PandiO/knk-workspace/issues/22)
@@ -1368,9 +1368,10 @@ server, CI job `paper-boot`).
     `knk_task_duration_seconds{task="production.survey.capture"}` and the TPS. **Expected:** no main-thread spike from
     block reads: the capture task stays in the low milliseconds per tick (two chunk snapshots); counting runs on the
     `KnK-survey` thread.
-14. [automated: `SurveyCounterTest.placeholdersCountAsTheirOriginal`; by hand once P8 (#134) is in] Harvest ore in the
+14. [partly automated: `SurveyCounterTest.placeholdersCountAsTheirOriginal`, scenario `player-harvest-tree` (the overlay
+    reads a felled log as `OAK_LOG`); by hand: a survey after a harvest] Harvest ore in the
     Pit (regenerating placeholders) and survey it. **Expected:** the survey counts the ore that waits to regenerate as
-    present (no drop in `BLOCK:COAL_ORE`). Before P8 there are no placeholders; only the automated part applies.
+    present (no drop in `BLOCK:COAL_ORE`). Needs a coal ore harvest rule (§ 9.2); P8 is in knk-plugin `next` `6f6c915f`.
 15. [automated: `SurveyCounterTest.theSameWorldGivesTheSameHash`] Survey the Pit twice without changing it.
     **Expected:** both surveys have the same `contentHash`.
 
@@ -2304,7 +2305,7 @@ minutes; the untagged parts about 15 minutes. Tests: knk-plugin `RewardInboxTest
 ## 9. Phase P8: player harvesting and block regeneration (#685 API, #134 plugin; tier:3)
 
 Built so far: link L21, the API (knk-web-api, migration `AddPlayerHarvesting`; in `next`), with placement rule P-3 for
-Polygon areas (#900), and link L22, the game server part (knk-plugin branch `claude/production-p8`, PR into `next`): the
+Polygon areas (#900), and link L22, the game server part (knk-plugin, in `next` `6f6c915f`, PR PandiO/knk-plugin#114): the
 harvest listener, placeholders and the regeneration queue, § 9.2. § 9.1 runs with a REST client (or Swagger) against the
 API, sending what the game server sends: the plugin key (`X-API-Key`). 21 steps in § 9.1: 18 automated in CI and 3
 partly (tagged); every step can still be run by hand; not run. § 9.2 is the plugin part (22 steps). Full manual run of § 9.1 about 35
@@ -2445,7 +2446,7 @@ block comes back.
 
 ### 9.2 Steps (plugin, #134)
 
-Built by link L22 (knk-plugin branch `claude/production-p8`, PR into `next`): the harvest listener for blocks and
+Built by link L22 (knk-plugin, in `next` `6f6c915f`, PR PandiO/knk-plugin#114): the harvest listener for blocks and
 entities against the API's catalogue, the WorldGuard and global-region pass for qualified harvests, placeholders and
 the disk-persisted regeneration queue (whole felled trees restored by snapshot), batched harvest reports with one
 idempotency key per entry, the worker's share handed to the player, the messages and `/knk production harvest
@@ -2459,12 +2460,12 @@ WorldGuard 7.0.20). Full manual run about 60 minutes; the untagged parts about 2
 
 **Preconditions (in addition to § 9.0):**
 
-1. The game server runs the plugin built from `claude/production-p8` (or `next` once merged) with `production.enabled:
+1. The game server runs the plugin built from `next` (`6f6c915f` or later) with `production.enabled:
    true`, `items.identity.enabled: true` and the `production.harvest` block of the changelog entry (restart). The API has
    `AddPlayerHarvesting` applied and `Production:Enabled` on.
 2. The Quarry of § 9.0 has its managed region (a `RESOURCE_PRODUCTION` region, which denies `block-break` to
    non-members) and the area **Pit** is a `Region` area on it, or a `Cuboid` area inside it. Pit holds stone.
-3. Harvest rules (web app or `POST api/HarvestRules`):
+3. Harvest rules (`POST api/HarvestRules`; the web app pages are #913):
    1. **Quarry stone**: kind Quarry, targets `STONE`, tool Pickaxe (any tier), permission `knk.harvest.quarry`, yield
       Cobblestone 4 per break, worker's share 0.25, pool cost 1, placeholder DepletedBlock with material `BEDROCK`,
       regeneration 60 s.
@@ -2552,7 +2553,7 @@ WorldGuard 7.0.20). Full manual run about 60 minutes; the untagged parts about 2
     Stop the API, mine a stone, log out, start the API, wait 10 s and log in. **Expected:** the share arrives about 2 s
     after joining.
 19. [automated: `HarvestModuleTest.aRejectedEntryPaysNothing`]
-    Switch Quarry stone off in the web app and mine a stone at once (before the next catalogue read). **Expected:** "Your
+    Switch Quarry stone off (`PUT api/HarvestRules/{id}` with `enabled: false`) and mine a stone at once (before the next catalogue read). **Expected:** "Your
     harvest at Quarry was not booked: …", no share; the stone still regenerates. After `/knk production harvest
     refresh` stone is no longer a harvest (WorldGuard refuses Member as before).
 20. [partly automated: `HarvestModuleTest.withTheApiFlagOffBreaksBehaveAsBefore`, `HarvestModuleTest.a409DropsTheReportAndPaysNothing`;
@@ -2570,9 +2571,10 @@ WorldGuard 7.0.20). Full manual run about 60 minutes; the untagged parts about 2
 
 ## 10. Phase P9: town logistics (#127 API, #686 web app; tier:3)
 
-Built so far: link L23, the API (knk-web-api, migration `AddTownLogistics`; branch `claude/production-p9`, PR into
-`next`). The policy and rule editor, the planner dry-run view and the town supply view are link L24 (#686, § 10.2
-draft); until then § 10.1 runs with a REST client (or Swagger) against the API. 24 steps in § 10.1: 21 automated in
+Built so far: link L23, the API (knk-web-api, migration `AddTownLogistics`; in `next`), and link L24, the web app
+(knk-web-app branch `claude/production-p9b`, PR into `next`; § 10.2): the policy and rule editor, the planner dry-run
+view, the town supply view, the consumer and warehouse panels. § 10.1 runs with a REST client (or Swagger) against the
+API. 24 steps in § 10.1: 21 automated in
 CI and 3 partly (tagged); every step can still be run by hand; not run. Full manual run about 50 minutes (most of it
 setting up stock and waiting for trips, or `POST api/TransportOrders/run-now`); the untagged parts about 15 minutes.
 The tests are in knk-web-api `Tests/.../Services/Logistics/LogisticsPlannerTests.cs`, `LogisticsPolicyTests.cs`,
@@ -2746,19 +2748,147 @@ town (a save is a new version); admins keep **default templates** per town size 
     supply view's `nextRunAt` is the last run + 10 minutes. With the Visitor token, every logistics read and write is 403;
     a write without a token is 401. (A17, A21)
 
-### 10.2 Steps (web app #686, draft)
+### 10.2 Steps (web app #686)
 
-*Draft from the design (2026-11-16) and the API above; L24 updates it to what was built and tags the automated steps.*
+Built in link L24 (knk-web-app, branch `claude/production-p9b`, PR into `next`). The tags name tests in knk-web-app
+`e2e/logistics.spec.ts` (Playwright, mocked API; the mocks use Phoenix with the warehouses North and South, the
+consumers Bakery and Garrison in Market with their Input storages, Coal and Iron ore, Phoenix's policy v2 with a town
+reserve of 70 Coal and a Critical Garrison, the template "Farming village", reservation 600 with its collection order
+710 and planner run 300) and the Jest tests next to the code (`src/utils/__tests__/logistics.test.ts`,
+`src/apiClients/__tests__/logisticsClients.test.ts`). Extra preconditions: § 10.0 and § 10.1 steps 1-3 (the seeds
+imported with "make default", Bakery's replenishment setting), so the pages below have real rows; for step 21
+`Production:Enabled` on. Log in to the web app as **Staff** (holds `knk.admin.world`, `knk.admin.delete` and
+`knk.admin.config`) unless a step says otherwise. 22 steps: 18 automated, 3 partly (tagged), 1 by hand (step 21);
+every step can still be run by hand; not run. Full manual run about 45 minutes; the untagged parts about 20 minutes
+(most of it waiting for the scheduled planner and a collection trip, or `POST api/TransportOrders/run-now`).
 
-1. As Staff, open Phoenix's logistics policy and apply the template for Phoenix's size and specialization.
-   **Expected:** the rules shown in the editor; saving makes a new version and the history lists both. (A17)
-2. Run a planner dry run from the town page. **Expected:** a plan with an explanation per consumer line ("why did or
-   didn't the bakery get flour"); nothing moves. (A17)
-3. Open the town supply view. **Expected:** stock per blueprint across the warehouses, reserves, open reservations,
-   available, inflow and outflow per day and days of cover; the last run and the next. (A17)
-4. Wait for the 10-minute planner run. **Expected:** warehouses reserve stock; a consumer collects with its own worker
-   (worker away, as in § 6). (A17)
-5. Make a good scarce. **Expected:** higher-priority consumers are served first; the others show why not. (A17)
+1. [partly automated: `a town's logistics › shows the supply per item across the warehouses, the reservations, the
+   policy and the runs (A17, #65)`; by hand: compare with the API] Put 100 Coal into North and make the town reserve
+   of § 10.1 step 12, then run the planner once (step 4). Open Phoenix's page (`/display/Town/<Phoenix>`).
+   **Expected:** below the territory panel a **Town logistics** panel: Policy in force "the town's policy (#<id>)"
+   linking to the policy's page; Warehouses "North, South" (each linked); Last run with its time, trigger and summary
+   (linked to the run's page); Next run (the last run + 10 minutes); a **Low supply** box for items with nothing
+   available or under 3 days of cover. A **Supply** table per item: Stock, Held by reserves, Reserved, Available, In /
+   day, Out / day, Days of cover ("No outflow" without outflow) and By warehouse ("North: 100 (available 0); South: 0
+   (available 0)"). **Open reservations** (reservation, consumer, item, collected of amount, warehouse, status with
+   priority, expiry, collection order linked, Release). **Service areas** (each district, the rural territory and each
+   structure with the warehouse that serves it and "Service area rule #<id>" or "Nearest by road"). **Recent planner
+   runs** (the last five, linked). By hand: the numbers match `GET api/Logistics/towns/<Phoenix>/supply` and
+   `.../service-areas`. (A17)
+2. [automated: `a town's logistics › without knk.admin.world the panel is not shown and nothing is read`] Log in as a
+   staff member who can open towns but lacks `knk.admin.world` (for example a road manager with `knk.admin.road`) and
+   open Phoenix's page. **Expected:** no Town logistics panel; the browser's network tab shows no `api/Logistics`
+   request.
+3. [automated: `a town's logistics › a dry run explains every consumer line, why the bakery got nothing, and writes
+   nothing (A17)`] With the data of § 10.1 step 15 (50 Coal in North, both consumers at 20/60, Garrison Critical),
+   press **Dry run** on Phoenix's panel. **Expected:** "Dry run: nothing was written. Policy: Phoenix logistics v<n>
+   (the town's policy)."; the plan's summary and warnings (with production off: the dry-run warning); **Consumer
+   lines** in the order the planner served them, Garrison first: each with the consumer (linked), its storage, the
+   item, the outcome in words ("Partly reserved", "Held by a reserve", "Not needed", "No stock", "No worker", ...), a
+   line "<class> priority · stock <n> (with what is on the way) · min <n>, max <n> from its replenishment setting ·
+   short <n> · reserved <n> at North · rules #<ids>" and the planner's own explanation; **Collection orders** ("Garrison
+   collects from North with its own worker (2 of 2 present, carries up to 64 units)" with "30 × Coal"). "Only the lines
+   that didn't get everything" hides the lines that got what they needed. By hand: `POST
+   api/LogisticsReservations/search` with `townId` lists no new reservation (nothing was written). (A17)
+4. [automated: `a town's logistics › Run the planner now stores a run and reads the town again; the API's refusal is
+   shown`, `a town's logistics › while production is off Run now is off and no run is scheduled`] With
+   `Production:Enabled` on, press **Run the planner now**. **Expected:** "Run #<id> stored." (linked) and the plan
+   below it; the supply, reservations and runs are read again. With `Production:Enabled` off (restart the API):
+   **Expected:** Next run says "Production is off: no scheduled runs (a dry run still works)", Run the planner now is
+   off and Dry run still works; a 409 from the API is shown as its sentence. (A17, A21)
+5. [automated: `a town's logistics › Release ends an open reservation with a reason; the API's 409 once loaded is
+   shown`] With an open reservation (step 4), press **Release** on its row. **Expected:** a box "Releasing reservation
+   #<id> ends it Cancelled with its collection order; ..." with a reason field; type "test" and press **Release now**:
+   "Reservation #<id> released." and the row is gone. For a reservation whose order has loaded (after `POST
+   api/TransportOrders/run-now`) the API's sentence is shown and nothing changes.
+6. [automated: `a town's logistics › Apply a template copies its rules into the town policy (D-L3)`] Make the template
+   "Farming village" of § 10.1 step 23 (or step 12 below). On Phoenix's panel press **Apply a template**. **Expected:**
+   a list of the templates with their specialization, size, default flag and rule count; Apply to this town stays off
+   until one is picked. Pick "Farming village", type a reason, press **Apply to this town**. **Expected:** "Template
+   applied: Phoenix logistics is now v<n>."; the Policy in force link opens the new version with the template's rules.
+   (D-L3)
+7. [automated: `a policy › shows its rules, its version and every version (A23)`] Open Phoenix's policy (the link in
+   step 1). **Expected:** a **Policy rules** panel below the details: For "Town: Phoenix" (linked), Version "v<n>
+   (current) · based on #<id>", Saved, Reason; each rule as an editable row (its type, then only the fields that type
+   uses, its active window and its reason), with "Saved as: <the API's one-line summary>"; Save as a new version is off
+   while nothing changed; a **Versions** table newest first, each older version linked. (A23)
+8. [automated: `a policy › a save sends the whole rule list with its reason and opens the new version (A23)`] On the
+   current version pick **New rule** "Reserve (saving rule)" and press **Add the rule**. **Expected:** "Rule <n>: pick
+   the blueprint." under the rules and Save stays off. Pick Iron ore, Keep "Days of cover", 14, reason "Bread for two
+   weeks"; move the rule up with its arrow; type "Bread reserve 14 days" as the reason for this version and press
+   **Save as a new version**. **Expected:** the page of the new version opens with "Saved as version <n+1>."; the
+   rules are in the new order; the old version is in Versions. By hand: `GET api/LogisticsPolicies/<old>` is no longer
+   current. (A23)
+9. [automated: `a policy › a service area and a refused save: the API's sentence is shown`] Add a **Service area**
+   rule. **Expected:** "pick the district" and "pick the warehouse that serves it" listed. Pick the district Market and
+   a warehouse of another town, save. **Expected:** the API's sentence ("Rule <n>: warehouse <id> is not a warehouse of
+   this town.") and the edit stays. Pick South instead and save: a new version; step 1's Service areas table shows
+   "District Market · South · Service area rule #<id>".
+10. [automated: `a policy › a superseded version is read only and links to the next one`] Open an older version from
+    Versions. **Expected:** "This version was replaced on <date>; it is kept for the history and can't be edited. Next
+    version: #<id>." (linked); the rules as a numbered list of summaries; no New rule or Save.
+11. [automated: `a policy › a template sends its specialization, size and default flag, and applies to a town
+    (D-L3)`] Open the template "Farming village". **Expected:** For "Template: Crops, Village (default)"; the
+    Specialization, Town size and default fields; New rule offers Reserve, Priority class and Replenishment defaults
+    only (a template has no service areas); an **Apply to a town** box (pick Phoenix, Apply the template: "Applied:
+    Phoenix logistics v<n>." linked). Change Town size to Town and save: the new version keeps Crops and the default
+    flag. (D-L3)
+12. [partly automated: `the Town logistics page › lists the policies and templates, filters them, and opens a town
+    (A23)`; by hand: the seeded form] In the admin sidebar (group World) open **Town logistics** and press **New policy
+    or template**. **Expected:** the seeded LogisticsPolicy form; make a template "Mining town" (scope Template,
+    specialization Ore, size Town, default on): it is saved without rules and its page opens; add a Reserve of 90 Coal
+    there and save (v2). By hand: the dashboard's LogisticsPolicy list shows it; editing the name in the seeded form
+    makes a new version that keeps the rules. (G17, A23)
+13. [automated: `the Town logistics page › lists the policies and templates, filters them, and opens a town (A23)`]
+    On **Town logistics** (`/admin/logistics`). **Expected:** a table of policies (name linked, For, Version, Rules,
+    Saved, Reason), current versions only; **For** narrows to town, warehouse or template policies and **Versions** adds
+    the superseded ones; links to consumer settings, reservations, planner runs and all rules on the dashboard; pick
+    Phoenix under "A town's supply and planner" and press **Open the town**: Phoenix's page with its Town logistics
+    panel. (A23)
+14. [automated: `a consumer's supply › shows its demand with where each min and max came from, its workers and its
+    warehouse (A17)`] Open Bakery's page (`/display/ProductionStructure/<Bakery>`). **Expected:** a **Supply (as a
+    consumer)** panel: warnings (a worker away); Collected by "Its own workers: <present> of <total> present, each
+    carries up to 64 units"; Served by its warehouse (linked) and where that came from; a link to the town's logistics;
+    **Demand** per Input or Merchandise storage: per item Stock, On the way, Min, Max, Priority and "Min and max from"
+    (its replenishment setting, a Replenishment rule, or its line inputs (4 h / 12 h)), lines at or below their min
+    highlighted; the **Replenishment settings** table. (A17)
+15. [automated: `a consumer's supply › adds a setting after checking it, edits one and deletes one`] Press **Add a
+    setting**, keep the storage, pick Iron ore, min 30 and max 25. **Expected:** "The min is above the max." and Save
+    the setting off. Min 5, priority High, **Save the setting**: "Setting for Iron ore saved." and the demand line now
+    says "its replenishment setting". **Edit** Coal's setting (min 30), save; **Delete** it: "Setting for Coal deleted:
+    the min and max come from a rule or the line inputs again." (Delete needs `knk.admin.delete`.)
+16. [automated: `a consumer's supply › a structure without an Input or Merchandise storage is not a consumer`] Open the
+    Quarry's page. **Expected:** "Not a consumer: it has no Input or Merchandise storage, ..." and nothing else in the
+    panel.
+17. [automated: `a warehouse's logistics › lists what it serves, its warehouse policy and its open reservations`] Open
+    South's page. **Expected:** a **Logistics** panel: Warehouse policy (linked, or "None (the town's policy applies).
+    Make a warehouse policy"), a link to the town; **Serves** (the areas from step 1 served by South); **Open
+    reservations at this warehouse** with Release.
+18. [automated: `a planner run and a reservation › a run's page lists its counts and the explanation of every line,
+    with the reservation and order it made (A17)`] Open a run from Recent planner runs. **Expected:** below the details
+    a **Plan explanation** panel: the town (linked), when and why it ran (Scheduled or Manual), the policy version
+    (linked), "<n> lines at or below their min, <n> reserved, <n> orders, <n> released, <n> collected, <n> short", and
+    each stored line as in step 3 with links to its reservation and collection order. (A17)
+19. [automated: `a planner run and a reservation › a reservation's page says what is held for whom and releases it`]
+    Open a reservation. **Expected:** a **Reservation** panel: status in words (with its reason once closed), "<collected>
+    of <amount> <item> collected", the warehouse storage and the consumer storage (linked), made by run #<id>, the
+    expiry, the collection order with its status, the planner's explanation, and **Release the reservation** while
+    open (as in step 5; the status turns Cancelled and the order Cancelled).
+20. [automated: `game settings › shows and keeps the logistics section on a save of another section, and checks a
+    changed one`; Jest `logistics helpers › checks the logistics settings like the API and keeps them in the
+    production section`] Open **Game settings** (`knk.admin.config`). **Expected:** a **Town logistics** card: planner
+    interval 10, reservation expiry 30, consumption window 7, default min and max in hours of input 4 and 12, keep
+    runs 14 (or the stored values); a save of another section sends the logistics section back unchanged. Set the
+    default min to 20: "production.logistics.defaultReorderHours must be at most defaultTargetHours." and Save is off.
+21. [by hand] With `Production:Enabled` on, Bakery inputs empty and 100 Coal in North (no reserve), wait for the
+    scheduled planner (up to 10 minutes) and then `POST api/TransportOrders/run-now`. **Expected:** Phoenix's panel shows
+    a Scheduled run with one reservation for Bakery; Bakery's panel lists it under Open reservations and its workers
+    show one away; the collection order (linked from the reservation) is on the road (§ 6.3 step 3); after the trip the
+    reservation is Collected and Bakery's demand line for Coal shows the stock. (A17)
+22. [partly automated: `a town's logistics › a dry run explains every consumer line, why the bakery got nothing, and
+    writes nothing (A17)`; by hand: the scarcity against the API] Make Coal scarce (§ 10.1 step 15: 50 Coal, both
+    consumers at 20/60, Garrison Critical) and run a dry run. **Expected:** Garrison is listed first and gets 50
+    ("Partly reserved"); Bakery is "Held by a reserve" with "50 already reserved" in its explanation. (A17)
 
 ## 11. Phase P10: shops (#248 API, #687 plugin menus, #688 web app; tier:3)
 

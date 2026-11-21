@@ -11,7 +11,7 @@ merged into `next` (knk-web-api `fcfced27`, migration `AddProductionWorld`, 2026
 [DESIGN §14](DESIGN.md#14-decisions), [PRODUCTION_KINDS §9](PRODUCTION_KINDS.md#9-decisions) and
 [TOWN_LOGISTICS §8](TOWN_LOGISTICS.md#8-decisions); the few still open are listed there. Every item is marked
 **V1** or **Later**. The production structures work and the garrison/guard NPC work ship in the **same test phase**.
-**Last updated:** 2026-11-21 (P10 shops API in review, link L25, #248); 2026-11-21 (P8 harvest plugin #134 in review, link L22); 2026-11-21 (P7 and P7b merged into `next`: knk-web-api `2952d0c7`, knk-plugin `bdd8b463`; docs #915); 2026-11-21 (P7b inbox plugin #684 in review, link L20); 2026-11-20 (P7 delivery and inbox API #60 in review, link L19, with #883 and #890); 2026-11-20 (P5c transport web app #682 in review, link L16); 2026-11-20 (P5 transport API #79 in review, link L14); 2026-11-20 (P4c yield areas web app #680 in review); 2026-11-19 (P4 yield areas API #138 in review); 2026-11-19 (P3b production engine web app #678 in review); 2026-11-19 (P3 production engine API #86 merged into `next`); 2026-11-19 (P2c world plugin #677 in review); 2026-11-19 (P2 world API #91 merged into `next`); 2026-11-19 (P1b stock web app #675 in review; P1 API #97 merged into `next`); 2026-11-19 (P1 stock core API #97 in review); 2026-11-19 (territory plugin #689 and web app #690 merged into `next`); 2026-11-19 (territory API #326 in review); 2026-11-19 (item identity #141 merged into `next`, docs #796); 2026-11-19 (item identity #141 in review); 2026-11-11 (open questions answered, [decision record §11](DECISIONS_2026-11-05.md#11-follow-up-decisions-2026-11-11); issues #324, #325)
+**Last updated:** 2026-11-21 (P10 shops API in review, link L25, #248); 2026-11-21 (P8 merged into `next`: knk-web-api `9ad32c23`, knk-plugin `6f6c915f`; docs #922); 2026-11-21 (P8 harvest plugin #134 in review, link L22); 2026-11-21 (P7 and P7b merged into `next`: knk-web-api `2952d0c7`, knk-plugin `bdd8b463`; docs #915); 2026-11-21 (P7b inbox plugin #684 in review, link L20); 2026-11-20 (P7 delivery and inbox API #60 in review, link L19, with #883 and #890); 2026-11-20 (P5c transport web app #682 in review, link L16); 2026-11-20 (P5 transport API #79 in review, link L14); 2026-11-20 (P4c yield areas web app #680 in review); 2026-11-19 (P4 yield areas API #138 in review); 2026-11-19 (P3b production engine web app #678 in review); 2026-11-19 (P3 production engine API #86 merged into `next`); 2026-11-19 (P2c world plugin #677 in review); 2026-11-19 (P2 world API #91 merged into `next`); 2026-11-19 (P1b stock web app #675 in review; P1 API #97 merged into `next`); 2026-11-19 (P1 stock core API #97 in review); 2026-11-19 (territory plugin #689 and web app #690 merged into `next`); 2026-11-19 (territory API #326 in review); 2026-11-19 (item identity #141 merged into `next`, docs #796); 2026-11-19 (item identity #141 in review); 2026-11-11 (open questions answered, [decision record §11](DECISIONS_2026-11-05.md#11-follow-up-decisions-2026-11-11); issues #324, #325)
 **Design:** [DESIGN.md](DESIGN.md), [PRODUCTION_KINDS.md](PRODUCTION_KINDS.md), [TOWN_LOGISTICS.md](TOWN_LOGISTICS.md),
 [shops DESIGN](../shops/DESIGN.md), [NPC platform](../npc-platform/DESIGN.md) (lifecycle).
 **Evidence:** [V2 scan](../../reports/2026-10-09-v2-production-storage-transport-scan.md).
@@ -396,6 +396,12 @@ loaded chunks, over unchanged placeholders and never into an entity, and the sur
 `/knk production harvest status|refresh`; `config.yml` `production.harvest.*`; scenarios `player-harvest-regenerate` and
 `player-harvest-tree`; smoke guide § 9.2.
 
+**Status (2026-11-21):** both parts merged into `next` (knk-web-api `9ad32c23`, PR PandiO/knk-web-api#72; knk-plugin
+`6f6c915f`, PR PandiO/knk-plugin#114); smoke test § 9 not run live. Docs: [architecture](../../architecture/production-harvesting.md),
+[API contract](../api/API_CONTRACT_HARVESTING.md), [admin guide](../../guides/admin/production-harvesting-admin-guide.md),
+[player guide](../../guides/users/harvesting-player-guide.md) (#922). Open: the web app pages (#913), harvest breaks in the
+survey NotableChange counter (#923).
+
 ## P9 — Town logistics · [#127](https://github.com/PandiO/knk-workspace/issues/127) (`[KNG-98]`)
 
 The developer reviewed TOWN_LOGISTICS §4 on 2026-11-05; the V1 subset is below.
@@ -430,7 +436,10 @@ a structure, also the producers' inbound preference; replenishment defaults per 
 origin Distribution carried by the consumer's own worker through `TransportService`; a plan explanation per consumer
 line), the town supply, service area and consumer views, the seeds. The planner needs `Production:Enabled`. Consumer
 workers: V1 consumers are production structures (their `WorkersTotal`/`WorkersPresent`); other consumers (shops,
-P10) need workers and the transport carrier widened (note for L25). Web app: link L24 (#686).
+P10) need workers and the transport carrier widened (note for L25). Web app: link L24 (#686, in review, knk-web-app
+branch `claude/production-p9b`): the policy and rule editor with versions and templates, the planner dry-run and run
+view with the explanation per consumer line, the town supply view with reservations and service areas, the consumer
+and warehouse panels, the settings card.
 
 ## P10 — Shops · [#248](https://github.com/PandiO/knk-workspace/issues/248)
 

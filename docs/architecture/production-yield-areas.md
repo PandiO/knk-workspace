@@ -1,6 +1,6 @@
 # Production yield areas and surveys: areas, surveys, yield tables and Derived/Hybrid rates (knk-web-api, knk-plugin and knk-web-app)
 
-**Status:** Current · **Last updated:** 2026-11-20 (first version, production P4 #138/#679/#680, docs PandiO/knk-workspace#882)
+**Status:** Current · **Last updated:** 2026-11-21 (§ 6 and limitations: the placeholder overlay is the P8 regeneration queue, docs #922); 2026-11-20 (first version, production P4 #138/#679/#680, docs PandiO/knk-workspace#882)
 **Checked against:** knk-web-api `next` `e26c7d88` (PR PandiO/knk-web-api#60), knk-plugin `next` `d36001b2` (PR
 PandiO/knk-plugin#105), knk-web-app `next` `eaf0467d` (PR PandiO/knk-web-app#67). Not released; the manual steps of the
 [smoke test § 5](../guides/production-storage-transport-smoke-test.md#5-phase-p4-yield-areas-and-surveys-138-api-679-plugin-680-web-app-tier3)
@@ -299,8 +299,8 @@ One survey runs at a time, in queue order.
    (P-D2 "when the chunks are loaded"). The animals in the area are read on the main thread. A capture that takes too
    long fails ("capture timed out").
 3. **Count (off the main thread):** `SurveyCounter` runs on the counting executor over the snapshots
-   (`ChunkSnapshotBlocks`), the `PlaceholderOverlay` (blocks waiting to regenerate count as their original; empty until
-   harvesting P8, #134) and the entities. It is pure: the same world gives the same rows and the same `contentHash`
+   (`ChunkSnapshotBlocks`), the `PlaceholderOverlay` (blocks waiting to regenerate count as their original: the harvest
+   regeneration queue since P8, #134, [harvesting architecture § 6.4](production-harvesting.md#64-placeholders-and-the-persisted-regeneration-queue-production_kinds--7-p-d7-p-d8)) and the entities. It is pure: the same world gives the same rows and the same `contentHash`
    (SHA-256 of the sorted `key|sharedBy|count|extra` lines).
 4. **Report (off the main thread):** `POST …/surveys` with the due item's profile version and the trigger
    (`NotableChange` when the notable counter asked for it, else empty so the API uses the request's). The outcome
@@ -400,10 +400,11 @@ polls; the report then carries trigger `NotableChange`.
    4. `sharedBy` ignores the unit type ([#875](https://github.com/PandiO/knk-workspace/issues/875)).
    5. Survey history is never pruned.
    6. An area keeps the model it was saved with when its kind's area model changes, until it is saved again.
-   7. The placeholder overlay is empty until harvesting (P8, #134).
+   7. Harvest breaks count toward the NotableChange counter (#923).
    8. The structure list does not show the yield source ([#877](https://github.com/PandiO/knk-workspace/issues/877)
       item 3).
 
 ## Changes
 
 1. 2026-11-20: first version (docs PandiO/knk-workspace#882).
+2. 2026-11-21: the placeholder overlay is the P8 regeneration queue; limitation 7 is now #923 (docs PandiO/knk-workspace#922).
