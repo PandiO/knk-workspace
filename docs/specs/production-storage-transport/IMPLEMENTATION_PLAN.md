@@ -369,6 +369,16 @@ All **V1** unless marked.
 **Tests:** allowed vs denied breaks; the worker's share split and its ledger moves; the town gains net output for a
 net-positive rule; pool math; regeneration across restart and chunk unload; surveys counting pending regenerations.
 
+**Status (2026-11-21):** API part built in link L21 (#685, in review, knk-web-api branch `claude/production-p8a`,
+migration `AddPlayerHarvesting`): `HarvestRule` per kind (targets, requirement, tool, yield with fortune, worker's share
+default 25 %, pool cost, cooldown, placeholder and regeneration time), `ResourcePool` per area (capacity from the latest
+survey, lazy regeneration, staff edits), `ProductionKind.PoolFloor` (0.5) and the pool step in settle, batched and
+idempotent harvest reports (`POST api/Harvest/reports`) that split each harvest as above with carried fractions per
+player and rule and the F10 rule for a full Output, the game server's catalogue (`GET api/Harvest/catalog`), the
+net-output check per rule (`GET api/HarvestRules/{id}/balance`, F9), the harvest history and the seeds. Reports need
+`Production:Enabled`. Also in L21: P-3 for Polygon areas (#900). Plugin part: link L22 (#134); web app (rule editor with
+the balance, pools, history): [#913](https://github.com/PandiO/knk-workspace/issues/913).
+
 ## P9 — Town logistics · [#127](https://github.com/PandiO/knk-workspace/issues/127) (`[KNG-98]`)
 
 The developer reviewed TOWN_LOGISTICS §4 on 2026-11-05; the V1 subset is below.

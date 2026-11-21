@@ -19,8 +19,8 @@ scenario on a real Paper server), 7 partly and 1 manual (tagged); not run. § 5.
 partly (tagged) and 1 by hand; every step can still be run by hand; not run. § 6.1 (transport API, #79): 18 of 20 steps automated in CI
 and 2 partly (tagged); every step can still be run by hand; not run. § 6.2 (transport lanes plugin, #681): 3 of 14
 steps automated, 10 partly and 1 manual (tagged); not run. § 6.3 (transport web app, #682): 10 of 16 steps
-automated in CI, 5 partly (tagged) and 1 by hand; every step can still be run by hand; not run. § 7.1 (terminals and menus API, #683): 15 of 20 steps automated in CI, 4 partly and 1 by hand (tagged); every step can still be run by hand; not run. § 7.2 (terminals, displays and menus plugin, #74): 7 of 20 steps automated (one through a plugin scenario on a real Paper server), 11 partly and 2 by hand (tagged); not run. § 8.1 (delivery and inbox API, #60): 16 of 20 steps automated in CI, 3 partly and 1 by hand (tagged); every step can still be run by hand; not run. § 8.2 (reward inbox plugin, #684): 7 of 17 steps automated (two also through plugin scenarios on a real Paper server) and 10 partly (tagged); every step can still be run by hand; not run. Other sections not yet automated (the links tag them).
-**Last updated:** 2026-11-21 (§ 8.2 reward inbox plugin, link L20, #684); 2026-11-20 (§ 8 delivery and inbox API, link L19, #60, with #883 and #890; § 8.2 draft for L20); 2026-11-20 (§ 7.2 terminals, displays and menus plugin, link L18, #74); 2026-11-20 (§ 7 terminals and menus API, link L17, #683; § 7.2 draft for L18); 2026-11-20 (§ 6.2 transport lanes plugin, link L15, #681); 2026-11-20 (§ 6.3 transport web app, link L16, #682); 2026-11-20 (§ 6 transport API, link L14, #79; § 6.2 and § 6.3 drafts for L15 and L16); 2026-11-20 (§ 5.2 surveys plugin, link L12, #679); 2026-11-20 (§ 5.3 yield areas web app, link L13, #680); 2026-11-19 (§ 5 yield areas API, link L11, #138; § 5.1 step 18: #831); 2026-11-19 (§ 4.2 production engine web app, link L10, #678); 2026-11-19 (§ 4.1 production engine API, link L9, #86); 2026-11-19 (§ 3 intro, § 3.0, § 3.2 and § 3.3 intros: builds from `next`; § 3.3 precondition 4: `/knk regions repair` needs `knk.admin.regions`, `/knk territory rebuild` `knk.admin.world.territory`; docs #830); 2026-11-19 (§ 3.2 world web app, link L7, #676); 2026-11-19 (§ 3.3 world plugin, link L8, #677); 2026-11-19 (§ 3.1 world API, link L6, #91); 2026-11-19 (§ 2.2 stock web app, link L5, #675); 2026-11-19 (§ 2 stock core API, link L4, #97); 2026-11-19 (§ 1.0 and § 1.3 preconditions: builds from `next` instead of the link branches; guides: [territory admin guide](admin/territory-admin-guide.md), docs #806); 2026-11-19 (§ 1.4 territory web app, link L3, #690); 2026-11-19 (§ 1.3 territory plugin, link L2, #689); 2026-11-19 (§ 1 territory API, link L1, #326); 2026-11-19 (§ 0 item identity, link L0, #141); 2026-11-16 (draft from the design, territory and phases P1-P12)
+automated in CI, 5 partly (tagged) and 1 by hand; every step can still be run by hand; not run. § 7.1 (terminals and menus API, #683): 15 of 20 steps automated in CI, 4 partly and 1 by hand (tagged); every step can still be run by hand; not run. § 7.2 (terminals, displays and menus plugin, #74): 7 of 20 steps automated (one through a plugin scenario on a real Paper server), 11 partly and 2 by hand (tagged); not run. § 8.1 (delivery and inbox API, #60): 16 of 20 steps automated in CI, 3 partly and 1 by hand (tagged); every step can still be run by hand; not run. § 8.2 (reward inbox plugin, #684): 7 of 17 steps automated (two also through plugin scenarios on a real Paper server) and 10 partly (tagged); every step can still be run by hand; not run. § 9.1 (harvesting API, #685): 18 of 21 steps automated in CI and 3 partly (tagged); every step can still be run by hand; not run. Other sections not yet automated (the links tag them).
+**Last updated:** 2026-11-21 (§ 9 harvesting API, link L21, #685, with #900; § 9.2 draft for L22); 2026-11-21 (§ 8.2 reward inbox plugin, link L20, #684); 2026-11-20 (§ 8 delivery and inbox API, link L19, #60, with #883 and #890; § 8.2 draft for L20); 2026-11-20 (§ 7.2 terminals, displays and menus plugin, link L18, #74); 2026-11-20 (§ 7 terminals and menus API, link L17, #683; § 7.2 draft for L18); 2026-11-20 (§ 6.2 transport lanes plugin, link L15, #681); 2026-11-20 (§ 6.3 transport web app, link L16, #682); 2026-11-20 (§ 6 transport API, link L14, #79; § 6.2 and § 6.3 drafts for L15 and L16); 2026-11-20 (§ 5.2 surveys plugin, link L12, #679); 2026-11-20 (§ 5.3 yield areas web app, link L13, #680); 2026-11-19 (§ 5 yield areas API, link L11, #138; § 5.1 step 18: #831); 2026-11-19 (§ 4.2 production engine web app, link L10, #678); 2026-11-19 (§ 4.1 production engine API, link L9, #86); 2026-11-19 (§ 3 intro, § 3.0, § 3.2 and § 3.3 intros: builds from `next`; § 3.3 precondition 4: `/knk regions repair` needs `knk.admin.regions`, `/knk territory rebuild` `knk.admin.world.territory`; docs #830); 2026-11-19 (§ 3.2 world web app, link L7, #676); 2026-11-19 (§ 3.3 world plugin, link L8, #677); 2026-11-19 (§ 3.1 world API, link L6, #91); 2026-11-19 (§ 2.2 stock web app, link L5, #675); 2026-11-19 (§ 2 stock core API, link L4, #97); 2026-11-19 (§ 1.0 and § 1.3 preconditions: builds from `next` instead of the link branches; guides: [territory admin guide](admin/territory-admin-guide.md), docs #806); 2026-11-19 (§ 1.4 territory web app, link L3, #690); 2026-11-19 (§ 1.3 territory plugin, link L2, #689); 2026-11-19 (§ 1 territory API, link L1, #326); 2026-11-19 (§ 0 item identity, link L0, #141); 2026-11-16 (draft from the design, territory and phases P1-P12)
 **Design:** [specs/production-storage-transport/DESIGN.md](../specs/production-storage-transport/DESIGN.md) (§17
 acceptance A01-A27, §18 links) · [territory](../specs/territory/DESIGN.md) · [shops](../specs/shops/DESIGN.md) ·
 **Issue:** [PandiO/knk-workspace#22](https://github.com/PandiO/knk-workspace/issues/22)
@@ -2302,18 +2302,163 @@ minutes; the untagged parts about 15 minutes. Tests: knk-plugin `RewardInboxTest
 
 ## 9. Phase P8: player harvesting and block regeneration (#685 API, #134 plugin; tier:3)
 
-*Draft from the design (2026-11-16); the links update it to what was built and tag the automated steps.*
+Built so far: link L21, the API (knk-web-api, migration `AddPlayerHarvesting`; branch `claude/production-p8a`, PR into
+`next`), with placement rule P-3 for Polygon areas (#900). The game server part (the harvest listener, placeholders and
+the regeneration queue) is link L22 (#134); until then § 9.1 runs with a REST client (or Swagger) against the API,
+sending what the game server will send: the plugin key (`X-API-Key`). 21 steps in § 9.1: 18 automated in CI and 3
+partly (tagged); every step can still be run by hand; not run. § 9.2 is the draft for L22. Full manual run about 35
+minutes; the untagged parts about 10 minutes. The tests are in knk-web-api
+`Tests/.../Services/Production/ProductionHarvestTests.cs`, `Api/HarvestControllersTests.cs`,
+`Services/Production/ProductionAreaPlacementTests.cs` (#900), `Migrations/AddPlayerHarvestingTests.cs` and, with
+`KNK_TEST_MYSQL`, `MySql/PlayerHarvestMySqlTests.cs` (one pool per area and every draw counted under concurrent
+harvests, one booking per key). Tier:3; the developer's waiver of the smoke gates (2026-11-19) is read by the
+coordinator as covering the later links.
 
-### 9.1 Steps
+How it works, in short (PRODUCTION_KINDS § 6-7): a **harvest rule** per production kind says what players may break,
+what a break yields and how much of it the player keeps (the **worker's share**, 25% by default); the rest goes into
+the structure's Output storage. Each break draws its **pool cost** from the area's **resource pool**; the structure
+produces at `floor + (1 − floor) × fill` (floor 0.5, P-D6) until the pool regenerates. The game server reports each
+harvest; the API books the split once per idempotency key and answers how many units the player gets and when the
+block comes back.
 
-1. As Member, mine iron ore inside the quarry's yield area. **Expected:** the ore drops; the block becomes the neutral
-   placeholder (stone); the harvest is reported and the pool drops. (A16)
-2. Wait for the regeneration time. **Expected:** the ore comes back. (A16)
-3. Cut a tree inside the logger's area. **Expected:** a sapling placeholder, then the exact tree restored. (A16)
-4. Harvest until the pool reaches its floor (0.5). **Expected:** further breaks are refused with a message. (A16)
-5. Check the ledger. **Expected:** `PlayerHarvest` moves with the worker's share to Output; the town's net output is
-   positive. (A16)
-6. As Visitor, break blocks where the rules deny it. **Expected:** refused, nothing reported.
+### 9.0 Preconditions
+
+1. knk-web-api with the migrations up to `AddPlayerHarvesting` applied (`dotnet ef database update`),
+   `Production:Enabled` on except in step 18.
+2. Accounts: **Staff** (`knk.admin.world`), **Member** and **Sam** (players, no staff node). Note their user ids. The
+   game server's calls use the plugin key (`X-API-Key`).
+3. The § 4 quarry: a rural production structure **Quarry** in Phoenix of kind Quarry (id 3), level 1, with an Output
+   storage capped at 100 units and one Configured line **Cobblestone** at 60 per hour. An area **Pit** on it (`POST
+   api/ProductionAreas`, shape Cuboid, 10 × 10 × 10). The blueprint **Cobblestone** (storage weight 1).
+4. Game settings: `PUT api/GameSettings` with the production section's `harvest` set to `{ "defaultPoolCapacity": 1000,
+   "defaultRegenHoursToFull": 12, "maxEntriesPerReport": 200 }` (the other production sections as they are).
+
+### 9.1 Steps (API)
+
+1. [partly automated: knk-web-api `FormConfigurationSeedFilesTests`, `DisplayConfigurationSeedFilesTests` (every seed
+   dry-runs and imports); by hand: open the pages in the web app]
+   As Staff, import the form and display seeds `HarvestRule` and `ResourcePool`, the display seed `PlayerHarvest`, and
+   `ProductionKind` seed v3 (form and display), each with "make default". **Expected:** all import; the HarvestRule
+   form has four steps (rule, who may harvest, yield, regeneration); the ProductionKind form shows "Pool floor" (0.5)
+   on the Yield step. (A23)
+2. [automated: `ProductionHarvestTests.HarvestSettings_AreValidated_AndKeptWhenAClientOmitsThem`]
+   `GET api/GameSettings`. **Expected:** `production.harvest` as set in § 9.0 step 4. A save without the `harvest`
+   section keeps it; `defaultRegenHoursToFull: 0` is 400.
+3. [automated: `ProductionHarvestTests.ARule_IsValidated_AndCannotBeDeletedOnceItHasHarvests`]
+   As Staff, `POST api/HarvestRules` with `{ "productionKindId": 3, "name": "Stone", "targetKind": "Block", "targets":
+   ["stone", "*_cobblestone"], "yieldItemBlueprintId": <Cobblestone>, "yieldPerBreak": 1, "workerShare": 0.25,
+   "poolCost": 1, "placeholder": "DepletedBlock", "placeholderMaterial": "bedrock", "regenSeconds": 60,
+   "requiredPermission": "knk.harvest.quarry" }`. **Expected:** 201; the targets come back upper case (`STONE`,
+   `*_COBBLESTONE`), `placeholderMaterial` `BEDROCK`. The same name in the same kind is 400; `workerShare: 1.5`, a target
+   with a space, a permission with a space and an unknown `minTitleBracketId` are 400; moving the rule to another kind
+   is 400.
+4. [automated: `ProductionHarvestTests.TheCatalogue_ListsTheEnabledRules_AndTheAreasOfTheirKinds_WithThePoolFill`]
+   With the plugin key, `GET api/Harvest/catalog`. **Expected:** `featureEnabled` true; `rules` has Stone (a switched-off
+   rule is not listed); `areas` has Pit with Quarry's id, kind 3, its shape and bounds, and `poolFill` 1 (no pool yet).
+5. [automated: `ProductionHarvestTests.AHarvest_IsSplitAtOnce_WorkersShareToTheWorld_TheRestToOutput_BothAsPlayerHarvest`]
+   With the plugin key, `POST api/Harvest/reports` with `{ "entries": [ { "idempotencyKey": "h-1", "userId": <Member>,
+   "harvestRuleId": <Stone>, "productionAreaId": <Pit>, "breaks": 4 } ] }`. **Expected:** 200, the entry `Applied` with
+   `workerUnits` 1 (the player gets 1 cobblestone), `townUnits` 3, `townAccepted` 3, `regenSeconds` 60. The ledger has
+   two PlayerHarvest transactions (source `PlayerHarvest h-1`): 1 cobblestone `SYS_PRODUCTION` → `SYS_WORLD` and 3
+   `SYS_PRODUCTION` → Quarry's Output. `GET api/StockTransactions/reconcile` is clean. (A16)
+6. [automated: `ProductionHarvestTests.TheFirstHarvest_MakesTheAreasPool_Full_ThenDrawsThePoolCost_NotBelowZero`]
+   `POST api/ResourcePools/search` with filter `productionAreaId` = Pit, then `GET api/ResourcePools/<id>`.
+   **Expected:** one pool made by the first harvest: `capacity` 1000 (no survey: the default), `current` 996 (4 breaks ×
+   cost 1), `regenPerHour` 83.33 (full in 12 hours), `poolFloor` 0.5. A harvest that costs more than is left takes the
+   pool to 0, not below. (A16)
+7. [automated: `ProductionHarvestTests.Fractions_AccruePerPlayerAndRule_LikeLineAccrual`]
+   Report four entries of 1 break each for Member (keys `f-1` to `f-4`) and one for Sam (`s-1`). **Expected:** Member's
+   entries pay 0, 0, 0, 1 units (the quarters carry over) and send 0, 1, 1, 1 to Output; Sam's entry pays 0 and sends 0
+   (his fractions are his own).
+8. [automated: `ProductionHarvestTests.AReport_IsIdempotentPerEntry_AndAKeyWithAnotherHarvestIsRejected`]
+   Send step 5 again, together with a new entry `h-2` (4 breaks) and an entry with an unknown rule. **Expected:** `h-1`
+   `Replayed` with the same numbers (nothing moves again), `h-2` `Applied`, the third `Rejected` with "not found". Key
+   `h-1` with 5 breaks is `Rejected` ("a different harvest"); two entries with the same key in one report are 400.
+9. [automated: `ProductionHarvestTests.EntriesTheApiMayNotBook_AreRejected_WithAReason`]
+   Report entries with a switched-off rule, a rule of another kind (a Logger rule in Pit), an unknown user and an
+   unknown area; then switch Quarry's production off (`productionEnabled` false) and report a valid entry.
+   **Expected:** each `Rejected` with its reason; nothing is booked and no pool is made for these. Switch Quarry's
+   production back on.
+10. [automated: `ProductionHarvestTests.AFullOutput_LosesTheTownsShare_ButThePlayerIsStillPaid_F10`]
+    Fill Quarry's Output to 98 of 100 units, then report 8 breaks. **Expected:** `workerUnits` 2, `townUnits` 6,
+    `townAccepted` 2, `townLost` 4, a `shortfallReason` saying the rest is lost to the town; the player is still paid
+    (F10). The reconciler stays clean.
+11. [automated: `ProductionHarvestTests.ThePoolStep_SlowsTheStructure_DownToTheFloor_AndTheTraceShowsIt`]
+    Set Pit's pool to `current` 0 (`PUT api/ResourcePools/<id>` with `{ "current": 0 }`), wait for a cycle (or `POST
+    api/ProductionLines/<Cobblestone>/settle`), then `GET api/ProductionStructures/<Quarry>/production`. **Expected:** the
+    line's `poolFactor` is 0.5 plus half the pool's fill (0.5 at an empty pool), its `effectiveRatePerHour` 60 × that,
+    and a reason "Player harvesting has drawn down the resource pool: …% output until it regenerates"; the newest cycle
+    record (`GET api/ProductionCycleRecords/<id>`) has the same `poolFactor`. Production never stops. (A16, P-D6)
+12. [automated: `ProductionHarvestTests.TheHarvest_SettlesTheStructureFirst_SoTheTimeBeforeCountsAtTheOldFactor`]
+    With a full pool and an hour since the last settle, report a harvest that empties the pool. **Expected:** a cycle
+    record for that hour with `poolFactor` 1 (the time before the harvest at full speed); the next settle uses the
+    lower factor.
+13. [partly automated: `ProductionHarvestTests.Pool_RegeneratesLazily_UpToItsCapacity`,
+    `ProductionHarvestTests.TheFirstHarvest_MakesTheAreasPool_Full_ThenDrawsThePoolCost_NotBelowZero`; by hand: the
+    wait]
+    After step 11, wait an hour and `GET api/ResourcePools/<id>`. **Expected:** `current` about 83 higher (regeneration
+    is worked out on read, up to the capacity), `fill` and `poolFactor` up, `hoursToFull` about 11. (A16)
+14. [automated: `ProductionHarvestTests.ANewSurvey_SetsThePoolsCapacity_KeepingItsFill`]
+    For a Hybrid logger with a surveyed Radius area (§ 5.1 steps), harvest once, then report a new survey with twice
+    the units (`POST api/ProductionAreas/<id>/surveys`). **Expected:** the first harvest made the pool with `capacity` =
+    the latest survey's total units; after the new survey the capacity doubles and the fill is kept. With
+    `capacityFromSurvey` false (staff typed a capacity) a survey leaves the capacity alone. (§ 6.3, L11 note)
+15. [automated: `ProductionHarvestTests.StaffMakeAndTuneAPool_OnePerArea`]
+    As Staff, `POST api/ResourcePools` with `{ "productionAreaId": <another area>, "capacity": 500 }`, then a second pool
+    for the same area, then `PUT` with `{ "current": 125, "regenPerHour": 0 }` and with `{ "capacity": 0 }`.
+    **Expected:** 201 (full, `capacityFromSurvey` false); 409 (one pool per area); `fill` 0.25, `poolFactor` 0.625,
+    `hoursToFull` null; 400.
+16. [automated: `ProductionHarvestTests.TheBalance_ComparesTheTownsShare_WithTheProductionLostUntilThePoolRefills`,
+    `ProductionHarvestTests.TheBalance_UsesANewPoolsDefaults_ForAnAreaWithoutAPool`]
+    Set Pit's pool to capacity 1000 and `regenPerHour` 100, then `GET api/HarvestRules/<Stone>/balance`. **Expected:**
+    for Pit: `baseRatePerHour` 60, `townSharePerBreak` 0.75, `lostPerBreak` 0.00015 (60 × 0.5 × 1/1000 × 1/100 ÷ 2),
+    `netPositive` true, no warnings. Make a rule with `poolCost` 100 and `workerShare` 0.5 and set the regeneration to 1
+    per hour: `lostPerBreak` 150, `netPositive` false and a warning naming Quarry / Pit. With regeneration 0:
+    `lostPerBreak` null and a "does not regenerate" warning. An area without a pool uses a new pool's defaults
+    (`poolExists` false). (F9)
+17. [automated: `ProductionHarvestTests.ThePoolStep_SlowsTheStructure_DownToTheFloor_AndTheTraceShowsIt`]
+    `PUT api/ProductionKinds/3` with `{ "poolFloor": 1 }`, settle the line. **Expected:** `poolFactor` 1 whatever the
+    pool holds (harvesting no longer slows Quarry). `poolFloor: 1.5` is 400. Set it back to 0.5.
+18. [automated: `ProductionHarvestTests.WithProductionOff_ReportsAre409_AndTheCatalogueIsEmpty`,
+    `HarvestControllersTests.Results_MapTo400_404_And409WhileOff`]
+    Switch `Production:Enabled` off. **Expected:** `POST api/Harvest/reports` is 409 `ProductionDisabled`; `GET
+    api/Harvest/catalog` answers `featureEnabled` false with empty lists; rules and pools can still be read and edited.
+    Switch it back on. (A21)
+19. [partly automated: `ReadAccessRulesTests`, `EndpointAccessRulesTests`, `DeleteAccessRulesTests`,
+    `DashboardChangeAccessRulesTests` (the rules are pinned), `HarvestControllersTests.TheRoutes_CarryTheirAccessRules`;
+    by hand: the calls below]
+    As Member with a web token: `POST api/Harvest/reports` is 403 (game server only), `POST api/HarvestRules` and `PUT
+    api/ResourcePools/<id>` are 403, `GET api/PlayerHarvests/<id>` is 403. As Staff: `POST api/PlayerHarvests/search`
+    lists the harvests (filters `userId`, `harvestRuleId`, `productionStructureId`, `productionAreaId`); `DELETE
+    api/HarvestRules/<Stone>` is 409 (it has harvests: switch it off instead) and needs `knk.admin.delete`.
+20. [automated with `KNK_TEST_MYSQL`: `PlayerHarvestMySqlTests` (all)]
+    On a MySQL test database, send ten reports for Pit at the same time (ten players, and again one player), and one
+    key eight times at once. **Expected:** one pool; every pool cost counted; the players' fractions add up; one booking
+    for the key; the reconciler clean.
+21. [automated: `ProductionAreaPlacementTests.APolygonArea_IsCheckedByEachOfItsPoints`,
+    `ProductionAreaPlacementTests.PolygonPoints_ReadsPointsJsonOrAPointsList_AndNeedsThree`]
+    With `ProductionArea` seed v3 the default, `POST api/ProductionAreas` for the rural Logger with shape Polygon and
+    points `[{"x":0,"z":0},{"x":20,"z":0},{"x":30,"z":20},{"x":0,"z":20}]` inside Phoenix's territory, then one with a
+    point outside. **Expected:** the first saves without warnings; the second saves with a `placementWarnings` entry
+    naming Phoenix's territory (P-3, each point checked); moving the point back inside on update clears it. (#900)
+
+### 9.2 Steps (plugin #134, draft)
+
+*Draft for link L22: the harvest listener, placeholders and the regeneration queue.*
+
+1. As Member (holding the rule's permission), mine stone inside Pit. **Expected:** the vanilla drop is replaced by
+   `workerUnits` cobblestone; the block becomes the placeholder (bedrock); the harvest is reported and the pool drops.
+   (A16)
+2. Wait for the regeneration time. **Expected:** the stone comes back (only if the placeholder is still there). (A16)
+3. Cut a tree inside a logger's area. **Expected:** a sapling placeholder, then the exact tree restored by snapshot.
+   (A16, P-D8)
+4. Restart the server with blocks waiting to regenerate. **Expected:** they come back on time after the restart and when
+   their chunk loads. (§ 7)
+5. Harvest until the pool is empty. **Expected:** the quarry's production slows to its floor (§ 9.1 step 11); what the
+   game server does with breaks at an empty pool follows L22's decision (the API still books them, the pool stays at
+   0).
+6. As Visitor (no permission), break blocks in Pit. **Expected:** refused, nothing reported.
+7. Turn `production.enabled` off. **Expected:** no harvesting in production areas, nothing reported. (A21)
 
 ## 10. Phase P9: town logistics (#127 API, #686 web app; tier:3)
 
