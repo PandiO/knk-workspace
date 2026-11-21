@@ -3,7 +3,7 @@
 **Status:** Written 2026-11-16 for knk-plugin `next` `cc5262ff` (links M1–M7 merged into `next`, behind
 `npc.navigation.enabled` and each link's own key, all off by default); only the steps no plugin scenario checks; not
 run yet (the developer's run with every key on is planned for 2026-11-16)
-**Last updated:** 2026-11-20 (link G1 section, [#814](https://github.com/PandiO/knk-workspace/issues/814)); 2026-11-20 (link H1 section, [#779](https://github.com/PandiO/knk-workspace/issues/779)); 2026-11-18 (link R1 section, [#724](https://github.com/PandiO/knk-workspace/issues/724)); 2026-11-18 (link E1 section, [#701](https://github.com/PandiO/knk-workspace/issues/701)); 2026-11-18 (link C1 section, [#700](https://github.com/PandiO/knk-workspace/issues/700)); 2026-11-17 (link B5 section, [#699](https://github.com/PandiO/knk-workspace/issues/699)); 2026-11-16 (assembled from the developer tests of implementation plan 4c.4, PandiO/knk-workspace#658)
+**Last updated:** 2026-11-21 (H1 step 4 with no road point reaching the goal, [#848](https://github.com/PandiO/knk-workspace/issues/848)); 2026-11-20 (link G1 section, [#814](https://github.com/PandiO/knk-workspace/issues/814)); 2026-11-20 (link H1 section, [#779](https://github.com/PandiO/knk-workspace/issues/779)); 2026-11-18 (link R1 section, [#724](https://github.com/PandiO/knk-workspace/issues/724)); 2026-11-18 (link E1 section, [#701](https://github.com/PandiO/knk-workspace/issues/701)); 2026-11-18 (link C1 section, [#700](https://github.com/PandiO/knk-workspace/issues/700)); 2026-11-17 (link B5 section, [#699](https://github.com/PandiO/knk-workspace/issues/699)); 2026-11-16 (assembled from the developer tests of implementation plan 4c.4, PandiO/knk-workspace#658)
 **Issue:** [PandiO/knk-workspace#358](https://github.com/PandiO/knk-workspace/issues/358) (links
 [#621](https://github.com/PandiO/knk-workspace/issues/621)–[#627](https://github.com/PandiO/knk-workspace/issues/627));
 post results on the link's sub-issue or [#603](https://github.com/PandiO/knk-workspace/issues/603)
@@ -245,9 +245,14 @@ Steps:
    left the hatch, the hatch closes again by itself.
 4. [partly automated: `npc-ladder-hatch`, trip "hatch closed, no open-doors"; by hand: what the order ends with]
    **Closed hatch, an NPC that may not open doors.** The hatch is closed. `/knk npc nav clear`,
-   `/knk npc nav spawn 1 no-doors`. The NPC never opens the hatch and never gets onto the roof. The log shows "off-road
-   walk to the goal …: NO_PATH …, walked in hops". Known: the order then ends as arrived under the roof
-   ([#848](https://github.com/PandiO/knk-workspace/issues/848)). Note what `stats` says.
+   `/knk npc nav spawn 1 no-doors`. The NPC never opens the hatch and never gets onto the roof. With
+   `npc.navigation.road-goal-reachable: true` (the G1 section's setup): the log's "road goal for" line shows every road
+   point "not reached on foot", then "none reached on foot: the road point nearest the goal, #n (x y z) …; the order
+   ends there as failed". The NPC walks to that road point by the tower, not to the keep's road end (1408 84 −517),
+   and stops there: "order failed: the goal … is not reachable on foot from any of the 12 road points tried; stopped
+   at the road point nearest it …". It tries again every 5 s and stays there
+   ([#848](https://github.com/PandiO/knk-workspace/issues/848), developer decision 2026-11-21). With the key off, the
+   log shows "off-road walk to the goal …: NO_PATH …, walked in hops", as before. Note what `stats` says.
 5. **Climbing down** (manual: no scenario walks down). Save the reverse route (`/knk npc nav from` on the roof,
    `/knk npc nav to` on the road, `/knk npc nav route save hatch-tower-down`), close the hatch, then
    `/knk npc nav route load hatch-tower-down`, `/knk npc nav clear`, `/knk npc nav spawn 1`. The NPC spawns on the
