@@ -4,6 +4,17 @@ This is a human-readable record of capabilities merged into the V3 default branc
 
 ## Unreleased — on feature branches, not merged
 
+- **NPC navigation: a goal no road point reaches on foot ends the order at the road point nearest it**
+  ([PandiO/knk-workspace#848](https://github.com/PandiO/knk-workspace/issues/848), developer decision 2026-11-21 after
+  the H1 smoke retest). With `npc.navigation.road-goal-reachable: true` and no road point from which the walk search
+  reaches the destination (a roof behind a closed hatch for an NPC that may not open it), the NPC walks to the road
+  point nearest the destination and its order ends there as failed, with a reason naming the goal and the road point.
+  Before, it went to the router's road end (on the dev world the keep's, about 30 blocks off) and tried to hop into the
+  air. knk-plugin: `NpcNavigationService` (G1's `roadGoalChosen` with `nearestRoadEnd`, the route kept on replans in
+  `onRoad`, the failed end in `legDone`), the counter `roadGoalsUnreachable()` and the log line "none reached on foot:
+  the road point nearest the goal, #n (x y z) …; the order ends there as failed". With the key off (the default)
+  nothing changes. No new key, no migration.
+
 - **Off-road navigation: a group's default route mode is now a fixed choice (Enum field)**
   ([PandiO/knk-workspace#852](https://github.com/PandiO/knk-workspace/issues/852) follow-up, developer decision
   2026-11-21). For staff: the permission group form's "Default route mode" is an Enum field with Shortest, Efficient
