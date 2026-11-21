@@ -86,7 +86,7 @@ of what is already in `next`.
 | L18 P6 plugin: terminals, displays, Structures menu, structure menu, orders list | #74 | Merged into next (2026-11-20) | plugin `a9ee8bf1`, workspace `f947c84b`; final head `19f74865` (L18 merged `next` and regenerated `content-seeds.json`); merges: plugin `8e672ba6`, workspace `df27cc18` (after a coordinator merge of `next`, `0f1c8264`) | [plugin#110](https://github.com/PandiO/knk-plugin/pull/110), [ws#898](https://github.com/PandiO/knk-workspace/pull/898) | green (plugin build + paper-boot, 69 scenarios) | create_session `session_01R1w2UxMM4WEwxxedAe11ji` (prompt says start without asking), started 2026-11-20 |
 | L19 P7 delivery and inbox API | #60 | Merged into next (2026-11-21) | api `a389259`, workspace `fbe4ded6`; merges: api `2952d0c7`, workspace `e2c6f45b` | [api#70](https://github.com/PandiO/knk-web-api/pull/70), [ws#899](https://github.com/PandiO/knk-workspace/pull/899) | build-and-test, fresh-database green; mysql-tests running (green locally) | create_session `session_01R1w2UwpK1NtaZLrA8k2uhP` (prompt says start without asking), started 2026-11-20 |
 | L20 P7b inbox plugin, kit/lootbox migration | #684 | In review (2026-11-21) | plugin `823ebf09`, workspace `e48c9d0e` | [plugin#113](https://github.com/PandiO/knk-plugin/pull/113), [ws#911](https://github.com/PandiO/knk-workspace/pull/911) | green on `1952a5b9` (build + paper-boot, 71 scenarios); `823ebf09` running | create_session `session_01R1w2Ux3iuWqjcAV5HQdPvM` (prompt says start without asking), started 2026-11-21 |
-| L21 P8a harvest API | #685 | Running | — | — | — | create_session `session_01R1w2Ux7jFcMxYzkwej4qY4` (prompt says start without asking), started 2026-11-21 |
+| L21 P8a harvest API | #685 | In review (2026-11-21) | api `e89e396`, workspace `35f9f46b` | [api#72](https://github.com/PandiO/knk-web-api/pull/72), [ws#914](https://github.com/PandiO/knk-workspace/pull/914) | push runs on `e89e396` green (build-and-test, mysql-tests, fresh-database); PR runs running | create_session `session_01R1w2Ux7jFcMxYzkwej4qY4` (prompt says start without asking), started 2026-11-21 |
 | L22 P8 harvest plugin | #134 | Not started | — | — | — | — |
 | L23 P9 town logistics API | #127 | Not started | — | — | — | — |
 | L24 P9b logistics web app | #686 | Not started | — | — | — | — |
@@ -2089,3 +2089,86 @@ _(Each link appends its block here when it finishes.)_
        stable key.
     2. #901 (P7 web app) can show the deliveries with their keys (`kit-claim-`, `lootbox-claim-`,
        `kit-first-join-`).
+
+### 4.21 L21 — P8a harvest API (#685)
+
+1. **Scope done** (knk-web-api, plus essential docs in knk-workspace).
+    1. `HarvestRule` per kind (PRODUCTION_KINDS § 6.1): targets (blocks or entities, `*` at either end), minimum crop
+       age, permission node and lowest title bracket, tool class and tier, cooldown, yield blueprint, units per break and
+       a fortune bonus (up to Fortune IV), worker's share (default 0.25), pool cost, placeholder and its block,
+       regeneration seconds (up to twice as long at an empty pool when the rule says so).
+    2. `ResourcePool` per area (§ 6.3): capacity from the latest survey's total units (a new survey keeps the fill),
+       lazy regeneration, staff CRUD; made on the first harvest. `ProductionKind.PoolFloor` (0.5, P-D6).
+    3. `POST api/Harvest/reports` (game server only, batched, one idempotency key per entry): settle first, regenerate
+       and draw the pool, split at once: worker's share `SYS_PRODUCTION → SYS_WORLD`, the rest `SYS_PRODUCTION → Output`
+       (both `PlayerHarvest`); fractions per player and rule (`HarvestAccrual`); full Output loses the town's share, the
+       player is still paid (F10); per-entry Rejected with a reason. Area row lock, then the user row lock.
+    4. The pool as a built-in step in the engine (L9 and L11 notes): `floor + (1 − floor) × fill` over the structure's
+       pools; `poolFactor` on the production view (with a reason) and on `ProductionCycleRecord`.
+    5. Net-output check (F9) `GET api/HarvestRules/{id}/balance` per area of the rule's kind, with warnings.
+    6. `GET api/Harvest/catalog` for L22 (enabled rules, their kinds' areas with shape, bounds and pool fill; empty
+       while off). History `api/PlayerHarvests` (read only). Game settings section `production.harvest`. Registry,
+       lookups, pinned access tests.
+    7. Seeds (G17): form and display `HarvestRule`, `ResourcePool`; display `PlayerHarvest`; `ProductionKind` v3 (form
+       and display). `HarvestAccrual` without seeds (counter table, decision 20).
+    8. #900 (additive extra, closed by the PR): P-3 checks a Polygon area by each of its points.
+    9. One additive migration `20261121011159_AddPlayerHarvesting` (four tables, two columns with defaults), generated
+       last on `next` `2952d0c`, which had not moved at the last fetch; `KnKDbContext` edits in one contiguous block, no
+       DbSet properties; snapshot not hand-edited.
+    10. knk-workspace (branch from `next`): smoke guide § 9 (§ 9.1 21 API steps, 18 automated, 3 partly; § 9.2 plugin
+        draft for L22), changelog entry, production installation § 5.3 item 15, implementation plan status.
+2. **Commits and heads.** knk-web-api `claude/production-p8a` at `e89e396` (6 commits on `next` `2952d0c`);
+   knk-workspace `claude/production-p8a` at `35f9f46b` (1 commit on `next` `e2c6f45b`).
+3. **PRs.** [knk-web-api#72](https://github.com/PandiO/knk-web-api/pull/72) (Closes #685, Closes #900) and
+   [knk-workspace#914](https://github.com/PandiO/knk-workspace/pull/914) (Part of #685, #900), base `next`. Not merged.
+4. **Tests, baseline → result.**
+    1. knk-web-api: baseline on `next` `2952d0c` 5048 passed / 122 skipped / 0 failed; branch `e89e396` 5077 / 125 / 0.
+    2. New (32): `ProductionHarvestTests` (23), `HarvestControllersTests` (2), `ProductionAreaPlacementTests` (+2, #900),
+       `AddPlayerHarvestingTests` (2), `PlayerHarvestMySqlTests` (3, requires-mysql). Pinned: `ReadAccessRulesTests`,
+       `DeleteAccessRulesTests`, `DashboardChangeAccessRulesTests`, `LookupFiltersTests`.
+    3. MySQL 8.0.46 locally with `KNK_TEST_MYSQL`: 5201 passed, 1 failed = the known red #285.
+    4. Broken on purpose: the pool formula without the floor and the worker's share into Output turn 9 harvest tests
+       red; without the area row lock the concurrent-harvest MySQL test is red; without the points context the Polygon
+       P-3 test is red.
+    5. Migration applied, rolled back to `AddItemDelivery` and re-applied; `has-pending-model-changes` clean.
+    6. CI push runs on `e89e396`: build-and-test, mysql-tests and fresh-database green; the PR runs were running at the
+       time of writing.
+    7. Known reds: #285 (MySQL run only).
+5. **Decisions (DESIGN § 4.3).** All 17, each with alternatives, are in knk-web-api#72. The main ones:
+    1. *Empty pool.* Chosen: a harvest at an empty pool is still booked (the pool stays at 0, production at its floor);
+       L22 may deny breaks at `poolFill` 0. Alternatives: (a) refuse reports at an empty pool (the old draft smoke step,
+       rewritten); (b) a setting.
+    2. *New pools.* Chosen: made on the first harvest; capacity = the latest survey's total units, else
+       `production.harvest.defaultPoolCapacity` (1000); full again in `defaultRegenHoursToFull` (12 h). Alternatives:
+       (a) made on every survey; (b) staff only.
+    3. *Pool factor.* Chosen: the value at settle time, the structure settled before each harvest; several areas
+       combine as Σ current ÷ Σ capacity; regeneration lazy. Alternatives: (a) the period's average fill; (b) the lowest
+       area; (c) a regeneration sweep.
+    4. *Fractions.* Chosen: per player and rule (§ 6.2), worker's and town's. Alternatives: (a) per player, rule and area.
+    5. *Fortune.* Chosen: a per-rule bonus per level up to IV (default 0). Alternatives: (a) vanilla tables; (b) the game
+       server reports drops.
+    6. *Batches.* Chosen: one key per entry, per-entry results. Alternatives: (a) one key per batch, all or nothing.
+    7. *Requirements.* Chosen: permission node and lowest title bracket, tool, cooldown stored here and checked by the
+       game server. Alternatives: (a) a free JSON requirement.
+    8. *Wage or title XP.* Not built (optional in V1).
+    9. *Smoke gate.* The developer's 2026-11-19 waiver, read by the coordinator as covering the later links.
+6. **Out of scope, noted.** #913 filed (P8 web app: rule editor with the balance, pools, history, `production.harvest`
+   card, tier:2). The L22 contract is a comment on #134. Codex: the connector hit its code-review usage limit on both
+   PRs (review "failed", usage-limit comment); no inline findings; noted on each PR.
+7. **Blockers.** None.
+8. **At merge / what the developer must do.**
+    1. Apply migration `AddPlayerHarvesting` (additive, after `AddItemDelivery`).
+    2. Import the seeds `HarvestRule` and `ResourcePool` (form and display), `PlayerHarvest` (display) and
+       `ProductionKind` v3 (form and display), "make default".
+    3. Optional: game settings section `production.harvest` (JSON in the changelog entry; defaults apply when missing).
+    4. Write the harvest rules per kind (none seeded) and check each rule's balance. No `api.env` key, no plugin
+       `config.yml` change.
+    5. Smoke test [§ 9.1](../guides/production-storage-transport-smoke-test.md) (tier:3): 18 of 21 steps automated,
+       about 10 minutes for the untagged parts.
+    6. At merge into `next`: the `documentation` sub-issue (harvesting architecture page and API contract, admin guide
+       for rules, pools and the balance check, feature register row; the player guide with L22).
+9. **Notes for later links.**
+    1. L22 (#134): see the comment on #134. Drop `workerUnits` of the rule's blueprint instead of the vanilla drops; one
+       stable key per entry; deny every break while the catalogue says `featureEnabled` false; requirement, tool and
+       cooldown are checked by the game server; `placeholderMaterial` null = the world's default (stone, netherrack).
+    2. #913 (P8 web app): `GET api/HarvestRules/{id}/balance` has the numbers and warnings for the rule editor.
