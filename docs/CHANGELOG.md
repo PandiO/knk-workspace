@@ -80,7 +80,7 @@ This is a human-readable record of capabilities merged into the V3 default branc
   `TreeFeller`, `HarvestAreaIndex`) and the port `HarvestApi` with knk-api-client `HarvestApiImpl`; knk-paper
   `production/harvest` (`HarvestModule`, `HarvestWorldGuardListener`, `HarvestRequirements`, `HarvestConfig`), the
   survey placeholder overlay, the global-region protection's harvest pass and the scenarios `player-harvest-regenerate`
-  and `player-harvest-tree`. Branch `claude/production-p8` in knk-plugin and knk-workspace. Smoke test:
+  and `player-harvest-tree`. In knk-plugin `next` `6f6c915f` (PandiO/knk-plugin#114); the API in knk-web-api `next` `9ad32c23` (PandiO/knk-web-api#72). Smoke test:
   [production smoke test § 9.2](guides/production-storage-transport-smoke-test.md#92-steps-plugin-134). Player guide:
   [harvesting](guides/users/harvesting-player-guide.md).
   Admin steps:

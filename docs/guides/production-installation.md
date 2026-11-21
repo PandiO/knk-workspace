@@ -1,6 +1,6 @@
 # Knights and Kings — production installation guide (admin)
 
-**Status:** Draft · **Last updated:** 2026-11-21 (§ 5.3 item 16: `AddTownLogistics` of #127 on its branch); 2026-11-21 (§ 5.3 item 14: `AddItemDelivery` in `next` `2952d0c7`, link to the reward inbox admin guide, docs #915); 2026-11-21 (§ 5.3 item 15: `AddPlayerHarvesting` of #685 on its branch); 2026-11-21 (§ 5.3: the four siege shop migrations in `next`, docs #908); 2026-11-20 (§ 5.3 item 14: `AddItemDelivery` of #60 on its branch); 2026-11-20 (§ 5.3 item 13: `AddStorageContainers` of #683 on its branch); 2026-11-20 (§ 5.3 item 12: `AddTransportCore` of #79 on its branch); 2026-11-20 (§ 5.3 item 11: `SeedNavigateDefaultNode` of #845 on its branch, before the plugin); 2026-11-20 (§ 5.3 item 10: `AddPermissionGroupDefaultRouteMode` of #852 on its branch); 2026-11-19 (§ 5.3 item 7: link to the warehouses and production structures admin guide, `/knk regions repair` once, docs #830); 2026-11-19 (§ 5.3: `AddSiegeWeapons` and `AddTerritory` both in `next` `0d6e369a`, in order; link to the territory admin guide, docs #806); 2026-11-19 (§ 5.3: `AddTerritory` of #326 on its branch); 2026-11-19 (§ 5.3: the migrations waiting in `next`, with `AddItemIdentity`, docs PandiO/knk-workspace#796); 2026-11-18 (§ 4.3: the `Map__GateCommands__*` keys, PandiO/knk-workspace#741); 2026-11-18 (§ 4.3: the `Map__LivePlayers__*` keys, PandiO/knk-workspace#738); 2026-11-18 (§ 4.3: `Map__Enabled` also shows the web map, #737; the `Map__*` and `RateLimiting__Map__*` keys, PandiO/knk-workspace#736); 2026-11-16 (§ 10.4: `actions/checkout@v7` in the release plan, #426); 2026-11-15 (header and § 5.3: the migrations of releases v0.1 to v0.3 on knk-web-api `main` `2cc8254`, PandiO/knk-workspace#577)
+**Status:** Draft · **Last updated:** 2026-11-21 (§ 5.3 item 15: `AddPlayerHarvesting` in `next` `9ad32c23`, the plugin block and the harvesting admin guide; § 9.7: the harvest files, docs #922); 2026-11-21 (§ 5.3 item 16: `AddTownLogistics` of #127 on its branch); 2026-11-21 (§ 5.3 item 14: `AddItemDelivery` in `next` `2952d0c7`, link to the reward inbox admin guide, docs #915); 2026-11-21 (§ 5.3 item 15: `AddPlayerHarvesting` of #685 on its branch); 2026-11-21 (§ 5.3: the four siege shop migrations in `next`, docs #908); 2026-11-20 (§ 5.3 item 14: `AddItemDelivery` of #60 on its branch); 2026-11-20 (§ 5.3 item 13: `AddStorageContainers` of #683 on its branch); 2026-11-20 (§ 5.3 item 12: `AddTransportCore` of #79 on its branch); 2026-11-20 (§ 5.3 item 11: `SeedNavigateDefaultNode` of #845 on its branch, before the plugin); 2026-11-20 (§ 5.3 item 10: `AddPermissionGroupDefaultRouteMode` of #852 on its branch); 2026-11-19 (§ 5.3 item 7: link to the warehouses and production structures admin guide, `/knk regions repair` once, docs #830); 2026-11-19 (§ 5.3: `AddSiegeWeapons` and `AddTerritory` both in `next` `0d6e369a`, in order; link to the territory admin guide, docs #806); 2026-11-19 (§ 5.3: `AddTerritory` of #326 on its branch); 2026-11-19 (§ 5.3: the migrations waiting in `next`, with `AddItemIdentity`, docs PandiO/knk-workspace#796); 2026-11-18 (§ 4.3: the `Map__GateCommands__*` keys, PandiO/knk-workspace#741); 2026-11-18 (§ 4.3: the `Map__LivePlayers__*` keys, PandiO/knk-workspace#738); 2026-11-18 (§ 4.3: `Map__Enabled` also shows the web map, #737; the `Map__*` and `RateLimiting__Map__*` keys, PandiO/knk-workspace#736); 2026-11-16 (§ 10.4: `actions/checkout@v7` in the release plan, #426); 2026-11-15 (header and § 5.3: the migrations of releases v0.1 to v0.3 on knk-web-api `main` `2cc8254`, PandiO/knk-workspace#577)
 **State:** Draft v1 — written for review. Not yet followed on a real production host. The database, API, seed and
 web-server steps were rehearsed in a scratch environment on 2026-10-07 (see [Appendix A](#appendix-a--what-was-verified-and-how)).
 The Paper server steps and the release and deploy workflows are untested drafts; the CI workflows (§ 10.3) run on GitHub.
@@ -706,14 +706,15 @@ promotes `next` lists them here with its tag:
     display) and `ProductionArea` v3, set the game settings section `production.delivery` (inbox and stash caps,
     premium tier caps) and grant `knk.economy.admin` to the staff who gift items ([changelog](../CHANGELOG.md) entry of
     #60; [reward inbox admin guide](admin/reward-inbox-admin-guide.md)).
-15. `20261121011159_AddPlayerHarvesting` (#685, player harvesting P8a; on its branch `claude/production-p8a` until
-    merged; after `20261120234819_AddItemDelivery`): additive; four new tables `harvest_rules` (deleted with their kind),
+15. `20261121011159_AddPlayerHarvesting` (#685, player harvesting P8a; in knk-web-api `next` `9ad32c23`, not released;
+    after `20261120234819_AddItemDelivery`): additive; four new tables `harvest_rules` (deleted with their kind),
     `resource_pools` (one per area, deleted with it), `player_harvests` (the history, unique idempotency key) and
     `harvest_accruals`, and two columns with defaults (`production_kinds.PoolFloor` 0.5,
     `production_cycle_records.PoolFactor` 1); no data written. No `api.env` key. Set-up afterwards: import the seeds
     `HarvestRule` and `ResourcePool` (form and display), `PlayerHarvest` (display) and `ProductionKind` v3, optionally
     set the game settings section `production.harvest`, and write the harvest rules per kind
-    ([changelog](../CHANGELOG.md) entry of #685).
+    ([changelog](../CHANGELOG.md) entry of #685; [harvesting admin guide](admin/production-harvesting-admin-guide.md)).
+    On the game server merge the plugin's `production.harvest` block (#134) and back up its files (§ 9.7).
 16. `20261121024444_AddTownLogistics` (#127, town logistics P9; on its branch `claude/production-p9` until merged; after
     `20261121011159_AddPlayerHarvesting`): additive; six new tables `logistics_policies` (versions, one current per
     town, warehouse or template), `logistics_rules` (deleted with their version), `consumer_replenishments` (one per
@@ -1405,6 +1406,11 @@ includes the whole server directory:
 - `siege-vault/world-blocks.yml`: placed siege blocks.
 - `discovery-spool/` and `private-messages-spool.jsonl`: queued writes that are replayed when the API is back.
 - `logs/private-messages-*.log`: 30-day retention.
+- `production/harvest/regen.txt`, `outbox.txt` and `owed.txt` (player harvesting, #134, only with
+  `production.enabled`): blocks waiting to regenerate (with felled-tree snapshots), harvests not booked by the API yet,
+  and worker's shares owed to offline players. Restore them with the world they belong to: without `regen.txt` the
+  placeholders (depleted blocks, saplings) stay for good; see the
+  [harvesting admin guide § 5.2](admin/production-harvesting-admin-guide.md#52-game-server-plugin-productionharvest).
 
 ### 9.8 World backups
 

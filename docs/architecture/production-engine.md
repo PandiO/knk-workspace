@@ -1,6 +1,6 @@
 # Production engine: kinds, lines, modifiers, weather and cycles (knk-web-api and knk-web-app)
 
-**Status:** Current · **Last updated:** 2026-11-20 (P5: transport sends workers away, docs #891); 2026-11-20 (P4 pointers: Derived and Hybrid providers, area caps, variation; docs #882); 2026-11-19 (first version, production P3 #86/#678, docs PandiO/knk-workspace#839)
+**Status:** Current · **Last updated:** 2026-11-21 (P8 pointer: the pool factor as a built-in step, docs #922); 2026-11-20 (P5: transport sends workers away, docs #891); 2026-11-20 (P4 pointers: Derived and Hybrid providers, area caps, variation; docs #882); 2026-11-19 (first version, production P3 #86/#678, docs PandiO/knk-workspace#839)
 **Checked against:** knk-web-api `next` `6c648f60` (PR PandiO/knk-web-api#58), knk-web-app `next` `4e4ca39a` (PR
 PandiO/knk-web-app#63). Not released; the manual steps of the
 [smoke test § 4](../guides/production-storage-transport-smoke-test.md#4-phase-p3-production-engine-86-api-678-web-app-tier3)
@@ -300,8 +300,10 @@ public interface IProductionBaseRateProvider
    modifier sources `Primary` and `Variation`; a Derived or Hybrid line is accepted on a structure of that yield source
    ([yield areas architecture § 4–5](production-yield-areas.md#4-from-surveys-to-base-rates)). A line with a source no
    provider serves would stop with `Error` "Rate source X is not available yet (P4).".
-4. New rate factors are new `IProductionModifierSource`s; P8's pool factor goes next to unlock and workers as a built-in
-   step (`ProductionRate.Compute`).
+4. New rate factors are new `IProductionModifierSource`s. P8 (#685, knk-web-api `next` `9ad32c23`) added the pool factor
+   next to unlock and workers as a built-in step: `floor + (1 − floor) × fill` over the structure's resource pools,
+   `poolFactor` on the production view and on `ProductionCycleRecord`
+   ([harvesting architecture § 3](production-harvesting.md#3-the-resource-pool-its-floor-and-refill-production_kinds--63-p-d6)).
 
 ## 10. Web app
 
@@ -406,3 +408,4 @@ import the six form and display seeds and make the v2 seeds of `ProductionStruct
 
 1. 2026-11-19: first version (docs PandiO/knk-workspace#839).
 2. 2026-11-20: pointers to the yield areas (P4) where P3 said "P4" (docs PandiO/knk-workspace#882).
+3. 2026-11-21: § 9 item 4, the P8 pool factor is built (docs PandiO/knk-workspace#922).
