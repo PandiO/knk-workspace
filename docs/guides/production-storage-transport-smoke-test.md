@@ -2890,6 +2890,45 @@ every step can still be run by hand; not run. Full manual run about 45 minutes; 
     consumers at 20/60, Garrison Critical) and run a dry run. **Expected:** Garrison is listed first and gets 50
     ("Partly reserved"); Bakery is "Held by a reserve" with "50 already reserved" in its explanation. (A17)
 
+### 10.3 Steps (API follow-ups #928, link L25b)
+
+Built on knk-web-api branch `claude/production-p9-followups` (migration `AddTownLogisticsProfile`, PR into `next`). Same
+preconditions as § 10.0 (with `AddTownLogisticsProfile` applied), a REST client and the Staff token. 5 steps, all
+automated in CI (knk-web-api `Tests/.../Services/Logistics/LogisticsFollowUpsTests.cs`, `Api/LookupFiltersTests.cs`);
+every step can still be run by hand; not run. Manual run about 15 minutes.
+
+1. [automated: `LogisticsFollowUpsTests.ATownsProfile_StartsEmpty_AndSuggestsTheTemplateForItsSizeAndSpecialization`,
+   `TheProfileEndpoints_Answer404ForAnUnknownTown_And400ForAnUnknownLabel`]
+   Make three templates (`POST api/LogisticsPolicies`, `"scope": "Template"`, `"rules": []`): "General" (no labels,
+   `"isDefaultTemplate": true`), "Village" (`"townSize": "Village"`) and "Farming village" (`"townSize": "Village",
+   "specialization": "Crops"`). `GET api/LogisticsPolicies/towns/<Phoenix>/profile`. **Expected:** `townSize` and
+   `specialization` null, `suggestedTemplateMatch` `Default` with General. `PUT` the same route with `{ "townSize":
+   "Village", "specialization": "Crops" }`: `Exact`, Farming village. `PUT { "specialization": "Fish" }`: the size stays
+   Village, `Size`, Village. `PUT { "townSize": "City" }`: `Default`, General. `PUT { "townSize": "", "specialization":
+   "" }` clears both. `"townSize": "Metropolis"` is 400, an unknown town 404; nothing is applied to the town's policy.
+2. [automated: `LogisticsFollowUpsTests.APutWithoutLabels_KeepsThem_AndAnEmptyStringClearsThem`]
+   `PUT api/LogisticsPolicies/<Farming village>` with only `{ "reason": "Rules only", "rules": [] }`. **Expected:** the
+   new version still has `townSize` Village, `specialization` Crops and its default flag as before. A `PUT` with
+   `"specialization": ""` clears it (general); `"townSize": "City"` on a town policy is 400.
+3. [automated: `LogisticsFollowUpsTests.ThePlannersReads_CarryTheStructureType_AndTheItemAndStorageNames`,
+   `StructureTypes_NameTheMostSpecificType_AndSkipUnknownIds`, `AShop_IsNamedShop_NotProductionStructure`]
+   Put 100 Coal into North and give Bakery inputs min 20, max 60 (§ 10.1 step 3). `POST
+   api/Logistics/towns/<Phoenix>/dry-run`. **Expected:** the entry has `consumerStructureType` `ProductionStructure`;
+   the order has `consumerStructureType`, `consumerStorageName` "Bakery inputs" and `warehouseStorageName` North's
+   delivery storage. After `run-now`, `POST api/LogisticsReservations/search`, the planner run, `GET
+   api/Logistics/consumers/<Bakery>` (`structureType`) and the service areas (`structureType` on structure entries) carry
+   the type; a shop's is `Shop`, a warehouse's `Warehouse`.
+4. [automated: same test as step 3]
+   In the dry run of step 3, look at the order's `lines`. **Expected:** each line has `itemBlueprintName` (Coal) next to
+   `itemBlueprintId` and `amount`; reservation rows have `consumerStorageName`, `warehouseStorageId` and
+   `warehouseStorageName`.
+5. [automated: `LogisticsFollowUpsTests.TheStorageSearch_FiltersByTown_ThroughItsDistrictsAndStructures`, the pinned
+   `LookupFiltersTests.LookupFilters_ArePinnedPerType_AndNeverOnUsers` table]
+   `POST api/Lookup/Storage/search` with `filters: { "townId": "<Phoenix>" }` (and the same for `ConsumerReplenishment`
+   and `LogisticsRule`). **Expected:** only storages held by Phoenix, its districts or its structures (Bakery inputs,
+   North's delivery storage, a rural structure's storages); Rivertown gives none of them. `Warehouse`, `District` and
+   `Structure` already filter by `townId`.
+
 ## 11. Phase P10: shops (#248 API, #687 plugin menus, #688 web app; tier:3)
 
 Built so far: link L25, the API (knk-web-api, migration `AddShops`; branch `claude/production-p10`, PR into `next`).
