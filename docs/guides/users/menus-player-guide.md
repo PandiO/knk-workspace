@@ -1,7 +1,7 @@
 # Menus — Player Guide
 
 **Status:** Living document — update in place as the game changes
-**Last updated:** 2026-11-20 (§ Structures and § Storage terminals: in knk-plugin `next` `8e672ba6`, more terminal
+**Last updated:** 2026-11-21 (§ Reward inbox and § Kits: items that don't fit go to the reward inbox, production chain L20, PandiO/knk-workspace#684, knk-plugin branch `claude/production-p7b`, not in `next` yet); 2026-11-20 (§ Structures and § Storage terminals: in knk-plugin `next` `8e672ba6`, more terminal
 messages, docs PandiO/knk-workspace#903); 2026-11-20 (§ Structures and § Storage terminals and displays, production chain L18,
 PandiO/knk-workspace#74, knk-plugin branch `claude/production-p6`, not in `next` yet); 2026-11-13 (§ Kits: kits a staff member gives you from the web app, PandiO/knk-workspace#261, in
 knk-plugin `next` `745fcf6`, not yet released); 2026-11-11 (first version, PandiO/knk-workspace#302; checked against knk-plugin `main` `121030f`; menu
@@ -38,6 +38,7 @@ easily.
 | `/siege menu` (`/siegemenu`, `/sgm`) | Your siege's information menu (only while you are in a siege) |
 | `/leaderboard` (`/lb`, no arguments) | The leaderboards |
 | `/stats settings` | Who may see your statistics |
+| `/inbox` | Your reward inbox (where production is switched on) |
 
 All commands: the [commands reference](commands.md).
 
@@ -64,7 +65,8 @@ available, so a tile may be missing for a while after a server start.
 Each kit shows what is in it, its cost and whether you can claim it now: `Click to claim`, `Available again in 4m 10s`
 (counting down), or a red reason. A **premium kit** is bought once with gems: click it, then **Confirm** (or
 **Cancel**) — the chat asks `Buy the kit "<name>" for N gems? Click Confirm or Cancel.` After buying you claim it like
-any other kit. Claimed items go into your inventory; what doesn't fit is **dropped at your feet**. (When that happens you may see a technical line like `placed=… dropped=…` in chat; it will be replaced by a readable message, [#321](https://github.com/PandiO/knk-workspace/issues/321).)
+any other kit. Claimed items go into your inventory; what doesn't fit is **dropped at your feet**, or, on servers where
+the reward inbox is on, goes to your **reward inbox** (see below). (When that happens you may see a technical line like `placed=… dropped=…` in chat; it will be replaced by a readable message, [#321](https://github.com/PandiO/knk-workspace/issues/321).)
 
 **Kits a staff member gives you.** Staff can give you a kit from the web app as well as in game. You don't need to do
 anything to receive it, and it doesn't cost you anything:
@@ -80,6 +82,37 @@ or you log out, at the very moment it is being handed over, it can be lost; then
 kit's waiting time for your own claim, as if you had claimed it. (Since PandiO/knk-workspace#261; part of the next
 release, not live yet. Kits given from the web app before that release don't arrive by themselves: ask staff to give
 them again.)
+
+### Reward inbox
+
+*On servers where staff switched production on (`production.enabled`); knk-plugin branch `claude/production-p7b`,
+PandiO/knk-workspace#684, not live yet.*
+
+When a reward doesn't fit in your inventory, it waits for you in your **reward inbox** instead of dropping on the
+ground: kit items (also kits staff give you, and your starter kit), lootbox items, and gifts from staff. If you were
+offline when a kit was handed over, it is in your inbox too. The chat tells you: `25 items didn't fit and went to your
+reward inbox (/inbox).`
+
+1. **Open it** with `/inbox`. Each item shows how many wait (`Waiting: 24`) and when the first of them expires
+   (`24 expire in 30 days`). The ender chest at the bottom shows how full the inbox is (`Filled: 49 of 100 (49%)`).
+2. **Claim:** left-click an item to take a stack, right-click to take one, shift-click to take as much as fits in your
+   inventory. Only what fits is taken; the rest stays in the inbox. The oldest items are taken first.
+3. **It has a limit.** Rewards that arrive when the inbox is full are **lost**. You get a warning as it fills up (`Your
+   reward inbox is 80% full. ...`) and a red message when something was lost. Premium ranks have a bigger inbox.
+4. **Items expire 30 days** after they arrive. You get a reminder a week before and a day before; expired items are gone.
+5. When you join with items waiting, the chat says how many (and whether some expire soon).
+6. Unique items (for example a sword with its own name and enchantments) can't be claimed in game yet; they show in the
+   inbox, and rewards like that still drop at your feet when your inventory is full.
+
+| Message | Meaning |
+|---|---|
+| `Your inventory is full. Make room, then claim again.` | Nothing fits; nothing was taken |
+| `Claimed 10 items Bread (the inbox has less than that)` | You got what was left |
+| `You can't claim rewards during a siege. Your inbox waits for you.` | Claim after the siege |
+| `The reward inbox is switched off on the server right now.` | Staff switched it off; your items stay in the inbox |
+| `Unique items can't be claimed in game yet; ask a staff member.` | See point 6 |
+| `Your reward inbox is full: 3 items were lost.` | The inbox was at its limit when a reward arrived |
+| `The reward inbox is not switched on on this server.` | This server has no reward inbox; rewards drop at your feet as before |
 
 ### Profile and titles
 
