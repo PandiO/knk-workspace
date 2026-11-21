@@ -1,7 +1,7 @@
 # Menus — Player Guide
 
 **Status:** Living document — update in place as the game changes
-**Last updated:** 2026-11-21 (§ Reward inbox: in knk-plugin `next` `bdd8b463`, two more messages, a link to the admin guide, docs PandiO/knk-workspace#915); 2026-11-21 (§ Reward inbox and § Kits: items that don't fit go to the reward inbox, production chain L20, PandiO/knk-workspace#684, knk-plugin branch `claude/production-p7b`, not in `next` yet); 2026-11-21 (§ The menu item: what a click does in a siege, set on the game settings page; § Sieges: the
+**Last updated:** 2026-11-21 (new § Shops: the shop menus of production P10b in knk-plugin `next` `c349a53c`, PandiO/knk-workspace#687, docs PandiO/knk-workspace#966); 2026-11-21 (§ Reward inbox: in knk-plugin `next` `bdd8b463`, two more messages, a link to the admin guide, docs PandiO/knk-workspace#915); 2026-11-21 (§ Reward inbox and § Kits: items that don't fit go to the reward inbox, production chain L20, PandiO/knk-workspace#684, knk-plugin branch `claude/production-p7b`, not in `next` yet); 2026-11-21 (§ The menu item: what a click does in a siege, set on the game settings page; § Sieges: the
 siege shop and Siege unlocks menus; siege shop chain #870, #871, #868, #869 in `next`, docs PandiO/knk-workspace#908); 2026-11-20 (§ Structures and § Storage terminals: in knk-plugin `next` `8e672ba6`, more terminal
 messages, docs PandiO/knk-workspace#903); 2026-11-20 (§ Structures and § Storage terminals and displays, production chain L18,
 PandiO/knk-workspace#74, knk-plugin branch `claude/production-p6`, not in `next` yet); 2026-11-13 (§ Kits: kits a staff member gives you from the web app, PandiO/knk-workspace#261, in
@@ -218,6 +218,79 @@ What a terminal refuses, and why:
 | `That is a display sample, not a real item.` | Display items are only a picture |
 | `The storage is busy or locked; try again in a moment.` | Another move happened at the same time, or staff locked the storage |
 | `This container is no longer bound.` | Staff unbound it; it is a plain chest again |
+
+### Shops
+
+*On servers with production switched on (in knk-plugin `next` `c349a53c`, PandiO/knk-workspace#687; not released
+yet).* Town shops sell goods for coins and buy goods back. **For now only staff can open a shop** (with
+`/knk shop <shop id>`); shopkeepers that open it for every player come next.
+
+**Buying:**
+
+1. **The shop menu** shows your coins (gold ingot, top left), the shop's information (anvil: type, kind, level, town,
+   whether it buys from players), a **Sell** chest when the shop buys, and **Back**. Below them the catalogue: each item
+   as the real item with `Price: <n> coins each` and its stock (`Stock: plenty` when it never runs out). Featured items
+   glow and come first; sold-out items are greyed out with `Sold out` (some shops hide them). Use the arrows for more
+   pages.
+2. **Click an item** for its information menu: the **Amount** chest (click it to step through 1, 8, 16, 32, 64), the
+   item, the name tag `This item costs: <n> coins` with the stock, the amount and the total, and a map with the
+   description and how the price is set. The amount is never more than the stock; a unique item is always one.
+3. **Click the name tag** to open the confirmation: `Are you sure you want to buy 8 x Bread?` with the price each and
+   the total. Then:
+   1. **Confirm** (green): the items go into your inventory. Make room first; the shop checks.
+   2. **Confirm: to your reward inbox** (ender chest): the items wait in your [reward inbox](#reward-inbox) and you
+      claim them with `/inbox`.
+   3. **Cancel** (red) or **Back**: nothing is bought.
+4. After a purchase the chat says `You bought 8 x Bread for 160 coins. You have 340 coins left.` and you are back in
+   the item's information menu. The coins go to the shop's town.
+5. **The price changed?** If the price changed between the confirmation and your click, nothing is bought: you see
+   `The price changed. Check the new price and confirm again.` and the confirmation shows the new price. Click Confirm
+   again to buy at it.
+6. **Unique items** (one exact item, for example an enchanted sword) are listed with their enchantments but can't be
+   bought in game yet; ask staff.
+
+**Selling:**
+
+1. Click the **Sell** chest in the shop menu. The sell menu shows your coins, the Sell chest with the total, the shop's
+   information, a book with how to sell, and Back.
+2. **Click a stack in your own inventory** to add it to the sale (up to 7 stacks); it shows in the middle row with
+   `Buy-back: <n> coins each` and `For these 20: <n> coins`. Click it in the menu to take it out again. **Your items
+   stay in your inventory** until you sell.
+3. A stack the shop won't buy is marked with the reason (for example `This shop doesn't buy items of that kind.`). The
+   shop buys all of the sale or none of it: take the marked stacks out first.
+4. **Click the Sell chest** (`Click here to sell`). The items leave your inventory, the chat says `You sold 2 item
+   stacks for 60 coins. You now have 400 coins.`, and the menu closes. The shop's town pays you; a town that hasn't
+   earned enough yet can't buy (`The town can't pay this much right now`).
+5. If the sale is refused, every item is back in your inventory. If you moved a picked stack, you see `Your inventory
+   changed; check the sale and click again.`
+
+**No shopping during a siege:** `Shops are closed to you during a siege.` / `You can't sell to shops during a siege.`
+
+What a shop refuses, and why:
+
+| Message | Meaning |
+|---|---|
+| `You don't have enough coins. Nothing was charged.` (name tag: `You need <n> more`) | The total is more than you have |
+| `Your inventory has no room for <n>. Make room, or send it to your reward inbox.` | Make room, or use the reward inbox button |
+| `Your reward inbox is full.` | Claim what is in your inbox first |
+| `This item is sold out.` / `The shop doesn't have that many in stock any more.` | Someone bought it first; pick a smaller amount or wait for restocking |
+| `This item is no longer for sale here.` | The shop took it off its catalogue |
+| `Unique items can't be bought in game yet; ask a staff member.` | See above |
+| `This shop doesn't buy items from players.` | It has no Sell chest: its kind of shop buys nothing |
+| `This shop doesn't buy items of that kind.` | The shop buys only some item categories (a bakery buys food) |
+| `This item has no price, so the shop can't buy it.` / `This item isn't in the item catalogue.` | A renamed item, another plugin's item, or an item without a price |
+| `Damaged items can't be sold to a shop ...` / `Enchanted items can't be sold as plain items ...` | Repair it first, or keep it: it would be resold repaired or lose its enchantments |
+| `That is a display sample, not a real item.` | Display items are only a picture |
+| `Soulbound items can't be sold.` / `That unique item is in a storage, not in your hands.` | Only items you carry and may give away can be sold |
+| `The town can't pay that much right now.` | The town's account is low; sell less, or later |
+| `The shop has no room for more of this.` | The shop's storage is full |
+| `Selling to shops and buying into the reward inbox are switched off right now.` | Staff switched production off for now; buying into your inventory still works |
+| `This shop belongs to no town, so it can't trade right now.` | Tell staff |
+| `The shop's stock is busy right now. Try again in a moment.` | Another trade happened at the same moment |
+| `The shop is still working out the price; click again in a moment.` | The price is still loading |
+| `The shop didn't answer. If coins were taken, show staff this code: <code>` | Keep the code; staff can look it up |
+
+Staff: setting shops up and testing them is in the [shops admin guide](../admin/shops-admin-guide.md#7-a-safe-test).
 
 ## Moving around in menus
 

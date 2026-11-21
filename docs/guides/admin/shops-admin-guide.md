@@ -1,7 +1,8 @@
 # Shops — Admin Guide
 
-**Status:** Current · **Last updated:** 2026-11-21 (first version, production P10 #248/#688, docs PandiO/knk-workspace#939)
-**Checked against:** knk-web-api `next` `289f4d4b`, knk-web-app `next` `11832d6b` (not released; the manual steps of
+**Status:** Current · **Last updated:** 2026-11-21 (the shop menus in game: § 1 items 6-7, § 7.1, § 9; production P10b #687, docs PandiO/knk-workspace#966); 2026-11-21 (first version, production P10 #248/#688, docs PandiO/knk-workspace#939)
+**Checked against:** knk-web-api `next` `289f4d4b` and `7c6dd7f5` (the menu seeds), knk-web-app `next` `11832d6b`,
+knk-plugin `next` `c349a53c` (not released; the manual steps of
 the [smoke test § 11](../production-storage-transport-smoke-test.md#11-phase-p10-shops-248-api-687-plugin-menus-688-web-app-tier3)
 have not been run live yet)
 **Related:** [shops architecture](../../architecture/shops.md) (pricing, the purchase and sale transactions, the town
@@ -20,11 +21,12 @@ account** of the shop's town; buy-backs are paid from it. The town's warehouses 
 planner, and the shop's sales are counted per hour in **trade stats**. This guide covers the set-up, the screens, the
 settings, a safe test and what to do when a shop misbehaves.
 
-**What players see in V1: nothing yet.** The shop menus that let players buy and sell are a later link
-([#687](https://github.com/PandiO/knk-workspace/issues/687), waiting for the menu templates), and shopkeepers and
-display stalls come after that ([#249](https://github.com/PandiO/knk-workspace/issues/249),
-[#250](https://github.com/PandiO/knk-workspace/issues/250)). Until then the game server doesn't call the shop routes;
-you can set shops up and test them with a REST client (§ 7). There is no player guide yet.
+**What players see.** In game a shop has a **shop menu** (its catalogue), an **item information** menu, a **purchase
+confirmation** and a **sell menu** ([#687](https://github.com/PandiO/knk-workspace/issues/687); how players use them:
+[menus player guide § Shops](../users/menus-player-guide.md#shops)). Until shopkeepers and display stalls arrive
+([#249](https://github.com/PandiO/knk-workspace/issues/249), [#250](https://github.com/PandiO/knk-workspace/issues/250))
+only staff open a shop, with `/knk shop <shop id>` (§ 7.1); the purchase and sale routes can also be called with a REST
+client (§ 7).
 
 ## 1. What you need
 
@@ -61,6 +63,20 @@ you can set shops up and test them with a REST client (§ 7). There is no player
       price is not on sale.
    3. For restocking: a **warehouse** in the town with stock, and a lane or measured road connection between the shop
       and the warehouse ([town logistics admin guide § 1](town-logistics-admin-guide.md#1-what-you-need)).
+6. **The game server, for the shop menus** (knk-plugin `next` `c349a53c`, #687):
+   1. `production.enabled: true` in the plugin's `config.yml` (default false). Off, `/knk shop` answers "Production is
+      off on this server (production.enabled: false)." and the three shop menus are blocked.
+   2. `items.identity.enabled: true` for selling: the sell menu resolves each stack through item identity.
+   3. The API's **Production enabled** for selling and for purchases into the reward inbox (item 3); buying into the
+      inventory works without it.
+   4. No new `config.yml` key, no API environment key, no migration.
+   5. `knk.admin.world.production` (also matched by `knk.admin.world.*`) for the staff who open shops with
+      `/knk shop` ([commands](../users/commands.md#server-tools-knk)).
+7. **The menu templates** `shops.shop`, `shops.item` and `shops.confirm` (knk-web-api `next` `7c6dd7f5`). The API
+   creates them on start when they are missing, like every menu seed; nothing to import by hand. **Deploy the plugin
+   first, then the API**: a game server without the shop menu ids fails the new templates' validation. To change a
+   layout or text later: the [menu authoring admin guide](menus-admin-guide.md) (the seed is create-only, so an edited
+   template is kept). The sell menu is built in the plugin and has no template.
 
 ## 2. Where things are
 
@@ -266,6 +282,25 @@ server will make later. The full checklist is the [smoke test § 11](../producti
 7. Press **Rebuild from the ledger** under Trade stats: the hour shows 3 sold for 60, 2 bought back for 20.
 8. Clean up: switch the entry off. A shop with ledger history can't be deleted; keep test shops in a test town.
 
+### 7.1 In game
+
+With the game server set up (§ 1 items 6-7) and the shop from steps 1-4 (give **Bread** an Unlimited entry too, or keep
+Merchandise stock), as a staff member with `knk.admin.world.production` and some coins:
+
+1. `/knk shop <shop id>`: "Opening shop #<id>...", then the shop menu: your coins, the anvil with type, kind, level,
+   town and "Buys items from players", the Sell chest, and Bread as the real item with its price and stock.
+2. Click Bread, click the Amount chest to 8, click the name tag, then **Confirm** (green): 8 Bread land in your
+   inventory, the chat says what you paid, and the shop page's **Sales and buy-backs** and the town account show the
+   sale.
+3. Buy again with **Confirm: to your reward inbox**: nothing lands in the inventory; `/inbox` shows it (needs
+   Production enabled).
+4. Back in the shop menu click the Sell chest, click the Bread stack in your inventory, then the Sell chest: you get
+   the buy-back price, the bread is gone, and Merchandise holds it again.
+
+The full in-game checklist (paging, sold out, a changed price, refusals, the flag off) is
+[smoke test § 11.2](../production-storage-transport-smoke-test.md#112-steps-plugin-687); the layouts and flows are in
+the [shops architecture § 13](../../architecture/shops.md#13-the-game-server-shop-menus-l26-687).
+
 ## 8. Effects on existing data and limits
 
 1. The migration adds tables and one column only; no existing currency posting, balance or stock line changes. The
@@ -276,7 +311,11 @@ server will make later. The full checklist is the [smoke test § 11](../producti
    check the town's **Dry run** first ([town logistics admin guide § 5.2](town-logistics-admin-guide.md#52-dry-run-and-run-now)).
 4. Limits: a sale has at most 54 lines; up to 100,000 units per line or purchase; a static price up to 1,000,000,000
    coins; a stats rebuild up to 31 days at a time.
-5. Not in V1: shop menus, shopkeepers, display stalls, upgrade costs for levels, corrections of town accounts, a
+5. A sale from the sell menu has at most 7 stacks, and a purchase from the menu at most 64 at a time (the Amount
+   steps 1, 8, 16, 32, 64).
+6. Unique items are listed in the shop menu but can't be bought in game until
+   [#897](https://github.com/PandiO/knk-workspace/issues/897); buy them for a player through the REST client.
+7. Not in V1: shopkeepers, display stalls, upgrade costs for levels, corrections of town accounts, a
    settings card, the town account on the town's page, the shop's kind and type in the shop list.
 
 ## 9. Troubleshooting
@@ -296,4 +335,11 @@ server will make later. The full checklist is the [smoke test § 11](../producti
 | A Processing shop's line says Paused | The shop is Trading | Set **Kind** to Processing |
 | Trade stats are empty | Production enabled off (the job doesn't run), or no trade in that range | Press **Rebuild from the ledger** |
 | The town account says "Does not match" | The balance and the last ledger entry differ | Don't change data; report it with the account id (there is no correction route yet, #934) |
+| `/knk shop` says "Production is off on this server" | The plugin's `production.enabled` is off | Switch it on and restart |
+| `/knk shop` says "There is no shop #<id>." | Wrong id | Use the id of the shop's page (`/display/Shop/<id>`) |
+| The shop menus fail to load after an update, or a menu says it is unavailable | The API with the shop menu seeds started before the plugin that knows their ids | Deploy the plugin, then restart the API (§ 1 item 7) |
+| The shop menu has no Sell chest | The type accepts no categories, or Production enabled is off | Add categories; switch it on |
+| The sell menu says "Item identity is off on this server" | `items.identity.enabled` is off | Switch it on in the plugin's `config.yml` |
+| A player shows a code from "The shop didn't answer" | The purchase or sale got no answer, even after one retry | Look the key up in the town account ledger (source the shop) and the server log; a sale's items went back to the player |
+| The log says a player "left before purchase … was placed" | The player logged out between paying and placing | Give the item back by hand ([stock admin guide](stock-admin-guide.md) or the player's inventory tools) |
 | A shop type or shop can't be deleted | The type is used by shops; the shop has stock or ledger history, or its worker is out | Give the shops another type; keep the shop |
