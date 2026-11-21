@@ -1,6 +1,6 @@
 # NPC navigation follow-ups chain — progress report
 
-**Status:** In review: every link merged into `next`; developer smoke tests, the option-B decision and promotion open (2026-11-16) · **Last updated:** 2026-11-20 (block 4.27, link G1); 2026-11-20 (block 4.26, link H1)
+**Status:** In review: every link merged into `next`; developer smoke tests, the option-B decision and promotion open (2026-11-16) · **Last updated:** 2026-11-21 (§ 1 item 8, #953 and #954 from the smoke run); 2026-11-20 (block 4.27, link G1); 2026-11-20 (block 4.26, link H1)
 
 **Issue:** [PandiO/knk-workspace#358](https://github.com/PandiO/knk-workspace/issues/358), links
 [#519](https://github.com/PandiO/knk-workspace/issues/519) (L1),
@@ -33,6 +33,7 @@ the configuration reference § 4.27), then restart. In test order:
    1. #658 for M1–M7 is in its own session (session_01R1w2UsvN2p9uCZqKQGjgrH).
    2. #590 (L2–L4 leftovers) waits for your test results.
 7. **Filed along the way:** #636 (a follower that never settles), #657 (door-mouth rule), #586 (intermittent fake-player log line in CI).
+8. **From the smoke run of 2026-11-21:** #953 (after a false push by "something unknown", an NPC on the keep tower route walked back again and again; M7's push watch, fix in review: knk-plugin [#117](https://github.com/PandiO/knk-plugin/pull/117), knk-workspace [#957](https://github.com/PandiO/knk-workspace/pull/957)) and #954 (no way to unprotect an NPC for smoke step 13).
 
 ## 2. Summary
 
