@@ -106,7 +106,7 @@ of what is already in `next`.
 | L25b P9 API follow-ups (coordinator extra) | #928 | Merged into next (2026-11-21) | api `16713a85`, workspace `77f3a022` (after a coordinator merge of `next`); merges: api `e02bf557`, workspace `0c469db3` | [api#75](https://github.com/PandiO/knk-web-api/pull/75), [ws#935](https://github.com/PandiO/knk-workspace/pull/935) | green on `16713a85` (build-and-test, mysql-tests, fresh-database); Codex at its usage limit | create_session `session_01R1w2UwSQPJ4gQDcsTmi8Xt`, branch `claude/production-p9-followups` |
 | L26 P10b shop menus plugin | #687 | Waiting (developer's shop menu templates, asked on #687) | — | — | — | — |
 | L27 P10c shops web app | #688 | Merged into next (2026-11-21) | web app `0100518`, workspace `f46e0de6` (after coordinator merges of `next`); merges: web app `11832d6b`, workspace `ee4ee00b` | [web#73](https://github.com/PandiO/knk-web-app/pull/73), [ws#936](https://github.com/PandiO/knk-workspace/pull/936) | green on `0100518` (build-and-test, e2e) | create_session `session_01R1w2Uwx1cX3dVQ9hS8MdKX`, started 2026-11-21 |
-| L27b P10 shops follow-ups (coordinator extra) | #938 | Running (started 2026-11-21 06:16) | — | — | — | create_session `session_01R1w2UuaqLDEYWP9TRyxn93`, branch `claude/production-p10-followups` |
+| L27b P10 shops follow-ups (coordinator extra) | #938 | In review (2026-11-21) | api `3a2e5db`, web app `c368176`, workspace `e28a6610` | [api#76](https://github.com/PandiO/knk-web-api/pull/76), [web#74](https://github.com/PandiO/knk-web-app/pull/74), [ws#941](https://github.com/PandiO/knk-workspace/pull/941) | push runs green on `3a2e5db` (build-and-test, mysql-tests, fresh-database) and `c368176` (build-and-test, e2e); Codex at its usage limit | create_session `session_01R1w2UuaqLDEYWP9TRyxn93`, branch `claude/production-p10-followups` |
 | L28 P11 shopkeepers | #249 | Not started | — | — | — | — |
 | L29 P12 display stalls | #250 | Not started | — | — | — | — |
 
@@ -2798,3 +2798,73 @@ _(Each link appends its block here when it finishes.)_
        production and consumer panels of the shop.
     2. L26 (#687) and L29 (#250): the offer DTO and `formatCoins` / `priceSourceLabel` in `src/utils/shops.ts` are
        there for any later web view of a shop menu or a display stall.
+
+### 4.27b L27b — P10 shops follow-ups (#938)
+
+1. **Scope done** (knk-web-api, knk-web-app, plus the changelog and two API contract lines in knk-workspace), the five
+   points of #938, additive, no migration.
+    1. API: the shop search row (`api/Shops/search`, `ProductionWorldListDto`) gains `kind`, `shopTypeId` and
+       `shopTypeName` (null for warehouses and production structures); the web app's Shop dashboard shows Kind and
+       Shop type.
+    2. API: `TownAccountEntryDto.username` (one `Users` query per page; null when the user is gone); the ledger shows
+       the player by name (`User #id` as fallback).
+    3. API: `TownAccountEntryDto.stockTransactionId`, the goods leg of a `SHOP_PURCHASE` or `SHOP_BUYBACK` leg, joined on
+       the plugin idempotency key both legs already share (one key per sale line; the join the trade stats use); the
+       ledger's Goods column links the stock transaction.
+    4. Web app: a Shops card on the game settings page for `production.shops` (`enchantmentPercentPerLevel` 0 to 1000,
+       `statsLookbackHours` whole 0 to 168) with the API's checks (`src/utils/shopSettings.ts`); the normalizer keeps
+       the section and sends it back on every save.
+    5. Web app: `TownAccountSummary` on the town page (coins, the ledger check, "Open the ledger"; "No account yet" on
+       a 404), World area only.
+    6. knk-workspace (branch from `next`): changelog entry; `API_CONTRACT_SHOPS.md` lines for the search row and
+       `TownAccountEntryDto` (header left to the docs session #939).
+2. **Commits and heads.**
+    1. knk-web-api `claude/production-p10-followups` at `3a2e5db`: 1 commit on `next` `e02bf55`.
+    2. knk-web-app `claude/production-p10-followups` at `c368176`: 1 commit on `next` `11832d6`.
+    3. knk-workspace `claude/production-p10-followups` at `e28a6610`: 1 commit on `next` `2a79fe75` (latest `next`
+       merged before the commit, a fast-forward).
+3. **PRs.** [knk-web-api#76](https://github.com/PandiO/knk-web-api/pull/76) (Closes #938),
+   [knk-web-app#74](https://github.com/PandiO/knk-web-app/pull/74) and
+   [knk-workspace#941](https://github.com/PandiO/knk-workspace/pull/941) (Part of #938), base `next`. Not merged.
+4. **Tests, baseline → result.**
+    1. knk-web-api baseline on `next` `e02bf55` (clean worktree): 5155 passed / 128 skipped / 0 failed. Branch: 5160 /
+       128 / 0; new `ShopFollowUpTests` (5). The pinned access tests are unchanged and green (no new route). MySQL
+       tests skipped locally; CI's mysql-tests green on the push run.
+    2. knk-web-app baseline on `next` `11832d6`: Jest 2929 passed (346 suites), Playwright 368 passed, `tsc` clean,
+       build OK. Branch: Jest 2933 (347 suites; new `shopSettings.test.ts` (4), `territory.test.ts` updated);
+       Playwright 373 (new: town-detail 4, shops settings 1; updated: the ledger, dashboard and territory settings
+       payload tests); `tsc`, `typecheck:e2e` clean, `CI=true npm run build` OK. DTO-typed fixtures.
+    3. Seen failing first: without the account mock the strict logistics town page test reported the unmocked
+       `GET TownAccounts/by-town/4`; without the shops section the territory settings payload test failed.
+    4. CI: push runs green on `3a2e5db` (build-and-test, mysql-tests, fresh-database) and `c368176` (build-and-test,
+       e2e); the PR runs were still running at the time of writing.
+    5. Known reds: none (#801 did not fail).
+5. **Decisions (DESIGN § 4.3).** All in the PRs. The main ones:
+    1. *Where the join lives.* Chosen: `stockTransactionId` on the town ledger read, from the shared idempotency key.
+       Alternatives: (a) a currency reference on `StockTransactionListDto`: touches the generic stock reads; (b) a
+       column and migration: not needed; (c) a separate join endpoint: one more route, rule and access test.
+    2. *Shop row shape.* Chosen: nullable fields on the shared `ProductionWorldListDto`. Alternatives: (a) a
+       `ShopListDto` subtype: changes the generic subtype service's search signature.
+    3. *The account on the town page.* Chosen: a small summary with a link to the ledger. Alternatives: (a) the full
+       `TownAccountPanel` on the town page.
+    4. *Strict town specs.* Chosen: `mockNoTownAccount(api, townId)` in `e2e/fixtures/shops.ts`, called in the
+       territory, landmarks, logistics and town-detail specs. Alternatives: (a) inside `mockNoTownLogistics`: a fixture
+       import cycle and two features mixed.
+    5. *The player in the ledger.* Chosen: the username as text. Alternatives: (a) a link: no user display page.
+6. **Out of scope, noted.** In `api/ProductionStructures/search` a shop row has `kind` but no `shopTypeName` (that
+   search doesn't load the shop type); noted in api#76 and on #938, harmless today. Smoke guide § 11.3 steps for the
+   five points: with the shops documentation (#939 or its follow-up), noted on #938. Codex: the connector hit its
+   code-review usage limit on all three PRs (review "failed", usage-limit comment); no inline findings or threads;
+   noted on each PR.
+7. **Blockers.** None.
+8. **At merge / what the developer must do.**
+    1. Deploy the API and the web app together (no migration, setting, seed or plugin change).
+    2. Manual check (about 5 minutes): `/dashboard/Shop` (Kind, Shop type); a town account's page (player names, Goods
+       links); Game settings → Shops (change, save, reload); a town's page (Town account panel).
+    3. Shops docs (#939 or its follow-up): the Shops settings card, the town account on the town page, the ledger's
+       names and goods links; smoke guide § 11.3 steps.
+9. **Notes for later links.**
+    1. Strict e2e specs that open a town page as staff with `knk.admin.world` need `mockNoTownAccount(api, townId)`
+       (`e2e/fixtures/shops.ts`) next to `mockNoTownLogistics`.
+    2. `TownAccountEntryDto.stockTransactionId` links a trade's coins to its goods; L26 (#687) and L29 (#250) can use
+       it for any receipt view.
