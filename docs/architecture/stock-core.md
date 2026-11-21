@@ -1,6 +1,6 @@
 # Stock core (knk-web-api and knk-web-app)
 
-**Status:** Current · **Last updated:** 2026-11-19 (limitations: Storage weight on the ItemBlueprint form v2, production cycles in P3; docs #839); 2026-11-19 (§ 2: default storages of the P2 structure subtypes, docs #830); 2026-11-19 (first version, stock core P1 #97/#675, docs PandiO/knk-workspace#820)
+**Status:** Current · **Last updated:** 2026-11-21 (§ 12 item 1: links to the later phases' pages, docs #915); 2026-11-19 (limitations: Storage weight on the ItemBlueprint form v2, production cycles in P3; docs #839); 2026-11-19 (§ 2: default storages of the P2 structure subtypes, docs #830); 2026-11-19 (first version, stock core P1 #97/#675, docs PandiO/knk-workspace#820)
 **Checked against:** knk-web-api `next` `2e7d4e81` (PR PandiO/knk-web-api#56), knk-web-app `next` `9f46cb49` (PR
 PandiO/knk-web-app#60). Not released; no plugin part yet (nothing in game changes).
 **Related:** [production DESIGN § 4](../specs/production-storage-transport/DESIGN.md#4-stock-model) (the rules),
@@ -257,7 +257,9 @@ Deploy and seed steps: [production installation § 5.3](../guides/production-ins
 ## 12. Limitations (P1)
 
 1. No plugin part: nothing in game reads or writes stock yet; containers (P6), transport (P5)
-   and the inbox (P7) are later phases.
+   and the inbox (P7) are later phases. (Since then: P5 [transport](production-transport.md), P6
+   [terminals](production-storage-terminals.md) and P7 [item delivery and the reward inbox](production-item-delivery.md)
+   are in `next`.)
 2. Storages are created by hand; nothing creates a storage for a structure, player or clan automatically yet.
 3. The Storage weight field is on the `ItemBlueprint` form from seed v2 (#819); the production engine (P3) writes
    stock through `IStockService` ([production engine](production-engine.md)).
@@ -270,3 +272,4 @@ Deploy and seed steps: [production installation § 5.3](../guides/production-ins
 
 1. 2026-11-19: first version (docs PandiO/knk-workspace#820).
 2. 2026-11-19: limitations updated for P3 and the ItemBlueprint form v2 (docs PandiO/knk-workspace#839).
+3. 2026-11-21: § 12 item 1 links the transport, terminals and item delivery pages (docs PandiO/knk-workspace#915).
