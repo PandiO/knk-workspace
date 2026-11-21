@@ -4,6 +4,60 @@ This is a human-readable record of capabilities merged into the V3 default branc
 
 ## Unreleased — on feature branches, not merged
 
+- **Player harvesting in game: harvest in yield areas, blocks regenerate** ([PandiO/knk-workspace#134](https://github.com/PandiO/knk-workspace/issues/134),
+  link L22 of the production, storage and transport chain, absorbs KNG-48 / #105; the API is #685; [production kinds](specs/production-storage-transport/PRODUCTION_KINDS.md)
+  § 6-7, P-D7, P-D8, A16). With `production.enabled: true` in the plugin, players can harvest in production structures'
+  yield areas what the kind's harvest rules allow. A player who meets a rule (its permission node or lowest title, its
+  tool class and tier, a ripe crop, its cooldown) may break the rule's blocks or kill its animals there, also inside the
+  structure's production region (which keeps denying every other block) and in an area outside every region (a logger's
+  radius). The vanilla drops are replaced: the harvest is reported to the API in batches (`POST api/Harvest/reports`,
+  one idempotency key per entry, sent again with the same key after a timeout or a restart) and the player gets the
+  worker's share of the rule's blueprint item in the inventory when the API answers (`+2 Cobblestone (your share of the
+  harvest)`; an offline player gets it when they join); the town's share goes to the structure's Output. The block gets
+  a placeholder until it regenerates: ores and rock a depleted block (the rule's, else stone, netherrack in the nether),
+  crops are replanted at age 0, flowers leave air, and a log fells the **whole tree** (its logs and natural leaves),
+  leaving a sapling that does not grow; the exact tree comes back by snapshot. Blocks come back after the API's
+  regeneration time (longer at a low pool when the rule says so), only when their chunks are loaded, only where the
+  placeholder still stands (a changed block is never overwritten) and never into a player or mob; the queue is kept on
+  disk and survives restarts and chunk unloads. Surveys count blocks waiting to regenerate as their original. Players
+  who don't meet a rule are refused its targets with the reason (`You can't harvest this here: you need the permission
+  ...`); a block waiting to regenerate can't be broken. Staff with `knk.admin.world.production` are left to WorldGuard.
+  With `production.enabled: false`, or while the API's `Production:Enabled` is off, breaks in production areas behave
+  exactly as before (A21). `/knk production harvest status|refresh` (node `knk.admin.world.production`) shows the
+  catalogue, the blocks waiting to regenerate and the reports waiting for the API. knk-plugin: knk-core
+  `production/harvest` (`HarvestRule`, `HarvestGate`, `RequirementEvaluator`, `RegenQueue`, `HarvestOutbox`,
+  `TreeFeller`, `HarvestAreaIndex`) and the port `HarvestApi` with knk-api-client `HarvestApiImpl`; knk-paper
+  `production/harvest` (`HarvestModule`, `HarvestWorldGuardListener`, `HarvestRequirements`, `HarvestConfig`), the
+  survey placeholder overlay, the global-region protection's harvest pass and the scenarios `player-harvest-regenerate`
+  and `player-harvest-tree`. Branch `claude/production-p8` in knk-plugin and knk-workspace. Smoke test:
+  [production smoke test § 9.2](guides/production-storage-transport-smoke-test.md#92-steps-plugin-134). Player guide:
+  [harvesting](guides/users/harvesting-player-guide.md).
+  Admin steps:
+  1. Merge into the plugin's `config.yml` (Restart; [plugin configuration § 4.31](guides/admin/plugin-configuration.md#431-production)):
+     ```yaml
+     production:
+       harvest:
+         catalog-refresh-minutes: 5
+         report-flush-seconds: 2
+         report-batch: 200
+         regen-blocks-per-tick: 64
+         regen-retry-seconds: 5
+         save-seconds: 10
+         deny-at-empty-pool: false
+         tree-max-logs: 256
+         tree-max-leaves: 1500
+         max-area-chunks: 256
+         messages:
+           denied: "&cYou can't harvest this here: {reason}."
+           regenerating: "&7This block is regenerating."
+           paid: "&a+{amount} {item} &7(your share of the harvest)"
+           rejected: "&cYour harvest at {area} was not booked: {reason}."
+     ```
+  2. The API needs migration `AddPlayerHarvesting` and `Production:Enabled` (#685), and harvest rules per kind (none are
+     seeded). A rule for stone should name a `placeholderMaterial` other than stone (for example `BEDROCK` or
+     `COBBLESTONE`), else the depleted block looks like the stone it stands in for.
+  3. Grant each rule's permission node to the players who may harvest under it (a rule without a node lets every
+     player harvest). Back up `plugins/KnightsAndKings/production/harvest/` with the world.
 - **Player harvesting: the API** ([PandiO/knk-workspace#685](https://github.com/PandiO/knk-workspace/issues/685),
   link L21 of the production, storage and transport chain; [production kinds](specs/production-storage-transport/PRODUCTION_KINDS.md)
   § 6-7, decision record § 3.6 and § 11 F9-F10). The game server part (the harvest listener, placeholders and the

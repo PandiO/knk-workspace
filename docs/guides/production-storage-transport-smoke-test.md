@@ -19,8 +19,8 @@ scenario on a real Paper server), 7 partly and 1 manual (tagged); not run. § 5.
 partly (tagged) and 1 by hand; every step can still be run by hand; not run. § 6.1 (transport API, #79): 18 of 20 steps automated in CI
 and 2 partly (tagged); every step can still be run by hand; not run. § 6.2 (transport lanes plugin, #681): 3 of 14
 steps automated, 10 partly and 1 manual (tagged); not run. § 6.3 (transport web app, #682): 10 of 16 steps
-automated in CI, 5 partly (tagged) and 1 by hand; every step can still be run by hand; not run. § 7.1 (terminals and menus API, #683): 15 of 20 steps automated in CI, 4 partly and 1 by hand (tagged); every step can still be run by hand; not run. § 7.2 (terminals, displays and menus plugin, #74): 7 of 20 steps automated (one through a plugin scenario on a real Paper server), 11 partly and 2 by hand (tagged); not run. § 8.1 (delivery and inbox API, #60): 16 of 20 steps automated in CI, 3 partly and 1 by hand (tagged); every step can still be run by hand; not run. § 8.2 (reward inbox plugin, #684): 7 of 17 steps automated (two also through plugin scenarios on a real Paper server) and 10 partly (tagged); every step can still be run by hand; not run. § 9.1 (harvesting API, #685): 18 of 21 steps automated in CI and 3 partly (tagged); every step can still be run by hand; not run. Other sections not yet automated (the links tag them).
-**Last updated:** 2026-11-21 (§ 8 and § 8.2 intros: L19 and L20 merged into `next`, links to the architecture page and admin guide, docs #915); 2026-11-21 (§ 9 harvesting API, link L21, #685, with #900; § 9.2 draft for L22); 2026-11-21 (§ 8.2 reward inbox plugin, link L20, #684); 2026-11-20 (§ 8 delivery and inbox API, link L19, #60, with #883 and #890; § 8.2 draft for L20); 2026-11-20 (§ 7.2 terminals, displays and menus plugin, link L18, #74); 2026-11-20 (§ 7 terminals and menus API, link L17, #683; § 7.2 draft for L18); 2026-11-20 (§ 6.2 transport lanes plugin, link L15, #681); 2026-11-20 (§ 6.3 transport web app, link L16, #682); 2026-11-20 (§ 6 transport API, link L14, #79; § 6.2 and § 6.3 drafts for L15 and L16); 2026-11-20 (§ 5.2 surveys plugin, link L12, #679); 2026-11-20 (§ 5.3 yield areas web app, link L13, #680); 2026-11-19 (§ 5 yield areas API, link L11, #138; § 5.1 step 18: #831); 2026-11-19 (§ 4.2 production engine web app, link L10, #678); 2026-11-19 (§ 4.1 production engine API, link L9, #86); 2026-11-19 (§ 3 intro, § 3.0, § 3.2 and § 3.3 intros: builds from `next`; § 3.3 precondition 4: `/knk regions repair` needs `knk.admin.regions`, `/knk territory rebuild` `knk.admin.world.territory`; docs #830); 2026-11-19 (§ 3.2 world web app, link L7, #676); 2026-11-19 (§ 3.3 world plugin, link L8, #677); 2026-11-19 (§ 3.1 world API, link L6, #91); 2026-11-19 (§ 2.2 stock web app, link L5, #675); 2026-11-19 (§ 2 stock core API, link L4, #97); 2026-11-19 (§ 1.0 and § 1.3 preconditions: builds from `next` instead of the link branches; guides: [territory admin guide](admin/territory-admin-guide.md), docs #806); 2026-11-19 (§ 1.4 territory web app, link L3, #690); 2026-11-19 (§ 1.3 territory plugin, link L2, #689); 2026-11-19 (§ 1 territory API, link L1, #326); 2026-11-19 (§ 0 item identity, link L0, #141); 2026-11-16 (draft from the design, territory and phases P1-P12)
+automated in CI, 5 partly (tagged) and 1 by hand; every step can still be run by hand; not run. § 7.1 (terminals and menus API, #683): 15 of 20 steps automated in CI, 4 partly and 1 by hand (tagged); every step can still be run by hand; not run. § 7.2 (terminals, displays and menus plugin, #74): 7 of 20 steps automated (one through a plugin scenario on a real Paper server), 11 partly and 2 by hand (tagged); not run. § 8.1 (delivery and inbox API, #60): 16 of 20 steps automated in CI, 3 partly and 1 by hand (tagged); every step can still be run by hand; not run. § 8.2 (reward inbox plugin, #684): 7 of 17 steps automated (two also through plugin scenarios on a real Paper server) and 10 partly (tagged); every step can still be run by hand; not run. § 9.1 (harvesting API, #685): 18 of 21 steps automated in CI and 3 partly (tagged); every step can still be run by hand; not run. § 9.2 (harvesting plugin, #134): 10 of 22 steps automated (four through plugin scenarios on a real Paper server), 10 partly and 2 by hand (tagged); not run. Other sections not yet automated (the links tag them).
+**Last updated:** 2026-11-21 (§ 9.2 harvesting plugin, link L22, #134); 2026-11-21 (§ 8 and § 8.2 intros: L19 and L20 merged into `next`, links to the architecture page and admin guide, docs #915); 2026-11-21 (§ 9 harvesting API, link L21, #685, with #900; § 9.2 draft for L22); 2026-11-21 (§ 8.2 reward inbox plugin, link L20, #684); 2026-11-20 (§ 8 delivery and inbox API, link L19, #60, with #883 and #890; § 8.2 draft for L20); 2026-11-20 (§ 7.2 terminals, displays and menus plugin, link L18, #74); 2026-11-20 (§ 7 terminals and menus API, link L17, #683; § 7.2 draft for L18); 2026-11-20 (§ 6.2 transport lanes plugin, link L15, #681); 2026-11-20 (§ 6.3 transport web app, link L16, #682); 2026-11-20 (§ 6 transport API, link L14, #79; § 6.2 and § 6.3 drafts for L15 and L16); 2026-11-20 (§ 5.2 surveys plugin, link L12, #679); 2026-11-20 (§ 5.3 yield areas web app, link L13, #680); 2026-11-19 (§ 5 yield areas API, link L11, #138; § 5.1 step 18: #831); 2026-11-19 (§ 4.2 production engine web app, link L10, #678); 2026-11-19 (§ 4.1 production engine API, link L9, #86); 2026-11-19 (§ 3 intro, § 3.0, § 3.2 and § 3.3 intros: builds from `next`; § 3.3 precondition 4: `/knk regions repair` needs `knk.admin.regions`, `/knk territory rebuild` `knk.admin.world.territory`; docs #830); 2026-11-19 (§ 3.2 world web app, link L7, #676); 2026-11-19 (§ 3.3 world plugin, link L8, #677); 2026-11-19 (§ 3.1 world API, link L6, #91); 2026-11-19 (§ 2.2 stock web app, link L5, #675); 2026-11-19 (§ 2 stock core API, link L4, #97); 2026-11-19 (§ 1.0 and § 1.3 preconditions: builds from `next` instead of the link branches; guides: [territory admin guide](admin/territory-admin-guide.md), docs #806); 2026-11-19 (§ 1.4 territory web app, link L3, #690); 2026-11-19 (§ 1.3 territory plugin, link L2, #689); 2026-11-19 (§ 1 territory API, link L1, #326); 2026-11-19 (§ 0 item identity, link L0, #141); 2026-11-16 (draft from the design, territory and phases P1-P12)
 **Design:** [specs/production-storage-transport/DESIGN.md](../specs/production-storage-transport/DESIGN.md) (§17
 acceptance A01-A27, §18 links) · [territory](../specs/territory/DESIGN.md) · [shops](../specs/shops/DESIGN.md) ·
 **Issue:** [PandiO/knk-workspace#22](https://github.com/PandiO/knk-workspace/issues/22)
@@ -2303,11 +2303,11 @@ minutes; the untagged parts about 15 minutes. Tests: knk-plugin `RewardInboxTest
 
 ## 9. Phase P8: player harvesting and block regeneration (#685 API, #134 plugin; tier:3)
 
-Built so far: link L21, the API (knk-web-api, migration `AddPlayerHarvesting`; branch `claude/production-p8a`, PR into
-`next`), with placement rule P-3 for Polygon areas (#900). The game server part (the harvest listener, placeholders and
-the regeneration queue) is link L22 (#134); until then § 9.1 runs with a REST client (or Swagger) against the API,
-sending what the game server will send: the plugin key (`X-API-Key`). 21 steps in § 9.1: 18 automated in CI and 3
-partly (tagged); every step can still be run by hand; not run. § 9.2 is the draft for L22. Full manual run about 35
+Built so far: link L21, the API (knk-web-api, migration `AddPlayerHarvesting`; in `next`), with placement rule P-3 for
+Polygon areas (#900), and link L22, the game server part (knk-plugin branch `claude/production-p8`, PR into `next`): the
+harvest listener, placeholders and the regeneration queue, § 9.2. § 9.1 runs with a REST client (or Swagger) against the
+API, sending what the game server sends: the plugin key (`X-API-Key`). 21 steps in § 9.1: 18 automated in CI and 3
+partly (tagged); every step can still be run by hand; not run. § 9.2 is the plugin part (22 steps). Full manual run of § 9.1 about 35
 minutes; the untagged parts about 10 minutes. The tests are in knk-web-api
 `Tests/.../Services/Production/ProductionHarvestTests.cs`, `Api/HarvestControllersTests.cs`,
 `Services/Production/ProductionAreaPlacementTests.cs` (#900), `Migrations/AddPlayerHarvestingTests.cs` and, with
@@ -2443,23 +2443,130 @@ block comes back.
     point outside. **Expected:** the first saves without warnings; the second saves with a `placementWarnings` entry
     naming Phoenix's territory (P-3, each point checked); moving the point back inside on update clears it. (#900)
 
-### 9.2 Steps (plugin #134, draft)
+### 9.2 Steps (plugin, #134)
 
-*Draft for link L22: the harvest listener, placeholders and the regeneration queue.*
+Built by link L22 (knk-plugin branch `claude/production-p8`, PR into `next`): the harvest listener for blocks and
+entities against the API's catalogue, the WorldGuard and global-region pass for qualified harvests, placeholders and
+the disk-persisted regeneration queue (whole felled trees restored by snapshot), batched harvest reports with one
+idempotency key per entry, the worker's share handed to the player, the messages and `/knk production harvest
+status|refresh`, all behind `production.enabled`. 22 steps: 10 automated (four of them also through the plugin scenarios
+`player-harvest-regenerate` and `player-harvest-tree` on a real Paper server), 10 partly and 2 by hand (tagged); every
+step can still be run by hand; not run on a live server (the two scenarios pass on a local Paper 26.3 server with
+WorldGuard 7.0.20). Full manual run about 60 minutes; the untagged parts about 25 minutes. Tests: knk-plugin
+`HarvestGateTest`, `RegenQueueTest`, `HarvestOutboxTest`, `TreeFellerTest`, `HarvestAreaIndexTest`, `HarvestRuleTest`
+(knk-core), `HarvestApiImplTest` (knk-api-client), `HarvestModuleTest`, `GlobalRegionProtectionListenerTest`,
+`ProductionAdminCommandTest` (knk-paper).
 
-1. As Member (holding the rule's permission), mine stone inside Pit. **Expected:** the vanilla drop is replaced by
-   `workerUnits` cobblestone; the block becomes the placeholder (bedrock); the harvest is reported and the pool drops.
-   (A16)
-2. Wait for the regeneration time. **Expected:** the stone comes back (only if the placeholder is still there). (A16)
-3. Cut a tree inside a logger's area. **Expected:** a sapling placeholder, then the exact tree restored by snapshot.
-   (A16, P-D8)
-4. Restart the server with blocks waiting to regenerate. **Expected:** they come back on time after the restart and when
-   their chunk loads. (§ 7)
-5. Harvest until the pool is empty. **Expected:** the quarry's production slows to its floor (§ 9.1 step 11); what the
-   game server does with breaks at an empty pool follows L22's decision (the API still books them, the pool stays at
-   0).
-6. As Visitor (no permission), break blocks in Pit. **Expected:** refused, nothing reported.
-7. Turn `production.enabled` off. **Expected:** no harvesting in production areas, nothing reported. (A21)
+**Preconditions (in addition to § 9.0):**
+
+1. The game server runs the plugin built from `claude/production-p8` (or `next` once merged) with `production.enabled:
+   true`, `items.identity.enabled: true` and the `production.harvest` block of the changelog entry (restart). The API has
+   `AddPlayerHarvesting` applied and `Production:Enabled` on.
+2. The Quarry of § 9.0 has its managed region (a `RESOURCE_PRODUCTION` region, which denies `block-break` to
+   non-members) and the area **Pit** is a `Region` area on it, or a `Cuboid` area inside it. Pit holds stone.
+3. Harvest rules (web app or `POST api/HarvestRules`):
+   1. **Quarry stone**: kind Quarry, targets `STONE`, tool Pickaxe (any tier), permission `knk.harvest.quarry`, yield
+      Cobblestone 4 per break, worker's share 0.25, pool cost 1, placeholder DepletedBlock with material `BEDROCK`,
+      regeneration 60 s.
+   2. **Logs**: kind Logger, targets `*_LOG`, any tool, no permission, yield Oak log 1, placeholder Sapling,
+      regeneration 120 s; a Logger structure with a `Radius` area **Forest** (radius 16) around a few oak trees outside
+      every region.
+   3. **Wheat**: kind Farm, targets `WHEAT`, minimum age 7, any tool, placeholder Replant, regeneration 60 s; a Farm with
+      an area **Field** over ripe and unripe wheat.
+   4. **Cows** (for step 21): kind Farm, target kind Entity, targets `COW`, placeholder None; two cows in Field.
+4. Accounts: **Member** holds `knk.harvest.quarry` (an in-house grant), **Visitor** holds nothing, **Staff** holds
+   `knk.admin.world.production`. None is a member of the Quarry's region.
+5. Note Member's user id. `GET api/PlayerHarvests/search` and the Quarry's Output storage show the bookings.
+
+**Steps:**
+
+1. [partly automated: `HarvestModuleTest.statusDescribesTheModule`, `ProductionAdminCommandTest`; by hand: the live
+   catalogue]
+   As Staff, type `/knk production harvest refresh`, then `/knk production harvest status`. **Expected:** "Catalogue
+   read: 4 rules, 3 areas"; the status shows the API flag on, the rules and areas, no area left out, 0 jobs and 0
+   entries waiting.
+2. [automated: plugin scenario `player-harvest-regenerate`, `HarvestModuleTest.aQualifiedBreakIsHarvestedAndPaidWhenTheApiAnswers`]
+   As Member, holding an iron pickaxe, mine a stone block in Pit. **Expected:** the block breaks although the region
+   denies building; no stone or cobblestone drops; the block turns to bedrock; within about 2 s the chat says "+1
+   Cobblestone (your share of the harvest)" and one cobblestone is in the inventory (4 × 0.25). (A16)
+3. [partly automated: `HarvestModuleTest.aQualifiedBreakIsHarvestedAndPaidWhenTheApiAnswers`, `HarvestOutboxTest`; by
+   hand: the API rows]
+   **Expected** after step 2: `api/PlayerHarvests/search` has one harvest of Member, rule Quarry stone, area Pit, 1 break,
+   key `harvest-<server id>-<uuid>`; the Quarry's Output holds 3 more Cobblestone; the pool of Pit dropped by 1. Mine
+   five more stones within 2 s: **Expected:** one harvest with 5 breaks (one entry), 5 cobblestone paid. (A16, F10)
+4. [automated: plugin scenario `player-harvest-regenerate`, `RegenQueueTest.aDueJobIsRestoredWhereThePlaceholderStands`]
+   Wait 60 s (the answer's `regenSeconds`; longer when the rule scales with the pool). **Expected:** the stone is back
+   where the bedrock was. (A16, § 7)
+5. [automated: `HarvestModuleTest.aBlockWaitingToRegenerateIsRefused`, `HarvestGateTest.aBlockWaitingToRegenerateCannotBeBroken`]
+   As Member, mine a stone, then try to mine the bedrock in its place. **Expected:** refused with "This block is
+   regenerating."; nothing reported.
+6. [partly automated: `HarvestGateTest.anUnqualifiedPlayerIsRefusedWithTheReason`, `HarvestRuleTest.toolsHaveAClassAndATier`;
+   by hand: the message in game]
+   As Member, hit a stone in Pit with an empty hand, then with a shovel. **Expected:** refused each time with "You can't
+   harvest this here: needs a pickaxe."; nothing reported.
+7. [automated: plugin scenario `player-harvest-regenerate`, `HarvestModuleTest.anUnqualifiedPlayerIsRefusedAndNothingIsReported`]
+   As Visitor, holding a pickaxe, mine a stone in Pit. **Expected:** the stone stays; "You can't harvest this here: you
+   need the permission knk.harvest.quarry."; nothing reported. Break a dirt block in Pit: **Expected:** refused by
+   WorldGuard's region message, as before harvesting existed.
+8. [partly automated: `HarvestModuleTest.staffAndBlocksOutsideTheAreasAreLeftAlone`; by hand: WorldGuard's answer]
+   As Staff, mine a stone in Pit. **Expected:** WorldGuard decides as before (staff with region rights break it with
+   vanilla drops); nothing reported, no placeholder.
+9. [automated: plugin scenario `player-harvest-tree`, `TreeFellerTest.aLogFellsItsWholeTree`]
+   As Member, break the bottom log of an oak in Forest (outside every region). **Expected:** the whole tree (logs and its
+   leaves) disappears at once, nothing drops, an oak sapling stands at its base; one harvest with as many breaks as the
+   tree had logs; the share arrives. Bone meal on the sapling does nothing. After 120 s the same tree is back, leaf for
+   leaf. (A16, P-D8)
+10. [partly automated: `TreeFellerTest.tooManyLogsIsNotATreeAndALonePlacedLogNeither`; by hand: a log building]
+    Build a small hut of 300 oak logs in Forest and break one log as Member. **Expected:** only that log is harvested
+    (more than `tree-max-logs` 256 is not a tree): air or a sapling there, the hut stays.
+11. [partly automated: `HarvestGateTest.cropsMustBeRipeAndTheCooldownHolds`; by hand: the crop in game]
+    As Member, break an unripe wheat in Field. **Expected:** refused, "it isn't ripe yet". Break a ripe one.
+    **Expected:** no vanilla drop, the wheat is replanted small at once, the share (wheat) arrives; after 60 s it is ripe
+    again.
+12. [partly automated: `RegenQueueTest.surveysSeeTheOriginalMeanwhile`, `HarvestModuleTest.aQualifiedBreakIsHarvestedAndPaidWhenTheApiAnswers`;
+    by hand: the survey]
+    Mine ten stones in Pit, then at once type `/knk production survey <Quarry id>`. **Expected:** the survey's
+    `BLOCK:STONE` count is the same as before the mining: blocks waiting to regenerate count as stone (§ 3.2, L12).
+13. [automated: plugin scenario `player-harvest-regenerate` (a module restart), `RegenQueueTest.jobsSurviveARestart`,
+    `HarvestModuleTest.jobsReportsAndSharesSurviveARestart`]
+    Mine three stones, then restart the server within 60 s. **Expected:** the startup line "Player harvesting is on
+    (production.enabled): 3 blocks waiting to regenerate, …"; the stones come back on time after the restart. (§ 7)
+14. [partly automated: `RegenQueueTest.anUnloadedChunkWaitsUntilItLoads`, `RegenQueueTest.aFelledTreeComesBackWholeOnlyWhenEveryChunkIsLoaded`;
+    by hand: the chunk unload]
+    Mine a stone, then fly more than 20 chunks away (or log out alone) so Pit's chunks unload, and come back after 2
+    minutes. **Expected:** `/knk production harvest status` showed the job waiting for its chunk while you were away; the
+    stone is back as soon as the chunk loads. (§ 7)
+15. [automated: `RegenQueueTest.aPlayerInTheBlockPostponesTheRestore`, `RegenQueueTest.aChangedBlockIsNeverOverwritten`]
+    As Staff (who may build in Pit), put a dirt block where a harvested stone's bedrock is. **Expected:** when it is due
+    the dirt stays and the job is dropped (a changed block is never overwritten). Then, with a rule whose placeholder is
+    Air (a flower), stand in a harvested flower's spot when it is due. **Expected:** the flower does not come back while
+    you stand there and is back within 5 s after you step away. (§ 7)
+16. [partly automated: `HarvestGateTest.aSwitchedOffStructureOrAnEmptyPoolRefuses`; by hand: the pool and production]
+    Set Pit's pool to 0 (`PUT api/ResourcePools/<id>` current 0) and mine a stone. **Expected:** with
+    `deny-at-empty-pool: false` the harvest is booked and the Quarry produces at its floor (§ 9.1 step 11); with
+    `deny-at-empty-pool: true` (restart) refused with "Quarry is exhausted for now; come back later".
+17. [automated: `HarvestModuleTest.aFailedReportIsSentAgainWithTheSameKey`, `HarvestOutboxTest.anEntryWithoutAnswerIsSentAgainWithTheSameKeyAfterAPause`]
+    Stop the API, mine two stones, wait 20 s, start the API. **Expected:** no share while the API is down (status:
+    entries waiting); after the API is back the share arrives once; `api/PlayerHarvests` has one harvest per key.
+18. [automated: `HarvestModuleTest.anOfflinePlayersShareWaitsUntilTheyJoin`]
+    Stop the API, mine a stone, log out, start the API, wait 10 s and log in. **Expected:** the share arrives about 2 s
+    after joining.
+19. [automated: `HarvestModuleTest.aRejectedEntryPaysNothing`]
+    Switch Quarry stone off in the web app and mine a stone at once (before the next catalogue read). **Expected:** "Your
+    harvest at Quarry was not booked: …", no share; the stone still regenerates. After `/knk production harvest
+    refresh` stone is no longer a harvest (WorldGuard refuses Member as before).
+20. [partly automated: `HarvestModuleTest.withTheApiFlagOffBreaksBehaveAsBefore`, `HarvestModuleTest.a409DropsTheReportAndPaysNothing`;
+    by hand: the API setting]
+    Turn the API's `Production:Enabled` off and type `/knk production harvest refresh`. **Expected:** "… (the API's flag
+    is off)"; Member's breaks in Pit are refused by WorldGuard as before; nothing is reported. Turn it on again. (A21)
+21. [by hand]
+    As Member, kill a cow in Field. **Expected:** no vanilla drops; one harvest under Cows; the share (the rule's
+    blueprint) arrives. As Visitor, hit a cow in Field: **Expected:** refused with the reason.
+22. [by hand]
+    Set `production.enabled: false` and restart. **Expected:** no "Player harvesting is on" startup line; breaks in Pit
+    and Forest behave exactly as before this link (WorldGuard and the global-region protection decide, vanilla drops);
+    `/knk production harvest status` says production is off; the files in `plugins/KnightsAndKings/production/harvest/`
+    are left alone. (A21)
 
 ## 10. Phase P9: town logistics (#127 API, #686 web app; tier:3)
 
