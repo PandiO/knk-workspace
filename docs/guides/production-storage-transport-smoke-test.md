@@ -20,7 +20,7 @@ partly (tagged) and 1 by hand; every step can still be run by hand; not run. § 
 and 2 partly (tagged); every step can still be run by hand; not run. § 6.2 (transport lanes plugin, #681): 3 of 14
 steps automated, 10 partly and 1 manual (tagged); not run. § 6.3 (transport web app, #682): 10 of 16 steps
 automated in CI, 5 partly (tagged) and 1 by hand; every step can still be run by hand; not run. § 7.1 (terminals and menus API, #683): 15 of 20 steps automated in CI, 4 partly and 1 by hand (tagged); every step can still be run by hand; not run. § 7.2 (terminals, displays and menus plugin, #74): 7 of 20 steps automated (one through a plugin scenario on a real Paper server), 11 partly and 2 by hand (tagged); not run. § 8.1 (delivery and inbox API, #60): 16 of 20 steps automated in CI, 3 partly and 1 by hand (tagged); every step can still be run by hand; not run. § 8.2 (reward inbox plugin, #684): 7 of 17 steps automated (two also through plugin scenarios on a real Paper server) and 10 partly (tagged); every step can still be run by hand; not run. § 9.1 (harvesting API, #685): 18 of 21 steps automated in CI and 3 partly (tagged); every step can still be run by hand; not run. § 9.2 (harvesting plugin, #134): 10 of 22 steps automated (four through plugin scenarios on a real Paper server), 10 partly and 2 by hand (tagged); not run. § 10.1 (town logistics API, #127): 21 of 24 steps automated in CI and 3 partly (tagged); every step can still be run by hand; not run. Other sections not yet automated (the links tag them).
-**Last updated:** 2026-11-21 (§ 10 town logistics API, link L23, #127; § 10.2 draft for L24); 2026-11-21 (§ 9.2 harvesting plugin, link L22, #134); 2026-11-21 (§ 8 and § 8.2 intros: L19 and L20 merged into `next`, links to the architecture page and admin guide, docs #915); 2026-11-21 (§ 9 harvesting API, link L21, #685, with #900; § 9.2 draft for L22); 2026-11-21 (§ 8.2 reward inbox plugin, link L20, #684); 2026-11-20 (§ 8 delivery and inbox API, link L19, #60, with #883 and #890; § 8.2 draft for L20); 2026-11-20 (§ 7.2 terminals, displays and menus plugin, link L18, #74); 2026-11-20 (§ 7 terminals and menus API, link L17, #683; § 7.2 draft for L18); 2026-11-20 (§ 6.2 transport lanes plugin, link L15, #681); 2026-11-20 (§ 6.3 transport web app, link L16, #682); 2026-11-20 (§ 6 transport API, link L14, #79; § 6.2 and § 6.3 drafts for L15 and L16); 2026-11-20 (§ 5.2 surveys plugin, link L12, #679); 2026-11-20 (§ 5.3 yield areas web app, link L13, #680); 2026-11-19 (§ 5 yield areas API, link L11, #138; § 5.1 step 18: #831); 2026-11-19 (§ 4.2 production engine web app, link L10, #678); 2026-11-19 (§ 4.1 production engine API, link L9, #86); 2026-11-19 (§ 3 intro, § 3.0, § 3.2 and § 3.3 intros: builds from `next`; § 3.3 precondition 4: `/knk regions repair` needs `knk.admin.regions`, `/knk territory rebuild` `knk.admin.world.territory`; docs #830); 2026-11-19 (§ 3.2 world web app, link L7, #676); 2026-11-19 (§ 3.3 world plugin, link L8, #677); 2026-11-19 (§ 3.1 world API, link L6, #91); 2026-11-19 (§ 2.2 stock web app, link L5, #675); 2026-11-19 (§ 2 stock core API, link L4, #97); 2026-11-19 (§ 1.0 and § 1.3 preconditions: builds from `next` instead of the link branches; guides: [territory admin guide](admin/territory-admin-guide.md), docs #806); 2026-11-19 (§ 1.4 territory web app, link L3, #690); 2026-11-19 (§ 1.3 territory plugin, link L2, #689); 2026-11-19 (§ 1 territory API, link L1, #326); 2026-11-19 (§ 0 item identity, link L0, #141); 2026-11-16 (draft from the design, territory and phases P1-P12)
+**Last updated:** 2026-11-21 (§ 9 and § 9.2 intros and preconditions: L21 and L22 in `next`, rules through the API until #913; § 4 step 14 partly automated by `player-harvest-tree`, docs #922); 2026-11-21 (§ 10 town logistics API, link L23, #127; § 10.2 draft for L24); 2026-11-21 (§ 9.2 harvesting plugin, link L22, #134); 2026-11-21 (§ 8 and § 8.2 intros: L19 and L20 merged into `next`, links to the architecture page and admin guide, docs #915); 2026-11-21 (§ 9 harvesting API, link L21, #685, with #900; § 9.2 draft for L22); 2026-11-21 (§ 8.2 reward inbox plugin, link L20, #684); 2026-11-20 (§ 8 delivery and inbox API, link L19, #60, with #883 and #890; § 8.2 draft for L20); 2026-11-20 (§ 7.2 terminals, displays and menus plugin, link L18, #74); 2026-11-20 (§ 7 terminals and menus API, link L17, #683; § 7.2 draft for L18); 2026-11-20 (§ 6.2 transport lanes plugin, link L15, #681); 2026-11-20 (§ 6.3 transport web app, link L16, #682); 2026-11-20 (§ 6 transport API, link L14, #79; § 6.2 and § 6.3 drafts for L15 and L16); 2026-11-20 (§ 5.2 surveys plugin, link L12, #679); 2026-11-20 (§ 5.3 yield areas web app, link L13, #680); 2026-11-19 (§ 5 yield areas API, link L11, #138; § 5.1 step 18: #831); 2026-11-19 (§ 4.2 production engine web app, link L10, #678); 2026-11-19 (§ 4.1 production engine API, link L9, #86); 2026-11-19 (§ 3 intro, § 3.0, § 3.2 and § 3.3 intros: builds from `next`; § 3.3 precondition 4: `/knk regions repair` needs `knk.admin.regions`, `/knk territory rebuild` `knk.admin.world.territory`; docs #830); 2026-11-19 (§ 3.2 world web app, link L7, #676); 2026-11-19 (§ 3.3 world plugin, link L8, #677); 2026-11-19 (§ 3.1 world API, link L6, #91); 2026-11-19 (§ 2.2 stock web app, link L5, #675); 2026-11-19 (§ 2 stock core API, link L4, #97); 2026-11-19 (§ 1.0 and § 1.3 preconditions: builds from `next` instead of the link branches; guides: [territory admin guide](admin/territory-admin-guide.md), docs #806); 2026-11-19 (§ 1.4 territory web app, link L3, #690); 2026-11-19 (§ 1.3 territory plugin, link L2, #689); 2026-11-19 (§ 1 territory API, link L1, #326); 2026-11-19 (§ 0 item identity, link L0, #141); 2026-11-16 (draft from the design, territory and phases P1-P12)
 **Design:** [specs/production-storage-transport/DESIGN.md](../specs/production-storage-transport/DESIGN.md) (§17
 acceptance A01-A27, §18 links) · [territory](../specs/territory/DESIGN.md) · [shops](../specs/shops/DESIGN.md) ·
 **Issue:** [PandiO/knk-workspace#22](https://github.com/PandiO/knk-workspace/issues/22)
@@ -1368,9 +1368,10 @@ server, CI job `paper-boot`).
     `knk_task_duration_seconds{task="production.survey.capture"}` and the TPS. **Expected:** no main-thread spike from
     block reads: the capture task stays in the low milliseconds per tick (two chunk snapshots); counting runs on the
     `KnK-survey` thread.
-14. [automated: `SurveyCounterTest.placeholdersCountAsTheirOriginal`; by hand once P8 (#134) is in] Harvest ore in the
+14. [partly automated: `SurveyCounterTest.placeholdersCountAsTheirOriginal`, scenario `player-harvest-tree` (the overlay
+    reads a felled log as `OAK_LOG`); by hand: a survey after a harvest] Harvest ore in the
     Pit (regenerating placeholders) and survey it. **Expected:** the survey counts the ore that waits to regenerate as
-    present (no drop in `BLOCK:COAL_ORE`). Before P8 there are no placeholders; only the automated part applies.
+    present (no drop in `BLOCK:COAL_ORE`). Needs a coal ore harvest rule (§ 9.2); P8 is in knk-plugin `next` `6f6c915f`.
 15. [automated: `SurveyCounterTest.theSameWorldGivesTheSameHash`] Survey the Pit twice without changing it.
     **Expected:** both surveys have the same `contentHash`.
 
@@ -2304,7 +2305,7 @@ minutes; the untagged parts about 15 minutes. Tests: knk-plugin `RewardInboxTest
 ## 9. Phase P8: player harvesting and block regeneration (#685 API, #134 plugin; tier:3)
 
 Built so far: link L21, the API (knk-web-api, migration `AddPlayerHarvesting`; in `next`), with placement rule P-3 for
-Polygon areas (#900), and link L22, the game server part (knk-plugin branch `claude/production-p8`, PR into `next`): the
+Polygon areas (#900), and link L22, the game server part (knk-plugin, in `next` `6f6c915f`, PR PandiO/knk-plugin#114): the
 harvest listener, placeholders and the regeneration queue, § 9.2. § 9.1 runs with a REST client (or Swagger) against the
 API, sending what the game server sends: the plugin key (`X-API-Key`). 21 steps in § 9.1: 18 automated in CI and 3
 partly (tagged); every step can still be run by hand; not run. § 9.2 is the plugin part (22 steps). Full manual run of § 9.1 about 35
@@ -2445,7 +2446,7 @@ block comes back.
 
 ### 9.2 Steps (plugin, #134)
 
-Built by link L22 (knk-plugin branch `claude/production-p8`, PR into `next`): the harvest listener for blocks and
+Built by link L22 (knk-plugin, in `next` `6f6c915f`, PR PandiO/knk-plugin#114): the harvest listener for blocks and
 entities against the API's catalogue, the WorldGuard and global-region pass for qualified harvests, placeholders and
 the disk-persisted regeneration queue (whole felled trees restored by snapshot), batched harvest reports with one
 idempotency key per entry, the worker's share handed to the player, the messages and `/knk production harvest
@@ -2459,12 +2460,12 @@ WorldGuard 7.0.20). Full manual run about 60 minutes; the untagged parts about 2
 
 **Preconditions (in addition to § 9.0):**
 
-1. The game server runs the plugin built from `claude/production-p8` (or `next` once merged) with `production.enabled:
+1. The game server runs the plugin built from `next` (`6f6c915f` or later) with `production.enabled:
    true`, `items.identity.enabled: true` and the `production.harvest` block of the changelog entry (restart). The API has
    `AddPlayerHarvesting` applied and `Production:Enabled` on.
 2. The Quarry of § 9.0 has its managed region (a `RESOURCE_PRODUCTION` region, which denies `block-break` to
    non-members) and the area **Pit** is a `Region` area on it, or a `Cuboid` area inside it. Pit holds stone.
-3. Harvest rules (web app or `POST api/HarvestRules`):
+3. Harvest rules (`POST api/HarvestRules`; the web app pages are #913):
    1. **Quarry stone**: kind Quarry, targets `STONE`, tool Pickaxe (any tier), permission `knk.harvest.quarry`, yield
       Cobblestone 4 per break, worker's share 0.25, pool cost 1, placeholder DepletedBlock with material `BEDROCK`,
       regeneration 60 s.
@@ -2552,7 +2553,7 @@ WorldGuard 7.0.20). Full manual run about 60 minutes; the untagged parts about 2
     Stop the API, mine a stone, log out, start the API, wait 10 s and log in. **Expected:** the share arrives about 2 s
     after joining.
 19. [automated: `HarvestModuleTest.aRejectedEntryPaysNothing`]
-    Switch Quarry stone off in the web app and mine a stone at once (before the next catalogue read). **Expected:** "Your
+    Switch Quarry stone off (`PUT api/HarvestRules/{id}` with `enabled: false`) and mine a stone at once (before the next catalogue read). **Expected:** "Your
     harvest at Quarry was not booked: …", no share; the stone still regenerates. After `/knk production harvest
     refresh` stone is no longer a harvest (WorldGuard refuses Member as before).
 20. [partly automated: `HarvestModuleTest.withTheApiFlagOffBreaksBehaveAsBefore`, `HarvestModuleTest.a409DropsTheReportAndPaysNothing`;
