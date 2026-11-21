@@ -1,6 +1,6 @@
 # Currency, kits, lootboxes and discoveries — Admin Guide
 
-**Status:** Current · **Last updated:** 2026-11-21 (§ 3.4 and § 4.8: kit and lootbox leftovers to the reward inbox with `production.enabled`, knk-plugin `next` `bdd8b463`, #684, docs PandiO/knk-workspace#915); 2026-11-21 (§ 2: reason code `SIEGE_UNLOCK`, knk-web-api `next` `fc1a5143`, #869, docs PandiO/knk-workspace#908); 2026-11-13 (first version, PandiO/knk-workspace#300)
+**Status:** Current · **Last updated:** 2026-11-21 (§ 2 and § 2.3: reason codes `SHOP_PURCHASE` and `SHOP_BUYBACK` with the town account, not reversible, knk-web-api `next` `289f4d4b`, #248, docs PandiO/knk-workspace#939); 2026-11-21 (§ 3.4 and § 4.8: kit and lootbox leftovers to the reward inbox with `production.enabled`, knk-plugin `next` `bdd8b463`, #684, docs PandiO/knk-workspace#915); 2026-11-21 (§ 2: reason code `SIEGE_UNLOCK`, knk-web-api `next` `fc1a5143`, #869, docs PandiO/knk-workspace#908); 2026-11-13 (first version, PandiO/knk-workspace#300)
 **Checked against:** knk-plugin `main` `57884e9`, knk-web-api `master` `75b5a00`, knk-web-app `main` `3ba747d` (desk
 check of the code, not a live test; the settings pages of #26 are not live-tested either)
 **Related:** [economy player guide](../users/economy-player-guide.md) (what players see; not repeated here),
@@ -61,7 +61,9 @@ grant is what counts):
 
 Every change of coins, gems or XP is a **ledger** transaction with a reason code (`SALARY`, `PLAYER_TRANSFER`,
 `DISCOVERY_REWARD`, `SIEGE_REWARD`, `SIEGE_UNLOCK` (a siege weapon unlock, in `next`, see the
-[siege shop admin guide § 4](siege-shop-admin-guide.md#4-siege-weapon-unlocks)), `KIT_CLAIM_COST`, `KIT_PURCHASE`, `TELEPORT_FEE`, `ADMIN_GRANT`, …). Balances are
+[siege shop admin guide § 4](siege-shop-admin-guide.md#4-siege-weapon-unlocks)), `SHOP_PURCHASE` and `SHOP_BUYBACK`
+(a town shop purchase or buy-back, paid to or from the town's account, in `next`, see the [shops admin
+guide § 5.3](shops-admin-guide.md#53-the-town-account)), `KIT_CLAIM_COST`, `KIT_PURCHASE`, `TELEPORT_FEE`, `ADMIN_GRANT`, …). Balances are
 never edited directly.
 
 ### 2.1 Currency policy
@@ -119,7 +121,9 @@ In game: `/knk user <player> coins|gems set|add|remove <amount> <reason…>`. Yo
    entries. **Reverse this transaction:** a reason of at least 10 characters, optionally **Allow a partial reversal
    (reverse what is left)** when the player spent part of it, then **Reverse**. There is no confirm yet: check
    before you click ([#459](https://github.com/PandiO/knk-workspace/issues/459)). The player isn't notified. In game:
-   `/knk currency reverse <txId> [--partial] <reason…>`.
+   `/knk currency reverse <txId> [--partial] <reason…>`. A shop purchase or buy-back (`SHOP_PURCHASE`,
+   `SHOP_BUYBACK`, in `next`) can't be reversed: it has a town account leg, and the API refuses with `NotReversible`
+   ([#934](https://github.com/PandiO/knk-workspace/issues/934)).
 3. **Payments lock:** the profile's **Payments** card, **Lock payments** with a reason (up to 200 characters), or
    `/knk currency lock <player> <reason…>`. A locked player can't send or receive `/pay`; staff grants still work.
 

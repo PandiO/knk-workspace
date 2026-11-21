@@ -1,6 +1,6 @@
 # Town logistics: policies, reserves, service areas and the planner (knk-web-api and knk-web-app)
 
-**Status:** Current · **Last updated:** 2026-11-21 (P9 API follow-ups #928; first version production P9 #127/#686, docs PandiO/knk-workspace#929)
+**Status:** Current · **Last updated:** 2026-11-21 (§ 4.3 demand source Shop level, § 11 shops collect: P10 #248 in `next` `289f4d4b`, docs #939); 2026-11-21 (P9 API follow-ups #928; first version production P9 #127/#686, docs PandiO/knk-workspace#929)
 **Checked against:** knk-web-api `next` `37be22e5` (PR PandiO/knk-web-api#73), knk-web-app `next` `c12e0e7e` (PR
 PandiO/knk-web-app#72). Not released; the manual steps of the
 [smoke test § 10](../guides/production-storage-transport-smoke-test.md#10-phase-p9-town-logistics-127-api-686-web-app-tier3)
@@ -147,9 +147,13 @@ that is not a warehouse. For each storage, one line per blueprint, the first sou
    the rules too).
 2. **Rule:** the best `Replenishment` rule. A blueprint target creates demand on its own; a category, tag or `Any`
    target applies only to blueprints the structure's production lines consume.
-3. **Inputs:** for an Input storage, each line input's rate per hour × `defaultReorderHours` (4) for the min and ×
-   `defaultTargetHours` (12) for the max, rounded up (L23 decision 8). Merchandise storages have no line inputs, so
-   they need a setting or a blueprint rule.
+3. **Shop level** (P10, #248): for a shop's Merchandise storage, each enabled `Stocked` blueprint catalogue entry with
+   the shop type level's `reorderPointUnits` (min) and `targetUnits` (max), source `ShopLevel`; a level without
+   `targetUnits` gives none ([shops § 7](shops.md#7-restocking-reserve-and-collect)). A category, tag or `Any`
+   `Replenishment` rule also applies to these blueprints.
+4. **Inputs:** for an Input storage, each line input's rate per hour × `defaultReorderHours` (4) for the min and ×
+   `defaultTargetHours` (12) for the max, rounded up (L23 decision 8). Other Merchandise storages have no line inputs,
+   so they need a setting or a blueprint rule.
 
 The stock the planner compares is the storage's stock plus what is **on the way** to it in open `Distribution` orders
 (planned minus delivered).
@@ -328,8 +332,9 @@ deletes of a policy or a consumer setting also need `knk.admin.delete`. The dash
 
 ## 11. Limitations
 
-1. Only production structures have workers, so other consumers (shops, generic structures) show `NoWorker` until shops
-   get workers and the transport carrier is widened (L25, [#248](https://github.com/PandiO/knk-workspace/issues/248)).
+1. Only production structures have workers. Shops are production structures underneath (P10,
+   [#248](https://github.com/PandiO/knk-workspace/issues/248), [shops](shops.md)), so they collect with their own
+   worker; other consumers (generic structures) show `NoWorker`.
 2. No Rebalance orders between warehouses, no ceilings, quotas, export/import, emergency modes or taxes (Later,
    [#324](https://github.com/PandiO/knk-workspace/issues/324)). #127's original body listed Rebalance; the Decided
    catalogue marks it Later (L23 decision 1).
