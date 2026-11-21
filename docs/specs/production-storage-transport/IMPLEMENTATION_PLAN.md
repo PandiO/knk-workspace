@@ -11,7 +11,7 @@ merged into `next` (knk-web-api `fcfced27`, migration `AddProductionWorld`, 2026
 [DESIGN §14](DESIGN.md#14-decisions), [PRODUCTION_KINDS §9](PRODUCTION_KINDS.md#9-decisions) and
 [TOWN_LOGISTICS §8](TOWN_LOGISTICS.md#8-decisions); the few still open are listed there. Every item is marked
 **V1** or **Later**. The production structures work and the garrison/guard NPC work ship in the **same test phase**.
-**Last updated:** 2026-11-21 (P7b inbox plugin #684 in review, link L20); 2026-11-20 (P7 delivery and inbox API #60 in review, link L19, with #883 and #890); 2026-11-20 (P5c transport web app #682 in review, link L16); 2026-11-20 (P5 transport API #79 in review, link L14); 2026-11-20 (P4c yield areas web app #680 in review); 2026-11-19 (P4 yield areas API #138 in review); 2026-11-19 (P3b production engine web app #678 in review); 2026-11-19 (P3 production engine API #86 merged into `next`); 2026-11-19 (P2c world plugin #677 in review); 2026-11-19 (P2 world API #91 merged into `next`); 2026-11-19 (P1b stock web app #675 in review; P1 API #97 merged into `next`); 2026-11-19 (P1 stock core API #97 in review); 2026-11-19 (territory plugin #689 and web app #690 merged into `next`); 2026-11-19 (territory API #326 in review); 2026-11-19 (item identity #141 merged into `next`, docs #796); 2026-11-19 (item identity #141 in review); 2026-11-11 (open questions answered, [decision record §11](DECISIONS_2026-11-05.md#11-follow-up-decisions-2026-11-11); issues #324, #325)
+**Last updated:** 2026-11-21 (P7 and P7b merged into `next`: knk-web-api `2952d0c7`, knk-plugin `bdd8b463`; docs #915); 2026-11-21 (P7b inbox plugin #684 in review, link L20); 2026-11-20 (P7 delivery and inbox API #60 in review, link L19, with #883 and #890); 2026-11-20 (P5c transport web app #682 in review, link L16); 2026-11-20 (P5 transport API #79 in review, link L14); 2026-11-20 (P4c yield areas web app #680 in review); 2026-11-19 (P4 yield areas API #138 in review); 2026-11-19 (P3b production engine web app #678 in review); 2026-11-19 (P3 production engine API #86 merged into `next`); 2026-11-19 (P2c world plugin #677 in review); 2026-11-19 (P2 world API #91 merged into `next`); 2026-11-19 (P1b stock web app #675 in review; P1 API #97 merged into `next`); 2026-11-19 (P1 stock core API #97 in review); 2026-11-19 (territory plugin #689 and web app #690 merged into `next`); 2026-11-19 (territory API #326 in review); 2026-11-19 (item identity #141 merged into `next`, docs #796); 2026-11-19 (item identity #141 in review); 2026-11-11 (open questions answered, [decision record §11](DECISIONS_2026-11-05.md#11-follow-up-decisions-2026-11-11); issues #324, #325)
 **Design:** [DESIGN.md](DESIGN.md), [PRODUCTION_KINDS.md](PRODUCTION_KINDS.md), [TOWN_LOGISTICS.md](TOWN_LOGISTICS.md),
 [shops DESIGN](../shops/DESIGN.md), [NPC platform](../npc-platform/DESIGN.md) (lifecycle).
 **Evidence:** [V2 scan](../../reports/2026-10-09-v2-production-storage-transport-scan.md).
@@ -343,6 +343,11 @@ expiry reminders, expiry) and a join summary; kit (`KitGrantPlacer` through `Kit
 first-join kits) and lootbox (`LootboxDelivery`) leftovers go to `POST api/ItemDeliveries` instead of the ground, and a
 kit for a player who went offline goes to the inbox whole. Unique items still drop until the instance-to-item builder
 (#897). With the flag off, kits and lootboxes deliver as before (A21).
+
+**Status (2026-11-21):** both parts merged into `next` (knk-web-api `2952d0c7`, PR PandiO/knk-web-api#70; knk-plugin
+`bdd8b463`, PR PandiO/knk-plugin#113); smoke test § 8 not run live. Docs: [architecture](../../architecture/production-item-delivery.md),
+[API contract](../api/API_CONTRACT_ITEM_DELIVERY.md), [admin guide](../../guides/admin/reward-inbox-admin-guide.md) (#915).
+Open: the web app pages (#901), unique items in game (#897), the lootbox `Inbox` method and claim all (#912).
 
 ## P8 — Player harvesting and block regeneration · [#134](https://github.com/PandiO/knk-workspace/issues/134) (`[KNG-97]`)
 

@@ -1,6 +1,6 @@
 # Currency, kits, lootboxes and discoveries — Admin Guide
 
-**Status:** Current · **Last updated:** 2026-11-21 (§ 2: reason code `SIEGE_UNLOCK`, knk-web-api `next` `fc1a5143`, #869, docs PandiO/knk-workspace#908); 2026-11-13 (first version, PandiO/knk-workspace#300)
+**Status:** Current · **Last updated:** 2026-11-21 (§ 3.4 and § 4.8: kit and lootbox leftovers to the reward inbox with `production.enabled`, knk-plugin `next` `bdd8b463`, #684, docs PandiO/knk-workspace#915); 2026-11-21 (§ 2: reason code `SIEGE_UNLOCK`, knk-web-api `next` `fc1a5143`, #869, docs PandiO/knk-workspace#908); 2026-11-13 (first version, PandiO/knk-workspace#300)
 **Checked against:** knk-plugin `main` `57884e9`, knk-web-api `master` `75b5a00`, knk-web-app `main` `3ba747d` (desk
 check of the code, not a live test; the settings pages of #26 are not live-tested either)
 **Related:** [economy player guide](../users/economy-player-guide.md) (what players see; not repeated here),
@@ -188,8 +188,9 @@ tooltip) uses the plugin's cache: up to 60 seconds (`cache.ttl-seconds`), or at 
 ### 3.4 Giving a kit
 
 1. In game: `/kit give <player> <kit name>` (`knk.kit.give`), for an online player. It skips gating, cooldown and price
-   and places the items like a claim (leftovers dropped at their feet). It starts their cooldown. The console can't
-   use it.
+   and places the items like a claim (leftovers dropped at their feet; with the reward inbox on, in `next`, they go to
+   the player's inbox, see the [reward inbox admin guide](reward-inbox-admin-guide.md)). It starts their cooldown. The
+   console can't use it.
 2. Web app: the profile's **Kits** card lists each kit's status, cooldown and cost for that player. **Grant** (needs
    `knk.kit.give`) records the claim, the audit entry and the kit's lootbox tokens and starts the cooldown, but on the
    released plugin **the items never reach the player** ([#261](https://github.com/PandiO/knk-workspace/issues/261)).
@@ -293,6 +294,9 @@ The game server re-reads the lootbox settings and active boxes every `lootboxes.
 `realtime.enabled: true` (off by default) a save is pushed at once; a despawn or revoke always arrives within seconds.
 `/knk lootbox reload` re-reads `config.yml` and refreshes from the API. The `lootboxes:` keys (display, reel, claim
 distance, full inventory, staff mode) are in [plugin configuration § 4.21](plugin-configuration.md#421-lootboxes).
+With `production.enabled: true` (knk-plugin `next`, not released) stackable leftovers of an opening go to the player's
+reward inbox instead of dropping owner-locked; the claim then shows Inventory (or Redelivered) with the note
+`N to the reward inbox (delivery #<id>)` ([reward inbox admin guide](reward-inbox-admin-guide.md)).
 
 ## 5. Discoveries
 
