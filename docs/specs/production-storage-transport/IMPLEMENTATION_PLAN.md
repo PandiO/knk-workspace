@@ -11,7 +11,7 @@ merged into `next` (knk-web-api `fcfced27`, migration `AddProductionWorld`, 2026
 [DESIGN §14](DESIGN.md#14-decisions), [PRODUCTION_KINDS §9](PRODUCTION_KINDS.md#9-decisions) and
 [TOWN_LOGISTICS §8](TOWN_LOGISTICS.md#8-decisions); the few still open are listed there. Every item is marked
 **V1** or **Later**. The production structures work and the garrison/guard NPC work ship in the **same test phase**.
-**Last updated:** 2026-11-21 (P7 and P7b merged into `next`: knk-web-api `2952d0c7`, knk-plugin `bdd8b463`; docs #915); 2026-11-21 (P7b inbox plugin #684 in review, link L20); 2026-11-20 (P7 delivery and inbox API #60 in review, link L19, with #883 and #890); 2026-11-20 (P5c transport web app #682 in review, link L16); 2026-11-20 (P5 transport API #79 in review, link L14); 2026-11-20 (P4c yield areas web app #680 in review); 2026-11-19 (P4 yield areas API #138 in review); 2026-11-19 (P3b production engine web app #678 in review); 2026-11-19 (P3 production engine API #86 merged into `next`); 2026-11-19 (P2c world plugin #677 in review); 2026-11-19 (P2 world API #91 merged into `next`); 2026-11-19 (P1b stock web app #675 in review; P1 API #97 merged into `next`); 2026-11-19 (P1 stock core API #97 in review); 2026-11-19 (territory plugin #689 and web app #690 merged into `next`); 2026-11-19 (territory API #326 in review); 2026-11-19 (item identity #141 merged into `next`, docs #796); 2026-11-19 (item identity #141 in review); 2026-11-11 (open questions answered, [decision record §11](DECISIONS_2026-11-05.md#11-follow-up-decisions-2026-11-11); issues #324, #325)
+**Last updated:** 2026-11-21 (P8 harvest plugin #134 in review, link L22); 2026-11-21 (P7 and P7b merged into `next`: knk-web-api `2952d0c7`, knk-plugin `bdd8b463`; docs #915); 2026-11-21 (P7b inbox plugin #684 in review, link L20); 2026-11-20 (P7 delivery and inbox API #60 in review, link L19, with #883 and #890); 2026-11-20 (P5c transport web app #682 in review, link L16); 2026-11-20 (P5 transport API #79 in review, link L14); 2026-11-20 (P4c yield areas web app #680 in review); 2026-11-19 (P4 yield areas API #138 in review); 2026-11-19 (P3b production engine web app #678 in review); 2026-11-19 (P3 production engine API #86 merged into `next`); 2026-11-19 (P2c world plugin #677 in review); 2026-11-19 (P2 world API #91 merged into `next`); 2026-11-19 (P1b stock web app #675 in review; P1 API #97 merged into `next`); 2026-11-19 (P1 stock core API #97 in review); 2026-11-19 (territory plugin #689 and web app #690 merged into `next`); 2026-11-19 (territory API #326 in review); 2026-11-19 (item identity #141 merged into `next`, docs #796); 2026-11-19 (item identity #141 in review); 2026-11-11 (open questions answered, [decision record §11](DECISIONS_2026-11-05.md#11-follow-up-decisions-2026-11-11); issues #324, #325)
 **Design:** [DESIGN.md](DESIGN.md), [PRODUCTION_KINDS.md](PRODUCTION_KINDS.md), [TOWN_LOGISTICS.md](TOWN_LOGISTICS.md),
 [shops DESIGN](../shops/DESIGN.md), [NPC platform](../npc-platform/DESIGN.md) (lifecycle).
 **Evidence:** [V2 scan](../../reports/2026-10-09-v2-production-storage-transport-scan.md).
@@ -381,8 +381,20 @@ survey, lazy regeneration, staff edits), `ProductionKind.PoolFloor` (0.5) and th
 idempotent harvest reports (`POST api/Harvest/reports`) that split each harvest as above with carried fractions per
 player and rule and the F10 rule for a full Output, the game server's catalogue (`GET api/Harvest/catalog`), the
 net-output check per rule (`GET api/HarvestRules/{id}/balance`, F9), the harvest history and the seeds. Reports need
-`Production:Enabled`. Also in L21: P-3 for Polygon areas (#900). Plugin part: link L22 (#134); web app (rule editor with
-the balance, pools, history): [#913](https://github.com/PandiO/knk-workspace/issues/913).
+`Production:Enabled`. Also in L21: P-3 for Polygon areas (#900). Web app (rule editor with the balance, pools, history):
+[#913](https://github.com/PandiO/knk-workspace/issues/913).
+
+**Status (2026-11-21, plugin):** built in link L22 (#134, in review, knk-plugin branch `claude/production-p8`), behind
+`production.enabled`: the harvest listener for blocks and entities against `GET api/Harvest/catalog` (`HarvestGate`:
+target, crop age, `IRequirementEvaluator` with permission node and title bracket, tool class and tier, cooldown, the
+structure's switch, optionally the empty pool), the WorldGuard pass for qualified harvests in `RESOURCE_PRODUCTION`
+regions (replaces the KNG-48 config switch for harvesting; #105) and the global-region protection's pass outside regions,
+blueprint drops (the answer's `workerUnits` of the rule's blueprint into the inventory, owed to offline players), batched
+reports with one idempotency key per entry (persisted outbox, resent with the same key), the disk-persisted regeneration
+queue with placeholders (depleted block P-D7, replant, air, whole-tree snapshot with a sapling P-D8), restored only with
+loaded chunks, over unchanged placeholders and never into an entity, and the survey placeholder overlay (L12).
+`/knk production harvest status|refresh`; `config.yml` `production.harvest.*`; scenarios `player-harvest-regenerate` and
+`player-harvest-tree`; smoke guide § 9.2.
 
 ## P9 — Town logistics · [#127](https://github.com/PandiO/knk-workspace/issues/127) (`[KNG-98]`)
 
