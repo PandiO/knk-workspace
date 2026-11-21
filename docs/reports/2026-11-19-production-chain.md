@@ -84,9 +84,9 @@ of what is already in `next`.
 | L16 P5c transport web app | #682 | Merged into next (2026-11-20) | web app `e36d39f`, workspace `77b3d4f5`; merges: web app `5ad5029f`, workspace `9eae7f48` | [web-app#68](https://github.com/PandiO/knk-web-app/pull/68), [ws#887](https://github.com/PandiO/knk-workspace/pull/887) | green on `e36d39f` (build-and-test, e2e) | create_session `session_01R1w2Uu8TpsSchsfou5i63j` (prompt says start without asking), started 2026-11-20 |
 | L17 P6a API: StorageContainer, caller-filtered reads, menu seeds | #683 | Merged into next (2026-11-20) | api `a2b8a98`, workspace `bd4d7949`; merges: api `a2865d75`, workspace `3dc4267c` | [api#67](https://github.com/PandiO/knk-web-api/pull/67), [ws#889](https://github.com/PandiO/knk-workspace/pull/889) | green (build-and-test, mysql-tests, fresh-database) | create_session `session_01R1w2UukTGdahr4dAwQTutW` (prompt says start without asking), started 2026-11-20 |
 | L18 P6 plugin: terminals, displays, Structures menu, structure menu, orders list | #74 | Merged into next (2026-11-20) | plugin `a9ee8bf1`, workspace `f947c84b`; final head `19f74865` (L18 merged `next` and regenerated `content-seeds.json`); merges: plugin `8e672ba6`, workspace `df27cc18` (after a coordinator merge of `next`, `0f1c8264`) | [plugin#110](https://github.com/PandiO/knk-plugin/pull/110), [ws#898](https://github.com/PandiO/knk-workspace/pull/898) | green (plugin build + paper-boot, 69 scenarios) | create_session `session_01R1w2UxMM4WEwxxedAe11ji` (prompt says start without asking), started 2026-11-20 |
-| L19 P7 delivery and inbox API | #60 | In review (2026-11-21) | api `a389259`, workspace `fbe4ded6` | [api#70](https://github.com/PandiO/knk-web-api/pull/70), [ws#899](https://github.com/PandiO/knk-workspace/pull/899) | build-and-test, fresh-database green; mysql-tests running (green locally) | create_session `session_01R1w2UwpK1NtaZLrA8k2uhP` (prompt says start without asking), started 2026-11-20 |
-| L20 P7b inbox plugin, kit/lootbox migration | #684 | Not started | — | — | — | — |
-| L21 P8a harvest API | #685 | Not started | — | — | — | — |
+| L19 P7 delivery and inbox API | #60 | Merged into next (2026-11-21) | api `a389259`, workspace `fbe4ded6`; merges: api `2952d0c7`, workspace `e2c6f45b` | [api#70](https://github.com/PandiO/knk-web-api/pull/70), [ws#899](https://github.com/PandiO/knk-workspace/pull/899) | build-and-test, fresh-database green; mysql-tests running (green locally) | create_session `session_01R1w2UwpK1NtaZLrA8k2uhP` (prompt says start without asking), started 2026-11-20 |
+| L20 P7b inbox plugin, kit/lootbox migration | #684 | Running | — | — | — | create_session `session_01R1w2Ux3iuWqjcAV5HQdPvM` (prompt says start without asking), started 2026-11-21 |
+| L21 P8a harvest API | #685 | Running | — | — | — | create_session `session_01R1w2Ux7jFcMxYzkwej4qY4` (prompt says start without asking), started 2026-11-21 |
 | L22 P8 harvest plugin | #134 | Not started | — | — | — | — |
 | L23 P9 town logistics API | #127 | Not started | — | — | — | — |
 | L24 P9b logistics web app | #686 | Not started | — | — | — | — |
@@ -398,6 +398,19 @@ of what is already in `next`.
    with migrations `AddMenuItemSettings` and `AddSiegeWeaponUnlockMinTitle`. Shop L6 #871 changes the menu item's
    click path (`paper/menu/`, `menus.menu-item.*`). L18 doesn't touch it, and the siege coordinator was told so. The
    rule for the `content-seeds.json` test fixture: whoever merges second regenerates it from the merged seeds.
+
+59. **L19 merge (2026-11-21).** § 6 checks held:
+   1. Heads matched.
+   2. The API branch contained `next`, including the siege shop migrations. `AddItemDelivery` was generated on top of
+      `AddSiegeWeaponUnlockMinTitle`.
+   3. CI was green (build-and-test, mysql-tests, fresh-database).
+   4. Codex was at its usage limit, so there were no findings.
+   5. The scope matched #60 plus #890 and #883.
+   Merged API #70 `2952d0c7` and workspace #899 `e2c6f45b`. L19 filed #900 (P-3 for Polygon areas, tier:1) and #901
+   (the P7 web app: settings card, a player's inbox, stash and gifting; tier:2, not a charter link).
+60. **After L19: L20 (#684) and L21 (#685, with #900) in parallel.** Both gates are open and each runs in its own repo.
+   L20 must keep today's kit and lootbox delivery (#261) with `production.enabled` off. The P7 docs start once L20 is
+   merged. #901 is outside the charter's links; the coordinator leaves it for the developer or the manager to schedule.
 
 ## 4. Link blocks
 
