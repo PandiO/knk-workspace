@@ -190,6 +190,16 @@
     tested) and that #845 runs as a small link after L5. Alternatives: (a) treat the failure as a gate blocker and fix
     first — needs an API seed migration the charter did not plan; (b) fold #845 into L5 — mixes a permission-model
     change into a removal link. Still to run before L5: § 3.3 s1, § 4.4 s1–s2, § 3.1 s2 siege part.
+28. **Off-road F3 takes the slot (2026-11-20 09:09).** Fixes from the developer's off-road live test of 2026-11-19
+    (road-goal choice, route-replacement announcements, walk start cell, door clearance; `core/roads`,
+    `NavigationService`), reading `HandleDestinations`/`Destination` only. Agreed: L5 still waits for the rest of the
+    live test and the #845 decision. Alternatives: none.
+29. **Off-road F3 merged, two more off-road steps (2026-11-20 10:07).** F3 merged (knk-plugin `6878d584`, handle untouched).
+    The off-road chain runs a `trail-leg-spacing` follow-up and L7b's plugin step (default route mode per permission
+    group, route request only) next, while L5 still waits for the developer. Agreed on condition that L5 takes the next
+    free slot once its gate opens, ahead of further off-road plugin links, and that L7b resolves the per-group default
+    in the shared `parseRoute`/`withMode` path. Alternatives: (a) reserve the slot now for L5 — it cannot start before
+    the developer answers.
 
 ## 4. Link blocks
 
