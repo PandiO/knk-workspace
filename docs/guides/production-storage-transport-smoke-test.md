@@ -19,8 +19,8 @@ scenario on a real Paper server), 7 partly and 1 manual (tagged); not run. § 5.
 partly (tagged) and 1 by hand; every step can still be run by hand; not run. § 6.1 (transport API, #79): 18 of 20 steps automated in CI
 and 2 partly (tagged); every step can still be run by hand; not run. § 6.2 (transport lanes plugin, #681): 3 of 14
 steps automated, 10 partly and 1 manual (tagged); not run. § 6.3 (transport web app, #682): 10 of 16 steps
-automated in CI, 5 partly (tagged) and 1 by hand; every step can still be run by hand; not run. § 7.1 (terminals and menus API, #683): 15 of 20 steps automated in CI, 4 partly and 1 by hand (tagged); every step can still be run by hand; not run. § 7.2 (terminals, displays and menus plugin, #74): 7 of 20 steps automated (one through a plugin scenario on a real Paper server), 11 partly and 2 by hand (tagged); not run. Other sections not yet automated (the links tag them).
-**Last updated:** 2026-11-20 (§ 7.2 terminals, displays and menus plugin, link L18, #74); 2026-11-20 (§ 7 terminals and menus API, link L17, #683; § 7.2 draft for L18); 2026-11-20 (§ 6.2 transport lanes plugin, link L15, #681); 2026-11-20 (§ 6.3 transport web app, link L16, #682); 2026-11-20 (§ 6 transport API, link L14, #79; § 6.2 and § 6.3 drafts for L15 and L16); 2026-11-20 (§ 5.2 surveys plugin, link L12, #679); 2026-11-20 (§ 5.3 yield areas web app, link L13, #680); 2026-11-19 (§ 5 yield areas API, link L11, #138; § 5.1 step 18: #831); 2026-11-19 (§ 4.2 production engine web app, link L10, #678); 2026-11-19 (§ 4.1 production engine API, link L9, #86); 2026-11-19 (§ 3 intro, § 3.0, § 3.2 and § 3.3 intros: builds from `next`; § 3.3 precondition 4: `/knk regions repair` needs `knk.admin.regions`, `/knk territory rebuild` `knk.admin.world.territory`; docs #830); 2026-11-19 (§ 3.2 world web app, link L7, #676); 2026-11-19 (§ 3.3 world plugin, link L8, #677); 2026-11-19 (§ 3.1 world API, link L6, #91); 2026-11-19 (§ 2.2 stock web app, link L5, #675); 2026-11-19 (§ 2 stock core API, link L4, #97); 2026-11-19 (§ 1.0 and § 1.3 preconditions: builds from `next` instead of the link branches; guides: [territory admin guide](admin/territory-admin-guide.md), docs #806); 2026-11-19 (§ 1.4 territory web app, link L3, #690); 2026-11-19 (§ 1.3 territory plugin, link L2, #689); 2026-11-19 (§ 1 territory API, link L1, #326); 2026-11-19 (§ 0 item identity, link L0, #141); 2026-11-16 (draft from the design, territory and phases P1-P12)
+automated in CI, 5 partly (tagged) and 1 by hand; every step can still be run by hand; not run. § 7.1 (terminals and menus API, #683): 15 of 20 steps automated in CI, 4 partly and 1 by hand (tagged); every step can still be run by hand; not run. § 7.2 (terminals, displays and menus plugin, #74): 7 of 20 steps automated (one through a plugin scenario on a real Paper server), 11 partly and 2 by hand (tagged); not run. § 8.1 (delivery and inbox API, #60): 16 of 20 steps automated in CI, 3 partly and 1 by hand (tagged); every step can still be run by hand; not run. Other sections not yet automated (the links tag them).
+**Last updated:** 2026-11-20 (§ 8 delivery and inbox API, link L19, #60, with #883 and #890; § 8.2 draft for L20); 2026-11-20 (§ 7.2 terminals, displays and menus plugin, link L18, #74); 2026-11-20 (§ 7 terminals and menus API, link L17, #683; § 7.2 draft for L18); 2026-11-20 (§ 6.2 transport lanes plugin, link L15, #681); 2026-11-20 (§ 6.3 transport web app, link L16, #682); 2026-11-20 (§ 6 transport API, link L14, #79; § 6.2 and § 6.3 drafts for L15 and L16); 2026-11-20 (§ 5.2 surveys plugin, link L12, #679); 2026-11-20 (§ 5.3 yield areas web app, link L13, #680); 2026-11-19 (§ 5 yield areas API, link L11, #138; § 5.1 step 18: #831); 2026-11-19 (§ 4.2 production engine web app, link L10, #678); 2026-11-19 (§ 4.1 production engine API, link L9, #86); 2026-11-19 (§ 3 intro, § 3.0, § 3.2 and § 3.3 intros: builds from `next`; § 3.3 precondition 4: `/knk regions repair` needs `knk.admin.regions`, `/knk territory rebuild` `knk.admin.world.territory`; docs #830); 2026-11-19 (§ 3.2 world web app, link L7, #676); 2026-11-19 (§ 3.3 world plugin, link L8, #677); 2026-11-19 (§ 3.1 world API, link L6, #91); 2026-11-19 (§ 2.2 stock web app, link L5, #675); 2026-11-19 (§ 2 stock core API, link L4, #97); 2026-11-19 (§ 1.0 and § 1.3 preconditions: builds from `next` instead of the link branches; guides: [territory admin guide](admin/territory-admin-guide.md), docs #806); 2026-11-19 (§ 1.4 territory web app, link L3, #690); 2026-11-19 (§ 1.3 territory plugin, link L2, #689); 2026-11-19 (§ 1 territory API, link L1, #326); 2026-11-19 (§ 0 item identity, link L0, #141); 2026-11-16 (draft from the design, territory and phases P1-P12)
 **Design:** [specs/production-storage-transport/DESIGN.md](../specs/production-storage-transport/DESIGN.md) (§17
 acceptance A01-A27, §18 links) · [territory](../specs/territory/DESIGN.md) · [shops](../specs/shops/DESIGN.md) ·
 **Issue:** [PandiO/knk-workspace#22](https://github.com/PandiO/knk-workspace/issues/22)
@@ -2065,20 +2065,146 @@ hand; not run. Full manual run about 40 minutes; the untagged parts about 15 min
 
 ## 8. Phase P7: item delivery, reward inbox, deposit/withdraw (#60 API, #684 plugin; tier:3)
 
-*Draft from the design (2026-11-16); the links update it to what was built and tag the automated steps.*
+Built so far: link L19, the API (knk-web-api, migration `AddItemDelivery`; branch `claude/production-p7`, PR into
+`next`), with the P5 read additions of #890 and placement rule P-3 for production areas (#883). The game server part
+(`/inbox`, the inbox menu, kit and lootbox delivery through the inbox) is link L20 (#684); until then § 8.1 runs with a
+REST client (or Swagger) against the API, sending what the game server will send: the plugin key and, for a player,
+`X-Acting-User-Id: <user id>`. 20 steps in § 8.1: 16 automated in CI, 3 partly and 1 by hand (tagged); every step can
+still be run by hand; not run. § 8.2 is the draft for L20. Full manual run about 35 minutes; the untagged parts about
+10 minutes. The tests are in knk-web-api `Tests/.../Services/Stock/ItemDeliveryServiceTests.cs`,
+`Api/InboxControllersTests.cs`, `Services/Production/ProductionAreaPlacementTests.cs`,
+`Services/Production/TransportReadNamesTests.cs` (`TransportReadNamesTests`, `SurveyOverlapUnitTypesTests`),
+`Migrations/AddItemDeliveryTests.cs` and, with `KNK_TEST_MYSQL`, `MySql/ItemDeliveryMySqlTests.cs` (one inbox per player, one
+delivery per key and the cap under concurrent deliveries). Tier:3; the developer's waiver of the smoke gates (2026-11-19) is read by the
+coordinator as covering the later links.
 
-### 8.1 Steps
+### 8.0 Preconditions
 
-1. As Admin, grant a kit to Member while Member is offline. **Expected:** at login the kit is in `/inbox`, not on the
-   ground. (A15)
-2. Grant a lootbox reward to Member with a full inventory. **Expected:** it goes to the inbox with a message. (A15)
-3. Claim from the inbox with room for half the items. **Expected:** half claimed, the rest stays. (A15)
-4. Fill the inbox to the hard cap, then grant one more item. **Expected:** the overflow is logged as `InboxOverflow` to
-   `SYS_LOSS`, and Member gets a loss notification and a near-cap warning before that. (A15)
-5. As a premium-tier player, check the cap. **Expected:** higher than for Member. (A15)
-6. Move the clock 30 days on a test database. **Expected:** reminders were sent; expired items are moved out as
-   `InboxExpired`. (A15)
-7. Turn `production.enabled` off and grant a kit. **Expected:** today's delivery path (#261) still works.
+1. knk-web-api with the migrations up to `AddItemDelivery` applied (`dotnet ef database update`), `Production:Enabled`
+   on except in steps 15 and 16.
+2. Accounts: **Staff** (`knk.economy.admin`), **Member** (no staff node) and **Gold** (a player in a premium-tier
+   permission group **Gold**, `isPremiumTier` true). Note their user ids and Gold's group id. The game server's calls are
+   the plugin key (`X-API-Key`) with `X-Acting-User-Id` naming the player.
+3. The blueprints **Oak log** (storage weight 1) and **Stone** (storage weight 2), and one unique item: an
+   `ItemInstance` **Dawnbreaker** of a sword blueprint that is in no storage.
+4. Game settings: `PUT api/GameSettings` with the production section's `delivery` set to `{ "inboxBaseCapUnits": 100,
+   "stashBaseCapUnits": 0, "expiryDays": 30, "reminderDaysBefore": [7, 1], "warnAtPercent": [80, 95], "premiumTiers": [ {
+   "permissionGroupId": <Gold>, "inboxCapUnits": 500, "stashCapUnits": 200 } ] }` (the other production sections as
+   they are).
+
+### 8.1 Steps (API)
+
+1. [partly automated: knk-web-api `FormConfigurationSeedFilesTests`, `DisplayConfigurationSeedFilesTests` (every seed
+   dry-runs and imports); by hand: open the pages in the web app]
+   As Staff, import the form and display seeds `ItemDelivery` and the form seed `ProductionArea` (seed v3), each with
+   "make default". **Expected:** all import; an ItemDelivery opens read only with its lines (requested, inboxed, lost,
+   claimed, expired, remaining). (A23)
+2. [automated: `ItemDeliveryServiceTests.TheSettings_AreValidated_AndAMissingSectionKeepsTheStoredOne`]
+   `GET api/GameSettings`. **Expected:** `production.delivery` as set in § 8.0 step 4. A save without the `delivery`
+   section keeps it; `reminderDaysBefore: [30]` (not below `expiryDays`) or the same group twice in `premiumTiers` is 400.
+3. [automated: `ItemDeliveryServiceTests.ADelivery_MovesTheItemsIntoTheInbox_AndTellsThePlayer`]
+   With the plugin key, `POST api/ItemDeliveries` with `{ "userId": <Member>, "reason": "Lootbox", "sourceType":
+   "LootboxClaim", "sourceRef": "77", "idempotencyKey": "lootbox-77", "lines": [ { "itemBlueprintId": <Oak log>,
+   "amount": 40 }, { "itemBlueprintId": <Stone>, "amount": 5 } ] }` (what the game server could not place).
+   **Expected:** 200, `status` Inboxed, `inboxedUnits` 45, `lostUnits` 0, `expiresAt` 30 days ahead. Member now has a
+   Player storage with purpose Inbox, capped at 100; the ledger has one RewardInbox transaction from `SYS_WORLD`
+   (source `LootboxClaim 77`). `GET api/PlayerNotifications/pending` has an `InboxUpdated` for Member: event Delivered,
+   `fillPercent` 50 (40 + 5 × 2), no `warningPercent`. (A15)
+4. [automated: `ItemDeliveryServiceTests.ARetry_AppliesOnce_AndTheSameKeyWithAnotherRequestIs409`]
+   Send step 3 again. **Expected:** the same delivery with `replayed` true; the inbox still holds 40 and 5. The same key
+   with 41 oak logs is 409 `IdempotencyKeyReuse`.
+5. [automated: `ItemDeliveryServiceTests.AtTheHardCap_TheOverflowIsLostToSysLoss_WithALossNotificationAndAWarningBefore`]
+   On a fresh Member inbox, deliver 85 oak logs (key `a`), then 10 oak logs and 5 stone (key `b`), then 5 stone (key
+   `c`). **Expected:** `a`: Inboxed, the notification has `warningPercent` 80. `b`: PartlyLost: 10 oak logs and 2 stone in
+   the inbox, 3 stone lost, an InboxOverflow transaction `SYS_WORLD` → `SYS_LOSS` of 3 stone; the notification has
+   `lostUnits` 3 (the loss notification) and `warningPercent` 95. `c`: Lost, nothing in the inbox, no RewardInbox
+   transaction. The reconciler stays clean (`GET api/StockTransactions/reconcile`). (A15)
+6. [automated: `ItemDeliveryServiceTests.APremiumTier_RaisesTheCaps_AndAnExpiredTierNoLonger`]
+   `GET api/Inbox/<Member>` and `GET api/Inbox/<Gold>` with the plugin key. **Expected:** `capUnits` 100 for Member and
+   500 for Gold (`premiumTierGroupId` Gold); a 300-unit delivery to Gold fits whole. When Gold's membership ends, a new
+   delivery sees the base cap again; nothing already in the inbox is trimmed. (A15)
+7. [automated: `ItemDeliveryServiceTests.AClaim_WithRoomForHalf_TakesHalf_OldestLotFirst_AndTheRestStays`]
+   Deliver 20 oak logs to Member (key `old`), a day later 20 more (key `new`). With the plugin key and
+   `X-Acting-User-Id: <Member>`, `POST api/Inbox/<Member>/claim` with `{ "idempotencyKey": "click-1", "lines": [ {
+   "itemBlueprintId": <Oak log>, "amount": 25 } ] }` (room for 25). **Expected:** `result.accepted` 25, an InboxClaim
+   transaction to `SYS_WORLD`; 15 stay; the `old` delivery shows claimed 20, the `new` one claimed 5 and remaining 15;
+   `view.entries` shows 15 with `nextExpiresAt` of the `new` delivery. The same click again replays; asking for 64 claims
+   the 15 there are (`NotEnoughStock` for the rest). (A15)
+8. [automated: `ItemDeliveryServiceTests.AUniqueReward_IsAStockUnitInTheInbox_AndKeepsItsIdentityWhenClaimed`]
+   Deliver Dawnbreaker (`"lines": [ { "itemInstanceId": <Dawnbreaker> } ]`). **Expected:** a stock unit in Member's
+   inbox; the inbox entry shows its custom name. Delivering it again while it is in the inbox is 400. Claim it: the unit
+   leaves the inbox and the instance keeps its name and enchantments.
+9. [partly automated: `ItemDeliveryServiceTests.Reminders_GoOutBeforeExpiry_ThenExpiredItemsMoveToSysLoss`; by hand:
+   the SQL and the sweep]
+   On a test database, deliver 30 oak logs and 4 stone and claim 10 oak logs. Set the lots to expire in 6 days:
+   `UPDATE item_delivery_lines SET ExpiresAt = UTC_TIMESTAMP(6) + INTERVAL 6 DAY WHERE ItemDeliveryId = <id>;` then, as
+   Staff, `POST api/Inbox/sweep`. **Expected:** `remindersSent` 1 and an `InboxUpdated` ExpiryReminder for Member
+   (`expiringUnits` 24); a second sweep sends none. Set `ExpiresAt` to 12 hours ahead and sweep: the 1-day reminder.
+   Set it to an hour ago and sweep: `expiredLines` 2, `expiredUnits` 24, two InboxExpired transactions inbox →
+   `SYS_LOSS`, an `InboxUpdated` Expired with `lostUnits` 24; the lines show expired 20 and 4, remaining 0. The API
+   also sweeps every hour. (A15, D7)
+10. [automated: `ItemDeliveryServiceTests.TheStash_IsSeparate_DepositsUpToItsCap_AndWithdrawsOncePerKey`]
+    With the plugin key and `X-Acting-User-Id: <Member>`, `POST api/Inbox/<Member>/stash/deposit` with key `d0` and 1
+    oak log. **Expected:** Rejected `CapacityFull` (no stash without a premium tier). For Gold, deposit 250 (key `d1`):
+    200 accepted (cap 200), a Stash storage separate from the inbox, a Deposit transaction. As Staff (web token),
+    `.../stash/withdraw` 50 with key `w1`, twice: one Withdraw transaction (actor Staff), 150 left.
+11. [automated: `InboxControllersTests.StaffDeliver_FromTheWeb_AndTheGameServerClaims_ForTheNamedPlayerOnly`]
+    As Staff with a web token, `POST api/ItemDeliveries` with reason Gift. **Expected:** 200, actor User (Staff). A claim
+    with `X-Acting-User-Id` of another player, or without it, is 400 `ActingUserRequired`.
+12. [automated: `InboxControllersTests.TheStash_NeedsTheNamedPlayer_OrAWebStaffMember`]
+    A stash deposit from the game server naming another player is 400; from Staff's web token it is answered.
+13. [partly automated: `ReadAccessRulesTests`, `EndpointAccessRulesTests` (the rules are pinned),
+    `InboxControllersTests.TheRoutes_CarryTheirAccessRules`; by hand: the calls below]
+    As Member with a web token: `GET api/Inbox/<Member>` is 200, `GET api/Inbox/<Gold>` is 403, `POST api/ItemDeliveries`
+    and `POST api/Inbox/sweep` are 403, `POST api/Inbox/<Member>/claim` is 403 (game server only). `POST
+    api/ItemDeliveries/search` as Staff lists the deliveries (filters `userId`, `reason`, `status`, `open`).
+14. [automated: `ItemDeliveryServiceTests.ALockedInbox_RefusesTheDelivery_AndNothingMoves`]
+    Lock Member's inbox (`PUT api/Storages/<inbox>` with `lockedUntil` an hour ahead) and deliver. **Expected:** 409;
+    nothing moves, no delivery is recorded.
+15. [automated: `ItemDeliveryServiceTests.WithTheFlagOff_NothingMoves_ButTheViewsWork`,
+    `InboxControllersTests.WithTheFlagOff_MovesAre409_AndTheViewWorks`]
+    Switch `Production:Enabled` off. **Expected:** delivery, claim and stash moves are 409 `ProductionDisabled`; `GET
+    api/Inbox/<Member>` still answers; the sweep moves nothing. Switch it back on. (A21)
+16. [by hand]
+    With `Production:Enabled` off, grant Member a kit on the web player profile ("Grant"). **Expected:** today's delivery
+    (#261): the kit claim is pending and the game server hands the kit over when Member is online. Kit and lootbox
+    delivery do not go through the inbox until L20 (#684). (A21)
+17. [automated: `ProductionAreaPlacementTests` (all)]
+    Import `ProductionArea` seed v3 as default. For a rural structure in Phoenix, `POST api/ProductionAreas` with a
+    Region area whose region is outside Phoenix's territory. **Expected:** 201 with `placementWarnings` naming Phoenix's
+    territory (P-3, warning by default). For a structure in district Market, a Region area outside the district's
+    region warns; a Cuboid is checked by its four corners, a Radius by its centre and the four points one radius away.
+    Make the rule blocking (the form's rule, `isBlocking`): the save is 400 and nothing is saved. With the game server
+    offline the area saves with a "not checked" warning; with `Production:Enabled` off the territory half is skipped.
+    (#883)
+18. [automated: `TransportReadNamesTests.TheStructureView_NamesItsDestinationWarehouse_AndThePlanItsCarrier`,
+    `TransportReadNamesTests.ACycleRecord_NamesItsStructure`]
+    `GET api/ProductionStructures/<Quarry>/transport`, `POST api/TransportOrders/dry-run` and `GET
+    api/ProductionCycleRecords/<id>`. **Expected:** `destinationWarehouseName`, `carrierStructureName` and
+    `productionStructureName` next to their ids. (#890)
+19. [automated: `TransportReadNamesTests.TheDueLanes_SayWhichEndIsAProducerAndWhichAWarehouse`]
+    With the plugin key, `GET api/TransportLanes/due`. **Expected:** each row has `fromKind` (Producer or Warehouse) and
+    `toKind` (Warehouse). (#890)
+20. [automated: `SurveyOverlapUnitTypesTests.TheSurveyQueuesOverlaps_CarryTheirKindsUnitTypes`,
+    `TransportReadNamesTests.TheUnitTypes_AreReadFromTheKindsSurveyProfile`]
+    A Derived logger's forest overlapped by a farm's shared area: `GET api/ProductionAreas/survey-due`. **Expected:** the
+    overlap carries `unitTypes` `["CROP"]` (the farm kind's survey profile). (#890, #875)
+
+### 8.2 Steps (plugin #684, draft)
+
+*Draft for link L20: `/inbox`, the inbox menu, kit and lootbox delivery through the inbox.*
+
+1. With `production.enabled` on, grant a kit to Member while Member is offline. **Expected:** at login the kit is
+   placed when it fits; what does not fit is in `/inbox`, not on the ground. (A15)
+2. Give Member a lootbox reward with a full inventory. **Expected:** it goes to the inbox with a message. (A15)
+3. Open `/inbox` and claim with room for half the items. **Expected:** half claimed, the rest stays, the menu shows
+   what expires first. (A15)
+4. Fill the inbox to the hard cap, then give one more reward. **Expected:** a near-cap warning came before; the overflow
+   is lost with a loss message. (A15)
+5. As Gold, check the inbox cap in the menu. **Expected:** higher than Member's. (A15)
+6. On a test database, let items reach their reminder days and expiry (§ 8.1 step 9). **Expected:** reminder messages in
+   game; expired items are gone from the menu with a message. (A15)
+7. Turn `production.enabled` off and grant a kit. **Expected:** today's delivery path (#261) still works. (A21)
 
 ## 9. Phase P8: player harvesting and block regeneration (#685 API, #134 plugin; tier:3)
 
