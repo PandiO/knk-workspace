@@ -85,10 +85,10 @@ of what is already in `next`.
 | L17 P6a API: StorageContainer, caller-filtered reads, menu seeds | #683 | Merged into next (2026-11-20) | api `a2b8a98`, workspace `bd4d7949`; merges: api `a2865d75`, workspace `3dc4267c` | [api#67](https://github.com/PandiO/knk-web-api/pull/67), [ws#889](https://github.com/PandiO/knk-workspace/pull/889) | green (build-and-test, mysql-tests, fresh-database) | create_session `session_01R1w2UukTGdahr4dAwQTutW` (prompt says start without asking), started 2026-11-20 |
 | L18 P6 plugin: terminals, displays, Structures menu, structure menu, orders list | #74 | Merged into next (2026-11-20) | plugin `a9ee8bf1`, workspace `f947c84b`; final head `19f74865` (L18 merged `next` and regenerated `content-seeds.json`); merges: plugin `8e672ba6`, workspace `df27cc18` (after a coordinator merge of `next`, `0f1c8264`) | [plugin#110](https://github.com/PandiO/knk-plugin/pull/110), [ws#898](https://github.com/PandiO/knk-workspace/pull/898) | green (plugin build + paper-boot, 69 scenarios) | create_session `session_01R1w2UxMM4WEwxxedAe11ji` (prompt says start without asking), started 2026-11-20 |
 | L19 P7 delivery and inbox API | #60 | Merged into next (2026-11-21) | api `a389259`, workspace `fbe4ded6`; merges: api `2952d0c7`, workspace `e2c6f45b` | [api#70](https://github.com/PandiO/knk-web-api/pull/70), [ws#899](https://github.com/PandiO/knk-workspace/pull/899) | build-and-test, fresh-database green; mysql-tests running (green locally) | create_session `session_01R1w2UwpK1NtaZLrA8k2uhP` (prompt says start without asking), started 2026-11-20 |
-| L20 P7b inbox plugin, kit/lootbox migration | #684 | In review (2026-11-21) | plugin `823ebf09`, workspace `e48c9d0e` | [plugin#113](https://github.com/PandiO/knk-plugin/pull/113), [ws#911](https://github.com/PandiO/knk-workspace/pull/911) | green on `1952a5b9` (build + paper-boot, 71 scenarios); `823ebf09` running | create_session `session_01R1w2Ux3iuWqjcAV5HQdPvM` (prompt says start without asking), started 2026-11-21 |
-| L21 P8a harvest API | #685 | In review (2026-11-21) | api `e89e396`, workspace `00fab16d` (merged `next` `12804469`) | [api#72](https://github.com/PandiO/knk-web-api/pull/72), [ws#914](https://github.com/PandiO/knk-workspace/pull/914) | push runs on `e89e396` green (build-and-test, mysql-tests, fresh-database); PR runs running | create_session `session_01R1w2Ux7jFcMxYzkwej4qY4` (prompt says start without asking), started 2026-11-21 |
-| L22 P8 harvest plugin | #134 | Not started | — | — | — | — |
-| L23 P9 town logistics API | #127 | Not started | — | — | — | — |
+| L20 P7b inbox plugin, kit/lootbox migration | #684 | Merged into next (2026-11-21) | plugin `823ebf09`, workspace `e48c9d0e`; merges: plugin `bdd8b463`, workspace `bb127457` | [plugin#113](https://github.com/PandiO/knk-plugin/pull/113), [ws#911](https://github.com/PandiO/knk-workspace/pull/911) | green on `1952a5b9` (build + paper-boot, 71 scenarios); `823ebf09` running | create_session `session_01R1w2Ux3iuWqjcAV5HQdPvM` (prompt says start without asking), started 2026-11-21 |
+| L21 P8a harvest API | #685 | Merged into next (2026-11-21) | api `e89e396`, workspace `00fab16d` (merged `next` `12804469`); merges: api `9ad32c23`, workspace `69f2b108` (after a coordinator merge of `next`, `944a443b`) | [api#72](https://github.com/PandiO/knk-web-api/pull/72), [ws#914](https://github.com/PandiO/knk-workspace/pull/914) | push runs on `e89e396` green (build-and-test, mysql-tests, fresh-database); PR runs running | create_session `session_01R1w2Ux7jFcMxYzkwej4qY4` (prompt says start without asking), started 2026-11-21 |
+| L22 P8 harvest plugin | #134 | Running | — | — | — | create_session `session_01R1w2UuXe6TVT7QDKeAXdgn` (prompt says start without asking), started 2026-11-21 |
+| L23 P9 town logistics API | #127 | Running | — | — | — | create_session `session_01R1w2UwWMWgbXsBzScMifEq` (prompt says start without asking), started 2026-11-21 |
 | L24 P9b logistics web app | #686 | Not started | — | — | — | — |
 | L25 P10 shops API, town account | #248 | Not started | — | — | — | — |
 | L26 P10b shop menus plugin | #687 | Not started | — | — | — | — |
@@ -411,6 +411,23 @@ of what is already in `next`.
 60. **After L19: L20 (#684) and L21 (#685, with #900) in parallel.** Both gates are open and each runs in its own repo.
    L20 must keep today's kit and lootbox delivery (#261) with `production.enabled` off. The P7 docs start once L20 is
    merged. #901 is outside the charter's links; the coordinator leaves it for the developer or the manager to schedule.
+
+61. **L20 and L21 merge (2026-11-21).** § 6 checks held for both:
+   1. Heads matched, and the branches contained or cleanly merged `next`.
+   2. CI was green: plugin build and paper-boot (71 scenarios); API build-and-test, mysql-tests and fresh-database.
+   3. Codex was at its usage limit, so there were no findings.
+   4. The scope matched #684 and #685 (with #900).
+   5. L20 keeps today's kit and lootbox delivery, #261 included, with `production.enabled` off; both paths are tested.
+   Merged plugin #113 `bdd8b463`, API #72 `9ad32c23` and workspace #911 `bb127457`. Workspace #914 conflicted with
+   #911 in the changelog and the smoke header. Both sides were kept (coordinator merge `944a443b`), then it was merged
+   as `69f2b108`. P7 (L19–L20) is complete: `documentation` sub-issue #915 under #60, docs session started. L21 filed
+   #913 (P8 web app pages, tier:2, not a charter link; for the developer or the manager to schedule, like #901).
+62. **After L20/L21: L22 (#134) and L23 (#127) in parallel.** Both gates are open (L22: L12 and L21 merged; L23: L14
+   merged) and each runs in its own repo. #127's body still says the rule catalogue needs the developer's review, but
+   TOWN_LOGISTICS.md was Decided on 2026-11-16 with the production design, so L23 implements the catalogue as written.
+   Alternatives: (a) ask the developer first: the design's Decided status already answers it, and the point stays open
+   for review in report § 1.
+63. **P6 docs #903:** done.
 
 ## 4. Link blocks
 
