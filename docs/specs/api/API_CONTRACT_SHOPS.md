@@ -1,9 +1,10 @@
-# API Contract: Shops (shop types and levels, shops, the catalogue, buying and selling, trade stats, town accounts)
+# API Contract: Shops (shop types and levels, shops, the catalogue, buying and selling, display spots, trade stats, town accounts)
 
-**Status:** Current · **Last updated:** 2026-11-21 (first version, production P10 #248, docs PandiO/knk-workspace#939)
+**Status:** Current · **Last updated:** 2026-11-21 (§ 4.5 `api/ShopDisplaySpots` and the § 1 access rows, display stalls P12 #250, docs PandiO/knk-workspace#970); 2026-11-21 (first version, production P10 #248, docs PandiO/knk-workspace#939)
 **Checked against:** knk-web-api `next` `289f4d4b` (PR PandiO/knk-web-api#74; `Controllers/ShopsControllers.cs`,
 `Dtos/ShopDtos.cs`, `Enums/ShopEnums.cs`, `Services/Shops/*.cs`, `Services/Currency/CurrencyService.Town.cs`,
-`Services/Territory/ProductionSettings.cs`). Not released.
+`Services/Territory/ProductionSettings.cs`); § 4.5 against knk-web-api `next` `d86d6e1a` (PR PandiO/knk-web-api#80;
+`Models/Shops/ShopDisplaySpot.cs`, `Services/Shops/ShopDisplaySpotService.cs`). Not released.
 **Related:** [shops architecture](../../architecture/shops.md) (pricing, the purchase and sale transactions, restocking,
 processing, the town account, the stats), [shops DESIGN](../shops/DESIGN.md), [shops admin
 guide](../../guides/admin/shops-admin-guide.md), [town logistics API contract](API_CONTRACT_TOWN_LOGISTICS.md) (the
@@ -31,12 +32,13 @@ deleted).
 | Route | Plugin key | `knk.admin.world` | + other node |
 |---|---|---|---|
 | `GET` and `POST …/search` of every controller, `GET api/Shops`, `GET api/Shops/{id}/offer`, `GET api/TownAccounts/by-town/{townId}`, `GET api/TownAccounts/{id}/ledger` | yes | yes (any node of the World area) | — |
-| `POST` and `PUT` of `api/ShopTypes`, `api/ShopTypeLevels`, `api/Shops`, `api/ShopCatalogueEntries` | yes | yes | the dashboard change rule of the type (`knk.admin.content`) |
+| `POST` and `PUT` of `api/ShopTypes`, `api/ShopTypeLevels`, `api/Shops`, `api/ShopCatalogueEntries`, `api/ShopDisplaySpots` | yes | yes | the dashboard change rule of the type (`knk.admin.content`) |
 | `POST api/ShopTradeStats/rebuild` | yes | yes | — |
-| `DELETE` of `api/ShopTypes`, `api/ShopTypeLevels`, `api/Shops`, `api/ShopCatalogueEntries` | yes | yes | `knk.admin.delete` |
+| `DELETE` of `api/ShopTypes`, `api/ShopTypeLevels`, `api/Shops`, `api/ShopCatalogueEntries`, `api/ShopDisplaySpots` | yes | yes | `knk.admin.delete` |
 | `POST api/Shops/{id}/quote`, `…/purchase`, `…/sell-quote`, `…/sell` | yes | no | — |
 
-Dashboard types (World area, with lookups): `ShopType`, `ShopTypeLevel`, `Shop`, `ShopCatalogueEntry` editable;
+Dashboard types (World area, with lookups): `ShopType`, `ShopTypeLevel`, `Shop`, `ShopCatalogueEntry`,
+`ShopDisplaySpot` editable;
 `ShopTradeStat` and `TownAccount` view only. Pinned in `ReadAccessRulesTests`, `DashboardChangeAccessRulesTests` and
 `DeleteAccessRulesTests`.
 
@@ -224,6 +226,37 @@ The **sale** (`ShopSellResultDto`): `shopId`, `userId`, `total`, `lines[]`, `sto
 | `IdempotencyKeyReuse` | `purchase`, `sell` | The key was used by another player or for another shop |
 
 A purchase or sale that was refused moved nothing.
+
+### 4.5 `api/ShopDisplaySpots` (display stalls)
+
+Display spots (P12, [#250](https://github.com/PandiO/knk-workspace/issues/250)): blocks where the game server shows
+one of the shop's items ([architecture § 14](../../architecture/shops.md#14-the-game-server-display-stalls-l29-250)).
+Admin CRUD: works while `Production:Enabled` is off. The game server chooses what each spot shows from the offer
+(§ 4.1) and the trade stats (§ 5); the API only keeps the spots.
+
+| Method | Route | Answer |
+|---|---|---|
+| `GET` | `{id}` | `ShopDisplaySpotDto`; 404 |
+| `POST` | `search` | `ShopDisplaySpotListDto`; filters `shopId`, `enabled` (`true`/`false`), `worldName`; term = label or shop name; by shop, `sortOrder`, id |
+| `POST` | — | 201 with the spot; 400 (fields), 409 (the block is already a spot; the shop has 100 spots) |
+| `PUT` | `{id}` | 200; only the fields sent change; a spot keeps its shop (400 on a change); 409 as for `POST` |
+| `DELETE` | `{id}` | 204; 404 |
+
+`ShopDisplaySpotDto`: `id`; `shopId` (required on create) / `shop` (`{id, name}`, read only); `worldName` (required on
+create, at most 64); `x`, `y`, `z` (required on create; `y` -64 to 320); `facing` (`North`, `East`, `South` or `West`,
+the way the item faces; default `South`; another word is 400); `pinnedCatalogueEntryId` (an entry of the spot's own
+shop that this spot always shows, else 400; `0` clears it) / `pinnedCatalogueEntry` (`{id, name}` with the entry's
+item name, read only); `sortOrder` (the fill order, lowest first; on create without it: after the shop's last spot);
+`label` (at most 100; empty clears it); `enabled` (default true; off shows nothing); `createdByUserId` (the caller's
+user, else the value sent); `createdAt`, `updatedAt`. The list row has `shopName` and the plain columns, without the
+`shop` and `pinnedCatalogueEntry` references.
+
+One spot per block: (`worldName`, `x`, `y`, `z`) is unique across all shops. A deleted shop takes its spots with it; a
+deleted catalogue entry clears the pins on it.
+
+The game server (plugin key) lists every spot (`search`, pages of 200), creates spots for `/knk shop display add`,
+pins with `PUT {id}` `{"pinnedCatalogueEntryId": <id or 0>}` and deletes for `remove`. For the best sellers it reads
+`POST api/ShopTradeStats/search` with `shopId` and `from` (§ 5) and sums `unitsSold` per blueprint.
 
 ## 5. `api/ShopTradeStats`
 

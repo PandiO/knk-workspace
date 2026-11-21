@@ -1,12 +1,13 @@
-# Shops: shop types, the catalogue, buying and selling, restocking, processing, the town account and the shop menus (knk-web-api, knk-web-app and knk-plugin)
+# Shops: shop types, the catalogue, buying and selling, restocking, processing, the town account, the shop menus and display stalls (knk-web-api, knk-web-app and knk-plugin)
 
-**Status:** Current · **Last updated:** 2026-11-21 (§ 13: the shop menus of the plugin, production P10b #687, docs PandiO/knk-workspace#966); 2026-11-21 (first version, production P10 #248/#688, docs PandiO/knk-workspace#939)
+**Status:** Current · **Last updated:** 2026-11-21 (§ 14: display stalls, production P12 #250, docs PandiO/knk-workspace#970; § 15 and § 16 renumbered); 2026-11-21 (§ 13: the shop menus of the plugin, production P10b #687, docs PandiO/knk-workspace#966); 2026-11-21 (first version, production P10 #248/#688, docs PandiO/knk-workspace#939)
 **Checked against:** knk-web-api `next` `289f4d4b` (PR PandiO/knk-web-api#74) and `e02bf557` (PR PandiO/knk-web-api#75,
 the P9 follow-ups that name shops as consumers) and `7c6dd7f5` (PR PandiO/knk-web-api#79, the menu seeds), knk-web-app
-`next` `11832d6b` (PR PandiO/knk-web-app#73), knk-plugin `next` `c349a53c` (PR PandiO/knk-plugin#120). Not
+`next` `11832d6b` (PR PandiO/knk-web-app#73), knk-plugin `next` `c349a53c` (PR PandiO/knk-plugin#120); § 14 against
+knk-web-api `next` `d86d6e1a` (PR PandiO/knk-web-api#80) and knk-plugin `next` `b31fceb6` (PR PandiO/knk-plugin#121). Not
 released; the manual steps of the
 [smoke test § 11](../guides/production-storage-transport-smoke-test.md#11-phase-p10-shops-248-api-687-plugin-menus-688-web-app-tier3)
-have not been run live yet.
+have not been run live yet, nor those of § 11.4 (display stalls).
 **Related:** [shops DESIGN § 2-5, § 9.1](../specs/shops/DESIGN.md) (the design: model, buying and selling, interim
 pricing, levels, trade stats), [API contract](../specs/api/API_CONTRACT_SHOPS.md), [shops admin
 guide](../guides/admin/shops-admin-guide.md), [town logistics](town-logistics.md) (the planner that restocks shops),
@@ -449,11 +450,120 @@ The main agent decisions with them: the amount kept by the plugin (not `menu.sta
 bought (#897); picks as slot references; one sale line per blueprint; the node `knk.admin.world.production` (not a new
 `knk.admin.world.shop`); one retry with the same key.
 
-## 14. Tests and recovery
+## 14. The game server: display stalls (L29, #250)
+
+Everything in game here runs only with the plugin's `production.enabled: true` (A21); the API part is admin CRUD and
+works with `Production:Enabled` off, like the catalogue. Design: [shops DESIGN § 7](../specs/shops/DESIGN.md). Player
+view: [menus player guide § Display stalls](../guides/users/menus-player-guide.md#display-stalls); set-up: [shops
+admin guide § 3.6](../guides/admin/shops-admin-guide.md#36-display-stalls).
+
+### 14.1 Spot registration
+
+1. **A spot is one block** (a shelf, a barrel, a slab, a stall counter) registered for one shop: entity
+   `ShopDisplaySpot` (knk-web-api `Models/Shops/ShopDisplaySpot.cs`, table `shop_display_spots`, migration
+   `AddShopDisplaySpots`): `ShopId`, `WorldName`, `X`/`Y`/`Z` (Y -64 to 320), `Facing` (`North`, `East`, `South`,
+   `West`; default `South`), `PinnedCatalogueEntryId` (an entry of the same shop, optional), `SortOrder`, `Label`
+   (optional, at most 100 characters), `Enabled`, `CreatedByUserId`, `CreatedAt`, `UpdatedAt`.
+2. **Rules** (`ShopDisplaySpotService`): a block is a spot once (unique world and x/y/z; 409 "The block … is already
+   a display spot."), at most 100 spots per shop (409), a spot keeps its shop (400 on a change), the pin must be an
+   entry of the spot's own shop (400; `0` clears it). Without a `sortOrder` a new spot comes after the shop's last one.
+   Spots go with their shop (cascade); a deleted catalogue entry clears the pins on it (set null).
+3. **Never found by scanning** (production DESIGN § 6.2, like storage containers). Two ways in:
+   1. In game, `/knk shop display add <shop id> [label]` while looking at the block (within 6 blocks): the plugin
+      sends `POST api/ShopDisplaySpots` with the block and the facing towards the admin (`DisplaySpot.Facing.towards`
+      of the player's yaw), with the plugin key.
+   2. The web app's generic dashboard form (`ShopDisplaySpot` form and display seeds, World area); a page of its own is
+      [#968](https://github.com/PandiO/knk-workspace/issues/968). The plugin picks such a change up at its next
+      re-read (`refresh-minutes`, default 5) or at once with `/knk shop display reload`.
+4. **The plugin's copy** (`DisplaySpotIndex`, knk-core) is the API's whole list (`POST api/ShopDisplaySpots/search`,
+   pages of 200), read at start, every `refresh-minutes` and on `reload`; `add`, `remove` and `pin` change it in place
+   after the API answered. It is indexed by spot, block, shop and chunk; the fill order is `SortOrder`, then id.
+5. Contract: [API contract § 4.5](../specs/api/API_CONTRACT_SHOPS.md#45-apishopdisplayspots-display-stalls).
+
+### 14.2 Item display entities and their respawn
+
+`ShopDisplayPresenter` (knk-paper), the lootbox technique (lootboxes DESIGN D3). Per shown spot, on top of the block:
+
+1. an `ItemDisplay` with the item (transform `FIXED`, billboard fixed, turned to the spot's facing, scaled by
+   `item-scale`, default 0.5): it doesn't turn with the viewer and can't be knocked down, pushed or picked up;
+2. an `Interaction` hitbox of the same size, for the clicks;
+3. a `TextDisplay` label (billboard centre) when `label` is on: the item's name, "<price> coins each" (a unique item
+   without "each"), or "Sold out" in red, and with `hints` on "Right-click: information · Shift: buy" ("Right-click:
+   information" for a sold-out item) (`DisplayText`).
+
+All three are **non-persistent** and carry PDC `knightsandkings:knk_shop_display = <spot id>`. They are spawned only
+while the spot's chunk is loaded and removed when it unloads; a crash leaves nothing behind. The block itself is never
+changed. A sold-out item is the real item dimmed (brightness 3/3).
+
+Respawn (`ShopDisplayModule`): once a second every chosen spot whose entities went away (killed, a chunk reload) is
+spawned again; a chunk that loads gets its spots painted at once (or its shop read, the first time); when a chunk's
+entities load, stray stall entities that the module doesn't own are removed (`purgeOrphans`, also for every world at
+start), so a spot never shows two copies. An update with the same block, facing and label setting changes the
+entities in place; anything else respawns them. On a plugin disable every stall entity goes.
+
+### 14.3 Selection: pins, the pin fallback and best sellers
+
+`DisplaySelection.select` (knk-core, pure) fills one shop's enabled spots in fill order from the shop's offer (`GET
+api/Shops/{id}/offer`, § 5.1, read through `ShopService.fetchOffer`) and its units sold:
+
+1. **A spot's own pin** (`PinnedCatalogueEntryId`) shows that entry.
+2. **The pin fallback:** a pinned entry that is gone, switched off, hidden (sold out with **Hide sold-out items**) or
+   already shown on an earlier spot doesn't leave the spot empty: the spot is filled like an unpinned one (a link
+   decision in PandiO/knk-plugin#121; the alternative was an empty spot).
+3. **The catalogue's pinned entries** (`pinned`) fill the next free spots, in the offer's order.
+4. **The rest:** in-stock items before sold-out ones, then **best sellers** (most units sold), then the offer's order.
+5. Sold-out items are greyed out, or not shown when the shop's `hideSoldOut` is set (they are then not in the offer).
+6. An item is shown on one spot at most; spots left over when the offer runs out, and disabled spots, show nothing.
+
+**Best sellers** are the units sold per blueprint over the last `best-seller-hours` (default 168, 7 days; 1 to 2160),
+summed from `POST api/ShopTradeStats/search` (filters `shopId` and `from`, the window's start on the whole hour; § 11)
+and read at most every 10 minutes per shop. Units sold, not revenue and not all time (a link decision in PandiO/knk-plugin#121). If the stats can't be
+read, the last numbers are used, or none: the stalls still fill.
+
+**When it runs:** every `selection-refresh-seconds` (default 30) for the shops with a spot in a loaded chunk; when such
+a chunk loads; after the spot list changes; and at once after a purchase, sale or refusal that drops the shop's
+offer (`ShopService.onOfferChanged`, one listener). The reads are off the main thread, one at a time per shop; the
+result is applied on the main thread. Unique items in the offer get their real item built first, so a stall shows the
+exact item (another item falls back to paper while its template is missing).
+
+### 14.4 Interactions
+
+`ShopDisplayModule` listens on the stall entities only (the PDC tag); everything else is left alone.
+
+1. **Right-click** (`PlayerInteractEntityEvent`, main hand; the off-hand copy is ignored; two clicks within 250 ms are
+   one): `ShopService.openItem(player, shopId, ref, false)` reads the offer and opens `shops.item` (§ 13.2) with
+   `ctx.shopId` and `ctx.item`. No purchase. Anyone can click: there is no node, as for the shop menus.
+2. **Shift-right-click, the quick buy:** `openItem(…, true)` opens `shops.confirm` with `ctx.amount` = the amount the
+   player last picked for that item in the item information menu (`ShopAmounts`, 1 at first; a link decision, the alternatives were always 1 or a stack), and asks
+   for the quote at once. **Every purchase is confirmed there**; the flow is § 13.3. An item that can't be bought
+   opens nothing and is told: "This item is sold out.", "Unique items can't be bought in game yet.", "This item is no
+   longer for sale here."
+3. **Refused before a menu:** a player in a siege ("Shops are closed to you during a siege."), a spot showing nothing
+   ("Nothing is on display here right now."), an offer that can't be read ("Could not open the shop (<why>).").
+4. **Left-click and damage** on a stall entity are cancelled (`PrePlayerAttackEntityEvent`): nothing happens.
+5. **WorldGuard** (`ShopDisplayWorldGuardListener`, registered only with WorldGuard): shops stand in town regions,
+   where WorldGuard refuses entity use to non-members. For a stall entity only, a player's `UseEntityEvent` is marked
+   allowed before WorldGuard's region check (the KNG-266 lootbox pattern); every other entity stays protected.
+
+No new menu seed: the stalls reuse L26's `shops.item` and `shops.confirm` (a link decision; the alternative was a stall menu seed), so `content-seeds.json` is
+unchanged. The node for `/knk shop display` is L26's `knk.admin.world.production` (not a new `knk.admin.world.shop`).
+
+### 14.5 Configuration
+
+`production.shops.displays.*` in the plugin's `config.yml` (restart; out-of-range values are clamped,
+`DisplaySettings`): `refresh-minutes` 5 (1-1440), `selection-refresh-seconds` 30 (5-3600), `best-seller-hours` 168
+(1-2160), `item-scale` 0.5 (0.1-2.0), `label` true, `hints` true. Reference: [plugin configuration
+§ 4.31](../guides/admin/plugin-configuration.md#431-production). The start logs "Shop display stalls on: spots re-read every <n> min,
+shown items chosen every <n> s (best sellers of the last <n> h)".
+
+## 15. Tests and recovery
 
 1. **knk-web-api** (xUnit): `Services/Shops/ShopTradingTests.cs` (23), `ShopSupplyTests.cs` (8), `ShopAdminTests.cs` (9),
    `Migrations/AddShopsTests.cs` (3); with `KNK_TEST_MYSQL`, `MySql/ShopsMySqlTests.cs` (2). The access tables and the
-   seed import tests cover the six types; `MenuTemplateContentSeedTests` the three menu seeds. Every step of the
+   seed import tests cover the six types; `MenuTemplateContentSeedTests` the three menu seeds. Display stalls (§ 14):
+   `ShopDisplaySpotTests.cs` (5), `Migrations/AddShopDisplaySpotsTests.cs` (2) and the `ShopDisplaySpot` rows of the
+   pinned access tests (`ReadAccessRulesTests` with the plugin-key reads of `ShopDisplaySpots` and `ShopTradeStats`
+   search, `DashboardChangeAccessRulesTests`, `DeleteAccessRulesTests`). Every step of the
    [smoke test § 11.1](../guides/production-storage-transport-smoke-test.md#111-steps-api) names its test.
 2. **knk-web-app**: § 12.3; the steps of [smoke test § 11.3](../guides/production-storage-transport-smoke-test.md#113-steps-web-app-688).
 3. **knk-plugin**: knk-core `ShopItemRefTest`, `ShopRefusalTest`, `ShopAmountsTest`, `ShopKeysTest`, `SellBasketTest`,
@@ -462,6 +572,11 @@ bought (#897); picks as slot references; one sale line per blueprint; the node `
    `ShopAdminCommandTest`; the scenario `player-shop-sell-and-buy` on a real Paper server in CI's `paper-boot`
    ([plugin scenarios § 1](../guides/developer/plugin-scenarios.md#1-a-scenario-in-under-30-lines)). The steps of
    [smoke test § 11.2](../guides/production-storage-transport-smoke-test.md#112-steps-plugin-687) name them.
+   Display stalls (§ 14): knk-core `DisplaySelectionTest`, `DisplaySpotIndexTest`, `DisplaySpotFacingTest`,
+   `DisplayTextTest`; knk-api-client `ShopDisplaySpotsApiImplTest`; knk-paper `ShopDisplayModuleTest` (MockBukkit: the
+   entities, the clicks with the real `ShopService`, respawn and stray copies), `ShopDisplayCommandTest`,
+   `ShopDisplayConfigTest`; the scenario `shop-display-stall`. The steps of [smoke test
+   § 11.4](../guides/production-storage-transport-smoke-test.md#114-steps-display-stalls-plugin-and-api-250) name them.
 3. **Recovery.**
    1. A town account that is not `reconciled`: compare `GET api/TownAccounts/{id}/ledger` with the balance; there is no
       correction route for town legs yet (#934).
@@ -470,22 +585,27 @@ bought (#897); picks as slot references; one sale line per blueprint; the node `
       says what happened. The plugin logs the key of a purchase or sale that got no answer, and the player is shown
       it ("show staff this code"); a player who left before a bought item was placed is logged too ("give it back by
       hand").
-   4. Turning shops off for players: `Production:Enabled` off stops selling, inbox delivery, restocking, processing
+   4. A stall that shows two copies or a wrong item: `/knk shop display list <shop id>` says what each spot should
+      show; `/knk shop display reload` re-reads the spots; a chunk reload removes stray copies (§ 14.2).
+   5. Turning shops off for players: `Production:Enabled` off stops selling, inbox delivery, restocking, processing
       and the stats job; buying from the catalogue goes on. Switching catalogue entries off (`enabled: false`) takes
       them off the offer.
 
-## 15. Limitations
+## 16. Limitations
 
-1. No shopkeeper NPC ([#249](https://github.com/PandiO/knk-workspace/issues/249)) and no display stalls
-   ([#250](https://github.com/PandiO/knk-workspace/issues/250)): a shop is opened with `/knk shop <id>`, so only staff
-   with `knk.admin.world.production` reach the menus; `ShopkeeperLocationId` and the entries' `Pinned` (for stalls) are
-   stored for them.
-2. Unique items are listed in the shop menus but can't be bought in game until
+1. No shopkeeper NPC ([#249](https://github.com/PandiO/knk-workspace/issues/249)): the full shop menu is opened with
+   `/knk shop <id>` (staff with `knk.admin.world.production`); players reach a shop's items only through its display
+   stalls (§ 14), which open the item information and the confirmation, not the shop menu or the sell menu.
+   `ShopkeeperLocationId` is stored for P11.
+2. Display spots have no page of their own in the web app yet, only the generic dashboard form
+   ([#968](https://github.com/PandiO/knk-workspace/issues/968)); a spot added there shows after `refresh-minutes` or
+   `/knk shop display reload`.
+3. Unique items are listed in the shop menus but can't be bought in game until
    [#897](https://github.com/PandiO/knk-workspace/issues/897) (buy them through staff).
-3. A town leg can't be reversed or corrected by staff ([#934](https://github.com/PandiO/knk-workspace/issues/934)).
-4. Interim pricing only; trade stats recorded but unused (#120). Levels are set by admins, no upgrade costs.
-5. Web app gaps noted on [#688](https://github.com/PandiO/knk-workspace/issues/688#issuecomment-7058103705): the shop
+4. A town leg can't be reversed or corrected by staff ([#934](https://github.com/PandiO/knk-workspace/issues/934)).
+5. Interim pricing only; prices don't use the trade stats yet (#120), only the display stalls read them (best sellers, § 14.3). Levels are set by admins, no upgrade costs.
+6. Web app gaps noted on [#688](https://github.com/PandiO/knk-workspace/issues/688#issuecomment-7058103705): the shop
    search row has no kind or type name, the town ledger shows user ids, sales and currency legs are not joined; no
    `production.shops` settings card and no account on the town page.
-6. Deleting a shop type level doesn't check the shops at that level (§ 3.2).
-7. `townPlayerCount` is always null (towns have no member count in V1).
+7. Deleting a shop type level doesn't check the shops at that level (§ 3.2).
+8. `townPlayerCount` is always null (towns have no member count in V1).
