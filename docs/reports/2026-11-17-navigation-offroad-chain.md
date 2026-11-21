@@ -1,6 +1,6 @@
 # Off-road navigation and landmarks chain — progress report
 
-**Status:** Running, waiting for the developer (2026-11-18) · **Last updated:** 2026-11-19 (F2 block); 2026-11-18 (L9 block); 2026-11-18 (L5 block); 2026-11-18 (L8 step A block)
+**Status:** Running, waiting for the developer (2026-11-18) · **Last updated:** 2026-11-20 (L7b step B merged); 2026-11-20 (L7b step A merged); 2026-11-19 (F2 block); 2026-11-18 (L9 block); 2026-11-18 (L5 block); 2026-11-18 (L8 step A block)
 
 **Issue:** [PandiO/knk-workspace#698](https://github.com/PandiO/knk-workspace/issues/698), links
 [#703](https://github.com/PandiO/knk-workspace/issues/703) (L1), [#704](https://github.com/PandiO/knk-workspace/issues/704) (L2),
@@ -31,12 +31,15 @@ on `next` (Decided 2026-11-17).
 | L5 Phase 2 walk links | #705 | Merged into next (2026-11-18); waits for the developer's live test (tier:3, smoke § 3) and confirmation of the road-first defaults | knk-plugin `claude/offroad-walk-links` `5b4f666d`; knk-workspace `06b3f92a` | [knk-plugin#85](https://github.com/PandiO/knk-plugin/pull/85) → `3977329c`, [#774](https://github.com/PandiO/knk-workspace/pull/774) → `e2cac646` | green (build, paper-boot) | create_session `session_01R1w2UsbXwf6jzEc33aVwLL` (2026-11-18) |
 | L6 Phase 3 hierarchical walk search | #706 | On hold as the fallback (developer, 2026-11-19, O32: option A and a better rural road network) | `claude/offroad-hierarchical` | — | — | — |
 | L7 Phase 4 route modes | #707 | Merged into next (2026-11-18); waits for the developer's smoke § 5 (steps 2, 3, 9) and the node grants | knk-plugin `claude/offroad-route-modes` `d374b016`; knk-workspace `ed01ab75` | [knk-plugin#86](https://github.com/PandiO/knk-plugin/pull/86) → `a94332d9`, [#775](https://github.com/PandiO/knk-workspace/pull/775) → `dd09f782` | green (build, paper-boot) | create_session `session_01R1w2UveW7t8KTUAYeD5kAa` (2026-11-18) |
+| L7b default route mode per permission group | #852 | Merged into `next` (step A and step B, 2026-11-20); waits for the developer's smoke § 15 | knk-web-api `5e16ea04`, knk-web-app `88d6f663`, knk-plugin `c7e36e6e`, knk-workspace `428bcd9e`, `5e4fb7b7` (merges into `next`) | [knk-web-api#62](https://github.com/PandiO/knk-web-api/pull/62), [knk-web-app#65](https://github.com/PandiO/knk-web-app/pull/65), [knk-plugin#103](https://github.com/PandiO/knk-plugin/pull/103), [#855](https://github.com/PandiO/knk-workspace/pull/855), [#862](https://github.com/PandiO/knk-workspace/pull/862) | green (API build-and-test, mysql-tests, fresh-database; web build-and-test, e2e; plugin build, paper-boot on both runs of `5f7e801`) | step A subagent of the coordinator; step B `session_01R1w2UsqpBUhZfifDnvcyJj`, docs by the coordinator |
 | L8 Phase 5.1 landmark entity | #708 | Merged into next (2026-11-18); waits for the developer's live test (tier:3, smoke § 6) | knk-web-api `d331bdf4`, knk-web-app `b50c4134`, knk-plugin `be9e3a74`, knk-workspace `eb3321a9` (`claude/offroad-landmarks`) | [knk-web-api#50](https://github.com/PandiO/knk-web-api/pull/50) → `935fe8cc`, [knk-web-app#54](https://github.com/PandiO/knk-web-app/pull/54) → `3432e6ef`, [knk-plugin#83](https://github.com/PandiO/knk-plugin/pull/83) → `5fd81466`, [#763](https://github.com/PandiO/knk-workspace/pull/763) → `7722cc76` | green (all jobs) | subagent of the coordinator (three component repos; resumed once after the usage limit) |
 | L9 Phase 5.2 landmark weights | #709 | Merged into next (2026-11-18); waits for the developer's smoke § 7 steps 1–3 | knk-plugin `claude/offroad-landmark-weights` `636c9f32`; knk-workspace `9d0c926f` | [knk-plugin#87](https://github.com/PandiO/knk-plugin/pull/87) → `c7be34fb`, [#776](https://github.com/PandiO/knk-workspace/pull/776) → `99fef23d` | green (build; paper-boot after one #695 flake on the PR run) | create_session `session_01R1w2Ut1P9c2jGxRYC3weCJ` (2026-11-18) |
 | L10 Phase 7 plaza lines | #712 | Merged into next (step 1 and step 2, 2026-11-18); waits for the developer's smoke § 10.2 | knk-plugin `claude/offroad-plaza-lines` `28ad18c5`; knk-workspace `d7e4e834` | step 1: [knk-plugin#73](https://github.com/PandiO/knk-plugin/pull/73) → `ce0f65ec`, [#723](https://github.com/PandiO/knk-workspace/pull/723) → `c7f61e9e`; step 2: [knk-plugin#84](https://github.com/PandiO/knk-plugin/pull/84) → `4daa0c84`, [#769](https://github.com/PandiO/knk-workspace/pull/769) → `2e0c04d4` | green (build, paper-boot) | create_session `session_01R1w2Ussca79jpGCPqzcTf8` (2026-11-18) |
 | F1 walk-search fixes (#771 items 1, 2) | #771 | Merged into next (2026-11-19); waits for the developer's smoke § 12; the storage hall by road stays open (#780) | knk-plugin `claude/offroad-walk-fixes-771` `321daf6b`; knk-workspace `8fdfe392` | [knk-plugin#88](https://github.com/PandiO/knk-plugin/pull/88) → `cee53213`, [#778](https://github.com/PandiO/knk-workspace/pull/778) → `d1850c7a` | green (build, paper-boot) | create_session `session_01R1w2Ut7LKtBrvQw9bA3mVQ` (2026-11-19) |
 | F2 road goal and route ends (#780 b, #771 items 3–5) | #780, #771 | Merged into next (2026-11-19); waits for the developer's smoke § 13 | knk-plugin `claude/offroad-route-ends-f2` `ebc63265`; knk-workspace `441dd7cc` | [knk-plugin#94](https://github.com/PandiO/knk-plugin/pull/94) → `6311de11`, [#813](https://github.com/PandiO/knk-workspace/pull/813) → `05b8edc3` | green (build, paper-boot) | create_session `session_01R1w2UtLzNFzgycUAEB8mVd` (2026-11-19; resumed once after the usage limit) |
+| F3 smoke-test failures of 2026-11-19 (#780, #771, #710) | #780, #771, #710 | Merged into next (2026-11-20); waits for the developer's smoke § 14; spacing default 2.0 follow-up running | knk-plugin `claude/offroad-smoke-fixes-f3` `64b4de3b`; knk-workspace `e7e6d306` | [knk-plugin#100](https://github.com/PandiO/knk-plugin/pull/100) → `6878d584`, [#851](https://github.com/PandiO/knk-workspace/pull/851) → `c1e078ba` | green (build, paper-boot) | create_session `session_01R1w2UsZsisbttfNE2dkTV3` (2026-11-20) |
 | F2 road goal and route ends (#780 b, #771 items 3–5) | #780, #771 | Merged into next (2026-11-19); waits for the developer's smoke § 13 | knk-plugin `claude/offroad-route-ends-f2` `ebc63265`; knk-workspace `441dd7cc` | [knk-plugin#94](https://github.com/PandiO/knk-plugin/pull/94) → `6311de11`, [#813](https://github.com/PandiO/knk-workspace/pull/813) → `05b8edc3` | green (build, paper-boot) | create_session `session_01R1w2UtLzNFzgycUAEB8mVd` (2026-11-19; resumed once after the usage limit) |
+| F3 smoke-test failures of 2026-11-19 (#780, #771, #710) | #780, #771, #710 | Merged into next (2026-11-20); waits for the developer's smoke § 14; spacing default 2.0 follow-up running | knk-plugin `claude/offroad-smoke-fixes-f3` `64b4de3b`; knk-workspace `e7e6d306` | [knk-plugin#100](https://github.com/PandiO/knk-plugin/pull/100) → `6878d584`, [#851](https://github.com/PandiO/knk-workspace/pull/851) → `c1e078ba` | green (build, paper-boot) | create_session `session_01R1w2UsZsisbttfNE2dkTV3` (2026-11-20) |
 
 ## 3. Coordinator decisions
 
@@ -252,6 +255,53 @@ on `next` (Decided 2026-11-17).
     Codex findings (usage limit). C1's NPC join is private and could not leave the dead end; F2 applies the same
     principle for players (NPC coordinator told; a shared rule is their call). #780 closes on promotion; #771 stays
     open until the developer's test tells which cause of item 5 they saw. The plugin slot is free.
+39. **Developer's live smoke test, 2026-11-19 evening (summary on #698).** Passed: #780 (b) (storage hall reached by
+    road with the key on), #771 item 2 (hatch both ways; closed hatch never passed), #771 item 3 (`trail-leg-spacing`,
+    developer chose 2.0 for the dev server), #710 shape on the spiral stair and a corridor corner. Failed: (1) the
+    road-goal rule stops the road too early (Keep Tower Roof walk 202 vs 161; watchtower goal not moved) and repeats
+    the first turn message 4× with the keys on; (2) a 0-expansion first walk search from plain roof floor on the
+    Garrison Watchtower Roof; (3, provisional) with `guidance-v2` on, an open normal door near 1404 104 -494 is not
+    crossed. Developer kept `road-goal-reachable` and `road-to-its-end` off until fixed. Not run: § 8 steps 6–7, § 9,
+    § 10.2, § 3, § 5, § 6, § 7, L1's open items.
+40. **Fix link F3 started (2026-11-20 09:09)** for the four failures (skill § 8: a failed live test gets a fix link).
+    The NPC coordinator is told that #710's spiral shape passed (their wait) but the flag-on door crossing is a
+    provisional failure, and that G1 (#814) should wait for F3's `RoadGoalChoice` change. Non-navigation findings of
+    the session (SignalR `TerritoryChanged` bind error, InventoryMenu validation for duel/arena menus) are reported to
+    the developer for the owning chains.
+41. **Developer decisions, 2026-11-20 (asked in the session):** (1) `trail-leg-spacing` default becomes 2.0 (added to
+    F3); (2) L5 defaults decided after the § 3 live test; (3) L7 mode nodes: a default route mode per permission group
+    on top of the nodes, as a field on the permission group (API, web app, plugin), built now as link L7b (#852, tier:3
+    schema; additive migration); (4) L8: `knk.admin.world` does not include the landmark node, granted separately;
+    (5) the docs session starts after the live tests. L7b step A (API, web app) runs now beside F3 (no shared files);
+    its plugin step B takes the plugin slot after F3.
+42. **F3 merged into `next` (2026-11-20 10:10).** § 6 checks held (clean merges, CI green on both runs, no NPC,
+    destinations, production or siege file, goldens and flag-off tests unchanged, no Codex findings). Results: road
+    goal scored road + 4 × walk (`road-goal-walk-weight` 4.0) with the road's onward nodes as candidates, reproduced
+    and fixed on the snapshots; repeated turn messages fixed; the roof 0-expansion search not reproduced (INFO
+    diagnostics added; suspect the sheared "Keep Stair House" gate door); the #710 door was a WorldGuard door check
+    on open doors for a player without door rights, not guidance-v2, now only closed doors are checked (players
+    only, unflagged). The spacing default 2.0 (developer, 09:25) missed F3; a small follow-up PR from the same session.
+    NPC and engine coordinators told (G1 may build on `RoadGoalChoice`).
+43. **L7b step A merged into `next` (2026-11-20).** § 6 checks held: heads matched, branches contained `next`, the
+    migration `20261120101407_AddPermissionGroupDefaultRouteMode` only adds and drops the nullable `DefaultRouteMode`
+    column (an exception to charter rule 3, which allowed a migration only in L8: the developer asked for this field,
+    decision 41), CI green (API build-and-test, mysql-tests, fresh-database; web build-and-test, e2e), no review
+    findings (Codex at its usage limit). Merged in dependency order: knk-web-api#62 `5e16ea04`, knk-web-app#65
+    `88d6f663`, #855 `428bcd9e`. A local MySQL server the subagent left running was stopped. Deploy note: apply the
+    migration; on databases seeded before this change add the form field by hand (smoke § 15). Step B (plugin) started
+    11:16 (`session_01R1w2UsqpBUhZfifDnvcyJj`) and holds the plugin navigation slot; engine L5 (#747) follows once
+    the developer opens its gate.
+44. **L7b step B merged into `next` (2026-11-20 12:00).** The link session could not attach knk-workspace (attach
+    refused by its permission check; not worked around), so the coordinator wrote the docs from its notes (#862: smoke
+    § 15.4, seven steps, four automated, one in part; changelog). § 6 checks held: head `5f7e801` matched, branch
+    contained `next`, 14 files, no NPC, siege, production or migration file, L7 goldens and flag-off tests unchanged,
+    CI green (build, paper-boot, both runs), no review findings (Codex at its usage limit). `withMode` reads the group
+    default from a warm cache only (a miss runs today's call and fills in the background); a group default needs no
+    node, a typed word still does. Accepted gap: the legacy siege-match path (`navigateInMatch`) takes no group
+    default, as it takes no typed word. Note: a group default of `preferred` runs through the mode path rather than
+    today's call; same mode, recorded for the § 15.4 test. #852 stays open for the developer's live test. Merges:
+    knk-plugin#103 `c7e36e6e`, #862 `5e4fb7b7` (CHANGELOG conflict with overview map F3 resolved by keeping both).
+    The plugin navigation slot is free; engine L5 (#747) may take it once the developer opens its gate.
 
 ## 4. Link blocks
 
@@ -1209,3 +1259,112 @@ _(Each link appends its block here when it finishes.)_
     1. The engine chain's removal of the raw entry (#747) is not affected: F2 uses `begin` and `onNetworkChanged` only.
     2. NPC long walks (#698's NPC phase) could reuse `RoadGoalChoice.candidates`/`best` for an NPC's road goal; that is the NPC chain's call.
 
+
+### 4.13 F3 — smoke-test failures of 2026-11-19 (#780, #771, #710)
+
+1. **Scope done.** The four failures of the developer's live runs of 2026-11-19 (smoke § 8, § 12, § 13), tier:2, no migration.
+    1. **Road goal too early (#780, #771 items 4 and 5), behind `road-goal-reachable`.**
+        1. Reproduced on `keep-tower.zip`: with F2's rule (least road + walk) the tower roof's goal is the garrison exit (edge 2000000003 at 1399 80 -532, 198 walked; live 202), and the watchtower's goal stays under the watchtower. The snapshot routes the long way through the Keep Upper Stairhouse and the Keep Garrison, as the live route did.
+        2. New key `navigation.road-goal-walk-weight` (4.0, 1..100): the score is road + weight × walk (`RoadGoalChoice.best(options, walkWeight)`, `Option.score`).
+        3. New candidates: `RoadGoalChoice.candidatesAlongRoad`. These are the per-edge points plus the network nodes reached from today's goal's edge ends, breadth first, without leaving `max-snap-distance`. Nearest first, today's first, at most `road-goal-candidates`. Node #74 is now a candidate.
+        4. Result on the snapshot, tower roof: the road goes into the Keep Gate (1421 84 -521), 161 walked. That is the least walk of the 9 candidates (node #74: 168).
+        5. Result on the snapshot, watchtower: the goal moves to 1417 81 -546, 86 walked instead of 124.
+        6. One INFO line per choice lists every candidate with its road, walk and score, and marks the chosen one.
+        7. `candidates` and `best(options)` are unchanged (for the NPC chain's G1, #814).
+    2. **First turn said 4× (#780), behind either route-end key.**
+        1. Cause: `routeAdopted` reset the announced maneuvers on every adoption, including the silent NETWORK_CHANGED ones (the goal choice, live-tag swaps).
+        2. Fix: `Active.spokenManeuvers` survives silent replacements while a key is on. A maneuver with the same text within 2 blocks is not said again.
+        3. With the keys off, a swap still repeats the turn, as today (pinned).
+    3. **0 expansions from the watchtower roof (#771, § 12 step 3a): not reproduced.**
+        1. On the merged snapshots (`keep-tower` blocks over `quarry-to-keep-stairhouse`'s), every roof floor cell reaches every road point within 60 blocks (pinned). This includes the cells with a snow layer.
+        2. 0 expansions means the start or target cell check failed. A new INFO line names which, with both positions.
+        3. Suspect for the repeat run: the sheared "Keep Stair House" gate door (ID 2) on the road the start leg aims at, 45 blocks away.
+    4. **Open door not crossed (#710, § 8), unflagged (it only makes a valid route work).**
+        1. Not `guidance-v2`: both flags cross the door on the snapshot from every point along the way, with the real leg boxes.
+        2. Cause: `WalkAccessFactory` asked WorldGuard's door check for every door block, open ones too. The § 8 run's player (MrBedue) may not use the keep's doors. With the door denied, the snapshot gives the live picture (NO_PATH, partial trail to the door) with either flag.
+        3. Fix: `WalkChunk.openDoorBlocks` and `WalkCapture.openDoorBlocks` (additions) record the open state. The player's door check is asked for closed doors only.
+        4. NPC subjects keep their own door answer, unchanged.
+    5. **`trail-leg-spacing` ships as 2.0** (the developer's choice in § 13 step 5, relayed by the coordinator 2026-11-20). #100 and #851 were merged before it, so it is a follow-up on branch `claude/offroad-trail-spacing-default` from `next` (coordinator): [knk-plugin#102](https://github.com/PandiO/knk-plugin/pull/102) (`40d8d56a`) and [#854](https://github.com/PandiO/knk-workspace/pull/854) (`27448ced`), not merged. #101 and #853, the same commits on the F3 branch, were closed as superseded.
+        1. `config.yml` and `TrailConfig.DEFAULT_LEG_SPACING` go from 3.0 to 2.0.
+        2. `TrailRendererTest` and `ConfigLoaderNavigationTest` now pin 2.0 as the default and set 3.0 explicitly where they compare with it.
+        3. `TrailRenderer.LEG_SPACING` (the straight legs) stays 3.0.
+        4. No golden transcript changed: L7's cover routes, not particle spacing.
+        5. Build green locally, with the same counts.
+    6. Kept stable (additions only): `WalkLegPreparer`, `WalkSearch`/`WalkPathfinder`, `MovementProfile`, `RoadGoalChoice`, the shape package, `RoadPlanner`'s port. No `core/npc`, `paper/npc`, destinations, production or siege file was touched.
+2. **Commits and heads.**
+    1. knk-plugin `claude/offroad-smoke-fixes-f3` at `64b4de3b` (3 commits, base `next` `4e296797`).
+    2. knk-workspace `claude/offroad-smoke-fixes-f3` at `e7e6d306` (1 commit, base `next` `e50b423f`).
+3. **PRs.** [PandiO/knk-plugin#100](https://github.com/PandiO/knk-plugin/pull/100) and [PandiO/knk-workspace#851](https://github.com/PandiO/knk-workspace/pull/851), base `next`, `Part of` #780, #771, #710. Not merged.
+4. **Tests, baseline → result.**
+    1. knk-plugin `./gradlew build -x deployToDevServer`, baseline on `next` `4e296797`:
+        1. knk-core 3541 → 3544 (+3).
+        2. knk-paper 3229 → 3240 (+11, 18 skipped as before).
+        3. knk-api-client 366 → 366.
+        4. 0 failures; no known reds.
+    2. New tests:
+        1. knk-core `RoadGoalChoiceTest` +3.
+        2. knk-paper `NavigationServiceRouteEndsTest` +9 (test fixture `DevWorldSnapshot.merged`).
+        3. knk-paper `WalkAccessFactoryTest` +2 (`WalkCaptureTest.FakeWorld` gains open block states).
+    3. Unchanged and green: L7's golden transcripts, the flag-off identity tests, F1/F2's tests, the engine's handle tests, the NPC tests. No golden changed.
+5. **Decisions (DESIGN § 4.3).**
+    1. *Walk over road.* Chosen: road + k × walk, k a key, default 4. Alternatives:
+        1. (a) Least walk, near-ties broken by the longer road: on the snapshot it picks the dead-end node 34 for the watchtower, an overshoot like #771 item 4.
+        2. (b) Least walk only: any long road detour would win.
+    2. *k = 4.* Chosen because it is the smallest round weight that turns both live failures on the snapshot, with a margin. The tower roof is 1088 against 1107 for the next candidate. Alternatives:
+        1. (a) 2: the garrison exit still loses only narrowly.
+        2. (b) 10: a few blocks of walk would justify long road detours.
+    3. *Onward candidates.* Chosen: network nodes reached from today's goal's edge ends without leaving `max-snap-distance`, merged with the per-edge points nearest first. Alternative: (a) only the next node past today's goal along the route: needs the route's direction, and misses the Keep Gate's split points.
+    4. *Tower roof end point.* Chosen: assert the road into the Keep Gate (x ≥ 1413, z ≥ -523) with the least walk, rather than node #74 itself. From node #74 the walk is 7 blocks longer, and #771 item 4 had asked for no overshoot past the walk's start. Alternative: (a) force node #74: contradicts the "start walking as late as useful" rule by the numbers.
+    5. *Repeated turn.* Chosen: remember the maneuvers said and skip the same text at the same node, behind the route-end keys. Alternative: (a) keep the counter across NETWORK_CHANGED: a replacement's maneuver list may shift indexes.
+    6. *Open doors.* Chosen: the capture records the open state and only the player path skips the check. Alternatives:
+        1. (a) Skip for every subject: changes NPC access, outside this link's area.
+        2. (b) Behind `guidance-v2`: the cause is not the flag.
+    7. *Failure 3.* Chosen: diagnostics plus a pinned negative result. Alternative: (a) change `WalkGrid`'s gate-footprint floor rule on suspicion: it is shared with the road builder and not proven.
+6. **Out of scope, noted.**
+    1. With the route-end keys off, a live-tag network swap still repeats the turn message (today's behaviour).
+    2. The "Keep Stair House" gate door's sheared reference points (warned at every start) may remove a floor from the walk grid. To check with § 14 step 3's INFO line before filing.
+7. **Blockers.** None. Codex reached its code-review usage limit on both PRs (its comments of 2026-11-20 09:37 UTC), so the link finished without its review (developer decision 2026-11-14); said on both PRs. CI on `64b4de3b`: build and paper-boot green on the push and PR runs, no re-run.
+8. **At merge / what the developer must do.**
+    1. Add `navigation.road-goal-walk-weight: 4.0` and set `navigation.trail-leg-spacing: 2.0` under `navigation:` (YAML in the plugin PRs #100 and #102).
+    2. Live test, about 25 minutes: smoke § 14 steps 1 to 5. Use shipped settings and `max-snap-distance` 48; route-end keys on for steps 1 to 3; player MrBedue with `guidance-v2` on, then off, for steps 4 and 5.
+9. **Notes for later links.**
+    1. `RoadGoalChoice.best(options)` stays F2's rule. G1 (#814) should use `best(options, walkWeight)` if NPCs ought to walk as little as players.
+    2. Door access now depends on the door's open state at capture time. A door toggled within `chunk-ttl-seconds` (10 s) keeps its captured state, as before.
+
+### 4.14 L7b — default route mode per permission group, step A (API and web app) (#852)
+
+1. **Scope done (step A).** No flag: a null default reproduces today.
+    1. knk-web-api:
+        1. `PermissionGroup.DefaultRouteMode` (nullable `varchar(16)`, `shortest`/`efficient`/`preferred`, stored lowercase) and the migration `20261120101407_AddPermissionGroupDefaultRouteMode`, one nullable column on `permission_groups` and nothing else (made with `dotnet ef`, `Database__MySqlServerVersion=8.0.36`; the snapshot diff is that column).
+        2. `defaultRouteMode` in `PermissionGroupDto` (read and write) and `PermissionGroupListDto`; AutoMapper read maps; the write is applied by `Services/PermissionGroupRouteMode` from `PermissionGroupService` (create and update): the words in any case are stored lowercase, `""` clears, omitted (null) keeps, anything else is a `400`.
+        3. Access unchanged: `PUT api/PermissionGroups/{id}` (`knk.admin.user.perm` or the plugin key, `PermissionEscalationGuard`'s rank rule); pinned access tests untouched.
+        4. Form seed `PermissionGroup.json`: the field `DefaultRouteMode` in step Group, in place (no new GUID), a String dropdown with `emptyOptionLabel` "None (default: preferred)"; seed README note.
+    2. knk-web-app: DTO types, the dashboard column "Default route", the object config select, and `settingsJson.emptyOptionLabel` for a dropdown's empty option in `FieldRenderers` (String with `enumValues` and Enum).
+    3. knk-workspace (`next` branch): smoke test § 15 (API, web and migration steps, 11 of 11 automated, 2 in part; in-game steps marked step B), CHANGELOG (Unreleased) with admin steps, production installation § 5.3 item 10.
+2. **Commits and heads** (branch `claude/offroad-group-route-mode`, all containing the current `next`).
+    1. knk-web-api `68feaa2` (4 commits, base `next` `4f6ac8b`).
+    2. knk-web-app `84690c3` (1 commit, base `next` `2c177be`).
+    3. knk-workspace `3ad5ddff` (1 commit and two merges of `next`, the last `0c014cb6`; the first conflicted in the smoke guide's header and end with F3's step 8, kept both).
+3. **PRs.** [knk-web-api#62](https://github.com/PandiO/knk-web-api/pull/62), [knk-web-app#65](https://github.com/PandiO/knk-web-app/pull/65), [#855](https://github.com/PandiO/knk-workspace/pull/855), base `next`, all `Part of PandiO/knk-workspace#852` (step B's plugin PR closes it). Not merged.
+4. **Tests, baseline → result.**
+    1. knk-web-api: 4801 passed, 117 skipped → 4826 passed, 117 skipped (+25: `PermissionGroupDefaultRouteModeTests`, `AddPermissionGroupDefaultRouteModeTests`; MySQL tests skip locally without `KNK_TEST_MYSQL`). A mutation (no validation, null clears) failed 6.
+    2. knk-web-app: Jest 2845 → 2858 (+13); tsc and `typecheck:e2e` clean; build ok; Playwright 280 → 283 (`e2e/permission-group-route-mode.spec.ts`, strict mocks), full run green.
+    3. Known reds: none.
+    4. CI: green on all heads (summary row). The first API run had 3 red `mysql-tests` (`SeedDashboardActionNodesMySqlTests`, `SeedStaffKickBanNodesMySqlTests`, `SeedStaffFreezeNodesMySqlTests`: they roll the schema back and insert groups through EF, which wrote the new column, "Unknown column 'DefaultRouteMode'"); fixed in `68feaa2` with a plain-SQL helper `MySql/PermissionGroupRows`, checked on a local MySQL 8.0.46 (117 MySQL tests: 116 pass; `MinecraftCatalogMySqlTests.UpgradePath_PhaseTwoKeepsRows…` fails locally only, the same pattern on `ArmorTrimMaterial`, not this link's column and green in CI). Codex: at its usage limit on all three PRs (2026-11-20 10:35 UTC), no review; said on each PR.
+5. **Decisions (DESIGN § 4.3).**
+    1. *String, not a C# enum.* Chosen: a string checked by the service, because the global `NullableEnumConverterFactory` reads `""` as null (an enum can't tell "clear" from "omitted") and the stored words equal the plugin's. Alternatives: (a) `RouteMode?` enum: a stale form wipes the default or None can't clear it; names would read `Shortest`.
+    2. *Omitted keeps, `""` clears.* Chosen: like `GemBonusMultiplier` and the teleport modes, because the wizard sends only the form's fields and older imported forms lack this one. Alternative: (a) taken as sent like `NameColor`: saving through an older form drops the default.
+    3. *Seed field in place.* Chosen: the KNG-234 `NavigationItem` precedent; additive, no clash with other chains' seed edits; an existing database adds the field in the form designer (admin step). Alternative: (a) seed v2 with new GUIDs: imports without hand work, but every GUID changes and v1 stays behind.
+    4. *"None (default: preferred)".* Chosen: a generic `emptyOptionLabel` field setting in the web app. Alternatives: (a) a `none` word the API maps to null: a sentinel that isn't a mode; (b) a special case by field name in the renderer.
+    5. *Where the field sits.* Chosen: last field of the seed's Group step (with weight and parent). Alternative: (a) a new "Navigation" step: one more step for one field.
+    6. *Display.* Chosen: the dashboard column and the object config; no PermissionGroup display seed exists, so the detail page shows what the developer's display configuration has. Alternative: (a) a new display seed: out of this link's scope.
+    7. *Old-schema MySQL tests.* Chosen: insert the groups with plain SQL (the first table's columns), as `SeedAlphaTesterGroupMySqlTests` does. Alternatives: (a) insert after the full migration and roll back: changes what the tests check at the old schema; (b) a default on the column: the column would no longer be null for "no default".
+6. **Out of scope, noted.** None filed. Docs follow-ups for the `documentation` sub-issue at merge: `docs/specs/api/` permission group contract, DESIGN § 5.4.7, navigation admin guide (with step B), form designer guide (`emptyOptionLabel`), player guide and register (with step B).
+7. **Blockers.** None.
+8. **At merge / what the developer must do.**
+    1. The coordinator merges knk-web-api#62, knk-web-app#65 and #855 into `next` (the web app needs the API).
+    2. Deploy: apply `AddPermissionGroupDefaultRouteMode`; on a database that imported the PermissionGroup seed before, add the field in the form designer (changelog admin step 2).
+    3. Smoke test § 15.1 to § 15.3 (about 15 min); § 15.4 after step B.
+9. **Notes for later links.**
+    1. Step B (this link): read `GET api/PermissionGroups` (already a pinned plugin read; `PermissionGroupsQueryApiImpl`) and add `@JsonProperty("defaultRouteMode") String defaultRouteMode` to knk-api-client's `PermissionGroupListItemDto`; values are `"shortest"`, `"efficient"`, `"preferred"` or null, which `RouteMode.fromWord` parses. The player's groups and weights come from `GET api/UserPermissionGroups?userId=` (`GroupMembershipDto`) joined on the group id; take the highest weight with a non-null default, else `RouteMode.DEFAULT`.
+    2. The `realtime` event `PermissionGroupChanged` (Updated) already fires on every group edit, so a cache of the defaults can refresh on it.

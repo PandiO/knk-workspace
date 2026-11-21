@@ -36,14 +36,42 @@ of what is already in `next`.
    2. Import the seeds `ProductionArea` and `ProductionYieldOverride` (form and display) and `AreaSurvey` (display).
    3. Make `ProductionKind` v2, `ProductionStructure` v3 (form and display) and `Structure` v3 (form) the default.
    4. Fill each kind's `yieldTable`; none is seeded, and #836 proposes defaults.
-6. **Smoke test of territory (L1 § 1.1–1.2, L2 § 1.3, L3 § 1.4).**
+6. **Smoke test of L12 (surveys plugin, tier:3):** guide § 5.2.
+   1. Merge the `production.surveys` block into the plugin `config.yml`. The YAML is in the changelog and knk-plugin#105.
+   2. Grant `knk.admin.world.production`.
+   3. Yield table rows (#836) are needed for the rates.
+7. **Smoke test of L14 (transport API, tier:3):** guide § 6.1 (18 of 20 steps automated).
+   1. Apply migration `AddTransportCore`.
+   2. Import the seeds `TransportOrder` and `TransportLane`.
+   3. Until L15 measures lanes, type in lanes or accept the estimated routes, and set rural producers' road connections.
+8. **Smoke test of L15/L16 (transport plugin and web app):** guide § 6.2 (merge the `production.logistics.lanes` keys,
+   restart; the road network must be built) and § 6.3 (deploy the web app).
+9. **Smoke test of L17 (terminals and menus API, tier:2):** guide § 7.1. Apply migration `AddStorageContainers`,
+   import the seeds `StorageContainer` (form and display), `StockTransaction` v2 and `ProductionArea` v2, restart the
+   API once (menus and the hub tile are seeded).
+10. **Decision (L17, agent):** town membership for the caller-filtered structure reads (M3) is the permission node
+    `knk.town.member.<town id>` (one permission group per town), a stand-in until town runtime management #246. Confirm,
+    or name the membership source you want.
+11. **Shop menu templates for L26 (#687):** the charter gate for the plugin shop menus. Asked on #687 on 2026-11-21.
+    The alternative offered there: start from the legacy V1/V2 shop menus and review the result.
+12. **Review (L22 decision 1):** in a yield area, a player who doesn't meet a harvest rule can't break that rule's
+    targets, also in the wilderness (otherwise they'd get full vanilla drops there).
+13. **Not in the charter's links, for the developer or the manager to schedule:** #901 (P7 web app: inbox, stash,
+    gifting) and #913 (P8 web app: harvest rules, pools, history).
+14. **Smoke test of territory (L1 § 1.1–1.2, L2 § 1.3, L3 § 1.4).**
    1. Apply migration `AddTerritory`.
    2. Import the four territory form and display seeds (`Kingdom` first).
    3. Merge the plugin `production` block into `config.yml`.
    4. To test, turn on `production.enabled` in the plugin and in the API game settings.
-7. **Review:** the agent decisions in blocks 4.0–4.11 (L6's are listed in knk-web-api#57) (L0's retag rule; L1 server-side territory and loyalty as a town
+15. **Review:** the agent decisions in blocks 4.0–4.23 (L6's are listed in knk-web-api#57) (L0's retag rule; L1 server-side territory and loyalty as a town
    id; L2's crown land region kind) and coordinator decision 15 (Town/District seed fields).
-8. Later: the shop menu templates for L26 (#687).
+16. **Review (L25 decision 5.1):** `Shop : ProductionStructure` (a shop's row next to its `production_structures` row)
+    instead of the design's `Shop : Structure`. Block 4.25 gives the reason and the alternative.
+17. **Smoke test of shops (L25 § 11.1).**
+   1. Apply migration `AddShops` (after `AddTownLogistics`).
+   2. Import the six seeds: `ShopType`, `ShopTypeLevel`, `Shop`, `ShopCatalogueEntry`, `ShopTradeStat` and `TownAccount`.
+   3. Optionally set the game settings section `production.shops`; create shop types, shops and catalogues.
+
 
 ## 2. Summary
 
@@ -61,22 +89,23 @@ of what is already in `next`.
 | L9 P3 production engine API | #86 | Merged into next (2026-11-19) | api `20dcfb7`, workspace `ea01df32`; merges: api `6c648f60`, workspace `7b1495d0` (after a coordinator merge of `next`, `50497cc8`) | [api#58](https://github.com/PandiO/knk-web-api/pull/58), [ws#827](https://github.com/PandiO/knk-workspace/pull/827) | green (build-and-test, mysql-tests, fresh-database) | create_session `session_01R1w2Uvi8uaBqDwjJDADicL` (one repo besides knk-workspace), started 2026-11-19 |
 | L10 P3b production web app | #678 | Merged into next (2026-11-19) | web-app `9e5a2ca`, workspace `eaf1f1a1`; merges: web app `4e4ca39a`, workspace `9eef39cf` | [web-app#63](https://github.com/PandiO/knk-web-app/pull/63), [ws#834](https://github.com/PandiO/knk-workspace/pull/834) | green (build-and-test, e2e) | create_session `session_01R1w2UvmqQ34HGVHXxDfmwW` (prompt says start without asking), started 2026-11-19 |
 | L11 P4 yield areas API | #138 | Merged into next (2026-11-19) | api `06b11ca`, workspace `b467e15a`; merges: api `e26c7d88`, workspace `e846be50` | [api#60](https://github.com/PandiO/knk-web-api/pull/60), [ws#837](https://github.com/PandiO/knk-workspace/pull/837) | green on `06b11ca` (build-and-test, mysql-tests, fresh-database) | create_session `session_01R1w2UuXh4wtTxPhhZUpLGF` (prompt says start without asking), started 2026-11-19 |
-| L12 P4b surveys plugin | #679 | Running | — | — | — | create_session `session_01R1w2Utt8cigo5ND98ZqXzC` (prompt says start without asking), started 2026-11-19 |
-| L13 P4c yield areas web app | #680 | Running | — | — | — | create_session `session_01R1w2UwYw3NNQSSBoP7XaBk` (prompt says start without asking), started 2026-11-19 |
-| L14 P5 transport API (simulated carrying, G14) | #79 | Running | — | — | — | create_session `session_01R1w2UtGLZrUEAUNFYvkqGB` (prompt says start without asking), started 2026-11-19 |
-| L15 P5b lanes plugin | #681 | Not started | — | — | — | — |
-| L16 P5c transport web app | #682 | Not started | — | — | — | — |
-| L17 P6a API: StorageContainer, caller-filtered reads, menu seeds | #683 | Not started | — | — | — | — |
-| L18 P6 plugin: terminals, displays, Structures menu, structure menu, orders list | #74 | Not started | — | — | — | — |
-| L19 P7 delivery and inbox API | #60 | Not started | — | — | — | — |
-| L20 P7b inbox plugin, kit/lootbox migration | #684 | Not started | — | — | — | — |
-| L21 P8a harvest API | #685 | Not started | — | — | — | — |
-| L22 P8 harvest plugin | #134 | Not started | — | — | — | — |
-| L23 P9 town logistics API | #127 | Not started | — | — | — | — |
-| L24 P9b logistics web app | #686 | Not started | — | — | — | — |
-| L25 P10 shops API, town account | #248 | Not started | — | — | — | — |
-| L26 P10b shop menus plugin | #687 | Not started | — | — | — | — |
-| L27 P10c shops web app | #688 | Not started | — | — | — | — |
+| L12 P4b surveys plugin | #679 | Merged into next (2026-11-20) | plugin `3472e32d`, workspace `c6f53e07`; merges: plugin `d36001b2`, workspace `496ed6fa` | [plugin#105](https://github.com/PandiO/knk-plugin/pull/105), [ws#876](https://github.com/PandiO/knk-workspace/pull/876) | green (plugin build + paper-boot, 68 scenarios) | create_session `session_01R1w2Utt8cigo5ND98ZqXzC` (prompt says start without asking), started 2026-11-19 |
+| L13 P4c yield areas web app | #680 | Merged into next (2026-11-20) | web app `6da700c`, workspace `638e5c3c`; merges: web app `eaf0467d`, workspace `2159952e` | [web-app#67](https://github.com/PandiO/knk-web-app/pull/67), [ws#873](https://github.com/PandiO/knk-workspace/pull/873) | green on `6da700c` (build-and-test, e2e) | create_session `session_01R1w2UwYw3NNQSSBoP7XaBk` (prompt says start without asking), started 2026-11-19 |
+| L14 P5 transport API (simulated carrying, G14) | #79 | Merged into next (2026-11-20) | api `ef61cd1`, workspace `ae26c88b`; merges: api `bf8633fb`, workspace `66cd37f0` (after a coordinator merge of `next`, `9a4de0b9`) | [api#65](https://github.com/PandiO/knk-web-api/pull/65), [ws#880](https://github.com/PandiO/knk-workspace/pull/880) | api build-and-test, fresh-database green; mysql-tests green on push run | create_session `session_01R1w2UtGLZrUEAUNFYvkqGB` (prompt says start without asking), started 2026-11-19 |
+| L15 P5b lanes plugin | #681 | Merged into next (2026-11-20) | plugin `796f1127`, workspace `77ebdc07`; merges: plugin `7116f1a5`, workspace `e0bf327e` (after a coordinator merge of `next`, `8be418b6`) | [plugin#108](https://github.com/PandiO/knk-plugin/pull/108), [ws#886](https://github.com/PandiO/knk-workspace/pull/886) | CI green (build + paper-boot) on `796f1127` | create_session `session_01R1w2Ux1xEr3Um5M3f3UysM` (prompt says start without asking), started 2026-11-20 |
+| L16 P5c transport web app | #682 | Merged into next (2026-11-20) | web app `e36d39f`, workspace `77b3d4f5`; merges: web app `5ad5029f`, workspace `9eae7f48` | [web-app#68](https://github.com/PandiO/knk-web-app/pull/68), [ws#887](https://github.com/PandiO/knk-workspace/pull/887) | green on `e36d39f` (build-and-test, e2e) | create_session `session_01R1w2Uu8TpsSchsfou5i63j` (prompt says start without asking), started 2026-11-20 |
+| L17 P6a API: StorageContainer, caller-filtered reads, menu seeds | #683 | Merged into next (2026-11-20) | api `a2b8a98`, workspace `bd4d7949`; merges: api `a2865d75`, workspace `3dc4267c` | [api#67](https://github.com/PandiO/knk-web-api/pull/67), [ws#889](https://github.com/PandiO/knk-workspace/pull/889) | green (build-and-test, mysql-tests, fresh-database) | create_session `session_01R1w2UukTGdahr4dAwQTutW` (prompt says start without asking), started 2026-11-20 |
+| L18 P6 plugin: terminals, displays, Structures menu, structure menu, orders list | #74 | Merged into next (2026-11-20) | plugin `a9ee8bf1`, workspace `f947c84b`; final head `19f74865` (L18 merged `next` and regenerated `content-seeds.json`); merges: plugin `8e672ba6`, workspace `df27cc18` (after a coordinator merge of `next`, `0f1c8264`) | [plugin#110](https://github.com/PandiO/knk-plugin/pull/110), [ws#898](https://github.com/PandiO/knk-workspace/pull/898) | green (plugin build + paper-boot, 69 scenarios) | create_session `session_01R1w2UxMM4WEwxxedAe11ji` (prompt says start without asking), started 2026-11-20 |
+| L19 P7 delivery and inbox API | #60 | Merged into next (2026-11-21) | api `a389259`, workspace `fbe4ded6`; merges: api `2952d0c7`, workspace `e2c6f45b` | [api#70](https://github.com/PandiO/knk-web-api/pull/70), [ws#899](https://github.com/PandiO/knk-workspace/pull/899) | build-and-test, fresh-database green; mysql-tests running (green locally) | create_session `session_01R1w2UwpK1NtaZLrA8k2uhP` (prompt says start without asking), started 2026-11-20 |
+| L20 P7b inbox plugin, kit/lootbox migration | #684 | Merged into next (2026-11-21) | plugin `823ebf09`, workspace `e48c9d0e`; merges: plugin `bdd8b463`, workspace `bb127457` | [plugin#113](https://github.com/PandiO/knk-plugin/pull/113), [ws#911](https://github.com/PandiO/knk-workspace/pull/911) | green on `1952a5b9` (build + paper-boot, 71 scenarios); `823ebf09` running | create_session `session_01R1w2Ux3iuWqjcAV5HQdPvM` (prompt says start without asking), started 2026-11-21 |
+| L21 P8a harvest API | #685 | Merged into next (2026-11-21) | api `e89e396`, workspace `00fab16d` (merged `next` `12804469`); merges: api `9ad32c23`, workspace `69f2b108` (after a coordinator merge of `next`, `944a443b`) | [api#72](https://github.com/PandiO/knk-web-api/pull/72), [ws#914](https://github.com/PandiO/knk-workspace/pull/914) | push runs on `e89e396` green (build-and-test, mysql-tests, fresh-database); PR runs running | create_session `session_01R1w2Ux7jFcMxYzkwej4qY4` (prompt says start without asking), started 2026-11-21 |
+| L22 P8 harvest plugin | #134 | Merged into next (2026-11-21) | plugin `676d6f11`, workspace `e6b8b6ec`; merges: plugin `6f6c915f`, workspace `700ec311` | [plugin#114](https://github.com/PandiO/knk-plugin/pull/114), [ws#919](https://github.com/PandiO/knk-workspace/pull/919) | green on `676d6f11` (plugin build + paper-boot, 73 scenarios) | create_session `session_01R1w2UuXe6TVT7QDKeAXdgn` (prompt says start without asking), started 2026-11-21 |
+| L23 P9 town logistics API | #127 | Merged into next (2026-11-21) | api `6a8c110`, workspace `3920e67d`; merges: api `37be22e5`, workspace `fbf071df` (after a coordinator merge of `next`, `8ebdbb2c`) | [api#73](https://github.com/PandiO/knk-web-api/pull/73), [ws#920](https://github.com/PandiO/knk-workspace/pull/920) | green on `6a8c110` (build-and-test, mysql-tests, fresh-database) | create_session `session_01R1w2UwWMWgbXsBzScMifEq` (prompt says start without asking), started 2026-11-21 |
+| L24 P9b logistics web app | #686 | Merged into next (2026-11-21) | web app `e392d84`, workspace `926ce973`; merges: web app `c12e0e7e`, workspace `385ec7d3` | [web-app#72](https://github.com/PandiO/knk-web-app/pull/72), [ws#927](https://github.com/PandiO/knk-workspace/pull/927) | green on `e392d84`: build-and-test (push 44863648405, PR 44863833419), e2e push run 44863648392; PR e2e run 44863833359 running | create_session `session_01R1w2UwTStX77ypqswMN3Kz` (prompt says start without asking), started 2026-11-21 |
+| L25 P10 shops API, town account | #248 | Merged into next (2026-11-21) | api `0e15599`, workspace `e5ac443c` (after a coordinator merge of `next`); merges: api `289f4d4b`, workspace `7c7f2de0` | [api#74](https://github.com/PandiO/knk-web-api/pull/74), [ws#933](https://github.com/PandiO/knk-workspace/pull/933) | green on `0e15599` (build-and-test, mysql-tests, fresh-database) | create_session `session_01R1w2Uu45eaJcRwWoXYurUU`, started 2026-11-21 |
+| L25b P9 API follow-ups (coordinator extra) | #928 | Done, in review (2026-11-21) | api `16713a85`, workspace `eb4858f4` | [api#75](https://github.com/PandiO/knk-web-api/pull/75), [ws#935](https://github.com/PandiO/knk-workspace/pull/935) | green on `16713a85` (build-and-test, mysql-tests, fresh-database); Codex at its usage limit | create_session `session_01R1w2UwSQPJ4gQDcsTmi8Xt`, branch `claude/production-p9-followups` |
+| L26 P10b shop menus plugin | #687 | Waiting (developer's shop menu templates, asked on #687) | — | — | — | — |
+| L27 P10c shops web app | #688 | In review (2026-11-21) | web app `0100518`, workspace `10a20851` | [web#73](https://github.com/PandiO/knk-web-app/pull/73), [ws#936](https://github.com/PandiO/knk-workspace/pull/936) | green on `0100518` (build-and-test, e2e) | create_session `session_01R1w2Uwx1cX3dVQ9hS8MdKX`, started 2026-11-21 |
 | L28 P11 shopkeepers | #249 | Not started | — | — | — | — |
 | L29 P12 display stalls | #250 | Not started | — | — | — | — |
 
@@ -288,6 +317,172 @@ of what is already in `next`.
 43. **After L11: L12 (#679), L13 (#680) and L14 (#79, with #838) in parallel.** Each one's gate is open and they use
    three different repos. L14 is the next API link in charter order; L19 (P7) and L25 (P10) also have open gates but
    come later in that order.
+
+44. **L12, L13, L14 stopped on the usage limit (2026-11-19 22:13).** All three hit the account's 5-hour limit, which
+   reset at 23:40. This coordinator session was also idle until 2026-11-20 12:08, so the 22:46 check-in fired 13 hours
+   late. L12 (`c00f95a2`) and L13 (`efcfcfc`) had pushed work in progress; L14 had not pushed yet. All three were
+   resumed at 12:10 with send_message: push what survived, merge the moved `next`, carry on. The weekly limit still
+   shows a warning (resets about 17:00 UTC). Alternatives: (a) fresh sessions: would lose L14's unpushed work if it
+   survived.
+45. **P3 docs #839:** done (PR #844 merged).
+46. **Siege shop chain (#611, same coordinator as #354), 2026-11-20.** Shop L1 #866 adds a knk-web-api migration, and a
+   plugin link edits `KnKPlugin`, `config.yml` (`siege.points`) and `plugin.yml` in its own blocks. Same rule as decision
+   7: whoever merges second regenerates. L12 and L14 were told.
+
+47. **L13 merge (2026-11-20).** § 6 checks held: heads matched, branches merged cleanly with `next`, CI was green
+   (build-and-test, e2e), Codex was at its usage limit (no findings) and the scope matched #680. Merged web app #67
+   `eaf0467d` and workspace #873 `2159952e`. The API points L13 raised (area seed `RegionClaim` and bounds,
+   `CaptureRadius`, `yieldSource` on the structure list) are #877 (tier:1). They fold into L17 (#683), the next API link,
+   and the plugin part of `CaptureRadius` goes into a later plugin link. P4 docs start when L12 is merged.
+
+48. **L12 and L14 merge (2026-11-20).** § 6 checks held for both:
+   1. Heads matched.
+   2. CI was green: plugin build and paper-boot (68 scenarios); API build-and-test, mysql-tests and fresh-database.
+   3. Codex was at its usage limit, so there were no findings.
+   4. The scope matched #679 and #79 (with #838).
+   Plugin `next` had moved 2 commits (navigate permission default, #845). The only shared file was `plugin.yml`, with
+   different lines that merged cleanly, so the coordinator merged without re-running CI. Merged: plugin #105
+   `d36001b2`, workspace #876 `496ed6fa`, API #65 `bf8633fb`. Workspace #880 then conflicted in the smoke guide header;
+   the coordinator merged `origin/next` (`9a4de0b9`) and then merged it as `66cd37f0`. P4 (L11–L13) is complete:
+   `documentation` sub-issue #882 under #138, docs session started. Follow-ups filed by the links: #875 (survey
+   `sharedBy` per unit type, tier:2) and #881 (`StockTransaction` seed Reason `Upgrade`).
+49. **After L14: L15 (#681), L16 (#682) and L17 (#683) in parallel.** Each runs in its own repo and each gate is
+   open. Extras:
+   1. L15 takes #875 and the plugin `CaptureRadius` handler of #877.
+   2. L17 takes the API part of #877 and #881.
+   3. L16 takes the #838 reads in the web app.
+   L19 (P7 delivery API) has an open gate (L4 merged) but comes after L17 in charter order on knk-web-api.
+
+50. **Weekly usage limit (2026-11-20 13:17).** L15, L16, L17 and the P4 docs session stopped three minutes after they
+   started because the account's weekly limit was reached. It reset at 17:00 UTC. A worker restart delayed this
+   coordinator's 14:06 check-in to 18:12. All four were resumed at 18:13 with send_message; nothing had been pushed, so
+   almost nothing was lost. L17 was told that the siege shop L1 migration (`AddSiegePointsEarning`, `9a3132dc`) is now
+   in `next`. Lesson: with the weekly limit near, start fewer links at once. Alternatives: (a) fresh sessions: same
+   result, more setup.
+
+51. **L15 and L16 merge (2026-11-20).** § 6 checks held for both:
+   1. Heads matched, and the branches merged cleanly with `next`.
+   2. CI was green: plugin build and paper-boot; web app build-and-test and e2e.
+   3. Codex was at its usage limit, so there were no findings.
+   4. The scope matched #681 and #682.
+   A cancelled duplicate e2e run blocked the web app PR under the required-check rule. The coordinator re-ran it,
+   then merged.
+   1. Merged: plugin #108 `7116f1a5`, workspace #887 `9eae7f48`, web app #68 `5ad5029f`.
+   2. Workspace #886 conflicted with L16's docs and the siege shop changelog entry. The coordinator merged `origin/next`
+      (`8be418b6`), then merged #886 as `e0bf327e`.
+   L15 did the plugin side of #875. The `CaptureRadius` handler of #877 waits for L17's task type and output.
+   P5 (L14–L16) is complete: `documentation` sub-issue #891 under #79, with a docs session.
+52. **P5 API follow-ups (#890, tier:1) and #883 (P-3 for production areas).** The API gaps found by L15 and L16 are
+   #890: names on the transport reads, the structure kind on due lanes, and the #875 DTO field. #883 is a missing
+   piece of P4: the design's placement rule P-3, warn by default. Chosen: fold both into L19 (#60), the next API link
+   after L17. #883 needs no developer decision, because DESIGN § 3.4 already defines the rule. Alternatives: (a) a
+   separate small link: overhead.
+53. **P4 docs #882:** done (#884 holds the promotion-time leftovers).
+
+54. **L17 merge (2026-11-20).** § 6 checks held:
+   1. Heads matched.
+   2. The API branch contained `next`, including both siege shop migrations. L17 merged them and generated
+      `AddStorageContainers` on top.
+   3. CI was green (build-and-test, mysql-tests, fresh-database). Codex was at its usage limit, so there were no
+      findings.
+   4. The scope matched #683 plus the API part of #877 (`ProductionArea` v2 with `RegionClaim`, `CaptureRadius`,
+      `yieldSource`) and #881 (`StockTransaction` v2).
+   Merged API #67 `a2865d75` and workspace #889 `3dc4267c`. The P6 docs start when L18 is merged.
+55. **After L17: L18 (#74) and L19 (#60, with #890 and #883) in parallel.** Both gates are open and each runs in its
+   own repo. The weekly usage limit reset at 17:00, so two links at once is affordable. L18 takes the plugin
+   `CaptureRadius` handler (#877).
+
+56. **L18 and L19 stopped on the 5-hour usage limit (2026-11-20 20:47).** The limit reset at 22:00. A worker restart
+   delayed this coordinator's 20:56 check-in to 23:45. L18 had already finished: its PRs were open and green, and its
+   final push `19f74865` merged `next` and regenerated the menu snapshot fixture. So the coordinator checked and merged
+   it without resuming the session. L19 was resumed at 23:47. It must merge the siege shop migrations
+   `AddMenuItemSettings` and `AddSiegeWeaponUnlockMinTitle` and regenerate on top.
+57. **L18 merge (2026-11-20).** § 6 checks held:
+   1. CI was green on the final head (plugin build and paper-boot, 69 scenarios).
+   2. Codex was at its usage limit, so there were no findings.
+   3. The scope matched #74 plus the plugin side of #877: the `CaptureRadius` handling already exists in the #679
+      world-task path.
+   4. No main-menu restructuring: the Structures tile comes from L17's API seed.
+   Merged plugin #110 `8e672ba6`. Workspace #898 conflicted in the changelog with the siege shop L4 entry; both entries
+   were kept (coordinator merge `0f1c8264`), then it merged as `df27cc18`. P6 (L17–L18) is complete:
+   `documentation` sub-issue #903 under #74, docs session started. L18 filed #897 (worker NPC, unique items in
+   terminals, notifications, `/knk transport`).
+58. **Siege shop coordination, 2026-11-20 evening.** Shop L3, L4 and L5 merged into knk-web-api and knk-plugin `next`,
+   with migrations `AddMenuItemSettings` and `AddSiegeWeaponUnlockMinTitle`. Shop L6 #871 changes the menu item's
+   click path (`paper/menu/`, `menus.menu-item.*`). L18 doesn't touch it, and the siege coordinator was told so. The
+   rule for the `content-seeds.json` test fixture: whoever merges second regenerates it from the merged seeds.
+
+59. **L19 merge (2026-11-21).** § 6 checks held:
+   1. Heads matched.
+   2. The API branch contained `next`, including the siege shop migrations. `AddItemDelivery` was generated on top of
+      `AddSiegeWeaponUnlockMinTitle`.
+   3. CI was green (build-and-test, mysql-tests, fresh-database).
+   4. Codex was at its usage limit, so there were no findings.
+   5. The scope matched #60 plus #890 and #883.
+   Merged API #70 `2952d0c7` and workspace #899 `e2c6f45b`. L19 filed #900 (P-3 for Polygon areas, tier:1) and #901
+   (the P7 web app: settings card, a player's inbox, stash and gifting; tier:2, not a charter link).
+60. **After L19: L20 (#684) and L21 (#685, with #900) in parallel.** Both gates are open and each runs in its own repo.
+   L20 must keep today's kit and lootbox delivery (#261) with `production.enabled` off. The P7 docs start once L20 is
+   merged. #901 is outside the charter's links; the coordinator leaves it for the developer or the manager to schedule.
+
+61. **L20 and L21 merge (2026-11-21).** § 6 checks held for both:
+   1. Heads matched, and the branches contained or cleanly merged `next`.
+   2. CI was green: plugin build and paper-boot (71 scenarios); API build-and-test, mysql-tests and fresh-database.
+   3. Codex was at its usage limit, so there were no findings.
+   4. The scope matched #684 and #685 (with #900).
+   5. L20 keeps today's kit and lootbox delivery, #261 included, with `production.enabled` off; both paths are tested.
+   Merged plugin #113 `bdd8b463`, API #72 `9ad32c23` and workspace #911 `bb127457`. Workspace #914 conflicted with
+   #911 in the changelog and the smoke header. Both sides were kept (coordinator merge `944a443b`), then it was merged
+   as `69f2b108`. P7 (L19–L20) is complete: `documentation` sub-issue #915 under #60, docs session started. L21 filed
+   #913 (P8 web app pages, tier:2, not a charter link; for the developer or the manager to schedule, like #901).
+62. **After L20/L21: L22 (#134) and L23 (#127) in parallel.** Both gates are open (L22: L12 and L21 merged; L23: L14
+   merged) and each runs in its own repo. #127's body still says the rule catalogue needs the developer's review, but
+   TOWN_LOGISTICS.md was Decided on 2026-11-16 with the production design, so L23 implements the catalogue as written.
+   Alternatives: (a) ask the developer first: the design's Decided status already answers it, and the point stays open
+   for review in report § 1.
+63. **P6 docs #903:** done.
+
+64. **L22 and L23 merge (2026-11-21).** § 6 checks held for both:
+   1. Heads matched, and both branches merged cleanly with `next`.
+   2. CI was green: plugin build and paper-boot (73 scenarios, including the two harvest scenarios); API
+      build-and-test, mysql-tests and fresh-database.
+   3. Codex was at its usage limit, so there were no findings.
+   4. The scope matched #134 and #127.
+   L22 changes the world. Its change to the global `GlobalRegionProtectionListener` is an additive `allowedBreaks`
+   hook, false by default, so global protection is unchanged unless L22's harvest module installs the hook. Its
+   regeneration queue is persisted across restarts.
+   Merged: plugin #114 `6f6c915f`, workspace #919 `700ec311`, API #73 `37be22e5`. Workspace #920 conflicted with #919
+   in the changelog and the smoke-guide header. The coordinator merged `origin/next` (`8ebdbb2c`), then merged #920 as
+   `fbf071df`. P8 (L21–L22) is complete: `documentation` sub-issue #922 under #134, docs session started.
+65. **After L23: L24 (#686) and L25 (#248) started; L26 waits for the developer.**
+   1. L24 and L25 have open gates. L25's restocking needs L23, which is merged.
+   2. L25 adds the town account as a currency `AccountKind`. Charter § 3.1 asks to coordinate with the currency owner,
+      so L25 checks the board for currency work and keeps its change additive.
+   3. L26 waits for the developer's shop menu templates (charter § 2.3), asked on #687. L28 and L29 depend on L26.
+   4. With L22 done, the plugin is idle until L26.
+66. **P7 docs #915:** done (#916 bug, #917 promotion steps).
+
+67. **L24 merge (2026-11-21).** § 6 checks held:
+   1. Heads matched, and the branches merged cleanly with `next`.
+   2. CI was green (build-and-test, e2e).
+   3. Codex was at its usage limit, so there were no findings.
+   4. The scope matched #686.
+   Merged web app #72 `c12e0e7e` and workspace #927 `385ec7d3`. P9 (L23–L24) is complete: `documentation` sub-issue
+   #929 under #127, with a docs session.
+   The API points L24 found are #928 (tier:1). Chosen: run them as a small API link after L25 rather than add them to
+   L25, which is already the biggest API link. Alternatives: (a) fold them into L25: they would widen a running link.
+68. **P8 docs #922:** done (PR #926).
+69. **No reply yet on #687 (shop menu templates) at 04:20.** L26, L28 and L29 stay gated.
+70. **L25 merge (2026-11-21 05:10).** § 6 checks held: heads matched, branches contained `next`, CI green on `0e15599`,
+    Codex at its usage limit (merged without its review), `Production:Enabled` off by default. Currency check: the change
+    is additive (`CurrencyAccountKind.Town = 2`, nullable `currency_entries.TownId`, `CK_currency_entries_Account`
+    widened with a third case; every existing row still passes; town legs go through `PostWithTownAsync`, reversing a
+    town leg is refused, filed as #934). knk-web-api `289f4d4b`; the workspace PR #933 conflicted (changelog,
+    installation § 5.3 and header, smoke guide status, plan "Last updated"); resolved mechanically keeping both sides
+    (`e5ac443c`), merged as `7c7f2de0`.
+71. **After L25: L27 (#688) and L25b (#928) started.** L27 (web app) and a small tier:1 API link L25b for the P9 API
+    follow-ups of #928 (decision 68) run in parallel in different repos. L26 still waits for the #687 templates (no
+    reply at 05:10); L28 and L29 depend on it. P10 docs: deferred until L27 merges, as with the other phases.
 
 ## 4. Link blocks
 
@@ -1219,3 +1414,1374 @@ _(Each link appends its block here when it finishes.)_
        area with `size`, `sizeUnit` and the level's `maxSize`.
     3. L21 (P8a): the pool factor is still not in the engine; the latest survey's `TotalUnits` can seed a pool's
        capacity.
+
+### 4.12 L12 — P4b surveys plugin (#679)
+
+1. **Scope done** (knk-plugin, plus essential docs in knk-workspace). Everything runs only with `production.enabled:
+   true` (A21).
+    1. knk-core `production/survey/` (Bukkit-free): `SurveyCounter` over the `BlockSnapshotSource` port (trees as
+       26-connected log clusters with leaves within reach, species by majority log, SMALL/MEDIUM/LARGE by log count,
+       clusters over `maxLogs` are buildings; saplings; rock and ores in the whole volume; crops; flowers, tall ones
+       once; still water per biome with `columns`, `avgDepth`, `openSkyShare`; pasture animals), `PlaceholderOverlay`
+       (blocks waiting to regenerate count as their original; empty until P8), `AreaShape`, `AreaSpec`, `SurveyProfile`
+       (the seeded `unitTypes` plus the plugin's `materials`, `entityTypes`, `tree`), `NotableChangeTracker`,
+       `AreaOutline`, `CaptureRadius`, `SurveySettings`, `CapturedChunks`; port `ProductionSurveyApi`. Shared split per the
+       L11 contract: one row per (key, `sharedBy`), `sharedBy` = 1 + distinct other structures whose overlapping shared
+       areas contain the unit. SHA-256 content hash of the rows.
+    2. knk-api-client `ProductionSurveyApiImpl` (`survey-due`, `{id}/surveys`, `ProductionStructures/{id}/survey`,
+       `GET api/ProductionAreas`).
+    3. knk-paper `production/`: `SurveyRunner` (one survey at a time; `chunks-per-tick` snapshots on the main thread,
+       timed as `production.survey.capture`; counting and reporting on the `KnK-survey` thread; Scheduled surveys wait
+       for loaded chunks, requested ones load chunks without generating them; caps), `SurveyModule` (queue poll, area
+       list, block break/place counters → `NotableChange`), `ChunkSnapshotBlocks`, `SurveyWorld`, `SurveyRegionShapes`,
+       `AreaOutlineRenderer`, `CaptureRadiusTaskHandler` (world task `CaptureRadius`).
+    4. `/knk production survey <structure> [area] | survey status | area show <structure> [area] [seconds]`, node
+       `knk.admin.world.production`; `config.yml` `production.surveys.*` (nine keys). `KnKPlugin`, `config.yml` and
+       `plugin.yml` changes are separate additive blocks.
+    5. Plugin scenario `production-area-survey`; `MIN_SCENARIOS` 68 (65 + link G1's two + this one). Hunters deferred
+       (P-D10).
+    6. knk-workspace (branch from `next`): smoke guide § 5.2 (15 steps: 7 automated, 7 partly, 1 manual), plugin
+       configuration § 4.31 `production.surveys.*` with § 2.1 and § 3 rows, changelog entry with the YAML,
+       implementation plan § P4 status.
+2. **Commits and heads.** knk-plugin `claude/production-p4b` at `3472e32d` (6 commits plus two merges of `origin/next`,
+   the second `MIN_SCENARIOS` 66/67 → 68 and the scenario count test); knk-workspace `claude/production-p4b` at
+   `c6f53e07` (1 commit plus three merges of `origin/next`; changelog, plugin configuration, smoke guide and plan
+   conflicts were both-sides additions, L13's § 5.3 kept). The first push `c00f95a2` (before the usage-limit stop) did
+   not compile (a package-private method used by the command); fixed in the next commit.
+3. **PRs.** [knk-plugin#105](https://github.com/PandiO/knk-plugin/pull/105) (Closes #679),
+   [knk-workspace#876](https://github.com/PandiO/knk-workspace/pull/876) (Part of #679), base `next`. Not merged.
+4. **Tests, baseline → result** (`./gradlew build -x deployToDevServer`, Gradle on JDK 21, JDK 25 toolchain).
+    1. Baseline on `next` `cbac2b6c`: knk-core 3541, knk-api-client 366 (2 skipped), knk-paper 3229 (18 skipped), 0
+       failures.
+    2. Branch at `3472e32d` (after merging `next`): knk-core 3594, knk-api-client 371 (2 skipped), knk-paper 3284 (18
+       skipped), 0 failures.
+    3. New: `SurveyCounterTest` (15), `SurveyAreasTest` (9), `CaptureRadiusTest` (3), `ProductionSurveyApiImplTest` (4),
+       `SurveyRunnerTest` (6), `SurveyConfigTest` (3), `ProductionAdminCommandTest` (4); `PaperScenariosTest` updated. A
+       mutation of the shared split (`sharedBy` always 1) failed `SurveyCounterTest` and `SurveyRunnerTest`.
+    4. CI on `3472e32d`: build green; paper-boot green (68 scenarios, `production-area-survey` PASS in 3 ticks). The scenario was not run locally (no Paper server in the
+       session).
+    5. Known reds: none.
+5. **Decisions (DESIGN § 4.3).** All nine with alternatives are in knk-plugin#105. The main ones:
+    1. *Scheduled surveys and unloaded chunks.* Chosen: skipped (stays due) unless every chunk is loaded;
+       `scheduled-loads-chunks: true` loads them; requested surveys always load them, never generate. Alternatives: (a)
+       always load: daily cost for remote areas; (b) never load: a requested survey of a remote area never runs.
+    2. *Trees at the border.* Chosen: only logs inside the area cluster; a tree's position is its lowest log.
+       Alternatives: (a) read a margin: more snapshots, trees mostly outside would count.
+    3. *Tree limits.* Chosen: SMALL ≤ 6 logs, MEDIUM ≤ 20, building > 400, leaves within 1 block; profile overrides.
+       Alternatives: (a) per-species tables.
+    4. *Farmland.* Chosen: crops count without a farmland or hydration check (§ 8.1 open). Alternatives: (a) hydrated
+       farmland only: excludes sugar cane, cocoa, nether wart.
+    5. *sharedBy.* Chosen: the L11 contract literally. Alternatives: (a) same area model only: still wrong; follow-up
+       #875.
+    6. *Notable change.* Chosen: block breaks and places per area (64, cooldown 30 min), then "survey now" through the
+       API with trigger `NotableChange`. Alternatives: (a) wait for P8's harvest counters.
+    7. *Plugin caps.* Chosen: `max-area-chunks` 256, `max-area-blocks` 16M (snapshot memory, counting time); the API's
+       level cap (G6) stays the rule. Alternatives: (a) no plugin cap.
+6. **Out of scope, noted.** [#875](https://github.com/PandiO/knk-workspace/issues/875) (tier:2, under #22): overlaps in the
+   survey queue should carry each area's unit types, so `sharedBy` counts only structures that count the unit (a farm
+   inside a logger's radius now halves its crops). Codex: the connector hit its code-review usage limit on both PRs
+   (usage-limit comment, review "failed"); no inline findings; noted on each PR.
+7. **Blockers.** None.
+8. **At merge / what the developer must do.**
+    1. Merge into the plugin's `production` block (nothing runs while `production.enabled` is false) and restart:
+
+       ```yaml
+       production:
+         surveys:
+           poll-minutes: 5
+           batch: 20
+           chunks-per-tick: 2
+           max-area-blocks: 16000000
+           max-area-chunks: 256
+           scheduled-loads-chunks: false
+           notable-change-blocks: 64
+           notable-cooldown-minutes: 30
+           areas-refresh-minutes: 10
+       ```
+    2. Grant `knk.admin.world.production` to staff who survey (in `knk.admin.world.*`).
+    3. Smoke test [§ 5.2](../guides/production-storage-transport-smoke-test.md) (tier:3): about 30 minutes for the
+       untagged and partly tagged parts; needs L11 (API) and yield table rows (#836) for rates.
+    4. At merge into `next`: the `documentation` sub-issue (survey architecture page with the profile JSON fields and
+       unit keys, admin guide for surveys and `/knk production`, commands guide, plugin scenarios guide
+       `production-area-survey`, feature register row).
+9. **Notes for later links.**
+    1. L22 (P8 harvest): implement `PlaceholderOverlay` over the regeneration jobs and pass it to `SurveyRunner` in
+       `SurveyModule` (now `PlaceholderOverlay.NONE`); a felled tree's job should list every original log and leaves
+       block so the tree counts whole. Harvest counters can feed `NotableChangeTracker.record`.
+    2. L13 / web app: the `CaptureRadius` world task's output is `{shape, worldName, centerX, centerY, centerZ, radius}`;
+       its input may carry `radius` and `maxRadius` (the level's cap).
+    3. Profiles: the plugin reads `materials`, `entityTypes` and `tree.{smallMaxLogs, mediumMaxLogs, maxLogs, leafReach}`
+       beyond `unitTypes`; raising the kind's profile version is the API's job when they change.
+
+### 4.13 L13 — P4c yield areas web app (#680)
+
+1. **Scope done** (knk-web-app, plus the essential docs in knk-workspace).
+    1. Types and clients: `src/types/dtos/production/ProductionYieldDtos.ts` (mirrors `ProductionYieldDtos.cs` and the P4 enums); P4 fields on `ProductionKindDto` and `ProductionStructureDto` (`yieldSource`, read-only `areas`); `productionAreaClient` (CRUD, search, overlaps), `areaSurveyClient` (read, search, trend), `productionYieldOverrideClient` (CRUD, search); `productionStructureClient.getYield`, `requestSurvey`, `materialize`. Registry additions, additive and grouped: `Controllers`, `entityApiMapping` (areas and overrides all five, surveys search and fetch), `objectConfigs` columns.
+    2. Production structure page, `StructureYieldPanel` (A10, #65): the yield source in words; the areas with size against the level's cap; Add area (the seeded form); Survey now (hidden for Configured, G5) and Make lines again; every output with why its rate is what it is (surveyed rate, override, base, primary, line; per survey unit the area, unit, matched yield row, count, shared split, rate and chance); the unmatched unit keys.
+    3. Hybrid override editor on the same panel: Pin, Exclude, Scale or None per output, and a pin for an output the survey doesn't yield.
+    4. Survey viewer: `ProductionAreaPanel` on an area's page (size and cap, a 2D plot from above with the overlapping areas `AreaPlot`, the overlaps table, the latest composition `SurveyCompositionTable`, the trend over 30 surveys `SurveyTrendTable`, the history, Survey this area now); `AreaSurveyPanel` on a survey's page.
+    5. Kind page: `ProductionKindYieldTablePanel` edits the yield table and the primary outputs (sends `{ id, yieldTable, primaryOutputs }`; checks match the API's). Survey profile and multiplier stay on the seeded form.
+    6. Form wizard: a refused ProductionArea or ProductionYieldOverride save shows the API's `{ error }` sentence (area over the cap, A11; exclusive overlap; a second override), as the P2 types did.
+    7. Area capture via WorldTask: the seeded ProductionArea form has no world task and the API needs a Region's bounds typed in; `CaptureRadius` is neither in the API's known types nor handled by the plugin yet. Filed on #680 (out of scope, knk-web-api); smoke step 5.3.3 does it by hand with `RegionClaim` turned on in the form builder.
+    8. knk-workspace (branch from `next`): smoke guide § 5.3 (12 web app steps in full: 9 automated, 2 partly, 1 by hand), § 5 intro and status header, changelog entry, implementation plan P4 status.
+2. **Commits and heads.**
+    1. knk-web-app `claude/production-p4c` at `6da700c`: 7 commits plus merges of `next` (`2c177be`, then `287bb2c`, which had not moved at the last fetch).
+    2. knk-workspace `claude/production-p4c` at `638e5c3c`: 1 commit plus a merge of `next` (no conflicts).
+3. **PRs.** [knk-web-app#67](https://github.com/PandiO/knk-web-app/pull/67) (Closes #680) and [knk-workspace#873](https://github.com/PandiO/knk-workspace/pull/873) (Part of #680), both into `next`. Not merged.
+4. **Tests, baseline → result.**
+    1. knk-web-app baseline on `next` `4e4ca39`: Jest 2845 passed (333 suites), Playwright 280 passed, `tsc` clean, build OK.
+    2. Branch after merging `next` `287bb2c`: Jest 2882 passed (338 suites; `next` brought its own new tests); new `src/utils/__tests__/productionYield.test.ts` (9) and `src/apiClients/__tests__/productionYieldClients.test.ts` (6). `tsc` and `typecheck:e2e` clean.
+    3. Playwright: 296 passed (full run); the three production specs repeated 5×: 185 passed, none flaky. New `e2e/production-yield.spec.ts` (11 tests, strict API, DTO-typed fixtures `e2e/fixtures/productionYield.ts`); `production-world.spec.ts` and `production-engine.spec.ts` mock the new yield panel.
+    4. Seen failing: the override test failed while the toast came before the reload (a fast second edit was reset); fixed in the panel.
+    5. CI on `6da700c`: build-and-test and e2e green (PR runs 44734961691 and 44734961655, push runs 44734955024 and 44734955138).
+    6. Known reds: none.
+5. **Decisions (DESIGN § 4.3).**
+    1. *Area capture.* Chosen: the seeded form; the seed's `RegionClaim` and Region bounds asked of the API on #680; `CaptureRadius` after #679. Alternatives: (a) a world-task default hard-coded in `FormWizard`: changes the shared wizard for one seed and still leaves bounds to type; (b) offer `CaptureRadius` now: no handler, the task would hang (#180).
+    2. *Where the screens live.* Chosen: panels below the generic detail pages (the L3/L5/L7/L10 pattern). Alternatives: (a) custom pages: duplicate the seeded forms (G17).
+    3. *Trend.* Chosen: one small line per unit key, each on its own scale, in a table with first, latest and change. Alternatives: (a) one multi-series chart: needs a categorical palette for many unit keys, and small units vanish.
+    4. *Override editing.* Chosen: one select per output (None deletes), plus one row to pin a new output; the success message after the re-read. Alternatives: (a) a separate override list: away from the rate it changes.
+    5. *Make lines again.* Chosen: shown to World staff. Alternatives: (a) hidden: staff need it after fixing a yield table.
+    6. *Refusal sentence on the P4 forms.* Chosen: extend the P2 `{ error }` reading to the two P4 form types. Alternatives: (a) change `describeErrorBody` app-wide: outside this link.
+6. **Out of scope, noted.** [#680 comment](https://github.com/PandiO/knk-workspace/issues/680#issuecomment-7039235466): the area seed's missing `RegionClaim`, Region bounds from the region, `CaptureRadius` (API known types and #679 handler), no `yieldSource` on `ProductionWorldListDto`, and Add area without the structure prefilled (web app). No new issues. Codex: the connector hit its code-review usage limit on both PRs (review "failed", usage-limit comment); no inline findings or threads; noted on each PR.
+7. **Blockers.** None.
+8. **At merge / what the developer must do.**
+    1. Deploy the web app with the P4 API (#138, in `next`) and its imported seeds. No migration, setting or plugin change.
+    2. Until the seed carries it, turn on `RegionClaim` on the ProductionArea form's WorldGuard region field in the form builder.
+    3. Smoke test [§ 5.3](../guides/production-storage-transport-smoke-test.md) (tier:2): about 40 minutes in full, about 15 minutes for the untagged parts.
+    4. At merge into `next`: the `documentation` sub-issue (yield areas admin guide: areas, the survey viewer, yield tables, overrides, Survey now; feature register row).
+    5. Coordinator: decide on the API points of the #680 comment.
+9. **Notes for later links.**
+    1. L12 (#679): when the `CaptureRadius` handler ships, add it to `WORLD_TASK_TYPES_WITH_HANDLER` (`src/utils/forms/worldTaskTypes.ts`) and to the API's `KnownWorldTaskTypes`.
+    2. Strict e2e specs that open a production structure page now need a `ProductionStructures/<id>/yield` mock (`mockConfiguredYield` in `e2e/fixtures/productionYield.ts`); a kind's page reads `ProductionKinds/<id>` for the yield table too.
+    3. L21/L22 (harvest): `SurveyTrendTable` and `SurveyCompositionTable` take any survey; a pool view can reuse them.
+
+### 4.14 L14 — P5 transport API (simulated carrying, G14) (#79)
+
+1. **Scope done** (knk-web-api, plus essential docs in knk-workspace).
+    1. `TransportOrder` (origin, status lifecycle, carrier structure and capacity, timing, `NextActionAt` index) with
+       `TransportStop`s and per-stop `TransportStopLine`s (V2 defect 3), `TransportOrderLine`s (requested, loaded,
+       delivered, returned, lost), one `Transit` storage per order (unique), `TransportAssignment` (Simulated) and the
+       `TransportEvent` log.
+    2. Lifecycle Planned → Assigned → Loading → InTransit ⇄ AtStop → Delivered. A full stop goes AwaitingSpace (30 min),
+       then re-routes within the town (max 2), else the carrier carries on and the rest goes back: Returning → Returned,
+       with ReturnBlocked while the source is full (V2 defect 2). Every step runs in one transaction with the order row
+       locked, and every move goes through `IStockService` (TransportLoad, TransportDeliver, TransportReturn) with an
+       idempotency key per try. The ledger reconciles after every step, and a restart continues mid-transit (V2
+       defects 4, 11).
+    3. Simulated carrying (G14, § 7.7): one of the producer's workers is away from loading until the order ends
+       (`WorkersPresent` ±1, the carrier's production settled first), so the engine runs at 50% / 0%. An order waits
+       without a free worker; the level's `TransportCapacity` bounds it. A leg takes the lane's road length ÷ walking
+       speed; without a lane the straight distance × 1.4, without positions 200 blocks.
+    4. Automatic trigger (V2 defects 7-9): it fires on occupancy ≥ threshold (75% of the cap), a line BlockedFull or
+       the distinct cap. Sizing is by stock up to the worker's capacity, largest line first. The destination is the
+       preferred warehouse if it has room, else the nearest by road in the effective town, with room first. One open
+       automatic order per source (structure row lock). Rural producers that are not `Connected` are held (D5).
+    5. `TransportLane` read model with `GET api/TransportLanes/due` and `POST report` for L15, plus staff CRUD.
+       `TransportSweepService` runs every 60 s with `Production:Enabled` only (A21). Manual orders (`POST
+       api/TransportOrders`, `clientKey` replay), `dry-run`, `{id}/cancel` (a loaded order turns back) and `run-now`
+       (409 while off).
+    6. `GET api/ProductionStructures/{id}/transport` is the trigger's dry run: warnings (missing road, full Output,
+       A13), trigger and held reasons, open orders, workers away. The structure DTO also warns about a full Output.
+       Game setting section `production.transport`; a save without it keeps the stored values.
+    7. #838 (additive extra, closed by the PR): `productionKindName` on `ProductionWorldListDto`, `itemBlueprintName` on
+       `ConsumedInputDto` (read, never stored), `ProductionCycleRecord` as a listable dashboard type with a lookup and an
+       `itemBlueprintId` filter.
+    8. Seeds (G17): form and display `TransportOrder` (form read only) and `TransportLane`; the child rows are view-only.
+       World area registry, lookups, pinned access tests. One additive migration `AddTransportCore` (seven tables),
+       generated last on `next` `4f4580b`; `KnKDbContext` edits in one DbSet block and one model block.
+    9. knk-workspace (branch from `next`): smoke guide § 6 (§ 6.1 20 API steps, 18 automated, 2 partly; § 6.2 and
+       § 6.3 drafts for L15 and L16), changelog entry, production installation § 5.3 item 12, implementation plan status.
+2. **Commits and heads.** knk-web-api `claude/production-p5` at `ef61cd1` (6 commits plus two merges of `next`, the
+   last at `4f4580b`; migration generated after it). knk-workspace `claude/production-p5` at `ae26c88b` (1 commit plus a
+   merge of `next` `2159952e`).
+3. **PRs.** [knk-web-api#65](https://github.com/PandiO/knk-web-api/pull/65) (Closes #79, Closes #838) and
+   [knk-workspace#880](https://github.com/PandiO/knk-workspace/pull/880) (Part of #79, #838), base `next`. Not merged.
+4. **Tests, baseline → result.**
+    1. knk-web-api: baseline on `next` `e26c7d8` 4801 passed / 117 skipped / 0 failed; branch (with `next` `4f4580b`)
+       4865 passed / 119 skipped / 0 failed. New: `TransportTests` (33), `TransportLanesAndSettingsTests` (4),
+       `TransportControllersTests` (2), `AddTransportCoreTests` (3), `TransportMySqlTests` (1, requires-mysql).
+    2. MySQL 8.0.46 locally with `KNK_TEST_MYSQL`: 4983 passed, 1 failed = the known red #285. The new race test
+       (four transport sweeps) makes one automatic order and applies each step once.
+    3. Broken on purpose: the worker decrement and the per-stop shortfall (3 tests red), and the order and structure
+       row locks (the MySQL race test red with two orders).
+    4. Migration applied, rolled back to `SeedNavigateDefaultNode` and re-applied; `has-pending-model-changes` clean.
+    5. CI on `ef61cd1`: build-and-test, fresh-database and mysql-tests green on the push run; on the PR run
+       build-and-test and fresh-database green, mysql-tests still running when this block was written.
+    6. Known reds: #285 (MySQL run only).
+5. **Decisions (DESIGN § 4.3).** All 14, each with alternatives, are in knk-web-api#65. The main ones:
+    1. *Walking speed.* Chosen: game setting `production.transport.walkingSpeedBlocksPerSecond` 4.317 (a player's walk;
+       the NPC plan's abstract mover names no number). Alternatives: (a) a constant; (b) sprint 5.6 b/s.
+    2. *Worker away.* Chosen: from loading until the order ends. Alternatives: (a) also the empty walk back; (b) the
+       outbound leg only.
+    3. *Worker accounting.* Chosen: `WorkersPresent` ±1 after settling the carrier. Alternatives: (a) a `WorkersAway`
+       column; (b) the engine derives presence from assignments.
+    4. *Full stop.* Chosen: wait 30 min, re-route within the town (max 2), else carry on and return the rest;
+       ReturnBlocked waits. Alternatives: (a) return at once; (b) overflow to `SYS_LOSS` (V2 defect 2).
+    5. *Cancel after loading.* Chosen: turn back and end Returned. Alternatives: (a) end Cancelled; (b) refuse.
+    6. *No lane.* Chosen: straight × 1.4, else 200 blocks, with a dry-run warning. Alternatives: (a) refuse until #681.
+    7. *Unmeasured road.* Chosen: held like Unconnected (D5). Alternatives: (a) hold only Unconnected.
+    8. *Manual orders.* Chosen: `knk.admin.world` or the plugin key (they create no goods). Alternatives: (a)
+       `knk.economy.admin`.
+    9. *Seeds.* Chosen: `TransportOrder` form read only, manual orders through the API and #682's form; child rows
+       without seeds (developer's G17 clarification). Alternatives: (a) a flat single-stop create form.
+    10. *Smoke gate.* The developer's 2026-11-19 waiver of the L4 and L6 smoke gates, read by the coordinator as
+        covering this link (it builds on L9, whose smoke test is open).
+6. **Out of scope, noted.** #881 filed (the `StockTransaction` form seed's Reason list lacks `Upgrade`). Comments on
+   #681 (due/report contract, road connection, trip time) and #682 (endpoints, DTOs, the structure's transport view,
+   settings, #838). Codex: the connector hit its code-review usage limit on both PRs (review "failed", usage-limit
+   comment); no inline findings; noted on each PR.
+7. **Blockers.** None.
+8. **At merge / what the developer must do.**
+    1. Apply migration `AddTransportCore` (additive, seven tables).
+    2. Import the seeds `TransportOrder` and `TransportLane` (form and display, "make default").
+    3. Until L15 (#681) measures lanes: type in lanes or accept estimated routes, and set rural producers' road
+       connections (`PUT api/ProductionStructures/<id>/road-connection`); automatic transport is held until Connected.
+    4. No `api.env` key, no plugin `config.yml` change; game setting `production.transport` has defaults.
+    5. Smoke test [§ 6](../guides/production-storage-transport-smoke-test.md) (tier:3): 18 of 20 steps automated, about
+       10 minutes for the untagged parts.
+    6. At merge into `next`: the `documentation` sub-issue (transport architecture page and API contract, admin guide
+       for orders, lanes and settings, feature register row).
+9. **Notes for later links.**
+    1. L15 (#681), L16 (#682): see the comments on #681 and #682.
+    2. L17 (P6a): the caller-filtered structure view can reuse `TransportService.StructureViewAsync` and the order search
+       filter `structureId` for the orders list.
+    3. L23 (P9): `TransportOrigin.Distribution` exists. Collection orders can be made with the internal insert path: a
+       consumer's worker as carrier (`CarrierStructureId` is a `ProductionStructure` today; consumers that are not
+       production structures need it widened) and the warehouse storage as source. The automatic trigger only looks at
+       production structures.
+
+### 4.15 L15 — P5b lanes plugin (#681)
+
+1. **Scope done** (knk-plugin, plus essential docs in knk-workspace). Everything runs only with `production.enabled:
+   true` (A21).
+    1. knk-core `production/transport/` (Bukkit-free): `LaneMeasurer` (the road route of each due pair with `AStarRouter`
+       over the road snapshot, read-only: road distance = walk to the road + road route + walk from it; unreachable
+       beyond `max-snap-distance`, on roads that do not join, or across worlds; skipped without a location or without a
+       loaded road network), `LaneJob` (list → measure on its own thread, timed `production.lanes.measure` → report in
+       chunks of 500 → road connections; one run at a time), `RoadConnectionBook` (Connected with any reachable lane
+       measured since start, Unconnected when all are unreachable; only changes sent; a 404 marks a warehouse),
+       `LaneSettings`; port `TransportLanesApi`.
+    2. knk-api-client `TransportLanesApiImpl` (`GET api/TransportLanes/due`, `POST api/TransportLanes/report`, `PUT
+       api/ProductionStructures/{id}/road-connection`).
+    3. knk-paper `production/LaneModule` (headless job every `interval-minutes`, first run 2 min after start),
+       `LaneConfig`, `commands/LogisticsAdminCommand` (`/knk logistics lanes measure|status`, node
+       `knk.admin.world.production`); `config.yml` `production.logistics.lanes.*` (four keys). `KnKPlugin` and
+       `config.yml` changes are separate additive blocks. No navigation code changed.
+    4. #875 (additive extra, plugin side): the survey queue's overlaps may carry `unitTypes` or `surveyProfileJson`;
+       `SurveyCounter.sharedBy` then counts only structures whose kind counts the unit's type; without them as before.
+    5. #877 (plugin side): no change; the `CaptureRadius` handler is on `next` since L12, registered by task type only,
+       so it tolerates an API without the type. Comment on #877 with the type name and output for L17.
+    6. knk-workspace (branch from `next`): smoke guide § 6.2 (14 steps: 3 automated, 10 partly, 1 manual), plugin
+       configuration § 4.31 `production.logistics.lanes.*` with § 2.1 and § 3 rows, changelog entry with the YAML,
+       implementation plan § P5 status.
+2. **Commits and heads.** knk-plugin `claude/production-p5b` at `796f1127` (8 commits plus a merge of `origin/next`
+   `91e3ddb8`, siege shop L1; no conflicts). knk-workspace `claude/production-p5b` at `77ebdc07` (1 commit on `next`
+   `35e95fbb`).
+3. **PRs.** [knk-plugin#108](https://github.com/PandiO/knk-plugin/pull/108) (Closes #681, Part of #875, #877),
+   [knk-workspace#886](https://github.com/PandiO/knk-workspace/pull/886) (Part of #681, #875), base `next`. Not merged.
+4. **Tests, baseline → result** (`./gradlew build -x deployToDevServer`, Gradle on JDK 21, JDK 25 toolchain).
+    1. Baseline on `next` `d36001b2`: knk-core 3594, knk-api-client 371 (2 skipped), knk-paper 3285 (18 skipped), 0
+       failures.
+    2. Branch at `796f1127` (with `next` `91e3ddb8`, which adds siege shop L1's tests): knk-core 3643, knk-api-client 378
+       (2 skipped), knk-paper 3312 (18 skipped), 0 failures.
+    3. New: `LaneMeasurerTest` (7, over a built road network), `LaneJobTest` (7, fake API), `RoadConnectionBookTest`
+       (3), `TransportLanesApiImplTest` (4), `LaneConfigTest` (3), `LogisticsAdminCommandTest` (4, MockBukkit),
+       `SurveyCounterTest` +1, `ProductionSurveyApiImplTest` +1. `TransportLanesApiImplTest` caught that the
+       road-connection PUT must accept a 204 (fixed in the test's expectations; `BaseApiImpl` already does).
+    4. CI on `796f1127`: green (build + paper-boot, push and PR runs; paper-boot finished 18:57 UTC). No plugin
+       scenario added (`MIN_SCENARIOS` stays 68).
+    5. Known reds: none.
+5. **Decisions (DESIGN § 4.3).** All 11 with alternatives are in knk-plugin#108. The main ones:
+    1. *Road distance.* Chosen: walk to the road + road route + walk from it. Alternatives: (a) road route only:
+       underestimates trips for structures set back from the road.
+    2. *Unconnected threshold.* Chosen: no road within 48 blocks (navigation's snap distance), configurable.
+       Alternatives: (a) 96; (b) distance from the structure's region edge.
+    3. *Routing.* Chosen: default mode, every gate and region open, one-way roads count. Alternatives: (a) `shortest`
+       mode; (b) a player's access policy (no player; closed gates would cut lanes).
+    4. *Road connection.* Chosen: judged on all lanes measured since start, any reachable = Connected. Alternatives:
+       (a) this run's lanes only (flips); (b) read all lanes via search (outside the plugin key's contract).
+    5. *Warehouses.* Chosen: found by the 404 of the road-connection PUT, not asked again. Alternatives: (a) a kind on
+       the due rows (API change, noted on #681).
+    6. *Unmeasurable pairs.* Chosen: skipped, not reported. Alternatives: (a) unreachable: an empty road cache at start
+       would disconnect every producer.
+    7. *No plugin scenario.* Measuring reads only the road snapshot and the API; the in-game run is smoke § 6.2.
+       Alternatives: (a) a scenario wrapping the core test.
+6. **Out of scope, noted.** Comment on #681: the due rows carry no structure kind (nice-to-have for the next API link).
+   Comments on #875 (API DTO field still open) and #877 (task type and output for L17). Codex: the connector hit its
+   code-review usage limit on both PRs (review "failed", usage-limit comment); no inline findings; noted on each PR.
+7. **Blockers.** None.
+8. **At merge / what the developer must do.**
+    1. Merge into the plugin's `production` block (nothing runs while `production.enabled` is false) and restart; the
+       road network must be built (navigation):
+
+       ```yaml
+       production:
+         logistics:
+           lanes:
+             interval-minutes: 60
+             batch: 100
+             max-snap-distance: 48
+             road-connections: true
+       ```
+    2. Grant `knk.admin.world.production` to staff who measure (in `knk.admin.world.*`).
+    3. Smoke test [§ 6.2](../guides/production-storage-transport-smoke-test.md) (tier:2): about 20 minutes for the
+       untagged and partly tagged parts; needs L14 (merged) and the road network.
+    4. At merge into `next`: the `documentation` sub-issue (transport architecture page: the lane measurer and road
+       connections; admin guide for lanes and `/knk logistics`; commands guide; feature register row).
+9. **Notes for later links.**
+    1. L16 (#682): lanes from the plugin have `source` Plugin and `routeEdgeIds` in walking order; an unreachable lane
+       has no road distance. A structure's road connection changes only when the plugin measures it.
+    2. L23 (P9): `LaneJob` measures whatever pairs the due list returns; consumer → warehouse pairs need no plugin
+       change, but the road connection PUT targets `ProductionStructures` only (non-producers get 404 and are skipped).
+    3. NPC carriers (#251): `LaneMeasurer` routes with `AccessPolicy.ALL_OPEN`; rendered carriers will need the gate
+       rules.
+
+### 4.16 L16 — P5c transport web app (#682)
+
+1. **Scope done** (knk-web-app, plus the essential docs in knk-workspace).
+    1. Types and clients: `src/types/dtos/production/TransportDtos.ts` (mirrors `TransportDtos.cs` and `TransportEnums.cs`), `transportOrderClient` (read, search, create, `dry-run`, `cancel`, `run-now`), `transportLaneClient` (CRUD, search), `productionStructureClient.getTransport`. Registry additions, additive and grouped: `Controllers`, `entityApiMapping` (orders search and fetch only, lanes all five), `objectConfigs` columns, two routes in the World group (`transportOrders`, `transportOrderNew`) and their `App.tsx` entries.
+    2. Order list: `TransportOrdersPage` (`/admin/transport/orders`, `knk.admin.world`), filters open, status, origin, structure and storage in the URL, pager, New manual order.
+    3. Order detail: `TransportOrderPanel` on `/display/TransportOrder/<id>` (A12): status and reason, source, carrier, times, cargo per blueprint and in transit, route per stop with distance and its source, carriers, the event log as a timeline (oldest first) with stock transaction links, Cancel with the outcome said first.
+    4. Manual order and dry run: `TransportOrderNewPage` (`/admin/transport/orders/new`): source, optional carrier, stops with items, start time, note; Dry run renders `TransportPlanView` (errors, warnings, cargo against stock, legs with distance, time and room); Make the order only after a dry run of the same request, with a `clientKey`; prefilled from a structure.
+    5. Lanes: dashboard columns and the seeded form; the structure's lane table and Add a lane.
+    6. Structure transport: `StructureTransportPanel` on production structure pages (A13, #65): warnings, Output fill against the threshold, workers away, trigger and held reasons, the order the trigger would make, open orders, lanes, links to its orders and a new order.
+    7. Settings: `TransportSettingsCard` (`production.transport`, kept on every save by `normalizeProductionSettings`) with Run transport now.
+    8. #838 reads: Kind column on the production structure list, blueprint names on consumed inputs in `ProductionCycleTable`, an "All cycle records" link (the list itself existed since L10).
+    9. knk-workspace (branch from `next`): smoke guide § 6.3 (16 steps in full: 10 automated, 5 partly, 1 by hand), § 6 intro and status header, changelog entry, implementation plan P5 status.
+2. **Commits and heads.**
+    1. knk-web-app `claude/production-p5c` at `e36d39f`: 6 commits, base `next` at `eaf0467`, which had not moved at the last fetch.
+    2. knk-workspace `claude/production-p5c` at `77b3d4f5`: 1 commit on `next` `35e95fbb` (merged before the commit, no conflicts).
+3. **PRs.** [knk-web-app#68](https://github.com/PandiO/knk-web-app/pull/68) (Closes #682) and [knk-workspace#887](https://github.com/PandiO/knk-workspace/pull/887) (Part of #682), both into `next`. Not merged.
+4. **Tests, baseline → result.**
+    1. knk-web-app baseline on `next` `eaf0467`: Jest 2882 passed (338 suites), Playwright 296 passed, `tsc` clean, build OK.
+    2. Branch: Jest 2894 passed (340 suites). New: `src/utils/__tests__/transport.test.ts` (7), `src/apiClients/__tests__/transportClients.test.ts` (4), one test in `territory.test.ts`; `routeTable.test.ts` lists the two new routes.
+    3. Branch: Playwright 312 passed. New `e2e/transport.spec.ts` (16 tests, strict API, DTO-typed fixtures `e2e/fixtures/transport.ts`, `mockNoTransport`); `production-world`, `production-engine` and `production-yield` specs mock the transport panel; `territory.spec.ts` expects `transport` in the saved section. `tsc` and `typecheck:e2e` clean, `CI=true npm run build` OK.
+    4. Seen failing: with `transport` dropped from `normalizeProductionSettings`, the five game settings tests failed.
+    5. CI on `e36d39f`: PR runs build-and-test 44794820443 and e2e 44794820399 green; push run build-and-test 44794499282 green (its e2e run 44794499464 was cancelled after 10 minutes, the PR's e2e covers the same head).
+    6. Known reds: none.
+5. **Decisions (DESIGN § 4.3).**
+    1. *Order list.* Chosen: a page of its own with URL filters, plus dashboard columns. Alternatives: (a) the dashboard only: no filters by status, structure or storage, and no link from a structure.
+    2. *Manual order form.* Chosen: a page of its own (the seed is read only, G17), Make enabled only after a dry run of the exact request. Alternatives: (a) the dry run optional: staff could make an order they never saw planned; (b) a form seed: the API's is read only.
+    3. *Idempotency.* Chosen: one `clientKey` per page visit, renewed after a made order. Alternatives: (a) none: a double click could make two orders.
+    4. *Cancel.* Chosen: shown while the API would accept it (not final, not returning), with a confirm step naming the outcome. Alternatives: (a) always shown, relying on the 409.
+    5. *Structure view.* Chosen: a panel below the Yield panel (the L7/L10/L13 pattern). Alternatives: (a) a separate page.
+    6. *Run transport now.* Chosen: on the Transport settings card, like Run production now. Alternatives: (a) on the order list: the settings page is where the feature flag is.
+6. **Out of scope, noted.** [#682 comment](https://github.com/PandiO/knk-workspace/issues/682#issuecomment-7047671628): no name for the structure view's destination warehouse, the plan's carrier or a cycle record's structure (API), and the generic dashboard can't take URL filters (web app). No new issues. Codex: the connector hit its code-review usage limit on both PRs (review "failed", usage-limit comment); no inline findings or threads; noted on each PR.
+7. **Blockers.** None.
+8. **At merge / what the developer must do.**
+    1. Deploy the web app with the transport API (#79, in `next`) and its imported seeds `TransportOrder` and `TransportLane`. No migration, setting or plugin change.
+    2. Smoke test [§ 6.3](../guides/production-storage-transport-smoke-test.md) (tier:2): about 40 minutes in full, about 15 minutes for the untagged parts.
+    3. At merge into `next`: the `documentation` sub-issue (transport admin guide: order list, order page, manual orders, structure transport, lanes, settings card; feature register row).
+    4. Coordinator: decide on the API points of the #682 comment.
+9. **Notes for later links.**
+    1. Strict e2e specs that open a production structure page now need `mockNoTransport(api)` (`e2e/fixtures/transport.ts`): `ProductionStructures/<id>/transport` and `TransportLanes/search`.
+    2. The game settings page sends `production.transport` back; a later setting under `production` goes into `normalizeProductionSettings` the same way.
+    3. L23 (P9, town logistics): `TransportOrderTable` and `TransportPlanView` take any order rows and plan; the order list's `structureId` and `storageId` filters cover consumers and warehouses.
+
+### 4.17 L17 — P6a API: StorageContainer, caller-filtered reads, menu seeds (#683)
+
+1. **Scope done** (knk-web-api, plus essential docs in knk-workspace).
+    1. `StorageContainer` (Terminal, Display; DESIGN § 6.2): a block (world, x, y, z, unique) bound to a domain, player
+       or clan storage, with Chest, TrappedChest or Barrel and a double flag (27 or 54 slots). Binding, moving or
+       unbinding a container, or changing the storage's `UnitsPerSlot` (also through a level upgrade), writes
+       `MaxUnits = Σ slots × UnitsPerSlot` under the storage row lock (§ 4.4).
+    2. `api/StorageContainers`: CRUD and search (World area to read, `knk.admin.world` to write, delete also
+       `knk.admin.delete`, dashboard type and lookup) and `by-block`. Game-server-only routes: `{id}/terminal`,
+       `{id}/put` and `{id}/take` (`SYS_WORLD` moves, Deposit and Withdraw, idempotency key, `X-Acting-User-Id`
+       required, `Production:Enabled` required) and `{id}/display` (a sample by fill level). A14, API side.
+    3. `api/StructureMenus` (M3): `search` (public overview rows of production structures and warehouses: status
+       Working, Stalled, NoRoad or Full; filters town, kind, type, status), `{id}` (the `detail` with rates,
+       storages, workers, warnings and the open order count only for members of the town and staff) and `{id}/orders`
+       (403 for visitors). A25, A26.
+    4. Staff actions (M4): new `POST api/TransportOrders/{id}/retry`; survey now, dry run and cancel are the existing
+       routes.
+    5. Menu content seeds `structures.overview`, `structures.structure`, `structures.orders` and the hub's "Structures"
+       tile (slot 18, added to an existing hub at startup). A27.
+    6. Seeds: `StorageContainer` form and display (G17, A23); `StockTransaction` form v2 with `Upgrade` (#881);
+       `ProductionArea` form v2 with RegionClaim and CaptureRadius (#877).
+    7. #877 API part: `CaptureRadius` is a known world task type; a Region area with empty bounds takes them from the
+       region's stored outline; `ProductionWorldListDto.yieldSource`.
+    8. One additive migration `20261120185936_AddStorageContainers`, regenerated last after merging `next` `aff345d`
+       (after `AddSiegeShopCatalogue`; first generated on `9a3132d`, removed and regenerated, snapshot never hand-edited);
+       `KnKDbContext` edits in one DbSet block and one model block.
+    9. knk-workspace (branch from `next`): smoke guide § 7 (§ 7.1 20 API steps: 15 automated, 4 partly, 1 by hand; § 7.2
+       plugin draft for L18), changelog entry, production installation § 5.3 item 13, implementation plan status.
+2. **Commits and heads.** knk-web-api `claude/production-p6a` at `a2b8a98` (5 commits plus a merge of `next` `aff345d`;
+   the seed README conflict kept both sections). knk-workspace `claude/production-p6a` at `bd4d7949` (2 commits, a
+   merge of `next` `e0bf327e` and a fix commit: that merge recorded conflict markers in the smoke guide header, which
+   `bd4d7949` resolves by keeping the § 6.2 and § 6.3 status lines of `next` and adding § 7.1).
+3. **PRs.** [knk-web-api#67](https://github.com/PandiO/knk-web-api/pull/67) (Closes #683, Closes #881, Part of #877) and
+   [knk-workspace#889](https://github.com/PandiO/knk-workspace/pull/889) (Part of #683, #877, #881), base `next`. Not
+   merged.
+4. **Tests, baseline → result.**
+    1. knk-web-api: baseline on `next` `aff345d` 4936 passed / 119 skipped / 0 failed (earlier bases: `bf8633f` 4865,
+       `9a3132d` 4879). Branch `a2b8a98`: 4969 / 119 / 0.
+    2. New (33): `TerminalsAndMenusTests` (18), `ProductionAreaRegionBoundsTests` (2), `MenuTemplateProductionSeedTests`
+       (8), `AddStorageContainersTests` (2), the three menus in the content seed theory (3). Pinned:
+       `ReadAccessRulesTests`, `DashboardChangeAccessRulesTests`, `DeleteAccessRulesTests`, `LookupFiltersTests`.
+    3. Broken on purpose: the display split (the first version was not largest remainder; the test caught it).
+    4. MySQL tests skipped locally (no `KNK_TEST_MYSQL`).
+    5. CI: on `a2b8a98` build-and-test, mysql-tests and fresh-database green on both the push and the PR runs (also green on the earlier head `4e71216`). Known reds: none seen.
+5. **Decisions (DESIGN § 4.3).** All 14, each with alternatives, are in knk-web-api#67. The main ones:
+    1. *Town membership.* Chosen: permission node `knk.town.member.<townId>` (wildcard-aware) behind
+       `ITownMembershipResolver`, since the API has no membership data until #246. Alternatives: (a) staff only (A26 not
+       met for members); (b) a membership table now (#246's design).
+    2. *Container-derived cap.* Chosen: written through to `Storage.MaxUnits`. Alternatives: (a) computed at move time
+       (every cap reader would need it); (b) a `ContainerSlots` column on `storages`.
+    3. *Last container unbound.* Chosen: the last cap stays as a fixed cap. Alternatives: (a) clear it; (b) refuse.
+    4. *Terminal use.* Chosen: members of the holder's town, the player of a player storage, staff; game server only;
+       put and take need the flag. Alternatives: (a) anyone; (b) staff only; (c) web users too.
+    5. *Retry.* Chosen: a waiting order runs now; a Returned or Cancelled one is sent again once (`retry-of-<id>`).
+       Alternatives: (a) waiting orders only; (b) a new order per click.
+    6. *Menu contract.* Chosen: this link names the plugin-side roots, sources, getters and actions (comment on #74).
+       Alternatives: (a) leave the seeds to L18 (A27 is this link's).
+    7. *Overview.* Chosen: stored state only (no settle), filtered and paged in memory; status Full > NoRoad > Stalled >
+       Working. Alternatives: (a) settle on read.
+    8. *Region bounds (#877).* Chosen: from `map_region_outlines`; bounds that are sent win. Alternatives: (a) ask the
+       game server at save time.
+    9. *Smoke gate.* The developer's 2026-11-19 waiver of the smoke gates, read by the coordinator as covering the later
+       links.
+6. **Out of scope, noted.** The API contract for L18 is a comment on #74 (container routes, menu roots, sources,
+   getters and actions, the membership node, CaptureRadius completion fields). No new issues. Codex: the connector hit
+   its code-review usage limit on both PRs (review "failed", usage-limit comment); no inline findings; noted on each PR.
+7. **Blockers.** None.
+8. **At merge / what the developer must do.**
+    1. Apply migration `AddStorageContainers` (additive, one table, after `AddSiegeShopCatalogue`).
+    2. Import the seeds `StorageContainer` (form and display), `StockTransaction` v2 and `ProductionArea` v2 ("make
+       default").
+    3. Grant `knk.town.member.<town id>` to each town's members (a permission group per town) until #246.
+    4. Restart the API once: the menus and the hub tile are seeded.
+    5. No `api.env` key, no plugin `config.yml` change.
+    6. Smoke test [§ 7.1](../guides/production-storage-transport-smoke-test.md) (tier:2): 15 of 20 steps automated,
+       about 10 minutes for the untagged parts.
+    7. At merge into `next`: the `documentation` sub-issue (terminals and structure menus architecture page and API
+       contract, admin guide for containers and the membership node, feature register row; the player guide with L18).
+9. **Notes for later links.**
+    1. L18 (#74): see the comment on #74. Regenerate the plugin's `content-seeds.json` from
+       `MenuTemplateContentSeedTests.ContentSeeds_ExportAsApiJson` (`KNK_MENU_CONTENT_SEED_EXPORT`); the three production
+       menus are in the export list. Bind the left half of a double chest. Put/take resolve blueprints with item identity
+       (#141).
+    2. A later plugin link: the `CaptureRadius` world task handler (complete with `centerX/Y/Z`, `radius`, `worldName`).
+    3. #246 (town roles): replace `PermissionTownMembershipResolver` (one class behind `ITownMembershipResolver`).
+    4. L19 (P7): Player storages with Purpose Inbox or Stash can be bound to containers the same way; the terminal rule
+       already lets a player use their own player storage.
+
+### 4.18 L18 — P6 plugin: terminals, displays, Structures menu, structure menu, orders list (#74)
+
+1. **Scope done** (knk-plugin, plus essential docs in knk-workspace). Everything runs only with `production.enabled:
+   true` (A21).
+    1. `/knk storage bind <storage id> <terminal|display> [label]|unbind|info|reload` (`commands/StorageAdminCommand`,
+       node `knk.admin.world.production`). It binds the block the sender looks at through `POST api/StorageContainers`,
+       using the left half of a double chest; the container must be empty.
+    2. Terminals (A14), `production/terminal/StorageTerminalModule`. Right-clicking opens a paged view (`TerminalView`)
+       of `GET {id}/terminal` as the player. Left-click on an entry takes a stack, right-click one, shift-click what
+       fits. Clicking an item in the player's own inventory puts it. Each click is one `take` or `put` with its own
+       idempotency key. A put resolves the item with item identity (#141), holds the items back until the API answers,
+       returns what the API refused, and resends once with the same key when no answer came.
+    3. Displays: the block's own inventory holds the API's sample, with the stacks tagged
+       `knightsandkings:knk_display_sample` (`DisplayWriter`). It is written on chunk load and after terminal moves on
+       the same storage, at most once per `display-refresh-seconds`. Opening it shows a read-only copy (`DisplayView`).
+    4. Bound blocks can't be broken, explosions leave them, and hoppers move nothing in or out. The bindings index
+       (`ContainerIndex`) is the API's list (`POST api/StorageContainers/search`), read at start, every
+       `refresh-minutes` and after `/knk storage`.
+    5. Structures menus (M1-M5, A24-A27): `menu/content/StructuresMenuFeature` serves the seeded menus of #683.
+        1. Roots `structures`, `structure` and `structureOrders`.
+        2. Sources `structures.overview`, `structures.storages` and `structures.orders`. They act for the viewer, so
+           the API filters the detail.
+        3. Staff actions: survey, dry run, outline, and order cancel and retry.
+        4. Condition `structures.pending`.
+        5. The Town filter is preset from the territory lookup.
+        6. With the flag off the three menus are blocked, so the hub tile hides.
+    6. knk-core holds `production/terminal` (index, layouts, throttle, messages) and `production/menu` (text, facets,
+       rows), plus the ports `StorageContainersApi` and `StructureMenusApi`. knk-api-client holds their implementations.
+       `content-seeds.json` was regenerated from knk-web-api `a2865d7`.
+    7. Config `production.storage.refresh-minutes` (5) and `display-refresh-seconds` (30). A new scenario,
+       `storage-display-double-chest`, raises `MIN_SCENARIOS` to 69.
+    8. #877: the plugin's `CaptureRadius` handler (#679) already matches the API's task type and form seed v2, and
+       `CaptureRadiusTest` pins its output, so no code change was needed. The PR closes #877.
+    9. knk-workspace (branch from `next`) has these docs:
+        1. Smoke guide § 7.2: 20 steps, 7 automated, 11 partly and 2 by hand.
+        2. The changelog entry.
+        3. Plugin configuration § 4.31.
+        4. The commands guide row.
+        5. Menus player guide § Structures and § Storage terminals and displays.
+        6. The plan status for P6.
+2. **Commits and heads.**
+    1. knk-plugin `claude/production-p6` at `a9ee8bf1`: 10 commits, base `next` `7116f1a5`, which has not moved since.
+    2. knk-workspace `claude/production-p6` at `f947c84b`: 2 commits plus merges of `next` `a59eda2d` and `094495c4`.
+       In the second merge both changelog entries were kept.
+3. **PRs.** [knk-plugin#110](https://github.com/PandiO/knk-plugin/pull/110) (Closes #74, Closes #877) and
+   [knk-workspace#898](https://github.com/PandiO/knk-workspace/pull/898) (Part of #74 and #877), base `next`. Not merged.
+4. **Tests, baseline → result.**
+    1. knk-plugin, baseline on `next` `7116f1a5`: knk-core 3643, knk-api-client 378 (2 skipped), knk-paper 3312
+       (18 skipped).
+    2. Branch: knk-core 3656, knk-api-client 393, knk-paper 3339 (skips unchanged). The 55 new tests:
+        1. knk-core: `TerminalLogicTest`, `StructureMenuTextTest`.
+        2. knk-api-client: `StorageContainersApiImplTest`, `StructureMenusApiImplTest`.
+        3. knk-paper: `StructuresMenuFeatureTest` (the three seeded menus and the hub validate),
+           `StorageTerminalModuleTest` (MockBukkit), `StorageAdminCommandTest`, `StorageTerminalConfigTest`.
+    3. MockBukkit first marked 9 terminal tests "Not implemented" (skipped, not passed) for `getState(false)` and
+       `getHolder(false)`. Switched to the plain calls; all now run.
+    4. Broken on purpose: a put that doesn't return refused items. Two tests caught it.
+    5. CI on `a9ee8bf1`: build and paper-boot green on both the push and the PR runs. A local Paper run passed
+       `storage-display-double-chest` and the log check. Known reds: none.
+5. **Decisions (DESIGN § 4.3).** All 12, each with alternatives, are in knk-plugin#110. The main ones:
+    1. *Facet values.* Chosen: names, mapped to ids (a number is taken as an id, for the territory preset).
+       Alternatives: (a) ids shown to players; (b) a chat prompt.
+    2. *Flag off.* Chosen: the feature is always registered and the menus are blocked. Alternatives: (a) register
+       only with the flag (a validation failure on every start); (b) leave them open (A21).
+    3. *Finding bindings.* Chosen: an index of the API's list. Alternatives: (a) `by-block` per click (too late to
+       cancel the event); (b) scanning (DESIGN § 6.2 forbids it).
+    4. *Put safety.* Chosen: hold the items back, then one retry on the same key. Alternatives: (a) remove after the
+       answer (dupe window); (b) no retry.
+    5. *Items that change on the way.* Chosen: damaged and enchanted-vanilla items are refused. Alternatives: (a)
+       accept (free repairs, lost enchantments).
+    6. *Unique items.* Chosen: refused both ways in game (#897). Alternatives: (a) put only (one-way).
+    7. *Command node.* Chosen: `knk.admin.world.production`, as for `/knk logistics`. Alternatives: (a) a new
+       `knk.admin.world.storage`.
+6. **Out of scope, noted.** #897 lists four things:
+    1. The worker NPC can't open the structure menu, because no production worker NPC entity exists (A25 partly).
+    2. Unique items in terminals in game.
+    3. Notifications and Bukkit events.
+    4. `/knk transport` and watch on/off.
+
+   Codex: the connector hit its usage limit on both PRs, so there are no inline findings; this is noted on each PR.
+7. **Blockers.** None.
+8. **At merge / what the developer must do.**
+    1. Plugin `config.yml` (Restart): `production:` → `storage:` → `refresh-minutes: 5`, `display-refresh-seconds: 30`.
+    2. Grant `knk.admin.world.production` (binding) and `knk.admin.world` (the staff buttons). Town members need
+       `knk.town.member.<town id>` (#683). Terminal puts need `items.identity.enabled: true`.
+    3. Smoke test [§ 7.2](../guides/production-storage-transport-smoke-test.md) (tier:2): 7 of 20 steps automated, 11
+       partly; about 15 minutes for the untagged parts.
+    4. At merge into `next`, the `documentation` sub-issue covers:
+        1. The terminals and structure menus architecture page.
+        2. The production admin guides (binding, displays).
+        3. The register row and the guides index.
+9. **Notes for later links.**
+    1. L19/L20 (P7): inbox and stash storages bind with `/knk storage bind` the same way, and the terminal works for a
+       player's own storage. Unique items still need an instance-to-item builder (#897).
+    2. Worker NPCs: open `structures.structure` with `ctx.structureId` and `ctx.name`. The feature needs no change.
+
+### 4.19 L19 — P7 delivery and inbox API (#60)
+
+1. **Scope done** (knk-web-api, plus essential docs in knk-workspace).
+    1. `IItemDeliveryService` (DESIGN § 4.6, decision record § 2.4, D7, A15): `POST api/ItemDeliveries` (the game server
+       sends what it could not place; staff with `knk.economy.admin` send gifts). Items move `SYS_WORLD` → the player's
+       Inbox storage (Player, purpose Inbox, made on first use) as RewardInbox; fungible items as stock lines, unique
+       ones as `StockUnit`s. A hard cap (raw units × storage weight) that premium tiers raise; the overflow moves
+       `SYS_WORLD` → `SYS_LOSS` as InboxOverflow. One delivery per idempotency key (replay; another body is 409).
+    2. Entities `ItemDelivery` and `ItemDeliveryLine` (the inbox lots: requested, inboxed, lost, claimed, expired,
+       remaining, expiry, reminders). Notification `InboxUpdated` (Delivered with lost units and a warning level,
+       ExpiryReminder, Expired).
+    3. Claim `POST api/Inbox/{userId}/claim` (game server, `X-Acting-User-Id` = the player): partial, oldest lots first,
+       InboxClaim to `SYS_WORLD`. 30-day expiry with reminders 7 and 1 days before: `InboxMaintenanceService` hourly and
+       `POST api/Inbox/sweep` (staff); InboxExpired to `SYS_LOSS`.
+    4. Premium stash (separate Player storage, purpose Stash): idempotent `.../stash/deposit` and `.../withdraw` for the
+       game server (that player) or `knk.economy.admin`. Views `GET api/Inbox/{userId}` and `.../stash` for the game
+       server, the player themself and economy staff.
+    5. Game settings section `production.delivery` (caps, expiry, reminder days, warning levels, premium tier caps by
+       permission group). Every move needs `Production:Enabled` (409); reads work while it is off. Kit and lootbox
+       delivery are untouched (#261).
+    6. #883: validation method `ProductionAreaPlacement` (P-3) on the `ProductionArea` form's structure field (seed v3,
+       warning by default); run on area create and update, `placementWarnings` returned. Region areas whole, Cuboid by
+       corners, Radius by centre and edge points; Polygon not checked (#900).
+    7. #890: `destinationWarehouseName`, `carrierStructureName`, `productionStructureName` (cycle records),
+       `fromKind`/`toKind` on due lanes, `unitTypes` on survey overlaps (#875).
+    8. Seeds `ItemDelivery` (form and display, G17), `ProductionArea` form seed v3. Pinned access tests. One additive
+       migration `20261120234819_AddItemDelivery` (two tables), regenerated last after merging `next` `fc1a514`
+       (`AddSiegeWeaponUnlockMinTitle`); first generated on `a2865d7`, regenerated after `AddMenuItemSettings` and again;
+       snapshot never hand-edited. `KnKDbContext`: one contiguous model block, no DbSet properties.
+    9. knk-workspace (branch from `next`): smoke guide § 8 (§ 8.1 20 API steps: 16 automated, 3 partly, 1 by hand; § 8.2
+       plugin draft for L20), changelog entry, production installation § 5.3 item 14, implementation plan status.
+2. **Commits and heads.** knk-web-api `claude/production-p7` at `a389259` (9 commits plus 2 merges of `next`, last
+   `fc1a514`). knk-workspace `claude/production-p7` at `fbe4ded6` (3 commits plus 2 merges of `next`; the changelog and
+   the smoke guide header kept both sides).
+3. **PRs.** [knk-web-api#70](https://github.com/PandiO/knk-web-api/pull/70) (Closes #60, #883, #890; Part of #875) and
+   [knk-workspace#899](https://github.com/PandiO/knk-workspace/pull/899) (Part of #60, #883, #890), base `next`. Not
+   merged.
+4. **Tests, baseline → result.**
+    1. knk-web-api: baseline on `next` `fc1a514` 5019 passed / 119 skipped / 0 failed (first base `a2865d7`: 4969).
+       Branch `a389259`: 5048 / 122 / 0.
+    2. New (32): `ItemDeliveryServiceTests` (12), `InboxControllersTests` (4), `ProductionAreaPlacementTests` (6),
+       `TransportReadNamesTests` (4), `SurveyOverlapUnitTypesTests` (1), `AddItemDeliveryTests` (2),
+       `ItemDeliveryMySqlTests` (3, requires-mysql). Pinned: `ReadAccessRulesTests`, `FormConfigurationSeedFilesTests`.
+    3. MySQL 8.0.46 locally: the 3 delivery and 9 stock ledger MySQL tests green; the full suite with `KNK_TEST_MYSQL`
+       fails only the known red #285.
+    4. Broken on purpose: newest-lot-first claims fail the FIFO test; removing the user row lock fails all three MySQL
+       delivery tests.
+    5. CI on `a389259`: build-and-test and fresh-database green; mysql-tests still running at the time of writing (green locally, see 3).
+    6. Known reds: #285 (MySQL run only).
+5. **Decisions (DESIGN § 4.3).** All 16, each with alternatives, are in knk-web-api#70. The main ones:
+    1. *Who places.* Chosen: the game server places what fits and sends only the rest; placed items never touch the
+       ledger. Alternatives: (a) API-side pending deliveries as for #261: a second path, items in limbo for offline
+       players; (b) everything into the inbox and an auto-claim: a full inbox would lose rewards an online player had
+       room for.
+    2. *Ledger counterpart.* Chosen: `SYS_WORLD` for deliveries and claims. Alternatives: (a) `SYS_PRODUCTION`: mixes
+       rewards into production figures; (b) `SYS_ADJUSTMENT`: kept for staff corrections.
+    3. *Expiry.* Chosen: the lots (`ItemDeliveryLine`) carry the expiry; the stock line stays the truth. Alternatives: (a)
+       per stock line: loses arrival times; (b) one row per item.
+    4. *Premium caps.* Chosen: game settings `production.delivery.premiumTiers` by permission group id, the higher of
+       base and tier. Alternatives: (a) columns on `PermissionGroup` (wider migration, form seed bump); (b) permission
+       nodes per cap.
+    5. *Defaults.* Chosen: inbox 2304 units, stash 0 (premium perk), reminders 7 and 1 days, warnings 80 % and 95 %.
+       Alternatives: (a) a base stash for everyone; (b) other numbers (all settings).
+    6. *Flag.* Chosen: every move (deliver, claim, stash, sweep) needs `Production:Enabled`; reads stay on; expiry waits.
+       Alternatives: (a) claims while off (A21); (b) expiry while off.
+    7. *Concurrency.* Chosen: lock the user row before finding or making the inbox, then the storages in id order.
+       Alternatives: (a) a unique index on (user, purpose).
+    8. *P-3.* Chosen: a new validation method on the structure field, district or territory picked from the structure.
+       Alternatives: (a) `RegionContainment` + `InsideTerritory` with paths: one would always fail per structure; (b)
+       Polygon by bounding box: false warnings.
+    9. *Smoke gate.* The developer's 2026-11-19 waiver, read by the coordinator as covering the later links.
+6. **Out of scope, noted.** #900 (P-3 for Polygon areas, tier:1), #901 (P7 web app: settings card, a player's inbox,
+   stash and gifting, tier:2). The L20 contract is a comment on #684; #875 API part a comment on #875. Codex: the
+   connector hit its code-review usage limit on both PRs (also on the `@codex review` after the last merge); no inline
+   findings; noted on each PR.
+7. **Blockers.** None.
+8. **At merge / what the developer must do.**
+    1. Apply migration `AddItemDelivery` (additive, two tables, after `AddSiegeWeaponUnlockMinTitle`).
+    2. Import the seeds `ItemDelivery` (form and display) and `ProductionArea` v3 ("make default").
+    3. Set the game settings section `production.delivery` and each premium tier's caps (JSON in the changelog entry);
+       defaults apply when missing.
+    4. Grant `knk.economy.admin` to staff who gift items or use players' stashes. No `api.env` key, no plugin
+       `config.yml` change.
+    5. Smoke test [§ 8.1](../guides/production-storage-transport-smoke-test.md) (tier:3): 16 of 20 steps automated,
+       about 10 minutes for the untagged parts.
+    6. At merge into `next`: the `documentation` sub-issue (delivery and inbox architecture page and API contract, admin
+       guide for the inbox settings and gifting, feature register row; the player guide with L20).
+9. **Notes for later links.**
+    1. L20 (#684): see the comment on #684. Place first, then `POST api/ItemDeliveries` with the rest and a stable key
+       (`kit-claim-<claimId>`, `lootbox-claim-<claimId>`); claim with one key per click and place exactly `accepted`;
+       fall back to today's delivery when the API answers 409 `ProductionDisabled`. Claimed unique items need the
+       instance-to-item builder (#897, from L18).
+    2. A web app link (#901): the `production.delivery` settings card and a player's inbox and stash.
+
+### 4.20 L20 — P7b inbox plugin, kit/lootbox migration (#684)
+
+1. **Scope done** (knk-plugin, plus essential docs in knk-workspace). Everything new runs only with
+   `production.enabled: true`. With it off, kits and lootboxes are delivered exactly as before (A21, #261), and both
+   paths are tested.
+    1. `RewardInbox` (knk-paper `production/inbox`) places what fits first. It sends the rest with
+       `POST api/ItemDeliveries`, under a key that stays the same for each reward:
+        1. `kit-claim-<claimId>` for kits granted from the web app (#261).
+        2. `lootbox-claim-<claimId>` for lootboxes.
+        3. `kit-first-join-u<userId>` for first-join kits.
+        4. A random `kit-<kitId>-u<userId>-…` for each in-game grant.
+       Items are resolved with item identity (#141), or else by the blueprint they were built from. If the API gives no
+       answer or a 5xx error, the plugin retries once with the same key. If the API refuses (409 `ProductionDisabled`
+       or another 4xx), the plugin falls back to today's delivery.
+    2. Kits: `KitGrantPlacer.place(player, items, overflow)`. Without an overflow it is unchanged. It is used by
+       `KitGrantFlow` (`/kit get|give`), `KitGrantDelivery` (#261) and first-join kits. A kit for a player who went
+       offline before it was placed now goes to the inbox (it was lost before).
+    3. Lootboxes (`LootboxDelivery`): leftovers of stackable items go to the inbox. The claim is confirmed after the
+       inbox answers: Inventory or Redelivered, with the note `N to the reward inbox (delivery #id)`. If the inbox
+       refuses, the items drop owner-locked and the claim is DroppedOwned. Unique items still drop owner-locked (#897).
+    4. `/inbox` (`InboxModule`, `InboxScreen`, `InboxCommand`; no permission node):
+        1. A paged view of the inbox: amounts, the first expiry of each entry, and how full the inbox is.
+        2. Left click claims a stack, right click claims one, shift-click claims as much as fits. Each click has its
+           own key, and exactly what the API accepted is placed.
+        3. These are refused without calling the API: a full inventory, unique items, and claims during a siege.
+    5. `InboxUpdated` notices (through a new handler in `PlayerNotificationPoller`): loss, near-cap warning, expiry
+       reminders and expiry. If this server already told the player about a delivery, only the warning is shown again.
+       `production.inbox.join-summary` (default true) tells a player on join what is waiting.
+    6. knk-core `production/inbox` and the port `ItemDeliveryApi`. knk-api-client `ItemDeliveryApiImpl` and the
+       `inbox` payload on `PlayerNotification`.
+    7. Two new scenarios, `player-kit-overflow-inbox` and `player-inbox-claim-partial`. `MIN_SCENARIOS` 69 → 71.
+       `content-seeds.json` is unchanged. Siege, navigation, NPC and the menu item listener are untouched.
+       `KnKPlugin`, `config.yml` and `plugin.yml` additions are in their own blocks.
+    8. knk-workspace (branch from `next`):
+        1. Smoke guide § 8.2: 17 steps, 7 automated and 10 partly.
+        2. The changelog entry.
+        3. Plugin configuration § 4.31.
+        4. `/inbox` in the commands guide.
+        5. Menus player guide § Reward inbox.
+        6. The plan status for P7.
+2. **Commits and heads.**
+    1. knk-plugin `claude/production-p7b` at `823ebf09`: 3 commits plus a merge of `next` `ec02a64a` (siege shop L6).
+    2. knk-workspace `claude/production-p7b` at `e48c9d0e`: 1 commit plus two merges of `next`. The changelog,
+       plugin configuration, commands and menus guide headers kept both sides.
+3. **PRs.** [knk-plugin#113](https://github.com/PandiO/knk-plugin/pull/113) (Closes #684) and
+   [knk-workspace#911](https://github.com/PandiO/knk-workspace/pull/911) (Part of #684), base `next`. Not merged.
+4. **Tests, baseline → result.**
+    1. knk-plugin baseline on `next` `02a99b62`: knk-core 3680, knk-api-client 402 (2 skipped), knk-paper 3364
+       (18 skipped).
+    2. Branch (with `next` merged in): knk-core 3711, knk-api-client 411 (2 skipped), knk-paper 3416 (18 skipped).
+       Nothing fails.
+    3. New tests:
+        1. knk-core: `InboxLogicTest`.
+        2. knk-api-client: `ItemDeliveryApiImplTest`.
+        3. knk-paper: `RewardInboxTest` and `InboxModuleTest`, plus tests for both paths in `KitGrantDeliveryTest`,
+           `KitGrantFlowTest` and `LootboxDeliveryTest`.
+    4. MockBukkit skipped one new test at first, because `ItemMock` doesn't implement `getOwner`. I rewrote that test
+       so it runs. The owner lock is already covered by `LootboxDeliveryTest`.
+    5. Broken on purpose: with the overflow hook in `KitGrantPlacer` turned off, three `RewardInboxTest` tests failed.
+       The scenario `player-kit-overflow-inbox` also checks the flag-off path (the kit drops at the feet).
+    6. A local Paper 26.3 run with Citizens passed all 71 scenarios, including both new ones. CI on `1952a5b9` is
+       green (build and paper-boot). The runs on `823ebf09` (a test-only change) were still going when this block
+       was written.
+    7. Known reds: none.
+5. **Decisions (DESIGN § 4.3).** All 9 are in knk-plugin#113, each with its alternatives. The main ones:
+    1. *A delivery the API refuses or doesn't answer.* Chosen: today's drop, logged with the key. Alternatives:
+       (a) hold the items and retry later (lost on a restart); (b) drop nothing (the items are lost).
+    2. *Unique items.* Chosen: never sent to the inbox; they drop as today until #897. Alternatives: (a) send them
+       and show them as not claimable (one-way).
+    3. *Keys for kits granted in game.* Chosen: a random key per grant. Alternatives: (a) add `claimId` to
+       `KnkKitClaimResult` (the API only sends it for a give).
+    4. *Lootbox confirmation.* Chosen: Inventory with a note, sent after the inbox answers. Alternatives: (a) a new
+       `Inbox` method in the API (filed as #912).
+    5. *Inbox screen.* Chosen: a view built in the plugin, like L18's terminal. Alternatives: (a) a seeded
+       InventoryMenu (it needs an API seed).
+    6. *Siege.* Chosen: `/inbox` is refused during a siege. Alternatives: (a) allow it (the items would be lost when
+       the siege inventory is replaced).
+6. **Out of scope, noted.**
+    1. #912: the lootbox `Inbox` delivery method, claim all, a main-menu tile, and leftover lootbox tokens.
+    2. A comment on #897: the inbox also needs the instance-to-item builder.
+    3. Codex hit its code-review usage limit on both PRs, also on the `@codex review` after the last pushes. There
+       are no inline findings; this is noted on each PR.
+7. **Blockers.** None.
+8. **At merge / what the developer must do.**
+    1. Merge into the plugin `config.yml`, then restart:
+       ```yaml
+       production:
+         inbox:
+           join-summary: true
+       ```
+    2. The API needs `AddItemDelivery`, `Production:Enabled` and the game settings `production.delivery` (#60). No
+       new permission node.
+    3. Smoke test [§ 8.2](../guides/production-storage-transport-smoke-test.md) (tier:3): 7 of 17 steps automated and
+       10 partly. The untagged parts take about 15 minutes.
+    4. At the merge into `next`, open the `documentation` sub-issue for:
+        1. The inbox part of the delivery architecture page.
+        2. An inbox admin guide.
+        3. The plugin scenarios guide (the two new scenarios).
+        4. The register row and the guides index.
+9. **Notes for later links.**
+    1. Other rewards can use the same path: `RewardInbox.send(player, userId, reason, …, key, leftovers, fallback)`
+       (`KnKPlugin.kitRewardRouter()` is null while the flag is off). A quest reward would pass `Reason.QUEST` and a
+       stable key.
+    2. #901 (P7 web app) can show the deliveries with their keys (`kit-claim-`, `lootbox-claim-`,
+       `kit-first-join-`).
+
+### 4.21 L21 — P8a harvest API (#685)
+
+1. **Scope done** (knk-web-api, plus essential docs in knk-workspace).
+    1. `HarvestRule` per kind (PRODUCTION_KINDS § 6.1): targets (blocks or entities, `*` at either end), minimum crop
+       age, permission node and lowest title bracket, tool class and tier, cooldown, yield blueprint, units per break and
+       a fortune bonus (up to Fortune IV), worker's share (default 0.25), pool cost, placeholder and its block,
+       regeneration seconds (up to twice as long at an empty pool when the rule says so).
+    2. `ResourcePool` per area (§ 6.3): capacity from the latest survey's total units (a new survey keeps the fill),
+       lazy regeneration, staff CRUD; made on the first harvest. `ProductionKind.PoolFloor` (0.5, P-D6).
+    3. `POST api/Harvest/reports` (game server only, batched, one idempotency key per entry): settle first, regenerate
+       and draw the pool, split at once: worker's share `SYS_PRODUCTION → SYS_WORLD`, the rest `SYS_PRODUCTION → Output`
+       (both `PlayerHarvest`); fractions per player and rule (`HarvestAccrual`); full Output loses the town's share, the
+       player is still paid (F10); per-entry Rejected with a reason. Area row lock, then the user row lock.
+    4. The pool as a built-in step in the engine (L9 and L11 notes): `floor + (1 − floor) × fill` over the structure's
+       pools; `poolFactor` on the production view (with a reason) and on `ProductionCycleRecord`.
+    5. Net-output check (F9) `GET api/HarvestRules/{id}/balance` per area of the rule's kind, with warnings.
+    6. `GET api/Harvest/catalog` for L22 (enabled rules, their kinds' areas with shape, bounds and pool fill; empty
+       while off). History `api/PlayerHarvests` (read only). Game settings section `production.harvest`. Registry,
+       lookups, pinned access tests.
+    7. Seeds (G17): form and display `HarvestRule`, `ResourcePool`; display `PlayerHarvest`; `ProductionKind` v3 (form
+       and display). `HarvestAccrual` without seeds (counter table, decision 20).
+    8. #900 (additive extra, closed by the PR): P-3 checks a Polygon area by each of its points.
+    9. One additive migration `20261121011159_AddPlayerHarvesting` (four tables, two columns with defaults), generated
+       last on `next` `2952d0c`, which had not moved at the last fetch; `KnKDbContext` edits in one contiguous block, no
+       DbSet properties; snapshot not hand-edited.
+    10. knk-workspace (branch from `next`): smoke guide § 9 (§ 9.1 21 API steps, 18 automated, 3 partly; § 9.2 plugin
+        draft for L22), changelog entry, production installation § 5.3 item 15, implementation plan status.
+2. **Commits and heads.** knk-web-api `claude/production-p8a` at `e89e396` (6 commits on `next` `2952d0c`);
+   knk-workspace `claude/production-p8a` at `00fab16d` (1 commit plus a merge of `next` `12804469`, the siege shop docs #908; the
+   changelog and the installation header keep both sides).
+3. **PRs.** [knk-web-api#72](https://github.com/PandiO/knk-web-api/pull/72) (Closes #685, Closes #900) and
+   [knk-workspace#914](https://github.com/PandiO/knk-workspace/pull/914) (Part of #685, #900), base `next`. Not merged.
+4. **Tests, baseline → result.**
+    1. knk-web-api: baseline on `next` `2952d0c` 5048 passed / 122 skipped / 0 failed; branch `e89e396` 5077 / 125 / 0.
+    2. New (32): `ProductionHarvestTests` (23), `HarvestControllersTests` (2), `ProductionAreaPlacementTests` (+2, #900),
+       `AddPlayerHarvestingTests` (2), `PlayerHarvestMySqlTests` (3, requires-mysql). Pinned: `ReadAccessRulesTests`,
+       `DeleteAccessRulesTests`, `DashboardChangeAccessRulesTests`, `LookupFiltersTests`.
+    3. MySQL 8.0.46 locally with `KNK_TEST_MYSQL`: 5201 passed, 1 failed = the known red #285.
+    4. Broken on purpose: the pool formula without the floor and the worker's share into Output turn 9 harvest tests
+       red; without the area row lock the concurrent-harvest MySQL test is red; without the points context the Polygon
+       P-3 test is red.
+    5. Migration applied, rolled back to `AddItemDelivery` and re-applied; `has-pending-model-changes` clean.
+    6. CI push runs on `e89e396`: build-and-test, mysql-tests and fresh-database green; the PR runs were running at the
+       time of writing.
+    7. Known reds: #285 (MySQL run only).
+5. **Decisions (DESIGN § 4.3).** All 17, each with alternatives, are in knk-web-api#72. The main ones:
+    1. *Empty pool.* Chosen: a harvest at an empty pool is still booked (the pool stays at 0, production at its floor);
+       L22 may deny breaks at `poolFill` 0. Alternatives: (a) refuse reports at an empty pool (the old draft smoke step,
+       rewritten); (b) a setting.
+    2. *New pools.* Chosen: made on the first harvest; capacity = the latest survey's total units, else
+       `production.harvest.defaultPoolCapacity` (1000); full again in `defaultRegenHoursToFull` (12 h). Alternatives:
+       (a) made on every survey; (b) staff only.
+    3. *Pool factor.* Chosen: the value at settle time, the structure settled before each harvest; several areas
+       combine as Σ current ÷ Σ capacity; regeneration lazy. Alternatives: (a) the period's average fill; (b) the lowest
+       area; (c) a regeneration sweep.
+    4. *Fractions.* Chosen: per player and rule (§ 6.2), worker's and town's. Alternatives: (a) per player, rule and area.
+    5. *Fortune.* Chosen: a per-rule bonus per level up to IV (default 0). Alternatives: (a) vanilla tables; (b) the game
+       server reports drops.
+    6. *Batches.* Chosen: one key per entry, per-entry results. Alternatives: (a) one key per batch, all or nothing.
+    7. *Requirements.* Chosen: permission node and lowest title bracket, tool, cooldown stored here and checked by the
+       game server. Alternatives: (a) a free JSON requirement.
+    8. *Wage or title XP.* Not built (optional in V1).
+    9. *Smoke gate.* The developer's 2026-11-19 waiver, read by the coordinator as covering the later links.
+6. **Out of scope, noted.** #913 filed (P8 web app: rule editor with the balance, pools, history, `production.harvest`
+   card, tier:2). The L22 contract is a comment on #134. Codex: the connector hit its code-review usage limit on both
+   PRs (review "failed", usage-limit comment); no inline findings; noted on each PR.
+7. **Blockers.** None.
+8. **At merge / what the developer must do.**
+    1. Apply migration `AddPlayerHarvesting` (additive, after `AddItemDelivery`).
+    2. Import the seeds `HarvestRule` and `ResourcePool` (form and display), `PlayerHarvest` (display) and
+       `ProductionKind` v3 (form and display), "make default".
+    3. Optional: game settings section `production.harvest` (JSON in the changelog entry; defaults apply when missing).
+    4. Write the harvest rules per kind (none seeded) and check each rule's balance. No `api.env` key, no plugin
+       `config.yml` change.
+    5. Smoke test [§ 9.1](../guides/production-storage-transport-smoke-test.md) (tier:3): 18 of 21 steps automated,
+       about 10 minutes for the untagged parts.
+    6. At merge into `next`: the `documentation` sub-issue (harvesting architecture page and API contract, admin guide
+       for rules, pools and the balance check, feature register row; the player guide with L22).
+9. **Notes for later links.**
+    1. L22 (#134): see the comment on #134. Drop `workerUnits` of the rule's blueprint instead of the vanilla drops; one
+       stable key per entry; deny every break while the catalogue says `featureEnabled` false; requirement, tool and
+       cooldown are checked by the game server; `placeholderMaterial` null = the world's default (stone, netherrack).
+    2. #913 (P8 web app): `GET api/HarvestRules/{id}/balance` has the numbers and warnings for the rule editor.
+
+### 4.22 L22 — P8 harvest plugin (#134)
+
+1. **Scope done** (knk-plugin, plus the essential docs in knk-workspace). Everything runs only with `production.enabled:
+   true`; with it off nothing is built or registered (A21).
+    1. knk-core `production/harvest/` (Bukkit-free):
+        1. `HarvestRule`, `HarvestArea`, `HarvestCatalog` and `HarvestAreaIndex` (the catalogue's areas by chunk).
+        2. `HarvestGate`: target, crop age, `RequirementEvaluator` (the design's `IRequirementEvaluator`: permission node
+           and title bracket), tool class and tier, cooldown, the structure's switch, the empty pool (optional).
+        3. `RegenQueue` / `RegenJob`: restores only with loaded chunks and only where each placeholder's material still
+           stands, never into a living entity, within a per-tick budget. The queue is also the survey `PlaceholderOverlay`.
+        4. `HarvestOutbox`: stable keys `harvest-<server>-<uuid>`, entries grouped per player, rule, area and fortune,
+           resent with the same key.
+        5. `OwedPay`, `TreeFeller` (the whole tree for the P-D8 snapshot) and `HarvestTools`.
+        6. The port `HarvestApi`.
+    2. knk-api-client `HarvestApiImpl` (`GET api/Harvest/catalog`, `POST api/Harvest/reports`).
+    3. knk-paper `production/harvest/`:
+        1. `HarvestModule`: the break decision at LOW, the drops off at HIGHEST, and at MONITOR the job, the placeholder
+           on the next tick and the report entry. It also covers entity kills, sapling growth cancelled, chunk loads, the
+           report flush, the share paid into the inventory (offline players on join), and the files
+           `production/harvest/{regen,outbox,owed}.txt`.
+        2. `HarvestWorldGuardListener` (WorldGuard `BreakBlockEvent` / `DamageEntityEvent` set to ALLOW for a qualified
+           harvest).
+        3. `HarvestRequirements` and `HarvestConfig`.
+    4. Wiring, each an additive block:
+        1. `KnKPlugin`: `initializeHarvesting`, the getter, `onDisable`, the survey overlay and the global-protection hook.
+        2. `SurveyModule`: a new constructor with the overlay.
+        3. `GlobalRegionProtectionListener.setAllowedBreaks`.
+        4. `/knk production harvest status|refresh` (existing node).
+        5. `config.yml` `production.harvest.*` (14 keys).
+        6. No `plugin.yml` change and no change to `content-seeds.json`.
+    5. Scenarios `player-harvest-regenerate` and `player-harvest-tree`; `MIN_SCENARIOS` 71 → 73.
+    6. knk-workspace (branch from `next`):
+        1. Smoke guide § 9.2: 22 steps, 10 automated, 10 partly, 2 by hand.
+        2. Plugin configuration § 4.31 `production.harvest.*` with the § 2.1 and § 3 rows.
+        3. A changelog entry with the YAML.
+        4. A new player guide `guides/users/harvesting-player-guide.md`.
+        5. The implementation plan's § P8 status.
+2. **Commits and heads.**
+    1. knk-plugin `claude/production-p8` at `676d6f11`: 6 commits on `next` `bdd8b463`, which had not moved at the last
+       fetch.
+    2. knk-workspace `claude/production-p8` at `e6b8b6ec`: 1 commit plus a merge of `next` (docs #915). The conflicts
+       were header lines and the § 2.1 table; both sides were kept.
+3. **PRs.** [knk-plugin#114](https://github.com/PandiO/knk-plugin/pull/114) (Closes #134) and
+   [knk-workspace#919](https://github.com/PandiO/knk-workspace/pull/919) (Part of #134), base `next`. Not merged.
+4. **Tests, baseline → result** (`./gradlew build -x deployToDevServer`, Gradle on JDK 21, JDK 25 toolchain).
+    1. Baseline on `next` `bdd8b463`: knk-core 3711, knk-api-client 411 (2 skipped), knk-paper 3416 (18 skipped), 0
+       failures.
+    2. Branch `676d6f11`: knk-core 3746, knk-api-client 415 (2 skipped), knk-paper 3432 (18 skipped), 0 failures.
+    3. New tests:
+        1. knk-core: `HarvestGateTest` (9), `RegenQueueTest` (11), `HarvestOutboxTest` (5), `TreeFellerTest` (5),
+           `HarvestRuleTest` (4), `HarvestAreaIndexTest` (1).
+        2. knk-api-client: `HarvestApiImplTest` (4).
+        3. knk-paper: `HarvestModuleTest` (14, MockBukkit), `GlobalRegionProtectionListenerTest` (+1),
+           `ProductionAdminCommandTest` (+1); `PaperScenariosTest` updated.
+    4. A real Paper server ran here: Paper 26.3-205, WorldGuard 7.0.20 and WorldEdit 7.4.6 with `tools/paper-boot`,
+       running `player-harvest*`. Both scenarios PASS (about 90 and 46 ticks). The first runs found three bugs, all
+       fixed before the PR:
+        1. The join loading hold.
+        2. The global-region protection refusing harvests outside regions.
+        3. `Tag.DIRT` refusing grass in 26.3; the game's `isSupported` check is used now.
+    5. CI on `676d6f11`: build and paper-boot green (73 scenarios; push and PR runs).
+    6. Known reds: none.
+5. **Decisions (DESIGN § 4.3).** All 11, each with its alternatives, are in knk-plugin#114. The main ones:
+    1. *Who is refused.* Chosen: in an area, a rule's target the player does not meet is refused with the reason (also
+       outside regions). Every other block is left to WorldGuard and the global protection, and holders of
+       `knk.admin.world.production` are left to WorldGuard. Alternatives: (a) leave unqualified breaks to WorldGuard:
+       in a wilderness radius they would get full vanilla drops; (b) refuse every block in an area.
+    2. *Empty pool.* Chosen: `deny-at-empty-pool: false` (the API books at the floor, L21 decision 1); the local fill
+       follows each answer. Alternatives: (a) always deny at 0; (b) no setting.
+    3. *Pay.* Chosen: the share goes into the inventory when the API answers (§ 6.2); offline players get it on join.
+       Alternatives: (a) pay at once from the rule's numbers; (b) drop it at the block.
+    4. *Trees.* Chosen: a Sapling rule fells the whole tree (26-connected logs inside the area plus the natural leaves
+       nearest to it) and reports breaks = logs. A sapling goes at the base where the game allows one; more than 256
+       logs is not felled. Alternatives: (a) a sapling per log with no felling; (b) the tree as one break.
+    5. *Restore safety.* Chosen: the whole job restores, or the whole job is dropped when a position changed; an entity
+       in a block postpones it. Alternatives: (a) a partial restore; (b) overwrite anyway.
+    6. *Report failures.* Chosen: 409, 400, 403 and 404 drop the batch (nobody paid, players told); any other failure is
+       resent with the same key. The outbox is saved at once after each answer, so a Replayed answer can't pay twice.
+       Alternatives: (a) keep 409 entries until the flag is on again.
+    7. *Outside regions.* Chosen: an allowed-breaks hook on `GlobalRegionProtectionListener`. Alternatives: (a)
+       un-cancel afterwards, which can override other plugins' refusals.
+6. **Out of scope, noted.** A comment on #134:
+    1. Harvest breaks also feed the survey NotableChange counter (a wasted survey at most every 30 min per area); a
+       tier:1 fix is proposed there.
+    2. Whether #105 (KNG-48) closes; it is covered for harvesting.
+    Codex: the connector hit its code-review usage limit on both PRs (review "failed", no inline findings); this is
+    noted on each PR.
+7. **Blockers.** None.
+8. **At merge / what the developer must do.**
+    1. Merge into the plugin's `production` block and restart (nothing runs while `production.enabled` is false):
+
+       ```yaml
+       production:
+         harvest:
+           catalog-refresh-minutes: 5
+           report-flush-seconds: 2
+           report-batch: 200
+           regen-blocks-per-tick: 64
+           regen-retry-seconds: 5
+           save-seconds: 10
+           deny-at-empty-pool: false
+           tree-max-logs: 256
+           tree-max-leaves: 1500
+           max-area-chunks: 256
+           messages:
+             denied: "&cYou can't harvest this here: {reason}."
+             regenerating: "&7This block is regenerating."
+             paid: "&a+{amount} {item} &7(your share of the harvest)"
+             rejected: "&cYour harvest at {area} was not booked: {reason}."
+       ```
+    2. The API needs `AddPlayerHarvesting`, `Production:Enabled` and harvest rules per kind (none are seeded). A stone
+       rule needs a `placeholderMaterial` other than stone (for example `BEDROCK`).
+    3. Grant each rule's permission node. Back up `plugins/KnightsAndKings/production/harvest/` with the world.
+    4. Smoke test [§ 9.2](../guides/production-storage-transport-smoke-test.md) (tier:3): about 25 minutes for the
+       untagged and partly tagged parts.
+    5. Review decision 1 (who is refused: unqualified players can't break a rule's targets in a wilderness area either).
+    6. At merge into `next`, the `documentation` sub-issue: a harvesting architecture page (plugin side, files, restore
+       rules), an admin guide for harvest rules, the commands guide (`/knk production harvest`), the plugin scenarios
+       guide (the two scenarios), the player handbook link, the production installation backup note, and the feature
+       register row.
+9. **Notes for later links.**
+    1. `HarvestModule.overlay()` is the survey overlay; `HarvestModule.anyAllowsBreak` is the question for other
+       protections.
+    2. `RequirementEvaluator` is the place for skills, professions and knowledge unlocks later (F12).
+    3. Entity rules have no population regulation yet (§ 8.7).
+
+### 4.23 L23 — P9 town logistics API (#127)
+
+1. **Scope done** (knk-web-api, plus essential docs in knk-workspace).
+    1. Entities (one additive migration `AddTownLogistics`, six tables, generated last on `next` `9ad32c23`; one
+       contiguous `KnKDbContext` block, no DbSet properties):
+        1. `LogisticsPolicy`: versions of a town's policy, a warehouse's policy or a default template (specialization
+           = a `ResourceCategory`, town size, one default). A save is a new version, and a unique `CurrentKey` keeps one
+           current version.
+        2. `LogisticsRule`: the V1 types Reserve (units or days of cover, town-wide or per warehouse), PriorityClass,
+           ServiceArea (district, rural territory, structure) and Replenishment. Target: blueprint, category or tag.
+           Each rule has an active window, an author and a reason. The Later types are refused with a pointer to #324.
+        3. `ConsumerReplenishment`: min, max and priority per Input or Merchandise storage and blueprint.
+        4. `LogisticsReservation` (one open per consumer storage and blueprint, unique `OpenKey`),
+           `LogisticsPlannerRun` and `LogisticsPlanEntry` (the explanation).
+    2. `LogisticsPlanner`, reserve and collect (D-L1):
+        1. A run settles reservations first: collected, or released when expired (30 min, F11) or when the order
+           ended.
+        2. Available = stock − reserves − open reservations, per warehouse and town-wide.
+        3. Demand: consumer lines at or below their min, counting what is on the way. Lines are served by priority
+           class, then by road distance.
+        4. Each reservation goes to the service-area warehouse, else the nearest that covers the need, else the one
+           with the most free stock.
+        5. One collection order (origin `Distribution`) per consumer storage and warehouse storage, carried by the
+           consumer's own worker and sized to its capacity. Orders go through the new
+           `TransportService.CreatePlannedAsync` with an idempotency key, inside the run's transaction.
+        6. The run locks the town row. Every line gets an explanation, and the dry run writes nothing.
+        7. `LogisticsPlannerSweepService` runs every minute and plans each town every 10 minutes (D-L2), only while
+           `Production:Enabled` is on (A21). Old runs are pruned.
+    3. A producer without a preferred warehouse delivers to its service-area warehouse when it has room
+       (`TransportService.EvaluateAsync`).
+    4. Endpoints:
+        1. `api/LogisticsPolicies`: get, search, create, `PUT` (a new version), delete with every version,
+           `{id}/versions`, `{id}/apply`.
+        2. `api/LogisticsRules`: read.
+        3. `api/ConsumerReplenishments`: CRUD.
+        4. `api/LogisticsReservations`: read, `{id}/release`.
+        5. `api/LogisticsPlannerRuns`: read.
+        6. `api/Logistics`: `towns/{id}/supply`, `service-areas`, `dry-run`, `run-now`, and `consumers/{id}`.
+        7. Access: reads need the World area or the plugin key; writes `knk.admin.world` or the plugin key; deletes
+           also `knk.admin.delete`. All are in the dashboard registry with lookups and pinned in the access tests.
+    5. Game settings section `production.logistics`. Seeds (G17): form and display `LogisticsPolicy`,
+       `ConsumerReplenishment`, `LogisticsRule`, `LogisticsReservation`, `LogisticsPlannerRun`. The last three forms
+       are read only; `LogisticsPlanEntry` is a child log row without a seed.
+    6. knk-workspace (branch from `next`): smoke guide § 10 (§ 10.1: 24 API steps, 21 automated and 3 partly; § 10.2
+       draft for L24), changelog entry, production installation § 5.3 item 16, implementation plan status.
+2. **Commits and heads.** knk-web-api `claude/production-p9` at `6a8c110` (6 commits, base `next` `9ad32c23`, not
+   moved since). knk-workspace `claude/production-p9` at `3920e67d` (1 commit plus a merge of `next` `f04a9659`).
+3. **PRs.** [knk-web-api#73](https://github.com/PandiO/knk-web-api/pull/73) (Closes #127) and
+   [knk-workspace#920](https://github.com/PandiO/knk-workspace/pull/920) (Part of #127), base `next`. Not merged.
+4. **Tests, baseline → result.**
+    1. knk-web-api: baseline on `next` `9ad32c23` 5077 passed / 125 skipped / 0 failed; branch 5105 passed / 126 skipped
+       / 0 failed. New: `LogisticsPlannerTests` (17), `LogisticsPolicyTests` (8), `AddTownLogisticsTests` (3),
+       `LogisticsMySqlTests` (1, requires-mysql).
+    2. CI on `6a8c110`: build-and-test, mysql-tests and fresh-database green (push and PR runs).
+    3. Local MySQL 8 with `KNK_TEST_MYSQL`:
+        1. The migration applies; `has-pending-model-changes` is clean.
+        2. Whole category: 124 passed, 2 failed, both outside this link: the known #285, and #921 (a currency
+           ledger test that failed once under full load and passed four reruns).
+        3. Broken on purpose: with the town row lock removed, the race test goes red (duplicate open key).
+    4. Known reds: #285 (MySQL run only); #921 filed.
+5. **Decisions (DESIGN § 4.3).** All 15, each with alternatives, are in knk-web-api#73. The main ones:
+    1. *Rebalance orders.* Chosen: not built, because the Decided catalogue marks Rebalance Later (#324); only #127's
+       old body listed them. Alternatives: (a) build them now.
+    2. *Consumer workers.* Chosen: a consumer is any structure with an Input or Merchandise storage, but only
+       production structures have workers, so other consumers show `NoWorker`. Alternatives: (a) widen the transport
+       carrier FK to `Structure` with worker columns (not additive); (b) a consumer-worker table.
+    3. *Service areas.* Chosen: a rule type in the versioned policy. Alternatives: (a) a separate table.
+    4. *Versioning.* Chosen: copy on write, one row per version. Alternatives: (a) drafts with activate; (b) an audit
+       log on a mutable row.
+    5. *Templates.* Chosen: specialization and size labels, applied by admins; one default for towns without a policy;
+       none seeded. Alternatives: (a) specialization and size columns on `Town` with automatic matching.
+    6. *Expiry.* Chosen: 30 minutes, released at the next run after. Alternatives: (a) expire at the very next run.
+    7. *Warehouse choice.* Chosen: service area, else the nearest that covers the need, else the one with the most
+       free stock. Alternatives: (a) the service area only.
+    8. *Min/max without a setting.* Chosen: a Replenishment rule, else line inputs × 4 h / 12 h. Alternatives: (a) no
+       demand without a setting.
+    9. *Permission.* Chosen: `knk.admin.world`, like transport. Alternatives: (a) `knk.economy.admin`.
+    10. *Smoke gate.* Chosen: no wait for an earlier link's smoke test, because the developer's 2026-11-19 waiver is
+        read by the coordinator as covering later links. Alternatives: (a) wait for the earlier tests.
+6. **Out of scope, noted.** #921 filed (the flaky currency MySQL test). Comments: #686 (the API L24 needs) and #248
+   (shops need workers and a wider carrier for restocking). Codex: the connector hit its code-review usage limit on
+   both PRs (review "failed", usage-limit comment); no inline findings; noted on each PR.
+7. **Blockers.** None.
+8. **At merge / what the developer must do.**
+    1. Apply migration `AddTownLogistics` (additive, six tables).
+    2. Import the seeds `LogisticsPolicy`, `ConsumerReplenishment`, `LogisticsRule`, `LogisticsReservation` and
+       `LogisticsPlannerRun` (form and display, "make default").
+    3. Optional: game settings section `production.logistics` (defaults: interval 10, reservation 30 min, window 7
+       days, reorder/target hours 4/12, run retention 14 days). No `api.env` key, no plugin `config.yml` change.
+    4. Write a default template or the town policies, give consumers an Input storage and min/max settings.
+    5. Smoke test [§ 10](../guides/production-storage-transport-smoke-test.md) (tier:3): 21 of 24 steps automated, about
+       15 minutes for the untagged parts.
+    6. At merge into `next`: the `documentation` sub-issue (logistics architecture page and API contract, admin guide
+       for policies, templates and consumer settings, feature register row).
+9. **Notes for later links.**
+    1. L24 (#686): see the comment on #686.
+    2. L25 (#248): see the comment on #248. Shops need workers, and `TransportOrder.CarrierStructureId` must be widened,
+       before the planner can restock them. Level-based default min/max can be a new source in
+       `LogisticsTownState.DemandSettings`.
+
+### 4.24 L24 — P9b logistics web app (#686)
+
+1. **Scope done** (knk-web-app, plus the essential docs in knk-workspace).
+    1. Types and clients: `src/types/dtos/production/LogisticsDtos.ts` (mirrors `LogisticsDtos.cs` and
+       `LogisticsEnums.cs`); `logisticsPolicyClient` (get, search, create, `saveVersion`, delete, versions, apply,
+       `updateKeepingRules`), `logisticsRuleClient`, `consumerReplenishmentClient` (CRUD), `logisticsReservationClient`
+       (release), `logisticsPlannerRunClient`, `logisticsClient` (supply, service areas, dry run, run now, consumer
+       view). Registry additions, additive and grouped: `Controllers`, `entityApiMapping` (policies search, fetch,
+       create, update keeping rules, delete; consumer settings all five; rules, reservations, runs search and fetch),
+       `objectConfigs` columns, one route `logistics` (`/admin/logistics`, World group) and its `App.tsx` entry.
+    2. Policy and rule editor: `LogisticsPolicyPanel` with `LogisticsRuleEditor` on a policy's page (V1 types with only
+       their fields, window, reason; checks before a save; Save as a new version opens it; versions; template labels
+       and Apply to a town; superseded versions read only). New policies through the seeded form.
+    3. Warehouse service areas and consumer settings: `WarehouseLogisticsPanel` (what it serves, its warehouse policy,
+       reservations); `StructureLogisticsPanel` on production structure pages (workers, service warehouse, demand with
+       the min/max source, replenishment settings add, edit, delete; reservations).
+    4. Planner dry-run view: `LogisticsPlanView` on the town panel (Dry run, Run the planner now) and on a run's page
+       (`LogisticsPlannerRunPanel`); `LogisticsReservationPanel` with Release.
+    5. Town supply view and insight #65: `TownLogisticsPanel` (policy in force, warehouses, last and next run, low
+       supply, supply per item and per warehouse with flows and days of cover, open reservations with Release, service
+       areas, recent runs, Apply a template). `LogisticsPage` lists policies and templates.
+    6. Settings: `LogisticsSettingsCard` (`production.logistics`, kept on every save by `normalizeProductionSettings`).
+    7. knk-workspace (branch from `next`): smoke guide § 10.2 (22 steps in full: 18 automated, 3 partly, 1 by hand),
+       § 10 intro and status header, changelog entry, implementation plan P9 status.
+2. **Commits and heads.**
+    1. knk-web-app `claude/production-p9b` at `e392d84`: 4 commits on `next` `acff213`, which had not moved at the last
+       fetch.
+    2. knk-workspace `claude/production-p9b` at `926ce973`: 1 commit on `next` `ddff7457` (merged before the commit,
+       no conflicts).
+3. **PRs.** [knk-web-app#72](https://github.com/PandiO/knk-web-app/pull/72) (Closes #686) and
+   [knk-workspace#927](https://github.com/PandiO/knk-workspace/pull/927) (Part of #686), both into `next`. Not merged.
+4. **Tests, baseline → result.**
+    1. knk-web-app baseline on `next` `acff213`: Jest 2906 passed (342 suites), Playwright 330 passed, `tsc` clean,
+       build OK.
+    2. Branch: Jest 2917 passed (344 suites). New: `src/utils/__tests__/logistics.test.ts` (7),
+       `src/apiClients/__tests__/logisticsClients.test.ts` (4); `routeTable.test.ts` lists the new route,
+       `territory.test.ts` expects the logistics section.
+    3. Branch: Playwright 350 passed. New `e2e/logistics.spec.ts` (20 tests, strict API, DTO-typed fixtures
+       `e2e/fixtures/logistics.ts`); `territory`, `landmarks`, `town-detail`, `production-world`, `production-engine`,
+       `production-yield` and `transport` specs mock the new panels (`mockNoTownLogistics`, `mockNoConsumerLogistics`,
+       `mockNoWarehouseLogistics`); `territory.spec.ts` expects `logistics` in the saved section. `tsc` and
+       `typecheck:e2e` clean, `CI=true npm run build` OK.
+    4. Seen failing: with `logistics` dropped from `normalizeProductionSettings`, two Jest tests went red; an unused
+       import failed the CI build (warnings are errors) and was fixed before the first push of the spec.
+    5. CI on `e392d84`: build-and-test green (push run 44863648405, PR run 44863833419), e2e push run 44863648392
+       green; the PR's e2e run 44863833359 was still running at the report (same head).
+    6. Known reds: none.
+5. **Decisions (DESIGN § 4.3).** All 10, each with alternatives, are in knk-web-app#72. The main ones:
+    1. *Where the screens live.* Chosen: panels below the generic detail pages plus one list page (the L7/L10/L13/L16
+       pattern). Alternatives: (a) a page per town: duplicates its details; (b) the dashboard only.
+    2. *Rule editing.* Chosen: the whole list on the policy's page, saved as a new version with a reason, the API's
+       checks mirrored first. Alternatives: (a) per-rule saves: the API has none; (b) the seeded form: no rules.
+    3. *The seeded form's edit.* Chosen: a new version that keeps the current rules, since a `PUT` without rules
+       empties the policy. Alternatives: (a) no update registered: Edit fails; (b) a plain `PUT`: drops the rules.
+    4. *Template labels.* Chosen: sent on every save (the API takes them from the request). Alternatives: (a) only
+       when changed: a save would clear them.
+    5. *Visibility.* Chosen: the panels show only with `knk.admin.world` and read nothing otherwise. Alternatives: (a)
+       shown with "Requires": a panel of 403s.
+    6. *Consumers.* Chosen: the consumer panel on production structure pages (L23 decision 2). Alternatives: (a) on
+       generic structure pages too: every line NoWorker.
+    7. *Templates on a town page.* Chosen: every template offered with its labels (towns carry no size or
+       specialization). Alternatives: (a) preselect by town labels: no such fields (asked on #686).
+6. **Out of scope, noted.** [#686 comment](https://github.com/PandiO/knk-workspace/issues/686#issuecomment-7056960425):
+   town size and specialization fields, template labels cleared by a `PUT` without them, no structure type on plan
+   entries, missing item and storage names, no `townId` lookup filter (all API). No new issues. Codex: the connector
+   hit its code-review usage limit on both PRs (review "failed", usage-limit comment); no inline findings or threads;
+   noted on each PR.
+7. **Blockers.** None.
+8. **At merge / what the developer must do.**
+    1. Deploy the web app with the town logistics API (#127, in `next`) and its imported seeds. No migration, setting
+       or plugin change.
+    2. Smoke test [§ 10.2](../guides/production-storage-transport-smoke-test.md) (tier:2): about 45 minutes in full,
+       about 20 minutes for the untagged parts.
+    3. At merge into `next`: the `documentation` sub-issue (town logistics admin guide: town panel, policies and
+       templates, consumer settings, warehouse panel, settings card; feature register row).
+    4. Coordinator: decide on the API points of the #686 comment.
+9. **Notes for later links.**
+    1. Strict e2e specs that open a town page as World staff need `mockNoTownLogistics(api, id)`, a production
+       structure page `mockNoConsumerLogistics(api)`, a warehouse page `mockNoWarehouseLogistics(api)`
+       (`e2e/fixtures/logistics.ts`).
+    2. The game settings page sends `production.logistics` back; exact-body tests of the production section include it.
+    3. L27 (#688, shops web app): `StructureLogisticsPanel` reads any structure's consumer view; a shop page can mount
+       it once shops have workers (L25), and `LogisticsReservationTable` and `LogisticsPlanView` take any rows.
+
+### 4.25 L25 — P10 shops API, town account (#248)
+
+1. **Scope done** (knk-web-api, plus essential docs in knk-workspace), in the issue's order.
+    1. Entities (one additive migration `AddShops`, generated last on `next` `37be22e5`; one contiguous `KnKDbContext`
+       block, no DbSet properties): `Shop` (TPT subtype of `ProductionStructure`, table `shops`; type, kind Trading or
+       Processing, level, tax modifier, buy-back % default 50, shopkeeper location, hide sold out), `ShopType` with the
+       join `ShopTypeCategory` (accepted categories; a category accepts its sub-categories) and `ShopTypeLevel` (speed,
+       yield, input cost, price multiplier, Merchandise and Input caps, units per slot, default min/max),
+       `ShopCatalogueEntry` (a blueprint or one item instance, static price, Stocked or Unlimited, pin, order),
+       `ShopTradeStat` (per shop, blueprint and UTC hour) and `TownAccount`.
+    2. Static catalogue and the offer: a shop gets a Merchandise and an Input storage on create, capped by its level;
+       `GET api/Shops/{id}/offer` lists entries and Merchandise contents with price and stock (sold out greyed or
+       hidden).
+    3. Buying (`quote`, `purchase`, plugin key): `confirmed` plus the price the player saw; one database transaction:
+       `SHOP_PURCHASE` player → town account, then Merchandise (or `SYS_ADJUSTMENT` for Unlimited) → `SYS_WORLD`
+       (`ShopSale`), and for `deliverTo: Inbox` the P7 delivery (`IItemDeliveryService`). Idempotent; works with the
+       flag off except inbox delivery.
+    4. Restocking: the P9 planner reserves a shop's Stocked catalogue blueprints at its level's default min/max (new
+       source `ShopLevel` in `LogisticsTownState.DemandSettings`; settings and rules still win); the shop's own worker
+       collects (carrier = the shop).
+    5. Processing: a Processing shop's lines run on the P3 engine from Input into Merchandise at the level's speed, yield
+       and input cost; a Trading shop's lines are paused; the worker away lowers processing, selling goes on (F6).
+    6. Selling (`sell-quote`, `sell`, plugin key, `Production:Enabled`): accepted categories, all lines or none,
+       buy-back paid by the town account (`SHOP_BUYBACK`); a unique item becomes a `StockUnit` with its enchantments
+       and is resold as that exact item.
+    7. Interim pricing (static wins; midpoint × tax × level; unique × (1 + Σ enchantment levels × 10%)), levels on the
+       production level pattern.
+    8. Town account: currency `CurrencyAccountKind.Town = 2`, `currency_entries.TownId`, town legs with balances, the
+       account check widened; `ICurrencyTownService.PostWithTownAsync` on the same `CurrencyService`; the other routes
+       refuse the shop reasons and a reversal of a town leg is 409 `NotReversible`. No existing currency behaviour
+       changed; no other session claimed the currency code (sessions board read 2026-11-21).
+    9. Hourly trade stats from the ledger (joined on the idempotency key), a 10-minute job while the flag is on, and
+       `rebuild`. `api/TownAccounts` (read, `by-town`, `search`, `ledger`).
+    10. Game settings section `production.shops`. Seeds (G17): form and display `ShopType`, `ShopTypeLevel`, `Shop`,
+        `ShopCatalogueEntry`, `ShopTradeStat`, `TownAccount` (the join `ShopTypeCategory` has none). Access: reads the
+        World area or the plugin key; writes `knk.admin.world` or the plugin key; deletes also `knk.admin.delete`;
+        buying and selling the plugin key only; registry, lookups and the pinned access tests.
+    11. knk-workspace (branch from `next`): smoke guide § 11 (§ 11.1: 28 API steps, 26 automated and 2 partly; § 11.2
+        and § 11.3 drafts for L26 and L27), changelog entry, production installation § 5.3 item 17, implementation
+        plan and shops DESIGN status.
+2. **Commits and heads.** knk-web-api `claude/production-p10` at `0e15599` (7 commits, base `next` `37be22e5`, not
+   moved since). knk-workspace `claude/production-p10` at `e1d3a9f6` (1 commit, base `next` `fbf071df`).
+3. **PRs.** [knk-web-api#74](https://github.com/PandiO/knk-web-api/pull/74) (Closes #248) and
+   [knk-workspace#933](https://github.com/PandiO/knk-workspace/pull/933) (Part of #248), base `next`. Not merged.
+4. **Tests, baseline → result.**
+    1. knk-web-api: baseline on `next` `37be22e5` 5105 passed / 126 skipped / 0 failed; branch 5148 passed / 128 skipped
+       / 0 failed. New: `ShopTradingTests` (23), `ShopSupplyTests` (8), `ShopAdminTests` (9), `AddShopsTests` (3),
+       `ShopsMySqlTests` (2, requires-mysql).
+    2. CI on `0e15599` (push run): build-and-test, mysql-tests and fresh-database green; the PR runs were running.
+    3. Local MySQL 8 with `KNK_TEST_MYSQL`: the migration applies, `has-pending-model-changes` clean; the whole category
+       127 passed, 1 failed (the known #285). Broken on purpose: without the purchase's transaction both
+       `ShopsMySqlTests` go red (racing purchases charge two players; a refused move keeps the payment).
+    4. Known reds: #285 (MySQL run only).
+5. **Decisions (DESIGN § 4.3).** All 14, each with alternatives, are in knk-web-api#74. The main ones:
+    1. *Shop's base type.* Chosen: `Shop : ProductionStructure` (TPT, still a `Structure` subtype), to reuse the
+       worker, the carrier FK and the engine without FK changes. Alternatives: (a) `Shop : Structure` with worker
+       columns and the carrier and line FKs widened to `structures` (L23's note; not additive, engine and transport typed
+       on `ProductionStructure`); (b) a separate shop processing loop. Shops also show in `api/ProductionStructures`
+       (created with automatic transport off and yield source Configured). **To review:** the design text says
+       `Shop : Structure`.
+    2. *Town account model.* Chosen: town legs with balances in the existing ledger and a `town_accounts` row.
+       Alternatives: (a) a system account string per town (no balance or floor); (b) a coins column on `towns`.
+    3. *Buy-backs.* Chosen: paid by the town account (409 `TownFundsInsufficient` when it can't). Alternatives:
+       (a) minted from a system account.
+    4. *Confirmation.* Chosen: `confirmed` plus the expected price or total (409 `PriceChanged`). Alternatives: (a) a
+       stored quote token.
+    5. *Catalogue before the supply chain.* Chosen: an Unlimited stock mode for blueprint entries. Alternatives:
+       (a) Stocked only.
+    6. *Lock order.* Chosen: coins (users, town account), then goods, as a P7 delivery. Alternatives: (a) goods first,
+       as L9's upgrade.
+    7. *Levels.* Chosen: set by admins, no upgrade costs in V1. Alternatives: (a) the production upgrade copied.
+    8. *Smoke gate.* Chosen: no wait (the coordinator's reading of the 2026-11-19 waiver). Alternatives: (a) wait.
+6. **Out of scope, noted.** #934 filed (reversal and staff corrections of town account legs). Comments: #687 (the
+   offer, quote, purchase and sell routes for the shop menus) and #688 (what the web app reads). Codex: the connector
+   hit its code-review usage limit on both PRs (review "failed", usage-limit comment); no inline findings; noted on
+   each PR.
+7. **Blockers.** None.
+8. **At merge / what the developer must do.**
+    1. Apply migration `AddShops` (additive: seven tables, `currency_entries.TownId`, the account check widened).
+    2. Import the seeds `ShopType`, `ShopTypeLevel`, `Shop`, `ShopCatalogueEntry`, `ShopTradeStat` and `TownAccount`
+       (form and display, in that order, "make default").
+    3. Optional: game settings section `production.shops` (`enchantmentPercentPerLevel` 10, `statsLookbackHours` 2).
+       No `api.env` key, no plugin `config.yml` change.
+    4. Review decision 5.1 (`Shop : ProductionStructure`).
+    5. Smoke test [§ 11](../guides/production-storage-transport-smoke-test.md) (tier:3): 26 of 28 steps automated, about
+       10 minutes for the untagged parts.
+    6. At merge into `next`: the `documentation` sub-issue (shops architecture page and API contract with the town
+       account, admin guide for shop types, levels, catalogue and pricing, feature register row).
+9. **Notes for later links.**
+    1. L26 (#687): see the comment on #687; the routes take the plugin key, and a unique item must be an `ItemInstance`
+       in the player's hands before it is sold.
+    2. L27 (#688): see the comment on #688; a shop type's accepted categories are edited with `acceptedCategoryIds`
+       (no join seed); a shop is a production structure, so the production view, lines and L24's
+       `StructureLogisticsPanel` work on a shop page.
+    3. L28/L29: `Shop.ShopkeeperLocationId` and `HideSoldOut` and the entries' `Pinned` are stored; display spots are
+       not modelled yet (P12).
+
+### 4.25b L25b — P9 town logistics API follow-ups (#928)
+
+1. **Scope done** (knk-web-api, plus essential docs in knk-workspace), the five points of #928.
+    1. Town size and specialization: nullable `towns.LogisticsTownSize` and `towns.LogisticsSpecialization` (names,
+       one additive migration `AddTownLogisticsProfile`, generated last), read and set with `GET`/`PUT
+       api/LogisticsPolicies/towns/{townId}/profile` (`TownLogisticsProfileDto`; null keeps a field, `""` clears it;
+       400 unknown label, 404 unknown town). The read suggests the current template: `Exact`, `Size` (same size,
+       general), `Default` or `None`. The planner is unchanged; the town form ignores the fields.
+    2. Template labels on `PUT`: `specialization` and `townSize` left out keep the current value (like `name`); `""`
+       clears them.
+    3. Structure type (`Shop`, `ProductionStructure`, `Warehouse`, `GateStructure`, `Structure`, new
+       `LogisticsStructureTypes`): `consumerStructureType` on plan entries (live and stored runs), planned orders and
+       reservations (detail and list); `structureType` on service-area structure entries and the consumer view.
+    4. Names: planned order lines are `LogisticsPlannedOrderLineDto` with `itemBlueprintName` (the transport order
+       still gets plain lines); orders carry `consumerStorageName` and `warehouseStorageName`; reservation rows
+       `consumerStorageName`, `warehouseStorageId`, `warehouseStorageName`.
+    5. `townId` lookups: `Warehouse`, `District`, `Structure` already had one (P2); added to `Storage` (new filter in
+       `StorageService.SearchAsync`: held by the town, its districts or its structures), `ConsumerReplenishment` and
+       `LogisticsRule`.
+    6. knk-workspace (branch from `next`): API contract (§ 2.3, new § 2.4, § 5, § 7, § 9), architecture § 3.3 and § 6,
+       production installation § 5.3 item 18, smoke guide § 10.3 (5 steps, all automated).
+2. **Commits and heads.** knk-web-api `claude/production-p9-followups` at `16713a85` (2 commits, base `next`
+   `289f4d4b`, not moved since). knk-workspace `claude/production-p9-followups` at `eb4858f4` (2 commits, base `next`
+   `7c7f2de0`).
+3. **PRs.** [api#75](https://github.com/PandiO/knk-web-api/pull/75) (closes #928),
+   [ws#935](https://github.com/PandiO/knk-workspace/pull/935) (part of #928), base `next`. Not merged.
+4. **Tests, baseline → result.**
+    1. knk-web-api: baseline on `next` `289f4d4b` 5148 passed, 0 failed, 128 skipped (MySQL, no `KNK_TEST_MYSQL`
+       locally); result on the branch 5155 passed (+7 new in `LogisticsFollowUpsTests`), 0 failed, 128 skipped. Pinned
+       tables updated: `ReadAccessRulesTests` (`LogisticsPoliciesController.TownProfile` = `F LogisticsPolicy`),
+       `LookupFiltersTests` (three `townId` filters). CI on `16713a85` green: build-and-test, mysql-tests (MySQL, covers the TPT type checks), fresh-database (push runs 44870761510/44870761509, PR runs 44871073257/44871073239).
+    2. Known reds (also red on the base): none; #801 did not fail.
+    3. knk-workspace: docs only; added links resolve.
+5. **Decisions (DESIGN § 4.3).**
+    1. *Where the town labels live.* Chosen: two nullable columns on `towns` behind a logistics profile endpoint,
+       because a town without a policy needs them before a template is applied. Alternatives: (a) the town policy's
+       existing label columns (no migration, but no place for them before the first policy); (b) `TownDto` and the
+       town form (generic form flow and seeds; a "null = not on this form" field can't be cleared).
+    2. *Clearing a label on `PUT`.* Chosen: null keeps, `""` clears (the error text already said "or empty").
+       Alternatives: (a) a separate clear flag.
+    3. *Planner use of the labels.* Chosen: a suggestion only, planner unchanged. Alternatives: (a) a town without a
+       policy falls back to the matching template (a planner behaviour change; left for the developer, comment on
+       #928).
+    4. *Access for `PUT …/profile`.* Chosen: the class rule (`knk.admin.world` or the plugin key), like `apply`.
+       Alternatives: (a) `RequireDashboardChange("Town")` (would also ask `knk.admin.content`).
+    5. *Point 5 scope.* Chosen: `townId` on the logistics pickers that lacked it (Storage, ConsumerReplenishment,
+       LogisticsRule); the three L24 named already had it. Alternatives: (a) no change.
+    6. *Structure type values.* Chosen: the dashboard type names. Alternatives: (a) lower-case kinds (one more mapping
+       in the web app).
+    7. *Changelog.* Chosen: no entry; nothing admins see changes until the web app uses the fields. Alternatives: (a)
+       an API-only entry.
+6. **Out of scope, noted.** Comment on #928: the planner's use of the labels (developer decision), the web app
+   follow-ups (labels panel, template preselect, links by type, names, `townId` on the three pickers; to clear a
+   template label the web app now sends `""`), production installation § 5.3 item 17 still says `AddShops` is on its
+   branch.
+7. **Blockers.** None. Codex reached its code-review usage limit on both PRs (noted on each PR); no findings to handle.
+8. **At merge / what the developer must do.**
+    1. Apply `20261121052426_AddTownLogisticsProfile` with `dotnet ef database update` (additive, after `AddShops`, no
+       data written). No setting, secret, seed or `config.yml` key.
+    2. Nothing else; no admin-visible change until the web app uses the fields.
+9. **Notes for later links.**
+    1. L27 / later web app work: `consumerStructureType` and `structureType` give the route of a consumer's own page;
+       the profile endpoint feeds the town panel's template picker (`suggestedTemplateId`).
+
+### 4.27 L27 — P10c shops web app (#688)
+
+1. **Scope done** (knk-web-app, plus the essential docs in knk-workspace).
+    1. Types and clients: `src/types/dtos/production/ShopDtos.ts` (mirrors `ShopDtos.cs` and `ShopEnums.cs`);
+       `shopTypeClient`, `shopTypeLevelClient`, `shopClient` (with the offer), `shopCatalogueEntryClient`,
+       `shopTradeStatClient` (with `rebuild`), `townAccountClient` (`by-town`, `ledger`). Registry additions, additive
+       and grouped: `Controllers` (six), `entityApiMapping` (search and fetch for all six; create, update and delete for
+       ShopType, ShopTypeLevel, Shop and ShopCatalogueEntry), `objectConfigs` columns. The new entities use the
+       generic form and display pipeline with L25's seeds (G17).
+    2. Shop type page: `ShopTypePanel`, the accepted categories (a Category picker, saved as the whole
+       `acceptedCategoryIds` list) and the levels (add, edit, delete, with the API's checks first).
+    3. Shop page: `ShopPanel` (kind, type and level, prices, worker, storages, the town account and its balance, the
+       live offer with sold out struck through, sales and buy-backs from the stock ledger by source `Shop`),
+       `ShopCatalogueEditor`, `ShopTradeStatsPanel` (an inline SVG bar chart of sold, bought back and supplied per UTC
+       hour over 24 h, 7 or 30 days, one item or all, totals, rows, Rebuild); below it L10's
+       `StructureProductionPanel` and L24's `StructureLogisticsPanel` (reused as the issue asks).
+    4. Town account page: `TownAccountPanel` (balance, the reconciliation flag, the ledger in pages of 25).
+    5. Gates: hidden without `knk.admin.world`; creates and edits also need `knk.admin.content` (the API's
+       `RequireDashboardChange`), deletes `knk.admin.delete`. Small additive types: `StockReason` gains `Upgrade`,
+       `ShopSale`, `ShopBuyBack` (type only); `LogisticsSettingSource` gains `ShopLevel`.
+    6. knk-workspace (branch from `next`): smoke guide § 11.3 in full (15 steps: 11 automated, 4 partly), § 11 intro
+       and status header, changelog entry, implementation plan P10 and shops DESIGN status.
+2. **Commits and heads.**
+    1. knk-web-app `claude/production-p10c` at `0100518`: 3 commits on `next` `c12e0e7` (not moved at the last fetch).
+    2. knk-workspace `claude/production-p10c` at `10a20851`: 2 commits on `next` `7c7f2de0` (merged before the
+       commits, no conflicts).
+3. **PRs.** [knk-web-app#73](https://github.com/PandiO/knk-web-app/pull/73) (Closes #688) and
+   [knk-workspace#936](https://github.com/PandiO/knk-workspace/pull/936) (Part of #688), base `next`. Not merged.
+4. **Tests, baseline → result.**
+    1. knk-web-app baseline on `next` `c12e0e7`: Jest 2917 passed (344 suites), Playwright 350 passed, `tsc` clean,
+       build OK.
+    2. Branch: Jest 2929 passed (346 suites); new `src/utils/__tests__/shops.test.ts` (5) and
+       `src/apiClients/__tests__/shopClients.test.ts` (7).
+    3. Branch: Playwright 368 passed; new `e2e/shops.spec.ts` (18 tests, strict API, DTO-typed fixtures
+       `e2e/fixtures/shops.ts`). `tsc`, `typecheck:e2e` clean, `CI=true npm run build` OK.
+    4. Seen failing: with the shop id sent on a catalogue edit, the catalogue e2e test and a Jest test went red.
+    5. CI on `0100518`: build-and-test and e2e green (push and PR runs).
+    6. Known reds: none.
+5. **Decisions (DESIGN § 4.3).** All 10, each with alternatives, are in knk-web-app#73. The main ones:
+    1. *Where the screens live.* Chosen: panels below the generic detail pages of ShopType, Shop and TownAccount.
+       Alternatives: (a) a Shops list page: the dashboard covers it; (b) the account on the town page: a mock in every
+       strict town spec.
+    2. *The chart.* Chosen: inline SVG bars. Alternatives: (a) a chart library: a library is the developer's choice
+       (DESIGN § 4.4); (b) a table only: the issue asks for a chart.
+    3. *Saving accepted categories.* Chosen: `PUT { id, acceptedCategoryIds }` only. Alternatives: (a) the whole DTO:
+       could overwrite a concurrent edit; (b) the seeded form: it has no join list.
+    4. *Levels.* Chosen: edited on the type's page. Alternatives: (a) the seeded form only: no overview.
+    5. *Write gates.* Chosen: `knk.admin.world` and `knk.admin.content`, buttons off with the node named.
+       Alternatives: (a) `knk.admin.world` only, as L24: a World-only admin gets 403s.
+6. **Out of scope, noted.** [#688 comment](https://github.com/PandiO/knk-workspace/issues/688#issuecomment-7058103705):
+   no kind or type name on the shop search row, user ids only on the town ledger, sales and currency legs not
+   joined (API); no `production.shops` settings card and no account on the town page (web app); display spots with
+   P12. No new issues. Codex: the connector hit its code-review usage limit on both PRs (review "failed",
+   usage-limit comment); no inline findings or threads; noted on each PR.
+7. **Blockers.** None.
+8. **At merge / what the developer must do.**
+    1. Deploy the web app with the shops API (#248, in `next`) and its imported seeds. No migration, setting or
+       plugin change.
+    2. Smoke test [§ 11.3](../guides/production-storage-transport-smoke-test.md) (tier:2): about 30 minutes in full,
+       about 15 minutes for the untagged parts.
+    3. At merge into `next`: the `documentation` sub-issue (shops admin guide: shop types, levels, catalogue and
+       pricing, the shop page, the town account; feature register row).
+    4. Coordinator: decide on the points of the #688 comment.
+9. **Notes for later links.**
+    1. Strict e2e specs that open a shop page need `mockShopPage(api)` (`e2e/fixtures/shops.ts`); it also mocks the
+       production and consumer panels of the shop.
+    2. L26 (#687) and L29 (#250): the offer DTO and `formatCoins` / `priceSourceLabel` in `src/utils/shops.ts` are
+       there for any later web view of a shop menu or a display stall.

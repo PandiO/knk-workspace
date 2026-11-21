@@ -18,6 +18,9 @@
    and refunds; the object store choice on the NAS). Proposal: the manager schedules design sessions for #356, #611
    and #614 (#614 first: L3, L4 and the wreck/restore paths all paste schematics). **Developer: schedule these designs
    through the manager?** L4–L9 depend on L3, so the chain waits until then.
+   **Update 2026-11-20:** #611 and #356 are designed (specs/siege-shop/DESIGN.md, Decided); on the developer's
+   instruction this coordinator now also runs the Siege shop chain ([report](2026-11-20-siege-shop-chain.md)); L3
+   needs its L1–L3 (#866–#868) in `next`. **#614 (schematic pipeline) still has no design: developer, schedule it?**
 2. **L1 (#782) and L2 (#783) are in `next`, ready for your test** (tier:3 and tier:2): smoke-test guide § 1 and § 2
    (docs/guides/siege-weapons-smoke-test.md on `next`). Deploy: API migration `AddSiegeWeapons`, the five form seeds
    in L1's order, `siege.weapons.enabled: false` under `siege:` in the plugin `config.yml` (true only on a test
@@ -27,6 +30,7 @@
    import the updated `SiegeWeaponSpot` seed (or turn on "Requires in-game action" on Min X with type
    `SiegeWeaponSpot` in the form designer on a database that imported it before). Say so if `/knk weaponspot`
    should come back as a second way (removed as the coordinator's reversible default).
+4. 2026-11-20 (update): siege shop L1–L3 (#866–#868) are merged into `next` (plugin `c7e2ad4b`, API `57277cdc`); shop L3 added the `ShopPurchaseHandler` port that L3 #784 implements (register with `SiegeShopService.registerHandler`, see shop report § 4.3). L3 #784 now waits only for #614 (schematic pipeline, no design).
 
 ## 2. Summary
 
