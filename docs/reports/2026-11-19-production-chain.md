@@ -88,7 +88,7 @@ of what is already in `next`.
 | L20 P7b inbox plugin, kit/lootbox migration | #684 | Merged into next (2026-11-21) | plugin `823ebf09`, workspace `e48c9d0e`; merges: plugin `bdd8b463`, workspace `bb127457` | [plugin#113](https://github.com/PandiO/knk-plugin/pull/113), [ws#911](https://github.com/PandiO/knk-workspace/pull/911) | green on `1952a5b9` (build + paper-boot, 71 scenarios); `823ebf09` running | create_session `session_01R1w2Ux3iuWqjcAV5HQdPvM` (prompt says start without asking), started 2026-11-21 |
 | L21 P8a harvest API | #685 | Merged into next (2026-11-21) | api `e89e396`, workspace `00fab16d` (merged `next` `12804469`); merges: api `9ad32c23`, workspace `69f2b108` (after a coordinator merge of `next`, `944a443b`) | [api#72](https://github.com/PandiO/knk-web-api/pull/72), [ws#914](https://github.com/PandiO/knk-workspace/pull/914) | push runs on `e89e396` green (build-and-test, mysql-tests, fresh-database); PR runs running | create_session `session_01R1w2Ux7jFcMxYzkwej4qY4` (prompt says start without asking), started 2026-11-21 |
 | L22 P8 harvest plugin | #134 | In review (PRs open, not merged) | plugin `676d6f11`, workspace `e6b8b6ec` | [plugin#114](https://github.com/PandiO/knk-plugin/pull/114), [ws#919](https://github.com/PandiO/knk-workspace/pull/919) | green on `676d6f11` (plugin build + paper-boot, 73 scenarios) | create_session `session_01R1w2UuXe6TVT7QDKeAXdgn` (prompt says start without asking), started 2026-11-21 |
-| L23 P9 town logistics API | #127 | Running | — | — | — | create_session `session_01R1w2UwWMWgbXsBzScMifEq` (prompt says start without asking), started 2026-11-21 |
+| L23 P9 town logistics API | #127 | In review (done 2026-11-21) | api `6a8c110`, workspace `3920e67d` | [api#73](https://github.com/PandiO/knk-web-api/pull/73), [ws#920](https://github.com/PandiO/knk-workspace/pull/920) | green on `6a8c110` (build-and-test, mysql-tests, fresh-database) | create_session `session_01R1w2UwWMWgbXsBzScMifEq` (prompt says start without asking), started 2026-11-21 |
 | L24 P9b logistics web app | #686 | Not started | — | — | — | — |
 | L25 P10 shops API, town account | #248 | Not started | — | — | — | — |
 | L26 P10b shop menus plugin | #687 | Not started | — | — | — | — |
@@ -2316,3 +2316,104 @@ _(Each link appends its block here when it finishes.)_
        protections.
     2. `RequirementEvaluator` is the place for skills, professions and knowledge unlocks later (F12).
     3. Entity rules have no population regulation yet (§ 8.7).
+
+### 4.23 L23 — P9 town logistics API (#127)
+
+1. **Scope done** (knk-web-api, plus essential docs in knk-workspace).
+    1. Entities (one additive migration `AddTownLogistics`, six tables, generated last on `next` `9ad32c23`; one
+       contiguous `KnKDbContext` block, no DbSet properties):
+        1. `LogisticsPolicy`: versions of a town's policy, a warehouse's policy or a default template (specialization
+           = a `ResourceCategory`, town size, one default). A save is a new version, and a unique `CurrentKey` keeps one
+           current version.
+        2. `LogisticsRule`: the V1 types Reserve (units or days of cover, town-wide or per warehouse), PriorityClass,
+           ServiceArea (district, rural territory, structure) and Replenishment. Target: blueprint, category or tag.
+           Each rule has an active window, an author and a reason. The Later types are refused with a pointer to #324.
+        3. `ConsumerReplenishment`: min, max and priority per Input or Merchandise storage and blueprint.
+        4. `LogisticsReservation` (one open per consumer storage and blueprint, unique `OpenKey`),
+           `LogisticsPlannerRun` and `LogisticsPlanEntry` (the explanation).
+    2. `LogisticsPlanner`, reserve and collect (D-L1):
+        1. A run settles reservations first: collected, or released when expired (30 min, F11) or when the order
+           ended.
+        2. Available = stock − reserves − open reservations, per warehouse and town-wide.
+        3. Demand: consumer lines at or below their min, counting what is on the way. Lines are served by priority
+           class, then by road distance.
+        4. Each reservation goes to the service-area warehouse, else the nearest that covers the need, else the one
+           with the most free stock.
+        5. One collection order (origin `Distribution`) per consumer storage and warehouse storage, carried by the
+           consumer's own worker and sized to its capacity. Orders go through the new
+           `TransportService.CreatePlannedAsync` with an idempotency key, inside the run's transaction.
+        6. The run locks the town row. Every line gets an explanation, and the dry run writes nothing.
+        7. `LogisticsPlannerSweepService` runs every minute and plans each town every 10 minutes (D-L2), only while
+           `Production:Enabled` is on (A21). Old runs are pruned.
+    3. A producer without a preferred warehouse delivers to its service-area warehouse when it has room
+       (`TransportService.EvaluateAsync`).
+    4. Endpoints:
+        1. `api/LogisticsPolicies`: get, search, create, `PUT` (a new version), delete with every version,
+           `{id}/versions`, `{id}/apply`.
+        2. `api/LogisticsRules`: read.
+        3. `api/ConsumerReplenishments`: CRUD.
+        4. `api/LogisticsReservations`: read, `{id}/release`.
+        5. `api/LogisticsPlannerRuns`: read.
+        6. `api/Logistics`: `towns/{id}/supply`, `service-areas`, `dry-run`, `run-now`, and `consumers/{id}`.
+        7. Access: reads need the World area or the plugin key; writes `knk.admin.world` or the plugin key; deletes
+           also `knk.admin.delete`. All are in the dashboard registry with lookups and pinned in the access tests.
+    5. Game settings section `production.logistics`. Seeds (G17): form and display `LogisticsPolicy`,
+       `ConsumerReplenishment`, `LogisticsRule`, `LogisticsReservation`, `LogisticsPlannerRun`. The last three forms
+       are read only; `LogisticsPlanEntry` is a child log row without a seed.
+    6. knk-workspace (branch from `next`): smoke guide § 10 (§ 10.1: 24 API steps, 21 automated and 3 partly; § 10.2
+       draft for L24), changelog entry, production installation § 5.3 item 16, implementation plan status.
+2. **Commits and heads.** knk-web-api `claude/production-p9` at `6a8c110` (6 commits, base `next` `9ad32c23`, not
+   moved since). knk-workspace `claude/production-p9` at `3920e67d` (1 commit plus a merge of `next` `f04a9659`).
+3. **PRs.** [knk-web-api#73](https://github.com/PandiO/knk-web-api/pull/73) (Closes #127) and
+   [knk-workspace#920](https://github.com/PandiO/knk-workspace/pull/920) (Part of #127), base `next`. Not merged.
+4. **Tests, baseline → result.**
+    1. knk-web-api: baseline on `next` `9ad32c23` 5077 passed / 125 skipped / 0 failed; branch 5105 passed / 126 skipped
+       / 0 failed. New: `LogisticsPlannerTests` (17), `LogisticsPolicyTests` (8), `AddTownLogisticsTests` (3),
+       `LogisticsMySqlTests` (1, requires-mysql).
+    2. CI on `6a8c110`: build-and-test, mysql-tests and fresh-database green (push and PR runs).
+    3. Local MySQL 8 with `KNK_TEST_MYSQL`:
+        1. The migration applies; `has-pending-model-changes` is clean.
+        2. Whole category: 124 passed, 2 failed, both outside this link: the known #285, and #921 (a currency
+           ledger test that failed once under full load and passed four reruns).
+        3. Broken on purpose: with the town row lock removed, the race test goes red (duplicate open key).
+    4. Known reds: #285 (MySQL run only); #921 filed.
+5. **Decisions (DESIGN § 4.3).** All 15, each with alternatives, are in knk-web-api#73. The main ones:
+    1. *Rebalance orders.* Chosen: not built, because the Decided catalogue marks Rebalance Later (#324); only #127's
+       old body listed them. Alternatives: (a) build them now.
+    2. *Consumer workers.* Chosen: a consumer is any structure with an Input or Merchandise storage, but only
+       production structures have workers, so other consumers show `NoWorker`. Alternatives: (a) widen the transport
+       carrier FK to `Structure` with worker columns (not additive); (b) a consumer-worker table.
+    3. *Service areas.* Chosen: a rule type in the versioned policy. Alternatives: (a) a separate table.
+    4. *Versioning.* Chosen: copy on write, one row per version. Alternatives: (a) drafts with activate; (b) an audit
+       log on a mutable row.
+    5. *Templates.* Chosen: specialization and size labels, applied by admins; one default for towns without a policy;
+       none seeded. Alternatives: (a) specialization and size columns on `Town` with automatic matching.
+    6. *Expiry.* Chosen: 30 minutes, released at the next run after. Alternatives: (a) expire at the very next run.
+    7. *Warehouse choice.* Chosen: service area, else the nearest that covers the need, else the one with the most
+       free stock. Alternatives: (a) the service area only.
+    8. *Min/max without a setting.* Chosen: a Replenishment rule, else line inputs × 4 h / 12 h. Alternatives: (a) no
+       demand without a setting.
+    9. *Permission.* Chosen: `knk.admin.world`, like transport. Alternatives: (a) `knk.economy.admin`.
+    10. *Smoke gate.* Chosen: no wait for an earlier link's smoke test, because the developer's 2026-11-19 waiver is
+        read by the coordinator as covering later links. Alternatives: (a) wait for the earlier tests.
+6. **Out of scope, noted.** #921 filed (the flaky currency MySQL test). Comments: #686 (the API L24 needs) and #248
+   (shops need workers and a wider carrier for restocking). Codex: the connector hit its code-review usage limit on
+   both PRs (review "failed", usage-limit comment); no inline findings; noted on each PR.
+7. **Blockers.** None.
+8. **At merge / what the developer must do.**
+    1. Apply migration `AddTownLogistics` (additive, six tables).
+    2. Import the seeds `LogisticsPolicy`, `ConsumerReplenishment`, `LogisticsRule`, `LogisticsReservation` and
+       `LogisticsPlannerRun` (form and display, "make default").
+    3. Optional: game settings section `production.logistics` (defaults: interval 10, reservation 30 min, window 7
+       days, reorder/target hours 4/12, run retention 14 days). No `api.env` key, no plugin `config.yml` change.
+    4. Write a default template or the town policies, give consumers an Input storage and min/max settings.
+    5. Smoke test [§ 10](../guides/production-storage-transport-smoke-test.md) (tier:3): 21 of 24 steps automated, about
+       15 minutes for the untagged parts.
+    6. At merge into `next`: the `documentation` sub-issue (logistics architecture page and API contract, admin guide
+       for policies, templates and consumer settings, feature register row).
+9. **Notes for later links.**
+    1. L24 (#686): see the comment on #686.
+    2. L25 (#248): see the comment on #248. Shops need workers, and `TransportOrder.CarrierStructureId` must be widened,
+       before the planner can restock them. Level-based default min/max can be a new source in
+       `LogisticsTownState.DemandSettings`.
+
