@@ -96,7 +96,7 @@ of what is already in `next`.
 | L22 P8 harvest plugin | #134 | Merged into next (2026-11-21) | plugin `676d6f11`, workspace `e6b8b6ec`; merges: plugin `6f6c915f`, workspace `700ec311` | [plugin#114](https://github.com/PandiO/knk-plugin/pull/114), [ws#919](https://github.com/PandiO/knk-workspace/pull/919) | green on `676d6f11` (plugin build + paper-boot, 73 scenarios) | create_session `session_01R1w2UuXe6TVT7QDKeAXdgn` (prompt says start without asking), started 2026-11-21 |
 | L23 P9 town logistics API | #127 | Merged into next (2026-11-21) | api `6a8c110`, workspace `3920e67d`; merges: api `37be22e5`, workspace `fbf071df` (after a coordinator merge of `next`, `8ebdbb2c`) | [api#73](https://github.com/PandiO/knk-web-api/pull/73), [ws#920](https://github.com/PandiO/knk-workspace/pull/920) | green on `6a8c110` (build-and-test, mysql-tests, fresh-database) | create_session `session_01R1w2UwWMWgbXsBzScMifEq` (prompt says start without asking), started 2026-11-21 |
 | L24 P9b logistics web app | #686 | Merged into next (2026-11-21) | web app `e392d84`, workspace `926ce973`; merges: web app `c12e0e7e`, workspace `385ec7d3` | [web-app#72](https://github.com/PandiO/knk-web-app/pull/72), [ws#927](https://github.com/PandiO/knk-workspace/pull/927) | green on `e392d84`: build-and-test (push 44863648405, PR 44863833419), e2e push run 44863648392; PR e2e run 44863833359 running | create_session `session_01R1w2UwTStX77ypqswMN3Kz` (prompt says start without asking), started 2026-11-21 |
-| L25 P10 shops API, town account | #248 | Running | — | — | — | create_session `session_01R1w2Uu45eaJcRwWoXYurUU` (prompt says start without asking), started 2026-11-21 |
+| L25 P10 shops API, town account | #248 | In review (done 2026-11-21) | api `0e15599`, workspace `e1d3a9f6` | [api#74](https://github.com/PandiO/knk-web-api/pull/74), [ws#933](https://github.com/PandiO/knk-workspace/pull/933) | push run on `0e15599` green (build-and-test, mysql-tests, fresh-database); PR runs running | create_session `session_01R1w2Uu45eaJcRwWoXYurUU` (prompt says start without asking), started 2026-11-21 |
 | L26 P10b shop menus plugin | #687 | Waiting (developer's shop menu templates, asked on #687) | — | — | — | — |
 | L27 P10c shops web app | #688 | Not started | — | — | — | — |
 | L28 P11 shopkeepers | #249 | Not started | — | — | — | — |
@@ -2538,3 +2538,100 @@ _(Each link appends its block here when it finishes.)_
     2. The game settings page sends `production.logistics` back; exact-body tests of the production section include it.
     3. L27 (#688, shops web app): `StructureLogisticsPanel` reads any structure's consumer view; a shop page can mount
        it once shops have workers (L25), and `LogisticsReservationTable` and `LogisticsPlanView` take any rows.
+
+### 4.25 L25 — P10 shops API, town account (#248)
+
+1. **Scope done** (knk-web-api, plus essential docs in knk-workspace), in the issue's order.
+    1. Entities (one additive migration `AddShops`, generated last on `next` `37be22e5`; one contiguous `KnKDbContext`
+       block, no DbSet properties): `Shop` (TPT subtype of `ProductionStructure`, table `shops`; type, kind Trading or
+       Processing, level, tax modifier, buy-back % default 50, shopkeeper location, hide sold out), `ShopType` with the
+       join `ShopTypeCategory` (accepted categories; a category accepts its sub-categories) and `ShopTypeLevel` (speed,
+       yield, input cost, price multiplier, Merchandise and Input caps, units per slot, default min/max),
+       `ShopCatalogueEntry` (a blueprint or one item instance, static price, Stocked or Unlimited, pin, order),
+       `ShopTradeStat` (per shop, blueprint and UTC hour) and `TownAccount`.
+    2. Static catalogue and the offer: a shop gets a Merchandise and an Input storage on create, capped by its level;
+       `GET api/Shops/{id}/offer` lists entries and Merchandise contents with price and stock (sold out greyed or
+       hidden).
+    3. Buying (`quote`, `purchase`, plugin key): `confirmed` plus the price the player saw; one database transaction:
+       `SHOP_PURCHASE` player → town account, then Merchandise (or `SYS_ADJUSTMENT` for Unlimited) → `SYS_WORLD`
+       (`ShopSale`), and for `deliverTo: Inbox` the P7 delivery (`IItemDeliveryService`). Idempotent; works with the
+       flag off except inbox delivery.
+    4. Restocking: the P9 planner reserves a shop's Stocked catalogue blueprints at its level's default min/max (new
+       source `ShopLevel` in `LogisticsTownState.DemandSettings`; settings and rules still win); the shop's own worker
+       collects (carrier = the shop).
+    5. Processing: a Processing shop's lines run on the P3 engine from Input into Merchandise at the level's speed, yield
+       and input cost; a Trading shop's lines are paused; the worker away lowers processing, selling goes on (F6).
+    6. Selling (`sell-quote`, `sell`, plugin key, `Production:Enabled`): accepted categories, all lines or none,
+       buy-back paid by the town account (`SHOP_BUYBACK`); a unique item becomes a `StockUnit` with its enchantments
+       and is resold as that exact item.
+    7. Interim pricing (static wins; midpoint × tax × level; unique × (1 + Σ enchantment levels × 10%)), levels on the
+       production level pattern.
+    8. Town account: currency `CurrencyAccountKind.Town = 2`, `currency_entries.TownId`, town legs with balances, the
+       account check widened; `ICurrencyTownService.PostWithTownAsync` on the same `CurrencyService`; the other routes
+       refuse the shop reasons and a reversal of a town leg is 409 `NotReversible`. No existing currency behaviour
+       changed; no other session claimed the currency code (sessions board read 2026-11-21).
+    9. Hourly trade stats from the ledger (joined on the idempotency key), a 10-minute job while the flag is on, and
+       `rebuild`. `api/TownAccounts` (read, `by-town`, `search`, `ledger`).
+    10. Game settings section `production.shops`. Seeds (G17): form and display `ShopType`, `ShopTypeLevel`, `Shop`,
+        `ShopCatalogueEntry`, `ShopTradeStat`, `TownAccount` (the join `ShopTypeCategory` has none). Access: reads the
+        World area or the plugin key; writes `knk.admin.world` or the plugin key; deletes also `knk.admin.delete`;
+        buying and selling the plugin key only; registry, lookups and the pinned access tests.
+    11. knk-workspace (branch from `next`): smoke guide § 11 (§ 11.1: 28 API steps, 26 automated and 2 partly; § 11.2
+        and § 11.3 drafts for L26 and L27), changelog entry, production installation § 5.3 item 17, implementation
+        plan and shops DESIGN status.
+2. **Commits and heads.** knk-web-api `claude/production-p10` at `0e15599` (7 commits, base `next` `37be22e5`, not
+   moved since). knk-workspace `claude/production-p10` at `e1d3a9f6` (1 commit, base `next` `fbf071df`).
+3. **PRs.** [knk-web-api#74](https://github.com/PandiO/knk-web-api/pull/74) (Closes #248) and
+   [knk-workspace#933](https://github.com/PandiO/knk-workspace/pull/933) (Part of #248), base `next`. Not merged.
+4. **Tests, baseline → result.**
+    1. knk-web-api: baseline on `next` `37be22e5` 5105 passed / 126 skipped / 0 failed; branch 5148 passed / 128 skipped
+       / 0 failed. New: `ShopTradingTests` (23), `ShopSupplyTests` (8), `ShopAdminTests` (9), `AddShopsTests` (3),
+       `ShopsMySqlTests` (2, requires-mysql).
+    2. CI on `0e15599` (push run): build-and-test, mysql-tests and fresh-database green; the PR runs were running.
+    3. Local MySQL 8 with `KNK_TEST_MYSQL`: the migration applies, `has-pending-model-changes` clean; the whole category
+       127 passed, 1 failed (the known #285). Broken on purpose: without the purchase's transaction both
+       `ShopsMySqlTests` go red (racing purchases charge two players; a refused move keeps the payment).
+    4. Known reds: #285 (MySQL run only).
+5. **Decisions (DESIGN § 4.3).** All 14, each with alternatives, are in knk-web-api#74. The main ones:
+    1. *Shop's base type.* Chosen: `Shop : ProductionStructure` (TPT, still a `Structure` subtype), to reuse the
+       worker, the carrier FK and the engine without FK changes. Alternatives: (a) `Shop : Structure` with worker
+       columns and the carrier and line FKs widened to `structures` (L23's note; not additive, engine and transport typed
+       on `ProductionStructure`); (b) a separate shop processing loop. Shops also show in `api/ProductionStructures`
+       (created with automatic transport off and yield source Configured). **To review:** the design text says
+       `Shop : Structure`.
+    2. *Town account model.* Chosen: town legs with balances in the existing ledger and a `town_accounts` row.
+       Alternatives: (a) a system account string per town (no balance or floor); (b) a coins column on `towns`.
+    3. *Buy-backs.* Chosen: paid by the town account (409 `TownFundsInsufficient` when it can't). Alternatives:
+       (a) minted from a system account.
+    4. *Confirmation.* Chosen: `confirmed` plus the expected price or total (409 `PriceChanged`). Alternatives: (a) a
+       stored quote token.
+    5. *Catalogue before the supply chain.* Chosen: an Unlimited stock mode for blueprint entries. Alternatives:
+       (a) Stocked only.
+    6. *Lock order.* Chosen: coins (users, town account), then goods, as a P7 delivery. Alternatives: (a) goods first,
+       as L9's upgrade.
+    7. *Levels.* Chosen: set by admins, no upgrade costs in V1. Alternatives: (a) the production upgrade copied.
+    8. *Smoke gate.* Chosen: no wait (the coordinator's reading of the 2026-11-19 waiver). Alternatives: (a) wait.
+6. **Out of scope, noted.** #934 filed (reversal and staff corrections of town account legs). Comments: #687 (the
+   offer, quote, purchase and sell routes for the shop menus) and #688 (what the web app reads). Codex: the connector
+   hit its code-review usage limit on both PRs (review "failed", usage-limit comment); no inline findings; noted on
+   each PR.
+7. **Blockers.** None.
+8. **At merge / what the developer must do.**
+    1. Apply migration `AddShops` (additive: seven tables, `currency_entries.TownId`, the account check widened).
+    2. Import the seeds `ShopType`, `ShopTypeLevel`, `Shop`, `ShopCatalogueEntry`, `ShopTradeStat` and `TownAccount`
+       (form and display, in that order, "make default").
+    3. Optional: game settings section `production.shops` (`enchantmentPercentPerLevel` 10, `statsLookbackHours` 2).
+       No `api.env` key, no plugin `config.yml` change.
+    4. Review decision 5.1 (`Shop : ProductionStructure`).
+    5. Smoke test [§ 11](../guides/production-storage-transport-smoke-test.md) (tier:3): 26 of 28 steps automated, about
+       10 minutes for the untagged parts.
+    6. At merge into `next`: the `documentation` sub-issue (shops architecture page and API contract with the town
+       account, admin guide for shop types, levels, catalogue and pricing, feature register row).
+9. **Notes for later links.**
+    1. L26 (#687): see the comment on #687; the routes take the plugin key, and a unique item must be an `ItemInstance`
+       in the player's hands before it is sold.
+    2. L27 (#688): see the comment on #688; a shop type's accepted categories are edited with `acceptedCategoryIds`
+       (no join seed); a shop is a production structure, so the production view, lines and L24's
+       `StructureLogisticsPanel` work on a shop page.
+    3. L28/L29: `Shop.ShopkeeperLocationId` and `HideSoldOut` and the entries' `Pinned` are stored; display spots are
+       not modelled yet (P12).
