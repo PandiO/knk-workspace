@@ -18,9 +18,12 @@ on `next` (Decided 2026-11-18, O01–O33, O08 superseded by O31); smoke guide
 **2026-11-19, promoted:** the overview map alone went to trunk on the developer's go (selective promotion: branches
 from `main` with only the overview map merges of `next` replayed, CI green): knk-web-api `75b84343` (#59, release v0.4),
 knk-web-app `31a6896d` (#62, v0.4), knk-plugin `2411d785` (#97, v0.3), knk-workspace `a199ad15` (#835, the overview map
-docs only). Deployed to the alpha by the developer (`deploy-api`, `deploy-web`, `deploy-plugin`; `Map__Enabled` in
-`config/api/cloudflare-access.env`; the web build file `_files/nginx.conf` with the `/bluemap` redirect); smoke § 3
-step 1 passed on the alpha. #732 and its sub-issues are closed; the board row is archived (`sessions-archive/2026-11.md`).
+docs only). Deployed to the alpha by the developer on **2026-11-20** (`deploy-api` with the migration
+`AddMapRegionOutlines`, `deploy-web`, `deploy-plugin`; `Map__Enabled` in `config/api/cloudflare-access.env`; the web
+build file `_files/nginx.conf` with the `/bluemap/` block and redirect). The first attempt on 2026-11-19 stopped early:
+an empty `web` image line in `compose.yaml` (from a coordinator command with an unset variable), then an incomplete
+`_files/nginx.conf`. Both were fixed on 2026-11-20 (correction on #732). Smoke § 3 step 1 passed on the alpha on
+2026-11-20. #732 and its sub-issues are closed; the board row is archived (`sessions-archive/2026-11.md`).
 Open: #767 (screenshots), ideas #825 and #826, the `/ownermode` case. The items below are kept as history.
 
 1. **L1 (#735) smoke test (tier:3):** L1 is in `next` (knk-web-api `562f504`, knk-plugin `7f4bdd3a`). Deploy the API
