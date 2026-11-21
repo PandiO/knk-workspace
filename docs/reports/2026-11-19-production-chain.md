@@ -105,7 +105,7 @@ of what is already in `next`.
 | L25 P10 shops API, town account | #248 | Merged into next (2026-11-21) | api `0e15599`, workspace `e5ac443c` (after a coordinator merge of `next`); merges: api `289f4d4b`, workspace `7c7f2de0` | [api#74](https://github.com/PandiO/knk-web-api/pull/74), [ws#933](https://github.com/PandiO/knk-workspace/pull/933) | green on `0e15599` (build-and-test, mysql-tests, fresh-database) | create_session `session_01R1w2Uu45eaJcRwWoXYurUU`, started 2026-11-21 |
 | L25b P9 API follow-ups (coordinator extra) | #928 | Done, in review (2026-11-21) | api `16713a85`, workspace `eb4858f4` | [api#75](https://github.com/PandiO/knk-web-api/pull/75), [ws#935](https://github.com/PandiO/knk-workspace/pull/935) | green on `16713a85` (build-and-test, mysql-tests, fresh-database); Codex at its usage limit | create_session `session_01R1w2UwSQPJ4gQDcsTmi8Xt`, branch `claude/production-p9-followups` |
 | L26 P10b shop menus plugin | #687 | Waiting (developer's shop menu templates, asked on #687) | — | — | — | — |
-| L27 P10c shops web app | #688 | Running (started 2026-11-21 05:11) | — | — | — | create_session `session_01R1w2Uwx1cX3dVQ9hS8MdKX`, branch `claude/production-p10c` |
+| L27 P10c shops web app | #688 | In review (2026-11-21) | web app `0100518`, workspace `10a20851` | [web#73](https://github.com/PandiO/knk-web-app/pull/73), [ws#936](https://github.com/PandiO/knk-workspace/pull/936) | green on `0100518` (build-and-test, e2e) | create_session `session_01R1w2Uwx1cX3dVQ9hS8MdKX`, started 2026-11-21 |
 | L28 P11 shopkeepers | #249 | Not started | — | — | — | — |
 | L29 P12 display stalls | #250 | Not started | — | — | — | — |
 
@@ -2716,3 +2716,72 @@ _(Each link appends its block here when it finishes.)_
 9. **Notes for later links.**
     1. L27 / later web app work: `consumerStructureType` and `structureType` give the route of a consumer's own page;
        the profile endpoint feeds the town panel's template picker (`suggestedTemplateId`).
+
+### 4.27 L27 — P10c shops web app (#688)
+
+1. **Scope done** (knk-web-app, plus the essential docs in knk-workspace).
+    1. Types and clients: `src/types/dtos/production/ShopDtos.ts` (mirrors `ShopDtos.cs` and `ShopEnums.cs`);
+       `shopTypeClient`, `shopTypeLevelClient`, `shopClient` (with the offer), `shopCatalogueEntryClient`,
+       `shopTradeStatClient` (with `rebuild`), `townAccountClient` (`by-town`, `ledger`). Registry additions, additive
+       and grouped: `Controllers` (six), `entityApiMapping` (search and fetch for all six; create, update and delete for
+       ShopType, ShopTypeLevel, Shop and ShopCatalogueEntry), `objectConfigs` columns. The new entities use the
+       generic form and display pipeline with L25's seeds (G17).
+    2. Shop type page: `ShopTypePanel`, the accepted categories (a Category picker, saved as the whole
+       `acceptedCategoryIds` list) and the levels (add, edit, delete, with the API's checks first).
+    3. Shop page: `ShopPanel` (kind, type and level, prices, worker, storages, the town account and its balance, the
+       live offer with sold out struck through, sales and buy-backs from the stock ledger by source `Shop`),
+       `ShopCatalogueEditor`, `ShopTradeStatsPanel` (an inline SVG bar chart of sold, bought back and supplied per UTC
+       hour over 24 h, 7 or 30 days, one item or all, totals, rows, Rebuild); below it L10's
+       `StructureProductionPanel` and L24's `StructureLogisticsPanel` (reused as the issue asks).
+    4. Town account page: `TownAccountPanel` (balance, the reconciliation flag, the ledger in pages of 25).
+    5. Gates: hidden without `knk.admin.world`; creates and edits also need `knk.admin.content` (the API's
+       `RequireDashboardChange`), deletes `knk.admin.delete`. Small additive types: `StockReason` gains `Upgrade`,
+       `ShopSale`, `ShopBuyBack` (type only); `LogisticsSettingSource` gains `ShopLevel`.
+    6. knk-workspace (branch from `next`): smoke guide § 11.3 in full (15 steps: 11 automated, 4 partly), § 11 intro
+       and status header, changelog entry, implementation plan P10 and shops DESIGN status.
+2. **Commits and heads.**
+    1. knk-web-app `claude/production-p10c` at `0100518`: 3 commits on `next` `c12e0e7` (not moved at the last fetch).
+    2. knk-workspace `claude/production-p10c` at `10a20851`: 2 commits on `next` `7c7f2de0` (merged before the
+       commits, no conflicts).
+3. **PRs.** [knk-web-app#73](https://github.com/PandiO/knk-web-app/pull/73) (Closes #688) and
+   [knk-workspace#936](https://github.com/PandiO/knk-workspace/pull/936) (Part of #688), base `next`. Not merged.
+4. **Tests, baseline → result.**
+    1. knk-web-app baseline on `next` `c12e0e7`: Jest 2917 passed (344 suites), Playwright 350 passed, `tsc` clean,
+       build OK.
+    2. Branch: Jest 2929 passed (346 suites); new `src/utils/__tests__/shops.test.ts` (5) and
+       `src/apiClients/__tests__/shopClients.test.ts` (7).
+    3. Branch: Playwright 368 passed; new `e2e/shops.spec.ts` (18 tests, strict API, DTO-typed fixtures
+       `e2e/fixtures/shops.ts`). `tsc`, `typecheck:e2e` clean, `CI=true npm run build` OK.
+    4. Seen failing: with the shop id sent on a catalogue edit, the catalogue e2e test and a Jest test went red.
+    5. CI on `0100518`: build-and-test and e2e green (push and PR runs).
+    6. Known reds: none.
+5. **Decisions (DESIGN § 4.3).** All 10, each with alternatives, are in knk-web-app#73. The main ones:
+    1. *Where the screens live.* Chosen: panels below the generic detail pages of ShopType, Shop and TownAccount.
+       Alternatives: (a) a Shops list page: the dashboard covers it; (b) the account on the town page: a mock in every
+       strict town spec.
+    2. *The chart.* Chosen: inline SVG bars. Alternatives: (a) a chart library: a library is the developer's choice
+       (DESIGN § 4.4); (b) a table only: the issue asks for a chart.
+    3. *Saving accepted categories.* Chosen: `PUT { id, acceptedCategoryIds }` only. Alternatives: (a) the whole DTO:
+       could overwrite a concurrent edit; (b) the seeded form: it has no join list.
+    4. *Levels.* Chosen: edited on the type's page. Alternatives: (a) the seeded form only: no overview.
+    5. *Write gates.* Chosen: `knk.admin.world` and `knk.admin.content`, buttons off with the node named.
+       Alternatives: (a) `knk.admin.world` only, as L24: a World-only admin gets 403s.
+6. **Out of scope, noted.** [#688 comment](https://github.com/PandiO/knk-workspace/issues/688#issuecomment-7058103705):
+   no kind or type name on the shop search row, user ids only on the town ledger, sales and currency legs not
+   joined (API); no `production.shops` settings card and no account on the town page (web app); display spots with
+   P12. No new issues. Codex: the connector hit its code-review usage limit on both PRs (review "failed",
+   usage-limit comment); no inline findings or threads; noted on each PR.
+7. **Blockers.** None.
+8. **At merge / what the developer must do.**
+    1. Deploy the web app with the shops API (#248, in `next`) and its imported seeds. No migration, setting or
+       plugin change.
+    2. Smoke test [§ 11.3](../guides/production-storage-transport-smoke-test.md) (tier:2): about 30 minutes in full,
+       about 15 minutes for the untagged parts.
+    3. At merge into `next`: the `documentation` sub-issue (shops admin guide: shop types, levels, catalogue and
+       pricing, the shop page, the town account; feature register row).
+    4. Coordinator: decide on the points of the #688 comment.
+9. **Notes for later links.**
+    1. Strict e2e specs that open a shop page need `mockShopPage(api)` (`e2e/fixtures/shops.ts`); it also mocks the
+       production and consumer panels of the shop.
+    2. L26 (#687) and L29 (#250): the offer DTO and `formatCoins` / `priceSourceLabel` in `src/utils/shops.ts` are
+       there for any later web view of a shop menu or a display stall.
