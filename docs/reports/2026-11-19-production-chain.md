@@ -52,8 +52,7 @@ of what is already in `next`.
 10. **Decision (L17, agent):** town membership for the caller-filtered structure reads (M3) is the permission node
     `knk.town.member.<town id>` (one permission group per town), a stand-in until town runtime management #246. Confirm,
     or name the membership source you want.
-11. **Shop menu templates for L26 (#687):** the charter gate for the plugin shop menus. Asked on #687 on 2026-11-21.
-    The alternative offered there: start from the legacy V1/V2 shop menus and review the result.
+11. **Review L26's menus (#687):** you chose the legacy menus on 2026-11-21; L26 lists every layout deviation in its PR.
 12. **Review (L22 decision 1):** in a yield area, a player who doesn't meet a harvest rule can't break that rule's
     targets, also in the wilderness (otherwise they'd get full vanilla drops there).
 13. **Not in the charter's links, for the developer or the manager to schedule:** #901 (P7 web app: inbox, stash,
@@ -104,7 +103,7 @@ of what is already in `next`.
 | L24 P9b logistics web app | #686 | Merged into next (2026-11-21) | web app `e392d84`, workspace `926ce973`; merges: web app `c12e0e7e`, workspace `385ec7d3` | [web-app#72](https://github.com/PandiO/knk-web-app/pull/72), [ws#927](https://github.com/PandiO/knk-workspace/pull/927) | green on `e392d84`: build-and-test (push 44863648405, PR 44863833419), e2e push run 44863648392; PR e2e run 44863833359 running | create_session `session_01R1w2UwTStX77ypqswMN3Kz` (prompt says start without asking), started 2026-11-21 |
 | L25 P10 shops API, town account | #248 | Merged into next (2026-11-21) | api `0e15599`, workspace `e5ac443c` (after a coordinator merge of `next`); merges: api `289f4d4b`, workspace `7c7f2de0` | [api#74](https://github.com/PandiO/knk-web-api/pull/74), [ws#933](https://github.com/PandiO/knk-workspace/pull/933) | green on `0e15599` (build-and-test, mysql-tests, fresh-database) | create_session `session_01R1w2Uu45eaJcRwWoXYurUU`, started 2026-11-21 |
 | L25b P9 API follow-ups (coordinator extra) | #928 | Merged into next (2026-11-21) | api `16713a85`, workspace `77f3a022` (after a coordinator merge of `next`); merges: api `e02bf557`, workspace `0c469db3` | [api#75](https://github.com/PandiO/knk-web-api/pull/75), [ws#935](https://github.com/PandiO/knk-workspace/pull/935) | green on `16713a85` (build-and-test, mysql-tests, fresh-database); Codex at its usage limit | create_session `session_01R1w2UwSQPJ4gQDcsTmi8Xt`, branch `claude/production-p9-followups` |
-| L26 P10b shop menus plugin | #687 | Waiting (developer's shop menu templates, asked on #687) | — | — | — | — |
+| L26 P10b shop menus plugin | #687 | Running (started 2026-11-21 17:42; from the legacy menus, developer decision) | — | — | — | create_session `session_01R1w2UtuHZc7vYs2cYFbg7C`, branch `claude/production-p10b` |
 | L27 P10c shops web app | #688 | Merged into next (2026-11-21) | web app `0100518`, workspace `f46e0de6` (after coordinator merges of `next`); merges: web app `11832d6b`, workspace `ee4ee00b` | [web#73](https://github.com/PandiO/knk-web-app/pull/73), [ws#936](https://github.com/PandiO/knk-workspace/pull/936) | green on `0100518` (build-and-test, e2e) | create_session `session_01R1w2Uwx1cX3dVQ9hS8MdKX`, started 2026-11-21 |
 | L27b P10 shops follow-ups (coordinator extra) | #938 | Merged into next (2026-11-21) | api `3a2e5db5`, web app `c3681765`, workspace `e28a6610`; merges: api `58c06427`, web app `f386e519`, workspace `33b6a583` | [api#76](https://github.com/PandiO/knk-web-api/pull/76), [web#74](https://github.com/PandiO/knk-web-app/pull/74), [ws#941](https://github.com/PandiO/knk-workspace/pull/941) | push runs green on `3a2e5db` (build-and-test, mysql-tests, fresh-database) and `c368176` (build-and-test, e2e); Codex at its usage limit | create_session `session_01R1w2UuaqLDEYWP9TRyxn93`, branch `claude/production-p10-followups` |
 | L28 P11 shopkeepers | #249 | Not started | — | — | — | — |
@@ -503,6 +502,10 @@ of what is already in `next`.
 76. **The chain is idle on the developer.** Every link whose gate is open is merged (L0–L25, L25b, L27, L27b). L26 (#687)
     waits for the shop menu templates or the OK for the legacy fallback (no reply at 07:20); L28 (#249) and L29 (#250)
     depend on L26. Check-ins slow to every 3 hours until the developer answers.
+77. **Developer decision (2026-11-21 17:40, in the coordinator session): "Start from legacy menus please".** L26 (#687)
+    started from the legacy V1/V2 shop menus (`docs/specs/legacy/inventory-menus.md`, `inventory-menu-screens.md`, the V1
+    code), listing every deviation for the developer's review; recorded on #687. The open knk-plugin PRs into `next`
+    (#115 landmark regions, #116–#119 NPC navigation) don't touch the menu engine. Check-ins back to hourly.
 
 ## 4. Link blocks
 
