@@ -3,7 +3,7 @@
 **Status:** Written 2026-11-16 for knk-plugin `next` `cc5262ff` (links M1–M7 merged into `next`, behind
 `npc.navigation.enabled` and each link's own key, all off by default); only the steps no plugin scenario checks; not
 run yet (the developer's run with every key on is planned for 2026-11-16)
-**Last updated:** 2026-11-20 (link G1 section, [#814](https://github.com/PandiO/knk-workspace/issues/814)); 2026-11-20 (link H1 section, [#779](https://github.com/PandiO/knk-workspace/issues/779)); 2026-11-18 (link R1 section, [#724](https://github.com/PandiO/knk-workspace/issues/724)); 2026-11-18 (link E1 section, [#701](https://github.com/PandiO/knk-workspace/issues/701)); 2026-11-18 (link C1 section, [#700](https://github.com/PandiO/knk-workspace/issues/700)); 2026-11-17 (link B5 section, [#699](https://github.com/PandiO/knk-workspace/issues/699)); 2026-11-16 (assembled from the developer tests of implementation plan 4c.4, PandiO/knk-workspace#658)
+**Last updated:** 2026-11-21 (step 13 with `/knk npc nav protect`, [#954](https://github.com/PandiO/knk-workspace/issues/954)); 2026-11-20 (link G1 section, [#814](https://github.com/PandiO/knk-workspace/issues/814)); 2026-11-20 (link H1 section, [#779](https://github.com/PandiO/knk-workspace/issues/779)); 2026-11-18 (link R1 section, [#724](https://github.com/PandiO/knk-workspace/issues/724)); 2026-11-18 (link E1 section, [#701](https://github.com/PandiO/knk-workspace/issues/701)); 2026-11-18 (link C1 section, [#700](https://github.com/PandiO/knk-workspace/issues/700)); 2026-11-17 (link B5 section, [#699](https://github.com/PandiO/knk-workspace/issues/699)); 2026-11-16 (assembled from the developer tests of implementation plan 4c.4, PandiO/knk-workspace#658)
 **Issue:** [PandiO/knk-workspace#358](https://github.com/PandiO/knk-workspace/issues/358) (links
 [#621](https://github.com/PandiO/knk-workspace/issues/621)–[#627](https://github.com/PandiO/knk-workspace/issues/627));
 post results on the link's sub-issue or [#603](https://github.com/PandiO/knk-workspace/issues/603)
@@ -88,8 +88,10 @@ CI's `paper-boot` job runs these on a real Paper server with Citizens, collision
     where it stood; after the third push within 10 s you pass through it (the log says
     `collision between them off for 60 s`). Push one towards the drop of step 11: you pass through it at once and it
     doesn't fall.
-13. **Knockback (M7).** Make an NPC unprotected (`/npc select`, `/npc protect`) and hit it while it walks: it is
-    knocked back and walks back to its line.
+13. **Knockback (M7).** Stand next to an NPC on its way and run `/knk npc nav protect off` (the route NPC nearest
+    you, or `/knk npc nav protect off <npc>` by name; Citizens' own `/npc select` can't reach K&K's NPCs,
+    [#954](https://github.com/PandiO/knk-workspace/issues/954)). Hit it while it walks: it is knocked back and walks
+    back to its line. It takes damage now and can die. `/knk npc nav protect on <npc>` puts the protection back.
 14. **Push counters (M7).** `/knk npc nav stats`: the `pushes:` line counts your pushes, `returned` grows with them,
     `teleported` 0 while you watch.
 15. **The default for bodies (M7).** Report whether NPCs jostling each other on the dev world's stairs and gates look
