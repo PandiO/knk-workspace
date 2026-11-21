@@ -108,7 +108,7 @@ of what is already in `next`.
 | L27 P10c shops web app | #688 | Merged into next (2026-11-21) | web app `0100518`, workspace `f46e0de6` (after coordinator merges of `next`); merges: web app `11832d6b`, workspace `ee4ee00b` | [web#73](https://github.com/PandiO/knk-web-app/pull/73), [ws#936](https://github.com/PandiO/knk-workspace/pull/936) | green on `0100518` (build-and-test, e2e) | create_session `session_01R1w2Uwx1cX3dVQ9hS8MdKX`, started 2026-11-21 |
 | L27b P10 shops follow-ups (coordinator extra) | #938 | Merged into next (2026-11-21) | api `3a2e5db5`, web app `c3681765`, workspace `e28a6610`; merges: api `58c06427`, web app `f386e519`, workspace `33b6a583` | [api#76](https://github.com/PandiO/knk-web-api/pull/76), [web#74](https://github.com/PandiO/knk-web-app/pull/74), [ws#941](https://github.com/PandiO/knk-workspace/pull/941) | push runs green on `3a2e5db` (build-and-test, mysql-tests, fresh-database) and `c368176` (build-and-test, e2e); Codex at its usage limit | create_session `session_01R1w2UuaqLDEYWP9TRyxn93`, branch `claude/production-p10-followups` |
 | L28 P11 shopkeepers | #249 | Waiting (NPC lifecycle §6a not in knk-plugin `next`; #358) | — | — | — | — |
-| L29 P12 display stalls | #250 | Running (started 2026-11-21 18:45) | — | — | — | create_session `session_01R1w2UtpTbcFHRyyeQhvtTX`, branch `claude/production-p12` |
+| L29 P12 display stalls | #250 | In review (2026-11-21), not merged | api `326b6bb`, plugin `107539c9`, workspace `29210229` | [api#80](https://github.com/PandiO/knk-web-api/pull/80), [plugin#121](https://github.com/PandiO/knk-plugin/pull/121), [ws#969](https://github.com/PandiO/knk-workspace/pull/969) | green: api `326b6bb` (build-and-test, fresh-database), plugin `107539c9` (build, paper-boot push run with 75 scenarios); Codex at its usage limit | create_session `session_01R1w2UtpTbcFHRyyeQhvtTX`, branch `claude/production-p12` |
 
 ## 3. Coordinator decisions
 
@@ -2981,3 +2981,89 @@ _(Each link appends its block here when it finishes.)_
        (`e2e/fixtures/shops.ts`) next to `mockNoTownLogistics`.
     2. `TownAccountEntryDto.stockTransactionId` links a trade's coins to its goods; L26 (#687) and L29 (#250) can use
        it for any receipt view.
+
+### 4.29 L29 — P12 display stalls (#250)
+
+1. **Scope done** (knk-web-api, knk-plugin, essential docs in knk-workspace). The plugin part runs only with
+   `production.enabled: true` (A21); the API part is admin CRUD and works with the flag off, as the catalogue.
+    1. API (knk-web-api, needed because the design registers spots per shop with web CRUD, § 2.1 and § 9):
+       `ShopDisplaySpot` (shop, world and block unique, facing North/East/South/West, an optional pinned catalogue
+       entry of the same shop, order, label, on/off; at most 100 per shop), `api/ShopDisplaySpots` (get, search,
+       create, update, delete; reads the World area or the plugin key, writes `knk.admin.world` or the plugin key with
+       the dashboard change rule, delete also `knk.admin.delete`), dashboard registry and lookups, form and display
+       seeds (G17), the pinned access tests, one additive migration `AddShopDisplaySpots` generated last. What is shown
+       reuses L25's `GET api/Shops/{id}/offer` and `ShopTradeStats` search (both now in `PluginReads`).
+    2. Plugin: knk-core `production/shop/display` (`DisplaySelection`: the spot's pin, the catalogue's pins, in-stock
+       before sold out, best sellers over `best-seller-hours`, the offer's order; sold out greyed or hidden), the port
+       `ShopDisplaySpotsApi`; knk-api-client `ShopDisplaySpotsApiImpl`; knk-paper `ShopDisplayModule` and
+       `ShopDisplayPresenter` (non-persistent `ItemDisplay`, `Interaction`, `TextDisplay`, tagged
+       `knightsandkings:knk_shop_display`, respawned within a second, strays purged on entities load),
+       `ShopDisplayWorldGuardListener`, `ShopService.openItem` and `onOfferChanged` (additive to L26).
+    3. Right-click opens L26's `shops.item` (no purchase); shift-right-click opens L26's `shops.confirm` with the
+       player's last amount (the quick buy; every purchase is confirmed there). No new menu seed, so
+       `content-seeds.json` is unchanged.
+    4. `/knk shop display add <shop id> [label]|remove [spot id]|pin <spot id> <entry id|none>|list <shop id>|reload`,
+       node `knk.admin.world.production` (as L26's `/knk shop`). Config `production.shops.displays.*` (6 keys).
+       Scenario `shop-display-stall`, `MIN_SCENARIOS` 74 → 75.
+    5. knk-workspace (from `next`): smoke guide § 11.4 (17 steps: 7 automated, 8 partly, 2 by hand; § 13 now points
+       there), changelog entry with the YAML, plugin configuration § 4.31, installation § 5.3 item 20, plan P12 and
+       shops DESIGN status.
+2. **Commits and heads.**
+    1. knk-web-api `claude/production-p12` at `326b6bb`: 1 commit on `next` `7c6dd7f` (not moved at the last fetch).
+    2. knk-plugin `claude/production-p12` at `107539c9`: 2 commits on `next` `c349a53c` (not moved at the last fetch).
+    3. knk-workspace `claude/production-p12` at `29210229`: 1 commit plus a merge of `next` `359d05df` (docs #966, no
+       conflicts).
+3. **PRs.** [knk-web-api#80](https://github.com/PandiO/knk-web-api/pull/80) (Part of #250, merge first),
+   [knk-plugin#121](https://github.com/PandiO/knk-plugin/pull/121) (Closes #250) and
+   [knk-workspace#969](https://github.com/PandiO/knk-workspace/pull/969) (Part of #250), base `next`. Not merged.
+4. **Tests, baseline → result.**
+    1. knk-web-api, baseline on `next` `7c6dd7f`: 5169 passed / 129 skipped / 0 failed. Branch: 5176 / 129 / 0. New:
+       `ShopDisplaySpotTests` (5), `AddShopDisplaySpotsTests` (2); access tests updated. MySQL tests skipped locally.
+       CI push run on `326b6bb`: build-and-test and Migrations (fresh DB) green.
+    2. knk-plugin, baseline on `next` `c349a53c`: knk-core 3767, knk-api-client 422 (2 skipped), knk-paper 3459 (18
+       skipped), 0 failed. Branch: knk-core 3780, knk-api-client 426 (2 skipped), knk-paper 3477 (18 skipped), 0
+       failed. New: `DisplaySelectionTest` (6), `DisplaySpotIndexTest` (2), `DisplaySpotFacingTest` (3),
+       `DisplayTextTest` (2), `ShopDisplaySpotsApiImplTest` (4), `ShopDisplayModuleTest` (9, MockBukkit),
+       `ShopDisplayCommandTest` (7), `ShopDisplayConfigTest` (2); `PaperScenariosTest` updated.
+    3. Seen failing: the API pin check removed (1 test red); the quick buy forced off (2 MockBukkit tests red).
+    4. CI on `107539c9`: Build green; paper-boot green on the push run (75 of 75 scenarios, `shop-display-stall` passed in 34 ticks); the PR run of the same head was still running at the time of writing.
+    5. Known reds: none.
+5. **Decisions (DESIGN § 4.3).** All are in knk-web-api#80 and knk-plugin#121. The main ones:
+    1. *Store spots in the API.* Chosen: an additive `ShopDisplaySpot` entity (§ 2.1 registered spots, § 9 FormConfig
+       CRUD). Alternatives: (a) plugin-only file storage (no web CRUD); (b) a `StorageContainer` mode (a spot is no
+       storage).
+    2. *Per-spot pin.* Chosen: an optional pinned entry on the spot next to the catalogue's `Pinned`. Alternatives: (a)
+       the catalogue flag only (no choice of shelf).
+    3. *A gone, hidden or already-shown pin.* Chosen: the spot is filled by the shop. Alternatives: (a) left empty.
+    4. *Selection where.* Chosen: knk-core from the offer and trade stats. Alternatives: (a) a selection endpoint.
+    5. *Best sellers.* Chosen: units sold over 168 hours, read at most every 10 minutes per shop. Alternatives: (a)
+       revenue; (b) all time.
+    6. *Quick buy amount.* Chosen: the player's last amount for that item (1 at first), always through `shops.confirm`.
+       Alternatives: (a) always 1; (b) a stack.
+    7. *Greyed out.* Chosen: the real item dimmed with "Sold out". Alternatives: (a) a grey glass pane; (b) a barrier.
+    8. *Menus and node.* Chosen: L26's `shops.item`/`shops.confirm`, node `knk.admin.world.production`. Alternatives:
+       (a) a stall menu seed; (b) a new `knk.admin.world.shop` node.
+    9. *WorldGuard.* Chosen: allow use events on stall entities only (KNG-266 pattern). Alternatives: (a) none (stalls
+       unusable for visitors in town regions).
+6. **Out of scope, noted.** Filed [#968](https://github.com/PandiO/knk-workspace/issues/968) (P12 web app: display spots
+   on the dashboard and the shop page; knk-web-app was read-only). Unique items are shown but not bought in game until
+   #897 (as L26). Codex: the connector hit its code-review usage limit on all three PRs (review "failed", usage-limit
+   comment); no inline findings or threads; noted on each PR.
+7. **Blockers.** None.
+8. **At merge / what the developer must do.**
+    1. Merge knk-web-api#80 first. Apply migration `AddShopDisplaySpots`; import the `ShopDisplaySpot` form and display
+       seeds ("make default").
+    2. Plugin `config.yml` (Restart): `production:` → `shops:` → `displays:` → `refresh-minutes: 5`,
+       `selection-refresh-seconds: 30`, `best-seller-hours: 168`, `item-scale: 0.5`, `label: true`, `hints: true`.
+       Needs `production.enabled: true`; grant `knk.admin.world.production` to staff who register spots.
+    3. Smoke test [§ 11.4](../guides/production-storage-transport-smoke-test.md) (tier:2): 7 of 17 steps automated, 8
+       partly; about 15 minutes for the untagged parts.
+    4. Review the decisions above (5.1 to 5.9).
+    5. At merge into `next`: the `documentation` sub-issue (shops architecture § display stalls, `API_CONTRACT_SHOPS.md`
+       display spots, shops admin guide, menus player guide § Shops, commands guide row, plugin scenarios guide § 1,
+       feature register).
+9. **Notes for later links.**
+    1. L28 (#249, shopkeepers): `ShopService.openItem(player, shopId, ref, quickBuy)` opens `shops.item` or
+       `shops.confirm` after reading the offer; `ShopService.onOfferChanged` tells one listener (the stalls) after a
+       trade, so add a fan-out if a second listener is needed.
+    2. #968 (web app): the API's search filters are `shopId`, `enabled`, `worldName`; facing is an enum of four names.
