@@ -4,6 +4,29 @@ This is a human-readable record of capabilities merged into the V3 default branc
 
 ## Unreleased — on feature branches, not merged
 
+- **Off-road navigation: a group's default route mode is now a fixed choice (Enum field)**
+  ([PandiO/knk-workspace#852](https://github.com/PandiO/knk-workspace/issues/852) follow-up, developer decision
+  2026-11-21). For staff: the permission group form's "Default route mode" is an Enum field with Shortest, Efficient
+  and Preferred ("None (default: Preferred)" = no default), so it can be added in the form designer as an Enum field;
+  the dashboard shows the mode's name. Players notice nothing: `/navigate` behaves as with step B. knk-web-api:
+  `PermissionGroup.DefaultRouteMode` is the enum `RouteMode` (`Enums/NavigationEnums.cs`), stored by name
+  (`HasConversion<string>()`, the column stays nullable `varchar(16)`), `defaultRouteMode` in `PermissionGroupDto` and
+  `PermissionGroupListDto` is sent as `"Shortest"`, `"Efficient"` or `"Preferred"` (read in any case); a body without
+  the property still keeps the stored value, `""` or `null` clears it, another word is a `400` from the JSON binding;
+  the data migration `20261121144143_NormalizePermissionGroupDefaultRouteMode` renames stored lowercase words to the
+  names (Down renames them back); the PermissionGroup form seed's field is an Enum field in place (same field GUID).
+  knk-web-app: the group DTO type, object config, e2e fixtures and tests use the names. knk-plugin: no change
+  (`RouteMode.fromWord` reads any case). Branches `claude/group-route-mode-enum` in knk-web-api, knk-web-app and
+  knk-workspace. Smoke test:
+  [off-road smoke test § 15](guides/navigation-offroad-smoke-test.md#15-l7b-default-route-mode-per-permission-group-852-tier3).
+  Admin steps:
+  1. Apply the migration `NormalizePermissionGroupDefaultRouteMode` (`dotnet ef database update`; data only).
+  2. On a database whose PermissionGroup form has the field from step A (a String field) or none, set it up in the
+     form designer as an **Enum** field: step Group, field name `DefaultRouteMode`, label "Default route mode", not
+     required, settings JSON `{"enumValues": ["Shortest", "Efficient", "Preferred"], "emptyOptionLabel": "None
+     (default: Preferred)"}`. A fresh import of `PermissionGroup` has it.
+  3. No `api.env` key, no permission node and no plugin `config.yml` change.
+
 - **Shops follow-ups: kind and type on the Shop dashboard, usernames and goods links in the town ledger, a Shops
   settings card, the town account on the town page**
   ([PandiO/knk-workspace#938](https://github.com/PandiO/knk-workspace/issues/938), link L27b of the production, storage
@@ -651,9 +674,11 @@ This is a human-readable record of capabilities merged into the V3 default branc
   1. Apply the migration `AddPermissionGroupDefaultRouteMode` (`dotnet ef database update`; additive: one nullable
      column `permission_groups.DefaultRouteMode`, null on every group, so routes stay as today).
   2. Add the field to the PermissionGroup form if it was imported before this change (import never overwrites): in the
-     form designer, step Group, a String field named `DefaultRouteMode`, label "Default route mode", not required,
-     settings JSON `{"enumValues": ["shortest", "efficient", "preferred"], "emptyOptionLabel": "None (default: preferred)"}`.
-     A fresh import of `PermissionGroup` has it. Without the field the form keeps a group's stored default.
+     form designer, step Group, field `DefaultRouteMode`, label "Default route mode", not required. Since the enum
+     follow-up of 2026-11-21 (entry above) it is an **Enum** field with settings JSON `{"enumValues": ["Shortest",
+     "Efficient", "Preferred"], "emptyOptionLabel": "None (default: Preferred)"}`; step A's String field with
+     lowercase words no longer passes the publish check. A fresh import of `PermissionGroup` has it. Without the field
+     the form keeps a group's stored default.
   3. No `api.env` key, no new permission node and no plugin `config.yml` change.
 
 - **Off-road navigation: the smoke-test failures of 2026-11-19** ([PandiO/knk-workspace#780](https://github.com/PandiO/knk-workspace/issues/780),
