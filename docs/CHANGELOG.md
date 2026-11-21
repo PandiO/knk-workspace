@@ -4,6 +4,16 @@ This is a human-readable record of capabilities merged into the V3 default branc
 
 ## Unreleased — on feature branches, not merged
 
+- **NPC navigation test command: `/knk npc nav protect <on|off> [npc]`**
+  ([PandiO/knk-workspace#954](https://github.com/PandiO/knk-workspace/issues/954), from the NPC movement smoke run of
+  2026-11-21). For staff testing NPC navigation: switches Citizens' protection of one route test NPC, the one nearest
+  you unless you name it. With protection off an attack hurts the NPC and knocks it back (it can die), which the
+  knockback step of the NPC movement smoke test (step 13) needs; Citizens' own `/npc select` and `/npc` commands can't
+  reach K&K's NPCs, which live in K&K's own Citizens registry. knk-plugin: the `protect` action in
+  `NpcNavigationModule` (usage, completion of `on`/`off`) and `NpcNavRunner.setProtected` (the NPC pick shared with
+  `trace`), over `CitizensBootstrap.setProtected`. Behind `npc.navigation.enabled` (off by default) and the existing
+  `/knk npc` node; no `config.yml` key, no new node, no migration.
+
 - **Off-road navigation: a group's default route mode is now a fixed choice (Enum field)**
   ([PandiO/knk-workspace#852](https://github.com/PandiO/knk-workspace/issues/852) follow-up, developer decision
   2026-11-21). For staff: the permission group form's "Default route mode" is an Enum field with Shortest, Efficient

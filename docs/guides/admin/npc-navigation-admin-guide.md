@@ -1,6 +1,6 @@
 # NPC navigation (admin)
 
-**Status:** Current · **Last updated:** 2026-11-18 (the fix links L9, B1–B5, C1 and E1: the region warning at the first `/knk npc nav`, region overrides for NPCs, `/knk npc nav snapshot` with trimming and handing in, the trace's `JUMP` column, trespass on exit (`left`), the crowd guard from the last entry, off-road walks and the new log lines in § 4.1, § 7; PandiO/knk-workspace#726); 2026-11-16 (first version: turning NPC navigation on, the test commands, every movement key of Phase 4c and the stats lines; PandiO/knk-workspace#658, with #497)
+**Status:** Current · **Last updated:** 2026-11-21 (`/knk npc nav protect`, #954); 2026-11-18 (the fix links L9, B1–B5, C1 and E1: the region warning at the first `/knk npc nav`, region overrides for NPCs, `/knk npc nav snapshot` with trimming and handing in, the trace's `JUMP` column, trespass on exit (`left`), the crowd guard from the last entry, off-road walks and the new log lines in § 4.1, § 7; PandiO/knk-workspace#726); 2026-11-16 (first version: turning NPC navigation on, the test commands, every movement key of Phase 4c and the stats lines; PandiO/knk-workspace#658, with #497)
 **Checked against:** knk-plugin `next` `7aef3de4` (Phases 1–4, Phase 4b links L2–L4, Phase 4c links M1–M7, the fix
 links L9, B1–B5, C1 and E1). None of it is on trunk yet.
 **Applies to:** knk-plugin `next` only, with `npc.navigation.enabled: true` (default `false`). **Not live-tested:** the
@@ -65,8 +65,12 @@ The full syntax is in the [commands guide](../users/commands.md). The ones you u
    a tick where the NPC leaves the ground at a jump's upward speed (0.3 blocks a tick or more; link B4,
    [#673](https://github.com/PandiO/knk-workspace/issues/673)). A step up a slab or a stair is no jump. On stairs,
    Minecraft's move control also hops off a stair's step by itself; no waypoint changes that.
-6. `/knk npc nav clear` removes the test NPCs.
-7. `/knk npc nav snapshot <route>` (a route saved with `route save`; link B1,
+6. `/knk npc nav protect <on|off> [npc]` switches Citizens' protection of one test NPC, the one nearest you unless
+   you name it (from the console, name it). `off`: an attack hurts the NPC and knocks it back, and it can die; `on`:
+   protected again, Citizens' default for every K&K NPC. K&K spawns its NPCs in its own Citizens registry, so
+   Citizens' `/npc select` and its commands can't reach them ([#954](https://github.com/PandiO/knk-workspace/issues/954)).
+7. `/knk npc nav clear` removes the test NPCs.
+8. `/knk npc nav snapshot <route>` (a route saved with `route save`; link B1,
    [#670](https://github.com/PandiO/knk-workspace/issues/670)) writes
    `plugins/KnightsAndKings/npc-snapshots/<route>-<UTC time>.zip`, so an agent can replay the route's real blocks
    and rules in a plugin scenario. It holds the road line NPC navigation plans for the route and its stretches, the
@@ -212,5 +216,5 @@ The metrics endpoint has the same events (`knk_npc_nav_events_total{event=…}`:
 8. **An NPC stops at an off-road start or goal:** the run file's `off-road walk` line says whether the walk search
    found a path (`… cells`) or not (`…, walked in hops`, with the reason). A walk longer than the search's budget
    (`navigation.walk`) falls back to hops. Post the line and a `/knk npc nav snapshot` of the route.
-9. **A problem on a real route:** take a `/knk npc nav snapshot <route>` right after it happened (§ 3 item 7) and hand
+9. **A problem on a real route:** take a `/knk npc nav snapshot <route>` right after it happened (§ 3 item 8) and hand
    it in with the run file and a trace.
