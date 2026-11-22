@@ -46,6 +46,36 @@ This is a human-readable record of capabilities merged into the V3 default branc
        Domain lists (`api/Domains`) include landmarks from now on; the type filter and the catalogue's skip of
        landmarks come with L2 (#984).
 
+- **Landmarks in the domain lists, discovery, warps and realtime: the domain search filters on the type, a landmark
+  can be made discoverable one at a time, and a landmark with its warp on is a `/warp` destination**
+  ([PandiO/knk-workspace#984](https://github.com/PandiO/knk-workspace/issues/984), phase 2 of
+  [#976](https://github.com/PandiO/knk-workspace/issues/976), [design](specs/landmark-domain/DESIGN.md); branch
+  `claude/landmark-domain-integration` in knk-web-api, tier:2, no flag). knk-web-api: `POST api/Domains/search` lists
+  landmarks with `domainType` `Landmark` (as before L2) and takes two new filters: `domainType` (one or more exact
+  types, comma separated, any case; `Structure` means plain structures, a gate is `GateStructure`; an unknown type
+  matches nothing) and `excludeSubtreeOf` (leaves out that domain and every landmark below it, for a landmark's parent
+  picker). Discovery: a `Landmark` type rule, **disabled** (`api/discovery-rewards` lists it last and `PUT
+  api/discovery-rewards/landmark` edits it), so a landmark is discoverable only when its per-domain override switches
+  discovery on; only a landmark with its own region (`AreaKind` `OwnRegion`) is a discovery node; a point has nothing
+  to enter, and one that uses its parent's area is discovered as that parent. The rule's rewards are the small
+  structure placeholders, without ancestors. Warps: `GET api/teleport-destinations` gives a landmark `domainType`
+  `Landmark` (type word `landmark`) after the other types; its price, title and premium locks work as for any domain;
+  "requires discovery" stays locked while the landmark's discovery is off and unlocks once the player discovered it.
+  Realtime: a landmark change sends `EntityChanged` with type `Landmark` (key: its own region id, none for a point or
+  a linked-area landmark) next to the domain access, teleport and navigation events every domain already sends.
+  knk-plugin skips landmarks in its navigation catalogue and reacts to `Landmark` changes with L3 (#985); the web
+  app's type column and filter come with L4 (#986). Docs:
+  [smoke test § 2](guides/landmark-domain-smoke-test.md#2-phase-2-api-lists-discovery-warps-and-realtime-984-tier2).
+  **Admin steps (deploy notes):**
+    1. Migration `AddLandmarkDiscoveryRule` (additive, data only): inserts the `Landmark` row into
+       `discovery_reward_rules` with `IsEnabled` false; Down deletes that row. No schema change.
+    2. No seed import, no `config.yml` key, no API setting.
+    3. Nothing becomes discoverable or warpable by itself: discovery needs a landmark's override on, a warp needs
+       `TeleportEnabled` (off by default). How the plugin words landmark discoveries and warps, and its skip of
+       landmarks in the navigation catalogue, are L3's (#985); L2 did not run the plugin. The discovery summary's
+       `byType` gains a `Landmark` row with `enabled` false (the type rule), also when overrides make some landmarks
+       discoverable.
+
 - **Siege weapons: a weapon spot is now a WorldGuard region you draw in the spot form, and the form shows its size class before you save**
   ([PandiO/knk-workspace#988](https://github.com/PandiO/knk-workspace/issues/988), part of
   [#354](https://github.com/PandiO/knk-workspace/issues/354); developer decision 2026-11-22, spec W76; replaces the spot
