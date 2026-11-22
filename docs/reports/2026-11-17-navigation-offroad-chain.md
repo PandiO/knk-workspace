@@ -332,6 +332,11 @@ on `next` (Decided 2026-11-17).
     for the developer: whether off-road smoke § 6 (L8) and § 7 (L9) close as superseded by #976 or are kept for after
     it; the docs session for this chain waits for that answer (landmark guides would be rewritten). Still open
     otherwise: L1's concurrency item. `next` CI green.
+48. **#976 L3 merged into `next` (2026-11-22 21:38, knk-plugin#125 `14645895`).** L8's landmark classes now sit on the
+    domain model (`LandmarkExtent` is a point or a union of region shapes, no cylinder; `LandmarkWeights` over the union;
+    `/knk landmark` without radius, `link` as parent). Checked here: the merge changes no golden transcript,
+    `NavigateCommand`, route-mode code or `config.yml`. The plugin navigation slot is free again. The landmark chain's
+    smoke guide (`landmark-domain-smoke-test.md` § 3) covers landmark navigation and weights on the new model.
 
 ## 4. Link blocks
 
