@@ -14,22 +14,29 @@ design session of 2026-11-22).
 1. **L1 #983 in `next` (tier:3), for your test before the promotion of `next`:** smoke guide
    `docs/guides/landmark-domain-smoke-test.md` § 1 in full (14 steps; the automated ones are tagged). Deploy first:
    back up the dev DB, apply migration `LandmarkAsDomain` (it deletes every landmark row; recreate your test
-   landmarks), import the `Landmark` form seed v2 and `Landmark.display` and make both the default (form 51 and its
-   Region id projection are superseded). Don't put `next` on a server players use before L3 (#985) is in it too
-   (until then the plugin treats a landmark's own region as a domain region for effect damage).
+   landmarks), import the `Landmark` form seed v3 (L1b; v2 need not be imported) and `Landmark.display` and make both
+   the default (form 51 and its Region id projection are superseded). Deploy the API (phases 1, 2 and L1b) before the
+   plugin (L3). (Coordinator, 2026-11-22 21:40 UTC: seed v3 replaces v2 here; L3 is in `next`, so the earlier "not
+   before L3" warning no longer applies.)
 2. **L2 #984 in `next` (tier:2):** smoke guide § 2 (8 steps, 6 automated, 2 partly); deploy: apply migration
    `AddLandmarkDiscoveryRule` (data only, a disabled `Landmark` discovery rule).
 3. **Agent decisions to review:** L1 block § 4.1 item 5 (11 decisions), L2 block § 4.2 item 5 (7 decisions), each with
    alternatives, and § 3 below.
 4. **L4 #986 in `next` (tier:2):** smoke guide § 4 (9 steps: 6 automated, 2 partly, 1 by hand; step 8 needs L3).
-5. **Decide on #1003:** should a point landmark (Area None) keep the "Warp destination" step on the form? A17 hides it
+5. **L3 #985 in `next` (tier:2):** smoke guide § 3 (9 steps; `navigation.landmarks: true` for steps 5, 6, 8); deploy:
+   no `config.yml` key; run `/knk regions repair` once after the plugin deploy. Decide: the gate check in
+   `SimpleRegionTransitionService` compares against "gate" while the API sends "GateStructure" (block 4.3b item
+   6.1). Decide who takes #958 (left open with a reproduction; L3 proposes an NPC navigation session).
+6. **Decide on #1003:** should a point landmark (Area None) keep the "Warp destination" step on the form? A17 hides it
    without an own region; DESIGN § 4.1 item 5 has no condition and § 3 item 2 likens landmark warps to the v1 warp
    points. L1b builds seed v3 per A17 as written (decision 16); one seed edit reverses it.
-6. **L1b (#952, #1003) in `next`:** smoke guide § 5; deploy: import the Landmark form seed v3 and make it the
+7. **L1b (#952, #1003) in `next`:** smoke guide § 5; deploy: import the Landmark form seed v3 and make it the
    default (v2 need not be imported). **Decide on #1006**: healing a `domain_<id>` region (landmarks included) left
    behind by a failed re-run needs a plugin check of the existing region; until then the manual way out of
    managed-worldguard-regions § 7 applies.
-7. **Off-road smoke § 6 and § 7 (landmarks, #698):** the off-road coordinator asked you on #698 whether they close as
+8. **Docs:** #1008 (`documentation`, `tier:1`), docs session session_01R1w2UsgKAzYiVf45xr41DR; its player and admin
+   guide items gate deploys.
+9. **Off-road smoke § 6 and § 7 (landmarks, #698):** the off-road coordinator asked you on #698 whether they close as
    superseded by this chain; this chain's guide § 3 covers landmark navigation on the new model (L3).
 
 ## 2. Summary
@@ -38,7 +45,7 @@ design session of 2026-11-22).
 |---|---|---|---|---|---|---|
 | L1 API model, migration, area kinds and parent (tier:3) | #983 | Merged into `next` 2026-11-22 18:37 UTC (knk-web-api `8cc4511b`, knk-workspace `724ebc10`) | `claude/landmark-domain`: knk-web-api `00ee3115` (after merging `next` `c647daf7`); `claude/landmark-domain-l1`: knk-workspace `ba0596e0` (coordinator, 2026-11-22: the heads in block 4.1 item 2 predate that merge) | [knk-web-api#82](https://github.com/PandiO/knk-web-api/pull/82), [knk-workspace#994](https://github.com/PandiO/knk-workspace/pull/994) | green on `00ee3115` (build-and-test, mysql-tests, fresh-database); knk-workspace no checks; Codex at its usage limit (skipped) | create_session session_01R1w2Uv1A4MYoi62zFJTnwz, started 2026-11-22 16:32 UTC |
 | L2 API lists, discovery, warps and realtime (tier:2) | #984 | Merged into `next` 2026-11-22 19:45 UTC (knk-web-api `55d187d8`, knk-workspace `035f641f`) | `claude/landmark-domain-integration`: knk-web-api `2525be13`; `claude/landmark-domain-l2`: knk-workspace `fc64d3f2` | [knk-web-api#84](https://github.com/PandiO/knk-web-api/pull/84), [knk-workspace#1002](https://github.com/PandiO/knk-workspace/pull/1002) | green on `2525be13` (build-and-test, mysql-tests, fresh-database; push and PR runs); knk-workspace no checks; Codex at its usage limit (skipped) | create_session session_01R1w2Ux3HrcYVs53AugdtZW, started 2026-11-22 18:39 UTC |
-| L3 Plugin (tier:2) | #985 | Done, in review (rerun finished 2026-11-22 21:36 UTC, block 4.3b; first run blocked at setup, block 4.3) | `claude/landmark-domain`: knk-plugin `31658c58` (after merging `next` `3f39f15a`); `claude/landmark-domain-l3`: knk-workspace `43bcdbf3` (after merging `next` `f7e4f671`) | [knk-plugin#125](https://github.com/PandiO/knk-plugin/pull/125), [knk-workspace#1005](https://github.com/PandiO/knk-workspace/pull/1005) | green on `31658c58` (build, paper-boot; one push-run build re-run after an unrelated `HarvestModuleTest` setup error); knk-workspace no checks; Codex at its usage limit (skipped) | create_session session_01R1w2UtBFy9s4dBXQoeBMQF (19:46 UTC, environment "Default": blocked, `repo.papermc.io` refused); rerun create_session session_01R1w2UuLNw6Cr3qwUKQNvao in environment "Default Correct" (19:51 UTC, decision 14) |
+| L3 Plugin (tier:2), also #958 (findings only) and the plugin part of #951 | #985 | Merged into `next` 2026-11-22 21:38 UTC (knk-plugin `14645895`, knk-workspace `e6bb8dfe`) | `claude/landmark-domain`: knk-plugin `31658c58`; `claude/landmark-domain-l3`: knk-workspace `43bcdbf3` | [knk-plugin#125](https://github.com/PandiO/knk-plugin/pull/125), [knk-workspace#1005](https://github.com/PandiO/knk-workspace/pull/1005) | green on `31658c58` (build, paper-boot; both runs, one build re-run for a `HarvestModuleTest` setup error outside the PR); Codex at its usage limit (skipped) | create_session session_01R1w2UtBFy9s4dBXQoeBMQF (blocked, network); rerun session_01R1w2UuLNw6Cr3qwUKQNvao in "Default Correct" (decision 14) |
 | L4 Web app (tier:2) | #986 | Merged into `next` 2026-11-22 20:19 UTC (knk-web-app `8c9c3553`, knk-workspace `99da72cc`) | `claude/landmark-domain`: knk-web-app `4bc6b88d`; `claude/landmark-domain-l4`: knk-workspace `73e785d4` | [knk-web-app#78](https://github.com/PandiO/knk-web-app/pull/78), [knk-workspace#1004](https://github.com/PandiO/knk-workspace/pull/1004) | green on `4bc6b88d` (build-and-test, e2e; both runs); knk-workspace no checks; Codex at its usage limit (skipped) | create_session session_01R1w2UtGykzTGpUL4Ksj6S6, started 2026-11-22 19:46 UTC |
 | L1b #952 region re-run left on a temp name, and #1003 Landmark form seed v3 (charter § 3 item 8; fix link) | #952, #1003 | Merged into `next` 2026-11-22 20:50 UTC (knk-web-api `3bc3cfd5`, knk-workspace `f7e4f671`); `domain_<id>` part of #952 split off to #1006 | `claude/landmark-domain-952`: knk-web-api `60fe2723`; `claude/landmark-domain-l1b`: knk-workspace `d06f362d` | [knk-web-api#85](https://github.com/PandiO/knk-web-api/pull/85), [knk-workspace#1007](https://github.com/PandiO/knk-workspace/pull/1007) | green on `60fe2723` (build-and-test, mysql-tests, fresh-database; both runs); Codex at its usage limit (skipped) | create_session session_01R1w2Ut1aonbYwio9RXX7mA, started 2026-11-22 20:20 UTC |
 
@@ -177,6 +184,22 @@ design session of 2026-11-22).
     left to #1006 (a plugin check of the existing region is needed). Alternatives: (a) hold the merge until #1006 is
     designed, rejected (the healed kinds are safe on their own); (b) heal `domain_<id>` too, rejected (a legacy region
     can carry the name, managed-worldguard-regions § 8 item 9).
+18. **L3 checked and merged into `next`** (2026-11-22 21:38 UTC). Every check of skill § 6 held: heads matched and
+    were level with `next` (#123 merged in without touching its lines), CI green on `31658c58` (build, paper-boot;
+    the one red push-run `build` was a `HarvestModuleTest` setup error in an area the PR doesn't touch, green on its
+    re-run), tests knk-core 3779 → 3809, knk-api-client 429 → 430, knk-paper 3490 → 3496, local paper-boot 79/79,
+    scope knk-plugin plus three docs, smoke § 3 tagged (9 steps), 11 agent decisions, #985 `status:in-review`, Codex
+    at its usage limit. #958 was not fixed: L3 narrowed it (a sharp threshold at scene origin x 32740/32752, only the
+    group of 20 differs; suspects in `core/npc/nav/` group and crowd code or Citizens' follower path search, the area
+    of the open NPC PRs #116–#119) and left the findings and a 4-minute reproduction on #958, as the coordinator's
+    note allowed; the workaround (new scenarios registered last) holds. Nit, not fixed: the `paper-boot.yml` comment
+    says 79 while `MIN_SCENARIOS` is 76 (the floor; 79 is the local total). Alternatives: (a) hold the merge for
+    #958, rejected (outside the landmark code, in another session's area); (b) fix the comment before merging,
+    rejected (comment only, no effect on the floor).
+19. **At merge.** The documentation sub-issue #1008 ("Docs: Landmarks as a Domain subtype", `documentation`,
+    `tier:1`) was created under #976 and its docs session started at once (session_01R1w2UsgKAzYiVf45xr41DR, base
+    knk-workspace `next`). #976 and the link issues stay open, `status:in-review`, until the developer promotes `next`.
+    The #25 and #698 coordinators were told the knk-plugin navigation slot is free.
 
 ## 4. Link blocks
 
