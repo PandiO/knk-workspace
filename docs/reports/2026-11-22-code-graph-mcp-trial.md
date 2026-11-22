@@ -1,7 +1,6 @@
 # Code knowledge graph over MCP: trial
 
-**Status:** In progress — Steps 1–2 done (baseline, real-session overhead, vetting); Steps 3–4 (install, measure) wait for the developer's
-approval of the two tools · **Last updated:** 2026-11-22
+**Status:** Shelved by the developer 2026-11-22 after Steps 1–2 (no tool installed); follow-up plan in PandiO/knk-workspace#987 (`docs/specs/ai-agent-workflow/TOKEN_EFFICIENCY_PLAN.md`) · **Last updated:** 2026-11-22
 **Issue:** [PandiO/knk-workspace#977](https://github.com/PandiO/knk-workspace/issues/977) · **Branch:** knk-workspace `claude/relaxed-shannon-3t43yr` (not merged; time-boxed trial). Code repos read at
 knk-web-app `31a6896`, knk-web-api `75b8434`, knk-plugin `2411d78` (`main`).
 
@@ -121,7 +120,8 @@ CodeGraphContext's Neo4j backend is the "real graph database" escalation to weig
 
 ## 3. Trial
 
-_Pending approval._
+Not run: shelved 2026-11-22. A graph could save at most ~10 % per link (§ 1b), and start-up reading, turns and
+reuse are larger levers (#987). Reopen criteria: plan § 4.
 
 ## 4. Ground truth
 
