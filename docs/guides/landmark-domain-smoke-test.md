@@ -1,58 +1,101 @@
 # Landmarks as a Domain subtype — smoke test
 
-**Status:** Draft from the design (2026-11-22); no steps run. Steps not yet automated (the links tag them).
-**Last updated:** 2026-11-22 (draft from the design, phases 1–4)
+**Status:** § 1 built (L1, 2026-11-22, on `claude/landmark-domain`, not run by the developer); § 2–§ 4 draft from the design. Steps tagged by the links.
+**Last updated:** 2026-11-22 (§ 1 updated to what L1 built, steps tagged, #983); 2026-11-22 (draft from the design, phases 1–4)
 **Design:** [specs/landmark-domain/DESIGN.md](../specs/landmark-domain/DESIGN.md) · **Issue:**
 [PandiO/knk-workspace#976](https://github.com/PandiO/knk-workspace/issues/976)
 
 ## 1. Phase 1: API model, migration, area kinds and parent (#983, tier:3)
 
-*Draft from the design (2026-11-22); the link updates it to what was built and tags the automated steps.*
+*Built by link L1 (2026-11-22), knk-web-api `claude/landmark-domain`. tier:3: run every step before `next` is
+promoted. Steps tagged `[automated: …]` run in CI (knk-web-api xUnit, CI job Build and test; the migration also in
+the Migrations workflow on a fresh MySQL 8 database): skip them or run them by hand. `[partly automated: …; by hand:
+…]` names the part only a person can check.*
 
 ### 1.0 Preconditions
 
-1. Deployed: knk-web-api from `next` with the phase 1 migration applied to the dev DB; knk-web-app and knk-plugin
-   from `next` (the region task and the rename run through the plugin).
+1. Deployed: knk-web-api from `next` with migration `LandmarkAsDomain` applied to the dev DB; knk-web-app and
+   knk-plugin from `next` (the region task and the rename run through the plugin). The plugin and web app still use
+   the off-road landmark fields until L3 (#985) and L4 (#986); see the deploy notes in the changelog entry for what
+   that means in between.
 2. Settings: none new.
 3. Accounts and data:
-    1. A staff account with `knk.admin.world.landmark`, `knk.admin.content` and `knk.admin.delete` ("landmark staff").
-    2. A staff account with `knk.admin.world` and `knk.admin.content` but without `knk.admin.world.landmark`
-       ("domain staff").
-    3. A test town with a region in the dev world, and a crown land with a region (Territory V1 on `next`).
-    4. The Landmark form v2 as the default Landmark form (seed import or the startup seeder).
+    1. A staff account with `knk.admin.world`, `knk.admin.world.landmark`, `knk.admin.content` and
+       `knk.admin.delete` ("landmark staff"; `knk.admin.world` only for the domain dashboard of steps 12–13, the
+       landmark API and form need only the other three).
+    2. A staff account with `knk.admin.world`, `knk.admin.content` and `knk.admin.delete` but without
+       `knk.admin.world.landmark` ("domain staff").
+    3. A test town with a region and a spawn point in the dev world, and a crown land with a region (Territory V1 on
+       `next`).
+    4. The Landmark form seed v2 imported and made the default for Landmark: the form configuration list, Import /
+       seeds, `Landmark` ("Landmark - Default (seed v2)"), Make default. The seed v1 configuration and the
+       developer's edited form stay as they were; switch them off as default.
 
 ### 1.1 Steps
 
-1. Before the migration, note that the dev DB has landmark rows (the landmark list shows them). Apply the migration
-   and reload the landmark list. **Expected:** the list is empty; the migration reported no error; the Landmark form
-   that opens is the v2 form (Area offers None, Own region, Linked domain's area; no Radius). (A02)
-2. As landmark staff, create a landmark with the v2 form: a name, a pin captured in game, Area `None`, no parent.
-   **Expected:** it saves; `GET api/landmarks/{id}` shows area kind None and no region; `GET api/Domains/{id}` returns
-   it with domain type `Landmark`. (A01)
-3. As domain staff, try to create a town without a region (the town form with the region left empty, or
-   `POST api/Towns` without `wgRegionId`). **Expected:** refused with the region-required message; nothing is saved.
-   (A01)
-4. As landmark staff, create a landmark with Area `Own region`: Send to Minecraft on the region field, draw a round
-   area with `//sel cyl` in game, confirm, and submit the form. **Expected:** in game `/rg info` shows a cylinder-shaped
-   region named `domain_<id>` (the landmark's id); the landmark's region field shows `domain_<id>`; no
-   `tempregion_worldtask_*` region is left. (A04)
-5. On the landmark of step 4, add a sub-region in the sub-region step (draw a second region) and save. **Expected:**
-   the sub-region is named `domain_<id>_sub_<n>`. (A04)
-6. Create a landmark with Area `Linked domain's area` and the test town as parent. **Expected:** it saves; the landmark
-   has no region of its own (`GET api/landmarks/{id}`), its parent is the town. (A03)
-7. Try Area `Linked domain's area` without a parent, then with the point-only landmark of step 2 as parent.
-   **Expected:** both refused with a message that the area needs a parent with a region; nothing is saved. (A03)
-8. Call `POST api/Domains/search-region-decisions` (top-down) with the region of step 4, then with its sub-region of
-   step 5, then with the crown land's region; and `GET api/Domains/by-region/<region>` for each. **Expected:** every
-   call answers at once; the landmark comes back with its parent chain (none for a top-level landmark, the town when
-   it has the town as parent); the crown land comes back without parents; the API's memory stays flat. (A05)
-9. Give the landmark of step 4 the test town as parent and repeat the first call of step 8. **Expected:** the
-   landmark's decision lists the town as parent. (A05)
-10. As domain staff, open the landmark of step 2 from the domain dashboard and rename it, then try to delete it.
-    **Expected:** both refused (403, a no-permission message); nothing changes. (A06)
-11. As landmark staff, rename the same landmark from the domain dashboard, then try a name longer than 100 characters
-    and a name another landmark in the same world already has. **Expected:** the first rename saves; the other two
-    are refused with the landmark name messages. (A06)
+1. [partly automated: `Migrations/LandmarkAsDomainTests`, the Migrations workflow (Up, Down, Up on a fresh
+   database); by hand: the dev DB] Before the migration, note that the dev DB has landmark rows (the landmark list
+   shows them). Apply the migration and reload the landmark list. **Expected:** the list is empty; the migration
+   reported no error; towns, districts and structures are all still there with their regions. (A02)
+2. [partly automated: `LandmarkServiceTests.Create_APoint_IsADomainOfTypeLandmark_WithoutARegion_AndTheDomainDefaults`;
+   by hand: the v2 form] As landmark staff, open a new landmark form. **Expected:** it is "Landmark - Default (seed
+   v2)": Area offers `None`, `OwnRegion` and `LinkedDomain`; there is no Extent, Region id or Radius field; the steps
+   are Landmark, Location, Area, Access and messages, Warp destination, Sub-regions. (A01, LD25)
+3. [partly automated: `LandmarkServiceTests.Create_APoint_IsADomainOfTypeLandmark_WithoutARegion_AndTheDomainDefaults`;
+   by hand: the form] Create a landmark with the v2 form: a name, a description, a pin captured in game, Area `None`,
+   no parent. **Expected:** it saves; `GET api/landmarks/{id}` shows `areaKind` `None`, `wgRegionId` null,
+   `allowEntry` and `allowExit` true, `showEnterLeaveMessages` and `teleportEnabled` false; `GET api/Domains/{id}`
+   returns the same id as a domain (the Landmark fields with it) and `WgRegionId` null. (A01)
+4. [automated: `RegionStillRequiredTests.ATownWithoutARegion_IsRefused_AndNothingIsSaved`,
+   `DomainsControllerLandmarkTests.APlainDomainWrite_WithoutARegion_IsStillA400`] As domain staff, try to create a
+   town without a region (`POST api/Towns` without `wgRegionId`, or the town form with the region left empty).
+   **Expected:** refused with "WgRegionId is required."; nothing is saved. (A01)
+5. [automated: `LandmarkServiceTests.Create_OnATownsSpawn_CopiesTheLocation_AndLeavesTheTownsAlone`] Create a
+   landmark whose pin is the test town's spawn point (`POST api/landmarks` with the town's `locationId`).
+   **Expected:** it saves with a new Location at the same spot; the town keeps its spawn. (LD17)
+6. [partly automated: `LandmarkRegionRenameTests.Create_WithADrawnRegion_RenamesItToDomainId_AsALandmark_InThePinsWorld`;
+   by hand: in game] Create a landmark with Area `OwnRegion`: Send to Minecraft on the Region field, draw a round
+   area with `//sel cyl` in game, confirm, and submit the form. **Expected:** `/rg info domain_<id>` (the landmark's
+   id) shows a cylinder-shaped (polygon) region; the landmark's region field shows `domain_<id>`; no
+   `tempregion_worldtask_*` region is left after the cleanup. (A04)
+7. [partly automated: `LandmarkRegionRenameTests.SubRegion_OfALandmark_BecomesDomainIdSubN_AsACopyOfItsMainRegion`;
+   by hand: in game] Edit the landmark of step 6, add a sub-region in the Sub-regions step (draw a second region) and
+   save. **Expected:** the sub-region is named `domain_<id>_sub_<n>`; `/rg info` shows `domain_<id>` as its parent.
+   (A04)
+8. [automated: `LandmarkServiceTests.LinkedDomain_SavesOnlyWithAParentThatHasARegion_AndOwnsNoRegion`] Create a
+   landmark with Area `LinkedDomain` and the test town as parent. **Expected:** it saves; `GET api/landmarks/{id}`
+   shows no region of its own (`wgRegionId` null), `parentDomainId` the town. (A03)
+9. [automated: `LandmarkServiceTests.LinkedDomain_SavesOnlyWithAParentThatHasARegion_AndOwnsNoRegion`] Try Area
+   `LinkedDomain` without a parent, then with the point-only landmark of step 3 as parent. **Expected:** both refused
+   with "Area Linked domain's area needs a parent with a region."; nothing is saved. (A03)
+10. [automated: `DomainParentWalkTests.SearchRegionDecisions_TopDown_PutsTheLandmarkInnermost_WithItsParentChain`,
+    `DomainParentWalkTests.ByRegion_ALandmarkSubRegion_ResolvesToTheLandmark`,
+    `DomainParentWalkTests.ByRegion_ACrownLandRegion_ResolvesWithoutParents_AndEnds`] Give the landmark of step 6 the
+    test town as parent. Call `POST api/Domains/search-region-decisions` (`topDownHierarchy: true`) with the town's
+    region and the landmark's region, then with the town's region and the landmark's sub-region of step 7, then with
+    the crown land's region; and `GET api/Domains/by-region/<region>?world=<world>` for the landmark's region, its
+    sub-region and the crown land's region. **Expected:** every call answers at once; the search lists the town at
+    key 0 and the landmark at key 1 with the town as its parent decision (`matchedSubRegionId` set for the
+    sub-region); the crown land answers nothing in the search and itself without parents in `by-region`; the API's
+    memory stays flat. (A05, #981)
+11. [automated: `LandmarkServiceTests.Parent_CanBeALandmark_ButNeverItselfOrADescendant`] Create a landmark "Dais"
+    with the landmark of step 6 as parent, then try to give the landmark of step 6 "Dais" as parent. **Expected:** the
+    first saves; the second is refused with "… a landmark can't be its own ancestor."; nothing changes. (LD23)
+12. [automated: `DomainsControllerLandmarkTests.UpdateAndDelete_OnALandmark_WithoutTheLandmarkNode_Are403_AndChangeNothing`]
+    As domain staff, open the landmark of step 3 from the domain dashboard (or call `PUT api/Domains/{id}` with a new
+    name), then try to delete it (`DELETE api/Domains/{id}`). **Expected:** both refused with 403 "This domain is a
+    landmark: changing it requires the knk.admin.world.landmark permission."; nothing changes. (A06)
+13. [automated: `DomainsControllerLandmarkTests.UpdateAndDelete_OnALandmark_WithTheLandmarkNode_RunTheLandmarkRules`,
+    `LandmarkServiceTests.UpdateFromDomain_SavesTheDomainFields_ThroughTheLandmarkRules`] As landmark staff, rename
+    the same landmark through `PUT api/Domains/{id}`, then try a name longer than 100 characters and a name another
+    landmark in the same world already has. **Expected:** the first rename saves (area, parent and preference
+    unchanged); the other two are refused with 400 "Name can be at most 100 characters." and "A landmark named "…"
+    already exists in world …". (A06)
+14. [partly automated: `LandmarkServiceTests.Write_ReadsThe708Names_WhenTheNewOnesAreNotSent`,
+    `LandmarkServiceTests.Write_ARadius_IsRefused`; by hand: in game] With the plugin from `next` (before L3), run
+    `/knk landmark create Well` where you stand, then `/knk landmark create Pond radius 5`, then `/navigate Well`.
+    **Expected:** `Well` is created as a point (`areaKind` `None`); the radius form is refused with "The radius area
+    is gone: draw a round region with //sel cyl instead."; `/navigate Well` leads to it. (compatibility until L3)
 
 ## 2. Phase 2: API lists, discovery, warps and realtime (#984, tier:2)
 
