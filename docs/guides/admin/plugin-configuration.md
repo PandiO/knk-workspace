@@ -85,7 +85,7 @@ Newest first. Builds before this list: compare the files with the script.
 
 | Merged | Issue | Added (+), removed (−) or changed | Applies |
 |---|---|---|---|
-| on branch `claude/guidance-v2-default-990`, not in `next` yet | [PandiO/knk-workspace#990](https://github.com/PandiO/knk-workspace/issues/990) | `navigation.guidance-v2` default `false` → `true` (the shipped file and the code default): the off-road trail-quality pass is on where the server's file has no `guidance-v2` line; a file with `guidance-v2: false` written in keeps it off until the line is changed | Restart |
+| in `next` (`d6140d6e`, 2026-11-22), not released | [PandiO/knk-workspace#990](https://github.com/PandiO/knk-workspace/issues/990) | `navigation.guidance-v2` default `false` → `true` (the shipped file and the code default): the off-road trail-quality pass is on where the server's file has no `guidance-v2` line; a file with `guidance-v2: false` written in keeps it off until the line is changed | Restart |
 | in `next` (`b31fceb6`, 2026-11-21), not released | [#250](https://github.com/PandiO/knk-workspace/issues/250) | + `production.shops.displays.refresh-minutes` (5), `selection-refresh-seconds` (30), `best-seller-hours` (168), `item-scale` (0.5), `label` (true), `hints` (true): display stalls (registered spots show the shop's items; right-click the item information, shift-right-click the confirmed quick buy), only with `production.enabled` | Restart |
 | in `next` (`6f6c915f`, 2026-11-21), not released | [#134](https://github.com/PandiO/knk-workspace/issues/134) | + `production.harvest.catalog-refresh-minutes` (5), `report-flush-seconds` (2), `report-batch` (200), `regen-blocks-per-tick` (64), `regen-retry-seconds` (5), `save-seconds` (10), `deny-at-empty-pool` (false), `tree-max-logs` (256), `tree-max-leaves` (1500), `max-area-chunks` (256), `messages.denied`, `messages.regenerating`, `messages.paid`, `messages.rejected`: player harvesting in yield areas and block regeneration, only with `production.enabled` | Restart |
 | in `next` (`bdd8b463`, 2026-11-21), not released | [#684](https://github.com/PandiO/knk-workspace/issues/684) | + `production.inbox.join-summary` (true): the reward inbox (`/inbox`, kit and lootbox leftovers to the inbox), only with `production.enabled` | Restart |
@@ -1140,7 +1140,7 @@ clickable inside WorldGuard regions. Command: `/knk shop display add|remove|pin|
 
 ## Changes
 
-1. 2026-11-22: § 4.15 `navigation.guidance-v2` default `true` (#990), § 2.1 row; checked against knk-plugin `claude/guidance-v2-default-990`, not merged into `next` yet
+1. 2026-11-22: § 4.15 `navigation.guidance-v2` default `true` (#990), § 2.1 row; in knk-plugin `next` `d6140d6e` (knk-plugin#122)
 1. 2026-11-21: § 2.1 row of #250 in `next` `b31fceb6`, § 4.31 link to the shops admin guide § 3.6 (docs #970)
 1. 2026-11-21: § 4.31 `production.shops.displays.*` (#250), § 2.1 and § 3 rows; checked against knk-plugin `claude/production-p12`, not merged into `next` yet
 1. 2026-11-21: § 2.1 row of #134 in `next` `6f6c915f`, § 4.31 link to the harvesting admin guide (docs #922)

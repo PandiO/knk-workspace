@@ -6,7 +6,7 @@ This is a human-readable record of capabilities merged into the V3 default branc
 
 - **Walk-trail quality on by default: `navigation.guidance-v2` ships `true`**
   ([PandiO/knk-workspace#990](https://github.com/PandiO/knk-workspace/issues/990); off-road navigation #698, phases 6.1 #710 and 6.2 #711;
-  branch `claude/guidance-v2-default-990` in knk-plugin and knk-workspace). Developer decision 2026-11-22, after the
+  knk-plugin#122, in `next` `d6140d6e`). Developer decision 2026-11-22, after the
   live tests of the off-road smoke test (§ 8 passed 2026-11-20, § 9 accepted). knk-plugin: the shipped `config.yml`
   and the code default (`NavigationConfig.DEFAULT_GUIDANCE_V2`) are `true`. Players get walk paths that keep
   `walk.wall-clearance` from walls, shaped walk trails with curved corners, trail particles on fixed anchors that no
