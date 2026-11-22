@@ -200,6 +200,11 @@ design session of 2026-11-22).
     `tier:1`) was created under #976 and its docs session started at once (session_01R1w2UsgKAzYiVf45xr41DR, base
     knk-workspace `next`). #976 and the link issues stay open, `status:in-review`, until the developer promotes `next`.
     The #25 and #698 coordinators were told the knk-plugin navigation slot is free.
+20. **`next` green after the last merges** (checked 2026-11-22 22:12 UTC): knk-web-api `3bc3cfd5` (Build and test,
+    Migrations), knk-web-app `8c9c3553` (Build and test, End-to-end), knk-plugin `14645895` (Build, Paper boot test).
+    Smoke guide § 1 on `next` still has wording from before L3, L4 and L1b (steps 2–3 name seed v2, § 1.0 item 1 the
+    in-between state, step 14 "before L3"); handed to the docs session #1008 to correct in its docs PR rather than a
+    coordinator push to `next` (skill § 7.6). Final report on #976.
 
 ## 4. Link blocks
 
