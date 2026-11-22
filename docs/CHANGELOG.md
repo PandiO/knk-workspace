@@ -4,6 +4,21 @@ This is a human-readable record of capabilities merged into the V3 default branc
 
 ## Unreleased — on feature branches, not merged
 
+- **Walk-trail quality on by default: `navigation.guidance-v2` ships `true`**
+  ([PandiO/knk-workspace#990](https://github.com/PandiO/knk-workspace/issues/990); off-road navigation #698, phases 6.1 #710 and 6.2 #711;
+  branch `claude/guidance-v2-default-990` in knk-plugin and knk-workspace). Developer decision 2026-11-22, after the
+  live tests of the off-road smoke test (§ 8 passed 2026-11-20, § 9 accepted). knk-plugin: the shipped `config.yml`
+  and the code default (`NavigationConfig.DEFAULT_GUIDANCE_V2`) are `true`. Players get walk paths that keep
+  `walk.wall-clearance` from walls, shaped walk trails with curved corners, trail particles on fixed anchors that no
+  longer slide, a route that follows the player back (the HUD distance and the maneuver ahead too), and the start
+  leg's "heading away" rule replaced by the distance to the leg's path. `false` stays the kill switch (today's trail
+  exactly). NPC movement is unchanged: NPC walk planning does not read the flag. Admin steps: no migration, no new
+  key. A server whose `config.yml` has no `guidance-v2` line gets it on after the deploy without a file change (the
+  plugin never adds keys to an existing file; a missing key uses the default, [plugin configuration
+  § 1](guides/admin/plugin-configuration.md#1-how-the-plugin-reads-configyml)). A server whose file has
+  `guidance-v2: false` written in (every file merged since #710, such as the dev server's) keeps it off: change the
+  line to `true` and restart. Smoke test: [off-road § 16](guides/navigation-offroad-smoke-test.md).
+
 - **A production area's field drawn in game keeps its region, and its survey keeps counting**
   ([PandiO/knk-workspace#946](https://github.com/PandiO/knk-workspace/issues/946); with #944/#945 on branch
   `claude/landmark-regions`). knk-web-api: a Region-shaped production area's region drawn through the area form's
