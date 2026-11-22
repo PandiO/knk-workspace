@@ -1,6 +1,6 @@
 # Landmarks as a Domain subtype chain — progress report
 
-**Status:** Running (2026-11-22) · **Last updated:** 2026-11-22
+**Status:** Running (2026-11-22) · **Last updated:** 2026-11-22 (L1 block)
 
 **Issue:** [PandiO/knk-workspace#976](https://github.com/PandiO/knk-workspace/issues/976), links
 [#983](https://github.com/PandiO/knk-workspace/issues/983) (L1), [#984](https://github.com/PandiO/knk-workspace/issues/984) (L2),
@@ -17,7 +17,7 @@ Nothing.
 
 | Link | Issue | Status | Branch heads | PR | CI | How started |
 |---|---|---|---|---|---|---|
-| L1 API model, migration, area kinds and parent (tier:3) | #983 | Running (started 2026-11-22) | `claude/landmark-domain`: knk-web-api (none yet); `claude/landmark-domain-l1`: knk-workspace (none yet) | none | none | create_session session_01R1w2Uv1A4MYoi62zFJTnwz, started 2026-11-22 16:32 UTC |
+| L1 API model, migration, area kinds and parent (tier:3) | #983 | Done, in review (2026-11-22) | `claude/landmark-domain`: knk-web-api `ca417528`; `claude/landmark-domain-l1`: knk-workspace `e5d781e8` | PandiO/knk-web-api#82, PandiO/knk-workspace#994 | knk-web-api `ca417528`: Build and test, mysql-tests, fresh-database green (a second mysql-tests run of the same head was still running at 17:50 UTC) | create_session session_01R1w2Uv1A4MYoi62zFJTnwz, started 2026-11-22 16:32 UTC |
 | L2 API lists, discovery, warps and realtime (tier:2) | #984 | Not started (gate: L1 merged into `next`) | `claude/landmark-domain-integration`: knk-web-api; `claude/landmark-domain-l2`: knk-workspace | none | none | (not started) |
 | L3 Plugin (tier:2) | #985 | Not started (gate: L1 and L2 merged into `next`) | `claude/landmark-domain`: knk-plugin; `claude/landmark-domain-l3`: knk-workspace | none | none | (not started) |
 | L4 Web app (tier:2) | #986 | Not started (gate: L1 and L2 merged into `next`) | `claude/landmark-domain`: knk-web-app; `claude/landmark-domain-l4`: knk-workspace | none | none | (not started) |
@@ -70,3 +70,100 @@ Nothing.
 ## 4. Link blocks
 
 _(Each link appends its block here when it finishes.)_
+
+### 4.1 L1 — API model, migration, area kinds and parent (#983)
+
+1. **Scope done.**
+    1. knk-web-api model: `Landmark : Domain` (TPT, `landmarks` keyed by the domain id), `Domain.WgRegionId` nullable
+       (LD11), `AreaKind`, `ParentDomainId` (SET NULL), `ShowEnterLeaveMessages`; `ExtentKind`, `RegionId`, `Radius`
+       gone.
+    2. Migration `LandmarkAsDomain` (made with `dotnet ef migrations add`, then edited): drops the landmark rows first
+       (LD10), rebuilds the table, makes `domains.WgRegionId` nullable; Down deletes the landmark domains first and
+       restores the #708 table.
+    3. One parent walk `Services/DomainParents.cs` (LD23) in `DomainMappingProfile.GetParentDomainDecisions` (ends
+       the CrownLand loop, #981), `DomainRepository.GetByAnyRegionAsync`, `DomainRegionNameFinalizer`
+       (`ParentRegionIdAsync`, pass order) and the landmark parent rules.
+    4. `LandmarkService` / `LandmarkRepository` / DTOs / mapping on the hierarchy (area kinds, parent and cycle rule,
+       pin copy LD17, name LD18, defaults LD24, warp checks); `domain_<id>` names via the domain path, the #945
+       `landmark_<id>` path removed (finalizer, `RegionService.RenameLandmarkRegionAsync`, temp-region release).
+    5. `DomainsController`: `PUT`/`DELETE api/Domains/{id}` on a landmark need `knk.admin.world.landmark` and run the
+       landmark rules (LD19); plain domain writes without a region stay 400. `search-region-decisions` returns a
+       landmark innermost (A05).
+    6. Seeds: Landmark form seed v2 and Landmark display seed v2 (LD25).
+    7. knk-workspace: changelog entry with deploy notes, smoke guide § 1 as built (14 steps, tagged), DESIGN status.
+2. **Commits and heads.** knk-web-api `claude/landmark-domain` at `ca417528` (3 commits, base `next` at `4d9bea33`);
+   knk-workspace `claude/landmark-domain-l1` at `e5d781e8` (1 commit plus a merge of `origin/next` for a changelog
+   conflict with #990, base `next` at `0f7c3639`).
+3. **PRs.** PandiO/knk-web-api#82 (`Closes PandiO/knk-workspace#983`), PandiO/knk-workspace#994 (`Part of`), base
+   `next`. Not merged.
+4. **Tests, baseline → result.**
+    1. knk-web-api: baseline on `next` `4d9bea33` build 0 errors, 5223 passed, 129 skipped (MySQL, no
+       `KNK_TEST_MYSQL`), 5352 total; result at `ca417528` 5258 passed, 129 skipped, 5387 total (35 new tests, the
+       landmark service and rename tests rewritten); at `12896982` with `KNK_TEST_MYSQL` on a local MySQL 8.0.46,
+       5386 passed, 0 skipped. Migrations workflow steps run locally (up on empty DB, no pending model changes, down
+       to 0, up again), plus Up over #708 rows and Down with landmark domains present. CI on the PR: Build and test,
+       mysql-tests and fresh-database green on `12896982` and `ca417528` (the second, duplicate mysql-tests run of
+       `ca417528` was still running when this block was written; its twin passed).
+    2. Known reds (also red on the base): none.
+    3. Acceptance: A01 `LandmarkServiceTests`, `RegionStillRequiredTests`; A02 `LandmarkAsDomainTests` and the
+       Migrations workflow; A03 `LandmarkServiceTests.LinkedDomain_*`; A04 `LandmarkRegionRenameTests`; A05
+       `DomainParentWalkTests`; A06 `DomainsControllerLandmarkTests`.
+    4. Codex: no review on either PR, the connector's code-review usage limit was reached (asked again after each
+       push); finished without it (developer decision 2026-11-14). A self-review found and fixed one bug
+       (`ca417528`: the `PUT api/Domains/{id}` landmark answer would have been a JSON cycle).
+5. **Decisions (DESIGN § 4.3).**
+    1. *Old field names between L1 and L3.* Chosen: keep `domainId`, `extentKind` (`None`/`Region`), `regionId`,
+       `radius` (null) as a read and write projection; a `Region` naming the area's current main region keeps the
+       stored area; a radius is refused. The plugin on `next` keeps working until L3. Alternatives: (a) drop them and
+       deploy L1 with L3: `/knk landmark` and landmark navigation broken on `next` in between; (b) emulate the radius:
+       against LD08.
+    2. *LinkedDomain in that projection.* Chosen: `Region` with the parent's main region (arrival in the parent's
+       area). Alternative: (a) `None`, arrival at the pin only.
+    3. *Landmark in `search-region-decisions`.* Chosen: one innermost slot; bottom-up keys start one higher with a
+       landmark. Alternatives: (a) leave landmarks out until L3 (A05 asks for them); (b) key −1.
+    4. *Rights on `api/Domains` landmark writes.* Chosen: the class rule `knk.admin.world` plus
+       `knk.admin.world.landmark`; smoke guide landmark staff also hold `knk.admin.world` for the domain dashboard.
+       Alternative: (a) the landmark node alone, needing a resource-aware filter instead of the pinned class rule.
+    5. *Region required for plain domains.* Chosen: in `DomainsController` (where model binding enforced it).
+       Alternative: (a) in `DomainService`, breaking callers that use the service without a region.
+    6. *Children of a deleted landmark.* Chosen: made top level, a LinkedDomain child becomes a point. Alternative:
+       (a) LinkedDomain without parent, refused at the next save.
+    7. *Type sent to the plugin's rename.* Chosen: `Landmark` (before L3 the plugin treats it as STRUCTURE).
+       Alternative: (a) null like a bare domain, which L3 could not tell apart.
+    8. *Description on the v2 form.* Chosen: required (metadata check on non-nullable `Domain.Description`); the API
+       accepts none (empty). Alternative: (a) a default on `Domain.Description` for every type.
+    9. *Display seed version.* Chosen: "seed v2" like the form (no v1 existed). Alternative: (a) v1.
+    10. *Landmark world.* Chosen: the pin's world set by `LandmarkService`, one-owner check there. Alternative: (a)
+        `DomainWorldResolver`.
+    11. *Answer of `PUT api/Domains/{id}` on a landmark.* Chosen: the landmark DTO. Alternatives: (a) the entity: a
+        JSON cycle through the loaded sub-regions; (b) an untracked reread of the entity.
+    12. *Merge commit without trailers.* The merge of `origin/next` into the knk-workspace branch (`e5d781e8`) kept
+        git's default message without the trailer lines; it was pushed before this was noticed and is not rewritten
+        (no force-push).
+6. **Out of scope, noted.** `DomainMappingProfile.GetChildDomainDecisions` is unused and has the old loop shape;
+   left as it is (comment on #981). No issue filed.
+7. **Blockers.** None.
+8. **At merge / what the developer must do.**
+    1. Back up the dev DB, then apply migration `LandmarkAsDomain`: every landmark row is deleted; recreate the test
+       landmarks (v2 form or `/knk landmark create`).
+    2. Import the `Landmark` form seed v2 and `Landmark.display` and make both the default; seed v1 and form 51 are
+       superseded (the Region id projection is not carried over, #975).
+    3. Deploy L1 to a server players use only together with L3 (effect damage and the LANDMARK managed kind are
+       L3's); details in the changelog entry.
+    4. Run smoke guide § 1 before the promotion of `next` (tier:3).
+    5. #981 has `status:in-review` with #983 and stays open until `next` is promoted.
+9. **Notes for later links.**
+    1. L2 (#984): `api/Domains` lists, search and lookups include landmarks already, with no type field (`GET
+       api/Domains/{id}` returns the entity) and no type filter; `TeleportDestinationService.DomainType` answers
+       `Domain` for a landmark (add `Landmark`, type word `landmark`); `DiscoveryRepository` builds nodes for towns,
+       districts and structures only, so a landmark has no discovery node yet; no `Landmark` discovery rule exists
+       (a missing rule means not discoverable). The landmark search accepts `parentDomainId` and `domainId`.
+    2. L3 (#985): read `areaKind`, `wgRegionId`, `subRegionIds`, `parentDomainId` and `parentDomain.wgRegionId` from
+       `api/landmarks`; the region rename and `access-rules` carry `domainType` `Landmark`; `search-region-decisions`
+       puts a landmark innermost (top-down after the structure, bottom-up key 0); a LinkedDomain area's sub-regions
+       are the parent's (`by-region` / `api/Domains` of the parent). After L3 and L4, a later change can drop the
+       #708 projection fields from the DTOs.
+    3. L4 (#986): the form seed v2 field names (`ParentDomainId`, `AreaKind` enum `LandmarkAreaKind`, `WgRegionId`
+       with the region task, `SubRegions`, access, messages, warp); `LandmarkListDto` has `parentDomain*`,
+       `areaKind`, `wgRegionId` plus the old `domain*`/`extentKind` names; the domain panel's `domainId` filter still
+       works.
