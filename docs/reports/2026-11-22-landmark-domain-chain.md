@@ -34,8 +34,9 @@ design session of 2026-11-22).
    default (v2 need not be imported). **Decide on #1006**: healing a `domain_<id>` region (landmarks included) left
    behind by a failed re-run needs a plugin check of the existing region; until then the manual way out of
    managed-worldguard-regions § 7 applies.
-8. **Docs:** #1008 (`documentation`, `tier:1`), docs session session_01R1w2UsgKAzYiVf45xr41DR; its player and admin
-   guide items gate deploys.
+8. **Docs:** #1008 done and closed by its docs session (session_01R1w2UsgKAzYiVf45xr41DR; main docs PR #1011 merged
+   into `next` `188ade30`); leftovers #1009 and #1010. The smoke § 1 wording fix (seed v3, step 14 after L3) is
+   PandiO/knk-workspace#1012 into `next`, merged by the docs session.
 9. **Off-road smoke § 6 and § 7 (landmarks, #698):** the off-road coordinator asked you on #698 whether they close as
    superseded by this chain; this chain's guide § 3 covers landmark navigation on the new model (L3).
 
