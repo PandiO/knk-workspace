@@ -1,7 +1,7 @@
 # Landmarks as a Domain subtype — smoke test
 
-**Status:** § 1 built (L1, 2026-11-22, on `claude/landmark-domain`, not run by the developer); § 2–§ 4 draft from the design. Steps tagged by the links.
-**Last updated:** 2026-11-22 (§ 1 updated to what L1 built, steps tagged, #983); 2026-11-22 (draft from the design, phases 1–4)
+**Status:** § 1 built (L1, 2026-11-22, on `next`, not run by the developer); § 2 built (L2, 2026-11-22, on `claude/landmark-domain-integration`, not run by the developer); § 3–§ 4 draft from the design. Steps tagged by the links.
+**Last updated:** 2026-11-22 (§ 2 updated to what L2 built, steps tagged, #984); 2026-11-22 (§ 1 updated to what L1 built, steps tagged, #983); 2026-11-22 (draft from the design, phases 1–4)
 **Design:** [specs/landmark-domain/DESIGN.md](../specs/landmark-domain/DESIGN.md) · **Issue:**
 [PandiO/knk-workspace#976](https://github.com/PandiO/knk-workspace/issues/976)
 
@@ -99,25 +99,74 @@ the Migrations workflow on a fresh MySQL 8 database): skip them or run them by h
 
 ## 2. Phase 2: API lists, discovery, warps and realtime (#984, tier:2)
 
-*Draft from the design (2026-11-22); the link updates it to what was built and tags the automated steps.*
+*Built by link L2 (2026-11-22), knk-web-api `claude/landmark-domain-integration`. tier:2. Steps tagged
+`[automated: …]` run in CI (knk-web-api xUnit, CI job Build and test; tests under `MySql/` in the mysql-tests job, the
+migration also in the Migrations workflow on a fresh MySQL 8 database): skip them or run them by hand. `[partly
+automated: …; by hand: …]` names the part only a person can check. Test classes: `LandmarkDomainIntegrationTests`
+(`Services/`), `LandmarkDomainSearchMySqlTests` (`MySql/`), `AddLandmarkDiscoveryRuleTests` (`Migrations/`),
+`ConfigEntityEventTests` (`Realtime/`). The web app's type column and filter are § 4 (L4), the plugin's side of
+discovery, warps and realtime § 3 (L3).*
 
 ### 2.0 Preconditions
 
-1. Deployed: knk-web-api from `next` with phases 1 and 2; knk-web-app from `next`.
+1. Deployed: knk-web-api from `next` with phases 1 and 2, migrations `LandmarkAsDomain` and
+   `AddLandmarkDiscoveryRule` applied to the dev DB; knk-web-app from `next`.
 2. Settings: none new.
-3. Accounts and data: landmark staff; the landmarks of § 1.
+3. Accounts and data:
+    1. Landmark staff of § 1.0 item 3.1, also holding `knk.admin.discovery` (discovery rules and overrides).
+    2. A player account that has discovered nothing yet (its user id; "the player").
+    3. The landmarks of § 1: the point landmark of step 3, the own-region landmark of step 6 ("the tower", with the
+       sub-region of step 7 and the test town as parent since step 10), the `LinkedDomain` landmark of step 8 and
+       "Dais" of step 11 (parent: the tower). A second landmark with its own region and no override ("the second
+       own-region landmark"; create it like step 6).
+    4. A tool to call the API: the Swagger page of the dev API, or `curl` with the staff login cookie; the discovery
+       grant of step 5 needs the plugin's API key (`X-API-Key`).
 
 ### 2.1 Steps
 
-1. Open the domain list in the dashboard. **Expected:** the landmarks are listed with the type `Landmark`;
-   filtering on that type shows only landmarks. (A07)
-2. Open the discovery settings. **Expected:** a `Landmark` type rule exists and is disabled; a landmark has no
-   discovery until its override turns it on. Turn the override on for the own-region landmark of § 1 step 4. (A08)
-3. On the same landmark, switch the warp on with a price of 1 gem and save. **Expected:** the teleport destinations
-   (`GET api/TeleportDestinations` or the warp list in the web app) list it with the type word `landmark` and the
-   price. (A09)
-4. Edit a landmark's name while the dev server runs. **Expected:** the API sends a realtime change for the landmark
-   (the plugin log shows it received a `Landmark` change). (A16, API side)
+1. [automated: `LandmarkDomainIntegrationTests.Search_ListsLandmarks_WithTheTypeLandmark`] As landmark staff, call
+   `POST api/Domains/search` with `{"pageNumber":1,"pageSize":100}`. **Expected:** the landmarks of § 1 are in the
+   list with `"domainType": "Landmark"`; towns, districts and structures keep their own types. (A07)
+2. [automated: `LandmarkDomainIntegrationTests.Search_TheTypeFilter_KeepsOnlyThatType_AndCountsOnlyThose`,
+   `LandmarkDomainIntegrationTests.Search_TheTypeFilter_IsTheExactType_TakesSeveral_AndAnUnknownTypeMatchesNothing`,
+   `LandmarkDomainSearchMySqlTests.TheTypeFilter_AndTheSubtreeFilter_Translate`] Call the same search with
+   `"filters": {"domainType": "Landmark"}`, then with `"Structure"`, then `"Town,GateStructure"`, then `"Castle"`.
+   **Expected:** only landmarks, and `totalCount` counts only them; `Structure` lists plain structures without the
+   gate structures; the third lists towns and gate structures; `Castle` lists nothing (`totalCount` 0). (A07)
+3. [automated: `LandmarkDomainIntegrationTests.Search_ExcludeSubtreeOf_LeavesOutTheLandmarkAndItsDescendants`,
+   `LandmarkDomainSearchMySqlTests.TheTypeFilter_AndTheSubtreeFilter_Translate`] Call the search with `"filters":
+   {"domainType": "Landmark", "excludeSubtreeOf": "<id of the tower>"}`. **Expected:** neither the tower nor "Dais" is
+   listed; the other landmarks are. (LD20, the parent picker of § 4)
+4. [partly automated: `LandmarkDomainIntegrationTests.TheLandmarkRule_IsListedAndDisabled_AndCanBeEdited`,
+   `AddLandmarkDiscoveryRuleTests.Up_SeedsOneDisabledLandmarkRule_AndChangesNoSchema`,
+   `LandmarkDomainSearchMySqlTests.TheMigrations_SeedTheLandmarkRule_Disabled`; by hand: the web app page] Open the
+   discovery reward settings in the web app (or `GET api/discovery-rewards`). **Expected:** a `Landmark` rule is listed
+   last and is disabled, with small XP and coin rewards, no gems and no ancestors. Leave it disabled. (A08)
+5. [automated: `LandmarkDomainIntegrationTests.ALandmarkWithItsOverrideOn_IsDiscovered_OneWithout_IsNot`,
+   `LandmarkDomainIntegrationTests.OnlyALandmarkWithItsOwnRegion_IsADiscoveryNode`] Turn the tower's discovery
+   override on (the overrides list in the web app, or `PUT api/discovery-rewards/overrides/<id of the tower>` with
+   `{"isEnabled": true}`). Then, as the game server would on entering both regions, call `POST
+   api/users/<player id>/discoveries` with the plugin key and `{"wgRegionIds": ["domain_<id of the tower>",
+   "domain_<id of the second own-region landmark>"], "worldName": "<the dev world>", "source": "RegionEnter"}`.
+   **Expected:** `granted` holds the tower alone with `domainType` `Landmark` and its reward; the second landmark is
+   under `skipped` with reason `Disabled`. A call with `"domainIds": [<id of the LinkedDomain landmark>]` grants
+   nothing (skipped as `NotADomain`: it is discovered as its parent). (A08)
+6. [automated:
+   `LandmarkDomainIntegrationTests.ALandmarkWithItsWarpOn_IsADestinationOfTypeLandmark_WithItsPrice_AfterTheOtherTypes`]
+   On the tower, switch the warp on with a price of 1 gem and save (landmark form, Warp step, or `PUT
+   api/landmarks/<id>`). Call `GET api/teleport-destinations?userId=<player id>`. **Expected:** the tower is listed with
+   `"domainType": "Landmark"` and `"priceGems": 1`, after the towns, districts and structures; landmarks without their
+   warp on are not listed. (A09)
+7. [automated: `LandmarkDomainIntegrationTests.RequiresDiscovery_StaysLockedWhileDiscoveryIsOff_AndUnlocksAfterTheDiscovery`]
+   On the second own-region landmark (no override), switch the warp on with "Requires discovery" and call the
+   destinations for the player. Then turn its override on, grant it as in step 5 and call the destinations again.
+   **Expected:** first `available` false with `lockCode` `NotDiscovered` (with discovery off nothing can unlock it);
+   after the grant `available` true. (A09)
+8. [partly automated: `ConfigEntityEventTests.Map_ALandmarkChange_IsSentLikeTheOtherDomains_KeyedByItsOwnRegion`,
+   `ConfigEntityEventTests.Interceptor_ALandmarkSave_SendsEntityChangedLandmark`; by hand: the dev server] With the
+   dev server connected to the API's game hub, rename the tower. **Expected:** the game server receives an
+   `EntityChanged` event of type `Landmark` with the tower's id and its region id as the key (the plugin acts on it
+   from L3, § 3 step 8; before that only its realtime log shows it). (A16, API side)
 
 ## 3. Phase 3: plugin (#985, tier:2)
 
@@ -152,7 +201,7 @@ the Migrations workflow on a fresh MySQL 8 database): skip them or run them by h
 6. As staff, `/knk landmark create Test radius 10`, then `/knk landmark link <wilderness landmark> <test town>` with
    tab completion. **Expected:** the radius form is refused with the usage line; `link` sets the town as parent and
    does not offer the landmark itself. (A15)
-7. With the override of § 2 step 2 on, walk the player into that landmark for the first time; then `/warp
+7. With the override of § 2 step 5 on, walk the player into that landmark for the first time; then `/warp
    landmark:<name>` from elsewhere; switch "requires discovery" on and try with a player who has not discovered it.
    **Expected:** a discovery message and reward once; the warp works with its price; the undiscovered player is
    refused. (A08, A09)
