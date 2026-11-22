@@ -379,7 +379,7 @@ _(Each link appends its block here when it finishes.)_
 2. **Commits and heads.** knk-web-app `claude/landmark-domain` at `4bc6b88` (2 commits, base `next` at `1d7c23b`);
    knk-workspace `claude/landmark-domain-l4` at `73e785d4` (1 commit, base `next` at `035f641f`). Neither `next` moved
    while L4 ran (checked before the final push), so no merge was needed.
-3. **PRs.** PandiO/knk-web-app#78 (`Closes PandiO/knk-workspace#986`, `Part of PandiO/knk-workspace#951`),
+3. **PRs.** PandiO/knk-web-app#78 (`Closes PandiO/knk-workspace#986` and `#951`),
    PandiO/knk-workspace#1004 (`Part of`), base `next`. Not merged.
 4. **Tests, baseline → result.**
     1. knk-web-app: `npm run test:ci` 347 suites, 2935 tests → 350 suites, 2951 tests, all passed; `npx tsc --noEmit`
@@ -401,6 +401,9 @@ _(Each link appends its block here when it finishes.)_
        before the rest was done, so option (b) of that message). Alternatives: (a) a seed v3 on a knk-web-api branch in
        L4: outside the prompt's repos; (c) a Landmark-only visibility rule in FormWizard: duplicates the form
        configuration in code.
+       Update after the block was first written: the coordinator's answer (a) arrived late; `add_repo` for
+       knk-web-api was then refused by this session's permission check, so per the coordinator's fallback (b) stands
+       and the coordinator gets seed v3 (#1003) done separately.
     2. *Warp step without Own region.* Chosen: A17 as written in the test (warp hidden without Own region), and the
        question raised on #1003, since DESIGN § 4.1 item 5 and § 3 item 2 (v1 warp points) read as warps for points
        too. Alternative: (a) leave warp always visible: contradicts A17.
@@ -422,8 +425,8 @@ _(Each link appends its block here when it finishes.)_
     8. *#951 result shape.* Chosen: `bounds: {minX, minY, minZ, maxX, maxY, maxZ}` (top-level keys accepted too),
        sent to the coordinator for L3; only empty, visible bound fields of the same step are filled. Alternative: (a)
        wait for L3's shape: L3 runs at the same time.
-    9. *#951 closing keyword.* Chosen: `Part of #951` here, since L3 holds the plugin part; whichever of L3/L4 merges
-       last closes it. Alternative: (a) `Closes` here: would close it before the plugin part.
+    9. *#951 closing keyword.* First `Part of #951`; changed to `Closes PandiO/knk-workspace#951` in #78 on the
+       coordinator's instruction (2026-11-22), the plugin part being L3's.
     10. *World check for landmarks.* Chosen: `landmark` in `DOMAIN_ENTITY_TYPES` as the charter says; the check reads
         `api/Domains` (World area), as the parent picker does. Alternative: (a) skip the check for landmarks (the pin
         gives the world): a second rule for one type.
@@ -437,6 +440,6 @@ _(Each link appends its block here when it finishes.)_
     3. Run smoke guide § 4 when convenient (tier:2; 6 of 9 steps automated, step 8 needs L3's plugin).
 9. **Notes for later links.**
     1. L3 (#985): the region task's outputJson `bounds` object (block coordinates, whole numbers) is what the web app
-       reads for #951; the PR that merges last closes #951.
+       reads for #951; #78 closes #951.
     2. A later change can drop the #708 fields (`domainId`, `extentKind`, …) from `LandmarkListDto` in the API: the web
        app no longer reads them (the read DTO keeps them typed as deprecated).
