@@ -4,6 +4,1353 @@ This is a human-readable record of capabilities merged into the V3 default branc
 
 ## Unreleased — on feature branches, not merged
 
+- **Display stalls in shops: the shop's items on shelves, item information and a confirmed quick buy**
+  ([PandiO/knk-workspace#250](https://github.com/PandiO/knk-workspace/issues/250), production P12, link L29; behind
+  `production.enabled`, default off). For players: shelves and stalls in a shop show the shop's items as floating
+  items that don't turn and can't be knocked down, each with its name and price above it; a sold-out item is dimmed
+  with "Sold out" (or not shown when the shop hides sold-out items). Right-click an item for its information menu
+  (nothing is bought); shift-right-click to buy it quickly: the purchase confirmation of the shop menus opens, so every
+  purchase is still confirmed. What the shelves show: an admin's pins first, then in-stock items and the shop's best
+  sellers of the last 7 days. For staff: display spots are registered per shop, one per block, never found by scanning:
+  `/knk shop display add <shop id> [label]` while looking at the block (the item faces you), `remove [spot id]`, `pin
+  <spot id> <entry id|none>`, `list <shop id>`, `reload` (node `knk.admin.world.production`, as `/knk shop`), or
+  `api/ShopDisplaySpots`. knk-web-api: entity `ShopDisplaySpot` (shop, block, facing, an optional pinned catalogue entry
+  of the same shop, order, label, on/off; reads the World area or the plugin key, writes `knk.admin.world` or the plugin
+  key, delete also `knk.admin.delete`), form and display seeds, migration `AddShopDisplaySpots`. knk-plugin: knk-core
+  `production/shop/display` (`DisplaySelection`, `DisplaySpotIndex`, the `ShopDisplaySpotsApi` port), knk-api-client
+  `ShopDisplaySpotsApiImpl` (with the best sellers from `api/ShopTradeStats/search`), knk-paper `ShopDisplayModule`,
+  `ShopDisplayPresenter` (non-persistent `ItemDisplay`, `Interaction` and `TextDisplay`, tagged
+  `knightsandkings:knk_shop_display`, spawned again when they go away), a WorldGuard allowance for the stall entities,
+  `ShopService.openItem`; scenario `shop-display-stall` (`MIN_SCENARIOS` 75). The web app has no page for display spots
+  yet ([#968](https://github.com/PandiO/knk-workspace/issues/968)). Smoke test:
+  [§ 11.4](guides/production-storage-transport-smoke-test.md#114-steps-display-stalls-plugin-and-api-250). Admin
+  steps:
+  1. Apply the migration `AddShopDisplaySpots` (`dotnet ef database update`; one new table, additive).
+  2. Import the `ShopDisplaySpot` form and display seeds ("make default").
+  3. Merge this block into the plugin `config.yml` under `production:` and restart (Restart):
+
+     ```yaml
+     production:
+       shops:
+         displays:
+           refresh-minutes: 5             # how often the display spots are re-read
+           selection-refresh-seconds: 30  # how often the shown items are chosen again
+           best-seller-hours: 168         # trade stats window of the best sellers (7 days)
+           item-scale: 0.5                # size of the shown item
+           label: true                    # floating name and price over the item
+           hints: true                    # the label's line with the two clicks
+     ```
+
+  4. No `api.env` key, no menu seed (the stalls open L26's `shops.item` and `shops.confirm`). Needs
+     `production.enabled: true`; grant `knk.admin.world.production` to the staff who register spots.
+
+- **Shop menus in game: buy with a confirmation, sell for buy-back prices**
+  ([PandiO/knk-workspace#687](https://github.com/PandiO/knk-workspace/issues/687), production P10b, link L26; behind
+  `production.enabled`, default off). For players: a shop's menu shows the shop's information and its catalogue (the
+  real items, price, stock; sold-out items greyed out, featured ones first); an item's information menu sets the
+  amount (1, 8, 16, 32, 64) and shows the total; every purchase asks for a confirmation with the shop's quoted price
+  and goes to the inventory or the reward inbox; a price that changed meanwhile is shown and asked again. The sell
+  menu shows the buy-back price of each picked stack and the total and sells all of them or none; the items leave the
+  inventory only when the sale is sent. The layouts are the legacy V1 shop menus (developer decision 2026-11-21).
+  For staff: `/knk shop <shop id>` (node `knk.admin.world.production`) opens a shop's menu until shopkeepers (P11)
+  arrive. knk-plugin: knk-core `production/shop` (records, `ShopsApi` port, texts, refusal codes, sell basket),
+  knk-api-client `ShopsApiImpl` (`GET api/Shops/{id}/offer`, `quote`, `purchase`, `sell-quote`, `sell`, plugin key),
+  knk-paper `production/shop` (`ShopMenuFeature`, `ShopService`, the plugin-built sell menu `SellModule`), scenario
+  `player-shop-sell-and-buy` (`MIN_SCENARIOS` 74). knk-web-api: menu seeds `shops.shop`, `shops.item` and
+  `shops.confirm` (`MenuTemplateSeed.Shops.cs`). Unique items are listed but not bought in game until #897. Smoke
+  test: [§ 11.2](guides/production-storage-transport-smoke-test.md#112-steps-plugin-687). Admin steps:
+  1. Deploy the plugin first, then the API (the API creates the three menu templates on start when they are missing).
+  2. No new plugin `config.yml` key, no `api.env` key, no migration. Selling needs `items.identity.enabled: true`;
+     everything needs `production.enabled: true` and the API's `Production:Enabled` (selling and inbox delivery).
+  3. Grant `knk.admin.world.production` to the staff who test with `/knk shop`.
+
+- **Off-road navigation: a group's default route mode is now a fixed choice (Enum field)**
+  ([PandiO/knk-workspace#852](https://github.com/PandiO/knk-workspace/issues/852) follow-up, developer decision
+  2026-11-21). For staff: the permission group form's "Default route mode" is an Enum field with Shortest, Efficient
+  and Preferred ("None (default: Preferred)" = no default), so it can be added in the form designer as an Enum field;
+  the dashboard shows the mode's name. Players notice nothing: `/navigate` behaves as with step B. knk-web-api:
+  `PermissionGroup.DefaultRouteMode` is the enum `RouteMode` (`Enums/NavigationEnums.cs`), stored by name
+  (`HasConversion<string>()`, the column stays nullable `varchar(16)`), `defaultRouteMode` in `PermissionGroupDto` and
+  `PermissionGroupListDto` is sent as `"Shortest"`, `"Efficient"` or `"Preferred"` (read in any case); a body without
+  the property still keeps the stored value, `""` or `null` clears it, another word is a `400` from the JSON binding;
+  the data migration `20261121144143_NormalizePermissionGroupDefaultRouteMode` renames stored lowercase words to the
+  names (Down renames them back); the PermissionGroup form seed's field is an Enum field in place (same field GUID).
+  knk-web-app: the group DTO type, object config, e2e fixtures and tests use the names. knk-plugin: no change
+  (`RouteMode.fromWord` reads any case). Branches `claude/group-route-mode-enum` in knk-web-api, knk-web-app and
+  knk-workspace. Smoke test:
+  [off-road smoke test § 15](guides/navigation-offroad-smoke-test.md#15-l7b-default-route-mode-per-permission-group-852-tier3).
+  Admin steps:
+  1. Apply the migration `NormalizePermissionGroupDefaultRouteMode` (`dotnet ef database update`; data only).
+  2. On a database whose PermissionGroup form has the field from step A (a String field) or none, set it up in the
+     form designer as an **Enum** field: step Group, field name `DefaultRouteMode`, label "Default route mode", not
+     required, settings JSON `{"enumValues": ["Shortest", "Efficient", "Preferred"], "emptyOptionLabel": "None
+     (default: Preferred)"}`. A fresh import of `PermissionGroup` has it.
+  3. No `api.env` key, no permission node and no plugin `config.yml` change.
+
+- **Shops follow-ups: kind and type on the Shop dashboard, usernames and goods links in the town ledger, a Shops
+  settings card, the town account on the town page**
+  ([PandiO/knk-workspace#938](https://github.com/PandiO/knk-workspace/issues/938), link L27b of the production, storage
+  and transport chain; [shops DESIGN](specs/shops/DESIGN.md) § 3.1, § 4). knk-web-api: the shop search row
+  (`api/Shops/search`, `ProductionWorldListDto`) gains `kind`, `shopTypeId` and `shopTypeName`; a town account's
+  ledger row (`TownAccountEntryDto`) gains the player's `username` and the `stockTransactionId` of a purchase's or
+  buy-back's goods leg (joined on the idempotency key both legs share; no migration). knk-web-app: the Shop dashboard
+  shows Kind and Shop type; the town account's ledger shows the player by name and links each sale and buy-back to its
+  stock transaction; the game settings page has a **Shops** card for `production.shops` (enchantment surcharge per
+  level, trade stats lookback hours) with the API's checks; a town's page shows its **town account** (coins, the ledger
+  check, a link to the ledger), World area only. Admin steps: none (no migration, setting or plugin change).
+
+- **Shops in the web app: shop types with accepted categories and levels, a shop's offer, catalogue editor, sales,
+  town account and hourly trade stats chart**
+  ([PandiO/knk-workspace#688](https://github.com/PandiO/knk-workspace/issues/688), link L27 of the production, storage
+  and transport chain; [shops DESIGN](specs/shops/DESIGN.md) § 2-5, § 9, A18, A23). The pages over the shops API of
+  #248. Shop types, levels, shops and catalogue entries use the seeded forms and the dashboard (create, edit, delete);
+  trade stats and town accounts are read only. A **shop type's page** edits the categories its shops buy from players
+  (saved as the whole list) and its **levels** (multipliers, storage caps, default restocking min and max; add, edit,
+  delete with the API's checks first). A **shop's page** shows its kind, type and level, prices, worker, storages and
+  the **town account** its income goes to; the **offer** players see now (price and where it comes from, stock, sold
+  out struck through, bought-back unique items with their enchantments); the **catalogue editor** (a blueprint or one
+  unique item, static price, Stocked or Unlimited, pin, order, on); the **sales and buy-backs** from the stock ledger;
+  and the **hourly trade stats** as a bar chart (sold, bought back, supplied per UTC hour) over the last 24 hours, 7 or
+  30 days, for all items or one, with totals, the rows and **Rebuild from the ledger**. Below it the production panel
+  (processing) and the consumer panel (restocking at the level's default min and max) of the production structure the
+  shop is underneath. A **town account's page** shows its balance, whether it matches the ledger, and every town leg.
+  Everything needs `knk.admin.world`; deletes also `knk.admin.delete`. knk-web-app: DTOs `ShopDtos.ts`; clients
+  `shopTypeClient`, `shopTypeLevelClient`, `shopClient`, `shopCatalogueEntryClient`, `shopTradeStatClient`,
+  `townAccountClient`; panels `ShopTypePanel`, `ShopPanel`, `ShopCatalogueEditor`, `ShopTradeStatsPanel`,
+  `TownAccountPanel`; registry entries for the six types. Smoke test:
+  [production smoke test § 11.3](guides/production-storage-transport-smoke-test.md#113-steps-web-app-688).
+  Admin steps: none beyond #248's (its migration and seeds); deploy the web app with the shops API.
+- **Shops: a static catalogue, buying with coins to the town account, selling to shops, processing and restocking (the
+  API)** ([PandiO/knk-workspace#248](https://github.com/PandiO/knk-workspace/issues/248), link L25 of the production,
+  storage and transport chain; [shops DESIGN](specs/shops/DESIGN.md) § 2-5, § 9.1, A18, A23). The shop menus are link
+  L26 (#687, waiting for the developer's menu templates) and the web app pages link L27 (#688); this entry is what the
+  API offers them. A **shop** is a structure with a Merchandise and an Input storage, a **shop type** (bakery,
+  weaponsmith, …) with the categories it buys from players and its **levels** (price multiplier, processing speed,
+  yield and input cost, storage caps, default restocking min/max), a kind (**Trading** or **Processing**), a tax
+  modifier and a buy-back percentage (default 50). Admins fill a **static catalogue**: a blueprint or one unique item,
+  an optional static price, Stocked (sold from Merchandise) or Unlimited (never sold out: shops work before the supply
+  chain is live). Prices: a static price wins, else the blueprint's midpoint base price × tax modifier × level
+  multiplier; a unique item adds 10% of the base price per enchantment level. A **purchase** needs the player's
+  confirmation and the price they saw, and is one database transaction: the coins go from the player to the town's new
+  **town account** (currency `AccountKind.Town`), the goods leave Merchandise (to the player's inventory, or their inbox
+  through P7). Players **sell** items of the accepted categories (a category accepts its sub-categories) for the
+  buy-back price, paid from the town account; a sold unique item keeps its enchantments and is resold as that exact
+  item. A **processing** shop runs production lines from Input into Merchandise; the town planner **restocks** a shop's
+  stocked catalogue items with the shop's own worker, and processing slows while the worker is away (selling goes on).
+  **Hourly trade stats** per shop, blueprint and hour are rolled up from the ledger for the later pricing model.
+  Buying and admin CRUD work while `Production:Enabled` is off; selling, inbox delivery, processing, restocking and the
+  stats job need it. Town account trade, tax and spending stay Later
+  ([#124](https://github.com/PandiO/knk-workspace/issues/124), [#325](https://github.com/PandiO/knk-workspace/issues/325)).
+  knk-web-api: entities `Shop` (a TPT subtype of `ProductionStructure`), `ShopType` with `ShopTypeCategory` and
+  `ShopTypeLevel`, `ShopCatalogueEntry`, `ShopTradeStat`, `TownAccount`; `currency_entries.TownId` and currency reasons
+  `SHOP_PURCHASE` and `SHOP_BUYBACK` (posted only against a town account, not reversible yet); stock reasons `ShopSale`
+  and `ShopBuyBack`; endpoints `api/ShopTypes`, `api/ShopTypeLevels`, `api/ShopCatalogueEntries` (CRUD, `search`),
+  `api/Shops` (CRUD, `search`, `{id}/offer`; the game server's `{id}/quote`, `{id}/purchase`, `{id}/sell-quote`,
+  `{id}/sell`), `api/ShopTradeStats` (read, `search`, `rebuild`) and `api/TownAccounts` (read, `by-town/{townId}`,
+  `search`, `{id}/ledger`); the stats job (`ShopTradeStatSweepService`, every 10 minutes); game settings section
+  `production.shops`; form and display seeds `ShopType`, `ShopTypeLevel`, `Shop`, `ShopCatalogueEntry`,
+  `ShopTradeStat`, `TownAccount`. Reads: the World area or the plugin key; admin writes: `knk.admin.world` or the
+  plugin key; deletes also `knk.admin.delete`; buying and selling: the plugin key only. Smoke test:
+  [production smoke test § 11](guides/production-storage-transport-smoke-test.md#11-phase-p10-shops-248-api-687-plugin-menus-688-web-app-tier3).
+  Admin steps:
+  1. Apply the migration `AddShops` (`dotnet ef database update`; additive: seven tables, the nullable column
+     `currency_entries.TownId`, and the currency entries' account check widened to allow town legs).
+  2. Import the form and display seeds `ShopType`, `ShopTypeLevel`, `Shop`, `ShopCatalogueEntry`, `ShopTradeStat` and
+     `TownAccount` (in that order); make them the default.
+  3. Optional: set the shop defaults in the game settings, production section `shops` (defaults shown; a missing
+     section keeps the stored values):
+     ```json
+     "shops": {
+       "enchantmentPercentPerLevel": 10,
+       "statsLookbackHours": 2
+     }
+     ```
+  4. Create the shop types with their accepted categories and levels, then the shops and their catalogues. No
+     `api.env` key and no plugin `config.yml` change.
+- **Town logistics in the web app: policy and rule editor, planner dry run, town supply, consumer settings**
+  ([PandiO/knk-workspace#686](https://github.com/PandiO/knk-workspace/issues/686), link L24 of the production, storage
+  and transport chain; [town logistics](specs/production-storage-transport/TOWN_LOGISTICS.md) § 2-5, D-L1 to D-L3,
+  A17, A23). Staff can see and steer how a town's warehouses supply its consumers. A town's page gets a **Town
+  logistics** panel: the policy in force (the town's own, the default template, or none), the warehouses, the last and
+  next planner run, a low-supply warning, the **supply** per item across the warehouses (stock, held by reserves,
+  reserved, available, inflow and outflow per day, days of cover, and per warehouse), the **open reservations** with
+  **Release**, which warehouse serves each district, the rural territory and each structure, and the recent runs.
+  **Dry run** shows what a planner run would do and why for every consumer line ("why did or didn't the bakery get
+  flour": the outcome, stock against min and max and where they came from, the shortfall, what was reserved where, the
+  rules used and the planner's explanation) plus the collection orders, and writes nothing, also while production is
+  off; **Run the planner now** stores a run. **Apply a template** copies a template's rules into the town's policy. A
+  policy's page is the **rule editor**: the V1 rule types (reserves in units or days of cover, town-wide or for one
+  warehouse; priority classes; service areas; replenishment defaults), each with only the fields its type uses, an
+  active window and a reason; the problems the API would refuse are listed before a save; every save is a new version
+  with its reason, and the old versions stay readable; a template also has its specialization, size and default flag
+  and **Apply to a town**. A production structure's page gets a **Supply (as a consumer)** panel (its workers, its
+  service warehouse, its demand per storage and item, the replenishment settings with add, edit and delete, its open
+  reservations), a warehouse's page a **Logistics** panel (what it serves, its warehouse policy, its reservations), and
+  planner runs and reservations get their own pages. **Town logistics** (admin sidebar, World) lists the policies and
+  templates. The game settings page gets a **Town logistics** card (planner interval, reservation expiry, consumption
+  window, default min and max hours; always sent back on save).
+  knk-web-app: `logisticsPolicyClient`, `logisticsRuleClient`, `consumerReplenishmentClient`,
+  `logisticsReservationClient`, `logisticsPlannerRunClient`, `logisticsClient`; `TownLogisticsPanel`,
+  `LogisticsPolicyPanel` with `LogisticsRuleEditor`, `StructureLogisticsPanel`, `WarehouseLogisticsPanel`,
+  `LogisticsPlannerRunPanel`, `LogisticsReservationPanel`, `LogisticsPlanView`; page `LogisticsPage`;
+  `LogisticsSettingsCard`; `src/utils/logistics.ts`; `e2e/logistics.spec.ts`. Smoke test:
+  [production smoke test § 10.2](guides/production-storage-transport-smoke-test.md#102-steps-web-app-686). Admin
+  steps:
+  1. Deploy the web app with the town logistics API (#127, in `next`) and its imported seeds (`LogisticsPolicy`,
+     `ConsumerReplenishment`, `LogisticsRule`, `LogisticsReservation`, `LogisticsPlannerRun`). No migration, setting or
+     plugin change.
+
+- **Town logistics: warehouses reserve, consumers collect with their own worker (the API)** ([PandiO/knk-workspace#127](https://github.com/PandiO/knk-workspace/issues/127),
+  link L23 of the production, storage and transport chain; [town logistics](specs/production-storage-transport/TOWN_LOGISTICS.md)
+  § 2-5, D-L1 to D-L3, A17). The web app (policy and rule editor, planner dry-run view, town supply view) is link L24
+  (#686); this entry is what the API offers it. A **consumer** is a structure with an Input or Merchandise storage
+  (in V1 a production structure, which has workers). Staff give a consumer storage a **min and max** per blueprint (or
+  the planner takes them from the structure's production line inputs). Every 10 minutes per town, while
+  `Production:Enabled` is on, the **planner** reserves stock at a warehouse for every consumer line at or below its
+  min, up to its max: by **priority class** first (Critical, High, Normal, Low), then by road distance, at the
+  warehouse of the consumer's **service area** (else the nearest one with stock). **Reserves** (saving rules in units
+  or days of cover, town-wide or per warehouse) are never handed out. The consumer's own worker collects the
+  reservation as a transport order (origin Distribution), so its output drops while the worker is away, as at a
+  producer; a reservation not collected within 30 minutes is released at the next run. Every decision has a **plan
+  explanation** ("why did or didn't the bakery get flour"), and a **dry run** shows the plan without writing anything,
+  also while the flag is off. Rules live in a **versioned policy** per town (every save is a new version; the old ones
+  stay readable), with optional per-warehouse policies; admins keep **default templates** per town size and
+  specialization and copy one into a town. A producer's service area is also where its automatic deliveries go when it
+  has no preferred warehouse. The Later rules (ceilings, quotas, rebalance, export/import, emergency modes, tax) are
+  [#324](https://github.com/PandiO/knk-workspace/issues/324).
+  knk-web-api: entities `LogisticsPolicy` (versions), `LogisticsRule` (V1 types Reserve, PriorityClass, ServiceArea,
+  Replenishment), `ConsumerReplenishment`, `LogisticsReservation`, `LogisticsPlannerRun` and `LogisticsPlanEntry`;
+  endpoints `api/LogisticsPolicies` (get, `search`, create, `PUT` = a new version, delete with every version,
+  `{id}/versions`, `{id}/apply` for templates), `api/LogisticsRules` (read only), `api/ConsumerReplenishments` (CRUD,
+  `search`), `api/LogisticsReservations` (read, `search`, `{id}/release`), `api/LogisticsPlannerRuns` (read, `search`)
+  and `api/Logistics` (`towns/{id}/supply`, `towns/{id}/service-areas`, `towns/{id}/dry-run`, `towns/{id}/run-now`,
+  `consumers/{id}`); `TransportService.CreatePlannedAsync` for collection orders; the planner schedule
+  (`LogisticsPlannerSweepService`, every minute, each town every 10); game settings section `production.logistics`;
+  form and display seeds `LogisticsPolicy`, `LogisticsRule`, `ConsumerReplenishment`, `LogisticsReservation`,
+  `LogisticsPlannerRun`. Reads: the World area or the plugin key; writes: `knk.admin.world` or the plugin key; deletes
+  also `knk.admin.delete`. A run now is 409 `ProductionDisabled` while the flag is off; policies, settings and dry runs
+  work while it is off. Smoke test:
+  [production smoke test § 10](guides/production-storage-transport-smoke-test.md#10-phase-p9-town-logistics-127-api-686-web-app-tier3).
+  Admin steps:
+  1. Apply the migration `AddTownLogistics` (`dotnet ef database update`; additive: six tables).
+  2. Import the form and display seeds `LogisticsPolicy`, `ConsumerReplenishment`, `LogisticsRule`,
+     `LogisticsReservation` and `LogisticsPlannerRun`; make them the default.
+  3. Optional: set the planner defaults in the game settings, production section `logistics` (defaults shown; a
+     missing section keeps the stored values):
+     ```json
+     "logistics": {
+       "plannerIntervalMinutes": 10,
+       "reservationMinutes": 30,
+       "consumptionWindowDays": 7,
+       "defaultReorderHours": 4,
+       "defaultTargetHours": 12,
+       "runRetentionDays": 14
+     }
+     ```
+  4. Write a default template (none are seeded: rules name blueprints) or a policy per town, and give consumers an
+     Input storage and min/max settings. No `api.env` key, no plugin `config.yml` change in this link.
+
+
+- **Player harvesting in game: harvest in yield areas, blocks regenerate** ([PandiO/knk-workspace#134](https://github.com/PandiO/knk-workspace/issues/134),
+  link L22 of the production, storage and transport chain, absorbs KNG-48 / #105; the API is #685; [production kinds](specs/production-storage-transport/PRODUCTION_KINDS.md)
+  § 6-7, P-D7, P-D8, A16). With `production.enabled: true` in the plugin, players can harvest in production structures'
+  yield areas what the kind's harvest rules allow. A player who meets a rule (its permission node or lowest title, its
+  tool class and tier, a ripe crop, its cooldown) may break the rule's blocks or kill its animals there, also inside the
+  structure's production region (which keeps denying every other block) and in an area outside every region (a logger's
+  radius). The vanilla drops are replaced: the harvest is reported to the API in batches (`POST api/Harvest/reports`,
+  one idempotency key per entry, sent again with the same key after a timeout or a restart) and the player gets the
+  worker's share of the rule's blueprint item in the inventory when the API answers (`+2 Cobblestone (your share of the
+  harvest)`; an offline player gets it when they join); the town's share goes to the structure's Output. The block gets
+  a placeholder until it regenerates: ores and rock a depleted block (the rule's, else stone, netherrack in the nether),
+  crops are replanted at age 0, flowers leave air, and a log fells the **whole tree** (its logs and natural leaves),
+  leaving a sapling that does not grow; the exact tree comes back by snapshot. Blocks come back after the API's
+  regeneration time (longer at a low pool when the rule says so), only when their chunks are loaded, only where the
+  placeholder still stands (a changed block is never overwritten) and never into a player or mob; the queue is kept on
+  disk and survives restarts and chunk unloads. Surveys count blocks waiting to regenerate as their original. Players
+  who don't meet a rule are refused its targets with the reason (`You can't harvest this here: you need the permission
+  ...`); a block waiting to regenerate can't be broken. Staff with `knk.admin.world.production` are left to WorldGuard.
+  With `production.enabled: false`, or while the API's `Production:Enabled` is off, breaks in production areas behave
+  exactly as before (A21). `/knk production harvest status|refresh` (node `knk.admin.world.production`) shows the
+  catalogue, the blocks waiting to regenerate and the reports waiting for the API. knk-plugin: knk-core
+  `production/harvest` (`HarvestRule`, `HarvestGate`, `RequirementEvaluator`, `RegenQueue`, `HarvestOutbox`,
+  `TreeFeller`, `HarvestAreaIndex`) and the port `HarvestApi` with knk-api-client `HarvestApiImpl`; knk-paper
+  `production/harvest` (`HarvestModule`, `HarvestWorldGuardListener`, `HarvestRequirements`, `HarvestConfig`), the
+  survey placeholder overlay, the global-region protection's harvest pass and the scenarios `player-harvest-regenerate`
+  and `player-harvest-tree`. In knk-plugin `next` `6f6c915f` (PandiO/knk-plugin#114); the API in knk-web-api `next` `9ad32c23` (PandiO/knk-web-api#72). Smoke test:
+  [production smoke test § 9.2](guides/production-storage-transport-smoke-test.md#92-steps-plugin-134). Player guide:
+  [harvesting](guides/users/harvesting-player-guide.md).
+  Admin steps:
+  1. Merge into the plugin's `config.yml` (Restart; [plugin configuration § 4.31](guides/admin/plugin-configuration.md#431-production)):
+     ```yaml
+     production:
+       harvest:
+         catalog-refresh-minutes: 5
+         report-flush-seconds: 2
+         report-batch: 200
+         regen-blocks-per-tick: 64
+         regen-retry-seconds: 5
+         save-seconds: 10
+         deny-at-empty-pool: false
+         tree-max-logs: 256
+         tree-max-leaves: 1500
+         max-area-chunks: 256
+         messages:
+           denied: "&cYou can't harvest this here: {reason}."
+           regenerating: "&7This block is regenerating."
+           paid: "&a+{amount} {item} &7(your share of the harvest)"
+           rejected: "&cYour harvest at {area} was not booked: {reason}."
+     ```
+  2. The API needs migration `AddPlayerHarvesting` and `Production:Enabled` (#685), and harvest rules per kind (none are
+     seeded). A rule for stone should name a `placeholderMaterial` other than stone (for example `BEDROCK` or
+     `COBBLESTONE`), else the depleted block looks like the stone it stands in for.
+  3. Grant each rule's permission node to the players who may harvest under it (a rule without a node lets every
+     player harvest). Back up `plugins/KnightsAndKings/production/harvest/` with the world.
+- **Player harvesting: the API** ([PandiO/knk-workspace#685](https://github.com/PandiO/knk-workspace/issues/685),
+  link L21 of the production, storage and transport chain; [production kinds](specs/production-storage-transport/PRODUCTION_KINDS.md)
+  § 6-7, decision record § 3.6 and § 11 F9-F10). The game server part (the harvest listener, placeholders and the
+  regeneration queue) is link L22 (#134); this entry is what the API offers it and staff. Players may harvest in a
+  production structure's yield areas what the kind's **harvest rules** allow (blocks or entities, a permission node or
+  a lowest title, a tool). Harvesting counts as **working for the town**: each harvest is split at once, the player
+  keeps the **worker's share** (25 % by default) and the rest goes into the structure's Output storage. If Output is
+  full the town's share is lost and the player is still paid. Each break draws from the area's shared **resource
+  pool**; while the pool is low the structure produces less, down to half (the pool floor, 0.5 per kind), and never
+  stops; the pool refills over time and takes its size from the latest survey. A **net-output check** per rule shows
+  whether a harvest gives the town more than the production it costs until the pool refills. Every harvest has an
+  idempotency key, so a retried report never pays twice. Also: placement rule P-3 now checks **Polygon** production
+  areas by each of their points (#900).
+  knk-web-api: entities `HarvestRule`, `ResourcePool`, `PlayerHarvest` (the harvest history) and `HarvestAccrual` (the
+  unpaid fractions per player and rule); `ProductionKind.PoolFloor`; the built-in pool step in the production engine
+  (`poolFactor` on the production view and the cycle records); endpoints `api/HarvestRules` (CRUD, `search`,
+  `{id}/balance`), `api/ResourcePools` (CRUD, `search`), `api/PlayerHarvests` (`{id}`, `search`; read only), `GET
+  api/Harvest/catalog` (the enabled rules and their areas with the pool fill: the World area or the plugin key) and
+  `POST api/Harvest/reports` (the game server only: batched entries, each booked once per key, answering the units for
+  the player and the regeneration time); ledger reason PlayerHarvest (`SYS_PRODUCTION` → `SYS_WORLD` for the worker's
+  share, `SYS_PRODUCTION` → Output for the town's); game settings section `production.harvest`; form and display seeds
+  `HarvestRule` and `ResourcePool`, display seed `PlayerHarvest`, `ProductionKind` seed v3. Harvest reports need
+  `Production:Enabled` (409 while off) and the catalogue is empty while it is off; rules and pools can be edited while
+  it is off. Smoke test:
+  [production smoke test § 9](guides/production-storage-transport-smoke-test.md#9-phase-p8-player-harvesting-and-block-regeneration-685-api-134-plugin-tier3).
+  Admin steps:
+  1. Apply the migration `AddPlayerHarvesting` (`dotnet ef database update`; additive: four tables and two columns
+     with defaults).
+  2. Import the form and display seeds `HarvestRule` and `ResourcePool`, the display seed `PlayerHarvest` and
+     `ProductionKind` seed v3 (form and display); make them the default.
+  3. Optional: set the harvest defaults in the game settings, production section `harvest` (defaults shown; a missing
+     section keeps the stored values):
+     ```json
+     "harvest": {
+       "defaultPoolCapacity": 1000,
+       "defaultRegenHoursToFull": 12,
+       "maxEntriesPerReport": 200
+     }
+     ```
+  4. Write the harvest rules per kind (none are seeded) and check each rule's balance on its page; the game server
+     needs L22 before players can harvest. No `api.env` key, no plugin `config.yml` change in this link.
+
+- **Reward inbox in game: `/inbox`, kits and lootboxes through the inbox** ([PandiO/knk-workspace#684](https://github.com/PandiO/knk-workspace/issues/684),
+  link L20 of the production, storage and transport chain; the API is #60; [design](specs/production-storage-transport/DESIGN.md)
+  § 4.6, decision record § 2.4, D7, A15). With `production.enabled: true` in the plugin, kit and lootbox items that
+  don't fit in the player's inventory no longer drop at their feet: the plugin places what fits and sends the rest to the
+  player's **reward inbox** (`POST api/ItemDeliveries`, one key per reward, so a retry applies once), and tells them
+  (`25 items didn't fit and went to your reward inbox (/inbox).`, the loss first when the full inbox lost some). This
+  covers `/kit get` and `/kit give`, kits granted from the web app (#261, key `kit-claim-<claim id>`), the starter kits,
+  and lootbox openings and redeliveries (key `lootbox-claim-<claim id>`; the claim is confirmed with a note once the
+  inbox has the items). A kit for a player who went offline before it was placed now goes to their inbox instead of being
+  lost. **`/inbox`** opens the inbox: left-click claims a stack, right-click one, shift-click as much as fits, and exactly
+  what the API moved lands in the inventory (claim with partial space; a full inventory claims nothing); each entry shows
+  when its first part expires, the bottom item how full the inbox is. The inbox notices show in chat: the near-cap
+  warning, the loss message, expiry reminders and expired items; with `production.inbox.join-summary` a player who joins
+  with items waiting is told. Not during a siege. Still dropped at the feet, as before: unique items (an instance, for
+  example a lootbox sword), because the plugin can't rebuild them from the inbox yet (#897), and everything when the
+  API's `Production:Enabled` is off or refuses (the plugin falls back to today's delivery). With `production.enabled:
+  false` kits and lootboxes deliver exactly as before (#261, A21) and `/inbox` says the inbox is off. knk-plugin: knk-core
+  `production/inbox` (inbox view, texts, layout, keys) and the port `ItemDeliveryApi` with knk-api-client
+  `ItemDeliveryApiImpl` and the `InboxUpdated` payload; knk-paper `production/inbox` (`RewardInbox`, `InboxModule`,
+  `InboxScreen`, `InboxConfig`), `commands/InboxCommand`, the inbox hooks in `KitGrantPlacer`, `KitGrantFlow`,
+  `KitGrantDelivery`, first-join kits and `LootboxDelivery`; the scenarios `player-kit-overflow-inbox` and
+  `player-inbox-claim-partial`. Branch `claude/production-p7b` in knk-plugin and knk-workspace. Smoke test:
+  [production smoke test § 8.2](guides/production-storage-transport-smoke-test.md#82-steps-plugin-684).
+  Admin steps:
+  1. Merge into the plugin's `config.yml` (Restart; [plugin configuration § 4.31](guides/admin/plugin-configuration.md#431-production)):
+     ```yaml
+     production:
+       inbox:
+         join-summary: true
+     ```
+  2. The API needs migration `AddItemDelivery` and `Production:Enabled` (#60); the inbox cap, expiry and warnings are the
+     game settings `production.delivery`. No new permission node: every player opens their own inbox.
+  3. Kits and lootboxes resolve items with item identity when `items.identity.enabled` is on (#141); without it the
+     blueprint the item was built from is used.
+
+- **The menu item follows the game settings page: siege menu and shop in a match** ([PandiO/knk-workspace#871](https://github.com/PandiO/knk-workspace/issues/871),
+  phase 5b of the siege shop design, link L6 of the siege shop chain; parent [#859](https://github.com/PandiO/knk-workspace/issues/859)).
+  For players: in a running PvP Siege match a click with the menu item (the nether star) opens your siege menu and a
+  shift + right click opens the siege shop; at a siege's scenario hub (team split, and the result after the match) a
+  click opens the siege menu; anywhere else it opens the main menu as before. A Siege Survival match uses its own
+  override once Siege Survival (#41) is merged. For staff: what the game settings page's **Menu item** card (#870) sets
+  (look, who gets it, an action per click, situation overrides) reaches the game server as soon as the API answers and
+  on every save, without a restart: a new name, material or lore replaces the item where it is in online players'
+  inventories; switching it off or to Bedrock only takes it away; a new slot, and giving it to someone who has none,
+  wait for the player's next join or respawn, so nothing is moved mid-fight. With the API unreachable at startup the
+  menu item works exactly as before from `menus.menu-item.*` in `config.yml` (every click in `open-on` opens `/menu`;
+  the cached game settings are not used for it); once the API has answered, an outage keeps its last settings. Open menu
+  `main` runs `/menu`, `siege.information` runs `/siege` (your Information, else the siege overview), `siege.shop` runs
+  `/siege shop` (with its "still opening" and "not available" answers); other keys open that menu; Run command runs the
+  command as the player. Also: the locked-weapon text in the siege shop now names the real path, "Locked: unlock it in
+  /menu → Siege Minigame → Siege unlocks." knk-plugin: knk-core `MenuItemAction`, `MenuItemActionResolver`,
+  `MenuItemSituations` (registers `siege.survival.match`, `siege.match`, `siege.hub`; Survival provides its check at its
+  merge), `MenuItemApiSettings`, `KnkMenuItemSettings` in `KnkGameSettings`; knk-api-client `GameSettingsDto.menuItem`;
+  knk-paper `MenuItemSettingsSync`, `MenuItemActionRunner`, `SiegeMenuItemSituations`, the listener's shift-clicks and
+  `GameSettingsManager.setMenuItemListener`. No migration, no new keys. Branch `claude/siege-shop-l6` in knk-plugin and
+  knk-workspace. Admin steps: none (deploy after knk-web-api with #870; `menus.menu-item.*` stays as the fallback,
+  [plugin configuration](guides/admin/plugin-configuration.md)). Smoke test:
+  [siege shop smoke test § 5.2](guides/siege-shop-smoke-test.md#52-steps-in-game-phase-5b-871).
+- **Item delivery, reward inbox and stash: the API** ([PandiO/knk-workspace#60](https://github.com/PandiO/knk-workspace/issues/60),
+  link L19 of the production, storage and transport chain; [design](specs/production-storage-transport/DESIGN.md)
+  § 4.6, decision record § 2.4, D7). The game server part (`/inbox`, the inbox menu, kits and lootboxes through the
+  inbox) is link L20 (#684); this entry is what the API offers it and staff. Rewards the game server cannot place (the
+  player is offline, the inventory is full, the player is in a siege match or a minigame) go to the player's **reward
+  inbox**, a private storage, with a notification. The inbox has a **hard cap** that premium tiers raise; what arrives
+  when it is full is **lost** (recorded in the ledger) and the player is told, with a **warning** as the inbox passes
+  80 % and 95 %. Items wait **30 days**, with **reminders** 7 days and 1 day before; then they expire. The player
+  **claims** what fits in the inventory; the oldest items go first. Premium tiers also get a **stash**, a separate
+  private storage with deposit and withdraw. Every move has an idempotency key, so a retry never duplicates items.
+  Kit and lootbox delivery are unchanged until L20 moves them here. Also: placement rule **P-3** for production areas
+  (#883): an area stays inside its structure's district or, for a rural structure, its town's territory (a warning by
+  default, returned on save as on structures); and names on the transport reads, the structure kind on the lanes due
+  for measuring and the unit types on survey overlaps (#890, #875).
+  knk-web-api: entities `ItemDelivery` and `ItemDeliveryLine` (the inbox lots); `ItemDeliveryService` (deliver, claim,
+  stash moves, the hourly reminder and expiry sweep `InboxMaintenanceService`); endpoints `api/ItemDeliveries`
+  (`search`, `{id}`: World area or `knk.economy.admin`; `POST`: the game server or `knk.economy.admin`) and `api/Inbox`
+  (`{userId}` and `{userId}/stash`: the game server, the player or `knk.economy.admin`; `{userId}/claim`: the game
+  server for the player in `X-Acting-User-Id`; `{userId}/stash/deposit` and `.../withdraw`: the game server for that
+  player or `knk.economy.admin`; `sweep`: `knk.economy.admin`); player notification `InboxUpdated` (events Delivered with
+  lost units and a warning level, ExpiryReminder, Expired); ledger reasons RewardInbox, InboxOverflow, InboxClaim,
+  InboxExpired, Deposit and Withdraw; game settings section `production.delivery`; validation method
+  `ProductionAreaPlacement`; form and display seeds `ItemDelivery`; form seed `ProductionArea` v3; read fields
+  `destinationWarehouseName`, `carrierStructureName`, `productionStructureName`, `fromKind`/`toKind` and `unitTypes`.
+  Every move needs `Production:Enabled` (409 while off); the reads work while it is off. Smoke test:
+  [production smoke test § 8](guides/production-storage-transport-smoke-test.md#8-phase-p7-item-delivery-reward-inbox-depositwithdraw-60-api-684-plugin-tier3).
+  Admin steps:
+  1. Apply the migration `AddItemDelivery` (`dotnet ef database update`; additive: two tables).
+  2. Import the form and display seeds `ItemDelivery` and the form seed `ProductionArea` (seed v3); make them the
+     default.
+  3. Set the inbox rules in the game settings, production section `delivery` (defaults: inbox cap 2304 units, stash
+     cap 0, 30 days, reminders 7 and 1 days before, warnings at 80 % and 95 %), and give each premium tier its caps:
+     ```json
+     "delivery": {
+       "inboxBaseCapUnits": 2304,
+       "stashBaseCapUnits": 0,
+       "expiryDays": 30,
+       "reminderDaysBefore": [7, 1],
+       "warnAtPercent": [80, 95],
+       "premiumTiers": [ { "permissionGroupId": 12, "inboxCapUnits": 6912, "stashCapUnits": 2304 } ]
+     }
+     ```
+  4. Grant `knk.economy.admin` to staff who may gift items or use players' stashes from the web app.
+
+- **Terminals, displays and structure menus in game** ([PandiO/knk-workspace#74](https://github.com/PandiO/knk-workspace/issues/74),
+  link L18 of the production, storage and transport chain; the API is #683; [design](specs/production-storage-transport/DESIGN.md)
+  § 6 and § 11.2, decision record § 15.1 M1-M5). With `production.enabled: true` in the plugin: staff bind the chest,
+  trapped chest or barrel they look at to a storage with `/knk storage bind <storage id> <terminal|display> [label]`
+  (also `unbind`, `info`, `reload`; node `knk.admin.world.production`). Right-clicking a **terminal** opens the storage
+  page by page: left-click takes a stack, right-click one, shift-click as much as fits; clicking an item in your own
+  inventory puts it in. Each click is one ledger move as the player, so only members of the storage's town, its player
+  and staff can use it; what the storage refuses (full, not enough stock) comes straight back. Renamed, damaged,
+  enchanted vanilla and unique items are refused. A **display** holds a read-only sample of the stock, as full as the
+  storage is, refreshed when its chunk loads and after terminal moves. Bound blocks can't be broken, survive explosions
+  and hoppers move nothing in or out. Players get the **Structures** tile in the main menu: every production structure
+  and warehouse with search and Town, Kind and Status filters, the Town filter starting on the town whose land you stand
+  in; a structure's menu shows its public details, and for members of its town and staff its rates, workers, warnings,
+  storages and transport orders. Staff get buttons for survey now, the transport dry run, the area outline, and
+  cancelling or retrying an order (with a confirm). With `production.enabled: false` the menus are blocked (the tile is
+  hidden) and chests are plain chests. Not yet: opening the structure menu from a worker NPC (there is no worker NPC
+  entity), unique items in terminals in game. #877: the `CaptureRadius` world task the production area form sends is
+  handled since #679; its output is the API's. knk-plugin: knk-core `production/terminal` (container index, terminal
+  layout, display layout and throttle) and `production/menu` (menu text, facets), ports `StorageContainersApi` and
+  `StructureMenusApi` with their knk-api-client implementations, knk-paper `production/terminal`
+  (`StorageTerminalModule`, terminal and display views, display writer), `menu/content/StructuresMenuFeature`,
+  `commands/StorageAdminCommand`, the scenario `storage-display-double-chest`. Branch `claude/production-p6` in
+  knk-plugin and knk-workspace. Smoke test:
+  [production smoke test § 7.2](guides/production-storage-transport-smoke-test.md#72-steps-plugin-74).
+  Admin steps:
+  1. Merge into the plugin's `config.yml` (Restart; [plugin configuration § 4.31](guides/admin/plugin-configuration.md#431-production)):
+     ```yaml
+     production:
+       storage:
+         refresh-minutes: 5
+         display-refresh-seconds: 30
+     ```
+  2. Grant `knk.admin.world.production` (binding) and `knk.admin.world` (the menus' staff buttons) to staff; town
+     members need `knk.town.member.<town id>` (#683).
+  3. Putting items into terminals needs `items.identity.enabled: true` (#141).
+
+- **Siege weapon unlocks with coins and a minimum title** ([PandiO/knk-workspace#869](https://github.com/PandiO/knk-workspace/issues/869),
+  also [#795](https://github.com/PandiO/knk-workspace/issues/795); link L4 of the siege shop chain, #611). For players,
+  no flag: outside a match, `/menu` → **Siege Minigame** → **Siege unlocks** lists every siege weapon type with its
+  coin price, minimum title and state ("Unlocked", "Unlock for 1000 coins", "Needs title Squire"); an unlockable type
+  asks to confirm, then pays from the player's coins once (a double click charges once), and the type can be bought in
+  siege matches from the next match on. During a running match the menu opens but unlocking is refused. The same list
+  and button are on the player's own account page in the web app (**Siege unlocks** panel). For admins: the siege
+  weapon template form gains **Minimum title to unlock** (optional). knk-web-api: `POST api/SiegeWeaponUnlocks/purchase`
+  (plugin key for a named player, or the signed-in player for themselves; title and coins checked before charging,
+  ledger reason `SIEGE_UNLOCK` with key `siege-unlock:{templateId}:{userId}`, unlock row in the same transaction),
+  `GET api/SiegeWeaponUnlocks/mine` and `by-user/{userId}`, `SiegeWeaponTemplate.UnlockMinTitleLevel` (migration
+  `AddSiegeWeaponUnlockMinTitle`), form seed SiegeWeaponTemplate v2, menu seed `siege.unlocks` and its button in
+  `siege.overview` (added once to databases seeded before). knk-plugin: knk-core `core/siege/unlocks/`,
+  `SiegeWeaponUnlocksApi`; knk-paper `SiegeUnlocksMenuFeature`. knk-web-app: `MySiegeUnlocksSection` on the account
+  page. Branches `claude/siege-shop-l4` in knk-web-api, knk-plugin, knk-web-app and knk-workspace. Admin steps: apply
+  the migration, restart the API once (menu seeds), import the form seed **SiegeWeaponTemplate - Default (seed v2)**
+  and make it the default; no deploy order and no `config.yml` keys. Smoke test:
+  [siege shop smoke test § 4](guides/siege-shop-smoke-test.md#4-phase-4-siege-weapon-unlocks-with-coins-and-title-level-869-tier2).
+- **Siege shop in PvP Siege** ([PandiO/knk-workspace#868](https://github.com/PandiO/knk-workspace/issues/868); link
+  L3 of the siege shop chain, #611). For players, with `siege.shop.enabled: true` and `siege.points.enabled: true` in
+  the plugin's `config.yml` (both default `false`): during a running match `/siege shop` or the new **Shop** button in
+  `/siege menu` opens the siege shop anywhere on the map. It lists the match's categories (Consumables; Siege weapons
+  only with `siege.weapons.enabled`) with each offer's current price, "bought n/cap", cooldown left and why it can't be
+  bought now; a click buys at once when every check passes (match live and alive, unlock, cap, cooldown, room for the
+  whole stack, enough points), then charges, then gives. Prices rise per purchase and cooldowns grow along each
+  entry's curve; caps and counters reset each match. Each match reads its catalogue once at the start, so admin edits
+  apply from the next match; purchases are final and bought items go with the gear restore. A locked weapon says
+  "Locked: unlock it in /menu → Siege Minigame → Siege unlocks." (the path fixed by #871); unlocked weapons are bought from siege weapons phase 3 on
+  (#784, through the shop's `ShopPurchaseHandler` port). Bought potions carry their blueprint's potion type. knk-plugin:
+  knk-core `core/siege/shop/` (`ShopCatalogue`, `ShopBrakes`, `ShopPurchaseService`, `ShopPurchaseHandler`, views),
+  `SiegeShopApi`; knk-paper `siege/shop/` (`SiegeShopService`, `ItemPurchaseHandler`, `SiegeShopMenuFeature`,
+  telemetry `siege.shop_purchase`), `/siege shop`, `KnkItemBlueprint.potionType`. knk-web-api: menu seeds `siege.shop`,
+  `siege.shop.category` and the Shop button in `siege.information` (added once to databases seeded before), the
+  telemetry catalog line; no migration. Branches `claude/siege-shop-l3` in knk-plugin, knk-web-api and knk-workspace.
+  Admin steps: deploy the plugin **before** the API (an older plugin blocks `siege.information` once the API seeds the
+  Shop button), restart the API once, then set in `config.yml` (Restart):
+
+  ```yaml
+  siege:
+    points:
+      enabled: true
+    shop:
+      enabled: true
+  ```
+
+  Smoke test: [siege shop smoke test § 3](guides/siege-shop-smoke-test.md#3-phase-3-shop-menus-and-purchases-in-the-plugin-868-tier3).
+- **Terminals, displays and structure menus: the API** ([PandiO/knk-workspace#683](https://github.com/PandiO/knk-workspace/issues/683),
+  link L17 of the production, storage and transport chain; [design](specs/production-storage-transport/DESIGN.md)
+  § 6 and § 11.2, decision record § 15.1 M1-M5). The game server part (binding chests, the terminal and display
+  views, the menus) is link L18 (#74); this entry is what the API offers it and staff. Staff bind a block to a
+  storage as a **terminal** (opening it shows the storage as a paged menu; taking and putting items are ledger moves,
+  the chest stays empty) or a **display** (filled read-only with a sample of the stock, as full as the storage is).
+  Every bound chest adds its slots × the storage's units per slot to the storage's cap (a double chest 54 slots, a
+  chest or barrel 27), so placing a chest adds room. Every player can open a **structures overview** from the main menu
+  (a new "Structures" tile) with search and Town, Kind and Status filters, and a **structure menu** per production
+  structure or warehouse: name, kind, town, level, what it produces and a status (working, stalled, no road, full).
+  Members of the structure's town and staff also see rates, storage contents, workers present or away, warnings and
+  the structure's **transport orders**; the API leaves those out for everyone else. Staff get buttons for survey now,
+  the transport dry run, showing the area outline, and cancelling or retrying an order. Until town roles exist
+  (#246), a town's members are the players holding `knk.town.member.<town id>` (or `knk.town.member.*`). Also: the
+  `StockTransaction` form lists the reason Upgrade (#881); the production area form captures a region or a radius in
+  game, a region area takes its bounds from the region, and the structure list shows the yield source (#877).
+  knk-web-api: entity `StorageContainer`; `StorageContainerService` (CRUD, terminal view, take and put, display
+  sample), `StorageContainerCapacity`, `StructureMenuService`, `ProductionViewerResolver` and
+  `PermissionTownMembershipResolver`; endpoints `api/StorageContainers` (CRUD and search: World area to read,
+  `knk.admin.world` to write, delete also `knk.admin.delete`; `by-block`; the game server's `{id}/terminal`,
+  `{id}/put`, `{id}/take`, `{id}/display`), `api/StructureMenus` (`search`, `{id}`, `{id}/orders`: any logged-in user or
+  the game server, filtered by viewer) and `POST api/TransportOrders/{id}/retry` (`knk.admin.world`); menu seeds
+  `structures.overview`, `structures.structure`, `structures.orders` and the hub tile (added to an existing hub at
+  startup); form and display seeds `StorageContainer`; form seeds `StockTransaction` v2 and `ProductionArea` v2;
+  world task type `CaptureRadius`. Terminal take and put and the retry need `Production:Enabled`; binding, the reads and
+  the menus work while it is off. Smoke test:
+  [production smoke test § 7](guides/production-storage-transport-smoke-test.md#7-phase-p6-terminals-displays-menus-commands-683-api-74-plugin-tier2).
+  Admin steps:
+  1. Apply the migration `AddStorageContainers` (`dotnet ef database update`; additive: one table).
+  2. Import the form and display seeds `StorageContainer`, and the form seeds `StockTransaction` (seed v2) and
+     `ProductionArea` (seed v2); make them the default.
+  3. Give town members `knk.town.member.<town id>` (a permission group per town) so they see their structures' details.
+  4. Restart the API once: the menus are seeded and the main menu gets its "Structures" tile.
+- **Siege points in PvP Siege** ([PandiO/knk-workspace#866](https://github.com/PandiO/knk-workspace/issues/866),
+  builds [#356](https://github.com/PandiO/knk-workspace/issues/356); link L1 of the siege shop chain, #611). For
+  players, with `siege.points.enabled: true` in the plugin's `config.yml` (default `false`): every member of a PvP
+  match starts at 0 siege points and earns them from kills (100, the 2nd–6th kill of a streak 110–150, reset on
+  death), assists (40 for at least 2 hearts of damage in the last 10 s), deaths (15), gate damage (1 per 5 HP),
+  capture progress (3 per percent to the side moving it, inside the radius), captures (100 to the capturing side
+  inside) and an activity trickle (10 a minute, only for players who fought, worked an objective or moved). Each
+  member's sidebar shows "Siege points: N" on their own board, the action bar shows each change ("+130 kill ×1.3 ·
+  830"), `/siege points` prints balance, earned and spent, and `/siege pay <player> <amount>` sends points to a
+  teammate when the siege settings allow transfers (off in PvP by default). Balances end with the match; the match
+  result stores earned and spent per participant. Nothing is spent yet (the shop is L3, #868). knk-plugin: Survival's
+  `MatchLedger` moved unchanged into knk-core `core/siege/economy` (P11), the earn calculator, assist tracker and
+  economy there, the `SiegePointsService` observer, per-player boards, telemetry `siege.points_earned`. knk-web-api:
+  earn settings and `PointTransfersEnabled` on `SiegeConfiguration`, `SiegePointsEarned`/`SiegePointsSpent` on
+  `SiegeMatchParticipant`, migration `AddSiegePointsEarning` (additive). Branches `claude/siege-shop-l1` in
+  knk-plugin, knk-web-api and knk-workspace. Admin steps: apply the migration; set `siege:` → `points:` →
+  `enabled: true` to turn it on (Restart). The web app's siege settings page shows the new fields since L2 (#867 with
+  #878, also in `next`: section "Siege points"); `PUT api/SiegeConfiguration` works too. Smoke test: [siege shop smoke test § 1](guides/siege-shop-smoke-test.md#1-phase-1-shared-match-ledger-and-siege-points-earning-866-tier3).
+- **Production P5b: transport lanes in the plugin** ([PandiO/knk-workspace#681](https://github.com/PandiO/knk-workspace/issues/681),
+  link L15 of the production chain, #22; the API half is #79). For staff: with `production.enabled: true` the game
+  server measures the road route between every producer and the warehouses of its town (and between a town's
+  warehouses) over its road network, every hour and on `/knk logistics lanes measure`, and reports each lane's road
+  length to the API, which uses it for the trip time of transport orders (A12). A producer with no road within 48
+  blocks of its location, or on roads that do not join its town's, is set `Unconnected` and its automatic transport is
+  held (A13, D5); a reachable lane sets it `Connected`. `/knk logistics lanes status` shows the last run. Node
+  `knk.admin.world.production`. Measuring runs on its own thread (metric `production.lanes.measure`); the road router
+  and snapshot are used read-only. Also: a survey's shared split counts an overlapping area only when its structure
+  counts the unit's type, once the API sends the overlaps' unit types (#875; until then as before). knk-plugin: knk-core
+  `production/transport/` (`LaneMeasurer`, `LaneJob`, `RoadConnectionBook`), port `TransportLanesApi`, knk-api-client
+  `TransportLanesApiImpl`, knk-paper `production/LaneModule`, `LaneConfig` and `commands/LogisticsAdminCommand`.
+  Branch `claude/production-p5b`. Smoke test: [production smoke test § 6.2](guides/production-storage-transport-smoke-test.md#62-steps-plugin-681).
+  Admin steps: merge the `logistics` keys into the plugin's `production` block (nothing runs while `production.enabled`
+  is false), restart; the road network must be built (navigation); grant `knk.admin.world.production` to staff who
+  measure:
+
+  ```yaml
+  production:
+    logistics:
+      lanes:
+        interval-minutes: 60
+        batch: 100
+        max-snap-distance: 48
+        road-connections: true
+  ```
+
+- **Siege shop catalogue in the API and web app** ([PandiO/knk-workspace#867](https://github.com/PandiO/knk-workspace/issues/867),
+  link L2 of the siege shop chain, #611; with [#878](https://github.com/PandiO/knk-workspace/issues/878)). For staff:
+  the web app's dashboard and form wizard edit shop categories (seeded: Siege weapons, Consumables, Magic), shop
+  entries per game mode (PvP Siege, Siege Survival) selling an item blueprint in a quantity or a siege weapon type, with
+  a siege-point price and the brakes of DESIGN § 5.4 (price step and maximum, cooldown step and maximum, each with
+  None/Linear/Logarithmic/Exponential growth, cap per match), and on a scenario's new "Siege shop" step its overrides
+  (hide a default entry or change its price, quantity, cap, cooldown, steps or order) and scenario-only entries.
+  `GET api/SiegeShop/catalogue?mode=&scenarioId=` returns what a match sells: enabled defaults minus hidden ones, with
+  overrides applied, plus the scenario's own entries; a weapon entry without a price uses the template's
+  `MatchPrice`. The default catalogue of DESIGN § 12.2 is seeded at API start while a mode has no entries (ender pearl,
+  splash potion of healing II, golden apple, potion of regeneration; Survival at ×10 prices; one PvP entry per existing
+  weapon template). Item blueprints gain a potion type (`minecraft:strong_healing`). The Siege settings page gets a
+  "Siege points" section with L1's earn amounts and the teammate transfer switch (#878). Nothing in game reads the
+  catalogue yet (the shop is L3, #868). knk-web-api: `SiegeShopCategory`, `SiegeShopEntry`,
+  `SiegeScenarioShopOverride`, CRUD under `knk.siege.admin.manage` (overrides under
+  `api/SiegeScenarios/{id}/shop-overrides`), dashboard registry, lookups, form seeds, migration
+  `AddSiegeShopCatalogue` (additive: three tables, the categories, `item_blueprints.PotionType`). Branches
+  `claude/siege-shop-l2` in knk-web-api, knk-web-app and knk-workspace. Admin steps: apply the migration; restart the
+  API once (seed); import the form seeds `SiegeShopCategory`, `SiegeShopEntry`, `SiegeScenarioShopOverride` and the
+  updated `SiegeScenario` and `ItemBlueprint`. Smoke test: [siege shop smoke test § 2](guides/siege-shop-smoke-test.md#2-phase-2-shop-catalogue-entities-scenario-overrides-and-web-app-forms-867-tier2).
+- **Menu item settings on the game settings page** ([PandiO/knk-workspace#870](https://github.com/PandiO/knk-workspace/issues/870),
+  phase 5a of the siege shop design, link L5 of the siege shop chain; parent [#859](https://github.com/PandiO/knk-workspace/issues/859)).
+  For staff: the web app's game settings page gets a **Menu item** card: enabled, who gets it (all players or Bedrock
+  only), give on join, keep on death, material, name and lore with a preview, slot, droppable, movable, and a click
+  table (left, right, shift-left, shift-right, click in the inventory → Open menu with a menu key, Run command, or
+  Nothing), plus partial click tables per situation (Siege hub, Siege match, Siege Survival match) where "Use default"
+  keeps the default click. Seeded: today's `menus.menu-item.*` look with every click opening `main`; in a siege or Siege
+  Survival match left and right click open `siege.information` and shift-right `siege.shop`; in a siege hub left and
+  right click open `siege.information` (DESIGN § 4.3.4). Nothing changes in game yet: the plugin keeps using its
+  `config.yml` keys until phase 5b (#871) reads the section. knk-web-api: `GameSettings.MenuItem` in
+  `GET`/`PUT api/GameSettings` (`menuItem`; null on update keeps it), validated (click types, situations, action types,
+  menu key and command format, slot 0–35, material name, name and lore lengths), a save sends `GameSettingsChanged`;
+  migration `AddMenuItemSettings` (additive: nullable `game_settings.MenuItemSettingsJson`; null reads the defaults).
+  Branches `claude/siege-shop-l5` in knk-web-api, knk-web-app and knk-workspace. Admin steps: apply the migration.
+  Smoke test: [siege shop smoke test § 5](guides/siege-shop-smoke-test.md#5-phases-5a-and-5b-menu-item-settings-870-871-tier2).
+- **Production P4b: yield-area surveys in the plugin** ([PandiO/knk-workspace#679](https://github.com/PandiO/knk-workspace/issues/679),
+  link L12 of the production chain, #22; the API half is #138). For staff: with `production.enabled: true` the game
+  server surveys every `Derived` and `Hybrid` production area the API queues (on creation, once a day while its chunks
+  are loaded, on `/knk production survey <structure> [area]` and after a notable change of 64 blocks) and reports what
+  it holds: trees by species and size class, saplings, rock and ores, crops, flowers, water per biome (depth, open
+  sky), pasture animals; units inside other structures' shared areas are reported with their `sharedBy` (G7). Blocks
+  waiting to regenerate count as present once harvesting (P8) adds them. `/knk production survey status` shows the
+  queue and the last results; `/knk production area show <structure> [area] [seconds]` draws the areas with particles;
+  the `CaptureRadius` world task (stand at the centre, `radius <blocks>`, `confirm`) gives a radius area's centre and
+  radius. Node `knk.admin.world.production`. Chunk snapshots are taken on the main thread within `chunks-per-tick`
+  (metric `production.survey.capture`); counting runs on its own thread. knk-plugin: knk-core
+  `production/survey/` (`SurveyCounter` over the `BlockSnapshotSource` port, `PlaceholderOverlay`, `AreaShape`,
+  `SurveyProfile`, `NotableChangeTracker`), knk-api-client `ProductionSurveyApiImpl`, knk-paper `production/`
+  (`SurveyModule`, `SurveyRunner`, `ChunkSnapshotBlocks`, `CaptureRadiusTaskHandler`, `AreaOutlineRenderer`) and
+  `commands/ProductionAdminCommand`; plugin scenario `production-area-survey`. Branch `claude/production-p4b`. Smoke
+  test: [production smoke test § 5.2](guides/production-storage-transport-smoke-test.md#52-steps-plugin-679). Admin
+  steps: merge the `surveys` keys into the plugin's `production` block (nothing runs while `production.enabled` is
+  false), restart; grant `knk.admin.world.production` to staff who survey (in `knk.admin.world.*`):
+
+  ```yaml
+  production:
+    surveys:
+      poll-minutes: 5
+      batch: 20
+      chunks-per-tick: 2
+      max-area-blocks: 16000000
+      max-area-chunks: 256
+      scheduled-loads-chunks: false
+      notable-change-blocks: 64
+      notable-cooldown-minutes: 30
+      areas-refresh-minutes: 10
+  ```
+
+
+- **`/navigate` can be taken away from a rank or player** ([PandiO/knk-workspace#845](https://github.com/PandiO/knk-workspace/issues/845),
+  developer decision option A, 2026-11-19; found in the destination engine live test, #25). For staff: a deny of
+  `knk.navigate` in the in-house permission system (on a group or an account) now refuses `/navigate` and the
+  navigation compass with "You don't have permission to use /navigate." and, with `navigation.destination-engine` on,
+  ends a running route within about 2 seconds. Players without a deny keep `/navigate` as before. knk-plugin ([PandiO/knk-plugin#106](https://github.com/PandiO/knk-plugin/pull/106)):
+  `knk.navigate` is `default: false` in `plugin.yml` (was `default: true`, so Bukkit said yes for everyone and the
+  in-house deny was never asked); `knk.navigate.any` stays `default: false`. knk-web-api: data-only seed migration
+  `20261120120805_SeedNavigateDefaultNode` gives the Default group `knk.navigate` (skipped where the group or a parent already grants, denies
+  or wildcards the node; Down keeps the grant). Branches `claude/navigate-permission-default` in knk-plugin,
+  knk-web-api and knk-workspace. **Deploy order: apply the API migration before deploying the plugin, or every player
+  loses `/navigate`** (with the new plugin and no seed, only an explicit grant gives the node). Open: which staff rank(s) get
+  `knk.navigate.any`; that seed waits for the developer. Smoke test:
+  [destination engine smoke test § 4.0 item 4](guides/navigation-destination-engine-smoke-test.md#40-preconditions),
+  § 4.1 step 4 and § 4.2 step 3.
+- **Off-road navigation: a default route mode per permission group, step B (plugin)**
+  ([PandiO/knk-workspace#852](https://github.com/PandiO/knk-workspace/issues/852), link L7b of the off-road chain,
+  #698). For players: `/navigate <dest>` without a mode word now follows the default route mode of the player's
+  highest-weight group that has one (a weight tie goes to the lower group id), without needing that mode's
+  `knk.navigate.mode.<word>` node; a typed word still wins and still needs its node. With no default on any group,
+  routes are as before. NPC routes are unchanged, and a siege match on the legacy path takes no group default (as it
+  takes no typed word). knk-plugin: `defaultRouteMode` in knk-api-client `PermissionGroupListItemDto`, the
+  Bukkit-free `GroupRouteModeResolver` in knk-core, the per-player cache `GroupRouteModeDefaults` (cleared on
+  `PermissionGroupChanged` and membership changes; a cold cache uses today's default while it fills) and the shared
+  `NavigateCommand` mode path, for both the legacy and the destination-engine path. Branch
+  `claude/offroad-group-route-mode` (PandiO/knk-plugin#103). Smoke test:
+  [off-road smoke test § 15.4](guides/navigation-offroad-smoke-test.md#154-in-game-step-b). Admin steps: none (no
+  config key, no migration); needs knk-web-api with step A (an older API sends no default, so routes stay as before).
+- **Overview map: cleaner region drawing and fewer dots when zoomed out** ([PandiO/knk-workspace#826](https://github.com/PandiO/knk-workspace/issues/826),
+  [#825](https://github.com/PandiO/knk-workspace/issues/825); fix link F3 of the overview map chain, #732). A town's
+  flash and "Show region" now look like the spike's static markers: outlines without extra corners on straight edges,
+  the town as a flat surface with one clean outline and openings where its districts are (a click there opens the
+  district), districts as see-through volumes without vertical edge lines and one outline along the top, heights
+  clamped to y 20..120. District and structure dots now disappear with their labels when zoomed out; town dots stay.
+  Grouping dots into clusters is not built (#825 keeps it as an idea). Web app only, no new setting; the bridge
+  protocol is unchanged. knk-web-app branch `claude/overview-map-f3-map-drawing` (`public/bluemap-bridge/bridge.js`),
+  spec [OVERVIEW_MAP_DESIGN.md](specs/in-game-maps/OVERVIEW_MAP_DESIGN.md) O36–O42. Smoke test:
+  [overview map smoke test § 3](guides/overview-map-smoke-test.md#3-phase-3-map-page-737-tier2) steps 2–4.
+
+- **Off-road navigation: a default route mode per permission group, step A (API and web app)**
+  ([PandiO/knk-workspace#852](https://github.com/PandiO/knk-workspace/issues/852), link L7b of the off-road chain,
+  #698, on top of the route modes of #707). For staff: a permission group can now have a **default route mode**
+  (`shortest`, `efficient` or `preferred`; "None (default: preferred)" = no default), set on the group's form under
+  Group and shown in the dashboard's "Default route" column. The game server uses it since step B (`/navigate <dest>` without a mode word then takes the default of the player's highest-weight group
+  that has one; a typed word still wins and still needs its `knk.navigate.mode.<word>` node). knk-web-api:
+  `PermissionGroup.DefaultRouteMode` (nullable, stored lowercase), `defaultRouteMode` in `PermissionGroupDto` (read by
+  the plugin through `GET api/PermissionGroups`) and `PermissionGroupListDto`; on create and update the three words are
+  accepted in any case, `""` clears, an omitted value keeps the stored one, anything else answers `400`; changing it is
+  a group edit under the existing access rules (`knk.admin.user.perm` and `PermissionEscalationGuard`'s rank rule). The
+  PermissionGroup form seed has the field in place. knk-web-app: the field in the group DTOs and object config, the
+  dashboard column, and the form dropdown's empty option named by the field setting `emptyOptionLabel`. Branches
+  `claude/offroad-group-route-mode` in knk-web-api, knk-web-app and knk-workspace. Smoke test:
+  [off-road smoke test § 15](guides/navigation-offroad-smoke-test.md#15-l7b-default-route-mode-per-permission-group-852-tier3).
+  Admin steps:
+  1. Apply the migration `AddPermissionGroupDefaultRouteMode` (`dotnet ef database update`; additive: one nullable
+     column `permission_groups.DefaultRouteMode`, null on every group, so routes stay as today).
+  2. Add the field to the PermissionGroup form if it was imported before this change (import never overwrites): in the
+     form designer, step Group, field `DefaultRouteMode`, label "Default route mode", not required. Since the enum
+     follow-up of 2026-11-21 (entry above) it is an **Enum** field with settings JSON `{"enumValues": ["Shortest",
+     "Efficient", "Preferred"], "emptyOptionLabel": "None (default: Preferred)"}`; step A's String field with
+     lowercase words no longer passes the publish check. A fresh import of `PermissionGroup` has it. Without the field
+     the form keeps a group's stored default.
+  3. No `api.env` key, no new permission node and no plugin `config.yml` change.
+
+- **Off-road navigation: the smoke-test failures of 2026-11-19** ([PandiO/knk-workspace#780](https://github.com/PandiO/knk-workspace/issues/780),
+  [#771](https://github.com/PandiO/knk-workspace/issues/771), [#710](https://github.com/PandiO/knk-workspace/issues/710);
+  fix link F3 of the off-road chain, #698). For players: with `navigation.road-goal-reachable` on, the road part of a
+  route now goes as far as the road usefully carries it and the walk starts as late as it can (Keep Tower Roof: through
+  the Keep Garrison into the Keep Gate instead of stopping at the garrison exit; Garrison Watchtower Roof: no longer
+  under the watchtower with a long walk back); the first turn is said once, not again on every silent route
+  replacement; an open door is walked through even where the player may not open doors (the keep's spiral-stair door
+  stopped the walk trail). Walk trails are denser: `navigation.trail-leg-spacing` ships as 2.0 (was 3.0; the developer's choice; set it in an existing `config.yml`, which keeps its value). For staff: new key `navigation.road-goal-walk-weight` (4.0); one INFO line per road-goal
+  choice with every candidate's road and walk lengths, and one per walk search that never left its start naming the
+  unusable end. knk-plugin branch `claude/offroad-smoke-fixes-f3`; config key in
+  [plugin configuration § 4.15](guides/admin/plugin-configuration.md). Smoke test:
+  [off-road smoke test § 14](guides/navigation-offroad-smoke-test.md#14-f3-smoke-test-failures-of-2026-11-19-780-771-710-tier2).
+- **Transport in the web app: order list and detail, manual orders with a dry run, a structure's transport**
+  ([PandiO/knk-workspace#682](https://github.com/PandiO/knk-workspace/issues/682), link L16 of the production, storage
+  and transport chain; [design](specs/production-storage-transport/DESIGN.md) § 7, § 11.1). Staff can follow and steer
+  the goods on the road. **Transport orders** (admin sidebar, World) lists every order newest first with its status in
+  words, route, units delivered and ETA, filtered by open or final, status, origin, structure and storage. An order's
+  page shows its status and reason, source, carrier and times, the cargo per blueprint (requested, loaded, delivered,
+  returned, lost) and what is on the road now, the route stop by stop with each leg's distance and where it came from
+  (a measured lane, an estimate, the fallback), the carriers, and the event log as a timeline with a link to each stock
+  transaction; **Cancel** says what will happen first (cancelled, or the cargo turns back). **New manual order**
+  (source, an optional carrier, stops in visiting order with their items, a start time and a note) runs a **dry run**
+  first: errors, warnings, the cargo against the source's stock and each leg with its distance, time and room; the
+  order can be made only after a dry run of the same request. A production structure's page gets a **Transport** panel:
+  the warnings (no road connection, a full Output storage, no warehouse, no workers), the Output fill against the
+  threshold, the workers away, why the automatic trigger would fire or is held and the order it would make now, the
+  open orders, the lanes from and to the structure, and "New order from here". Lanes are on the dashboard with the
+  seeded form. The game settings page gets a **Transport** card (speed, capacity, triggers, route estimates, waits,
+  lane age; always sent back on save) with **Run transport now**. Also #838: the production structure list shows the
+  kind's name, a cycle's consumed inputs show blueprint names, and the production panel links to all cycle records.
+  knk-web-app: `transportOrderClient`, `transportLaneClient`, `productionStructureClient.getTransport`,
+  `TransportOrderPanel`, `StructureTransportPanel`, `TransportPlanView`, `TransportOrderTable`, pages
+  `TransportOrdersPage` and `TransportOrderNewPage`, `TransportSettingsCard`, `src/utils/transport.ts`;
+  `e2e/transport.spec.ts`. Smoke test:
+  [production smoke test § 6.3](guides/production-storage-transport-smoke-test.md#63-steps-web-app-682). Admin steps:
+  1. Deploy the web app with the transport API (#79, in `next`) and its imported seeds (`TransportOrder`,
+     `TransportLane`). No migration, setting or plugin change.
+
+- **Transport API: production structures send their goods to the town's warehouses** ([PandiO/knk-workspace#79](https://github.com/PandiO/knk-workspace/issues/79),
+  link L14 of the production, storage and transport chain; [design](specs/production-storage-transport/DESIGN.md)
+  § 7, decisions D5, D6 and G14). When a producer's Output storage fills up (75% of its cap by default), one of its
+  two workers loads the goods and walks them to the nearest warehouse of its town by road, or to its preferred one.
+  The trip takes the road length divided by walking speed (4.317 blocks per second, a player's walk); while the worker
+  is away the producer makes half as much, with both away nothing, and full output resumes when it is back. A rural
+  producer that is not connected to its town's road network keeps producing until it is full and then stops; its
+  transport waits, and the dashboard warns about the missing road and the full storage. Goods are never dropped: at a
+  full warehouse the carrier waits 30 minutes, goes on to another warehouse of the town, and otherwise brings the rest
+  back (waiting at a full source until there is room). Staff can make manual orders (one or more stops, each with its
+  own amounts) with a dry run first, cancel an order (a loaded one turns back), and read each order's stops, cargo
+  and event log. Carriers are simulated in V1 and robbery is off; caravans and couriers come later. Also #838: the
+  production structure list shows the kind's name, a cycle record's consumed inputs show their blueprint names, and
+  the dashboard lists cycle records. knk-web-api: entities `TransportOrder` (with `TransportStop`,
+  `TransportStopLine`, `TransportOrderLine`, `TransportAssignment`, `TransportEvent`) and `TransportLane`; a `Transit`
+  storage per order; `TransportService` (lifecycle, automatic trigger, sizing and destination), `TransportLaneService`,
+  `TransportSweepService` (every 60 s); endpoints `api/TransportOrders` (read, search, manual create, `dry-run`,
+  `{id}/cancel`, `run-now`), `api/TransportLanes` (CRUD, `due` and `report` for the game server's lane measurer
+  #681), `GET api/ProductionStructures/{id}/transport` (the automatic trigger's dry run, warnings, open orders); game
+  setting section `production.transport`; form and display seeds `TransportOrder` (read only) and `TransportLane`.
+  Writes need `knk.admin.world` or the plugin key (lane delete also `knk.admin.delete`); reads the World area node or
+  the plugin key. The sweep and the automatic trigger run only with `Production:Enabled` on; manual orders, dry runs,
+  cancel and lanes work while it is off. Smoke test:
+  [production smoke test § 6](guides/production-storage-transport-smoke-test.md#6-phase-p5-transport-core-simulated-79-api-681-plugin-682-web-app-tier3).
+  Admin steps:
+  1. Apply the migration `AddTransportCore` (`dotnet ef database update`; additive: seven tables).
+  2. Import the form and display seeds `TransportOrder` and `TransportLane` ("make default").
+  3. Until the lane measurer (#681) runs, either type in lanes (`api/TransportLanes`) or accept estimated routes
+     (straight distance × 1.4, or 200 blocks without positions), and set each rural producer's road connection
+     (`PUT api/ProductionStructures/<id>/road-connection`): automatic transport is held while it is not Connected.
+  4. No `api.env` key and no plugin `config.yml` change; the timing and sizing are the game setting
+     `production.transport` (defaults above; a settings save that leaves the section out keeps the stored values).
+
+- **Yield areas in the web app: areas, the survey viewer, "Survey now" and the Hybrid override editor** ([PandiO/knk-workspace#680](https://github.com/PandiO/knk-workspace/issues/680),
+  link L13 of the production, storage and transport chain; [production kinds](specs/production-storage-transport/PRODUCTION_KINDS.md)
+  § 3-4). Staff can now see and steer where a production structure's rates come from. A production structure's page
+  gets a **Yield** panel: its yield source in words (a Configured structure is never surveyed and has no Survey now,
+  G5), its areas with their size against the level's cap, **Add area** (the seeded ProductionArea form; an area over
+  the cap or overlapping an exclusive area is refused with the API's sentence), **Survey now** and **Make lines
+  again**, and every output with how its base rate comes about: the surveyed rate, the override, the base rate, the
+  primary multiplier, its line, and per survey unit the area, unit key, matched yield row, count, shared split, rate
+  and chance; units no yield row matches are listed. On a Hybrid structure each output can be pinned, excluded or
+  scaled, and an output the survey doesn't yield can be pinned. An area's page shows its size and cap, a plot from
+  above with the areas that overlap it, the latest survey's composition, the trend per unit key over the last 30
+  surveys and the survey history, with "Survey this area now"; a survey's page shows its composition. A kind's page
+  gets a **Yield table** editor (unit key or prefix, output, rate per unit per hour, chance, from level) and its
+  primary outputs. The dashboard lists areas, overrides and surveys. knk-web-app: `productionAreaClient`,
+  `areaSurveyClient`, `productionYieldOverrideClient`, `StructureYieldPanel`, `ProductionAreaPanel`, `AreaPlot`,
+  `SurveyCompositionTable`, `SurveyTrendTable`, `AreaSurveyPanel`, `ProductionKindYieldTablePanel`,
+  `src/utils/productionYield.ts`; `e2e/production-yield.spec.ts`. Smoke test:
+  [production smoke test § 5.3](guides/production-storage-transport-smoke-test.md#53-steps-web-app-680). Admin steps:
+  1. Deploy the web app with the yield areas API (#138, in `next`) and its imported seeds (`ProductionArea`,
+     `ProductionYieldOverride`, `AreaSurvey`, `ProductionKind` v2, `ProductionStructure` v3). No migration, setting or
+     plugin change.
+  2. Area capture in game: until the ProductionArea seed carries a world task, turn on `RegionClaim` on its WorldGuard
+     region field in the form builder (#680); the `CaptureRadius` task comes with #679.
+
+- **Yield areas API: areas, surveys, yield tables and Derived/Hybrid yields** ([PandiO/knk-workspace#138](https://github.com/PandiO/knk-workspace/issues/138),
+  link L11 of the production, storage and transport chain; [production kinds](specs/production-storage-transport/PRODUCTION_KINDS.md)
+  § 2-4). Production structures can now produce what their land holds. A structure has **yield areas** (a WorldGuard
+  region, a cuboid, a polygon or a radius around it); the API keeps each area's bounding box and size and refuses an
+  area over its level's cap (blocks for fields and pastures, volume for quarries and mines, radius for loggers,
+  fisheries and florists) or an exclusive area (fields, quarries, mines, pastures) that overlaps another exclusive area
+  of the same model. The game server **surveys** the areas (the plugin link #679) and reports what it counted, such as
+  `TREE:OAK:LARGE ×12` or `BLOCK:COAL_ORE ×340`; the API keeps every survey as history (with a trend per unit) and
+  queues areas for the next survey: on creation, on a staff request ("survey now"), and once a day. A structure's
+  **yield source** is `Hybrid` by default (the survey with staff pins, exclusions and scales per output), `Derived`
+  (the survey only) or `Configured` (rates staff enter, never surveyed); structures that existed before stay
+  `Configured`. Each production kind has a **yield table** (survey unit → output, rate per unit per hour, byproduct
+  share, from which level), a survey profile and **primary outputs** that get a multiplier (a coal mine's coal). After
+  every survey or override change the structure gets a production line for each output it yields; the engine computes
+  the base rate from the latest surveys, and units in overlapping shared areas (two loggers in one forest) count an
+  equal part for each structure. An optional ±10% variation per kind (P-D9) and the primary multiplier show in the cycle
+  trace. Background work (the survey queue and survey reports) runs only with `Production:Enabled` on; the CRUD works
+  while it is off. Also #831: a warehouse or production structure update answers 200 with the placement warnings, error
+  messages lose the " (Parameter 'dto')" suffix, and the Structure form can make a rural structure.
+  knk-web-api: entities `ProductionArea`, `AreaSurvey` (with units), `ProductionYieldRow`, `ProductionKindPrimaryOutput`,
+  `ProductionYieldOverride`; `ProductionStructure.YieldSource`; `ProductionKind.SurveyProfileJson`,
+  `SurveyProfileVersion`, `PrimaryMultiplier`, `yieldTable` and `primaryOutputs`; endpoints `api/ProductionAreas`
+  (+ `{id}/overlaps`, `survey-due`, `POST {id}/surveys`), `api/AreaSurveys` (read only, + `trend`),
+  `api/ProductionYieldOverrides`, and on `api/ProductionStructures` `GET {id}/yield` (the rate explanation),
+  `POST {id}/survey` and `POST {id}/materialize`; form and display seeds `ProductionArea`, `ProductionYieldOverride`, the
+  display seed `AreaSurvey`, and new versions `ProductionKind` v2, `ProductionStructure` v3 and `Structure` v3 (form).
+  Writes need `knk.admin.world` (delete also `knk.admin.delete`; survey reports the plugin key or `knk.admin.world`);
+  reads the World area node or the plugin key. Smoke test:
+  [production smoke test § 5](guides/production-storage-transport-smoke-test.md#5-phase-p4-yield-areas-and-surveys-138-api-679-plugin-680-web-app-tier3).
+  Admin steps:
+  1. Apply the migration `AddProductionYieldAreas` (`dotnet ef database update`; additive: six tables, three kind
+     columns with each kind's survey profile, and `production_structures.YieldSource`, `Configured` for existing rows).
+  2. Import the form and display seeds `ProductionArea` and `ProductionYieldOverride` and the display seed `AreaSurvey`,
+     and make the new versions of `ProductionKind` (v2, form and display), `ProductionStructure` (v3, form and display)
+     and `Structure` (v3, form) the default.
+  3. Fill each kind's yield table (`PUT api/ProductionKinds/<id>` with `yieldTable`; the web app editor comes with
+     #680): no table rows are seeded, so a survey yields nothing until they exist.
+  4. No `api.env` key and no plugin `config.yml` change.
+
+- **Production engine API: kinds, levels, production lines, modifiers, weather and the sweep** ([PandiO/knk-workspace#86](https://github.com/PandiO/knk-workspace/issues/86),
+  link L9 of the production, storage and transport chain; [production kinds](specs/production-storage-transport/PRODUCTION_KINDS.md)
+  § 2-5, [design](specs/production-storage-transport/DESIGN.md) § 9). Production structures now produce. A
+  **production kind** is catalogue data (seeded: Farm, Logger, Quarry, Mine, Fishery, Flower farm, Florist and Animal
+  farm; Hunter later) with ten **levels** each (yield multiplier, cycle speed, area cap for the yield areas, Output
+  storage and transport caps written on level change, an upkeep field without effect, unlocks and an upgrade cost in
+  resources and coins). A structure's **production lines** (one per output) have a configured rate per hour; the
+  engine settles each line on a grid anchored at its creation (no drift): it accrues `rate × elapsed` with fractions
+  kept, moves the whole units from `SYS_PRODUCTION` into the structure's Output storage through the stock ledger, and
+  writes a **cycle record** with the base rate, every modifier, the workers present, what was emitted and accepted, and
+  why anything fell short. The rate runs through a **modifier pipeline** (additions first, then multiplications) with
+  three sources: the structure's level, the **weather** (climate zones with weather odds, assigned per town, rolled once
+  per in-game day and stored) and staff-made modifiers (scope global, kingdom, town, territory, structure or one line;
+  target any output, a blueprint, a category or a kind; an optional active window). Output also scales with the
+  **workers** present (one of two away = 50%). A full Output storage stops the line without accruing and it resumes,
+  without catching up, once there is room; inputs are taken from the structure's Input storage while a line runs;
+  after downtime a line catches up at most 24 hours. Blocked and resumed lines are queued as notifications for the game
+  server. Staff can upgrade a structure by one level, paying the level's resources (to `SYS_CONSUMPTION`) and a
+  player's coins in one transaction. Everything runs only with `Production:Enabled` on; the CRUD works while it is
+  off. Also #819: the ItemBlueprint form gets "Storage weight" and a storage's page lists its stock by blueprint name.
+  knk-web-api: entities `ProductionKind`, `ProductionKindLevel`, `ProductionLine`, `ProductionModifier`,
+  `ClimateZone`, `WeatherType`, `WeatherRoll`, `ProductionCycleRecord` (and their child rows); endpoints
+  `api/ProductionKinds`, `api/ProductionKindLevels` (edit only), `api/ProductionLines` (+ `{id}/settle`),
+  `api/ProductionModifiers`, `api/ClimateZones` (+ `rolls/search`), `api/WeatherTypes`, `api/ProductionCycleRecords`
+  (read only), `POST api/Production/run-now`, and on `api/ProductionStructures` `GET {id}/production` (the production
+  view with "why not producing"), `PUT {id}/workers` and `POST {id}/upgrade`; the `ProductionStructure.ProductionKindId`
+  foreign key; game settings `production.engine` (`baseCycleMinutes` 10, `catchUpCapHours` 24, `weatherDayMinutes`
+  20); form and display seeds for the six major entities, `ProductionStructure` v2 (kind picker), `ItemBlueprint` v2
+  (storage weight) and the `Storage` display v2. Writes need `knk.admin.world` (delete also `knk.admin.delete`, the
+  upgrade also `knk.economy.admin`); reads the World area node or the plugin key. Smoke test:
+  [production smoke test § 4](guides/production-storage-transport-smoke-test.md#4-phase-p3-production-engine-86-api-678-web-app-tier3).
+  Admin steps:
+  1. Apply the migration `AddProductionEngine` (`dotnet ef database update`; additive: thirteen tables, the seeded
+     catalogue, one default climate zone and three weather types, and the foreign key from
+     `production_structures.ProductionKindId` to the kinds). Before it, check that no production structure has a kind id
+     outside 1-8 (`SELECT Id FROM production_structures WHERE ProductionKindId NOT BETWEEN 1 AND 8;` returns nothing);
+     otherwise clear it, or the foreign key can't be added.
+  2. Import the form and display seeds `ProductionKind`, `ProductionKindLevel`, `ProductionLine`,
+     `ProductionModifier`, `ClimateZone` and `WeatherType`, and make the new versions of `ProductionStructure` (form and
+     display), `ItemBlueprint` (form) and `Storage` (display) the default.
+  3. No `api.env` key and no plugin `config.yml` change. The engine timing is a game setting (`production.engine`,
+     defaults above).
+
+- **Production engine in the web app: kind, level and line editors, weather, the production view and the cycle trace** ([PandiO/knk-workspace#678](https://github.com/PandiO/knk-workspace/issues/678),
+  link L10 of the production, storage and transport chain; [production design](specs/production-storage-transport/DESIGN.md)
+  § 9, § 11.1, [production kinds](specs/production-storage-transport/PRODUCTION_KINDS.md) § 4-5). Staff can now run
+  the production engine from the web app. The dashboard lists production kinds, levels, lines, modifiers, climate zones
+  and weather types; each is created and edited with its seeded form. A kind's page lists its ten levels (yield,
+  cycle speed, area and output caps, upgrade coins, upgrade cost and unlocks); a level's page edits its **unlocks and
+  upgrade cost**; a line's page shows its state and accrual, edits its **inputs** per hour, settles it now and lists its
+  latest cycles; a climate zone's page edits its **weather odds** (at most 100% together, the rest clear) and its
+  **towns**, and lists the stored daily rolls; a weather type's page edits its **effects** per resource category. A
+  production structure's page gets a **Production** panel: why it isn't producing (production off, no kind, no output
+  storage, a full output storage, missing inputs), each line's rate step by step (base rate, each modifier in the order
+  applied, the unlock and the workers present), the **workers** present, the **upgrade** to the next level with its
+  coins and resources shown before paying (`knk.economy.admin`), and the latest cycles, each with its **trace**. The game
+  settings page gets a **Production engine** card (base cycle, catch-up cap, weather day) and **Run production now**;
+  a save of the game settings now keeps `production.engine` (before, the web app's save dropped it and the API reset
+  it to the defaults). knk-web-app: one client per resource, `StructureProductionPanel`, `ProductionKindLevelsPanel`,
+  `ProductionKindLevelItemsPanel`, `ProductionLinePanel`, `ClimateZonePanel`, `WeatherTypeEffectsPanel`,
+  `ProductionCycleTable`, `ProductionEngineSettingsCard`, `src/utils/productionEngine.ts`;
+  `e2e/production-engine.spec.ts`. Smoke test:
+  [production smoke test § 4.2](guides/production-storage-transport-smoke-test.md#42-steps-web-app-678). Admin steps:
+  1. Deploy the web app with the production engine API (#86, in `next`) and its imported form and display seeds
+     (`ProductionKind`, `ProductionKindLevel`, `ProductionLine`, `ProductionModifier`, `ClimateZone`, `WeatherType`,
+     `ProductionStructure` v2). No migration, setting or plugin change.
+
+- **World web app: warehouses, production structures and rural placement** ([PandiO/knk-workspace#676](https://github.com/PandiO/knk-workspace/issues/676),
+  link L7 of the production, storage and transport chain, [production design](specs/production-storage-transport/DESIGN.md)
+  § 3.3-3.4, § 11.1). Staff can now create warehouses and production structures in the web app with the seeded forms:
+  in a district (district, street, house number) or rural (only the town, picked from the list), with the region drawn
+  in game through Send to Minecraft. A save that breaks a placement rule set to warn still saves and shows the warning
+  (for example P-2, outside the town's territory) until it is closed; a refused save shows the API's reason (both a
+  district and a town, a blocking rule). The dashboard lists both types with their town, placement (District or Rural)
+  and territory flag, production structures also with level, production on or off and their road connection; the
+  structure, warehouse and production structure lists have a **Territory flag** filter that shows the structures the
+  territory report flagged (contested, outside their town's territory). A warehouse's or production structure's page
+  shows where it stands and its town, the production structure's warnings (contested land, outside its territory, not
+  connected to its town's roads), its road connection, workers and delivery preference, the territory flag and
+  loyalty, and every storage it holds with its stock (adjust and move with `knk.economy.admin`). The form builder's rule
+  editor offers the validation type **Inside Territory**, a warning by default. knk-web-app: `warehouseClient`,
+  `productionStructureClient`, `StructurePlacementPanel`, `StructureStoragesPanel`, `TerritoryFlagFilterSelect`,
+  `src/utils/productionWorld.ts`; `e2e/production-world.spec.ts`. Smoke test:
+  [production smoke test § 3.2](guides/production-storage-transport-smoke-test.md#32-steps-web-app-676). Admin steps:
+  1. Deploy the web app with the world API (#91, in `next`) and its imported `Warehouse` and `ProductionStructure`
+     form and display seeds. No migration, setting or plugin change.
+
+- **World plugin: production region kinds, rural structure regions and the territory lookup** ([PandiO/knk-workspace#677](https://github.com/PandiO/knk-workspace/issues/677),
+  link L8 of the production, storage and transport chain, [production design](specs/production-storage-transport/DESIGN.md)
+  § 3.4). With the plugin switch `production.enabled` on, the managed-region repair (and a freshly finished region)
+  gives a production structure's region the kind `RESOURCE_PRODUCTION` and a warehouse's the kind `STRUCTURE`. A rural
+  structure (a town, no district) gets a region with no parent at its kind's floor priority (30), so no town flags are
+  inherited and PvP stays allowed around it; the repair no longer warns about its missing district. The game server now
+  answers the territory lookup the API's placement rule P-2 (`InsideTerritory`) asks, so a rural structure outside its
+  town's territory gets a real warning instead of "not checked": `GET /api/territory/contains-region/{regionId}` (every
+  block column of the region and its sub-regions owned by the holder; contested land counts as not owned) and `GET
+  /api/territory/contains-location`, both with `holderKind`/`holderId`, on the region HTTP server behind the plugin key;
+  HTTP 503 while `production.enabled` is off or the territory cache is not built yet, which the API shows as "not
+  checked". The territory report now flags rural structures too (it reads each structure's town from the structure
+  search). A structure moved from a district to rural keeps its old WorldGuard parent until staff remove it
+  (`/rg setparent <region>`): the repair never clears a parent. With the switch off nothing changes. knk-plugin:
+  `ManagedRegionKind.fromDomainType(type, production)`, `DomainRegionSpecs` rural rule, knk-core `TerritoryLookup`,
+  knk-paper `TerritoryLookupHandler` and `RegionUnionOutlines`, `StructureListDto.townId`; plugin scenario
+  `rural-structure-region`. Smoke test:
+  [production smoke test § 3.3](guides/production-storage-transport-smoke-test.md#33-steps-plugin-677). Admin steps:
+  1. No new `config.yml` key: the existing `production.enabled` switches it (plugin configuration § 4.31).
+  2. For the lookup the API needs to reach the plugin's region HTTP server, as for region checks today
+     (`MinecraftPlugin:BaseUrl`, the shared plugin key).
+  3. After turning `production.enabled` on, run `/knk regions repair` once (or restart) so existing production
+     structures and rural structures get their kind.
+
+- **World API: rural structures, warehouses and production structures** ([PandiO/knk-workspace#91](https://github.com/PandiO/knk-workspace/issues/91),
+  link L6 of the production, storage and transport chain, [production design](specs/production-storage-transport/DESIGN.md)
+  § 3.3-3.4). A structure can now stand in a district (as before) or be **rural**: it belongs to a town by its
+  `townId`, with no district and no street, as most farms, quarries and mines will. Exactly one of district and town is
+  set (refused otherwise, also by the database); its effective town is the district's town or its own. Two new
+  structure types: **warehouses** (take deliveries, priority, a delivery storage created with them) and **production
+  structures** (level 1-10, production on/off, transport settings, preferred warehouse, road connection, workers; an
+  output storage created with them; the production kind and production itself come with P3). The placement rules of
+  the design are seeded on both forms as **warnings** an admin can switch to blocking: P-1, the region lies inside the
+  district's region, and P-2, a rural structure lies inside its town's territory (new validation type
+  `InsideTerritory`, a lookup on the game server, answered once the plugin link #677 is deployed; until then it says
+  "not checked"). The same rules now run when the API saves a structure, so a blocking rule refuses the save there too;
+  a rule that can't be checked never blocks. A rural structure on contested land keeps its town, keeps producing and
+  shows a warning. With `production.enabled` off the territory rule is skipped; warehouses and production structures can
+  still be created, edited and deleted. Rural structure regions have no parent (PvP stays allowed). knk-web-api:
+  `Structure.TownId` (and nullable `DistrictId`/`StreetId`), entities `Warehouse` and `ProductionStructure`; endpoints
+  `api/Warehouses` and `api/ProductionStructures` (CRUD, search, `PUT {id}/road-connection`); `api/Structures` accepts
+  `townId` and lists `townId`, `isRural` and `territoryFlag`; form and display seeds `Warehouse` and
+  `ProductionStructure`. Writes need `knk.admin.world` (delete also `knk.admin.delete`); reads the World area node or
+  the plugin key. Smoke test:
+  [production smoke test § 3](guides/production-storage-transport-smoke-test.md#3-phase-p2-world-rural-structures-warehouse-production-structure-91-api-676-web-app-677-plugin-tier3).
+  Admin steps:
+  1. Apply the migration `AddProductionWorld` (`dotnet ef database update`; additive: two nullable columns widened, a
+     nullable `TownId`, a check constraint, two tables; existing structures keep their district and street).
+  2. Import the form seeds `Warehouse` and `ProductionStructure` and their display seeds ("make default").
+  3. No `api.env` key and no plugin `config.yml` change.
+
+- **Stock core API: storages, the stock ledger and capacity** ([PandiO/knk-workspace#97](https://github.com/PandiO/knk-workspace/issues/97),
+  link L4 of the production, storage and transport chain, [production design](specs/production-storage-transport/DESIGN.md)
+  § 4). Staff can now create storages for a structure, town or district, a player, a clan or a transport's cargo, and
+  every change of stock is a double-entry move in a ledger: stock never appears or vanishes, it moves from one storage
+  to another, with five system storages (`SYS_PRODUCTION`, `SYS_CONSUMPTION`, `SYS_LOSS`, `SYS_ADJUSTMENT`,
+  `SYS_WORLD`) as the other side of goods entering or leaving. Stackable items are counted per blueprint; unique items
+  (an enchanted sword) keep their identity. A storage can cap raw units (amount × each item's new storage weight,
+  default 1) and distinct items; a move over the cap, without enough stock or into a locked storage is refused or, in
+  partial mode, moves what fits and reports the rest, never as an error. A repeated request with the same
+  idempotency key applies once; concurrent moves never lose an update (row locks in id order, tested on MySQL with
+  1000 parallel moves). Corrections are new compensating transactions, never edits. A reconciler checks that every
+  blueprint sums to zero and every line equals its moves; `Production` moves older than 30 days are rolled up per line
+  per day with totals unchanged (G3). The scheduled reconciler and roll-up run only with `production.enabled` on;
+  storage pages, moves, adjustments and corrections by hand work while it is off. Nothing in game changes yet: the web
+  app screens are the next link (#675). knk-web-api: entities `Storage`, `StockLine`, `StockUnit`,
+  `StockTransaction`, `StockMove`, `StockMoveRollup`, `ItemBlueprint.StorageWeight`; `IStockService`
+  (`Move`/`MoveMany`/`Adjust`/`Reverse`), `StockReconciler`, `StockRollupService`, `StockMaintenanceService`;
+  endpoints `api/Storages` (CRUD, search) and `api/StockTransactions` (search, `{id}`, `moves/search`,
+  `rollups/search`, `reconcile`; move, `adjust`, `{id}/reverse`, `rollup`); form and display seeds `Storage` and
+  `StockTransaction`. Storage writes need `knk.admin.world` (create and edit also `knk.admin.content`, delete
+  `knk.admin.delete`); ledger reads the World area node or `knk.economy.admin`; moving stock the new node
+  `knk.economy.admin` (not under `knk.admin`, so only `*` or an explicit grant). Smoke test:
+  [production smoke test § 2](guides/production-storage-transport-smoke-test.md#2-phase-p1-stock-core-97-api-675-web-app-tier3).
+  Admin steps:
+  1. Apply the migration `AddStockCore` (`dotnet ef database update`; additive: six tables, `item_blueprints.StorageWeight`
+     default 1, the five system storages).
+  2. Import the form seeds `Storage` and `StockTransaction` and their display seeds ("make default").
+  3. Grant `knk.economy.admin` to the staff who may move or adjust stock (nobody has it by default except `*`).
+  4. No `api.env` key and no plugin `config.yml` change; keep the game setting `production.enabled` as it is.
+
+- **Stock in the web app: storage pages, the adjust and move dialogs and the ledger explorer** ([PandiO/knk-workspace#675](https://github.com/PandiO/knk-workspace/issues/675),
+  link L5 of the production, storage and transport chain, [production design](specs/production-storage-transport/DESIGN.md)
+  § 4 and § 11.1). Staff now work with the stock core in the web app instead of a REST client: storages have a
+  dashboard table (kind, holder, fill against the cap, lock) and the seeded form; a storage's page shows its capacity
+  in raw units × storage weight against the cap (and when it is over its cap), its lock, its stock lines and its unique
+  items; each line's amount opens the moves that made it in the new **Stock ledger** (Admin → Economy,
+  `/admin/stock/ledger`), which lists transactions, moves and the 30-day roll-ups with filters for storage, blueprint,
+  unique item, reason, actor, reference and dates, and puts the line's amount next to the net of its moves (A01, A22).
+  The **Adjust stock** dialog (note required) and the **Move stock** dialog (several lines, a reason, all or nothing or
+  partial) show the result per line: what moved and, for the rest, why (capacity full, distinct cap, not enough stock,
+  locked, another line refused); a retry after a lost answer sends the same idempotency key, so it applies once. A
+  ledger transaction's page lists its moves and writes a compensating correction with **Reverse**. The ledger page's
+  health card runs the reconciler and the roll-up by hand (the stock part of #65). The blueprint list shows each
+  blueprint's storage weight. knk-web-app: clients and types for `api/Storages` and `api/StockTransactions`, dashboard
+  columns, `StoragePanel`, `StockTransactionPanel`, the two dialogs, `StockLedgerPage`, Playwright `e2e/stock.spec.ts`.
+  Adjusting, moving, reversing and rolling up need `knk.economy.admin` (shown off with "Requires knk.economy.admin"
+  without it); the ledger reads need `knk.admin.world` or `knk.economy.admin`. Smoke test
+  [§ 2.2](guides/production-storage-transport-smoke-test.md#22-steps-web-app-675). No migration, no setting, no plugin
+  change. Admin steps:
+  1. Deploy the web app with (or after) the stock core API (#97) and import its form and display seeds (see that
+     entry).
+  2. Grant `knk.economy.admin` to the staff who adjust or move stock; staff with `knk.admin.world` only can read the
+     ledger.
+  3. A blueprint's storage weight is set through the API for now: the seeded ItemBlueprint form has no Storage weight
+     field yet (seed follow-up on #675).
+
+- **Navigation: where a route's road part ends** ([PandiO/knk-workspace#780](https://github.com/PandiO/knk-workspace/issues/780)
+  option (b), [#771](https://github.com/PandiO/knk-workspace/issues/771) items 3 to 5, fix link F2 of the off-road
+  navigation chain). Three plugin switches, all off by default, so routes, trails and sessions stay exactly as before:
+  `navigation.road-goal-reachable` chooses a point destination's road goal by walk reachability (the road point from
+  which the destination is reached on foot within the walk limits, with the least road plus walk length) instead of the
+  straight-line nearest road point; this makes "Keep storage hall" reachable over the road with the shipped settings
+  and removes scene 2's road overshoot. `navigation.road-to-its-end` keeps a road route to its end when the road network
+  is swapped near the destination, instead of a walk leg from partway along the road. `navigation.trail-leg-spacing`
+  now also spaces the walk trail with `guidance-v2` off (default 3.0, today's). NPC road plans are not affected.
+  knk-plugin: knk-core `RoadGoalChoice`; knk-paper `NavigationService`, `NavigationConfig`, `TrailRenderer`. Smoke test:
+  [off-road smoke test § 13](guides/navigation-offroad-smoke-test.md#13-f2-road-goal-and-route-ends-780-771-items-3-to-5-tier2).
+  Admin steps:
+  1. Merge into the plugin `config.yml` under `navigation:` (the switches off = no change), restart:
+     ```yaml
+     road-goal-reachable: false
+     road-goal-candidates: 12
+     road-to-its-end: false
+     ```
+  2. Optional, for the live test: `road-goal-reachable: true`, `road-to-its-end: true`, and a denser walk trail with
+     `trail-leg-spacing: 1.5` to `2.0` (the developer's choice; the default stays 3.0). Never raise
+     `max-snap-distance` for it.
+
+- **Territory in game: who holds the land where you stand** ([PandiO/knk-workspace#689](https://github.com/PandiO/knk-workspace/issues/689),
+  link L2 of the production, storage and transport chain, [territory design](specs/territory/DESIGN.md) § 1-4). With
+  the new plugin switch `production.enabled` on, the game server works out each town's and kingdom's territory from the
+  API's districts, crown land and ranges, measured from the nearest edge of each region, and keeps it per chunk; where a
+  border runs through a chunk it is kept per block column, so borders can run diagonally. Players see an action bar line
+  when they enter a town's territory, crown land or contested land, or leave into the wilderness. When two towns'
+  territories overlap the server reports it to the API, which records the conflict and flags the structures standing
+  there; staff check any spot with `/knk territory here`. Crown land regions get their own managed-region kind (top
+  level, priority 10). With the switch off (the default) nothing of this runs. knk-plugin: knk-core `core/territory/`
+  (chunk cache, rules, report, outlines, player tracker, `TerritoryService`), knk-api-client `TerritoryApiImpl`
+  (`GET api/Territory/inputs`, `PUT api/Territory/report`), knk-paper `territory/` (listener,
+  `PlayerTerritoryChangeEvent`, realtime `TerritoryChanged`), `/knk territory here|status|rebuild` (node
+  `knk.admin.world.territory`), managed-region kind `CROWN_LAND`, plugin scenario `territory-border-crossing`. Map
+  outlines are built and can be sent over the game hub, but the API and the map do not take them yet
+  ([#802](https://github.com/PandiO/knk-workspace/issues/802)). Merged into `next` 2026-11-19 (knk-plugin `55804b11`,
+  PandiO/knk-plugin#91; knk-workspace PR #804). Guides: [territory admin guide](guides/admin/territory-admin-guide.md),
+  [player guide](guides/users/territory-player-guide.md), [architecture](architecture/territory.md). Admin steps:
+  1. Merge into the plugin `config.yml` (the switch off = no change), restart:
+     ```yaml
+     production:
+       enabled: false
+       territory:
+         refresh-minutes: 10
+         notify-players: true
+         report: true
+         map-outlines: false
+         max-chunks-per-world: 500000
+         messages:
+           enter-town: "&7Entering the territory of &f{name}"
+           enter-crown-land: "&7Entering the crown land of &f{name}"
+           enter-contested: "&6Entering contested land: &f{holders}"
+           enter-wilderness: "&7Leaving &f{name}&7: wilderness"
+     ```
+  2. To test: `production.enabled: true` in the plugin and the API's game setting `production.enabled` on, then smoke
+     test § 1.3; grant staff `knk.admin.world.territory` (included in `knk.admin.*`). Keep `map-outlines: false`
+     until #802.
+- **Territory in the web app: kingdoms, provinces, crown land, town power, contested zones and structure loyalty** ([PandiO/knk-workspace#690](https://github.com/PandiO/knk-workspace/issues/690),
+  link L3 of the production, storage and transport chain, [territory design](specs/territory/DESIGN.md)). Staff can now
+  do the territory set-up in the web app instead of with a REST client: kingdoms, provinces and crown land have
+  dashboard tables and forms (crown land's region is drawn in game with Send to Minecraft, like a district's, G10); a
+  town's page has a Territory panel with its power, kingdom, province and effective ranges, where staff set those and
+  mark capital districts (G11); a conflict's page shows the two holders, the contested area and the structures standing
+  in it, and staff award the area to one holder, mark the lines redrawn or reopen it (A05); a structure's page shows its
+  territory flag and its conflict and sets its loyalty (A07); Game settings has a "Production and territory" card with
+  the production switch and the range settings, with a worked example. knk-web-app: clients and types for
+  `api/Kingdoms`, `api/Provinces`, `api/CrownLands`, `api/TerritoryConflicts`, `api/Territory`; dashboard columns; the
+  three page panels and the settings card; Playwright `e2e/territory.spec.ts`. Every change needs `knk.admin.world`.
+  Merged into `next` 2026-11-19 (knk-web-app `89751315`, PandiO/knk-web-app#57; knk-workspace PR #803). Smoke test
+  [§ 1.4](guides/production-storage-transport-smoke-test.md#14-steps-web-app-690). No migration, no setting, no plugin
+  change. Admin steps:
+  1. Deploy the web app with (or after) the territory API (#326) and import its form and display seeds (see that
+     entry).
+  2. Set power, kingdom, province and capital districts on each town's page (Territory panel); the seeded Town and
+     District forms do not have those fields yet (seed follow-up on #690).
+
+- **Siege weapons: weapon spots are created in the web form with a world task, from a WorldEdit selection or WorldGuard region** ([PandiO/knk-workspace#783](https://github.com/PandiO/knk-workspace/issues/783)
+  and [#799](https://github.com/PandiO/knk-workspace/issues/799), links L2 and L2b of the siege weapons chain, phase 2
+  of [#354](https://github.com/PandiO/knk-workspace/issues/354)). In the scenario's "Siege weapons" step an admin creates
+  a spot, picks its team and name, and clicks "Send to Minecraft" on the spot form's Min X field; in game they claim
+  the task with `/knk task <code>`, select the spot with WorldEdit (`save`) or name a WorldGuard region
+  (`region <id>`); the facing is pre-filled from where the admin looks (rounded to north, east, south or west) and can
+  be changed (`facing <direction>`); the size class is worked out as width across × length along the facing × height
+  (the largest class that fits) and again when the facing changes; a selection smaller than the small class
+  (7 × 9 × 5) is refused; a floor that isn't solid or a volume that isn't clear is a warning; `confirm` completes the
+  task, and the web form fills its six bounds, facing, size class and region and shows the warnings; the form's Submit
+  saves the spot. knk-plugin: world task handler `SiegeWeaponSpot` (only with `siege.weapons.enabled`), rules in
+  knk-core `core/siege/weapons/`; L2's in-game `/knk weaponspot` command is removed by #799, so there is one way to
+  create a spot. knk-web-app: the spot form's fan-out of the task result. knk-web-api: the `SiegeWeaponSpot` form seed
+  starts the task from Min X; with all six bounds the API works the size class out from bounds and facing on save and
+  refuses bounds smaller than the small class; no migration, no new endpoint. Branches `claude/siege-weapons-l2`
+  (in `next`) and `claude/siege-weapons-l2b` in knk-plugin, knk-web-api, knk-web-app and knk-workspace (PRs into
+  `next`). Admin steps:
+  1. Add the new block to the plugin's `config.yml` under the existing `siege:` section (off by default; the plugin
+     never adds keys to an existing file):
+
+     ```yaml
+     siege:
+       weapons:
+         enabled: false
+     ```
+
+  2. To create spots, set `siege.weapons.enabled: true` on a test server and restart; the admin needs
+     `knk.siege.admin.manage` in the web app.
+  3. Import the `SiegeWeaponSpot` form seed; a database that imported it before #799 gets the task by turning on
+     "Requires in-game action" on Min X with type `SiegeWeaponSpot` in the form designer (import never overwrites).
+
+- **Territory API: kingdoms, provinces, crown land, town power and contested zones** ([PandiO/knk-workspace#326](https://github.com/PandiO/knk-workspace/issues/326),
+  link L1 of the production, storage and transport chain, [territory design](specs/territory/DESIGN.md)). Staff can now
+  set up who holds land: kingdoms, optional provinces (a town's province must be in its kingdom), crown land (a
+  kingdom-held region with a range, drawn like a district, G10), each town's power and which districts are capitals.
+  The API works out every district's range, base range + power × factor, multiplied for a capital (G11), and hands the
+  game server everything its territory map needs in one read; when the game server reports that two towns' territories
+  overlap, the API records a conflict and flags the structures standing there, and staff resolve it by awarding the
+  area to one town or redrawing the lines. Structures can also be given a loyalty (stored only for now). Nothing in game
+  changes yet: the game server side (#689) and the web pages (#690) are the next links. knk-web-api: entities
+  `Kingdom`, `Province`, `CrownLand`, `TerritoryConflict`; `Town.Power`/`KingdomId`/`ProvinceId`,
+  `District.IsCapital`, `Structure.LoyaltyTownId` and territory flag; the game setting section `production`
+  (`Production:Enabled`, default off, and the territory ranges); endpoints `api/Kingdoms`, `api/Provinces`,
+  `api/CrownLands`, `api/TerritoryConflicts` (with `resolve` and `reopen`), `api/Territory` (`inputs`, `report`,
+  `towns/{id}`, `structures/{id}` with `loyalty` and `flag`); realtime event `TerritoryChanged`; form and display seeds
+  for the four new entities. Writes need `knk.admin.world` (create and edit also `knk.admin.content`, deletes
+  `knk.admin.delete`); the report is the game server's only. Merged into `next` 2026-11-19 (knk-web-api `0d6e369a`,
+  PandiO/knk-web-api#53; knk-workspace PR #798); API contract in the [territory architecture](architecture/territory.md#4-api-contract). Admin steps:
+  1. Apply the migration `AddTerritory` (`dotnet ef database update`; additive: four tables, defaulted columns).
+  2. Import the form seeds `Kingdom`, `Province`, `CrownLand`, `TerritoryConflict` and their display seeds ("make
+     default").
+  3. Leave `production.enabled` off until the plugin link (#689) is deployed; set the ranges under
+     `production.territory` in the game settings (defaults: base 100, factor 2, capital × 1.5).
+
+- **Siege weapons: templates, ammo types, weapon spots and unlocks can be set up in the web app** ([PandiO/knk-workspace#782](https://github.com/PandiO/knk-workspace/issues/782),
+  link L1 of the siege weapons chain, phase 1 of [#354](https://github.com/PandiO/knk-workspace/issues/354)). Staff
+  can now describe trebuchets, catapults and ballistas, their ammunition and the places in a siege scenario where a
+  team may put one; nothing changes in a match yet. knk-web-api: new entities `SiegeWeaponTemplate` (range, spread by
+  ranging in, flight time, cone, gate and weapon damage multipliers, spot cooldown, match and unlock prices; schematic
+  references stay nullable until #614), `SiegeAmmoType` (effect, player and structure damage, radius, knockback, armour
+  piercing, effect area, price per shot; many-to-many with templates), `SiegeWeaponSpot` (owned by a scenario and one of
+  its teams: bounds, facing, size class) and `UserSiegeWeaponUnlock` (one per player and type), plus
+  `SiegeTeam.ActiveWeaponSpots` (0), `SiegeScenario.FriendlyFire` (off) and
+  `SiegeScenario.WeaponSpotCooldownOverrideSeconds` (empty). Endpoints `api/SiegeWeaponTemplates`, `api/SiegeAmmoTypes`,
+  `api/SiegeScenarios/{id}/weapon-spots` with `api/SiegeWeaponSpots/{id}`, and `api/UserSiegeWeaponUnlocks` (with
+  `by-user/{userId}`); writes need `knk.siege.admin.manage` (or the plugin key), create and edit also
+  `knk.admin.content`, deletes `knk.admin.delete`. knk-web-app: clients, dashboard columns and form wizard support.
+  Branches `claude/siege-weapons-l1` in knk-web-api, knk-web-app and knk-workspace (PRs into `next`). No flag (data
+  only). Admin steps:
+  1. Apply the migration `AddSiegeWeapons` (`dotnet ef database update`; additive: five tables, three defaulted
+     columns).
+  2. Import the form seeds `SiegeAmmoType`, `SiegeWeaponTemplateAmmoType.join`, `SiegeWeaponTemplate`,
+     `SiegeWeaponSpot`, `UserSiegeWeaponUnlock` (in that order, "make default").
+  3. On a database that imported `SiegeScenario` and `SiegeTeam` before, add the scenario's "Siege weapons" step and
+     the team's "Active weapon spots" field in the form designer (the seed files have them; import never overwrites).
+
+- **Item identity: every item a player obtains is a blueprint item** ([PandiO/knk-workspace#141](https://github.com/PandiO/knk-workspace/issues/141),
+  link L0 of the production, storage and transport chain). Every item you pick up, mine, loot, fish, craft or trade
+  for now has a known item type on the server, while it looks and stacks exactly as before. knk-web-api, knk-plugin and
+  knk-workspace branches `claude/item-identity-141`, merged into `next` 2026-11-19 (knk-web-api `7d213fd6`, knk-plugin
+  `2ef256e7`, knk-workspace `ca3bcc98`). Guides: [admin](guides/admin/item-identity-admin-guide.md),
+  [architecture](architecture/item-identity.md) (docs #796).
+  1. API: `ItemBlueprint.VanillaMaterialMatchRefId`, unique, maps each obtainable vanilla material to one blueprint.
+     Plain "vanilla shadow" blueprints in a new top-level "Uncurated" category are generated for materials nobody
+     curated (D11/G4), after every catalogue scan and on `POST api/ItemIdentity/shadows/generate`. New
+     `api/ItemIdentity`: `GET material-map` (any logged-in caller or the plugin key), `GET report` and
+     `PUT matches/{materialRefId}` (`knk.admin.content`; the latter also the plugin key), `POST conversion-counts`
+     (plugin key only). A catalogue merge keeps one match per material.
+  2. Plugin: one resolver (instance tag → blueprint tag → vanilla match); `knightsandkings:knk_blueprint` stamped on
+     blueprint items that differ from the plain vanilla item; the plain item never carries it (retag rule), so
+     stacking is vanilla's. Conversion hooks on pickup, block and mob drops, fishing, crafting, trades and the first
+     open of a container; counts logged and sent to the API. Everything behind `items.identity.enabled` and
+     `items.identity.convert-on-obtain`, both off by default: with them off, items behave exactly as before.
+  3. Admin steps: apply migration `AddItemIdentity` (additive: one nullable column with a unique index, one new table
+     `item_conversion_stats`; no data written). Run a catalogue scan (or `POST api/ItemIdentity/shadows/generate`)
+     to create the shadows. Merge into `config.yml`, then restart:
+     ```yaml
+     items:
+       identity:
+         enabled: false
+         convert-on-obtain: false
+         map-refresh-minutes: 10
+         report-interval-minutes: 10
+     ```
+- **Navigation: walk trails reach the keep storage hall and pass roof hatches** ([PandiO/knk-workspace#771](https://github.com/PandiO/knk-workspace/issues/771)
+  items 1 and 2, fix link F1 of the off-road navigation chain). A walking route that once found its way no longer
+  loses it when the trail is recalculated inside a building: the recalculation keeps the area and length of the way
+  already found. With the shipped settings the keep's storage hall is still not reached from spawn: the road ends on
+  the stair house's lower landing, and the walk from there is too long (follow-up on #771). An open
+  trapdoor over a ladder, such as the Garrison Watchtower Roof's hatch, is now climbed through up and down; a closed
+  one is still never passed. Also for NPC walk legs. No flag, no config key, no migration. knk-plugin and
+  knk-workspace branches `claude/offroad-walk-fixes-771` (PRs into `next`).
+- **Off-road navigation: landmark preference weights** ([PandiO/knk-workspace#709](https://github.com/PandiO/knk-workspace/issues/709),
+  link L9 of the off-road navigation chain, phase 5.2). Behind `navigation.landmarks` (off by default). A landmark
+  with an area (a region or a radius) and a `Preference` above 1.0 makes walking routes avoid that area in the default
+  `preferred` mode; below 1.0 they prefer it (preference indoors without an indoor road graph). `shortest` and
+  `efficient` ignore the weights, NPCs never use them. Overlapping landmarks multiply, capped by the new
+  `navigation.preference-max` (4.0). Landmarks standing on a road also become walk-link ends. knk-plugin and
+  knk-workspace branches `claude/offroad-landmark-weights` (PRs into `next`). Admin steps: add
+  `preference-max: 4.0` under `navigation:` in `config.yml`, restart. No migration.
+- **Off-road navigation: route modes `shortest`, `efficient`, `preferred`** ([PandiO/knk-workspace#707](https://github.com/PandiO/knk-workspace/issues/707),
+  link L7 of the off-road navigation chain, phase 4). `/navigate <place> [shortest|efficient|preferred] [spawn|region]`
+  picks how the route is chosen, on roads and on foot: `shortest` the fewest blocks, `efficient` the cheapest road
+  classes and walking (stairs, ladders, doors, water and drops cost extra), `preferred` also the road weights staff set
+  with `/knk road edge set <id> cost <x>`. Without a word the route is `preferred`, exactly today's route. knk-plugin
+  and knk-workspace branches `claude/offroad-route-modes` (PRs into `next`). No flag, no config key, no migration.
+  1. Each typed word needs its node `knk.navigate.mode.<word>` (declared `default: op`); no word needs none. Tab
+     completion offers only the words a player holds.
+  2. The mode works with the destination engine on and off, and stays for the navigation's re-routes; walk links cost
+     their walked length in `shortest`. NPC routes are unchanged.
+  3. Admin steps: grant the three nodes to the groups that should have them (none by default; staff proposed).
+
+- **Off-road navigation: shortcuts on foot in the middle of a route** ([PandiO/knk-workspace#705](https://github.com/PandiO/knk-workspace/issues/705),
+  link L5 of the off-road navigation chain, phase 2). Where the road goes the long way round (a courtyard, a bailey), the
+  route can now leave the road for a short walk across and join it again: the trail shows the walk in the walk colour
+  and the HUD says "Leave the road and walk across". A target close enough for one walk path is reached over the road
+  when the road carries most of the way. knk-plugin and knk-workspace branches `claude/offroad-walk-links` (PRs into
+  `next`). Behind `navigation.walk-links`, off by default: with it off, routes, trails and sessions are exactly as
+  before. No migration.
+  1. A route is a list of legs: road stretches and walk links in any order, with the walk to the road and the last
+     walk as before (`Route.legs()`). Walk links have their own id space (`WalkLinkId`, at least 2^62).
+  2. Links join road nodes at most `walk-link-range` (40) blocks apart whose road is more than `walk-link-ratio` (2.0)
+     times as long. They are searched lazily, off the main thread, after the first route, and cached per player; the
+     session then takes the better route ("A shorter route opened").
+  3. A link is offered only when the player's gate and region rules let them through; a new block-change hook drops
+     a link within a second of a change near it, with a TTL as the backstop.
+  4. Road-first (direct mode within `max-snap-distance`, which is unchanged): `road-first-share` 0.6 and
+     `road-first-max-ratio` 1.5, defaults for the developer to confirm.
+  5. `/knk road status` shows three walk-link lines (searches, cache, road-first decisions).
+  6. Admin steps (only to try it): under `navigation:` add the keys of the PR's admin steps and set `walk-links: true`;
+     restart.
+
+- **Off-road navigation: the trail rounds plazas** ([PandiO/knk-workspace#712](https://github.com/PandiO/knk-workspace/issues/712),
+  link L10 of the off-road navigation chain, phase 7 step 2). Where your route crosses a plaza from one road to
+  another, the navigation trail now takes a rounded line across the square instead of a sharp corner at its middle,
+  keeping clear of walls, wells and stalls. knk-plugin and knk-workspace branches `claude/offroad-plaza-lines` (PRs into
+  `next`). Behind `navigation.plaza-lines`, off by default: with it off the trail is exactly as before. No migration.
+  1. With the flag on, the road trail's spots inside a plaza crossing are drawn at the same share of the way along
+     the plaza line (`core/navigation/PlazaTrail`, a `TrailRenderer.drawRoute` overload). The crossings are worked out
+     lazily on the main thread, one per redraw, when the trail comes within 24 blocks, once per route.
+  2. The route, its length, the ETA, the HUD, the maneuvers and the session's progress and cursor stay on the route
+     polyline (A25, transcript test).
+  3. The developer's decision after viewing the lines on Cinix and Brink (O33): a curve is taken down to 0.65 from an
+     obstacle (`plaza-curve-clearance`); the A* line still never comes under 0.35.
+  4. `/knk road status` shows "plaza lines: on; placed N of M crossings".
+  5. Admin steps (only to try it): under `navigation:` add `plaza-curve-clearance: 0.65` beside the step-1 keys and set
+     `plaza-lines: true`; restart.
+
+- **Off-road navigation, phase 5.1 step B: landmarks in game** ([PandiO/knk-workspace#708](https://github.com/PandiO/knk-workspace/issues/708),
+  link L8 of the off-road navigation chain). knk-plugin and knk-workspace branches `claude/offroad-landmarks` (PRs into
+  `next`). Behind the new `config.yml` key `navigation.landmarks` (off by default: nothing changes for players).
+  1. With the key on (and `navigation.destination-engine` on), players can `/navigate` to a landmark by name or as
+     `landmark:<name>`; tab completion offers the landmarks of their world they may navigate to, not those with
+     "Offer in /navigate" off, not other worlds' and none during a siege match. A landmark with a region ends the
+     navigation inside the region, one with a radius inside that radius, one without either within the arrive distance.
+     A navigation to a landmark that is deleted or switched off ends with the "no longer" message; a rename keeps it.
+  2. Staff with `knk.admin.world.landmark` use `/knk landmark create <name> [region <id> | radius <n>]`, `list`, `show`,
+     `move`, `delete`, `link <landmark> <domain>` and `unlink` in game.
+  3. The navigation model keeps the landmarks in its snapshot (`offline/navigation-model.json`), so they work with the
+     API down after a restart; a failed landmark read keeps the last ones.
+  4. Admin steps: add `landmarks: false` under `navigation:` in `config.yml` (a missing key means `false`; see
+     [plugin configuration § 4.15](guides/admin/plugin-configuration.md#415-navigation)); restart after changing it.
+     The API side (migration, node) is step A's entry below. Steps:
+     [off-road smoke test § 6.3](guides/navigation-offroad-smoke-test.md#63-in-game-step-b-a12-to-a14).
+
+- **Off-road navigation, phase 5.1 step A: landmarks in the API and the web app** ([PandiO/knk-workspace#708](https://github.com/PandiO/knk-workspace/issues/708),
+  link L8 of the off-road navigation chain, [#698](https://github.com/PandiO/knk-workspace/issues/698)). knk-web-api,
+  knk-web-app and knk-workspace branches `claude/offroad-landmarks` (PRs into `next`). Nothing changes for players
+  yet: the game server reads landmarks from step B (knk-plugin, `navigation.landmarks`, off by default).
+  1. A landmark is a named place made by staff: a Location pin with a name (unique per world), optionally linked to a
+     domain (the link is dropped when the domain is deleted), optionally with an area (a WorldGuard region or a radius
+     up to 512 blocks), a route preference (0.25 to 4.0, used from phase 5.2) and "Offer in /navigate".
+  2. API `api/landmarks`: `GET ?world=` and `GET {id}` for anyone, also without login (the `map` rate limit);
+     `POST search` for the dashboard; `POST`, `PUT {id}`, `DELETE {id}` for staff with the new node
+     `knk.admin.world.landmark` (plus `knk.admin.content` for create and edit, `knk.admin.delete` for delete) or the
+     game server's key.
+  3. Web app: Landmark on the dashboard (World area) with World, Point, Domain, Area and In /navigate columns, the
+     default form "Landmark - Default (seed v1)", and a Landmarks box on every domain's detail page listing the
+     landmarks linked to it, with **Add landmark**.
+  4. Admin steps: apply the migration `AddLandmarks` (one new table `landmarks`, no change to existing tables); import
+     the form seed `Landmark` (form configurations → Import / seeds); grant `knk.admin.world.landmark` to the ranks
+     that make landmarks (`knk.admin.*` and `knk.admin.world.*` include it, a bare `knk.admin.world` does not; see the
+     [dashboard access admin guide § 2](guides/admin/dashboard-access-admin-guide.md#2-area-nodes-one-per-part-of-the-dashboard)).
+     No new settings. Steps: [off-road smoke test § 6](guides/navigation-offroad-smoke-test.md#6-phase-51-landmark-entity-708-tier3).
+
 - **Overview map: moderation from the map** ([PandiO/knk-workspace#743](https://github.com/PandiO/knk-workspace/issues/743),
   link L9 of the overview map chain, [#732](https://github.com/PandiO/knk-workspace/issues/732)). knk-web-app and
   knk-workspace branches `claude/overview-map-moderation` (PRs into `next`). No flag of its own: it needs the live
@@ -17,6 +1364,21 @@ This is a human-readable record of capabilities merged into the V3 default branc
   2. Everyone else still gets only the name card; anonymous viewers make no extra request.
   3. Admin steps: none. Steps:
      [overview map smoke test § 9](guides/overview-map-smoke-test.md#9-phase-7-player-moderation-panel-743-tier2).
+
+- **Navigation destination engine, phase 4: the hard blocks are scopes and running routes are re-checked, behind the flag** ([PandiO/knk-workspace#62](https://github.com/PandiO/knk-workspace/issues/62),
+  link L4 of the destination engine chain, [#25](https://github.com/PandiO/knk-workspace/issues/25)). knk-plugin and
+  knk-workspace branches `claude/navigation-destination-engine` (PRs into `next`). Only with
+  `navigation.destination-engine: true` (off by default: nothing changes for players).
+  1. With the key on, "still loading", "frozen", "no permission" and "in a siege" come from the engine's list with
+     today's texts; freeze also holds for owner mode, staff mode and `knk.navigate.any`. `knk.navigate.any` alone
+     (without `knk.navigate`) is enough to use `/navigate`.
+  2. A running route is checked against the player's list every 2 seconds and at once when an objective is captured,
+     the match ends, the lobby changes, a round is released, owner/staff mode is switched, a freeze starts or ends, or
+     the list of places is refreshed. A destination that left the list ends the route with the reason as the message,
+     for example "You can't navigate while frozen." or "Keep Gate is no longer part of this match."; an objective that
+     only changed from capture to defend keeps the route.
+  3. Admin steps: none (no new key, no migration, no API change). Steps:
+     [destination engine smoke test § 4](guides/navigation-destination-engine-smoke-test.md#4-phase-4-hard-blocks-as-scopes-and-live-re-validation-62-tier3).
 
 - **Overview map: live players on the map** ([PandiO/knk-workspace#739](https://github.com/PandiO/knk-workspace/issues/739),
   link L5 of the overview map chain, [#732](https://github.com/PandiO/knk-workspace/issues/732)). knk-web-app and
@@ -32,6 +1394,45 @@ This is a human-readable record of capabilities merged into the V3 default branc
      ([closed-alpha runbook Phase 10](guides/closed-alpha-deployment-runbook.md#phase-10--overview-map-bluemap-in-the-stack-737)
      step 3); without it everyone has BlueMap's default head. Steps:
      [overview map smoke test § 5](guides/overview-map-smoke-test.md#5-phase-4b-live-players-layer-739-tier2).
+
+- **Navigation destination engine, phase 3: `/navigate`, tab completion, the compass and the route start on the engine, behind a flag** ([PandiO/knk-workspace#69](https://github.com/PandiO/knk-workspace/issues/69),
+  link L3 of the destination engine chain, [#25](https://github.com/PandiO/knk-workspace/issues/25)). knk-plugin and
+  knk-workspace branches `claude/navigation-destination-engine` (PRs into `next`). Behind the new `config.yml` key
+  `navigation.destination-engine` (off by default: nothing changes for players).
+  1. With the key on, `/navigate`, its tab completion and the navigation compass use one list of places per player,
+     built from the navigation model of phase 2 and the road network: the same names, forms and messages as today
+     outside a siege, and in a siege match only the match's objectives and team spawn, now also as
+     `objective:<name>` and `objective:#<id>`. Places of another world are not suggested but still get "… is in
+     another world". Nothing is looked up when a destination is chosen, so it works with the API down after a
+     restart; without any saved model only streets and road points are offered, with "Some places aren't available
+     while the web API is down.".
+  2. The compass cycles the same list (the match's in a match, the configured general targets outside a siege) and
+     keeps its own wording; a resume picks the stored destination again only while it is still listed. Routes start
+     only from the list. Owner mode, staff mode and the new node `knk.navigate.any` (not granted by default) list
+     every place, also in a match.
+  3. The road-access answers ("Ignored" domains whose roads stay usable) and the compass settings come from the
+     navigation model with the key on.
+  4. Admin steps: add `destination-engine: false` under `navigation:` in `config.yml` (a missing key means `false`;
+     see [plugin configuration § 4.15](guides/admin/plugin-configuration.md#415-navigation)); restart after changing
+     it. No migration, no API change. Grant `knk.navigate.any` only to accounts that should navigate anywhere. Steps:
+     [destination engine smoke test § 3](guides/navigation-destination-engine-smoke-test.md#3-phase-3-switch-over-behind-the-flag-69-tier3).
+
+- **Navigation destination engine, phase 2: the navigation model and its offline snapshot** ([PandiO/knk-workspace#103](https://github.com/PandiO/knk-workspace/issues/103),
+  link L2 of the destination engine chain, [#25](https://github.com/PandiO/knk-workspace/issues/25)). knk-web-api,
+  knk-plugin and knk-workspace branches `claude/navigation-destination-engine` (PRs into `next`). Nothing changes for
+  players: nothing in the plugin reads the model before phase 3, which switches to it behind a flag.
+  1. The domain search (`POST api/Domains/search`) returns each domain's Location (`location`: id, name, x, y, z, yaw,
+     pitch, world; `null` when the domain has none). The other fields are unchanged; no migration.
+  2. The game server keeps a navigation model: every domain with its spawn Location, region, world, `/navigate`
+     default and road-access flag, the Location targets, the navigation compass settings and an empty landmarks
+     section for off-road landmarks (#708). It is refreshed from the API every minute, saved to
+     `plugins/KnightsAndKings/offline/navigation-model.json` when it changed, and loaded at start-up, so it survives a
+     restart with the API down. With an API from before this change it looks the Locations up one domain at a time,
+     two a second.
+  3. Admin steps: deploy knk-web-api and the plugin together (either order works). New `config.yml` key
+     `navigation.destinations.stale-after-days: 14` under `navigation:` (a missing key means 14; see
+     [plugin configuration § 4.15](guides/admin/plugin-configuration.md#415-navigation)). No migration. Steps:
+     [destination engine smoke test § 2](guides/navigation-destination-engine-smoke-test.md#2-phase-2-navigation-model-and-offline-snapshot-103-tier2).
 
 - **Overview map: gate command buttons in the map panel** ([PandiO/knk-workspace#742](https://github.com/PandiO/knk-workspace/issues/742),
   link L8 of the overview map chain, [#732](https://github.com/PandiO/knk-workspace/issues/732)). knk-web-app and
@@ -65,6 +1466,18 @@ This is a human-readable record of capabilities merged into the V3 default branc
      with `realtime.enabled: true`). No migration. Steps:
      [overview map smoke test § 7](guides/overview-map-smoke-test.md#7-phase-6a-gate-commands-backend-741-tier3),
      [production installation § 4.3](guides/production-installation.md#43-api-configuration-file--etcknkapienv).
+
+- **Navigation destination engine, phase 1: the pure engine in knk-core** ([PandiO/knk-workspace#96](https://github.com/PandiO/knk-workspace/issues/96),
+  link L1 of the destination engine chain, [#25](https://github.com/PandiO/knk-workspace/issues/25)). knk-plugin and
+  knk-workspace branches `claude/navigation-destination-engine` (PRs into `next`). Nothing changes for players: the
+  engine is code and tests only and nothing in the plugin uses it yet (phase 3 switches to it behind a flag).
+  1. The engine decides which places a player may navigate to: exclusive scopes by priority (loading, frozen, staff
+     bypass, no permission, siege match, siege lobby, world), providers of candidates, name resolution and completion
+     inside the list, an engine-issued handle, and re-validation of a running session by key.
+  2. Each refusal carries a reason code and today's `/navigate` text, so the compass can keep its own wording; places
+     may carry an arrival radius, ready for the landmark provider of off-road navigation (#708).
+  3. Admin steps: none (no flag, no `config.yml` key, no migration). Steps:
+     [destination engine smoke test § 1](guides/navigation-destination-engine-smoke-test.md#1-phase-1-pure-engine-in-knk-core-96-tier2).
 
 - **Overview map: staff details in the map panel** ([PandiO/knk-workspace#740](https://github.com/PandiO/knk-workspace/issues/740),
   link L6 of the overview map chain, [#732](https://github.com/PandiO/knk-workspace/issues/732)). knk-web-app and
@@ -168,6 +1581,591 @@ This is a human-readable record of capabilities merged into the V3 default branc
      Steps: [overview map smoke test § 1](guides/overview-map-smoke-test.md#1-phase-1-region-outlines-735-tier3),
      [plugin configuration § 4.29](guides/admin/plugin-configuration.md#429-map).
 
+- **NPC navigation: an NPC reaches a building whose nearest road end is a dead end** ([PandiO/knk-workspace#814](https://github.com/PandiO/knk-workspace/issues/814),
+  link G1 of the NPC navigation follow-ups chain). With the new key on, an NPC sent to a point off the road (a
+  storehouse, a workshop) no longer heads for the road point nearest it in a straight line when no walk leads on from
+  there; it takes the road from which the walk is shortest, by the off-road chain's rule for players (F2/F3, #780).
+  knk-plugin and knk-workspace branches `claude/npc-movement-g1` (PRs into `next`). Behind `npc.navigation.enabled` and
+  the new `npc.navigation.road-goal-reachable` (both off by default); no migration.
+  1. Candidates: today's goal, the nearest point of each road edge within `navigation.max-snap-distance` of the
+     destination and the road's nodes onward (`RoadGoalChoice.candidatesAlongRoad`, unchanged), at most 12. Each gets a
+     road route and one walk search with the NPC's access (`NpcWalkPlanner`), one after another, off the main thread.
+     The least road plus `road-goal-walk-weight` (4.0) times walk wins; the order keeps it for its replans. None
+     reached: today's goal with C1's join, as before. A group takes its leader's choice. The run log has one
+     "road goal for …" line per choice with every candidate's numbers.
+  2. Admin steps: add under `npc.navigation` (YAML in [plugin configuration § 4.27](guides/admin/plugin-configuration.md#427-npc)),
+     then restart:
+
+     ```yaml
+     road-goal-reachable: true
+     road-goal-walk-weight: 4.0
+     ```
+
+  3. New scenarios (CI `MIN_SCENARIOS` 67): `npc-road-goal-dead-end` (a road end on a causeway 6 blocks above the
+     destination, another road on the ground: with the key off the NPC walks up the dead end; with it on, an NPC and a
+     group of 5 arrive by the other road in about 30 s) and `npc-replay-keep-hall` (the developer's snapshot of
+     2026-11-19 routed on its own road graph to the keep storage hall at 1417 59 −489: the leader in about 53 s, a group
+     of 5 in about 64 s; on that snapshot the road reaches the hall, so today's goal wins there with the key on and off).
+     Smoke test: [Link G1](guides/npc-movement-smoke-test.md#link-g1-the-road-goal-by-walk-reachability-keep-storage-hall).
+
+- **NPC navigation: NPCs climb a ladder through a roof hatch, and open a closed one** ([PandiO/knk-workspace#779](https://github.com/PandiO/knk-workspace/issues/779),
+  link H1 of the NPC navigation follow-ups chain). An NPC whose off-road leg goes up a tower's ladder now climbs it and
+  passes through the roof hatch above it. Before, the NPC stalled at the ladder's foot: its own checks treated the
+  ladder and the open trapdoor as walls, although the walk search (#771) climbs them. knk-plugin and knk-workspace
+  branches `claude/npc-movement-h1` (PRs into `next`). Behind `npc.navigation.enabled` (off by default); no new
+  `config.yml` key, no migration.
+  1. A ladder and an open trapdoor right above one are climbed, never a wall or a floor, in every NPC check: the
+     planner's body check, headroom, and "blocks a body" (knk-core `NpcClimbables`, knk-paper `BukkitNavWorld`). The
+     route line and its waypoints keep the walk's ladder cells (`RouteFollower`, `WaypointChain`). A climbing body is
+     kept in its ladder column. Minecraft let it creep sideways until its head caught on the roof beside the hatch
+     (`ClimbHold`).
+  2. An NPC whose access profile has `open-doors` opens a closed wooden hatch on its way, as it opens doors, and closes
+     it again once nobody is in the shaft (`NpcHatches`; Citizens' own door opener skips trapdoors). Without
+     `open-doors` the closed hatch blocks, and an iron hatch always does.
+  3. New scenario `npc-ladder-hatch` (CI `MIN_SCENARIOS` 65): four trips up a tower, with the hatch open or closed and
+     with or without `open-doors`. On `next`, the first trip ended under the roof; now three arrive in about 17 s and
+     the fourth is kept off the roof. Known limits, including #848 (a leg walked in hops ends as "arrived" under an
+     unreachable goal): [plan § 4c.8 item 7](specs/npc-platform/IMPLEMENTATION_PLAN.md#4c8-fix-links-after-the-smoke-tests-of-2026-11-16-and-2026-11-17-b1b5-c1-j1-h1).
+     Smoke test: [Link H1](guides/npc-movement-smoke-test.md#link-h1-a-ladder-and-a-roof-hatch-on-an-npcs-off-road-leg).
+
+- **NPC navigation: no jumps toward a waypoint on the stair house; no hop after a stair step** ([PandiO/knk-workspace#695](https://github.com/PandiO/knk-workspace/issues/695),
+  link J1 of the NPC navigation follow-ups chain). NPCs walk up stairs without the small hop after each step, and waiting
+  NPCs no longer jump at the wall beside a flight. knk-plugin and knk-workspace branches `claude/npc-movement-j1` (PRs
+  into `next`). Behind `npc.navigation.enabled` (off by default); no new `config.yml` key, no migration.
+  1. The climb scenario failed CI now and then on "jumps toward a waypoint on the flights". Singles waiting for their
+     turn at flight 1's top had a queue spot on the wall top beside the flight, a block above their feet: the place's
+     queue line ran diagonally back through the wall. A queue spot is now on the way's own level and reached from the
+     NPC's feet without a step of more than 0.6 (knk-core `CrowdControl.onTheWaysLevel`).
+  2. Citizens moved on to the next waypoint once the body was within the list's margin (0.5 or 1.0) of a stair step's
+     waypoint, while the feet were still below it, and the next waypoint a block up drew a jump (the replay's hall
+     entry). Such a jump is now held back when the next cell toward the waypoint is at most a step up: the body steps
+     onto the stair instead. The same holds back the engine's hop on a stair's lower half (the developer's "walked up a
+     stair block and then seemed to jump up a bit"). It works through Citizens' jump power supplier (knk-paper
+     `CitizensNpcRuntime.jumpPower`, `StepHop`), and a full block in the way keeps its jump. The climb and the replay
+     report the jumps held back.
+  3. Local runs of `npc-stairhouse-climb` (12 in a row, half of them the first run after a server start):
+     0 jumps toward a waypoint and 0 engine hops (151 to 166 a run on `next`), the leader up in 57 s (75 to 81 s on
+     `next`), the longest crowd wait 17 to 20 s (28 to 34 s). CI `paper-boot` green. Steps: [plan § 4c.8 item 6](specs/npc-platform/IMPLEMENTATION_PLAN.md#4c8-fix-links-after-the-smoke-tests-of-2026-11-16-and-2026-11-17-b1b5-c1-j1-h1).
+
+- **NPC navigation: held NPCs stay held through `/knk cache refresh`** ([PandiO/knk-workspace#724](https://github.com/PandiO/knk-workspace/issues/724),
+  link R1 of the NPC navigation follow-ups chain). knk-plugin and knk-workspace branches `claude/npc-movement-r1` (PRs
+  into `next`). Behind `npc.navigation.enabled` (off by default); no new `config.yml` key, no migration.
+  1. A cache refresh cleared the region → domain map and sent its first availability event at once, about half a
+     second before the re-warm's answers were in. In that gap every region looked open to the NPC checks, so NPCs held
+     at a district edge (followers by their lane check, a single NPC by its blocking element) walked on and crossed,
+     for entry and exit alike. The re-warm's event then reset the trespass guard, so `trespasses` stayed 0.
+  2. A clear of the map (the cache refresh, and a realtime domain change) now keeps the last known answers for the NPC
+     checks until the re-warm is done. While it runs, a region the NPCs knew keeps its answer from before the clear.
+     When the answers are in, the trespass guards of every NPC and follower take a last look under the old answers, the
+     hold ends and the availability event follows, so the NPCs switch to the new answers at that event. A crossing in
+     the gap (an NPC carried over the edge) is counted. Players' lookups are unchanged. A hold that no re-warm ends
+     (NPC navigation off, no roads) ends by itself after a minute.
+  3. Scenario `npc-group-cache-refresh-held` (followers held inside a district they may not leave, then a cache refresh with a slow API; it fails on `next` before the fix)
+     runs in CI's `paper-boot` job (62 scenarios). Steps: [NPC movement smoke test, link R1](guides/npc-movement-smoke-test.md#link-r1-a-cache-refresh-while-npcs-are-held-at-an-edge),
+     [plan Phase 4 known limit 4](specs/npc-platform/IMPLEMENTATION_PLAN.md#phase-4--groups-plugin).
+
+- **NPC navigation: exit rules held while NPCs walk, not only where a route is planned** ([PandiO/knk-workspace#701](https://github.com/PandiO/knk-workspace/issues/701),
+  link E1 of the NPC navigation follow-ups chain). knk-plugin and knk-workspace branches `claude/npc-movement-e1` (PRs
+  into `next`). Behind `npc.navigation.enabled` (off by default); no new `config.yml` key, no migration.
+  1. The NPC walking checks now judge a step by the exit rule of every region the NPC stands in, as well as by the entry
+     rule. That covers the recheck of the way ahead, the trespass guard, the walk to a blocking element, and a group's
+     follower lanes, waypoints and guard. It applies to every domain type. Before, these checks were entry only, and an
+     exit denied while an NPC walked out on an earlier route did not stop it.
+  2. An NPC that would leave a region it may not leave stops at the edge, inside, and waits; it walks on when the rule
+     allows it again, through the same realtime and `/knk cache refresh` paths as entry. In a group, the followers
+     still inside stop at the edge and the leader and the followers already out walk on, as for entry.
+  3. The trespass guard counts a denied exit: `TRESPASS <npc> left <region> at x y z (…)`, in `rules: trespasses`.
+  4. The exit rule is the road router's own (`DomainAvailability` and the shared `DomainAccessEvaluator`). The NPC's
+     access profile applies: `bypass-domain-rules`, an allow list naming the region, and a domain whose rule does not
+     apply to roads all let it leave.
+  5. Scenarios `npc-exit-denied-leader` (an NPC alone: exit denied through realtime, allowed again through a cache
+     refresh) and `npc-group-exit-denied` (a group half inside, both ways through realtime) run in CI's `paper-boot`
+     job (61 scenarios). Steps: [NPC movement smoke test, link E1](guides/npc-movement-smoke-test.md#link-e1-exit-denied-mid-trip),
+     [plan Phase 4 developer test step 15](specs/npc-platform/IMPLEMENTATION_PLAN.md#phase-4--groups-plugin).
+
+- **NPC navigation: off-road starts and ends with the walk navigator's search** ([PandiO/knk-workspace#700](https://github.com/PandiO/knk-workspace/issues/700),
+  link C1 of the NPC navigation follow-ups chain). knk-plugin and knk-workspace branches `claude/npc-movement-c1` (PRs
+  into `next`). Behind `npc.navigation.enabled` (off by default); no new `config.yml` key, no migration.
+  1. An NPC's off-road start (to the road), off-road goal (from the road's end) and a trip with no road are planned
+     with the walk search players' trails use (the capture of loaded chunks, the NPC's gate, door and region access,
+     `navigation.walk`'s caps) and walked as part of the route line: stretches, the 3D handover, the join from the
+     feet, the walking surface. Before, they were straight lines cut into 16-block hops.
+  2. The road is joined where the walk reaches it (any road point within 32 blocks along the road); the walk to the goal
+     is tried from further back along the road when the road's end reaches nothing. Hops stay the fallback.
+  3. A group's followers take the leader's walked path, as on roads; a walk's cells are not shaped or moved off walls
+     (a spiral stair stays a spiral).
+  4. An open door or fence gate no longer counts as a wall for NPC lines; the walk planner checks a found path against
+     the NPC's body and searches again round cells it cannot stand in (an open trapdoor's panel).
+  5. `/knk npc nav snapshot` takes the route's from and to into its box, so an off-road goal (a tower top) is inside.
+  6. Scenario replays read Minecraft 26.x block states written as `{id, properties}` (stairs not facing north, top
+     slabs, open doors); they were missing from every replay before.
+  7. The developer's failed tower route of 2026-11-17 (`northern-wearway-upper-keep-tower`, stuck at 1405 85 −510) is
+     replayed: a leader alone and a group of 20 reach the goal up the spiral staircase (`npc-replay-keep-tower`), and
+     three scenes (a detour round a courtyard, a two-turn spiral, a ravine) run in CI's `paper-boot` job (59 scenarios with the off-road chain's L3, L4 and L10).
+     Steps: [NPC movement smoke test, link C1](guides/npc-movement-smoke-test.md#link-c1-off-road-ends-with-the-walk-search-retest-of-2026-11-17-step-5).
+
+- **Off-road navigation: plaza lines, step 1 (preview for staff)** ([PandiO/knk-workspace#712](https://github.com/PandiO/knk-workspace/issues/712),
+  link L10 of the off-road navigation chain, phase 7 step 1). knk-plugin and knk-workspace branches
+  `claude/offroad-plaza-lines` (PRs into `next`). The trail does not use plaza lines yet: the developer looks at them
+  on Cinix and Brink first (O16). New flag `navigation.plaza-lines`, off by default and read by nothing yet; routes,
+  trails, the session and NPC movement are unchanged. No migration.
+  1. knk-core `core/navigation/shape/PlazaCurve`: where a route enters a plaza on one road and leaves on another, a
+     cubic curve from the entry to the exit pulled towards the plaza node (`plaza-pull` 0.35, O30), checked every 0.5
+     block on the plaza's clearance map, regions and floor; when it does not fit, `PlazaLine`'s A* guided by the curve
+     (`plaza-guide-cost` 2; a new additive `PlazaLine.search` overload, the plain search unchanged); plazas only, by the
+     NPC rule (O19). `core/navigation/PlazaLinePreviews`: the passes through a named node (every pair of its roads) or
+     along a route, and the chat line.
+  2. `/knk road plazaline [<plaza or junction>]` (`knk.admin.road`): draws the lines of your route's junctions, or of
+     every pair of roads at a named node, for 10 seconds (green curve, orange A* line, red rejected curve, white the
+     road graph's bend, light blue the plaza's edge) and writes each one's length against the chord and the right
+     angle, its least clearance and why a curve did not fit.
+  3. Three paper-boot scenarios on real plazas from the developer's snapshots: `plaza-line-brink`,
+     `plaza-line-cinix-south-square`, `plaza-line-cinix-northern-gate-square` (two new trimmed snapshots of 175 KB
+     each).
+  4. Admin steps (optional, for the preview's pull): under `navigation:` add `plaza-lines: false`, `plaza-pull: 0.35`,
+     `plaza-guide-cost: 2`; restart.
+
+- **Off-road navigation: walk-trail particles stay put, and the guidance winds back** ([PandiO/knk-workspace#711](https://github.com/PandiO/knk-workspace/issues/711),
+  link L4 of the off-road navigation chain, phase 6.2). knk-plugin and knk-workspace branches
+  `claude/offroad-trail-cursor` (PRs into `next`). Behind `navigation.guidance-v2`, off by default: with it off the
+  session, the trail, the re-routes and the walk legs are exactly as before (transcript tests). No migration. NPC
+  navigation unchanged.
+  1. Walk-trail particles sit on fixed anchors every `trail-leg-spacing` (3.0) blocks from the walk path's start, drawn
+     from the leg's cursor, which follows the player along the path both ways and jumps more than 3 blocks only when
+     the player really is nearer the other place (`TrailRenderer.anchoredWindow`, `PolylineCursor`).
+  2. The route session keeps a monotone progress (ETA, percentage, maneuvers already announced) and a cursor that
+     follows the player back along the road (continuity within `cursor-jump`, 12, for loops and switchbacks); the
+     trail, the HUD distance and the maneuver ahead come from the cursor (`NavigationSession`, `CursorParameters`).
+  3. A player off the road walks to the join point with the least remaining cost (`JoinPoint`); a walk leg stays while
+     the player is within `walk.recompute-distance` of its path, walking back included, and is recomputed from the
+     player beyond it (at most once per `reroute-min-interval`). `DirectLeg.best` and the start leg's "heading away"
+     (N16) are not used under the flag. KNG-124, N17, rev. 9 and the partial path rule are kept.
+  4. Admin steps (only to try it on a test server): under `navigation:` add `trail-leg-spacing: 3.0` and
+     `cursor-jump: 12` beside `guidance-v2`; restart.
+  5. Tests: knk-core +21 (the cursor on lines, corners, loops and switchbacks, the join point, the session's progress
+     and cursor, today's session as a transcript), knk-paper +13 (anchors, the service with the flag on and off, the
+     keys), new paper-boot scenario `walk-trail-cursor-stairhouse` (the cursor and the anchors on the stair house's
+     shaped trail).
+
+- **Off-road navigation: walk trails keep off the walls and round their corners** ([PandiO/knk-workspace#710](https://github.com/PandiO/knk-workspace/issues/710),
+  link L3 of the off-road navigation chain, phase 6.1). knk-plugin and knk-workspace branches
+  `claude/offroad-trail-corners` (PRs into `next`). Behind `navigation.guidance-v2`, off by default: with it off the
+  walk paths, the search and the trail are exactly as before. No migration.
+  1. With the flag on, the walk search uses a clearance cost (`walk.clearance-cost` 5 per block of clearance a step
+     lacks to `walk.wall-clearance` 0.8) in place of `walk.wall-cost`; `clearance-cost: 0` keeps `wall-cost`.
+  2. A found or partial walk path is shaped on the walk thread by the shared `CorridorShaper` over the captured
+     terrain (`WalkTerrainNavWorld`, `WalkPathShaper` in `knk-core` `core/roads/walk/`), and its corners are drawn as
+     curves checked against the clearance map (`walk.curve`). Leg colour and 3.0 spacing unchanged; the road trail is
+     unchanged. `/knk road status` shows the shaped paths and their mean time.
+  3. Admin steps (only to try it on a test server): under `navigation:` add `guidance-v2: false` (set `true` to test)
+     and under `navigation.walk:` add `clearance-cost: 5`, `wall-clearance: 0.8`, `curve: true`; restart.
+  4. Tests: knk-core +17 (clearance cost, the flag-off identity over five scenes, a 3-wide spiral stair, the NPC and
+     player shapers on one scene), knk-paper +7, new paper-boot scenario `walk-trail-stairhouse` on the developer's
+     stair house (a local run: 0 % of the trail under 0.7 blocks from a wall, against 44.7 % of today's path).
+
+- **Off-road navigation: the shaping code is shared** ([PandiO/knk-workspace#704](https://github.com/PandiO/knk-workspace/issues/704),
+  link L2 of the off-road navigation chain, phase 1). knk-plugin and knk-workspace branches
+  `claude/offroad-shape-package` (PRs into `next`). Players and NPCs see no change; no `config.yml` key, no migration.
+  1. The NPC path shaping (`Corridor`, `CorridorShaper`, `FreeWidth`, `PlazaLine`) and the world primitives it reads
+     (`NavWorld`, `NavPoint`, `NavGeometry`, and `PlazaCrossing`, formerly `RoadPlanner.PlazaCrossing`) moved to
+     `knk-core` `core/navigation/shape/`, so the players' walk trail can use them in phase 6.1 (design O11).
+  2. `HopPlanner`'s floor helpers live in `NavGeometry` (`HopPlanner` delegates); `LocalLegSearch` stays NPC-side.
+  3. Tests: the same counts as before apart from one new guard test (`core/navigation/shape` uses nothing from
+     `core/npc`); the NPC scenarios run in CI's `paper-boot` job.
+
+- **Off-road navigation: walk-search measurements in `/knk road status`** ([PandiO/knk-workspace#703](https://github.com/PandiO/knk-workspace/issues/703),
+  link L1 of the off-road navigation chain, phase 0). knk-plugin and knk-workspace branches `claude/offroad-measurements`
+  (PRs into `next`). Players see no change: routes and trails are the same; staff get numbers to set the off-road
+  budgets with.
+  1. Every walk search reports its expansions, cells touched, search time and the cap that ended it
+     (`max-expansions`, `max-length`), and whether steps were cut at the length cap; every chunk capture its chunks,
+     cache hits, main-thread time and wait.
+  2. `/knk road status` shows them under `walk paths:`: max, p95 and p50 over the last 512 searches and the five
+     newest requests. `/knk road status reset` clears them, so one scene can be read at a time.
+  3. The measurement steps are in the [off-road smoke test § 1](guides/navigation-offroad-smoke-test.md#1-phase-0-measurements-703-tier1);
+     the [report skeleton](reports/2026-11-17-offroad-navigation-measurements.md) waits for the developer's live run.
+  4. Admin steps: new key `navigation.walk.max-chunks-per-request` (default 64, the limit that was built in). Paste
+     under `navigation.walk:`, then restart:
+
+     ```yaml
+         max-chunks-per-request: 64
+     ```
+
+- **NPC navigation: a group's path stays on the walk on stacked flights** ([PandiO/knk-workspace#699](https://github.com/PandiO/knk-workspace/issues/699),
+  link B5 of the NPC navigation follow-ups chain). knk-plugin and knk-workspace branches `claude/npc-movement-b5` (PRs
+  into `next`). Only with `npc.navigation.enabled` on and `group-formation-keeping: elastic` or `plaza-lines` on (all
+  off by default); no new `config.yml` key, no migration.
+  1. A group that keeps its formation elastic, or takes plaza lines, walks a path shaped in its corridor. On the stair
+     house's stacked flights that shaped line cut the hairpin across the stairwell, so the group's path skipped a
+     flight's top and its landing (or ran on the hall floor beside a flight). Followers there were judged against a
+     point a flight away: they left their lanes, walked their own legs back, and in the smoke test of 2026-11-17 walked
+     up and down flight 4 for minutes while their leader waited on the passage right above them.
+  2. A shaped point is now used only where it has a floor within a block of the route line's own point and a straight
+     walk leads to it; otherwise the group path takes the route line's own point. Shaping on one level is unchanged.
+  3. Tests: `npc-replay-quarry-to-keep` replays the developer's snapshot of 2026-11-17 and sends the group on to the
+     route's end in the keep with the developer's settings; it fails when a follower leaves its lane on the flights
+     and landings, or loops (three own legs back from one place). Followers off their lane on the stair house: 21
+     before (every follower, at flight 5's top), 0 now; the leader arrives in 105.5 s instead of 123.8 s.
+
+- **NPC navigation: crowd turns judged in 3D** ([PandiO/knk-workspace#672](https://github.com/PandiO/knk-workspace/issues/672),
+  link B3 of the NPC navigation follow-ups chain). knk-plugin and knk-workspace branches `claude/npc-movement-b3` (PRs
+  into `next`). Only with `npc.navigation.enabled` and `crowd-awareness` on (both off by default); no new `config.yml`
+  key, no migration.
+  1. A narrow place taken in turns now has a floor: flat, or a flight's slope. An NPC whose feet are 1.5 blocks or more
+     above or below it stands on another level.
+  2. An NPC holding a turn that climbed on to the flight above, or fell under the place, has left it: its turn ends,
+     unless one of its followers is still in the place.
+  3. Nobody waits for an NPC on another level. Before, on the stair house's stacked flights, singles going the same
+     way as a group waited behind its leader a flight up (seen from above it looked as if it stood at the place's
+     entry) until the 30 s guard let them go, up to 18 at a time.
+  4. The 30 s guard of a queue counts from the last time anyone entered the narrow place, not from the NPC's arrival:
+     a long single file that keeps moving (18 NPCs up a one-wide stair, about 2 s each) is no longer let go at its
+     end. A place nobody enters still lets its queue go after 30 s.
+  5. Tests: `npc-stairhouse-climb` now fails when the 30 s guard lets anyone go, and reports why (where the NPC and
+     every turn holder stood in 3D). The climb's queue let go by the guard: 0 to 6 per run before, 0 now (longest
+     queue 18, 2.1 s per NPC ahead); falls, jumps toward a waypoint, stuck spells and lost followers stay 0.
+
+- **NPC navigation: waypoints and group slots at the real stair heights; jumps told by upward speed** ([PandiO/knk-workspace#673](https://github.com/PandiO/knk-workspace/issues/673),
+  link B4 of the NPC navigation follow-ups chain). knk-plugin and knk-workspace branches `claude/npc-movement-b4` (PRs
+  into `next`). Only with `npc.navigation.enabled` on; no new `config.yml` key, no migration.
+  1. Waypoints go to the engine at the real walking surface: a bottom slab and an upright stair's step at half a block,
+     not at the whole-block height navigation plans with. Where two waypoints rise more than a step, the step between
+     them goes in, so the NPC walks a half-block stair up step by step instead of jumping.
+  2. Group slots too: a follower's slot on a half-block stair lies on the step's surface.
+  3. Once the leader has arrived, a follower standing at its slot's point (within a block across, less than a block
+     up or down) counts as settled, also where the group path passes the same place twice. Before, it was sent round
+     the loop, stalled next to its slot, and its recovery ended `no point ahead on its floor` and lost.
+  4. A half-block step up is no jump for the low-headroom rule, so recovery finds its point ahead on a half-block stair.
+  5. `/knk npc nav trace` marks `JUMP` by a jump's upward speed, not by any rise over 0.2 blocks: a step up a slab or
+     a stair is no longer a jump.
+  6. Tests: `npc-replay-quarry-to-keep` now fails on a lost follower: the group of 20 with the stored settings arrives
+     with 0 lost (B2: 3) and 4 to 6 stuck spells (B2: 26). `npc-stairhouse-climb` fails on a jump toward a waypoint on the
+     flights and their entries: 0. Both report the engine's own hops off a stair's step separately (Minecraft's move
+     control hops whenever the block at the feet reaches above them; no waypoint height removes those).
+
+- **NPC navigation: stretch handover in 3D, appended, bridged from the feet** ([PandiO/knk-workspace#671](https://github.com/PandiO/knk-workspace/issues/671),
+  link B2 of the NPC navigation follow-ups chain). knk-plugin and knk-workspace branches `claude/npc-movement-b2` (PRs
+  into `next`). The main cause of the failed smoke test of 2026-11-16 (chain report decision 34). Only with
+  `npc.navigation.enabled` on; no new `config.yml` key, no migration.
+  1. The next stretch is handed out by progress along the waypoints in 3D, not by horizontal distance to the stretch
+     end, so a stretch end on the flight above no longer counts as near.
+  2. The new stretch is appended to the waypoints not yet walked (those the NPC is already past are dropped), and the
+     join is bridged from the NPC's feet.
+  3. A step of the line the bridge cannot make is walked as a local leg, never as a straight walk across air.
+  4. A group leader that falls below the group path no longer takes the path with it: followers don't walk off the same
+     edge.
+  5. `npc-stairhouse-climb` and `npc-replay-quarry-to-keep` now fail on falls, handovers onto another level and turns
+     dropped by the crowd's guard after a fall. On the climb: falls 42 → 0, handovers onto another level 446 → 0,
+     stuck spells 117 → 2. Known limit: followers on the stair house's half-block flight still get lost in the replay
+     (a separate cause, proposed for B4, #673).
+
+- **NPC navigation tests: the whole stair house and snapshot replay** ([PandiO/knk-workspace#670](https://github.com/PandiO/knk-workspace/issues/670),
+  link B1b). knk-plugin and knk-workspace branches `claude/npc-movement-b1-scene` (PRs into `next`). Tests only, nothing
+  changes on a server.
+  1. The stair-house scenarios get the developer's whole schematic, both flights and the upper landings, in a bigger
+     scenario box (`SizedScene`).
+  2. `npc-stairhouse-climb` (report mode) walks a group of 20 with 20 singles on the real road line of the developer's
+     traces from the street east of the house up all five flights with short stretches. On `next` it shows falls
+     under the landings, stretches handed out on a flight above the NPC (decision 34's main cause) and a turn dropped
+     by the crowd's 30 s guard.
+  3. `SnapshotReplay` replays a zip of `/knk npc nav snapshot` in a scenario: blocks from its region files (Minecraft
+     26.x included), its domains as WorldGuard regions with fake access data, the stored line and settings.
+     `npc-replay-quarry-to-keep` replays the developer's snapshot of 2026-11-16, trimmed to the stair house. CI's `paper-boot` now expects 50 scenarios.
+
+- **NPC navigation: `/knk npc nav snapshot <route>`** ([PandiO/knk-workspace#670](https://github.com/PandiO/knk-workspace/issues/670),
+  link B1a of the NPC navigation follow-ups chain). knk-plugin branch `claude/npc-movement-b1` (PR into `next`). An admin
+  command (`knk.admin.npc`) that writes one zip to `plugins/KnightsAndKings/npc-snapshots/` with a saved route's road line
+  and stretches, the road graph, domains (whole regions, parents, priorities, entry and exit flags, gate state) and
+  settings around it, and the region files its box touches, so the route can be replayed in CI (the replay follows in
+  B1b). Refused while `npc.navigation.enabled` is off. Deploy: no `config.yml` key, no migration.
+
+- **NPC navigation: the NPC rule checks see WorldGuard regions on a server** ([PandiO/knk-workspace#668](https://github.com/PandiO/knk-workspace/issues/668),
+  link L9 of the NPC navigation follow-ups chain; #506, #593). knk-plugin and knk-workspace branches
+  `claude/npc-followups-l9` (PRs into `next`). Nothing changes with `npc.navigation.enabled: false`.
+  1. **What was wrong.** The NPC module starts while the plugin registers its commands, before the plugin builds its
+     WorldGuard region tracker, so the region query it took at start was empty on every server. The NPC rule checks
+     (the recheck of an NPC's way ahead, its trespass guard, and a group's follower lanes and guard) then saw no region
+     anywhere: a district whose entry was removed mid-walk (realtime or `/knk cache refresh`) stopped nobody until the
+     router's next plan, and `rules: trespasses` stayed 0 because no entry was ever seen. The per-region
+     `npc.navigation` override scopes did not apply to NPCs either. The tests had passed because the scenarios built a
+     region query of their own.
+  2. **What changed.** The module asks for the region query when route following is built (on the first
+     `/knk npc nav`) and logs `[NPC] no WorldGuard region query …` when there is none. The NPC scenarios with domain
+     rules now read regions through the live module, as the server's checks do. L6's realtime path is unchanged; it
+     was correct but had nothing to act on.
+  3. **The op's entry bypass is not involved.** A group started with `/knk npc nav group` is judged as NPCs with its
+     access profile (the command's profile argument, else `default`, whose `bypass-domain-rules` is `false`), never
+     as the player who ran the command.
+  4. **Deploy.** No new `config.yml` key, no migration. Check the startup line `0.1.0+<sha>`; per-region
+     `npc.navigation` overrides now take effect for NPCs.
+
+- **CI: the Paper boot test's log check no longer fails at random on the player scenarios** ([PandiO/knk-workspace#586](https://github.com/PandiO/knk-workspace/issues/586)).
+  knk-plugin and knk-workspace branches `claude/paper-boot-flake-586` (PRs into `next`; the plugin fix also into `main`).
+  1. **What was wrong.** Now and then a `paper-boot` run failed its log check on `Failed to sync user data for
+     Scn…: RuntimeException: Failed to check duplicate`, though every scenario passed. The plugin printed that error's
+     stack trace with `printStackTrace()`, one line at a time, and another API-client thread could log a plain warning
+     in between; the check then gave the trace (with its "API unreachable" cause) to that warning.
+  2. **What changed.** The join's account sync (and its welcome message fallback) log the exception with the log entry;
+     the check prefers the entry that quotes the trace's exception. Nothing is excused that wasn't before. The teleport
+     audit's retry that hits a stopped plugin is one `INFO` line (on `next` since 2026-11-15, now with a test of that
+     exact race) ([CI § 7](guides/developer/ci.md#7-plugin-the-paper-boot-test)).
+  3. **Deploy.** Nothing to deploy; server logs show the sync error's cause as part of the same entry.
+
+- **CI: the API's MySQL tests run on every push** ([PandiO/knk-workspace#419](https://github.com/PandiO/knk-workspace/issues/419)).
+  knk-web-api `main` and `next` ([knk-web-api#43](https://github.com/PandiO/knk-web-api/pull/43)); knk-workspace branch
+  `claude/mysql-tests-ci-419` (PR into `next`).
+  1. **What changed.** The new `mysql-tests` job of the API's "Build and test" workflow runs the 100 `requires-mysql`
+     tests (row locks, transactions, unique indexes, ledger triggers) against a throwaway MySQL 8.0 service container,
+     in parallel with `build-and-test`, and fails if any of them was skipped. 99 run and pass; one is a known failure
+     ([#285](https://github.com/PandiO/knk-workspace/issues/285)). The job takes 7 to 8 minutes
+     ([CI § 1.1.1](guides/developer/ci.md#11-tests-that-ci-does-not-run)).
+  2. **Unchanged.** `build-and-test` keeps its name and duration, and local runs without `KNK_TEST_MYSQL` still skip
+     these tests. `mysql-tests` is not a required check yet (recommended once it has been green a few times).
+  3. **Deploy.** Nothing to deploy; workflows and one test mark only.
+
+- **NPC navigation: push resistance with collision on; `collidable` stays off by default** ([PandiO/knk-workspace#627](https://github.com/PandiO/knk-workspace/issues/627),
+  link M7 of the NPC navigation follow-ups chain, implementation plan Phase 4c.4 item 7, research report 2026-11-15
+  § 6). knk-plugin and knk-workspace branches `claude/npc-movement-m7` (PRs into `next`, in review). Nothing changes with
+  `npc.navigation.collidable: false` (still the default) or with `npc.navigation.enabled: false`.
+  1. **What it does with `collidable: true`.** NPCs push and block each other; players never move an NPC (each NPC is
+     exempt from every player's collision through Paper's per-entity collidable exemptions; no scoreboard team is
+     touched). A push the NPC's own walk doesn't explain (a body, an attack's knockback, water, a piston) is detected,
+     counted and logged with who did it, and the NPC walks back to its line or post: straight back, else along its own
+     footsteps, else a local leg, and last, after 30 s, a teleport home only where no player sees it. Another NPC's
+     jostle on its way is left to the crowd unless it goes towards a drop; queue spots never stand next to a drop of 3
+     blocks or more. With `players-push-npcs: true` players bump NPCs (the realistic mode for later): a player who pushes
+     an NPC 3 times in 10 s, or once towards a drop, stops colliding with it for 60 s. An attack's knockback stays and the
+     NPC walks back. `/knk npc nav stats` shows `pushes: N (players N, attacks N), returned N, exempted N (now N),
+     teleported N`; the metrics count `knk_npc_nav_events_total{event="pushed|push_returned|push_exempt|push_teleport"}`.
+  2. **Checked** (scenarios on Paper 26.3 with Citizens and a scripted player): a player walking through a standing NPC
+     carries it 2.85–3.80 blocks with collision on and no policy, 0.00 with K&K's; a guard on a wall walk pushed towards a
+     7-block drop doesn't move, and with `players-push-npcs` it is pushed 0.68, the player is exempted at the edge, it
+     never falls and walks back; the five Phase 4c scenes pass with collision on as with it off; 12 singles one way
+     through a one-block door all arrive with turns kept.
+  3. **Why the default stays off.** With bodies on everywhere, NPCs walking a 1-wide flight next to a drop can shove
+     each other off it (the #491 stair corner scene: one fell), which push resistance can't undo; bodies of a squeezed
+     row still overlap (closest 0.19). The plan (4c.4 item 7.4.10) lists what is missing before the default turns on.
+  4. **Deploy.** Add the keys to `npc.navigation` in `config.yml` (configuration reference § 4.27) and restart:
+
+     ```yaml
+     npc:
+       navigation:
+         collidable: false
+         players-push-npcs: false
+         push-return: true
+         push-exempt-after: 3
+         push-exempt-window-ticks: 200
+         push-exempt-ticks: 1200
+         push-teleport-ticks: 600
+     ```
+
+- **CI: GitHub Actions on Node.js 24, Release workflow fixes** ([PandiO/knk-workspace#426](https://github.com/PandiO/knk-workspace/issues/426)).
+  knk-web-api, knk-web-app and knk-plugin `main` and `next`; knk-workspace branch `claude/actions-node24-426` (PR into
+  `next`).
+  1. **Actions.** Every workflow uses the Node.js 24 majors: `checkout` v7, `setup-dotnet` v6, `setup-node` v7,
+     `setup-java` v6, `upload-artifact` v7, `cache` v6 and `gradle/actions/setup-gradle` v6 (with the open-source
+     `cache-provider: basic`). The Node.js 20 warning on every run is gone; job and artifact names are unchanged
+     ([CI § 6](guides/developer/ci.md#6-action-versions-nodejs-24)).
+  2. **Release workflow.** One concurrency group per tag, so a third dispatch no longer replaces a pending second one.
+     A tag that already exists at exactly the requested commit without a release gets its release from a new run
+     instead of a failure; a tag at another commit, or one with a release, still fails the run.
+  3. **Deploy.** Nothing to deploy; workflows only.
+
+- **NPC navigation: crowd awareness, off by default** ([PandiO/knk-workspace#626](https://github.com/PandiO/knk-workspace/issues/626),
+  link M4 of the NPC navigation follow-ups chain, implementation plan Phase 4c.4 item 4, decision 3; BEHAVIOR_MODEL
+  NAV-26). knk-plugin and knk-workspace branches `claude/npc-movement-m4` (PRs into `next`, in review). Nothing changes
+  with `crowd-awareness: false` (the default) or with `npc.navigation.enabled: false`.
+  1. **What it does.** NPCs know who stands where near them: every 5 ticks the navigation service hashes the feet cell
+     of every navigating NPC. A narrow place on an NPC's way (a door, an arch, a passage under 2 blocks wide) is taken
+     in turns, one direction at a time: an NPC already in it goes first, then first come (decided by the developer
+     2026-11-15). The others wait in a queue a block apart before it, a block to the side of the line, so the way out
+     stays free. Two NPCs that meet head-on in a narrow place: the second to enter steps back out and waits (a yield).
+     A group's leader keeps its turn until its followers are through. Waiting in a queue, yielding or standing behind
+     another NPC (a single or a group's follower) is counted as a wait, not as a stuck spell, and recovery back-offs and
+     side-steps never end on a cell where another NPC stands; K&K's local legs (`local-legs-clearance`) go round such a
+     cell. `/knk npc nav stats` shows `crowd: waits N, yields N, longest queue N`; the metrics count
+     `knk_npc_nav_events_total{event="crowd_wait"}` and `{event="crowd_yield"}`. Authority values and closed
+     formations first are later updates (plan 4c.7).
+  2. **Checked.** In `npc-doorway-crowd` (6 singles from each side of a one-block doorway at once) today's code gets
+     11 of 12 through with 2 stuck spells and an NPC still for 11.7 s by the door (collision off); with the clearance-aware
+     legs alone all 12 walk through each other (5 in the doorway at once) and, with collision on, open 6 stuck spells.
+     With crowd awareness all 12 arrive both ways with 0 stuck spells, they take the doorway one direction at a time
+     (at most 2 in its cell at once, the same way), the 7th in the queue waits 7.8–8.3 s, 1.5 s per NPC that went
+     first, and nobody stands still outside a queue longer than 0.4 s. Turn-taking costs time with collision off: trips
+     take 6.3 s on average instead of 3.7 s. The group of 20 through the stair-house entrance is unchanged (no narrow
+     place on its line; 0 waits, 0 stuck spells, entrance still 0.4 s). Both scenarios now assert this, with collision
+     off and on. The hash and the turns cost 0.0015–0.0063 ms per NPC per tick.
+  3. **Deploy.** Add the key to `npc.navigation` in `config.yml` (configuration reference § 4.27) and restart:
+
+     ```yaml
+     npc:
+       navigation:
+         crowd-awareness: false
+     ```
+
+- **NPC navigation: plaza lines, off by default** ([PandiO/knk-workspace#625](https://github.com/PandiO/knk-workspace/issues/625),
+  link M5 of the NPC navigation follow-ups chain, implementation plan Phase 4c.4 item 5, decision 6; BEHAVIOR_MODEL
+  NAV-27). knk-plugin and knk-workspace branches `claude/npc-movement-m5` (PRs into `next`, in review). Nothing
+  changes with `plaza-lines: false` (the default) or with `npc.navigation.enabled: false`.
+  1. **What it does.** The road graph collapses a plaza into one junction, so a route across a plaza runs to its
+     middle and out again. With `plaza-lines: true` an NPC crosses a plaza on the straight line from where its route
+     enters to where it leaves: the corridor widens to the plaza (a designed plaza's radius, or the open floor measured
+     round the junction when it is wider than `corridor-half-width`, at most `plaza-corridor-blocks`), and the line
+     goes round wells, stalls and trees with `wall-clearance` and never into a region the route does not pass.
+     Groups take the same line, kept their formation's half width plus `wall-clearance` from obstacles, and keep
+     their width on the open plaza. It works with or without `corridor-steering`. The players' trail and the road
+     graph are unchanged; through-edges in the road-graph builder are a later update (plan 4c.7).
+  2. **Checked.** In `npc-plaza-line` (a 15 × 15 plaza with a well on the chord) 3 singles walked +40 % over the
+     chord through the plaza's middle; with the key on they walk +4 % over the shortest line that keeps 0.8 from the
+     well and pass it at 0.64–0.75 blocks, never near the middle. A group of 7 in ranks of 3 takes the same line round
+     the well with its own margin, 3 abreast all the way. The scenario now asserts this, with collision off and on.
+     Known: with collision off the group there reports its arrival 20 s late (followers already in place), a bug in
+     `next` filed as [#636](https://github.com/PandiO/knk-workspace/issues/636).
+  3. **Deploy.** Add the keys to `npc.navigation` in `config.yml` (configuration reference § 4.27) and restart:
+
+     ```yaml
+     npc:
+       navigation:
+         plaza-lines: false
+         plaza-corridor-blocks: 16
+     ```
+
+- **NPC navigation: elastic formation keeping, off by default** ([PandiO/knk-workspace#624](https://github.com/PandiO/knk-workspace/issues/624),
+  link M3 of the NPC navigation follow-ups chain, implementation plan Phase 4c.4 item 3, decision 2; #522, #493).
+  knk-plugin and knk-workspace branches `claude/npc-movement-m3` (PRs into `next`, in review). Nothing changes with
+  `group-formation-keeping: levels` (the default) or with `npc.navigation.enabled: false`.
+  1. **What it does.** With `group-formation-keeping: elastic` a group fits its width to the free width across its
+     path instead of fixed widths: neighbours move closer, down to shoulder to shoulder (`group-lateral-spacing-min`
+     0.6), and the rows close up (`group-spacing-min` 1.0) before the group drops a width, so 3 abreast walk a 2-wide
+     road. It decides its width ahead (the formation's depth plus `group-lookahead-blocks`, 4), so the followers are
+     in their new lanes before the narrow place. It folds into single file only where 2 abreast squeezed don't fit
+     for longer than `group-width-hysteresis-blocks`; a shorter tight place (a post, a one-block gap) is passed with
+     the lanes merged. Stairs are walked as wide as the flight allows when each lane has its own steps; lanes may
+     cross into regions the group's access rules allow; followers take the new slots by where they stand, so nobody
+     crosses another's line. The group path follows the corridor-shaped line, and the outer lanes keep
+     `wall-clearance` from walls where the road allows.
+  2. **Stats.** The groups line of `/knk npc nav stats` has `merges N (reasons)` next to the narrowings, and the metric
+     `knk_npc_nav_group_width_reasons_total` has `change="merge"`.
+  3. **Checked.** `npc-stairhouse-group` (the developer's stair house, 20 in ranks of 3) now walks 3 abreast with no
+     fold where it folded at the first step, the leader arrives after 7.5 s instead of 27 s and no follower stands in
+     the entrance longer than 0.4 s (was 23.7 s); the group of 9 on the jagged straight has no stuck spells with
+     collision off (was 5, 3 not freed). Both scenarios, collision off and on, check plan 4c.4 item 3.3;
+     `npc-group-narrows` checks the squeeze on the corner scene.
+  4. **Deploy.** Add the keys to `npc.navigation` in `config.yml` (configuration reference § 4.27) and restart:
+
+     ```yaml
+     npc:
+       navigation:
+         group-formation-keeping: levels
+         group-lateral-spacing-min: 0.6
+         group-spacing-min: 1.0
+         group-lookahead-blocks: 4
+     ```
+
+- **NPC navigation: clearance-aware local legs, off by default** ([PandiO/knk-workspace#623](https://github.com/PandiO/knk-workspace/issues/623),
+  link M6 of the NPC navigation follow-ups chain, implementation plan Phase 4c.4 item 6, decision 8, add-on D).
+  knk-plugin and knk-workspace branches `claude/npc-movement-m6` (PRs into `next`, in review). Nothing changes with
+  `local-legs-clearance: false` (the default) or with `npc.navigation.enabled: false`.
+  1. **What it does.** A local leg is the part of a trip an NPC walks without the road line: a short trip, a group
+     follower's own leg back to its group, the recovery ladder's local leg when an NPC is stuck. Until now Citizens'
+     own path search found the way, which knows the body's size but keeps no margin from walls, and its failed
+     searches cost main-thread time before they came back with no path. With the key on, K&K searches the leg itself:
+     on the walkable corridor around it (its own floor, steps of at most a block), with K&K's access rules for the
+     NPC (gates, doors, regions it may not enter), keeping `wall-clearance` (0.8) from walls where the gap allows and
+     never less than the body's width, so one-block doors stay open. The found way is smoothed into a few straight
+     steps that keep the floor under the NPC and is walked as waypoints. When K&K finds nothing within its cell budget,
+     Citizens' search walks the leg as before.
+  2. **Stats.** `/knk npc nav stats` has a new line `local legs: k&k N, engine N, none N`: legs K&K's search found,
+     legs Citizens' search walked, and legs neither found a way for.
+  3. **Checked.** `npc-stuck-ladder` (now with the key on) checks that the ladder's local leg frees the pushed NPC as a
+     K&K leg without an engine search; `npc-stairhouse-singles` (key on, collision off and on) checks that no local
+     leg ends without a path. The other movement scenarios report the counts.
+  4. **Deploy.** Add the key to `npc.navigation` in `config.yml` (configuration reference § 4.27) and restart:
+
+     ```yaml
+     npc:
+       navigation:
+         local-legs-clearance: false
+     ```
+
+- **NPC navigation: corridor steering, off by default** ([PandiO/knk-workspace#622](https://github.com/PandiO/knk-workspace/issues/622),
+  link M2 of the NPC navigation follow-ups chain, implementation plan Phase 4c.4 item 2, decision 1 option A).
+  knk-plugin and knk-workspace branches `claude/npc-movement-m2` (PRs into `next`, in review). Nothing changes with
+  `corridor-steering: false` (the default) or with `npc.navigation.enabled: false`.
+  1. **What it does.** Before an NPC walks a stretch of its route (about 32 blocks), K&K builds the walkable corridor
+     around the road line (`corridor-half-width` blocks each side, the NPC's own floor and the road's regions), works
+     out each spot's clearance from walls, posts and drops, and moves the line: `wall-clearance` (0.8) off walls
+     where the road is wide enough, on straights too; through the middle where it is narrower, so one-block doors
+     stay open; straightened where the corridor allows; and through the middle of a doorway or entrance on its axis,
+     with a waypoint 1.5 blocks before it, one in it and one after it (walked with waypoint margin 0.35). The shaped
+     stretch is built once and shared by every NPC that gets it. Corner clearance and the waypoint chain still run on
+     it. Group members keep today's line until link M3 fits formations to the corridor.
+  2. **Checked.** With the key on, `npc-stairhouse-singles` and `npc-jagged-straight` (collision off and on) now
+     assert: all 12 singles arrive, 0 stuck spells, nobody still longer than 3 s, no fall, corridor steering's own cost
+     at most 0.03 ms per NPC per tick (the plan's budget; about 0.005 ms warm).
+  3. **Deploy.** Add the three keys to `npc.navigation` in `config.yml` (configuration reference § 4.27) and restart:
+
+     ```yaml
+     npc:
+       navigation:
+         corridor-steering: false
+         corridor-half-width: 4
+         wall-clearance: 0.8
+     ```
+
+- **NPC navigation: movement evidence and diagnostics** ([PandiO/knk-workspace#621](https://github.com/PandiO/knk-workspace/issues/621),
+  link M1 of the NPC navigation follow-ups chain, implementation plan Phase 4c.4 item 1 and 4c.5). knk-plugin and
+  knk-workspace branches `claude/npc-movement-m1` (PRs into `next`, in review). No behaviour change, no new
+  `config.yml` key; nothing changes for players or with `npc.navigation.enabled: false` (the default).
+  1. **Why a group folded.** Every fold and narrowing now names its cause in the log line ("folds into a column: the
+     path is too narrow for 2 abreast (stair) at …") and counts it: `stair` (a step on the path), `narrow` (no floor
+     where a lane would stand), `door` (a gate door on the route), `rules` (a lane in other WorldGuard regions) and
+     `edge` (a lane with floor but no room at its shoulder, a jutting wall piece). The groups line of
+     `/knk npc nav stats` shows them ("folds 3 (stair 2, door 1)") and the metrics have
+     `knk_npc_nav_group_width_reasons_total{change, reason}`. Counting only: the widths are chosen as before.
+  2. **How much room the line has.** `/knk npc nav trace` writes a `# corridor:` line after each `# waypoints:` line:
+     each waypoint's free width across the line (total, left, right in blocks, to the nearest wall, post, full-block
+     step or drop, at most 4 per side).
+  3. **Real places as test scenes.** Plugin scenarios can paste a WorldEdit schematic (`.schem`, the format
+     `//schem save` writes) from the plugin's `scenario-scenes/` resources into their box. Five new scenarios, each run
+     with `npc.navigation.collidable` off and on, measure today's movement in report mode (they log a
+     `KNK-NPC-REPORT` line and pass; later links turn the numbers into checks): `npc-stairhouse-singles`,
+     `npc-stairhouse-group`, `npc-jagged-straight`, `npc-doorway-crowd` and `npc-plaza-line`. The stair house is
+     the developer's own schematic (attached to [#603](https://github.com/PandiO/knk-workspace/issues/603)); the
+     other three scenes are synthetic by design. On it, a group of 20 folds at the first step and a follower stands
+     about 24 s in the entrance, the developer's jam. CI's
+     `paper-boot` job runs 45 scenarios now and copies the report lines into its summary.
+- **NPC navigation: movement-quality design (decided)** ([PandiO/knk-workspace#603](https://github.com/PandiO/knk-workspace/issues/603), link L8): implementation plan Phase 4c (steering options from a [research report](reports/2026-11-15-npc-movement-research.md) on how games handle obstacle avoidance and stuck recovery, formations that tighten before they fold, turns at chokepoints, natural lines on plazas; links M1–M5) and BEHAVIOR_MODEL NAV-24–NAV-28; docs only; decided by the developer 2026-11-15 (all fifteen questions).
+- **NPC navigation: entry removed in the web app with realtime on stops a group at the district's edge**
+  ([PandiO/knk-workspace#593](https://github.com/PandiO/knk-workspace/issues/593), the developer's retest of
+  [#506](https://github.com/PandiO/knk-workspace/issues/506) (Phase 4 developer test step 10); also
+  [#533](https://github.com/PandiO/knk-workspace/issues/533); link L6 of the NPC navigation follow-ups chain).
+  knk-plugin and knk-workspace branches `claude/npc-followups-l6` (PRs into `next`, in review). No change for players
+  or with `npc.navigation.enabled: false` (the default).
+  1. **Why the whole group walked in.** A district's entry changed in the web app arrives over realtime as
+     `EntityChanged` (the plugin clears its region → domain map) and `DomainAccessChanged` (the WorldGuard flag sync).
+     Neither told NPC navigation. The group kept its "may enter" answers from before the change, and the NPC checks
+     count a region missing from the map as open, so every follower outside walked in and the trespass guard counted
+     nothing. A `/knk cache refresh` afterwards came too late for the followers who were already inside.
+  2. **The fix.** Both realtime events now ask, coalesced into one run after half a second, for the roads' regions to
+     be asked about again in place (the last known rule is kept until the API answers) and then send the availability
+     event the refresh sends. Followers outside stop at the edge within about a second, without a refresh. Only while
+     NPC navigation runs.
+  3. **The gate region over the district's entry is not the cause.** The NPC entry rule judges each region on its own:
+     a step into `district_1000004` and `gate_2000131` at once is allowed only when both may be entered, so a gate
+     region that allows entry (or has no domain) never hides the district's denial. There is no region priority in
+     the entry rule. The rule is now one core class (`DomainEntryRule`) shared by the server and the tests.
+  4. **No false trespass for an NPC that crossed just before the change arrived.** An NPC's own trespass guard (the
+     leader's, and any NPC with an order of its own) now takes a fresh look when an availability event comes, as the
+     followers' guard already did. An entry made under the old rules is not judged by the new ones. Entries made after
+     the plugin knew still count.
+  5. **Tests.** New plugin scenario `npc-group-realtime-entry`: a district under a gate region on a real server, entry
+     removed and restored through the plugin's realtime classes mid-group (CI `paper-boot` now has `MIN_SCENARIOS` 35).
+     New knk-core `NavGroupDomainRulesTest` covers the realtime, `DomainAccessChanged` and refresh paths with the gate
+     region; on `next` the realtime path fails it (followers enter). There are also new resolver tests, two
+     `NpcNavigationRulesTest` cases and the knk-paper `NavigationDomainChangesTest`.
+  - **Admin steps:** none (no `config.yml` key, no new node, no API change). Developer retest: Phase 4 step 10 as
+    changed in the implementation plan (realtime on, no `/knk cache refresh`), posted on #593.
 - **NPC navigation: NPCs stay on the stair at a turn over a ledge, and falls are counted**
   ([PandiO/knk-workspace#592](https://github.com/PandiO/knk-workspace/issues/592), the developer's L3 retest of
   [#491](https://github.com/PandiO/knk-workspace/issues/491) and [#492](https://github.com/PandiO/knk-workspace/issues/492);
