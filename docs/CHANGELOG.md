@@ -76,6 +76,38 @@ This is a human-readable record of capabilities merged into the V3 default branc
        `byType` gains a `Landmark` row with `enabled` false (the type rule), also when overrides make some landmarks
        discoverable.
 
+- **Landmarks in the web app as domains: the domain list shows each domain's type and filters on it, a landmark opens
+  with the landmark form, and the landmark form offers only the areas its parent allows**
+  ([PandiO/knk-workspace#986](https://github.com/PandiO/knk-workspace/issues/986), phase 4 of
+  [#976](https://github.com/PandiO/knk-workspace/issues/976), [design](specs/landmark-domain/DESIGN.md); also the web
+  part of [#951](https://github.com/PandiO/knk-workspace/issues/951); branch `claude/landmark-domain` in knk-web-app,
+  tier:2, no flag). knk-web-app: domain lists and domain pickers have a **Type** column (Town, District, Structure,
+  Gate, Landmark, …) and the domain table a **Type** filter (`domainType`, exact types: Structure leaves out gates);
+  the picker's options read "Type: Landmark". In the domain dashboard a landmark's row opens the landmark page and
+  its Edit the landmark form; other rows open as before. The landmark form shows the areas as "Point", "Own region"
+  and "Linked domain's area", and offers "Linked domain's area" only while the picked parent has a region (with the
+  API's message when a stored value no longer fits); a saved landmark's parent picker leaves out the landmark and the
+  landmarks below it (`excludeSubtreeOf`). The landmark list's columns are Parent (with its type), Area, Region and
+  In /navigate (the old Domain column goes); a domain's Landmarks panel lists the landmarks whose parent it is
+  (`parentDomainId`), on a landmark's page too (its child landmarks, never itself). The landmark DTOs sit on a domain
+  base DTO with an optional region; a landmark form gets the world check on save and its sub-regions link back to it
+  like any domain's. Discovery pages list the `Landmark` type last, and the overrides card offers landmarks. A region
+  drawn through a form's region task fills the form's empty MinX…MaxZ fields from the task's bounding box (#951; the
+  plugin sends the box with L3, #985), so a Region-shaped production area saves at the first try. Docs:
+  [smoke test § 4](guides/landmark-domain-smoke-test.md#4-phase-4-web-app-986-tier2).
+  **Admin steps (deploy notes):**
+    1. Deploy knk-web-app with phases 1 and 2 of the API (`api/landmarks` with `areaKind`/`parentDomainId`,
+       `POST api/Domains/search` with `domainType` and `excludeSubtreeOf`). No `REACT_APP_*` setting, no migration,
+       no `config.yml` key.
+    2. The Landmark form seed v2 (L1) has no display conditions yet, so its Region field and its "Access and
+       messages", "Warp destination" and "Sub-regions" steps show for every area until seed v3
+       ([#1003](https://github.com/PandiO/knk-workspace/issues/1003)); in between, add the condition "Area equals
+       OwnRegion" to them in the form builder by hand if wanted.
+    3. Landmark staff need `knk.admin.world` for the parent picker and the world check (both read `api/Domains`), as
+       the smoke guide's landmark staff already have.
+    4. The bounds fill needs the plugin of L3 (#985); with an older plugin nothing is filled and the bounds are typed
+       as before.
+
 - **Siege weapons: a weapon spot is now a WorldGuard region you draw in the spot form, and the form shows its size class before you save**
   ([PandiO/knk-workspace#988](https://github.com/PandiO/knk-workspace/issues/988), part of
   [#354](https://github.com/PandiO/knk-workspace/issues/354); developer decision 2026-11-22, spec W76; replaces the spot
