@@ -200,6 +200,17 @@
     free slot once its gate opens, ahead of further off-road plugin links, and that L7b resolves the per-group default
     in the shared `parseRoute`/`withMode` path. Alternatives: (a) reserve the slot now for L5 — it cannot start before
     the developer answers.
+30. **#845 run beside the chain, merged (2026-11-20).** On the developer's go, #845 ran as its own issue session
+    (not a link, because it needs a seed migration): knk-web-api#63 `4f4580bd`, knk-plugin#106 `2bc2dc26` (done by a
+    coordinator subagent after the session's knk-plugin attach was refused), knk-workspace#874 `67b7ceea`. It does not
+    gate L5. Deploy the API migration before the plugin. `knk.navigate.any` seed ranks still open. Alternatives: (a) a
+    link after L5, as first proposed; the developer pointed out it was independent.
+31. **Landmarks chain #976 L3 took the slot first, merged (2026-11-22).** L3 #985 merged into knk-plugin `next`
+    (`14645895`, knk-plugin#125) while L5's gate stayed closed. For the L5 prompt: `NavigationService.navigate(handle)`
+    now adds a landmark domain's regions once and `insideRegion` checks the area's other regions (keep both on the
+    engine path); landmark classes changed (`LandmarkProvider`, `ModelLandmarks`, `LandmarkExtent`, `LandmarkWeights`,
+    `HandleDestinations`, `NavigationModelSnapshot`); the arrival-radius code in `Destination`/`Place.Point` is now
+    unset (LD08) and L5 may drop it. Slot is free again. Alternatives: (a) hold L3 for L5 — L5 could not start.
 
 ## 4. Link blocks
 
