@@ -1,7 +1,7 @@
 # Landmarks as a Domain subtype chain — charter
 
 **Status:** Running (2026-11-22; coordinator session_01R1w2UtYX9XFbTVUFy6zJUb, cloud)
-**Last updated:** 2026-11-22 (coordinator's first run: progress report, knk-workspace branches, model, #981); 2026-11-22 (draft from the design session)
+**Last updated:** 2026-11-22 (§ 3 item 8: bugs picked up by the chain, developer decision, added from the design session); 2026-11-22 (coordinator's first run: progress report, knk-workspace branches, model, #981); 2026-11-22 (draft from the design session)
 **Issues:** parent [PandiO/knk-workspace#976](https://github.com/PandiO/knk-workspace/issues/976); sub-issues per
 link below. Reference issues as `PandiO/knk-workspace#n` in component repos.
 **Progress report:** [reports/2026-11-22-landmark-domain-chain.md](../../reports/2026-11-22-landmark-domain-chain.md).
@@ -44,8 +44,8 @@ Order and parallelism: L1, then L2 (same repo); L3 and L4 may run together after
    `next`, no link running, its smoke § 6 waits). L3 changes `core/navigation/` landmark classes
    (`LandmarkExtent`, `LandmarkProvider`, `ModelLandmarks`): check the off-road chain's row first and keep one knk-plugin
    navigation link at a time. L1 removes the landmark path that #945 added; #946 (production areas) keeps the generic
-   owner lookup. #981 (CrownLand loop) touches `DomainMappingProfile` and is replaced by L1's parent walk; if it is open
-   when L1 starts, L1 may take it over.
+   owner lookup. #981 (CrownLand loop) touches `DomainMappingProfile` and is replaced by L1's parent walk; L1 takes it
+   over (items 7 and 8).
 2. **Unchanged for existing modes.** Towns, districts, structures, gate structures, crown land and the production
    structures keep their behaviour: region still required, effect damage, messages and discovery as today. Every
    landmark behaviour is off or neutral by default (LD24).
@@ -57,3 +57,13 @@ Order and parallelism: L1, then L2 (same repo); L3 and L4 may run together after
 6. **knk-workspace branches** (coordinator decision 3): each link's docs (changelog entry, smoke-guide section, spec
    status) go on `claude/landmark-domain-l<n>` in knk-workspace, from `next`, with their own PR into `next`.
 7. **#981** (coordinator decision 4): L1 takes it over; L1's parent walk ends the CrownLand loop, with #981's tests.
+8. **Bugs picked up by the chain** (developer decision 2026-11-22, in the design session: "tell the coordinator to pick
+   up the remaining relevant bugs too"). Each goes with the link that changes the same code; the link closes it with
+   `Closes PandiO/knk-workspace#<n>` and lists it in its report block:
+    1. L1: #981 (the CrownLand loop in `GetParentDomainDecisions`; L1's parent walk) and #952 (a row left on a temp
+       name after a failed re-run; the region finalizer that L1 changes).
+    2. L3: #958 (`npc-replay-quarry-to-keep` fails when its scene moves; L3 adds scenarios) and the plugin part of
+       #951 (a freshly drawn production area region has no stored bounds; the region task's result carries the
+       drawn region's bounding box, option 2 of the issue).
+    3. L4: the web-app part of #951 (the form fills empty bounds from that result).
+    4. Not part of the chain: #948 and #949 (tests that fail only on a Dutch-locale or Windows checkout).
