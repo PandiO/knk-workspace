@@ -17,16 +17,21 @@ design session of 2026-11-22).
    landmarks), import the `Landmark` form seed v2 and `Landmark.display` and make both the default (form 51 and its
    Region id projection are superseded). Don't put `next` on a server players use before L3 (#985) is in it too
    (until then the plugin treats a landmark's own region as a domain region for effect damage).
-2. **Agent decisions to review:** L1 block § 4.1 item 5 (11 decisions, each with alternatives), and § 3 below.
+2. **L2 #984 in `next` (tier:2):** smoke guide § 2 (8 steps, 6 automated, 2 partly); deploy: apply migration
+   `AddLandmarkDiscoveryRule` (data only, a disabled `Landmark` discovery rule).
+3. **Agent decisions to review:** L1 block § 4.1 item 5 (11 decisions), L2 block § 4.2 item 5 (7 decisions), each with
+   alternatives, and § 3 below.
+4. **Off-road smoke § 6 and § 7 (landmarks, #698):** the off-road coordinator asked you on #698 whether they close as
+   superseded by this chain; this chain's guide § 3 covers landmark navigation on the new model (L3).
 
 ## 2. Summary
 
 | Link | Issue | Status | Branch heads | PR | CI | How started |
 |---|---|---|---|---|---|---|
 | L1 API model, migration, area kinds and parent (tier:3) | #983 | Merged into `next` 2026-11-22 18:37 UTC (knk-web-api `8cc4511b`, knk-workspace `724ebc10`) | `claude/landmark-domain`: knk-web-api `00ee3115` (after merging `next` `c647daf7`); `claude/landmark-domain-l1`: knk-workspace `ba0596e0` (coordinator, 2026-11-22: the heads in block 4.1 item 2 predate that merge) | [knk-web-api#82](https://github.com/PandiO/knk-web-api/pull/82), [knk-workspace#994](https://github.com/PandiO/knk-workspace/pull/994) | green on `00ee3115` (build-and-test, mysql-tests, fresh-database); knk-workspace no checks; Codex at its usage limit (skipped) | create_session session_01R1w2Uv1A4MYoi62zFJTnwz, started 2026-11-22 16:32 UTC |
-| L2 API lists, discovery, warps and realtime (tier:2) | #984 | Done, in review (2026-11-22) | `claude/landmark-domain-integration`: knk-web-api `2525be13`; `claude/landmark-domain-l2`: knk-workspace `fc64d3f2` | PandiO/knk-web-api#84, PandiO/knk-workspace#1002 | knk-web-api `2525be13`: Build and test, mysql-tests, fresh-database green | create_session session_01R1w2Ux3HrcYVs53AugdtZW, started 2026-11-22 18:39 UTC |
-| L3 Plugin (tier:2) | #985 | Not started (gate: L1 and L2 merged into `next`) | `claude/landmark-domain`: knk-plugin; `claude/landmark-domain-l3`: knk-workspace | none | none | (not started) |
-| L4 Web app (tier:2) | #986 | Not started (gate: L1 and L2 merged into `next`) | `claude/landmark-domain`: knk-web-app; `claude/landmark-domain-l4`: knk-workspace | none | none | (not started) |
+| L2 API lists, discovery, warps and realtime (tier:2) | #984 | Merged into `next` 2026-11-22 19:45 UTC (knk-web-api `55d187d8`, knk-workspace `035f641f`) | `claude/landmark-domain-integration`: knk-web-api `2525be13`; `claude/landmark-domain-l2`: knk-workspace `fc64d3f2` | [knk-web-api#84](https://github.com/PandiO/knk-web-api/pull/84), [knk-workspace#1002](https://github.com/PandiO/knk-workspace/pull/1002) | green on `2525be13` (build-and-test, mysql-tests, fresh-database; push and PR runs); knk-workspace no checks; Codex at its usage limit (skipped) | create_session session_01R1w2Ux3HrcYVs53AugdtZW, started 2026-11-22 18:39 UTC |
+| L3 Plugin (tier:2) | #985 | Running (started 2026-11-22 19:46 UTC) | `claude/landmark-domain`: knk-plugin (none yet); `claude/landmark-domain-l3`: knk-workspace (none yet) | none | none | create_session session_01R1w2UtBFy9s4dBXQoeBMQF, started 2026-11-22 19:46 UTC |
+| L4 Web app (tier:2) | #986 | Running (started 2026-11-22 19:46 UTC) | `claude/landmark-domain`: knk-web-app (none yet); `claude/landmark-domain-l4`: knk-workspace (none yet) | none | none | create_session session_01R1w2UtGykzTGpUL4Ksj6S6, started 2026-11-22 19:46 UTC |
 
 ## 3. Coordinator decisions
 
@@ -85,6 +90,27 @@ design session of 2026-11-22).
    Location rows without a user and Down the new ones (dev DB only, harmless). Alternatives: (a) send L1 back for a
    Codex review once the limit resets, rejected (the developer's rule says merge without it); (b) a separate
    review subagent, not needed after the read above.
+9. **L2 checked and merged into `next`** (2026-11-22 19:45 UTC). Chosen: merge; every check of skill § 6 held: heads
+   matched, both branches contained `next`, PRs clean with the template, CI green on knk-web-api `2525be13` (push and
+   PR runs), tests 5313 → 5327 passed (the one local MySQL red also fails on `next` locally and passes in CI), scope
+   knk-web-api plus three docs, migration `AddLandmarkDiscoveryRule` additive (one disabled row, Down deletes it),
+   7 agent decisions logged, #984 `status:in-review`, smoke § 2 tagged. Codex at its usage limit, merged without it.
+   API `next` CI after the L1 merge (`8cc4511b`) was green (Build and test, Migrations). Alternatives: none needed.
+10. **L3 and the shared knk-plugin navigation slot.** Chosen: L3 takes the slot now, agreed by message with the
+    destination engine coordinator (#25, session_01R1w2UvZSm3y5hAXB8VfYuv: its L5 #747 waits for the developer's live
+    test and, if its gate opens, for L3's merge) and the off-road coordinator (#698, session_01R1w2UuBBnWjqekMFxEMefN:
+    no plugin link running or queued). Their requests are in L3's prompt (golden transcripts and flag-off tests
+    unchanged, nothing new only on the flag-off path, `knk.navigate` granted in tests). Alternatives: (a) wait for
+    #747, rejected (its gate is closed and has no date); (b) start L3 without asking, rejected (the slot is shared).
+11. **Overlap with PandiO/knk-plugin#123 (#991, developer-run, open).** It adds `ManagedRegionKind.forNewRegion` and
+    changes the kind line of `ManagedRegionsBootstrap.finalizeNewRegion`. Chosen: L3 goes ahead and keeps to other
+    lines (a new LANDMARK constant, new `fromDomainType` arms and `DomainRegionSpecs` entries, its own test class),
+    because the edits are additive elsewhere in the same files (developer decision 2026-11-12); a later merge stays
+    mechanical. Alternatives: (a) hold L3 until #123 merges, rejected (no date, the developer merges it); (b) let L3
+    take over #991's change, rejected (another session's open PR).
+12. **L4 with L3.** Chosen: start L4 (knk-web-app) at the same time, as the charter allows; no knk-web-app PR is open
+    and the #608 claim on `objectConfigs.tsx` (PermissionGrant, design waiting) is not active. L3 and L4 write
+    separate knk-workspace branches and keep their changelog entries as separate blocks.
 
 ## 4. Link blocks
 
