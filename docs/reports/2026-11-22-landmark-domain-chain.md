@@ -30,7 +30,7 @@ design session of 2026-11-22).
 |---|---|---|---|---|---|---|
 | L1 API model, migration, area kinds and parent (tier:3) | #983 | Merged into `next` 2026-11-22 18:37 UTC (knk-web-api `8cc4511b`, knk-workspace `724ebc10`) | `claude/landmark-domain`: knk-web-api `00ee3115` (after merging `next` `c647daf7`); `claude/landmark-domain-l1`: knk-workspace `ba0596e0` (coordinator, 2026-11-22: the heads in block 4.1 item 2 predate that merge) | [knk-web-api#82](https://github.com/PandiO/knk-web-api/pull/82), [knk-workspace#994](https://github.com/PandiO/knk-workspace/pull/994) | green on `00ee3115` (build-and-test, mysql-tests, fresh-database); knk-workspace no checks; Codex at its usage limit (skipped) | create_session session_01R1w2Uv1A4MYoi62zFJTnwz, started 2026-11-22 16:32 UTC |
 | L2 API lists, discovery, warps and realtime (tier:2) | #984 | Merged into `next` 2026-11-22 19:45 UTC (knk-web-api `55d187d8`, knk-workspace `035f641f`) | `claude/landmark-domain-integration`: knk-web-api `2525be13`; `claude/landmark-domain-l2`: knk-workspace `fc64d3f2` | [knk-web-api#84](https://github.com/PandiO/knk-web-api/pull/84), [knk-workspace#1002](https://github.com/PandiO/knk-workspace/pull/1002) | green on `2525be13` (build-and-test, mysql-tests, fresh-database; push and PR runs); knk-workspace no checks; Codex at its usage limit (skipped) | create_session session_01R1w2Ux3HrcYVs53AugdtZW, started 2026-11-22 18:39 UTC |
-| L3 Plugin (tier:2) | #985 | Blocked at setup (2026-11-22): the session's network refuses the plugin's Maven repositories, block 4.3 item 7 | none pushed | none | none | create_session session_01R1w2UtBFy9s4dBXQoeBMQF, started 2026-11-22 |
+| L3 Plugin (tier:2) | #985 | Running (rerun started 2026-11-22 19:51 UTC; first run blocked at setup, block 4.3) | `claude/landmark-domain`: knk-plugin (none yet); `claude/landmark-domain-l3`: knk-workspace (none yet) | none | none | create_session session_01R1w2UtBFy9s4dBXQoeBMQF (19:46 UTC, environment "Default": blocked, `repo.papermc.io` refused); rerun create_session session_01R1w2UuLNw6Cr3qwUKQNvao in environment "Default Correct" (19:51 UTC, decision 14) |
 | L4 Web app (tier:2) | #986 | Running (started 2026-11-22 19:46 UTC) | `claude/landmark-domain`: knk-web-app (none yet); `claude/landmark-domain-l4`: knk-workspace (none yet) | none | none | create_session session_01R1w2UtGykzTGpUL4Ksj6S6, started 2026-11-22 19:46 UTC |
 
 ## 3. Coordinator decisions
@@ -122,6 +122,17 @@ design session of 2026-11-22).
     would keep showing steps for every area kind); (b) a Landmark rule hard-coded in the web app's `FormWizard`,
     rejected (form config duplicated in code); (c) change v2 in place, rejected (LD25: an import never overwrites an
     existing configuration).
+14. **L3's first run blocked by the network; rerun in "Default Correct"** (2026-11-22 19:51 UTC). The first L3
+    session ran in the environment "Default" (package registries only), where `repo.papermc.io`,
+    `maven.enginehub.org`, `jitpack.io` and `maven.citizensnpcs.co` are refused, so the plugin could not compile; it
+    stopped with nothing changed (block 4.3). Chosen: rerun L3 with `create_session` in the developer's environment
+    "Default Correct" (`env_018Anjpntcn3H2W8a9ZJTQ1R`, saved for the four K&K repositories), same prompt plus a rerun
+    note, because that is the environment saved for these repositories and a new session is the only way onto it (a
+    running session is not moved onto an unrestricted network). Alternatives: (a) the subagent fallback, rejected (the
+    coordinator also runs in "Default"; `repo.papermc.io` answers 403 here too); (b) propose the four hosts for
+    "Default", rejected for now (it changes every session on the developer's default environment for one
+    repository's needs); (c) wait for the developer, rejected (the saved environment answers it). Later plugin links
+    should start in "Default Correct" from the first run.
 
 ## 4. Link blocks
 
