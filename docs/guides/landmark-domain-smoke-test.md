@@ -1,7 +1,7 @@
 # Landmarks as a Domain subtype — smoke test
 
-**Status:** § 1 built (L1, 2026-11-22, on `next`, not run by the developer); § 2 built (L2, 2026-11-22, on `claude/landmark-domain-integration`, not run by the developer); § 3 built (L3, 2026-11-22, on knk-plugin `claude/landmark-domain`, not run by the developer); § 4 built (L4, 2026-11-22, on knk-web-app `claude/landmark-domain`, not run by the developer). Steps tagged by the links.
-**Last updated:** 2026-11-22 (§ 3 updated to what L3 built, steps tagged, #985); 2026-11-22 (§ 4 updated to what L4 built, steps tagged, #986); 2026-11-22 (§ 2 updated to what L2 built, steps tagged, #984); 2026-11-22 (§ 1 updated to what L1 built, steps tagged, #983); 2026-11-22 (draft from the design, phases 1–4)
+**Status:** § 1 built (L1, 2026-11-22, on `next`, not run by the developer); § 2 built (L2, 2026-11-22, on `claude/landmark-domain-integration`, not run by the developer); § 3 built (L3, 2026-11-22, on knk-plugin `claude/landmark-domain`, not run by the developer); § 4 built (L4, 2026-11-22, on knk-web-app `claude/landmark-domain`, not run by the developer); § 5 built (L1b, 2026-11-22, on knk-web-api `claude/landmark-domain-952`, not run by the developer). Steps tagged by the links.
+**Last updated:** 2026-11-22 (§ 3 updated to what L3 built, steps tagged, #985); 2026-11-22 (§ 5 added, fixes #952 and #1003; § 1.0 and § 4.0 name seed v3, L1b); 2026-11-22 (§ 4 updated to what L4 built, steps tagged, #986); 2026-11-22 (§ 2 updated to what L2 built, steps tagged, #984); 2026-11-22 (§ 1 updated to what L1 built, steps tagged, #983); 2026-11-22 (draft from the design, phases 1–4)
 **Design:** [specs/landmark-domain/DESIGN.md](../specs/landmark-domain/DESIGN.md) · **Issue:**
 [PandiO/knk-workspace#976](https://github.com/PandiO/knk-workspace/issues/976)
 
@@ -27,9 +27,10 @@ the Migrations workflow on a fresh MySQL 8 database): skip them or run them by h
        `knk.admin.world.landmark` ("domain staff").
     3. A test town with a region and a spawn point in the dev world, and a crown land with a region (Territory V1 on
        `next`).
-    4. The Landmark form seed v2 imported and made the default for Landmark: the form configuration list, Import /
-       seeds, `Landmark` ("Landmark - Default (seed v2)"), Make default. The seed v1 configuration and the
-       developer's edited form stay as they were; switch them off as default.
+    4. The Landmark form seed v3 imported and made the default for Landmark: the form configuration list, Import /
+       seeds, `Landmark` ("Landmark - Default (seed v3)", #1003; it supersedes seed v2, which need not be imported),
+       Make default. The seed v1 configuration, an imported v2 and the developer's edited form stay as they were;
+       switch them off as default.
 
 ### 1.1 Steps
 
@@ -301,15 +302,15 @@ scenario `landmark-region-is-managed-under-its-parent`.*
        `api/Domains`).
     2. The landmarks of § 1 and § 2: the point landmark of § 1 step 3, "the tower" (own region, parent the test town),
        "Dais" (parent the tower), the `LinkedDomain` landmark of § 1 step 8.
-    3. The Landmark form seed v2 as the default form. Its Region field and its "Access and messages", "Warp
-       destination" and "Sub-regions" steps have no display conditions until seed v3
-       ([#1003](https://github.com/PandiO/knk-workspace/issues/1003)): for step 1, add the condition "Area equals
-       OwnRegion" to those four in the form builder (or import seed v3 once it exists).
+    3. The Landmark form seed v3 as the default form (§ 1.0 item 3.4): its Region field and its "Access and
+       messages", "Warp destination" and "Sub-regions" steps show only with `Own region`
+       ([#1003](https://github.com/PandiO/knk-workspace/issues/1003), § 5 step 5).
 
 ### 4.1 Steps
 
 1. [partly automated: `landmark-domain.spec.ts` "shows the region, access, warp and sub-region steps only with Own
-   region (A17)", on a mocked form with those conditions; by hand: the real seed form, see 4.0 item 3.3] As landmark
+   region (A17)", on a mocked form with those conditions, and `FormConfigurationSeedFilesTests.LandmarkSeed_V3_ShowsTheOwnRegionParts_OnlyForAnOwnRegion`
+   for the seed's conditions; by hand: the real seed v3 form, see 4.0 item 3.3] As landmark
    staff, open a new landmark form, fill the name and go to the Area step. Pick `Point`, then `Own region`, and step
    through with Next. **Expected:** with `Point` there is no Region field and Area is the last step (Submit, no Next);
    with `Own region` the Region field shows and Next leads to "Access and messages", "Warp destination" and
@@ -328,7 +329,7 @@ scenario `landmark-region-is-managed-under-its-parent`.*
 4. [automated: `landmark-domain.spec.ts` "edits a landmark with the landmark form, and a town with the domain form
    (DESIGN § 4.3)", `landmarks.test.ts` "opens a landmark row …"] In the domain list, click Edit on the tower's row;
    go back and click Edit on the test town's row. **Expected:** the tower opens in the landmark form
-   (`/forms/Landmark/edit/<id>`, "Landmark - Default (seed v2)"), the town in the domain form as before. With a Domain display configuration the rows are links, and the tower's row
+   (`/forms/Landmark/edit/<id>`, "Landmark - Default (seed v3)"), the town in the domain form as before. With a Domain display configuration the rows are links, and the tower's row
    opens the landmark's page (`/display/Landmark/<id>`). (DESIGN § 4.3)
 5. [automated: `landmark-domain.spec.ts` "the parent picker shows the type and leaves out the landmark and its
    descendants (A18)", "a new landmark offers every domain as parent"] Edit the tower in the landmark form and click
@@ -351,3 +352,57 @@ scenario `landmark-region-is-managed-under-its-parent`.*
 9. [by hand] Open the discovery settings and the overrides card. **Expected:** the `Landmark` rule is last and
    disabled (§ 2 step 4); "Add override" offers the landmarks with the type word Landmark; the player discoveries
    filter and the stats card list Landmark last. (A08, web side)
+
+## 5. Fixes picked up by the chain (#952, #1003)
+
+*Built by fix link L1b (2026-11-22), knk-web-api `claude/landmark-domain-952` (charter § 3 item 8.1 and #1003).
+#952 is tier:2, #1003 tier:1. Steps tagged `[automated: …]` run in CI (knk-web-api xUnit, CI job Build and test):
+skip them or run them by hand. `[partly automated: …; by hand: …]` names the part only a person can check. Tests:
+`Services/TempNameHealTests`, `Services/Lootbox/LootboxAreaRegionRenameTests`, `Services/DomainSubRegionTests`,
+`Services/FormConfigurationSeedFilesTests`.*
+
+### 5.0 Preconditions
+
+1. Deployed: knk-web-api from `next` with this fix, knk-web-app and knk-plugin from `next` (the region task, the
+   rename and `replaceRegionId` run through the plugin; KNG-103 is on `next`).
+2. Settings: none new.
+3. Accounts and data:
+    1. Landmark staff of § 1.0 item 3.1, with `knk.admin.regions` too (for `POST api/Regions/finalize-temp-names`
+       and `/rg info`), and an operator in game.
+    2. A lootbox spawn area made through its form with a drawn region, so it is on `lootbox_area_<id>` (lootbox area
+       region smoke test, `guides/lootbox-area-region-smoke-test.md`); note its id.
+    3. The Landmark form seed v3 as the default form (§ 1.0 item 3.4).
+
+### 5.1 Steps
+
+1. [partly automated: `TempNameHealTests` (the guard and the first save), the game server; by hand: the failed save]
+   Open the lootbox area's form, Send to Minecraft on its Region field and draw a clearly different region in game
+   (`save`). Before you click Submit, stop the Paper server (or its connection to the API). Submit. **Expected:** the
+   form saves; the area's region is `tempregion_worldtask_<n>` (the area list or `GET api/LootboxSpawnAreas/<id>`);
+   the API log says the plugin did not rename it. Start the server again: `/rg info lootbox_area_<id>` still shows the
+   old shape. (#952, the state the issue describes)
+2. [partly automated: `TempNameHealTests.FinalizeAll_HealsEveryOwnerKind_ButNotADomainsOwnName`; by hand: the game
+   server] Call `POST api/Regions/finalize-temp-names` as that staff account. **Expected:** the response lists the area
+   under `renamed`, not `failed`; the area is on `lootbox_area_<id>` again; `/rg info lootbox_area_<id>` shows the
+   shape drawn in step 1 with the old region's flags and owners; `/rg info tempregion_worldtask_<n>` finds no region;
+   the API log line reads "Finalizing region name for lootbox spawn area <id>: tempregion_worldtask_<n> ->
+   lootbox_area_<id> (…, replacing lootbox_area_<id>)". (#952)
+3. [partly automated: `TempNameHealTests.LootboxArea_ASaveThatKeepsTheTempName_ReplacesItsOwnFinalName`,
+   `LootboxAreaRegionRenameTests.Update_WithTheSameTempRegion_RetriesTheRename_ReplacingItsOwnFinalName`; by hand: the
+   game server] Repeat step 1, then instead of step 2 open the area's form again and Submit without changing anything.
+   **Expected:** as step 2: the save heals the area. (#952)
+4. [automated: `TempNameHealTests` (`ProductionArea_…`, `SiegeWeaponSpot_…`, `SubRegion_…`, the `…IsNotReplaced`
+   guards, `FinalizeAll_HealsEveryOwnerKind_ButNotADomainsOwnName`)] The same heal for a Region-shaped production
+   area (`production_area_<id>`), a siege weapon spot (`siege_spot_<id>`) and a domain sub-region
+   (`domain_<id>_sub_<n>`); a final name that a domain, sub-region, lootbox area, production area or siege spot names
+   is not replaced (the row keeps its temp name, as before); a first save names nothing to replace; a domain's own
+   `domain_<id>` (a landmark's too) is not healed, so a domain in this state still needs the manual way out of
+   `architecture/managed-worldguard-regions.md` § 7. (#952)
+5. [partly automated: `FormConfigurationSeedFilesTests.LandmarkSeed_V3_ShowsTheOwnRegionParts_OnlyForAnOwnRegion`,
+   `FormConfigurationSeedFilesTests` (every seed's dry run), `e2e/landmark-domain.spec.ts` "shows the region, access,
+   warp and sub-region steps only with Own region (A17)"; by hand: the imported form] Open the form configuration list
+   and check that "Landmark - Default (seed v3)" is the default for Landmark. Open a new landmark form, go to the Area
+   step and pick `Point`, then `Linked domain's area` (with the test town as parent), then `Own region`. **Expected:**
+   with `Point` and `Linked domain's area` there is no Region field and Area is the last step; with `Own region` the
+   Region field shows and Next leads to "Access and messages", "Warp destination" and "Sub-regions". (A17, #1003; if
+   the developer decides on #1003 that a point landmark keeps its warp, "Warp destination" shows for every area)
