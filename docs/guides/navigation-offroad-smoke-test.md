@@ -1,7 +1,7 @@
 # Off-road navigation and landmarks — smoke test
 
-**Status:** Draft from the design (2026-11-17); no steps run. L7b (§ 15): step A 12 of 12 steps automated (2 in part), step B (§ 15.4) 5 of 8 automated (1 in part); F3 (§ 14): 8 of 8 steps automated (5 in part); F2 (§ 13): 7 of 9 steps automated (4 in part); F1 (§ 12): 5 of 7 steps automated (3 in part); Phase 5.2 (§ 7): 7 of 8 steps automated (3 in part); Phase 4 (§ 5): 8 of 9 steps automated (2 in part); Phase 2 (§ 3): 13 of 14 steps automated (5 in part); Phase 5.1 (§ 6): 21 of 22 steps automated (6 in part); Phase 0 (§ 1): 1 of 9 steps automated; phase 1 (§ 2): 4 of 4 steps automated; phase 6.1 (§ 8): 6 of 8 steps automated (3 of them in part); phase 6.2 (§ 9): 11 of 11 steps automated (3 of them in part); phase 7 step 1 (§ 10.1): 4 of 7 steps automated (3 of them in part), viewed by the developer 2026-11-18; phase 7 step 2 (§ 10.2): 9 of 9 steps automated (3 of them in part); the other phases not yet automated (the links tag them).
-**Last updated:** 2026-11-21 (§ 15 enum follow-up of #852: `DefaultRouteMode` holds the enum names Shortest, Efficient and Preferred, the form field is an Enum field, § 15.3 step 2 for the rename migration, § 15.0 item 5 for player D and the road pair, § 15.4 count corrected to 5 of 8 with a clean-up step); 2026-11-20 (§ 15.4 L7b step B, the plugin uses a group's default route mode, #852: seven steps, four automated, one in part); 2026-11-20 (§ 15 L7b step A, a default route mode per permission group, #852: API, web and migration steps, eleven, all automated, two in part; in-game steps marked step B); 2026-11-20 (§ 14 F3, the smoke-test failures of 2026-11-19, #780, #771, #710: the road goal weighs the walk above the road, no repeated turn message, which end a 0-expansion search could not use, open doors passed without the door check, `trail-leg-spacing` shipped as 2.0: eight steps, all automated, five in part; shipped settings); 2026-11-19 (§ 13 F2, road goal by walk reachability, the road kept to its end and the flag-off walk-trail spacing, #780 and #771 items 3 to 5: nine steps, seven automated, four in part; shipped settings); 2026-11-19 (§ 12 F1, the walk-search fixes of #771 items 1 and 2: seven steps, five automated, three in part; shipped settings first, scene 1 by road recorded as known); 2026-11-18 (§ 7 phase 5.2 built by link L9, #709: eight steps, seven automated, three in part); 2026-11-18 (§ 5 phase 4 built by link L7, #707: nine steps, eight automated, two in part); 2026-11-18 (§ 3 phase 2 built by link L5, #705: fourteen steps, thirteen automated, five in part); 2026-11-18 (§ 10 phase 7: step 1 viewed by the developer, O33; § 10.2 step 2 built by link L10, #712: nine steps, all automated, three in part); 2026-11-18 (§ 6.3 phase 5.1 step B, link L8: the in-game steps); 2026-11-18 (§ 6 phase 5.1 updated to what link L8 step A built, #708: API and web steps, plugin steps marked step B); 2026-11-18 (§ 10 phase 7 split into step 1, built by link L10, #712: the staff preview and the developer's viewing steps on Cinix and Brink, and step 2, the trail, not built yet); 2026-11-18 (§ 9 phase 6.2 updated to what link L4 built, #711: eleven steps, all automated, three in part); 2026-11-17 (§ 8 phase 6.1 updated to what link L3 built, #710: eight steps, six automated); 2026-11-17 (§ 2 phase 1 updated to what link L2 built, #704: every step automated); 2026-11-17 (§ 1 phase 0 updated to what link L1 built, #703: the measurement steps and the `/knk road status` lines); 2026-11-17 (draft from the design, phases 0, 1, 2, 3, 4, 5.1, 5.2, 6.1, 6.2, 7)
+**Status:** Draft from the design (2026-11-17); no steps run. Drawn landmark regions (§ 6.5): 8 of 8 steps automated (2 in part); L7b (§ 15): step A 12 of 12 steps automated (2 in part), step B (§ 15.4) 5 of 8 automated (1 in part); F3 (§ 14): 8 of 8 steps automated (5 in part); F2 (§ 13): 7 of 9 steps automated (4 in part); F1 (§ 12): 5 of 7 steps automated (3 in part); Phase 5.2 (§ 7): 7 of 8 steps automated (3 in part); Phase 4 (§ 5): 8 of 9 steps automated (2 in part); Phase 2 (§ 3): 13 of 14 steps automated (5 in part); Phase 5.1 (§ 6): 21 of 22 steps automated (6 in part); Phase 0 (§ 1): 1 of 9 steps automated; phase 1 (§ 2): 4 of 4 steps automated; phase 6.1 (§ 8): 6 of 8 steps automated (3 of them in part); phase 6.2 (§ 9): 11 of 11 steps automated (3 of them in part); phase 7 step 1 (§ 10.1): 4 of 7 steps automated (3 of them in part), viewed by the developer 2026-11-18; phase 7 step 2 (§ 10.2): 9 of 9 steps automated (3 of them in part); the other phases not yet automated (the links tag them).
+**Last updated:** 2026-11-21 (§ 6.5 drawn landmark regions, #944/#945: eight steps, all automated, two in part); 2026-11-21 (§ 15 enum follow-up of #852: `DefaultRouteMode` holds the enum names Shortest, Efficient and Preferred, the form field is an Enum field, § 15.3 step 2 for the rename migration, § 15.0 item 5 for player D and the road pair, § 15.4 count corrected to 5 of 8 with a clean-up step); 2026-11-20 (§ 15.4 L7b step B, the plugin uses a group's default route mode, #852: seven steps, four automated, one in part); 2026-11-20 (§ 15 L7b step A, a default route mode per permission group, #852: API, web and migration steps, eleven, all automated, two in part; in-game steps marked step B); 2026-11-20 (§ 14 F3, the smoke-test failures of 2026-11-19, #780, #771, #710: the road goal weighs the walk above the road, no repeated turn message, which end a 0-expansion search could not use, open doors passed without the door check, `trail-leg-spacing` shipped as 2.0: eight steps, all automated, five in part; shipped settings); 2026-11-19 (§ 13 F2, road goal by walk reachability, the road kept to its end and the flag-off walk-trail spacing, #780 and #771 items 3 to 5: nine steps, seven automated, four in part; shipped settings); 2026-11-19 (§ 12 F1, the walk-search fixes of #771 items 1 and 2: seven steps, five automated, three in part; shipped settings first, scene 1 by road recorded as known); 2026-11-18 (§ 7 phase 5.2 built by link L9, #709: eight steps, seven automated, three in part); 2026-11-18 (§ 5 phase 4 built by link L7, #707: nine steps, eight automated, two in part); 2026-11-18 (§ 3 phase 2 built by link L5, #705: fourteen steps, thirteen automated, five in part); 2026-11-18 (§ 10 phase 7: step 1 viewed by the developer, O33; § 10.2 step 2 built by link L10, #712: nine steps, all automated, three in part); 2026-11-18 (§ 6.3 phase 5.1 step B, link L8: the in-game steps); 2026-11-18 (§ 6 phase 5.1 updated to what link L8 step A built, #708: API and web steps, plugin steps marked step B); 2026-11-18 (§ 10 phase 7 split into step 1, built by link L10, #712: the staff preview and the developer's viewing steps on Cinix and Brink, and step 2, the trail, not built yet); 2026-11-18 (§ 9 phase 6.2 updated to what link L4 built, #711: eleven steps, all automated, three in part); 2026-11-17 (§ 8 phase 6.1 updated to what link L3 built, #710: eight steps, six automated); 2026-11-17 (§ 2 phase 1 updated to what link L2 built, #704: every step automated); 2026-11-17 (§ 1 phase 0 updated to what link L1 built, #703: the measurement steps and the `/knk road status` lines); 2026-11-17 (draft from the design, phases 0, 1, 2, 3, 4, 5.1, 5.2, 6.1, 6.2, 7)
 **Design:** [specs/navigation-offroad/DESIGN.md](../specs/navigation-offroad/DESIGN.md) · **Issue:**
 [PandiO/knk-workspace#698](https://github.com/PandiO/knk-workspace/issues/698)
 
@@ -480,6 +480,68 @@ About 20 min.*
 1. On a copy of the production database, apply the migrations. **Expected:** one new table `landmarks`, no change to
    any other table; `Down` drops only `landmarks`. [automated: knk-web-api `AddLandmarksTests`; CI "Migrations (fresh
    DB)" on the API PR]
+
+### 6.5 Drawn landmark regions (#944, #945, tier:2)
+
+*Built 2026-11-21 (knk-plugin, knk-web-api and knk-web-app `claude/landmark-regions`, PRs into `next`): the region
+world task runs on any field (the plugin finds its handler by task type, #944), and a region drawn on the Landmark
+form's Region field becomes `landmark_<id>` on save, is replaced by a re-run and is kept by the temp-region cleanup, as
+a domain's is (#945; [managed WorldGuard regions § 7 "Landmarks"](../architecture/managed-worldguard-regions.md)). 8 of 8
+steps automated (2 of them in part); every step can still be run by hand; not run by hand yet. About 15 min for every
+step, 8 min for the parts no suite covers (steps 2 and 4: drawing and walking with a real client).*
+
+Preconditions, besides § 6.0: the API, web app and plugin from `next` with #944/#945; `navigation.landmarks: true` and
+`navigation.destination-engine: true` for step 4. The Landmark form's Region field needs the region world task: a fresh
+import of the seed has it; on a database that imported the seed before (the dev DB), add it in the form designer (Region
+field → Requires in-game action → task type `ReagionCreate`) if it is not there yet.
+
+1. As staff A open the Landmark form (Dashboard → Landmark → Create) and go to the **Area** step. **Expected:** the
+   **Region** field has **Send to Minecraft** and its help text says a drawn region becomes `landmark_<id>` when you
+   save; you can still type a region id into it. [automated: knk-web-api
+   `FormConfigurationSeedFilesTests.LandmarkSeed_DrawsItsRegionThroughTheRegionTaskOnRegionId` (the seed); the form
+   wizard renders a world task on any field in its own specs]
+2. Fill in Name "Courtyard", a Location (Send to Minecraft on the Location step), Area = Region, then **Send to
+   Minecraft** on Region. In game, claim the task with its code (`/knk task <code>`, shown in the form), select an L-shaped
+   area with `//sel poly` from the ground to a few blocks up, type `save`. **Expected:** the task starts (no "This game
+   server has no handler for task type 'ReagionCreate' (field RegionId)"); after `save` the form's Region field shows
+   `tempregion_worldtask_<n>`. [partly automated: knk-plugin
+   `WorldTaskHandlerRegistryTest.theRegionTaskOnAFieldNotNamedWgRegionId_findsTheRegionHandler`, knk-web-app
+   `WorldBoundFieldRenderer.regionAnyField.test.ts` (the result fills RegionId); by hand: drawing with a real client]
+3. Submit. **Expected:** "Landmark created."; the landmark's page shows the region `landmark_<id>` (its own id);
+   in game `/rg info landmark_<id>` shows exactly the drawn outline and Y range and `/rg info tempregion_worldtask_<n>`
+   finds nothing. [automated: knk-web-api
+   `LandmarkRegionRenameTests.Create_WithADrawnRegion_RenamesItToTheLandmarkName_InThePinsWorld_AndStoresIt`;
+   knk-plugin scenario `landmark-region-rename-keeps-drawn-bounds` (`LandmarkRegionRenameScenario`)]
+4. As the player, wait a minute (or `/knk cache refresh` as staff), then `/navigate Courtyard` from outside and walk
+   there. **Expected:** navigation ends with "You have arrived" as you step into the drawn region (anywhere in the L,
+   not in its notch). [partly automated: scenario `landmark-region-rename-keeps-drawn-bounds` (the navigation's region
+   shapes resolve `landmark_<id>` to the drawn L), `HandleDestinationsLandmarkTest.noExtentIsAPlainPoint_aRegionExtentIsTheRegion`;
+   by hand: walking with a real client]
+5. Edit "Courtyard", go to the Area step, **Send to Minecraft** on Region again, draw a different shape and submit.
+   **Expected:** the region is still `landmark_<id>`; `/rg info landmark_<id>` shows the new shape; `/knk regions temp`
+   lists no `tempregion_worldtask_*` left from it; navigation to "Courtyard" ends in the new shape (at once: region
+   shapes are read live). [automated: knk-web-api
+   `LandmarkRegionRenameTests.Update_AfterARerun_ReplacesTheLandmarksOwnRegionInPlace`,
+   `Update_AfterARerun_OfALandmarkStillOnATempName_RemovesThatTempRegion`; knk-plugin scenario
+   `landmark-region-rerun-replaces-in-place` (`LandmarkRegionReplaceScenario`)]
+6. Create a landmark in the form with Area = Region and the region id `keep_throne` typed in, and one in game with
+   `/knk landmark create Throne room region keep_throne`. **Expected:** both keep `keep_throne` as their region; no
+   `landmark_<id>` region appears. [automated: knk-web-api `LandmarkRegionRenameTests.Create_OnAnExistingRegion_KeepsItsId`,
+   `Rerun_KeepsARegionTheFormDidNotDraw`; knk-plugin
+   `LandmarkAdminCommandTest.createTakesTheNameTheExtentAndThePlayersPosition`]
+7. A landmark left on a temp name: stop the game server after drawing (step 2) and submit while it is down, then start
+   it. **Expected:** the landmark is saved with `tempregion_worldtask_<n>`; `/knk regions temp` lists it under "Used by a
+   domain, lootbox area or landmark" and the daily cleanup keeps it; `POST /api/Regions/finalize-temp-names` (staff with
+   `knk.admin.regions`) answers `renamed: 1` and the landmark shows `landmark_<id>`. [automated: knk-web-api
+   `LandmarkRegionRenameTests.Create_WhenThePluginIsUnreachable_StillSaves`, `FinalizeAll_AlsoRenamesLandmarksStillOnATempName`,
+   `TempRegionReleaseTests.ListDue_ARegionSomethingNames_IsKept(landmark)`; knk-plugin
+   `TempRegionRetentionLookupTest.theCleanupKeepsARegionALandmarkStandsOn_evenWithNoDomainOrArea`]
+8. Start a new landmark's form, draw a region on its Region field (step 2), then cancel the task in the web app (or
+   delete the draft in Saved Progress) instead of submitting. **Expected:** within about 10 minutes the server log says
+   `Removed temp region <world>/tempregion_worldtask_<n> (…)` and the region is gone. [automated: knk-web-api
+   `TempRegionReleaseTests.IsRegionTask_ByTaskType_OnAnyField`,
+   `CancellingAHeldRegionTaskOnALandmarkRegionIdField_ReleasesItsRegion`; the plugin's release pass is
+   `TempRegionReleasePassTest`]
 
 ## 7. Phase 5.2: landmark preference weights (#709, tier:2)
 

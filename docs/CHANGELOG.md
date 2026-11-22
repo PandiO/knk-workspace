@@ -4,6 +4,43 @@ This is a human-readable record of capabilities merged into the V3 default branc
 
 ## Unreleased — on feature branches, not merged
 
+- **A production area's field drawn in game keeps its region, and its survey keeps counting**
+  ([PandiO/knk-workspace#946](https://github.com/PandiO/knk-workspace/issues/946); with #944/#945 on branch
+  `claude/landmark-regions`). knk-web-api: a Region-shaped production area's region drawn through the area form's
+  region task is renamed to `production_area_<id>` on create and update (`FinalizeProductionAreaAsync`, the area's
+  world, drawn outline and Y range kept); a re-run redefines it in place or removes a previous temp region; an existing
+  region id is kept; `finalize-temp-names` and the release service cover production areas. Lootbox spawn areas,
+  landmarks and production areas now share one finalize path (`RegionOwnerKind`). knk-plugin: the temp-region cleanup
+  and release pass ask the production areas (`GET api/ProductionAreas`), and each owner list is read at most once a
+  minute instead of once per region; the survey picks the renamed region up at its next poll. Before, the drawn region
+  stayed `tempregion_worldtask_<n>`, was deleted after 14 days and the survey failed with "WorldGuard region ... not
+  found". Docs: [managed WorldGuard regions § 7 "Production areas"](architecture/managed-worldguard-regions.md),
+  [production smoke test § 5.4](guides/production-storage-transport-smoke-test.md). Admin steps: none (no migration,
+  no `config.yml` key, no seed change). Known: the first save of a freshly drawn region needs its bounds typed (#951).
+
+- **Landmarks can draw their own region in game, like towns and lootbox areas do**
+  ([PandiO/knk-workspace#944](https://github.com/PandiO/knk-workspace/issues/944),
+  [#945](https://github.com/PandiO/knk-workspace/issues/945); follow-up of #708; branch `claude/landmark-regions` in
+  knk-plugin, knk-web-api, knk-web-app and knk-workspace). knk-plugin: the region world task's handler
+  (`WgRegionIdTaskHandler`) is registered by the task types `ReagionCreate`, `RegionCreate` and `RegionClaim` as well as
+  by the field name `WgRegionId`, so it runs on a field of any name: claiming the region task on the Landmark form's
+  Region field no longer fails with "This game server has no handler for task type 'ReagionCreate' (field RegionId)".
+  The temp-region cleanup and the release pass also ask the landmarks (`GET api/landmarks`) before removing a
+  `tempregion_worldtask_<n>`. knk-web-api: a landmark's drawn region is renamed to `landmark_<id>` on create and update
+  (`DomainRegionNameFinalizer.FinalizeLandmarkAsync`, the pin's world, drawn outline and Y range kept, no managed-region
+  setup); a re-run of the region step redefines `landmark_<id>` in place or removes a previous temp region (KNG-103);
+  an existing region id, typed in the form or given to `/knk landmark create <name> region <id>`, is kept as it is;
+  `POST api/Regions/finalize-temp-names` covers landmarks; the release service keeps a region a landmark names and
+  recognises region tasks by task type; the Landmark form seed's Region field has the region world task. No landmark
+  name is reserved. knk-web-app: comment only, plus a test that the result fills a field not named `WgRegionId`.
+  Docs: [managed WorldGuard regions § 7 "Landmarks"](architecture/managed-worldguard-regions.md), off-road smoke test
+  [§ 6.5](guides/navigation-offroad-smoke-test.md). Admin steps: no migration and no `config.yml` key. The seed change
+  (in place, seed v1) reaches only a fresh import of the Landmark form; a database that imported it before (the dev DB,
+  with the developer's edited Landmark form) keeps its configuration: add the world task `ReagionCreate` to the Region
+  field in the form designer if it is not there. Deploy the plugin and the API together; a plugin without #944 still
+  fails the task on `RegionId`, an API without #945 leaves the region on its temp name (kept by the new plugin's
+  cleanup, deleted after 14 days by an older one).
+
 - **Display stalls in shops: the shop's items on shelves, item information and a confirmed quick buy**
   ([PandiO/knk-workspace#250](https://github.com/PandiO/knk-workspace/issues/250), production P12, link L29; behind
   `production.enabled`, default off). For players: shelves and stalls in a shop show the shop's items as floating
