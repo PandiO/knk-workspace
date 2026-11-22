@@ -1,6 +1,6 @@
 # Realtime channel (SignalR) between knk-web-api, knk-plugin and knk-web-app
 
-**Status:** Current · **Last updated:** 2026-11-18 (§6.11 and §6.4: the overview map's hub methods `ReportRegionOutlines`, `ReportMapPlayers`, `GateCommand` / `GateCommandResult` and the `GateCommandSent` audit entry, in `next`, PandiO/knk-workspace#732, docs #766)
+**Status:** Current · **Last updated:** 2026-11-22 (§6.12, §6.4, §6.6: the region queries `RegionGeometryQuery` / `RegionGeometryResult` and `SpotSiteCheckQuery` / `SpotSiteCheckResult`, settings `RegionQueries:*`, in `next`, PandiO/knk-workspace#988, docs #999); 2026-11-18 (§6.11 and §6.4: the overview map's hub methods `ReportRegionOutlines`, `ReportMapPlayers`, `GateCommand` / `GateCommandResult` and the `GateCommandSent` audit entry, in `next`, PandiO/knk-workspace#732, docs #766)
 **Phases:** Accepted design (developer decisions 2026-10-26, §12). S1 (§4–§5), S2 (§6.1), WT1 (§8.2, §8.7, #180; as built: [world-tasks/README.md § Lifecycle](../world-tasks/README.md#lifecycle-and-endpoints-pandioknk-workspace180)), WT2 (§8.3–§8.6, #181; as built: §8.8) and S3 (§6.2–§6.4, #182; as built: §6.8) **merged into the default branches 2026-11-04** (API `master` `2258df5`, plugin `main` `e1b6a7a9`, web app `main` `d0c2ba8`) after the developer's smoke tests of #180 and WT2; `realtime.enabled: false` by default in the plugin. **S4** (#183, chain 2 X1, web live updates) **merged 2026-11-12** (API `master` `bc97b7d`, web app `main` `1371951`; smoke test § S4 not run); as built: §6.9; since #280 AM1 (same merge) the audience is the type's area node. **S5** (#184, chain 2 R1, account erasure): API part merged 2026-11-12 in `bc97b7d` (migration `AddPrivacyErasureEvents`), plugin part and § 7.5 in the PR into `next` from `claude/plugin-chains-into-next` (2026-11-13).
 **Issue:** [PandiO/knk-workspace#66](https://github.com/PandiO/knk-workspace/issues/66) (KNG-57, priority high); phase issues in
 [IMPLEMENTATION_PLAN.md](IMPLEMENTATION_PLAN.md). Related: #76 (KNG-170, rank changes don't reach the server),
@@ -243,6 +243,7 @@ hub-down case.
 | `ReportWorlds(worlds[])` | replaces the 10-minute runtime-worlds REST report while connected (keep REST as fallback) |
 | `WorldTaskOfferResult {taskId, result}` | §8 |
 | `ReportRegionOutlines(report)`, `ReportMapPlayers(report)`, `GateCommandResult(result)` | overview map (§6.11) |
+| `RegionGeometryResult(result)`, `SpotSiteCheckResult(result)` | region queries (§6.12) |
 | `Heartbeat` | not needed: SignalR keep-alive + connection state are the server liveness |
 
 Batched data (statistics, discoveries, PM logs, telemetry, analytics, gate state) **stays on REST**: it is spooled,
@@ -264,6 +265,10 @@ checks are synchronous queries a web user waits on. Moving them onto the hub nee
 (`ISingleClientProxy.InvokeAsync<T>` / Java `onWithResult`); worth it only when the plugin no longer needs to expose a
 port (e.g. API and game server on different hosts). #66's open question "Whether RegionHttpServer's inbound HTTP moves
 onto the hub" → **later, phase S6**.
+
+Since #988 (2026-11-22) the API also asks the game server about a region over the hub, with an event and an answer
+method rather than SignalR client results (§6.12). That covers the region's geometry and the siege weapon spot site
+check only; the rename and the containment checks above still go through `RegionHttpServer`.
 
 ### 6.7 S2 as built (2026-10-26, #179)
 
@@ -524,6 +529,48 @@ anything, and a bad or empty argument is ignored.
 6. **Delivery limits** as §6.10 item 6: a doorbell without outbox. A gate command is not replayed; a server that misses
    it never runs it, and a time-out does not mean it didn't run. Outlines and players recover by themselves (the
    reconnect resends the outlines; the next player report replaces the last).
+
+### 6.12 Region queries: `RegionGeometryQuery` and `SpotSiteCheckQuery` (PandiO/knk-workspace#988, in `next`)
+
+As built by #988 (siege weapon spots as WorldGuard regions, [siege weapons spec W76](../siege-minigame/SIEGE_WEAPONS.md));
+merged into `next` 2026-11-22 (knk-web-api `c647daf7`, knk-plugin `822eb39b`), not on trunk, not live-tested
+([siege weapons smoke test § 2](../../guides/siege-weapons-smoke-test.md)). Contracts in knk-web-api
+`Realtime/Contracts/RegionQueryContracts.cs` and knk-plugin `knk-api-client` `api/realtime/RegionQueryEvents.java`; the
+API side in `Services/Regions/GameRegionQueryClient.cs` and `RegionQueryWaiter`, the plugin side in
+`paper/realtime/RegionQueryRealtimeSync.java` (knk-core `regions/query/RegionQueryAnswers`). The pattern is the gate
+command's (§6.11 items 3–4): an event to every connected game server, an answer method with the same id, a singleton
+waiter and a timeout. Nothing in the world changes.
+
+1. **The queries**, API → game server, events with the usual envelope (§4.2) to the `servers` group, both v1 with the
+   payload `RegionQueryPayload`: `{queryId, regionId, world}`. `queryId` is a GUID (a receiver answers once per id);
+   `world` is the world to look in, or null for the first loaded world that has the region.
+   1. **`RegionGeometryQuery`**: generic, any validator may ask it; the plugin always answers it.
+   2. **`SpotSiteCheckQuery`**: a siege weapon spot's site check (knk-core `SpotSiteCheck`: the layer under the region
+      solid, the space inside it clear); the plugin registers its handler only with `siege.weapons.enabled`, so with the
+      flag off the API waits and times out.
+2. **The answers**, game server → API:
+   1. **`RegionGeometryResult(RegionGeometryResultDto)`**: `queryId`, `result`, `message`, `world`, `shape` (`cuboid`,
+      `polygon` or another WorldGuard kind, lower case), `minX`..`maxZ` (a polygon's are its bounding box) and
+      `points[]` of `{x, z}` (a polygon's points in order, empty for a cuboid).
+   2. **`SpotSiteCheckResult(SpotSiteCheckResultDto)`**: `queryId`, `result`, `message`, `floorBlocks`, `openFloor`
+      (of those, the ones that aren't solid), `volumeChecked` (false when the spot was too large to scan block by
+      block), `blockedVolume` and `warnings[]` (one line per warning, empty when the site is fine).
+   3. `result` is `found`, `not-found` (no region with that id in the world, or in any loaded world without one) or
+      `error` (the game server failed to read it; `message` says why). Anything other than `found` or `not-found`
+      counts as not checked.
+3. **Waiting:** the first answer per id wins; a late answer or one for an unknown id is logged and ignored. The API waits
+   `RegionQueries:TimeoutSeconds` (default 5, clamped 1..30). The caller gets "unavailable" with a reason, never an
+   exception, when `RegionQueries:Enabled` is off (nothing is sent; the hub also ignores answers), no game server is
+   connected, or no answer comes in time. The spot rules then pass with a `failureReason` ("Validation could not be
+   completed" in the form) and the spot save keeps its stored size class ([siege weapons admin guide § 2](../../guides/admin/siege-weapons-admin-guide.md#2-weapon-spots)).
+4. **Settings:** `RegionQueries:Enabled` (default **on**: the queries only read the world) and
+   `RegionQueries:TimeoutSeconds` (5), in `appsettings.json`, `Configuration/RegionQueryOptions.cs`. Plugin: no key;
+   the geometry answer is always registered, the site check answer with `siege.weapons.enabled`.
+5. **Access:** like every game hub method, the plugin key only (§7.3); a web hub connection can't answer a query.
+6. **Delivery limits** as §6.10 item 6: no outbox, no replay. **Known limit with several game servers:** the query goes
+   to every connected server and the first answer wins, so a server that doesn't have the region (or its world) can
+   answer `not-found` before the one that has it; the spot save would then be refused. Today there is one game server
+   ([#1000](https://github.com/PandiO/knk-workspace/issues/1000)).
 
 ## 7. Reliability
 
@@ -884,21 +931,22 @@ about the game server); small once the web hub exists. Phase S4 web part, low pr
 
 ## Changes
 
-1. 2026-11-18: §6.11 and §6.4: the overview map's hub methods and the `GateCommandSent` audit entry, PandiO/knk-workspace#732, docs #766
-2. 2026-11-15: §6.10 item 8: the plugin's handler as built, #574 in review
-3. 2026-11-15: §6.10: `PlayerKick` / `PlayerBan` v1 for kick and ban from the web app, #565 in review
-4. 2026-11-14: §7.5 corrections after the #486 retest: the feed is PascalCase, the first join is decided after the account sync
-5. 2026-11-14: §7.5: the returning player is new, #486
-6. 2026-11-13: §7.5: a failed erasure step keeps the feed position, a feed reset forgets this run's ids, review of knk-plugin#20
-7. 2026-11-13: #31 rest: §6.8 note brought into `claude/plugin-chains-into-next`, PR into `next`
-8. 2026-11-13: S5 #184 plugin part: R1 docs brought into `claude/plugin-chains-into-next`, PR into `next`, §7.5 as built
-9. 2026-11-12: §6.9 as built brought over from `claude/realtime-web-live-183` and marked merged, audience per area node since #280 AM1 — docs #341
-10. 2026-11-12: status: S4 merged, S5 API part merged
-11. 2026-11-06: §6.9: `Realtime:WebLiveUpdatesEnabled`, decision on LX1-10
-12. 2026-11-05: S4 built: §6.9, §6.5 table, §9
-13. 2026-11-05: #239 offer permission check, #240 Send again merged
-14. 2026-11-04: #239, #240 on a feature branch
-15. 2026-11-02: S3 built: §6.8
-16. 2026-11-02: WT2 built: §8.8
-17. 2026-11-01: status: WT1 built, #180
-18. 2026-10-26: S2 built: implementation notes in §6.7; S1 built: §4.6; decisions recorded; §8.3 delivery and busy flow, §8.7 tasks anchored to the draft, §4.3 publishing path
+1. 2026-11-22: §6.12, §6.4, §6.6: the region queries of #988 (geometry and the siege weapon spot site check), `RegionQueries:*`, docs #999
+2. 2026-11-18: §6.11 and §6.4: the overview map's hub methods and the `GateCommandSent` audit entry, PandiO/knk-workspace#732, docs #766
+3. 2026-11-15: §6.10 item 8: the plugin's handler as built, #574 in review
+4. 2026-11-15: §6.10: `PlayerKick` / `PlayerBan` v1 for kick and ban from the web app, #565 in review
+5. 2026-11-14: §7.5 corrections after the #486 retest: the feed is PascalCase, the first join is decided after the account sync
+6. 2026-11-14: §7.5: the returning player is new, #486
+7. 2026-11-13: §7.5: a failed erasure step keeps the feed position, a feed reset forgets this run's ids, review of knk-plugin#20
+8. 2026-11-13: #31 rest: §6.8 note brought into `claude/plugin-chains-into-next`, PR into `next`
+9. 2026-11-13: S5 #184 plugin part: R1 docs brought into `claude/plugin-chains-into-next`, PR into `next`, §7.5 as built
+10. 2026-11-12: §6.9 as built brought over from `claude/realtime-web-live-183` and marked merged, audience per area node since #280 AM1 — docs #341
+11. 2026-11-12: status: S4 merged, S5 API part merged
+12. 2026-11-06: §6.9: `Realtime:WebLiveUpdatesEnabled`, decision on LX1-10
+13. 2026-11-05: S4 built: §6.9, §6.5 table, §9
+14. 2026-11-05: #239 offer permission check, #240 Send again merged
+15. 2026-11-04: #239, #240 on a feature branch
+16. 2026-11-02: S3 built: §6.8
+17. 2026-11-02: WT2 built: §8.8
+18. 2026-11-01: status: WT1 built, #180
+19. 2026-10-26: S2 built: implementation notes in §6.7; S1 built: §4.6; decisions recorded; §8.3 delivery and busy flow, §8.7 tasks anchored to the draft, §4.3 publishing path
