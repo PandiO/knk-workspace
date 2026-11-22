@@ -1,6 +1,6 @@
 # Off-road navigation and landmarks chain — progress report
 
-**Status:** Running, waiting for the developer (2026-11-18) · **Last updated:** 2026-11-20 (L7b step B merged); 2026-11-20 (L7b step A merged); 2026-11-19 (F2 block); 2026-11-18 (L9 block); 2026-11-18 (L5 block); 2026-11-18 (L8 step A block)
+**Status:** Running, waiting for the developer (2026-11-18) · **Last updated:** 2026-11-21 (smoke sessions of 2026-11-21); 2026-11-21 (live test of 2026-11-20); 2026-11-20 (L7b step B merged); 2026-11-20 (L7b step A merged); 2026-11-19 (F2 block); 2026-11-18 (L9 block); 2026-11-18 (L5 block); 2026-11-18 (L8 step A block)
 
 **Issue:** [PandiO/knk-workspace#698](https://github.com/PandiO/knk-workspace/issues/698), links
 [#703](https://github.com/PandiO/knk-workspace/issues/703) (L1), [#704](https://github.com/PandiO/knk-workspace/issues/704) (L2),
@@ -302,6 +302,27 @@ on `next` (Decided 2026-11-17).
     today's call; same mode, recorded for the § 15.4 test. #852 stays open for the developer's live test. Merges:
     knk-plugin#103 `c7e36e6e`, #862 `5e4fb7b7` (CHANGELOG conflict with overview map F3 resolved by keeping both).
     The plugin navigation slot is free; engine L5 (#747) may take it once the developer opens its gate.
+45. **Developer's live smoke test, 2026-11-20 evening** (knk-plugin `next` `3fd493e8`). All passed, no fix link:
+    (1) § 14 F3, every live step (#780, #771): road goal into the Keep Gate (walk 157, was 202), round the garrison
+    (walk 86, was 124), the first turn said once, no 0-expansion search from the watchtower roof, the #710 door
+    passed for a player without use rights; (2) § 8 L3 steps 6 and 7 (#710, § 8 complete; `shaped` mean 14.5 ms, no
+    tick-time rise); (3) § 9 L4 accepted by the developer (#711). Observations, not failures, kept for later: the walk
+    budget (`walk.max-length` 144) is short for the way back from the upper keep stair house corridors; identical
+    walk recomputes while standing still (path-age refresh, ~16 ms each; an identical-result skip could save it);
+    road edge ids swapped between two goal choices 2 s apart (live tags); in § 14 step 1 the road trail seemed to run
+    on past the goal (not confirmed). Still to run: § 3 (and the L5 defaults), § 5, § 6, § 7, § 10.2, § 15, and L1's
+    concurrency item. NPC coordinator told that #710 is confirmed.
+46. **Developer's smoke sessions of 2026-11-21** (knk-plugin `next` `3fd493e8`): (1) § 10.2 L10 (#712): steps 1–3
+    pass live on Brink, the South Gate plaza and Northern Gate Square, step 4 accepted without live testing, no O29
+    fallback needed; (2) § 3 L5 (#705) and § 5 L7 (#707) accepted without live testing, resting on their automated
+    tests; the L5 defaults (`road-first-share` 0.6, `road-first-max-ratio` 1.5) stay the design defaults, and what was
+    not checked live is listed on each issue; (3) § 6 L8 (#708) steps 6–7 found that a region world task only runs on a
+    field named `WgRegionId`: the developer filed #944 (dispatch) and #945 (landmarks draw new regions, as domains do),
+    both in progress outside this chain; until then a landmark region works with an existing region id; (4) #852 got an
+    enum follow-up from the developer's session (`RouteMode` enum, data migration
+    `NormalizePermissionGroupDefaultRouteMode`, Enum form field; knk-web-api#78 `86463af7`, knk-web-app#76 `3b672c97`,
+    #955 `63126263`), because the hand-added form field could not be published; the plugin reads either case, no
+    plugin change. Still to run: the rest of § 6, § 7 (#709), § 15 (#852), L1's concurrency item. `next` CI green.
 
 ## 4. Link blocks
 

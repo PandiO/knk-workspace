@@ -41,6 +41,66 @@ This is a human-readable record of capabilities merged into the V3 default branc
   fails the task on `RegionId`, an API without #945 leaves the region on its temp name (kept by the new plugin's
   cleanup, deleted after 14 days by an older one).
 
+- **Display stalls in shops: the shop's items on shelves, item information and a confirmed quick buy**
+  ([PandiO/knk-workspace#250](https://github.com/PandiO/knk-workspace/issues/250), production P12, link L29; behind
+  `production.enabled`, default off). For players: shelves and stalls in a shop show the shop's items as floating
+  items that don't turn and can't be knocked down, each with its name and price above it; a sold-out item is dimmed
+  with "Sold out" (or not shown when the shop hides sold-out items). Right-click an item for its information menu
+  (nothing is bought); shift-right-click to buy it quickly: the purchase confirmation of the shop menus opens, so every
+  purchase is still confirmed. What the shelves show: an admin's pins first, then in-stock items and the shop's best
+  sellers of the last 7 days. For staff: display spots are registered per shop, one per block, never found by scanning:
+  `/knk shop display add <shop id> [label]` while looking at the block (the item faces you), `remove [spot id]`, `pin
+  <spot id> <entry id|none>`, `list <shop id>`, `reload` (node `knk.admin.world.production`, as `/knk shop`), or
+  `api/ShopDisplaySpots`. knk-web-api: entity `ShopDisplaySpot` (shop, block, facing, an optional pinned catalogue entry
+  of the same shop, order, label, on/off; reads the World area or the plugin key, writes `knk.admin.world` or the plugin
+  key, delete also `knk.admin.delete`), form and display seeds, migration `AddShopDisplaySpots`. knk-plugin: knk-core
+  `production/shop/display` (`DisplaySelection`, `DisplaySpotIndex`, the `ShopDisplaySpotsApi` port), knk-api-client
+  `ShopDisplaySpotsApiImpl` (with the best sellers from `api/ShopTradeStats/search`), knk-paper `ShopDisplayModule`,
+  `ShopDisplayPresenter` (non-persistent `ItemDisplay`, `Interaction` and `TextDisplay`, tagged
+  `knightsandkings:knk_shop_display`, spawned again when they go away), a WorldGuard allowance for the stall entities,
+  `ShopService.openItem`; scenario `shop-display-stall` (`MIN_SCENARIOS` 75). The web app has no page for display spots
+  yet ([#968](https://github.com/PandiO/knk-workspace/issues/968)). Smoke test:
+  [§ 11.4](guides/production-storage-transport-smoke-test.md#114-steps-display-stalls-plugin-and-api-250). Admin
+  steps:
+  1. Apply the migration `AddShopDisplaySpots` (`dotnet ef database update`; one new table, additive).
+  2. Import the `ShopDisplaySpot` form and display seeds ("make default").
+  3. Merge this block into the plugin `config.yml` under `production:` and restart (Restart):
+
+     ```yaml
+     production:
+       shops:
+         displays:
+           refresh-minutes: 5             # how often the display spots are re-read
+           selection-refresh-seconds: 30  # how often the shown items are chosen again
+           best-seller-hours: 168         # trade stats window of the best sellers (7 days)
+           item-scale: 0.5                # size of the shown item
+           label: true                    # floating name and price over the item
+           hints: true                    # the label's line with the two clicks
+     ```
+
+  4. No `api.env` key, no menu seed (the stalls open L26's `shops.item` and `shops.confirm`). Needs
+     `production.enabled: true`; grant `knk.admin.world.production` to the staff who register spots.
+
+- **Shop menus in game: buy with a confirmation, sell for buy-back prices**
+  ([PandiO/knk-workspace#687](https://github.com/PandiO/knk-workspace/issues/687), production P10b, link L26; behind
+  `production.enabled`, default off). For players: a shop's menu shows the shop's information and its catalogue (the
+  real items, price, stock; sold-out items greyed out, featured ones first); an item's information menu sets the
+  amount (1, 8, 16, 32, 64) and shows the total; every purchase asks for a confirmation with the shop's quoted price
+  and goes to the inventory or the reward inbox; a price that changed meanwhile is shown and asked again. The sell
+  menu shows the buy-back price of each picked stack and the total and sells all of them or none; the items leave the
+  inventory only when the sale is sent. The layouts are the legacy V1 shop menus (developer decision 2026-11-21).
+  For staff: `/knk shop <shop id>` (node `knk.admin.world.production`) opens a shop's menu until shopkeepers (P11)
+  arrive. knk-plugin: knk-core `production/shop` (records, `ShopsApi` port, texts, refusal codes, sell basket),
+  knk-api-client `ShopsApiImpl` (`GET api/Shops/{id}/offer`, `quote`, `purchase`, `sell-quote`, `sell`, plugin key),
+  knk-paper `production/shop` (`ShopMenuFeature`, `ShopService`, the plugin-built sell menu `SellModule`), scenario
+  `player-shop-sell-and-buy` (`MIN_SCENARIOS` 74). knk-web-api: menu seeds `shops.shop`, `shops.item` and
+  `shops.confirm` (`MenuTemplateSeed.Shops.cs`). Unique items are listed but not bought in game until #897. Smoke
+  test: [§ 11.2](guides/production-storage-transport-smoke-test.md#112-steps-plugin-687). Admin steps:
+  1. Deploy the plugin first, then the API (the API creates the three menu templates on start when they are missing).
+  2. No new plugin `config.yml` key, no `api.env` key, no migration. Selling needs `items.identity.enabled: true`;
+     everything needs `production.enabled: true` and the API's `Production:Enabled` (selling and inbox delivery).
+  3. Grant `knk.admin.world.production` to the staff who test with `/knk shop`.
+
 - **Off-road navigation: a group's default route mode is now a fixed choice (Enum field)**
   ([PandiO/knk-workspace#852](https://github.com/PandiO/knk-workspace/issues/852) follow-up, developer decision
   2026-11-21). For staff: the permission group form's "Default route mode" is an Enum field with Shortest, Efficient

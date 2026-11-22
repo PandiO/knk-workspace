@@ -20,8 +20,8 @@ partly (tagged) and 1 by hand; every step can still be run by hand; not run. § 
 steps automated, 1 of them in part (tagged); every step can still be run by hand; not run. § 6.1 (transport API, #79): 18 of 20 steps automated in CI
 and 2 partly (tagged); every step can still be run by hand; not run. § 6.2 (transport lanes plugin, #681): 3 of 14
 steps automated, 10 partly and 1 manual (tagged); not run. § 6.3 (transport web app, #682): 10 of 16 steps
-automated in CI, 5 partly (tagged) and 1 by hand; every step can still be run by hand; not run. § 7.1 (terminals and menus API, #683): 15 of 20 steps automated in CI, 4 partly and 1 by hand (tagged); every step can still be run by hand; not run. § 7.2 (terminals, displays and menus plugin, #74): 7 of 20 steps automated (one through a plugin scenario on a real Paper server), 11 partly and 2 by hand (tagged); not run. § 8.1 (delivery and inbox API, #60): 16 of 20 steps automated in CI, 3 partly and 1 by hand (tagged); every step can still be run by hand; not run. § 8.2 (reward inbox plugin, #684): 7 of 17 steps automated (two also through plugin scenarios on a real Paper server) and 10 partly (tagged); every step can still be run by hand; not run. § 9.1 (harvesting API, #685): 18 of 21 steps automated in CI and 3 partly (tagged); every step can still be run by hand; not run. § 9.2 (harvesting plugin, #134): 10 of 22 steps automated (four through plugin scenarios on a real Paper server), 10 partly and 2 by hand (tagged); not run. § 10.1 (town logistics API, #127): 21 of 24 steps automated in CI and 3 partly (tagged); every step can still be run by hand; not run. § 10.2 (town logistics web app, #686): 18 of 22 steps automated in CI, 3 partly and 1 by hand (tagged); every step can still be run by hand; not run. § 11.1 (shops API, #248): 25 of 28 steps automated in CI and 3 partly (tagged); every step can still be run by hand; not run. § 11.3 (shops web app, #688): 11 of 15 steps automated in CI and 4 partly (tagged); every step can still be run by hand; not run. Other sections not yet automated (the links tag them).
-**Last updated:** 2026-11-21 (§ 5.4 drawn area regions, #946: six steps, all automated, one in part); 2026-11-21 (§ 11 and § 11.3 intros: L25 and L27 in `next`; § 11.1 step 22: the reversal is 400 `NotReversible`, partly automated; § 10.3 intro: L25b in `next`; admin guide link, docs #939); 2026-11-21 (§ 11.3 shops web app, link L27, #688); 2026-11-21 (§ 11 shops API, link L25, #248; § 11.2 and § 11.3 drafts for L26 and L27); 2026-11-21 (§ 10.2 town logistics web app, link L24, #686); 2026-11-21 (§ 9 and § 9.2 intros and preconditions: L21 and L22 in `next`, rules through the API until #913; § 4 step 14 partly automated by `player-harvest-tree`, docs #922); 2026-11-21 (§ 10 town logistics API, link L23, #127; § 10.2 draft for L24); 2026-11-21 (§ 9.2 harvesting plugin, link L22, #134); 2026-11-21 (§ 8 and § 8.2 intros: L19 and L20 merged into `next`, links to the architecture page and admin guide, docs #915); 2026-11-21 (§ 9 harvesting API, link L21, #685, with #900; § 9.2 draft for L22); 2026-11-21 (§ 8.2 reward inbox plugin, link L20, #684); 2026-11-20 (§ 8 delivery and inbox API, link L19, #60, with #883 and #890; § 8.2 draft for L20); 2026-11-20 (§ 7.2 terminals, displays and menus plugin, link L18, #74); 2026-11-20 (§ 7 terminals and menus API, link L17, #683; § 7.2 draft for L18); 2026-11-20 (§ 6.2 transport lanes plugin, link L15, #681); 2026-11-20 (§ 6.3 transport web app, link L16, #682); 2026-11-20 (§ 6 transport API, link L14, #79; § 6.2 and § 6.3 drafts for L15 and L16); 2026-11-20 (§ 5.2 surveys plugin, link L12, #679); 2026-11-20 (§ 5.3 yield areas web app, link L13, #680); 2026-11-19 (§ 5 yield areas API, link L11, #138; § 5.1 step 18: #831); 2026-11-19 (§ 4.2 production engine web app, link L10, #678); 2026-11-19 (§ 4.1 production engine API, link L9, #86); 2026-11-19 (§ 3 intro, § 3.0, § 3.2 and § 3.3 intros: builds from `next`; § 3.3 precondition 4: `/knk regions repair` needs `knk.admin.regions`, `/knk territory rebuild` `knk.admin.world.territory`; docs #830); 2026-11-19 (§ 3.2 world web app, link L7, #676); 2026-11-19 (§ 3.3 world plugin, link L8, #677); 2026-11-19 (§ 3.1 world API, link L6, #91); 2026-11-19 (§ 2.2 stock web app, link L5, #675); 2026-11-19 (§ 2 stock core API, link L4, #97); 2026-11-19 (§ 1.0 and § 1.3 preconditions: builds from `next` instead of the link branches; guides: [territory admin guide](admin/territory-admin-guide.md), docs #806); 2026-11-19 (§ 1.4 territory web app, link L3, #690); 2026-11-19 (§ 1.3 territory plugin, link L2, #689); 2026-11-19 (§ 1 territory API, link L1, #326); 2026-11-19 (§ 0 item identity, link L0, #141); 2026-11-16 (draft from the design, territory and phases P1-P12)
+automated in CI, 5 partly (tagged) and 1 by hand; every step can still be run by hand; not run. § 7.1 (terminals and menus API, #683): 15 of 20 steps automated in CI, 4 partly and 1 by hand (tagged); every step can still be run by hand; not run. § 7.2 (terminals, displays and menus plugin, #74): 7 of 20 steps automated (one through a plugin scenario on a real Paper server), 11 partly and 2 by hand (tagged); not run. § 8.1 (delivery and inbox API, #60): 16 of 20 steps automated in CI, 3 partly and 1 by hand (tagged); every step can still be run by hand; not run. § 8.2 (reward inbox plugin, #684): 7 of 17 steps automated (two also through plugin scenarios on a real Paper server) and 10 partly (tagged); every step can still be run by hand; not run. § 9.1 (harvesting API, #685): 18 of 21 steps automated in CI and 3 partly (tagged); every step can still be run by hand; not run. § 9.2 (harvesting plugin, #134): 10 of 22 steps automated (four through plugin scenarios on a real Paper server), 10 partly and 2 by hand (tagged); not run. § 10.1 (town logistics API, #127): 21 of 24 steps automated in CI and 3 partly (tagged); every step can still be run by hand; not run. § 10.2 (town logistics web app, #686): 18 of 22 steps automated in CI, 3 partly and 1 by hand (tagged); every step can still be run by hand; not run. § 11.1 (shops API, #248): 25 of 28 steps automated in CI and 3 partly (tagged); every step can still be run by hand; not run. § 11.2 (shop menus plugin, #687): 5 of 16 steps automated (three of them also through a plugin scenario on a real Paper server), 10 partly and 1 by hand (tagged); every step can still be run by hand; not run. § 11.3 (shops web app, #688): 11 of 15 steps automated in CI and 4 partly (tagged); every step can still be run by hand; not run. § 11.4 (display stalls, #250): 7 of 17 steps automated (four also through a plugin scenario on a real Paper server), 8 partly and 2 by hand (tagged); every step can still be run by hand; not run. Other sections not yet automated (the links tag them).
+**Last updated:** 2026-11-21 (§ 5.4 drawn area regions, #946: six steps, all automated, one in part); 2026-11-21 (§ 11.4 intro: L29 in `next`, link to the shops admin guide § 3.6, docs #970); 2026-11-21 (§ 11.4 display stalls, link L29, #250; § 13 moved there; § 11 intro); 2026-11-21 (§ 11.2 shop menus plugin, link L26, #687; § 11 intro); 2026-11-21 (§ 11 and § 11.3 intros: L25 and L27 in `next`; § 11.1 step 22: the reversal is 400 `NotReversible`, partly automated; § 10.3 intro: L25b in `next`; admin guide link, docs #939); 2026-11-21 (§ 11.3 shops web app, link L27, #688); 2026-11-21 (§ 11 shops API, link L25, #248; § 11.2 and § 11.3 drafts for L26 and L27); 2026-11-21 (§ 10.2 town logistics web app, link L24, #686); 2026-11-21 (§ 9 and § 9.2 intros and preconditions: L21 and L22 in `next`, rules through the API until #913; § 4 step 14 partly automated by `player-harvest-tree`, docs #922); 2026-11-21 (§ 10 town logistics API, link L23, #127; § 10.2 draft for L24); 2026-11-21 (§ 9.2 harvesting plugin, link L22, #134); 2026-11-21 (§ 8 and § 8.2 intros: L19 and L20 merged into `next`, links to the architecture page and admin guide, docs #915); 2026-11-21 (§ 9 harvesting API, link L21, #685, with #900; § 9.2 draft for L22); 2026-11-21 (§ 8.2 reward inbox plugin, link L20, #684); 2026-11-20 (§ 8 delivery and inbox API, link L19, #60, with #883 and #890; § 8.2 draft for L20); 2026-11-20 (§ 7.2 terminals, displays and menus plugin, link L18, #74); 2026-11-20 (§ 7 terminals and menus API, link L17, #683; § 7.2 draft for L18); 2026-11-20 (§ 6.2 transport lanes plugin, link L15, #681); 2026-11-20 (§ 6.3 transport web app, link L16, #682); 2026-11-20 (§ 6 transport API, link L14, #79; § 6.2 and § 6.3 drafts for L15 and L16); 2026-11-20 (§ 5.2 surveys plugin, link L12, #679); 2026-11-20 (§ 5.3 yield areas web app, link L13, #680); 2026-11-19 (§ 5 yield areas API, link L11, #138; § 5.1 step 18: #831); 2026-11-19 (§ 4.2 production engine web app, link L10, #678); 2026-11-19 (§ 4.1 production engine API, link L9, #86); 2026-11-19 (§ 3 intro, § 3.0, § 3.2 and § 3.3 intros: builds from `next`; § 3.3 precondition 4: `/knk regions repair` needs `knk.admin.regions`, `/knk territory rebuild` `knk.admin.world.territory`; docs #830); 2026-11-19 (§ 3.2 world web app, link L7, #676); 2026-11-19 (§ 3.3 world plugin, link L8, #677); 2026-11-19 (§ 3.1 world API, link L6, #91); 2026-11-19 (§ 2.2 stock web app, link L5, #675); 2026-11-19 (§ 2 stock core API, link L4, #97); 2026-11-19 (§ 1.0 and § 1.3 preconditions: builds from `next` instead of the link branches; guides: [territory admin guide](admin/territory-admin-guide.md), docs #806); 2026-11-19 (§ 1.4 territory web app, link L3, #690); 2026-11-19 (§ 1.3 territory plugin, link L2, #689); 2026-11-19 (§ 1 territory API, link L1, #326); 2026-11-19 (§ 0 item identity, link L0, #141); 2026-11-16 (draft from the design, territory and phases P1-P12)
 **Design:** [specs/production-storage-transport/DESIGN.md](../specs/production-storage-transport/DESIGN.md) (§17
 acceptance A01-A27, §18 links) · [territory](../specs/territory/DESIGN.md) · [shops](../specs/shops/DESIGN.md) ·
 **Issue:** [PandiO/knk-workspace#22](https://github.com/PandiO/knk-workspace/issues/22)
@@ -2979,7 +2979,9 @@ every step can still be run by hand; not run. Manual run about 15 minutes.
 
 Built so far: link L25, the API (knk-web-api, migration `AddShops`), merged into `next` 2026-11-21 (knk-web-api
 `289f4d4b`), and link L27, the web app pages (#688, § 11.3), merged into `next` 2026-11-21 (knk-web-app `11832d6b`).
-The shop menus are link L26 (#687, waits for the developer's V1 shop menu templates, § 11.2 draft). Admins: [shops
+The shop menus are link L26 (#687, knk-plugin, built from the legacy V1 shop menus by the developer's decision of
+2026-11-21, § 11.2; not merged yet). The display stalls are link L29 (#250, knk-plugin and knk-web-api, migration
+`AddShopDisplaySpots`, § 11.4; not merged yet). Admins: [shops
 admin guide](admin/shops-admin-guide.md); developers: [shops architecture](../architecture/shops.md). § 11.1 runs with a REST client (or Swagger) against
 the API. 28 steps
 in § 11.1: 25 automated in CI and 3 partly (tagged); every step can still be run by hand; not run. Full manual run
@@ -3148,17 +3150,100 @@ its level's default min/max with the shop's own worker. **Hourly trade stats** a
     Two players buy the last 3 units 2 each at the same moment. **Expected:** one purchase succeeds; the other is 409
     `NotEnoughStock` and that player keeps their coins; the town account holds one payment and is reconciled. (A18)
 
-### 11.2 Steps (plugin #687, draft)
+### 11.2 Steps (plugin #687)
 
-*Draft from the design (2026-11-16); L26 updates it to what was built and tags the automated steps.*
+Built in link L26 (knk-plugin `next` `c349a53c`, PR PandiO/knk-plugin#120; the menu seeds in knk-web-api `next` `7c6dd7f5`, PR PandiO/knk-web-api#79). The tags name tests in knk-plugin:
+knk-core `core/production/shop/*Test` (JUnit), knk-api-client `ShopsApiImplTest`, knk-paper `ShopServiceTest`,
+`SellModuleTest` (MockBukkit, a stand-in shops API with the bakery's bread, flour and a unique sword),
+`ShopMenuSeedsTest` (the seeded menus of `content-seeds.json` against the plugin), `ShopAdminCommandTest`, and the
+scenario `player-shop-sell-and-buy` (a real Paper server in CI's `paper-boot` job, a scripted player and a stand-in
+shops API). Extra preconditions: § 11.0 and § 11.1 steps 1, 3-5 and 7 (Bakery with its catalogue: Bread as an
+Unlimited entry at a static price, some Merchandise stock, the type accepting Food), the shop menu seeds imported (below),
+the plugin with `production.enabled: true` and `items.identity.enabled: true` (selling needs item identity), the API's
+`Production:Enabled` on, and a player **Ann** (with coins) who holds `knk.admin.world.production` for `/knk shop`. 16
+steps: 5 automated, 10 partly (tagged), 1 by hand; every step can still be run by hand; not run. Full manual run about
+30 minutes; the untagged parts about 15 minutes.
 
-1. As Member, open the shop menu (`/knk shop <id>` until P11). **Expected:** info header and paged catalogue
-   (`GET api/Shops/{id}/offer`); prices at the midpoint base price with the shop's modifiers. (A18)
-2. Buy an item. **Expected:** a confirmation first (`quote`); then coins and stock move together (`purchase` with the
-   price the player saw); the coins go to Phoenix's town account. (A18)
-3. Buy with too few coins. **Expected:** refused; nothing moves. (A18)
-4. Sell items in the sell menu. **Expected:** the buy-back price per item and the total (`sell-quote`); confirmation;
-   coins paid (`sell`). (A18)
+Admin step first: import the menu templates `shops.shop`, `shops.item` and `shops.confirm` (knk-web-api seeds them on
+start; on an existing database they are created when missing, as every menu seed). Deploy the plugin before the API, or
+the menus fail the plugin's validation.
+
+The layouts are the legacy V1 shop menus (developer decision 2026-11-21 on #687; legacy
+[inventory-menu-screens § 3.7](../specs/legacy/inventory-menu-screens.md)):
+
+1. **Shop menu** (V1 "Products of X"), 6 rows: slot 0 Financial (your coins), 3 Sell chest (only when the shop buys),
+   4 the shop's information (anvil), 8 Back; rows 2 to 5 the catalogue, paged with arrows in 45 and 53.
+2. **Item information** (V1 item info), 1 row: 0 Financial, 3 Amount (chest), 4 the item, 5 the price (name tag),
+   6 the description (map), 8 Back.
+3. **Purchase confirmation** (V1 sale confirmation), 2 rows: 4 the confirmation (book), 8 Back, 10 Confirm to the reward
+   inbox (ender chest), 12 Confirm (green terracotta), 13 the item, 14 Cancel (red terracotta).
+4. **Sell menu** (V1 "Sell items to X"), 4 rows: 0 Financial, 3 Sell (chest, with the total), 4 the shop's information,
+   5 how to sell (book), 8 Back; slots 19 to 25 hold the stacks you picked.
+
+Steps:
+
+1. [partly automated: `ShopServiceTest.open_readsTheOfferAndOpensTheShopMenu`, `ShopMenuSeedsTest.shopMenu_keepsTheLegacyHeaderAndPagesTheCatalogue`,
+   `ShopAdminCommandTest.opensTheShopForAPlayer`; by hand: the real menu] As Ann type `/knk shop <Bakery id>`.
+   **Expected:** "Opening shop #<id>..." and the shop menu: Financial shows Ann's coins; the anvil "Information about
+   Bakery" lists Type Bakery, Kind, Level, Town Phoenix and "Buys items from players"; the catalogue shows each item as
+   the real item with "Price: <n> coins each", "Stock: plenty" (Unlimited) or the number, and "Click here for more
+   information". A pinned entry glows and says "Featured" and comes first. (A18)
+2. [partly automated: `ShopTextTest.rowLines_followTheLegacyPriceStockAndClickLines`; by hand: the greyed item] Make an
+   entry sold out (empty its Merchandise stock, § 11.0 item 5) and reopen. **Expected:** the item is greyed out with
+   "Stock: 0" and "Sold out" (F5); with **Hide sold out** on the shop (web app) it is not listed at all.
+3. [partly automated: `ShopMenuSeedsTest.theThreeShopMenus_validateAgainstTheRegisteredFeature`; by hand: paging] Give
+   the shop more than 36 offered items (catalogue entries or Merchandise stock). **Expected:** arrows in slots 45 and 53
+   page through the catalogue ("Page 1/2").
+4. [partly automated: `ShopServiceTest.view_cyclesTheAmountAndShowsTheTotal`, `ShopAmountsTest`; by hand: the real
+   clicks] Click Bread. **Expected:** the item information menu: "Amount: 1" (chest), Bread in the middle, the name tag
+   "This item costs: <n> coins" with stock, amount, total and "Click here to buy", the map with the item and how the
+   price is set. Click the chest: 8, 16, 32, 64, then 1 again; the total follows.
+5. [automated: `ShopServiceTest.purchase_toTheInventory_sendsThePriceSeenAndPlacesWhatWasBought`, scenario
+   `player-shop-sell-and-buy`] With "Amount: 8" click the name tag, then **Confirm** (green). **Expected:** the
+   confirmation book says "Are you sure you want to buy 8 x Bread?" with the price each and the total (the API's
+   `quote`); after Confirm Ann has 8 Bread more, the chat says "You bought 8 x Bread for <total> coins. You have
+   <n> coins left." and the item information menu is back. Phoenix's town account gained the total (web app, town
+   account page; § 11.1 step 7). (A18)
+6. [automated: `ShopServiceTest.purchase_toTheInbox_placesNothing`] Buy again with the ender chest **Confirm: to your
+   reward inbox**. **Expected:** nothing lands in the inventory; the chat says it waits in the reward inbox; `/inbox`
+   shows the Bread.
+7. [partly automated: `ShopServiceTest.purchase_priceChanged_asksAgainWithTheNewPrice`; by hand: the real price change] Open
+   the confirmation, then (web app) change Bread's static price, then click Confirm. **Expected:** "The price changed.
+   Check the new price and confirm again."; nothing is bought; the book now shows the new price and "The price changed
+   from <old>. Confirm again to buy."; a second Confirm buys at the new price.
+8. [partly automated: `ShopServiceTest.purchase_everyOtherRefusalIsToldAndNothingIsPlaced`; by hand: with Bob] As **Bob**
+   (50 coins) try to buy 64 Bread. **Expected:** the name tag says "You need <n> coins more"; Confirm answers "You don't
+   have enough coins. Nothing was charged."; nothing moves. (A18)
+9. [partly automated: `ShopServiceTest.purchase_refusedWithoutACall_fullInventoryUniqueItemSiege`; by hand: the real
+   inventory] Fill Ann's inventory, then confirm a purchase into the inventory. **Expected:** "Your inventory has no
+   room for <n>. Make room, or send it to your reward inbox."; nothing is bought. A unique item (§ 11.1's bought-back
+   sword) is listed with its enchantments and "Unique item", but its name tag says it can't be bought in game yet
+   (#897), and so does the confirmation.
+10. [partly automated: `SellModuleTest.open_showsTheLegacyLayout`; by hand: the real menu] Back in the shop menu click
+    the chest **Sell items to this shop**. **Expected:** the sell menu "Sell items to Bakery": coins, the Sell chest
+    ("Price: 0 coins", "Add items first"), the anvil, the book "How to sell" and Back. A shop whose type accepts no
+    categories, or with the API's `Production:Enabled` off, has no Sell chest.
+11. [automated: `SellModuleTest.pick_quotesTheLinesAndShowsThePrices`, scenario `player-shop-sell-and-buy`] Click 20
+    Bread and a unique enchanted sword in Ann's inventory. **Expected:** they show in slots 19 and 20 with "Buy-back:
+    <n> coins each" and "For these 20: <n> coins"; the Sell chest shows the total and "Click here to sell". The items
+    stay in Ann's inventory. Clicking a picked stack takes it out again.
+12. [automated: `SellModuleTest.sell_sellsAtTheTotalShownAndTakesTheItems`, scenario `player-shop-sell-and-buy`] Click
+    the Sell chest. **Expected:** "You sold 2 item stacks for <total> coins. You now have <n> coins."; the bread and the
+    sword are gone; the menu closes; Bakery's Merchandise holds them (web app), the sword as that exact item; the town
+    account paid the total. (A18)
+13. [partly automated: `SellModuleTest.sell_refusesARefusedLineWithoutACall`; by hand: a real category] Pick an item
+    the shop doesn't buy (Cobblestone, not Food). **Expected:** its stack says "This shop doesn't buy items of that
+    kind." and the Sell chest "Take out the marked items to sell"; a click on Sell sells nothing.
+14. [partly automated: `SellModuleTest.sell_refused_givesTheItemsBack`, `SellModuleTest.sell_inventoryChanged_dropsThePickAndAsksAgain`;
+    by hand: an empty town account] Empty Phoenix's town account (or pick more than it holds), then sell. **Expected:**
+    "The town can't pay that much right now." and every item is still in Ann's inventory. Moving a picked stack in the
+    inventory before clicking Sell drops it from the sale with "Your inventory changed; check the sale and click
+    again."
+15. [automated: `SellModuleTest.pick_refusesUnresolvedDamagedAndEnchantedPlainItems`] Click a damaged tool, a renamed
+    item and a plain item with an enchantment. **Expected:** "Damaged items can't be sold to a shop", "This item isn't in
+    the item catalogue." and "Enchanted items can't be sold as plain items"; none is picked.
+16. [by hand] Set `production.enabled: false` and restart. **Expected:** `/knk shop 1` answers "Production is off on
+    this server (production.enabled: false)." and the three shop menus are blocked in `/knk menu`. Turn it back on.
 
 ### 11.3 Steps (web app #688)
 
@@ -3266,6 +3351,115 @@ every step can still be run by hand; not run. Full manual run about 30 minutes; 
     staff member without `knk.admin.world` who can open the page. **Expected:** no Shop panel; the network tab shows
     no `offer` or `ShopTradeStats` request.
 
+### 11.4 Steps (display stalls plugin and API, #250)
+
+Built in link L29 (knk-plugin `next` `b31fceb6`, PR PandiO/knk-plugin#121; knk-web-api `next` `d86d6e1a`, PR
+PandiO/knk-web-api#80). Set-up: [shops admin guide § 3.6](admin/shops-admin-guide.md#36-display-stalls). Display spots (shelves,
+stalls) are registered per shop, one per block, like storage containers: never found by scanning
+([shops DESIGN](../specs/shops/DESIGN.md) § 7). Each spot shows one of the shop's items as a floating Paper item display
+(it doesn't turn and can't be knocked down) with a price label; the entities are non-persistent and spawned again by
+the plugin. What a spot shows: the spot's own pin first, then the catalogue's pinned entries, then in-stock items and
+best sellers (units sold in the trade stats of the last `best-seller-hours`), in the spots' order; sold-out items are
+greyed out, or hidden when the shop's **Hide sold out** is on. Right-click opens the item information menu
+(`shops.item`, no purchase); shift-right-click is the quick buy: it opens the purchase confirmation (`shops.confirm`),
+so every purchase is confirmed.
+
+The tags name tests in knk-plugin: knk-core `core/production/shop/display/*Test` (`DisplaySelectionTest`,
+`DisplaySpotIndexTest`, `DisplaySpotFacingTest`, `DisplayTextTest`), knk-api-client `ShopDisplaySpotsApiImplTest`,
+knk-paper `ShopDisplayModuleTest` (MockBukkit: the entities, the clicks with L26's real `ShopService`, respawn and
+stray copies), `ShopDisplayCommandTest`, `ShopDisplayConfigTest`, and the scenario `shop-display-stall` (a real Paper
+server in CI's `paper-boot` job, a scripted player and a stand-in API); and in knk-web-api
+`Tests/.../Services/Shops/ShopDisplaySpotTests.cs` and `Migrations/AddShopDisplaySpotsTests.cs`. 17 steps: 7
+automated, 8 partly (tagged), 2 by hand; every step can still be run by hand; not run. Full manual run about 30
+minutes; the untagged parts about 15 minutes. Tier:2.
+
+Extra preconditions:
+
+1. Everything of § 11.2 (Bakery with its catalogue: Bread as an Unlimited, pinned entry at a static price, Flour as a
+   Stocked entry, the shop menu seeds imported; the plugin with `production.enabled: true`; Ann with coins and
+   `knk.admin.world.production`).
+2. Admin steps: apply the migration `AddShopDisplaySpots` (one new table, `shop_display_spots`), import the
+   `ShopDisplaySpot` form and display seeds ("make default"), and merge the `production.shops.displays` block into the
+   plugin `config.yml` (the defaults are in the [changelog](../CHANGELOG.md) entry; restart).
+3. Three blocks in the bakery to show items on (a barrel, a slab, a shelf), next to each other, and a fourth block
+   elsewhere in the shop.
+4. Ann's catalogue entry ids (`POST api/ShopCatalogueEntries/search` with `shopId`, or the web app's shop page).
+
+Steps:
+
+1. [partly automated: `ShopDisplayCommandTest.addRegistersTheBlockLookedAt_withTheLabel`,
+   `ShopDisplaySpotTests.ASpot_IsRegisteredForAShop_WithDefaults_AndNumberedAfterTheLastSpot`; by hand: the real block]
+   As Ann look at the first block from the front of the stall and type `/knk shop display add <Bakery id> Front shelf
+   left`. **Expected:** "Display spot #<id> "Front shelf left" (<world> <x> <y> <z>) registered for shop #<Bakery id>,
+   facing <the way towards Ann>."; within a second an item floats on top of the block.
+2. [partly automated: `ShopDisplaySpotTests.ABlock_IsOneSpot_AndTheFieldsAreChecked`,
+   `ShopDisplayCommandTest.addTellsTheApisRefusal_andNeedsAPlayerAndAShopId`; by hand: the real block] Type the same
+   command again at the same block. **Expected:** "Not registered: That block is already display spot #<id> ..."; no
+   second spot. Look at the sky and try again: "Look at the shelf or stall block (within 6 blocks)."
+3. [automated: `ShopDisplayModuleTest.theSpotsShowPinsFirst_thenInStock_thenSoldOutGreyed_asNonPersistentEntities`,
+   scenario `shop-display-stall`] Register the second and third blocks the same way. **Expected:** each shows an item
+   on top of its block, facing the stall's front, not turning; above it a label with the item's name, "<price> coins
+   each" and "Right-click: information · Shift: buy". The items can't be picked up, pushed or turned.
+4. [automated: `DisplaySelectionTest.pinsComeFirst_thenInStockBestSellers_thenSoldOutGreyed`,
+   `ShopDisplayModuleTest.theSpotsShowPinsFirst_thenInStock_thenSoldOutGreyed_asNonPersistentEntities`] Look at what
+   the three spots show, in the order you registered them. **Expected:** the pinned Bread first; then in-stock items,
+   the best seller of the last 7 days first (buy a few of one item through `/knk shop` and wait for the next hourly
+   stats, or rebuild them with `POST api/ShopTradeStats/rebuild`); a sold-out item last, dimmed, with "Sold out" in its
+   label (F5). A shop with more spots than items leaves the extra spots empty.
+5. [partly automated: `DisplaySelectionTest.hiddenSoldOutItems_areNotShown_andAHiddenPinFallsBackToTheShop`; by hand:
+   the timing] Turn on **Hide sold out** on the Bakery (web app or `PUT api/Shops/<id>`). **Expected:** within
+   `selection-refresh-seconds` (30 s) the sold-out item is gone from the stalls and its spot shows the next item, or
+   nothing. Turn it off again.
+6. [partly automated: `ShopDisplayCommandTest.pinSetsOrClearsTheEntry`,
+   `ShopDisplayModuleTest.aRemovedSpotsEntitiesGo_andAPinMovesAnItem`,
+   `ShopDisplaySpotTests.APin_MustBeAnEntryOfTheSpotsOwnShop_AndZeroClearsIt`; by hand: the real stall] Type
+   `/knk shop display pin <third spot id> <Flour entry id>`. **Expected:** "Display spot #<id> ... now shows catalogue
+   entry <id>."; the third spot shows Flour and the other spots move up. A pin to another shop's entry is refused
+   ("pinnedCatalogueEntryId must be an entry of the spot's own shop."). `/knk shop display pin <id> none`: "... is filled
+   by the shop again."
+7. [partly automated: `ShopDisplayCommandTest.listAndReload`; by hand: the lines] Type `/knk shop display list <Bakery
+   id>`. **Expected:** "Display spots of shop #<id>:" and one line per spot: id, label, block, facing, the pin and what
+   it shows now ("Bread", "Flour (sold out)", "nothing", "off").
+8. [automated: `ShopDisplayModuleTest.rightClickOpensTheItemInformation_shiftRightClickTheQuickBuy_andTheOffHandIsIgnored`,
+   scenario `shop-display-stall`] As Ann (not sneaking) right-click the Bread. **Expected:** the item information menu
+   of § 11.2 step 4 for Bread at that shop (amount, price, description); nothing is bought and no coins move.
+9. [automated: `ShopDisplayModuleTest.theQuickBuyOpensTheConfirmation_withTheAmount_andNeverBuys`, scenario
+   `shop-display-stall`] Sneak and right-click the Bread. **Expected:** the purchase confirmation of § 11.2 step 5 for
+   the amount Ann last picked for Bread in the item information menu (1 at first): "Are you sure you want to buy 1 x
+   Bread?" with the price. **Cancel** closes it and nothing is bought; doing it again and clicking **Confirm** buys it
+   ("You bought 1 x Bread for <n> coins. ...") into the inventory. (A20)
+10. [automated: `ShopDisplayModuleTest.aQuickBuyOfASoldOutOrUniqueItem_isRefusedWithoutAMenu`] Sneak and right-click
+    the sold-out item, then a unique item on a stall (pin a bought-back sword's entry, § 11.1). **Expected:** "This item
+    is sold out." and "Unique items can't be bought in game yet."; no confirmation opens. A plain right-click still
+    shows their information.
+11. [partly automated: `ShopDisplayModuleTest.bestSellersFillTheFreeSpots_andATradeMakesTheStallsChooseAgain`; by hand:
+    the price change] Change Bread's static price in the web app. **Expected:** the label shows the new price within
+    30 s; right after a purchase at the stall the stalls are chosen again at once.
+12. [by hand] Left-click, punch and hit the items with a sword; push into them; throw a potion of harming at them.
+    **Expected:** nothing happens: no damage, no movement, no item dropped; a left-click opens nothing.
+13. [by hand] Put the shop inside a WorldGuard region (a town region) and right-click a stall as a player who isn't a
+    member. **Expected:** the item information opens (stall entities are allowed for everyone); other entities in the
+    region stay protected.
+14. [automated: `ShopDisplayModuleTest.entitiesThatWentAway_areSpawnedAgain_andStrayCopiesAreRemoved`, scenario
+    `shop-display-stall`; by hand: the restart] Type `/kill @e[type=item_display,distance=..10]`, then walk more than
+    the view distance away and come back, then restart the server. **Expected:** after the kill each spot's item is back
+    within about a second; after the walk and the restart each spot shows exactly one item, label and hitbox
+    (`/execute ... if entity` or F3+B), never two. (A20)
+15. [partly automated: `ShopDisplaySpotTests` (all), the pinned access tests `ReadAccessRulesTests`,
+    `DashboardChangeAccessRulesTests`, `DeleteAccessRulesTests`; by hand: the request] With the **Staff** token send
+    `POST api/ShopDisplaySpots` `{"shopId": <Bakery id>, "worldName": "<world>", "x": <x>, "y": <y>, "z": <z>, "facing":
+    "North", "label": "Back shelf"}` for the fourth block, then `/knk shop display reload`. **Expected:** 201 with the
+    spot (`sortOrder` after the last spot); "Display spots re-read: 4."; the fourth block shows an item. The same request
+    with the **Visitor** token is 403; a second time with Staff 409 "The block ... is already a display spot."
+    (Without the reload it shows within `refresh-minutes`, 5.)
+16. [automated: `ShopDisplayCommandTest.removeTakesAnIdOrTheSpotLookedAt`,
+    `ShopDisplayModuleTest.aRemovedSpotsEntitiesGo_andAPinMovesAnItem`] Look at the fourth block and type `/knk shop
+    display remove`. **Expected:** "Display spot #<id> "Back shelf" ... removed."; its item and label vanish at once;
+    `GET api/ShopDisplaySpots/<id>` is 404.
+17. [partly automated: `ShopDisplayCommandTest.offOrUnknown_isAnswered`, `ShopDisplayConfigTest`; by hand: the restart]
+    Set `production.enabled: false` and restart. **Expected:** no stall entities anywhere; `/knk shop display list 1`
+    answers "Production is off on this server (production.enabled: false)."; the spots stay in the API. Turn it back on.
+
 ## 12. Phase P11: shopkeepers (#249; tier:2)
 
 *Draft from the design (2026-11-16); the link updates it to what was built and tags the automated steps.*
@@ -3280,12 +3474,5 @@ every step can still be run by hand; not run. Full manual run about 30 minutes; 
 
 ## 13. Phase P12: display stalls (#250; tier:2)
 
-*Draft from the design (2026-11-16); the link updates it to what was built and tags the automated steps.*
-
-### 13.1 Steps
-
-1. Stand at a display stall. **Expected:** items shown as item display entities. (A20)
-2. Right-click an item. **Expected:** the shop item information menu, no purchase. (A20)
-3. Shift-right-click. **Expected:** quick buy with a confirmation. (A20)
-4. Sell out an item. **Expected:** greyed out. (A20)
-5. Reload the chunk. **Expected:** no duplicate display entities. (A20)
+Moved to [§ 11.4](#114-steps-display-stalls-plugin-and-api-250) with the shops (link L29, #250): the draft's five
+steps are steps 3, 8, 9, 4 and 14 there.
