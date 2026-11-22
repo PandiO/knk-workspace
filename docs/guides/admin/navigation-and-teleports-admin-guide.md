@@ -1,6 +1,6 @@
 # Navigation and teleports — admin guide
 
-**Status:** Current · **Last updated:** 2026-11-13 (new guide: road network setup, upkeep and reset, Road network page, warps, spawn and hub, group fees, rank perks, staff teleports and exemptions, PandiO/knk-workspace#298)
+**Status:** Current · **Last updated:** 2026-11-20 (§ 1: `knk.navigate` is `default: false` and seeded to Default, `knk.navigate.any` row, PandiO/knk-workspace#845); 2026-11-18 (§ 1: the route mode nodes `knk.navigate.mode.<word>`, PandiO/knk-workspace#707); 2026-11-13 (new guide: road network setup, upkeep and reset, Road network page, warps, spawn and hub, group fees, rank perks, staff teleports and exemptions, PandiO/knk-workspace#298)
 **Checked against:** knk-plugin `main` `57884e9`, knk-web-api `master` `75b5a00`, knk-web-app `main` `3ba747d` (desk check); `next` only for what § 7 names
 **Related:** [player guide](../users/navigation-and-teleports-player-guide.md) (what players see; not repeated here), [commands](../users/commands.md) (§ Teleporting players, `/knk road`), [plugin configuration](plugin-configuration.md) § 4.10 `teleport` and § 4.15 `navigation`, [Game Settings](../game-settings.md), [staff web app guide § 9](staff-web-app-guide.md#9-settings-pages), [road navigation design](../../specs/navigation/DESIGN.md) § 5 and § 7, [teleport design](../../specs/teleport/DESIGN.md)
 
@@ -12,7 +12,9 @@ teleport prices, and move players.
 | Node | Gives | Rank on the seed data |
 |---|---|---|
 | `knk.admin.road` | `/knk road …` in game and the web app's **Road network** page | Staff |
-| `knk.navigate` | `/navigate` (default on for everyone; see PandiO/knk-workspace#311: it can't be taken away from a rank yet) | Everyone |
+| `knk.navigate` | `/navigate` and the navigation compass. Given to everyone through the Default group by the knk-web-api seed `SeedNavigateDefaultNode`; `plugin.yml` declares it `default: false` (PandiO/knk-workspace#845, PandiO/knk-plugin#106), so a deny on a rank or player in the in-house system takes `/navigate` away. Before #845 it was `default: true` and could not be taken away (#311) | Everyone (Default) |
+| `knk.navigate.any` | With `navigation.destination-engine` on: `/navigate` to any place in the world, past the siege and permission scopes (frozen still refuses). `plugin.yml` declares it `default: false` | none yet (the staff rank(s) are the developer's call, open on PandiO/knk-workspace#845) |
+| `knk.navigate.mode.shortest`, `.mode.efficient`, `.mode.preferred` | The route mode words of `/navigate <place> <word>` (knk-plugin branch `claude/offroad-route-modes`, PandiO/knk-workspace#707): `shortest` length only, `efficient` road class and walking costs without the road weights, `preferred` typed explicitly (the same route as no word). `/navigate` without a word needs none of them. `plugin.yml` declares them `default: op` | none yet (who gets them is the developer's call, see the PR's Admin steps) |
 | `knk.teleport.spawn`, `.warp`, `.request` | `/spawn`, `/warp`/`/warps`, `/tpa` | Everyone |
 | `knk.teleport.request.here`, `knk.teleport.back` (+ `.back.warps\|teleport\|spawn\|all`) | `/tpahere`, `/back` and the kinds of place `/back` remembers | Dragon Blood (`/back` kinds: as staff grant them) |
 | `knk.teleport.warmup.short`, `.bypass.warmup\|cooldown\|combat\|cost\|requirements` | Rank perks: 3 s warmup, no warmup, no cooldown, teleport in combat, free, ignore warp requirements | Noble and up for the short warmup; the rest staff |

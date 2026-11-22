@@ -1,6 +1,6 @@
 # Knights and Kings — production installation guide (admin)
 
-**Status:** Draft · **Last updated:** 2026-11-19 (§ 4.3 overview map keys promoted to main alone, #732); 2026-11-18 (§ 4.3: the `Map__GateCommands__*` keys, PandiO/knk-workspace#741); 2026-11-18 (§ 4.3: the `Map__LivePlayers__*` keys, PandiO/knk-workspace#738); 2026-11-18 (§ 4.3: `Map__Enabled` also shows the web map, #737; the `Map__*` and `RateLimiting__Map__*` keys, PandiO/knk-workspace#736); 2026-11-15 (header and § 5.3: the migrations of releases v0.1 to v0.3 on knk-web-api `main` `2cc8254`, PandiO/knk-workspace#577)
+**Status:** Draft · **Last updated:** 2026-11-21 (§ 5.3 item 20: `AddShopDisplaySpots` in `next` `d86d6e1a`, link to the shops admin guide § 3.6, docs #970); 2026-11-21 (§ 5.3 item 20: `AddShopDisplaySpots` of #250 on its branch); 2026-11-21 (§ 5.3 item 19: `NormalizePermissionGroupDefaultRouteMode` of the #852 enum follow-up on its branch; item 10 set-up now an Enum field); 2026-11-21 (§ 5.3 items 17 and 18: `AddShops` in `next` `289f4d4b`, `AddTownLogisticsProfile` in `next` `e02bf557`, link to the shops admin guide, docs #939); 2026-11-21 (§ 5.3 item 18: `AddTownLogisticsProfile` of #928 on its branch); 2026-11-21 (§ 5.3 item 17: `AddShops` of #248 on its branch); 2026-11-21 (§ 5.3 item 16: `AddTownLogistics` in `next` `37be22e5`, the town logistics admin guide, docs #929); 2026-11-21 (§ 5.3 item 15: `AddPlayerHarvesting` in `next` `9ad32c23`, the plugin block and the harvesting admin guide; § 9.7: the harvest files, docs #922); 2026-11-21 (§ 5.3 item 16: `AddTownLogistics` of #127 on its branch); 2026-11-21 (§ 5.3 item 14: `AddItemDelivery` in `next` `2952d0c7`, link to the reward inbox admin guide, docs #915); 2026-11-21 (§ 5.3 item 15: `AddPlayerHarvesting` of #685 on its branch); 2026-11-21 (§ 5.3: the four siege shop migrations in `next`, docs #908); 2026-11-20 (§ 5.3 item 14: `AddItemDelivery` of #60 on its branch); 2026-11-20 (§ 5.3 item 13: `AddStorageContainers` of #683 on its branch); 2026-11-20 (§ 5.3 item 12: `AddTransportCore` of #79 on its branch); 2026-11-20 (§ 5.3 item 11: `SeedNavigateDefaultNode` of #845 on its branch, before the plugin); 2026-11-20 (§ 5.3 item 10: `AddPermissionGroupDefaultRouteMode` of #852 on its branch); 2026-11-19 (§ 5.3 item 7: link to the warehouses and production structures admin guide, `/knk regions repair` once, docs #830); 2026-11-19 (§ 5.3: `AddSiegeWeapons` and `AddTerritory` both in `next` `0d6e369a`, in order; link to the territory admin guide, docs #806); 2026-11-19 (§ 5.3: `AddTerritory` of #326 on its branch); 2026-11-19 (§ 5.3: the migrations waiting in `next`, with `AddItemIdentity`, docs PandiO/knk-workspace#796); 2026-11-18 (§ 4.3: the `Map__GateCommands__*` keys, PandiO/knk-workspace#741); 2026-11-18 (§ 4.3: the `Map__LivePlayers__*` keys, PandiO/knk-workspace#738); 2026-11-18 (§ 4.3: `Map__Enabled` also shows the web map, #737; the `Map__*` and `RateLimiting__Map__*` keys, PandiO/knk-workspace#736); 2026-11-16 (§ 10.4: `actions/checkout@v7` in the release plan, #426); 2026-11-15 (header and § 5.3: the migrations of releases v0.1 to v0.3 on knk-web-api `main` `2cc8254`, PandiO/knk-workspace#577)
 **State:** Draft v1 — written for review. Not yet followed on a real production host. The database, API, seed and
 web-server steps were rehearsed in a scratch environment on 2026-10-07 (see [Appendix A](#appendix-a--what-was-verified-and-how)).
 The Paper server steps and the release and deploy workflows are untested drafts; the CI workflows (§ 10.3) run on GitHub.
@@ -611,6 +611,164 @@ API, run the migrator (`dotnet ef database update`; the API does not migrate on 
 needs the new endpoints. No settings and no plugin `config.yml` keys change; kick and ban reach the game with knk-plugin `v0.2`
 (#574) or later, running with `realtime.enabled: true`. Details per change: the
 [v0.3 changelog section](../CHANGELOG.md#v03--2026-11-15).
+
+**Waiting in `next` (not released; knk-web-api `next` `0d6e369a`, 2026-11-19)**, in this order. The release that
+promotes `next` lists them here with its tag:
+
+1. `20261118095421_AddMapRegionOutlines` (#735, overview map): additive, one new table.
+2. `20261118152046_AddLandmarks` (#708, navigation landmarks): additive, one new table `landmarks`.
+3. `20261119090845_AddItemIdentity` (#141, item identity): additive; `item_blueprints` gets a nullable
+   `VanillaMaterialMatchRefId` with a unique index and a foreign key to `minecraftmaterialrefs`, and the new table
+   `item_conversion_stats`; no data written. After migrating, run a Minecraft catalogue scan (or
+   `POST api/ItemIdentity/shadows/generate`) to create the "Uncurated" shadow blueprints. The plugin keys
+   `items.identity.*` are off by default ([item identity admin guide](admin/item-identity-admin-guide.md)).
+4. `20261119100022_AddSiegeWeapons` (#782, siege weapons L1): additive; five new tables and three defaulted columns
+   for weapon templates, ammo types, weapon spots and unlocks; import the siege weapon form seeds afterwards (see the
+   [changelog](../CHANGELOG.md) entry of #782).
+5. `20261119102500_AddTerritory` (#326, territory API):
+   additive; new tables `kingdoms`, `provinces`, `crown_lands` (a domain subtype) and `territory_conflicts`; `towns`
+   gets `Power` (0), `KingdomId` and `ProvinceId` (null), `districts` gets `IsCapital` (false), `structures` gets
+   `LoyaltyTownId`, `TerritoryFlag` (`None`), `TerritoryFlaggedAt` and `TerritoryConflictId`, and `game_settings`
+   gets `ProductionSettingsJson` (null = `Production:Enabled` off, base range 100, factor 2, capital × 1.5); no data
+   written. No `api.env` key: the production flag and ranges are game settings (web app or `PUT api/GameSettings`,
+   section `production`). Set-up afterwards: [territory admin guide](admin/territory-admin-guide.md) (form and display
+   seeds `Kingdom`, `Province`, `CrownLand`, `TerritoryConflict`).
+6. `20261119160613_AddStockCore` (#97, stock core P1): additive; new tables `storages` (holder check constraint `CK_storages_Holder`), `stock_lines`,
+   `stock_units`, `stock_transactions`, `stock_moves` and `stock_move_rollups` (every FK Restrict);
+   `item_blueprints` gets `StorageWeight` (decimal, 1 on existing rows); the only data written are the five system
+   storages `SYS_PRODUCTION`, `SYS_CONSUMPTION`, `SYS_LOSS`, `SYS_ADJUSTMENT`, `SYS_WORLD` (ids 1-5). No `api.env` key.
+   Set-up afterwards: import the form and display seeds `Storage` and `StockTransaction`, and grant
+   `knk.economy.admin` to the staff who may move stock ([changelog](../CHANGELOG.md) entry of #97, [stock admin guide](admin/stock-admin-guide.md)).
+7. `20261119180109_AddProductionWorld` (#91, production world P2): additive; `structures.DistrictId` and `StreetId`
+   become nullable (existing rows keep their values), new nullable `structures.TownId` (FK to `towns`) and the check
+   constraint `CK_structures_DistrictXorTown` (exactly one of district and town; every existing structure has a
+   district); new tables `warehouses` and `production_structures` (subtypes of `structures`). The structure FKs to
+   districts, streets and towns are re-created without a delete action, so deleting a street, district or town a
+   structure uses is still refused. No data written, no `api.env` key; the plugin keeps reading `MinecraftPlugin:BaseUrl`
+   and `Security:PluginApiKey` for the new territory lookup. Set-up afterwards: import the form and display seeds
+   `Warehouse` and `ProductionStructure` ([changelog](../CHANGELOG.md) entry of #91, [warehouses and production
+   structures admin guide](admin/production-world-admin-guide.md)); with the plugin's `production.enabled` on, run
+   `/knk regions repair` once. Its `Down` makes the two columns
+   required again and fails while a rural structure exists.
+8. `20261119193750_AddProductionEngine` (#86, production engine P3): additive; thirteen new tables
+   (`production_kinds`, `production_kind_levels`, `production_kind_level_items`, `production_lines`,
+   `production_line_inputs`, `production_modifiers`, `climate_zones`, `climate_zone_weathers`, `climate_zone_towns`,
+   `weather_types`, `weather_type_effects`, `weather_rolls`, `production_cycle_records`) and the foreign key
+   `production_structures.ProductionKindId` → `production_kinds` (Restrict). Data written: the catalogue (eight kinds,
+   ids 1-8, with ten levels each), the climate zone "Default climate" (no odds: clear weather) and the weather types
+   Rain, Storm and Drought with example effects. Check first that no production structure has a kind id outside 1-8
+   (`SELECT Id FROM production_structures WHERE ProductionKindId NOT BETWEEN 1 AND 8;`), or the foreign key can't be
+   added. No `api.env` key: the engine timing is the game setting `production.engine` (`baseCycleMinutes` 10,
+   `catchUpCapHours` 24, `weatherDayMinutes` 20), and the engine runs only with `Production:Enabled` on. Set-up
+   afterwards: import the six production engine form and display seeds and make the v2 seeds of `ProductionStructure`,
+   `ItemBlueprint` (form) and `Storage` (display) the default ([changelog](../CHANGELOG.md) entry of #86).
+9. `20261119205631_AddProductionYieldAreas` (#138, yield areas P4): additive; six new tables (`production_areas`,
+   `area_surveys`, `area_survey_units`, `production_yield_rows`, `production_kind_primary_outputs`,
+   `production_yield_overrides`), the columns `production_kinds.SurveyProfileJson`, `SurveyProfileVersion` (1) and
+   `PrimaryMultiplier` (1.5), and `production_structures.YieldSource` (`Configured` for every existing structure, so
+   their P3 lines keep their rates; new structures default to `Hybrid`). Data written: a survey profile for each of the
+   eight seeded kinds. No yield table rows are seeded: fill them per kind before surveys can yield. No `api.env` key;
+   the survey queue and reports run only with `Production:Enabled` on. Set-up afterwards: import the P4 form and display
+   seeds and make `ProductionKind` v2, `ProductionStructure` v3 and `Structure` v3 the default ([changelog](../CHANGELOG.md)
+   entry of #138).
+10. `20261120101407_AddPermissionGroupDefaultRouteMode` (#852, a group's default /navigate route mode; on its branch
+    `claude/offroad-group-route-mode` until merged): additive; `permission_groups` gets the nullable `DefaultRouteMode`
+    (`varchar(16)`), null on every existing group, so routes stay as today. No data written, no `api.env` key. Set-up
+    afterwards: add the field to the imported PermissionGroup form as an Enum field (item 19; [changelog](../CHANGELOG.md)
+    entries of #852).
+11. `20261120120805_SeedNavigateDefaultNode` (#845, `/navigate` can be taken away; on its branch
+    `claude/navigate-permission-default` until merged): data only; gives the Default group `knk.navigate` unless the
+    group or a parent already grants, denies or wildcards it. Down removes nothing. **Apply it before deploying the
+    plugin build with `knk.navigate` as `default: false`** (PandiO/knk-plugin#106), or every player loses `/navigate` until it is applied. No
+    `api.env` key ([changelog](../CHANGELOG.md) entry of #845).
+
+12. `20261120123016_AddTransportCore` (#79, transport core P5; on its branch `claude/production-p5` until merged):
+    additive; seven new tables (`transport_orders`, `transport_stops`, `transport_stop_lines`,
+    `transport_order_lines`, `transport_assignments`, `transport_events`, `transport_lanes`), nothing else changed and
+    no data written. Each order creates its own `Transit` storage when it is made. No `api.env` key: the timing and
+    sizing are the game setting `production.transport` (`walkingSpeedBlocksPerSecond` 4.317, `defaultCarrierCapacity`
+    64, `defaultThresholdPercent` 75, `defaultThresholdUnits` 64, `unmeasuredRouteFactor` 1.4,
+    `fallbackDistanceBlocks` 200, `awaitingSpaceMinutes` 30, `maxReroutes` 2, `laneMaxAgeHours` 24), and the
+    transport sweep runs only with `Production:Enabled` on. Set-up afterwards: import the seeds `TransportOrder` and
+    `TransportLane`, and set the rural producers' road connections until the lane measurer (#681) does
+    ([changelog](../CHANGELOG.md) entry of #79).
+
+13. `20261120185936_AddStorageContainers` (#683, terminals and menus P6a; on its branch `claude/production-p6a` until
+    merged; after `20261120183543_AddSiegeShopCatalogue` of the siege shop chain): additive; one new table
+    `storage_containers` (a block bound to a storage, unique per world and position, deleted with its storage), nothing
+    else changed and no data written. No `api.env` key. Set-up afterwards: import the seeds `StorageContainer` (form
+    and display), `StockTransaction` v2 and `ProductionArea` v2, grant `knk.town.member.<town id>` to each town's
+    members, and restart the API once so the production menus and the main menu's "Structures" tile are seeded
+    ([changelog](../CHANGELOG.md) entry of #683).
+14. `20261120234819_AddItemDelivery` (#60, item delivery and reward inbox P7; in knk-web-api `next` `2952d0c7`, not
+    released; after `20261120231505_AddSiegeWeaponUnlockMinTitle` of the siege shop chain): additive; two new tables `item_deliveries` (one per
+    delivery, unique idempotency key) and `item_delivery_lines` (the inbox lots, deleted with their delivery), nothing
+    else changed and no data written. No `api.env` key. Set-up afterwards: import the seeds `ItemDelivery` (form and
+    display) and `ProductionArea` v3, set the game settings section `production.delivery` (inbox and stash caps,
+    premium tier caps) and grant `knk.economy.admin` to the staff who gift items ([changelog](../CHANGELOG.md) entry of
+    #60; [reward inbox admin guide](admin/reward-inbox-admin-guide.md)).
+15. `20261121011159_AddPlayerHarvesting` (#685, player harvesting P8a; in knk-web-api `next` `9ad32c23`, not released;
+    after `20261120234819_AddItemDelivery`): additive; four new tables `harvest_rules` (deleted with their kind),
+    `resource_pools` (one per area, deleted with it), `player_harvests` (the history, unique idempotency key) and
+    `harvest_accruals`, and two columns with defaults (`production_kinds.PoolFloor` 0.5,
+    `production_cycle_records.PoolFactor` 1); no data written. No `api.env` key. Set-up afterwards: import the seeds
+    `HarvestRule` and `ResourcePool` (form and display), `PlayerHarvest` (display) and `ProductionKind` v3, optionally
+    set the game settings section `production.harvest`, and write the harvest rules per kind
+    ([changelog](../CHANGELOG.md) entry of #685; [harvesting admin guide](admin/production-harvesting-admin-guide.md)).
+    On the game server merge the plugin's `production.harvest` block (#134) and back up its files (§ 9.7).
+16. `20261121024444_AddTownLogistics` (#127, town logistics P9; in knk-web-api `next` `37be22e5`, not released; after
+    `20261121011159_AddPlayerHarvesting`): additive; six new tables `logistics_policies` (versions, one current per
+    town, warehouse or template), `logistics_rules` (deleted with their version), `consumer_replenishments` (one per
+    storage and blueprint), `logistics_reservations` (one open per consumer storage and blueprint),
+    `logistics_planner_runs` and `logistics_plan_entries` (deleted with their run; runs older than
+    `production.logistics.runRetentionDays` are pruned by the planner); no data written. No `api.env` key. Set-up
+    afterwards: import the five seeds (form and display), optionally set the game settings section
+    `production.logistics`, write a default template or the town policies and the consumers' min/max settings
+    ([changelog](../CHANGELOG.md) entry of #127; [town logistics admin guide](admin/town-logistics-admin-guide.md), check a
+    dry run per town before switching production on). No game server change.
+17. `20261121041739_AddShops` (#248, shops P10; in knk-web-api `next` `289f4d4b`, not released; after
+    `20261121024444_AddTownLogistics`): additive; seven new tables `shops` (a shop's row next to its
+    `production_structures` row), `shop_types`, `shop_type_categories` and `shop_type_levels` (deleted with their type;
+    a type in use can't be deleted), `shop_catalogue_entries` (deleted with their shop), `shop_trade_stats` (one row per
+    shop, blueprint and hour) and `town_accounts` (one per town, coins never below 0); the nullable column
+    `currency_entries.TownId`, and the check `CK_currency_entries_Account` dropped and re-added with a third case for
+    town legs (every existing row still passes); no data written. No `api.env` key. Set-up afterwards: import the six
+    seeds (form and display), optionally set the game settings section `production.shops`, create the shop types, shops
+    and catalogues ([changelog](../CHANGELOG.md) entry of #248; [shops admin guide](admin/shops-admin-guide.md)). No game
+    server change.
+18. `20261121052426_AddTownLogisticsProfile` (#928, P9 API follow-ups; in knk-web-api `next` `e02bf557`, not
+    released; after `20261121041739_AddShops`): additive; two nullable columns `towns.LogisticsTownSize` and
+    `towns.LogisticsSpecialization` (varchar(16), the town's size and specialization labels for the logistics
+    templates); no data written, every town starts without labels. No `api.env` key, no seed, no game server change.
+19. `20261121144143_NormalizePermissionGroupDefaultRouteMode` (#852 follow-up, a group's default route mode as an enum;
+    on its branch `claude/group-route-mode-enum` until merged; after `20261121052426_AddTownLogisticsProfile`): data
+    only; renames the lowercase words stored in `permission_groups.DefaultRouteMode` (`shortest`, `efficient`,
+    `preferred`) to the enum names (`Shortest`, `Efficient`, `Preferred`); null stays null and the column is unchanged.
+    Down renames them back. No `api.env` key. Set-up afterwards: the PermissionGroup form's "Default route mode" is an
+    Enum field with settings `{"enumValues": ["Shortest", "Efficient", "Preferred"], "emptyOptionLabel": "None (default:
+    Preferred)"}` ([changelog](../CHANGELOG.md) entry of the #852 enum follow-up).
+20. `20261121185729_AddShopDisplaySpots` (#250, display stalls P12; in knk-web-api `next` `d86d6e1a`, not released;
+    after `20261121144143_NormalizePermissionGroupDefaultRouteMode`): additive; one new table `shop_display_spots` (one
+    row per block, unique world and x/y/z; deleted with their shop; a spot's pinned catalogue entry is cleared when the
+    entry is deleted); nothing else changes and no data is written. No `api.env` key. Set-up afterwards: import the
+    `ShopDisplaySpot` seeds (form and display, "make default"), merge the plugin's `production.shops.displays` block
+    (restart), then register the spots in game with `/knk shop display add <shop id>` ([changelog](../CHANGELOG.md) entry
+    of #250; [shops admin guide § 3.6](admin/shops-admin-guide.md#36-display-stalls); smoke guide [§ 11.4](production-storage-transport-smoke-test.md#114-steps-display-stalls-plugin-and-api-250)).
+
+The siege shop chain ([#611](https://github.com/PandiO/knk-workspace/issues/611), merged into knk-web-api `next`
+`fc1a5143`, 2026-11-20/21) adds four more, all additive. By timestamp they fall between items 12 and 14 above
+(`dotnet ef database update` applies them in timestamp order); no `api.env` key. Set-up afterwards (form seeds, the
+deploy order of the plugin, the `config.yml` switches): [siege shop admin guide § 1](admin/siege-shop-admin-guide.md#1-what-you-need).
+
+1. `20261120131558_AddSiegePointsEarning` (#866): thirteen defaulted columns on `siege_configurations` (the earn
+   amounts and `PointTransfersEnabled`), `SiegePointsEarned` and `SiegePointsSpent` (0) on `siege_match_participants`.
+2. `20261120183543_AddSiegeShopCatalogue` (#867): new tables `siege_shop_categories` (data written: the categories
+   `siege-weapons`, `consumables`, `magic`), `siege_shop_entries` and `siege_scenario_shop_overrides`; nullable
+   `item_blueprints.PotionType`. The default entries come from the startup seed at the next API start.
+3. `20261120193455_AddMenuItemSettings` (#870): nullable `game_settings.MenuItemSettingsJson` (null reads the
+   defaults).
+4. `20261120231505_AddSiegeWeaponUnlockMinTitle` (#869): nullable `siege_weapon_templates.UnlockMinTitleLevel` with a
+   foreign key to the title brackets.
 
 Earlier: `v0.2` (`58e3218`, 2026-11-14) added `20261109081203_AddTempRegionReleases` (#269), and `v0.1` (`6d5e9c1`,
 2026-11-13) added `20261113161725_SeedStaffFreezeNodes` (gives the Staff group `knk.freeze` and `knk.unfreeze`, #367).
@@ -1278,6 +1436,11 @@ includes the whole server directory:
 - `siege-vault/world-blocks.yml`: placed siege blocks.
 - `discovery-spool/` and `private-messages-spool.jsonl`: queued writes that are replayed when the API is back.
 - `logs/private-messages-*.log`: 30-day retention.
+- `production/harvest/regen.txt`, `outbox.txt` and `owed.txt` (player harvesting, #134, only with
+  `production.enabled`): blocks waiting to regenerate (with felled-tree snapshots), harvests not booked by the API yet,
+  and worker's shares owed to offline players. Restore them with the world they belong to: without `regen.txt` the
+  placeholders (depleted blocks, saplings) stay for good; see the
+  [harvesting admin guide § 5.2](admin/production-harvesting-admin-guide.md#52-game-server-plugin-productionharvest).
 
 ### 9.8 World backups
 
@@ -1374,7 +1537,7 @@ jobs:
   images:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - id: v
         run: echo "version=${GITHUB_REF_NAME#v}" >> "$GITHUB_OUTPUT"
       - uses: docker/login-action@v3
