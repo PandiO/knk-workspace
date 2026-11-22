@@ -258,6 +258,8 @@ Related: [LAST_MILE_PATHFINDING](../navigation/LAST_MILE_PATHFINDING.md), [REV6_
 
 ### 6.1 Concept
 
+**Superseded in part 2026-11-22** by [landmark-domain/DESIGN.md](../landmark-domain/DESIGN.md) (developer, LD01–LD10, #976): a landmark becomes a `Domain` subtype, so items 1 and 2 below ("a separate entity", "It is not a domain") and § 6.3's table and Radius extent no longer hold; the rest of § 6 stands.
+
 1. A landmark is a named place: a `Location` (world, x, y, z, yaw, pitch) with a name, optionally linked to one domain (town, district, structure, gate structure, any domain), optionally with an extent. It is a separate entity so the destination work does not grow.
 2. It answers "where is the throne room" for players and the walk planner. It is not a domain: a landmark has no region of its own unless given one, no access rules of its own (access follows the domain it is linked to and the region it uses), and no discovery rewards in v1.
 3. **Scopes.** Landmarks follow the destination rules: a landmark in another world is not offered in tab completion (destination engine E11), and an exclusive scope such as a siege match hides them (E2).

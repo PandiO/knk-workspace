@@ -1,7 +1,7 @@
 # Landmarks as a Domain subtype — sub-regions, entry and exit, warps and domain lists for landmarks
 
-**Status:** **Proposed** (2026-11-22) — no open questions in § 12; the agent decisions in § 2.1 are for review.
-**Last updated:** 2026-11-22 (design session: decisions LD01–LD10 from the developer, LD11–LD24 agent).
+**Status:** **Decided 2026-11-22** (developer). Phases as sub-issues in § 11.
+**Last updated:** 2026-11-22 (approved by the developer; LD25 and the final phases added on approval); 2026-11-22 (design session: decisions LD01–LD10 from the developer, LD07 and LD11–LD24 agent).
 **Issue:** [PandiO/knk-workspace#976](https://github.com/PandiO/knk-workspace/issues/976); phases as sub-issues in § 11.
 **Dependencies:** the landmark entity (#708, on `next`, not promoted), landmark weights (#709), landmark and production
 area drawn regions (#944, #945, #946, on `next`), domain sub-regions
@@ -75,6 +75,7 @@ Related: [navigation-offroad/DESIGN.md](../navigation-offroad/DESIGN.md) § 6 an
 | LD22 | 2026-11-22 | agent | Navigation: `LandmarkProvider` stays the one landmark destination source (the catalogue keeps skipping landmarks); arrival and route weights use the union of the area's regions (own main region and sub-regions, or the parent's in `LinkedDomain`); a point-only landmark arrives within `arrive-distance`. Landmark changes reach the plugin through realtime like other domain changes. |
 | LD23 | 2026-11-22 | agent | One parent walk for every domain type (a `ParentDomain` resolution per subtype, landmark included, with a cycle guard), used by the region decisions, the region finalizer's hierarchy and the repository's parent loading. It also ends the CrownLand loop in `GetParentDomainDecisions`. A landmark's parent may be any domain, also another landmark. |
 | LD24 | 2026-11-22 | agent | No new feature flag: every domain behaviour of a landmark is off or neutral by default (entry and exit allowed, messages off, discovery off, warp off), and navigation keeps `navigation.landmarks`. The schema change makes the API phase `tier:3`. |
+| LD25 | 2026-11-22 | agent | The new Landmark form ships as seed v2 (a new `configurationGuid`, default for Landmark) in phase 1, so the form on `next` matches the model as soon as the model changes. Existing Landmark configurations are not deleted; the developer's edited dev form (with the Region id projection of 2026-11-22) is superseded and its projection is not carried over (#975). |
 
 ### 2.1 Agent decisions: alternatives
 
@@ -138,6 +139,9 @@ Related: [navigation-offroad/DESIGN.md](../navigation-offroad/DESIGN.md) § 6 an
        "Palace" landmark is a natural case.
 15. **LD24 flag.** Chosen: no new flag, because every landmark behaviour is off or neutral until staff set it.
     1. (a) A `landmarks.domain` flag: the schema change can't be switched off, and a flag would only hide settings.
+16. **LD25 form seed v2.** Chosen: a v2 seed in the model phase, because the v1 form names fields the model drops (`ExtentKind`, `RegionId`, `Radius`) and an import never overwrites an existing configuration.
+    1. (a) Change v1 in place: databases that imported it keep the broken form.
+    2. (b) Seed in a later phase: the Landmark form on `next` is broken between the two merges.
 
 ## 3. Current state and legacy behaviour
 
@@ -302,7 +306,7 @@ Related: [navigation-offroad/DESIGN.md](../navigation-offroad/DESIGN.md) § 6 an
 
 | ID | Check | Phase |
 |---|---|---|
-| A01 | A landmark is created through `api/landmarks` with no region and saved as a `Domain` of type Landmark; a Town without a region is still refused. | 1 |
+| A01 | A landmark is created through `api/landmarks` (and the v2 form) with no region and saved as a `Domain` of type Landmark; a Town without a region is still refused. | 1 |
 | A02 | The migration applies on a database with landmark rows (they are dropped) and on a fresh database, and its Down works. | 1 |
 | A03 | `AreaKind = LinkedDomain` saves only with a parent that has a region; the landmark then owns no region. | 1 |
 | A04 | A drawn landmark region is renamed `domain_<id>`; a landmark sub-region becomes `domain_<id>_sub_<n>`. | 1 |
@@ -323,19 +327,20 @@ Related: [navigation-offroad/DESIGN.md](../navigation-offroad/DESIGN.md) § 6 an
 
 ## 11. Phases
 
-(Filled on approval. Draft for review:)
+Decided 2026-11-22. Each phase merges into `next` on its own; no flag (LD24).
 
 | Phase | Scope | Acceptance | Repos | Tier | Flag | Sub-issue | Depends on |
 |---|---|---|---|---|---|---|---|
-| 1 | API: Landmark as a Domain subtype, migration, area kinds, parent walk, region names, guarded domain writes, discovery rule, warps, seeds | A01–A09 (API side) | knk-web-api | tier:3 | none (LD24) | — | #981 can land first |
-| 2 | Plugin: managed kind, effect damage, messages, discovery and warp wording, landmark extent union, command, realtime | A08–A16 | knk-plugin | tier:2 | none | — | 1 |
-| 3 | Web app: DTOs, lists and pickers, form and display seeds in use, panel, e2e | A07, A17, A18 | knk-web-app | tier:2 | none | — | 1 |
+| 1 | API model: `Landmark : Domain` (TPT), nullable `WgRegionId`, the migration (rows dropped), `AreaKind`, the parent (`ParentDomainId`) and one parent walk, `LandmarkService` and `api/landmarks` on the hierarchy, drawn regions as `domain_<id>`, guarded `api/Domains` writes, the pinned access tests, the Landmark form and display seeds v2 | A01–A06 | knk-web-api | tier:3 | none | #983 | #981 can land first |
+| 2 | API integration: domain lists and search with the type and a type filter, the disabled `Landmark` discovery rule with the per-landmark override, warps with the type word `landmark`, landmark entries in the realtime change map | A07, A08 and A09 (API side) | knk-web-api | tier:2 | none | #984 | 1 |
+| 3 | Plugin: LANDMARK managed kind, effect damage without landmarks, opt-in messages, discovery and warp wording, the landmark area as a union of regions, `/knk landmark` without radius and with `link` as parent, realtime for landmarks, the `landmark_<id>` path removed | A08–A16 (plugin side) | knk-plugin | tier:2 | none | #985 | 1, 2 |
+| 4 | Web app: landmark DTOs on the domain base, `DOMAIN_ENTITY_TYPES`, the type column and filter in domain lists, pickers with the type and the parent picker without the landmark itself, `DomainLandmarksPanel`, the landmark list columns, e2e | A07, A17, A18 | knk-web-app | tier:2 | none | #986 | 1, 2 |
 
-Smoke test: [guides/landmark-domain-smoke-test.md](../../guides/landmark-domain-smoke-test.md) (written on approval).
+Smoke test: [guides/landmark-domain-smoke-test.md](../../guides/landmark-domain-smoke-test.md).
 
 ## 12. Open questions
 
-None. The agent decisions LD07 and LD11–LD24 (§ 2.1) are for the developer's review.
+None. The developer approved the design with the agent decisions LD07 and LD11–LD25 on 2026-11-22.
 
 ### After v1
 
