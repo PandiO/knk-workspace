@@ -1,7 +1,7 @@
 # Landmarks as a Domain subtype — smoke test
 
-**Status:** § 1 built (L1, 2026-11-22, on `next`, not run by the developer); § 2 built (L2, 2026-11-22, on `claude/landmark-domain-integration`, not run by the developer); § 3 built (L3, 2026-11-22, on knk-plugin `claude/landmark-domain`, not run by the developer); § 4 built (L4, 2026-11-22, on knk-web-app `claude/landmark-domain`, not run by the developer); § 5 built (L1b, 2026-11-22, on knk-web-api `claude/landmark-domain-952`, not run by the developer). Steps tagged by the links.
-**Last updated:** 2026-11-22 (§ 3 updated to what L3 built, steps tagged, #985); 2026-11-22 (§ 5 added, fixes #952 and #1003; § 1.0 and § 4.0 name seed v3, L1b); 2026-11-22 (§ 4 updated to what L4 built, steps tagged, #986); 2026-11-22 (§ 2 updated to what L2 built, steps tagged, #984); 2026-11-22 (§ 1 updated to what L1 built, steps tagged, #983); 2026-11-22 (draft from the design, phases 1–4)
+**Status:** §§ 1–5 built and merged into `next` (2026-11-22: knk-web-api `8cc4511b`, `55d187d8`, `3bc3cfd5`; knk-plugin `14645895`; knk-web-app `8c9c3553`), not run by the developer. § 1 is tier:3: run it before `next` is promoted. Steps tagged by the links. The branch names in the section notes are the links' branches, now merged.
+**Last updated:** 2026-11-22 (status: all sections merged into `next`, docs #1008); 2026-11-22 (§ 3 updated to what L3 built, steps tagged, #985); 2026-11-22 (§ 5 added, fixes #952 and #1003; § 1.0 and § 4.0 name seed v3, L1b); 2026-11-22 (§ 4 updated to what L4 built, steps tagged, #986); 2026-11-22 (§ 2 updated to what L2 built, steps tagged, #984); 2026-11-22 (§ 1 updated to what L1 built, steps tagged, #983); 2026-11-22 (draft from the design, phases 1–4)
 **Design:** [specs/landmark-domain/DESIGN.md](../specs/landmark-domain/DESIGN.md) · **Issue:**
 [PandiO/knk-workspace#976](https://github.com/PandiO/knk-workspace/issues/976)
 

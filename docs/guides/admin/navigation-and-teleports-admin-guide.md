@@ -1,6 +1,6 @@
 # Navigation and teleports — admin guide
 
-**Status:** Current · **Last updated:** 2026-11-22 (§ 2.6: `navigation.guidance-v2` is on by default and is the kill switch of the walk-trail quality pass, PandiO/knk-workspace#996, #990); 2026-11-20 (§ 1: `knk.navigate` is `default: false` and seeded to Default, `knk.navigate.any` row, PandiO/knk-workspace#845); 2026-11-18 (§ 1: the route mode nodes `knk.navigate.mode.<word>`, PandiO/knk-workspace#707); 2026-11-13 (new guide: road network setup, upkeep and reset, Road network page, warps, spawn and hub, group fees, rank perks, staff teleports and exemptions, PandiO/knk-workspace#298)
+**Status:** Current · **Last updated:** 2026-11-22 (§ 3.2 and § 7: landmarks as warps and `/navigate` places, on `next`, PandiO/knk-workspace#976, docs #1008); 2026-11-22 (§ 2.6: `navigation.guidance-v2` is on by default and is the kill switch of the walk-trail quality pass, PandiO/knk-workspace#996, #990); 2026-11-20 (§ 1: `knk.navigate` is `default: false` and seeded to Default, `knk.navigate.any` row, PandiO/knk-workspace#845); 2026-11-18 (§ 1: the route mode nodes `knk.navigate.mode.<word>`, PandiO/knk-workspace#707); 2026-11-13 (new guide: road network setup, upkeep and reset, Road network page, warps, spawn and hub, group fees, rank perks, staff teleports and exemptions, PandiO/knk-workspace#298)
 **Checked against:** knk-plugin `main` `57884e9`, knk-web-api `master` `75b5a00`, knk-web-app `main` `3ba747d` (desk check); `next` only for what § 7 names
 **Related:** [player guide](../users/navigation-and-teleports-player-guide.md) (what players see; not repeated here), [commands](../users/commands.md) (§ Teleporting players, `/knk road`), [plugin configuration](plugin-configuration.md) § 4.10 `teleport` and § 4.15 `navigation`, [Game Settings](../game-settings.md), [staff web app guide § 9](staff-web-app-guide.md#9-settings-pages), [road navigation design](../../specs/navigation/DESIGN.md) § 5 and § 7, [teleport design](../../specs/teleport/DESIGN.md)
 
@@ -166,7 +166,8 @@ game within 30 seconds, or at once with `/knk cache refresh`.
 
 ### 3.2 Warps (teleport destinations)
 
-Any Town, District or Structure can be a destination. On its form in the web app (dashboard → the record → Edit), the
+Any Town, District or Structure can be a destination, and on `next` a Landmark too (its form's **Warp destination**
+step, `/warp landmark:<name>`; [landmarks admin guide § 3.4](landmarks-admin-guide.md#34-warp-destination-own-region)). On its form in the web app (dashboard → the record → Edit), the
 teleport fields are:
 
 | Field | Effect |
@@ -257,7 +258,9 @@ The full checklists: [road navigation smoke test](../road-navigation-smoke-test.
 1. **NPC navigation** (Citizens adapter, PandiO/knk-workspace#358, phases #359–#361 and #377): in `next`, not yet
    released. It reuses the road network for NPC routes (`/knk npc nav`); nothing changes for players or for § 2.
 2. **Navigation destination engine** (PandiO/knk-workspace#25): design only.
-3. **Entrances** as a destination mode (PandiO/knk-workspace#110), sub-regions in routes (#140), a negative cache for
+3. **Landmarks** (PandiO/knk-workspace#976, #708): in `next`, not yet released. Named places for `/navigate`, warps
+   and discovery, made as domains: [landmarks admin guide](landmarks-admin-guide.md).
+4. **Entrances** as a destination mode (PandiO/knk-workspace#110), sub-regions in routes (#140), a negative cache for
    regions without a domain (#317), player homes (decision #447).
 
 ## Sources

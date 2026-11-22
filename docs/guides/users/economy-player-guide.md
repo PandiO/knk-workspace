@@ -1,6 +1,6 @@
 # Coins, gems, kits, lootboxes and discoveries — Player Guide
 
-**Status:** Current · **Last updated:** 2026-11-21 (§ Kits: leftovers go to the reward inbox where staff switched production on, knk-plugin `next` `bdd8b463`, #684, docs PandiO/knk-workspace#915); 2026-11-13 (first version, PandiO/knk-workspace#300)
+**Status:** Current · **Last updated:** 2026-11-22 (§ 6: landmarks, on `next`, PandiO/knk-workspace#976, docs #1008); 2026-11-21 (§ Kits: leftovers go to the reward inbox where staff switched production on, knk-plugin `next` `bdd8b463`, #684, docs PandiO/knk-workspace#915); 2026-11-13 (first version, PandiO/knk-workspace#300)
 **Checked against:** knk-plugin `main` `57884e9`, knk-web-api `master` `75b5a00`, knk-web-app `main` `3ba747d` (desk
 check of the code, not a live test). Amounts are the seed defaults; staff can change them.
 **Related:** [player handbook](player-handbook.md), [commands reference](commands.md), [menus guide](menus-player-guide.md),
@@ -255,6 +255,10 @@ of your salary. Default ranges:
 | Structure, gate | 0.05 to 0.25 % | 0.05 to 0.25 hours | none |
 
 Your premium tier and rank multipliers apply on top. Staff can give single places other rewards.
+
+**Landmarks** (on `next`, not live yet): a landmark counts only when staff made it discoverable, and then like a
+structure: `You discovered the landmark Old Well in Oakvale!` with a small reward, and a `Landmarks: 1/<n>` line in
+`/discoveries` (lodestone icon). A landmark that shares its town's or building's area is discovered as that place.
 
 **When it doesn't count:** in creative or spectator mode, in staff mode, while frozen, while you are in a siege lobby
 or match, and while your account is still loading. Walk into the place again later. Each place pays only once per

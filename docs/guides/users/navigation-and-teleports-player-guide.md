@@ -1,6 +1,6 @@
 # Navigation and teleports — player guide
 
-**Status:** Current · **Last updated:** 2026-11-22 (§ 2.3: the walked stretch of the trail as the server shows it by default, PandiO/knk-workspace#996, #990); 2026-11-13 (new guide: road navigation, teleports and requests, spawn, hub, warps, `/back`, staff moves and exemptions, PandiO/knk-workspace#298)
+**Status:** Current · **Last updated:** 2026-11-22 (§ 2.7 Landmarks and `/warp landmark:<name>` in § 3.3, on `next`, PandiO/knk-workspace#976, docs #1008); 2026-11-22 (§ 2.3: the walked stretch of the trail as the server shows it by default, PandiO/knk-workspace#996, #990); 2026-11-13 (new guide: road navigation, teleports and requests, spawn, hub, warps, `/back`, staff moves and exemptions, PandiO/knk-workspace#298)
 **Checked against:** knk-plugin `main` `57884e9`, knk-web-api `master` `75b5a00`, knk-web-app `main` `3ba747d` (desk check of the code; the behaviour itself was live-tested when each part merged, see [Sources](#sources))
 **Related:** [player handbook](player-handbook.md), [commands](commands.md) (every command with its rank), [menus](menus-player-guide.md) (the teleport menu), [gate structures](gate-structures-player-guide.md) (passing gates), [admin guide](../admin/navigation-and-teleports-admin-guide.md)
 
@@ -123,6 +123,24 @@ A route ends when you log out, die, change world, teleport more than 16 blocks, 
 **In a siege match** `/navigate` only knows the match's places (objectives, gates), and the navigation compass you get
 there points to them. See the Siege player guide (`siege-player-guide.md`, PandiO/knk-workspace#297).
 
+### 2.7 Landmarks
+
+Landmarks are named places staff mark on the map: a well, a ruin, a throne room. Some are just a spot, some have an
+area of their own, some share the area of the town or building they belong to. They are on `next`, not on the live
+server yet, and only where staff switched them on.
+
+- **Navigating:** `/navigate <landmark>` (or `/navigate landmark:<name>` when a town or building has the same name).
+  Tab completion offers each landmark once. You arrive when you step into the landmark's area, any part of it, or,
+  for a landmark that is only a spot, when you are close to it. Standing in its area already: "You are already in
+  <name>."
+- **Entering one:** most landmarks say nothing. Where staff switched messages on you get "You are now entering
+  <name>." and "You are now leaving <name>." once each. A landmark can keep you out, like a town with its entry
+  closed. A landmark never protects you from fire, lava or poison: in the wild they hurt as anywhere in the wild,
+  inside a town the town's rule applies.
+- **Discovering one:** only landmarks staff made discoverable count: "You discovered the landmark <name>!" with a
+  small reward ([economy guide § 6](economy-player-guide.md#6-discoveries)).
+- **Warping to one:** see § 3.3.
+
 ## 3. Teleporting yourself
 
 ### 3.1 How every player teleport works
@@ -152,13 +170,13 @@ has its own cooldown; your rank's spawn price and cooldown apply to both.
 
 ### 3.3 Warps: `/warp`, `/warps` and the teleport menu
 
-Staff can open towns, districts and structures as teleport destinations ("warps").
+Staff can open towns, districts, structures and landmarks as teleport destinations ("warps").
 
 | Command | What it does |
 |---|---|
 | `/warp` (`/point`) | Opens the teleport menu ([menus guide § Teleports](menus-player-guide.md#teleports)). |
 | `/warps`, `/warp list` | Lists every destination with its type, price and `Available!` or `Locked! <reason>`; click one to go. |
-| `/warp <place>` | Teleports you there. Two places with one name: `/warp town:Name`, `/warp district:Name`. |
+| `/warp <place>` | Teleports you there. Two places with one name: `/warp town:Name`, `/warp district:Name`, `/warp landmark:Name`. |
 
 A destination can need a **title** ("Reach title X to unlock"), a **premium tier** ("Premium tier X or higher
 required") or that you **discovered** it first ("Discover X first"), and it can cost **gems**. When you arrive: "You paid
