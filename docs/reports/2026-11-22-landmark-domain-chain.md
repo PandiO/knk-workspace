@@ -17,7 +17,7 @@ Nothing.
 
 | Link | Issue | Status | Branch heads | PR | CI | How started |
 |---|---|---|---|---|---|---|
-| L1 API model, migration, area kinds and parent (tier:3) | #983 | Not started | `claude/landmark-domain`: knk-web-api (none yet); `claude/landmark-domain-l1`: knk-workspace (none yet) | none | none | (not started) |
+| L1 API model, migration, area kinds and parent (tier:3) | #983 | Running (started 2026-11-22) | `claude/landmark-domain`: knk-web-api (none yet); `claude/landmark-domain-l1`: knk-workspace (none yet) | none | none | create_session session_01R1w2Uv1A4MYoi62zFJTnwz, started 2026-11-22 16:32 UTC |
 | L2 API lists, discovery, warps and realtime (tier:2) | #984 | Not started (gate: L1 merged into `next`) | `claude/landmark-domain-integration`: knk-web-api; `claude/landmark-domain-l2`: knk-workspace | none | none | (not started) |
 | L3 Plugin (tier:2) | #985 | Not started (gate: L1 and L2 merged into `next`) | `claude/landmark-domain`: knk-plugin; `claude/landmark-domain-l3`: knk-workspace | none | none | (not started) |
 | L4 Web app (tier:2) | #986 | Not started (gate: L1 and L2 merged into `next`) | `claude/landmark-domain`: knk-web-app; `claude/landmark-domain-l4`: knk-workspace | none | none | (not started) |
