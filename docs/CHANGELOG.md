@@ -4,6 +4,48 @@ This is a human-readable record of capabilities merged into the V3 default branc
 
 ## Unreleased — on feature branches, not merged
 
+- **Landmarks are domains now: a landmark can be a plain point, have its own region with sub-regions, or use the area
+  of the domain it belongs to** ([PandiO/knk-workspace#983](https://github.com/PandiO/knk-workspace/issues/983), phase 1
+  of [#976](https://github.com/PandiO/knk-workspace/issues/976), [design](specs/landmark-domain/DESIGN.md); also fixes
+  [#981](https://github.com/PandiO/knk-workspace/issues/981); branch `claude/landmark-domain` in knk-web-api, tier:3,
+  no flag). knk-web-api: `Landmark : Domain` (TPT, table `landmarks` keyed by the domain id; name, pin, created time
+  and region on `domains`), `Domain.WgRegionId` nullable for landmarks only (every other type still requires a
+  region), `AreaKind` (`None`, `OwnRegion`, `LinkedDomain`, replacing `ExtentKind`; the radius extent is gone),
+  `ParentDomainId` (the former `DomainId`, any domain, another landmark too, never the landmark itself or a
+  descendant), `ShowEnterLeaveMessages` (off). One parent walk for every domain type (`DomainParents`, cycle guard)
+  serves the region decisions, the repository's parent loading and the region finalizer, which ends the endless
+  `GetParentDomainDecisions` loop for a crown land's region (#981). `api/landmarks` keeps its routes and access rules
+  and gains the domain fields (access, warp, messages, area kind, sub-regions); a pin another domain uses is copied.
+  A drawn landmark region is named `domain_<id>` and its sub-regions `domain_<id>_sub_<n>`, like every domain's; the
+  `landmark_<id>` path of #945 is removed. `PUT`/`DELETE api/Domains/{id}` on a landmark need
+  `knk.admin.world.landmark` (403 otherwise) and run the landmark rules. `search-region-decisions` returns a landmark
+  region (or sub-region) as the innermost entry with its parent chain; without a landmark in the request the keys are
+  as before. The landmark DTOs keep the off-road field names (`domainId`, `extentKind`, `regionId`, `radius`) as a
+  read and write projection for knk-plugin until L3 (#985). New Landmark form seed v2 and Landmark display seed v2.
+  Docs: [smoke test § 1](guides/landmark-domain-smoke-test.md#1-phase-1-api-model-migration-area-kinds-and-parent-983-tier3).
+  **Admin steps (deploy notes):**
+    1. Migration `LandmarkAsDomain` (not additive): it **deletes every landmark row** and rebuilds `landmarks` as a
+       child table of `domains`; `domains.WgRegionId` becomes nullable. Only the dev DB has landmarks (#708 is not
+       promoted). Back up first. The developer's test landmarks are gone and must be recreated by hand (with the v2
+       form or `/knk landmark create`); their old ids no longer resolve (saved `/navigate` targets `landmark:<id>`).
+       Down works (it deletes the landmark domains made since and restores the off-road table, empty).
+    2. Seeds: import `Landmark` (form, "Landmark - Default (seed v2)") and `Landmark.display` from the seed panels and
+       make both the default for Landmark. The seed v1 configuration and the edited dev form (form 51, with the Region
+       id projection) stay in the database but are superseded: their Extent, Region id and Radius fields no longer
+       exist; the Region id projection is not carried over (#975).
+    3. No `config.yml` key, no API setting.
+    4. Between L1 and L3 (#985) the plugin on `next` still reads the off-road fields. What works: `/knk landmark
+       create|list|show|move|delete|link|unlink`, `/navigate` to landmarks (a `LinkedDomain` landmark arrives in its
+       parent's main region, not yet its sub-regions), the temp-region cleanup (a landmark's `domain_<id>` resolves
+       through `by-region`). What changes: `create … radius <n>` is refused by the API; `create … region <id>` only
+       takes a region no other domain holds. What is not right yet, so **deploy L1 to a server players use only
+       together with L3**: a landmark's own region is a domain region for the plugin, so `DomainEffectDamage` can make it
+       a no-effect-damage zone (LD12 is L3's), the managed-region setup and repair treat the unknown type `Landmark`
+       as STRUCTURE (LD13 is L3's), and the access flags are synced onto it (both allowed by default, so no effect).
+       These come from the plugin's code as the design describes it (§ 3.1 item 3); L1 did not run the plugin.
+       Domain lists (`api/Domains`) include landmarks from now on; the type filter and the catalogue's skip of
+       landmarks come with L2 (#984).
+
 - **A production area's field drawn in game keeps its region, and its survey keeps counting**
   ([PandiO/knk-workspace#946](https://github.com/PandiO/knk-workspace/issues/946); with #944/#945 on branch
   `claude/landmark-regions`). knk-web-api: a Region-shaped production area's region drawn through the area form's
