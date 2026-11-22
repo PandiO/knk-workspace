@@ -108,6 +108,46 @@ This is a human-readable record of capabilities merged into the V3 default branc
     4. The bounds fill needs the plugin of L3 (#985); with an older plugin nothing is filled and the bounds are typed
        as before.
 
+- **The game server treats landmarks as domains: a landmark's own region is managed under its parent, never stops
+  effect damage, speaks only when its messages are on, and navigation counts its whole area**
+  ([PandiO/knk-workspace#985](https://github.com/PandiO/knk-workspace/issues/985), phase 3 of
+  [#976](https://github.com/PandiO/knk-workspace/issues/976), [design](specs/landmark-domain/DESIGN.md) § 7; also the
+  plugin part of [#951](https://github.com/PandiO/knk-workspace/issues/951); branch `claude/landmark-domain` in
+  knk-plugin, tier:2, no flag). knk-plugin: reads `api/landmarks` with the landmark-domain names (`areaKind`,
+  `wgRegionId`, `subRegionIds`, `parentDomainId`, `parentDomain.wgRegionId`) and writes `parentDomainId`, `areaKind`
+  and `wgRegionId`; the API's off-road projection (`domainId`, `extentKind`, `regionId`, `radius`) is no longer read.
+  A landmark's own region is the managed-region kind `LANDMARK` (WorldGuard parent = the parent domain's main region,
+  top level without one; priority the parent's + 10, at least 30; no category flags), set when the region is drawn and
+  restored by the startup repair and `/knk regions repair`, which now also read `api/landmarks` (a failed read is a
+  warning). The no-effect-damage rule of domains leaves landmarks out: a landmark in the wilderness hurts as outside it,
+  one in a town keeps the town's rule. Enter and leave messages for a landmark only when its "Show enter and leave
+  messages" is on (one message per crossing, none between its sub-regions; read from `api/landmarks` at start-up and
+  on every landmark change); towns, districts and structures keep their messages. Discovery and warps say "the
+  landmark", "Landmark" and "Landmarks" (icon lodestone); `/warp landmark:<name>` picks a landmark; the discoveries
+  summary counts landmarks although the `Landmark` type rule is off (staff no longer see "Disabled" there while there
+  are landmarks to discover). Navigation (`navigation.landmarks` unchanged, off by default): one destination per
+  landmark; a landmark with an area is routed to its main region and arrives anywhere in its area (its own
+  sub-regions, or for `LinkedDomain` the parent's main region and the parent's sub-regions, found on the server through
+  their `knk-domain-id` flag); the route preference weights that union once; the cylinder (radius) extent is gone.
+  `/knk landmark create <name> radius <n>` is refused with the way to a round region (`//sel cyl`) and the usage line;
+  `link` sets the parent, may name another landmark, and never offers or takes the landmark itself; `show` tells the
+  area, the parent and the messages switch. Realtime: an `EntityChanged` of type `Landmark` clears that domain from the
+  catalogue and the region cache and, once per burst, refreshes the navigation model and the message settings. The
+  temp-region cleanup no longer asks `api/landmarks` (a landmark's `domain_<id>` is found by the domain lookup). The
+  region task's result now carries the drawn or selected region's `bounds` (`minX` … `maxZ`), for the web form of
+  #951. Docs: [smoke test § 3](guides/landmark-domain-smoke-test.md#3-phase-3-plugin-985-tier2).
+  **Admin steps (deploy notes):**
+    1. No `config.yml` key: nothing to merge into the dev or alpha config. `navigation.landmarks` keeps its meaning
+       and stays `false` by default.
+    2. Deploy together with knk-web-api phases 1 and 2 (migrations `LandmarkAsDomain` and `AddLandmarkDiscoveryRule`
+       applied): this plugin reads only the new landmark field names, so against an API from before phase 1 every
+       landmark reads as a point without a parent.
+    3. After the deploy, run `/knk regions repair` once (or restart): existing landmark regions get their `LANDMARK`
+       parent and priority (before, a new landmark region was set up as a plain structure).
+    4. A navigation snapshot written before (offline model) is read as before: a landmark with an old region extent
+       keeps that region, an old radius landmark is a point until the model refreshes.
+    5. No API setting, no migration, no permission node.
+
 - **A lootbox area, production area, siege weapon spot or domain sub-region left on a temp name after a failed re-run
   heals itself, and the Landmark form shows its region, access, warp and sub-region parts only for an own region**
   ([PandiO/knk-workspace#952](https://github.com/PandiO/knk-workspace/issues/952) and

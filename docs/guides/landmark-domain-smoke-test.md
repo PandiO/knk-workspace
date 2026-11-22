@@ -1,7 +1,7 @@
 # Landmarks as a Domain subtype — smoke test
 
-**Status:** § 1 built (L1, 2026-11-22, on `next`, not run by the developer); § 2 built (L2, 2026-11-22, on `claude/landmark-domain-integration`, not run by the developer); § 3 draft from the design; § 4 built (L4, 2026-11-22, on knk-web-app `claude/landmark-domain`, not run by the developer); § 5 built (L1b, 2026-11-22, on knk-web-api `claude/landmark-domain-952`, not run by the developer). Steps tagged by the links.
-**Last updated:** 2026-11-22 (§ 5 added, fixes #952 and #1003; § 1.0 and § 4.0 name seed v3, L1b); 2026-11-22 (§ 4 updated to what L4 built, steps tagged, #986); 2026-11-22 (§ 2 updated to what L2 built, steps tagged, #984); 2026-11-22 (§ 1 updated to what L1 built, steps tagged, #983); 2026-11-22 (draft from the design, phases 1–4)
+**Status:** § 1 built (L1, 2026-11-22, on `next`, not run by the developer); § 2 built (L2, 2026-11-22, on `claude/landmark-domain-integration`, not run by the developer); § 3 built (L3, 2026-11-22, on knk-plugin `claude/landmark-domain`, not run by the developer); § 4 built (L4, 2026-11-22, on knk-web-app `claude/landmark-domain`, not run by the developer); § 5 built (L1b, 2026-11-22, on knk-web-api `claude/landmark-domain-952`, not run by the developer). Steps tagged by the links.
+**Last updated:** 2026-11-22 (§ 3 updated to what L3 built, steps tagged, #985); 2026-11-22 (§ 5 added, fixes #952 and #1003; § 1.0 and § 4.0 name seed v3, L1b); 2026-11-22 (§ 4 updated to what L4 built, steps tagged, #986); 2026-11-22 (§ 2 updated to what L2 built, steps tagged, #984); 2026-11-22 (§ 1 updated to what L1 built, steps tagged, #983); 2026-11-22 (draft from the design, phases 1–4)
 **Design:** [specs/landmark-domain/DESIGN.md](../specs/landmark-domain/DESIGN.md) · **Issue:**
 [PandiO/knk-workspace#976](https://github.com/PandiO/knk-workspace/issues/976)
 
@@ -171,43 +171,117 @@ discovery, warps and realtime § 3 (L3).*
 
 ## 3. Phase 3: plugin (#985, tier:2)
 
-*Draft from the design (2026-11-22); the link updates it to what was built and tags the automated steps.*
+*Built by link L3 (2026-11-22), knk-plugin `claude/landmark-domain`. tier:2. Steps tagged `[automated: …]` run in CI
+(knk-plugin job `build`: knk-core JUnit and knk-paper MockBukkit/Mockito tests; job `paper-boot`: the plugin scenarios
+on a real Paper server with WorldGuard): skip them or run them by hand. `[partly automated: …; by hand: …]` names the
+part only a person can check. Test classes: knk-core `LandmarkRegionKindTest`, `LandmarkTransitionMessagesTest`,
+`DomainEffectDamageTest`, `AccessFlagSyncTest`, `LandmarkExtentTest`, `LandmarkWeightsTest`, `LandmarkProviderTest`,
+`LandmarkCommandArgsTest`, `WarpTargetsTest`, `NavigationModelSnapshotTest`; knk-api-client `LandmarksApiImplTest`;
+knk-paper `LandmarkAdminCommandTest`, `NavigationServiceLandmarkTest`, `ModelLandmarksTest`,
+`HandleDestinationsLandmarkTest`, `DiscoveryLandmarkTest`, `LandmarkRealtimeTest`, `WgRegionIdTaskOutputTest`;
+scenario `landmark-region-is-managed-under-its-parent`.*
 
 ### 3.0 Preconditions
 
-1. Deployed: the plugin from `next` on the dev server, with the API and web app of phases 1 and 2.
-2. Settings: `navigation.landmarks: true`.
-3. Accounts and data: landmark staff; a normal player account; a wilderness landmark with its own region and one with
-   its own region inside the test town (the town as parent).
+1. Deployed: knk-plugin from `next` with phase 3 on the dev server; knk-web-api from `next` with phases 1 and 2
+   (migrations `LandmarkAsDomain` and `AddLandmarkDiscoveryRule` applied); knk-web-app from `next` (phase 4), so the
+   landmark form has the Area, Access and messages, Warp and Sub-regions steps. After the deploy, run
+   `/knk regions repair` once as staff.
+2. Settings: `navigation.landmarks: true` in the dev server's `config.yml` (only steps 5, 6 and 8 need it; the other
+   steps work with it off). No new key.
+3. Accounts and data:
+    1. Landmark staff of § 1.0 item 3.1, also holding `knk.admin.discovery`, in game with `knk.admin.world.landmark`
+       ("staff").
+    2. A normal player account that has discovered nothing yet ("the player"), with `knk.navigate` granted (it is
+       `default: false` since #845) and some gems for step 7.
+    3. The test town of § 1.0 with a region and a spawn point. For step 5 item 3 the town also needs a sub-region
+       (the town form's Sub-regions step); without one, skip that item.
+    4. Three landmarks, made with the landmark form:
+        1. "the wild tower": Area `OwnRegion`, a region drawn in the wilderness (outside every town), no parent, and a
+           sub-region drawn right next to its main region (the Sub-regions step). Allow entry and Allow exit on,
+           messages off, discovery override off, warp off.
+        2. "the town well": Area `OwnRegion`, a small region drawn inside the test town, the test town as parent.
+        3. "the market cross": Area `LinkedDomain`, the test town as parent, a pin somewhere in the town.
 
 ### 3.1 Steps
 
-1. Switch Allow entry off on the wilderness landmark, wait for the access sync (or `/knk regions repair`) and walk
-   into its region with the player. **Expected:** the player is kept out with the domain's no-entry message; with
-   Allow entry on again, the player walks in. (A10)
-2. With the player, stand in fire and lava inside the wilderness landmark region, then inside the landmark in the
-   town. **Expected:** in the wilderness landmark the player takes damage as outside it; in the town landmark no effect
-   damage, as anywhere in the town. (A11)
-3. With messages off on the wilderness landmark, walk in and out; switch "Show enter and leave messages" on, give it
-   a sub-region next to the main region, and walk in, across into the sub-region, and out. **Expected:** nothing with
-   messages off; with messages on, one enter message, nothing when crossing into the sub-region, one leave message.
-   (A12)
-4. As staff, run `/rg info domain_<id>` for the town landmark, then `/knk regions repair` and again `/rg info`.
-   **Expected:** parent = the town's main region, priority = the town region's priority + 10, no category flags;
-   unchanged after the repair. (A13)
-5. With the player, `/navigate` with tab completion, then navigate to the wilderness landmark and walk into its
-   sub-region first; navigate to the linked-domain landmark of § 1 step 6 and walk into the town. **Expected:** each
-   landmark is offered once; arrival is announced on entering the sub-region; the linked-domain landmark arrives on
-   entering the town. (A14)
-6. As staff, `/knk landmark create Test radius 10`, then `/knk landmark link <wilderness landmark> <test town>` with
-   tab completion. **Expected:** the radius form is refused with the usage line; `link` sets the town as parent and
-   does not offer the landmark itself. (A15)
-7. With the override of § 2 step 5 on, walk the player into that landmark for the first time; then `/warp
-   landmark:<name>` from elsewhere; switch "requires discovery" on and try with a player who has not discovered it.
-   **Expected:** a discovery message and reward once; the warp works with its price; the undiscovered player is
-   refused. (A08, A09)
-8. Rename a landmark in the web app and use `/navigate` tab completion in game. **Expected:** the new name shows
-   within a few seconds, without a restart. (A16)
+1. [partly automated: `AccessFlagSyncTest.aLandmarksOwnRegionGetsTheAccessFlagsAndDomainId_APointIsSkipped`,
+   `LandmarkTransitionMessagesTest.aLandmarkWithEntryOff_KeepsThePlayerOut_LikeAnyDomain`; by hand: the dev server]
+   As staff, switch Allow entry off on the wild tower and save; wait a minute for the access sync (or run
+   `/knk regions repair`). Run `/rg info domain_<id of the wild tower>` and `/rg info domain_<id>_sub_<n>` (its
+   sub-region). Then walk the player into the main region, and into the sub-region. **Expected:** both regions show
+   the flags `knk-allow-entry deny`, `knk-allow-exit allow` and `knk-domain-id <id of the wild tower>`; the player is
+   kept out of both with the domain's no-entry message, as at a town with entry off. Switch Allow entry on again and wait
+   for the sync: the player walks in. (A10)
+2. [partly automated: `DomainEffectDamageTest.aLandmarkNeverMakesASafeZone_InTheWildernessItHurts_InATownTheTownDecides`;
+   by hand: the damage in game] With the player in survival mode, stand in fire, then in lava, then drink a poison
+   potion, first inside the wild tower's region, then inside the town well's region. **Expected:** inside the wild
+   tower the player takes fire, lava and poison damage as anywhere in the wilderness; inside the town well there is no
+   effect damage, as anywhere in the town (unless the town has `knk-effect-damage allow`). (A11)
+3. [partly automated: `LandmarkTransitionMessagesTest.withMessagesOff_EnteringAndLeavingALandmarkShowsNothing`,
+   `LandmarkTransitionMessagesTest.withMessagesOn_OneEnterAndOneLeave_NothingBetweenItsSubRegions`,
+   `LandmarkTransitionMessagesTest.aTownsMessageStillWins_AndALandmarkInsideTheTownSpeaksOnlyForItself`; by hand: the
+   messages in game] With messages off on the wild tower, walk the player into its main region, across into its
+   sub-region and out. Then, as staff, switch "Show enter and leave messages" on for the wild tower and save; wait a few
+   seconds (the realtime change) and walk the same way again. Finally walk from outside the town into the town well's
+   region, then out of it while staying in the town, with the town well's messages on. **Expected:** with messages off
+   nothing is shown for the landmark; with messages on, one "You are now entering <name>." on entering, nothing when
+   crossing into the sub-region, one "You are now leaving <name>." on leaving. Entering the town and the well at once
+   shows the town's message; leaving the well inside the town shows "You are now leaving <name of the well>." (A12)
+4. [partly automated: `LandmarkRegionKindTest.theRepairGivesALandmarkItsParentAndPriority_AndRestoresThem`,
+   `LandmarkRegionKindTest.theLandmarkTypeIsItsOwnKind_AtTheStructureFloor_WithoutFlags`, scenario
+   `landmark-region-is-managed-under-its-parent`; by hand: the dev server's regions] As staff, run
+   `/rg info domain_<id of the town well>` and `/rg info domain_<id of the wild tower>`. Then set the well's priority
+   to 0 and remove its parent (`/rg setpriority domain_<id> 0`, `/rg setparent domain_<id>`), run
+   `/knk regions repair` and `/rg info` again. **Expected:** the well's parent is the town's main region and its
+   priority is the town region's priority + 10, at least 30 (a town at 10 gives 30); the wild tower has no parent and
+   priority 30; neither has a category flag of its own (no `pvp`, `entry`, `mob-spawning`), so the town's `pvp deny`
+   applies in the well. After the repair the well's parent and priority are back. (A13)
+5. [partly automated: `LandmarkProviderTest.theCatalogueSkipsLandmarkDomains_SoEachLandmarkIsListedOnce`,
+   `LandmarkProviderTest.anAreaWithSubRegions_IsItsMainRegion_WithTheOthersAsArrival`,
+   `NavigationServiceLandmarkTest.anAreaIsReachedInsideASubRegion`,
+   `NavigationServiceLandmarkTest.aLinkedDomainAreaIsReachedInTheParentsSubRegion`,
+   `NavigationServiceLandmarkTest.standingInASubRegionIsAlreadyThere`; by hand: the routes in game] With the player:
+    1. Type `/navigate ` and press Tab. **Expected:** each of the three landmarks is offered once (no second entry as a
+       domain).
+    2. From a spot outside both, `/navigate <name of the wild tower>` and walk into its sub-region first (not its main
+       region). **Expected:** the route leads to the main region; arrival is announced on entering the sub-region.
+    3. `/navigate <name of the market cross>` from outside the town and walk into the town (into its sub-region, if
+       the town has one). **Expected:** arrival on entering the town's main region, and also on entering the town's
+       sub-region.
+    4. Standing inside the wild tower's sub-region, `/navigate <name of the wild tower>`. **Expected:** "You are
+       already in <name of the wild tower>." (no route). (A14)
+6. [automated: `LandmarkCommandArgsTest.theRadiusFormIsRefused_WithTheWayToARoundRegion`,
+   `LandmarkAdminCommandTest.createWithARadius_IsRefusedWithTheUsageLine`,
+   `LandmarkAdminCommandTest.linkNeverTakesOrOffersTheLandmarkItself_ButAnotherLandmarkCanBeTheParent`,
+   `LandmarkAdminCommandTest.showTellsTheAreaAndTheParent`] As staff, run `/knk landmark create Test radius 10`, then
+   `/knk landmark link <name of the wild tower> ` and press Tab, then `/knk landmark link <name of the wild tower>
+   <name of the wild tower>`, then `/knk landmark link <name of the wild tower> <name of the test town>` and
+   `/knk landmark show <name of the wild tower>`. **Expected:** the radius form is refused with "The radius area is
+   gone: draw a round region with //sel cyl, then use region <id>." and the usage line (no landmark is created); Tab
+   offers domains (other landmarks too) but not the wild tower itself; linking it to itself is refused with "A landmark
+   can't be its own parent."; linking to the town answers "Linked … to <town> (Town)."; `show` lists "region
+   domain_<id> and 1 sub-region", "Parent: <town> (Town) #<id>" and "Enter and leave messages: on" (step 3 switched them on). Unlink it again
+   afterwards (`/knk landmark unlink <name of the wild tower>`): it is a wilderness landmark in step 7. (A15)
+7. [partly automated: `DiscoveryLandmarkTest.aLandmarkIsCalledALandmark`,
+   `DiscoveryLandmarkTest.theSummaryCountsLandmarks_ForPlayersAndStaff_ThoughTheTypeRuleIsOff`,
+   `WarpTargetsTest.aLandmarkIsAWarpTarget_ByNameOrWithTheTypeWordLandmark`; by hand: the dev server] As staff, turn
+   the wild tower's discovery override on (the overrides list, or § 2 step 5) and switch its warp on with a price of
+   1 gem. Walk the player into the wild tower for the first time, then open the discoveries menu (`/discoveries`).
+   Walk away and run `/warp landmark:<name of the wild tower>`. Then switch "Requires discovery" on for the town well
+   (with its warp on and its override off) and try `/warp landmark:<name of the town well>` with the player.
+   **Expected:** one "You discovered the landmark <name>!" with its reward (once only); the menu lists it with the
+   type "Landmark" and a lodestone icon, and the summary line "Landmarks: 1/<n>" (staff see the same line, not
+   "Disabled"); the warp takes the player there for 1 gem; the town well is refused as not discovered. (A08, A09)
+8. [partly automated: `LandmarkRealtimeTest.aLandmarkChange_ClearsTheCaches_AndRefreshesTheModelOncePerBurst`; by
+   hand: the realtime path] With the dev server connected to the API's game hub, rename the market cross in the web
+   app, wait a few seconds and use `/navigate` tab completion in game. **Expected:** the new name shows without a
+   restart or `/knk cache refresh`; the server log shows the realtime `EntityChanged` for `Landmark`. (A16)
+9. [automated: `WgRegionIdTaskOutputTest.theResultCarriesTheRegionsBoundingBox`] As staff, open a new production area
+   in the web app with shape Region, leave the bounds empty, use Send to Minecraft on Region id and draw the region in
+   game. **Expected:** the world task's result (the task list in the web app, or `GET api/WorldTasks/<id>`) has
+   `bounds` with `minX` … `maxZ` of the drawn region; with the web-app part of #951 the form fills the empty bounds
+   from it and the first save works. (#951)
 
 ## 4. Phase 4: web app (#986, tier:2)
 
