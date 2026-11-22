@@ -111,6 +111,17 @@ design session of 2026-11-22).
 12. **L4 with L3.** Chosen: start L4 (knk-web-app) at the same time, as the charter allows; no knk-web-app PR is open
     and the #608 claim on `objectConfigs.tsx` (PermissionGrant, design waiting) is not active. L3 and L4 write
     separate knk-workspace branches and keep their changelog entries as separate blocks.
+13. **L4's A17 finding: Landmark form seed v3 in knk-web-api** (2026-11-22 19:50 UTC). L4 found that seed v2 (L1) has
+    no display conditions, so every step shows for every area kind, against DESIGN § 4.1 and A17. Chosen: L4 adds a
+    small knk-web-api branch `claude/landmark-domain-l4-seed` from `next` with only the Landmark form seed v3 (new
+    `configurationGuid`, default for Landmark, `displayConditionGroups` on `AreaKind = OwnRegion` for the Region field
+    and the access/messages, warp and sub-region steps) and its seed test, PR into `next`, `Part of #986`; no knk-web-api
+    link is running, so one link per component repo still holds. Seed v3 supersedes v2 in the deploy notes. If L4's
+    `add_repo` is refused, it files a follow-up issue and the coordinator gets the seed done separately. Alternatives:
+    (a) a follow-up issue and an e2e test with a mocked config only, rejected as the first choice (the form on `next`
+    would keep showing steps for every area kind); (b) a Landmark rule hard-coded in the web app's `FormWizard`,
+    rejected (form config duplicated in code); (c) change v2 in place, rejected (LD25: an import never overwrites an
+    existing configuration).
 
 ## 4. Link blocks
 
