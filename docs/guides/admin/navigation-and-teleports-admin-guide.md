@@ -1,6 +1,6 @@
 # Navigation and teleports — admin guide
 
-**Status:** Current · **Last updated:** 2026-11-20 (§ 1: `knk.navigate` is `default: false` and seeded to Default, `knk.navigate.any` row, PandiO/knk-workspace#845); 2026-11-18 (§ 1: the route mode nodes `knk.navigate.mode.<word>`, PandiO/knk-workspace#707); 2026-11-13 (new guide: road network setup, upkeep and reset, Road network page, warps, spawn and hub, group fees, rank perks, staff teleports and exemptions, PandiO/knk-workspace#298)
+**Status:** Current · **Last updated:** 2026-11-22 (§ 2.6: `navigation.guidance-v2` is on by default and is the kill switch of the walk-trail quality pass, PandiO/knk-workspace#996, #990); 2026-11-20 (§ 1: `knk.navigate` is `default: false` and seeded to Default, `knk.navigate.any` row, PandiO/knk-workspace#845); 2026-11-18 (§ 1: the route mode nodes `knk.navigate.mode.<word>`, PandiO/knk-workspace#707); 2026-11-13 (new guide: road network setup, upkeep and reset, Road network page, warps, spawn and hub, group fees, rank perks, staff teleports and exemptions, PandiO/knk-workspace#298)
 **Checked against:** knk-plugin `main` `57884e9`, knk-web-api `master` `75b5a00`, knk-web-app `main` `3ba747d` (desk check); `next` only for what § 7 names
 **Related:** [player guide](../users/navigation-and-teleports-player-guide.md) (what players see; not repeated here), [commands](../users/commands.md) (§ Teleporting players, `/knk road`), [plugin configuration](plugin-configuration.md) § 4.10 `teleport` and § 4.15 `navigation`, [Game Settings](../game-settings.md), [staff web app guide § 9](staff-web-app-guide.md#9-settings-pages), [road navigation design](../../specs/navigation/DESIGN.md) § 5 and § 7, [teleport design](../../specs/teleport/DESIGN.md)
 
@@ -138,6 +138,22 @@ To keep learned profiles, save them first (the dump above), or restore them afte
 `navigation.*` in `config.yml`: on/off, class costs, the 48 / 96 / 256-block limits, trail look, reroute and arrival
 distances, session length, builder and walk-path settings (`walk.enabled: false` is the kill switch back to straight
 lines). See [plugin configuration § 4.15](plugin-configuration.md); all need a restart.
+
+**`navigation.guidance-v2` (on by default since 2026-11-22, #990).** The flag switches the off-road trail-quality
+pass that players see on walked stretches (what it looks like: [player guide § 2.3](../users/navigation-and-teleports-player-guide.md#23-off-the-road)).
+With it on, walk paths keep `walk.wall-clearance` (0.8) from walls, the walk trail has curved corners (`walk.curve`),
+its particles sit on fixed anchors `trail-leg-spacing` (2.0) blocks apart, the route cursor follows a player who walks
+back, and a walk leg stays while the player is within `walk.recompute-distance` (6) of it. NPC movement is not
+affected.
+
+1. **Kill switch:** `guidance-v2: false` and a restart bring back the old trail exactly (walk paths, search and
+   trail as before the pass). Use it if players report odd walk trails; tell the developer which place.
+2. **Which value a server has:** the plugin never adds keys to an existing `config.yml`. A server whose file has no
+   `guidance-v2` line gets it **on**. A file that was merged since #710 (2026-11-17) has `guidance-v2: false` written
+   in and **keeps it off** until you change the line to `true`. Check with a look at the file; no command shows it.
+3. **Test:** with the flag on, `/navigate` to a place that needs a walked stretch (a room upstairs), walk it and step
+   back along it: the particles stay on their spots, the trail follows you back. Steps: [off-road smoke test § 16](../navigation-offroad-smoke-test.md).
+4. `walk.enabled: false` is a different switch (no walked stretches at all); it is unaffected.
 
 ## 3. Teleports
 
