@@ -1,7 +1,7 @@
 # Landmarks as a Domain subtype — sub-regions, entry and exit, warps and domain lists for landmarks
 
-**Status:** **Decided 2026-11-22** (developer). Phases as sub-issues in § 11. Phase 1 (#983) merged into `next`. Phase 2 (#984) built on knk-web-api `claude/landmark-domain-integration`, in review.
-**Last updated:** 2026-11-22 (phase 2 built by link L2, #984, in review); 2026-11-22 (phase 1 built by link L1, #983, in review); 2026-11-22 (approved by the developer; LD25 and the final phases added on approval); 2026-11-22 (design session: decisions LD01–LD10 from the developer, LD07 and LD11–LD24 agent).
+**Status:** **Decided 2026-11-22** (developer). Phases as sub-issues in § 11. Phase 1 (#983) merged into `next`. Phase 2 (#984) built on knk-web-api `claude/landmark-domain-integration`, in review. Phase 4 (#986) built on knk-web-app `claude/landmark-domain`, in review (the form seed's display conditions for A17 follow in #1003).
+**Last updated:** 2026-11-22 (phase 4 built by link L4, #986, in review); 2026-11-22 (phase 2 built by link L2, #984, in review); 2026-11-22 (phase 1 built by link L1, #983, in review); 2026-11-22 (approved by the developer; LD25 and the final phases added on approval); 2026-11-22 (design session: decisions LD01–LD10 from the developer, LD07 and LD11–LD24 agent).
 **Issue:** [PandiO/knk-workspace#976](https://github.com/PandiO/knk-workspace/issues/976); phases as sub-issues in § 11.
 **Dependencies:** the landmark entity (#708, on `next`, not promoted), landmark weights (#709), landmark and production
 area drawn regions (#944, #945, #946, on `next`), domain sub-regions

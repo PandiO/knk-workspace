@@ -1,7 +1,7 @@
 # Landmarks as a Domain subtype — smoke test
 
-**Status:** § 1 built (L1, 2026-11-22, on `next`, not run by the developer); § 2 built (L2, 2026-11-22, on `claude/landmark-domain-integration`, not run by the developer); § 3–§ 4 draft from the design. Steps tagged by the links.
-**Last updated:** 2026-11-22 (§ 2 updated to what L2 built, steps tagged, #984); 2026-11-22 (§ 1 updated to what L1 built, steps tagged, #983); 2026-11-22 (draft from the design, phases 1–4)
+**Status:** § 1 built (L1, 2026-11-22, on `next`, not run by the developer); § 2 built (L2, 2026-11-22, on `claude/landmark-domain-integration`, not run by the developer); § 3 draft from the design; § 4 built (L4, 2026-11-22, on knk-web-app `claude/landmark-domain`, not run by the developer). Steps tagged by the links.
+**Last updated:** 2026-11-22 (§ 4 updated to what L4 built, steps tagged, #986); 2026-11-22 (§ 2 updated to what L2 built, steps tagged, #984); 2026-11-22 (§ 1 updated to what L1 built, steps tagged, #983); 2026-11-22 (draft from the design, phases 1–4)
 **Design:** [specs/landmark-domain/DESIGN.md](../specs/landmark-domain/DESIGN.md) · **Issue:**
 [PandiO/knk-workspace#976](https://github.com/PandiO/knk-workspace/issues/976)
 
@@ -210,21 +210,70 @@ discovery, warps and realtime § 3 (L3).*
 
 ## 4. Phase 4: web app (#986, tier:2)
 
-*Draft from the design (2026-11-22); the link updates it to what was built and tags the automated steps.*
+*Built by link L4 (2026-11-22), knk-web-app `claude/landmark-domain`. tier:2. Steps tagged `[automated: …]` run in CI
+(knk-web-app: Playwright with a mocked API in the `e2e` job, Jest in Build and test): skip them or run them by hand.
+`[partly automated: …; by hand: …]` names the part only a person can check. Specs: `e2e/landmark-domain.spec.ts`
+("the domain list", "a landmark's page", "the landmark form", the #951 test) and `e2e/landmarks.spec.ts`; Jest:
+`utils/__tests__/landmarks.test.ts`, `utils/forms/__tests__/landmarkForm.test.ts`,
+`utils/forms/__tests__/regionTaskBounds.test.ts`, `components/landmarks/__tests__/DomainLandmarksPanel.test.tsx`.*
 
 ### 4.0 Preconditions
 
-1. Deployed: knk-web-app from `next` with phases 1 and 2 of the API.
-2. Settings: none.
-3. Accounts and data: landmark staff; the test town with a landmark as child.
+1. Deployed: knk-web-app from `next` with phases 1 and 2 of the API (§ 1 and § 2 deployed). For step 8 also the
+   plugin of phase 3 (§ 3, #985), which sends the drawn region's bounding box.
+2. Settings: none new.
+3. Accounts and data:
+    1. Landmark staff of § 1.0 item 3.1 (with `knk.admin.world`: the parent picker and the world check read
+       `api/Domains`).
+    2. The landmarks of § 1 and § 2: the point landmark of § 1 step 3, "the tower" (own region, parent the test town),
+       "Dais" (parent the tower), the `LinkedDomain` landmark of § 1 step 8.
+    3. The Landmark form seed v2 as the default form. Its Region field and its "Access and messages", "Warp
+       destination" and "Sub-regions" steps have no display conditions until seed v3
+       ([#1003](https://github.com/PandiO/knk-workspace/issues/1003)): for step 1, add the condition "Area equals
+       OwnRegion" to those four in the form builder (or import seed v3 once it exists).
 
 ### 4.1 Steps
 
-1. Open a new landmark form and switch Area between `None`, `Own region` and `Linked domain's area`. **Expected:** the
-   sub-region, access, messages, discovery and warp steps show only with `Own region`. (A17)
-2. Open the domain list and filter on the type `Landmark`. **Expected:** a type column, and only landmarks after the
-   filter. (A07)
-3. Open the parent picker of a landmark that has a child landmark. **Expected:** domains show their type; the landmark
-   itself and its child are not offered. (A18)
-4. Open the test town's page, then the child landmark's page. **Expected:** the town lists its landmark; the landmark's
-   page does not list itself as its own landmark.
+1. [partly automated: `landmark-domain.spec.ts` "shows the region, access, warp and sub-region steps only with Own
+   region (A17)", on a mocked form with those conditions; by hand: the real seed form, see 4.0 item 3.3] As landmark
+   staff, open a new landmark form, fill the name and go to the Area step. Pick `Point`, then `Own region`, and step
+   through with Next. **Expected:** with `Point` there is no Region field and Area is the last step (Submit, no Next);
+   with `Own region` the Region field shows and Next leads to "Access and messages", "Warp destination" and
+   "Sub-regions". (A17)
+2. [automated: `landmark-domain.spec.ts` "offers Linked domain's area only with a parent that has a region (A17)",
+   `landmarkForm.test.ts`] In the same form, leave the parent empty and open the Area options; go back, pick the test
+   town as parent, open the Area options again and pick `Linked domain's area`; go back and pick the point landmark of
+   § 1 step 3 as parent instead. **Expected:** without a parent the options are `Point` and `Own region`, with the line
+   "Linked domain's area is offered once the parent has a region."; with the town `Linked domain's area` is offered and
+   the Region field goes when it is picked; with the point landmark as parent the Area field shows "Area Linked
+   domain's area needs a parent with a region." until another area is picked, and the option is gone after that. (A17)
+3. [automated: `landmark-domain.spec.ts` "shows each domain with its type, and the type filter keeps one type
+   (A07)", `landmarks.test.ts`] Open the domain list (dashboard, type Domain). Then pick `Landmark` in the type filter
+   next to the search box. **Expected:** a Type column (Town, District, Structure, Gate, Landmark, …); after the filter
+   only landmarks, the tower, "Dais" and the others of § 1. (A07)
+4. [automated: `landmark-domain.spec.ts` "edits a landmark with the landmark form, and a town with the domain form
+   (DESIGN § 4.3)", `landmarks.test.ts` "opens a landmark row …"] In the domain list, click Edit on the tower's row;
+   go back and click Edit on the test town's row. **Expected:** the tower opens in the landmark form
+   (`/forms/Landmark/edit/<id>`, "Landmark - Default (seed v2)"), the town in the domain form as before. With a Domain display configuration the rows are links, and the tower's row
+   opens the landmark's page (`/display/Landmark/<id>`). (DESIGN § 4.3)
+5. [automated: `landmark-domain.spec.ts` "the parent picker shows the type and leaves out the landmark and its
+   descendants (A18)", "a new landmark offers every domain as parent"] Edit the tower in the landmark form and click
+   the Parent field. **Expected:** each option shows its type ("Type: Town", "Type: Landmark", …); neither the tower
+   nor "Dais" is offered; in a new landmark's form every domain is offered. (A18)
+6. [automated: `landmark-domain.spec.ts` "lists its child landmarks, not the landmark itself",
+   `DomainLandmarksPanel.test.tsx`, `landmarks.spec.ts` "a town's page"] Open the test town's page, then the tower's
+   page. **Expected:** the town's Landmarks panel lists the tower and the `LinkedDomain` landmark (not "Dais"); the
+   tower's panel lists "Dais" and not the tower itself; a landmark without children says "No landmarks have <name> as
+   their parent.". (DESIGN § 6.3 item 3)
+7. [automated: `landmarks.spec.ts` "lists the landmarks with world, point, parent, area, region and /navigate"] Open
+   the landmark list (dashboard, type Landmark). **Expected:** columns World, Point, Parent, Area, Region and In
+   /navigate; the tower shows "<town> (Town)", "Own region" and `domain_<id>`; the `LinkedDomain` landmark "Linked
+   domain's area" and no region; the point landmark "Point". (LD16)
+8. [partly automated: `landmark-domain.spec.ts` "a drawn region's bounding box fills the empty bounds and keeps typed
+   ones (#951)", `regionTaskBounds.test.ts`; by hand: with the plugin of § 3] Open a new production area (Shape
+   `Region`), type 99 into MaxY, then Send to Minecraft on Region id and draw a new region in game. **Expected:** after
+   the task completes the region id is filled, MinX, MinY, MinZ, MaxX and MaxZ hold the drawn region's box, MaxY keeps
+   99; the area saves at the first Submit. With a plugin before § 3 nothing is filled, as before. (#951)
+9. [by hand] Open the discovery settings and the overrides card. **Expected:** the `Landmark` rule is last and
+   disabled (§ 2 step 4); "Add override" offers the landmarks with the type word Landmark; the player discoveries
+   filter and the stats card list Landmark last. (A08, web side)
