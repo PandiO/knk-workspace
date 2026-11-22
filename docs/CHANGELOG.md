@@ -4,6 +4,21 @@ This is a human-readable record of capabilities merged into the V3 default branc
 
 ## Unreleased — on feature branches, not merged
 
+- **New Crown land, shop, warehouse and production structure regions are set up right away**
+  ([PandiO/knk-workspace#991](https://github.com/PandiO/knk-workspace/issues/991), split off #989). Before, such a
+  region drawn in its form got the wrong region kind, or none, until the plugin restarted or `/knk regions repair` ran.
+  knk-web-api: `DomainRegionNameFinalizer.DomainTypeOf` sends each Domain subtype's own class name, the name the
+  startup repair reads (`DomainMappingProfile`: `GetType().Name`): `CrownLand`, `Shop`, `Warehouse` and
+  `ProductionStructure` were sent as nothing or as `Structure`; a bare `Domain` still sends no type. The stored form
+  validation results about a domain are dropped after its region changes under every type name along its chain
+  (`TypeNamesOf`; a Shop form's results were kept, because they were looked up as `Structure`). knk-plugin:
+  `ManagedRegionKind.forNewRegion` gives the creation hook (`ManagedRegionsBootstrap.finalizeNewRegion`) the repair's
+  kind, so a new Crown land region is set up as `CROWN_LAND` only with `production.enabled`, as the repair; with it on a
+  new `ProductionStructure` region is `RESOURCE_PRODUCTION` from the start. Branches `claude/region-domain-type-991`
+  in knk-web-api, knk-plugin and knk-workspace.
+  Admin steps: none (no migration, no setting, no `config.yml` key). Regions created before this keep the kind the
+  last repair gave them.
+
 - **A production area's field drawn in game keeps its region, and its survey keeps counting**
   ([PandiO/knk-workspace#946](https://github.com/PandiO/knk-workspace/issues/946); with #944/#945 on branch
   `claude/landmark-regions`). knk-web-api: a Region-shaped production area's region drawn through the area form's
