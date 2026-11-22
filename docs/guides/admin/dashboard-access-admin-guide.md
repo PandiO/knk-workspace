@@ -1,6 +1,6 @@
 # Dashboard access, staff ranks and area nodes — admin guide
 
-**Status:** Current · **Last updated:** 2026-11-19 (§ 2: Warehouse and Production structure in the World area, on `next`, #91, docs #830); 2026-11-19 (§ 2: Storage and Stock transaction in the World area, `knk.economy.admin`, on `next`, #97, docs #820); 2026-11-19 (§ 2: siege weapon types in the Siege area, on `next`, #782); 2026-11-18 (§ 2: Landmark in the World area, node `knk.admin.world.landmark`, on `next`, #708); 2026-11-15 (release v0.3: a group's nodes in its Permissions panel (#50) and read-only town Streets (#409) are released; PandiO/knk-workspace#577)
+**Status:** Current · **Last updated:** 2026-11-22 (§ 2 Landmarks: landmarks in the Domain table and guarded domain writes, on `next`, #976, docs #1008); 2026-11-19 (§ 2: Warehouse and Production structure in the World area, on `next`, #91, docs #830); 2026-11-19 (§ 2: Storage and Stock transaction in the World area, `knk.economy.admin`, on `next`, #97, docs #820); 2026-11-19 (§ 2: siege weapon types in the Siege area, on `next`, #782); 2026-11-18 (§ 2: Landmark in the World area, node `knk.admin.world.landmark`, on `next`, #708); 2026-11-15 (release v0.3: a group's nodes in its Permissions panel (#50) and read-only town Streets (#409) are released; PandiO/knk-workspace#577)
 **Checked against:** knk-web-api `master` `45043a7` and knk-web-app `next` `e6ba115`
 (the dashboard access model, [#280](https://github.com/PandiO/knk-workspace/issues/280) AM1–AM3, and bulk delete,
 [#205](https://github.com/PandiO/knk-workspace/issues/205), merged 2026-11-12/13 on `main`; create and edit back on
@@ -54,7 +54,13 @@ so a direct API call without `knk.admin.content` is refused as well (§ 4).
 with `knk.admin.world` or `knk.admin.world.landmark`; created and edited with `knk.admin.world.landmark` and
 `knk.admin.content`; deleted with `knk.admin.world.landmark` and `knk.admin.delete`. The node is matched by
 `knk.admin.world.*`, `knk.admin.*` and `*`, **not** by a bare `knk.admin.world` grant, so a world-staff rank needs it
-granted separately (§ 6). Reading a landmark by world or id (`GET api/landmarks`) needs no login at all.
+granted separately (§ 6). Reading a landmark by world or id (`GET api/landmarks`) needs no login at all. Since
+[#976](https://github.com/PandiO/knk-workspace/issues/976) (on `next`) a landmark is a domain: the **Domain** table
+lists it with the type Landmark (its **Type** filter keeps one type), and its Edit opens the landmark form. Editing or
+deleting a landmark from the Domain table (`PUT`/`DELETE api/Domains/{id}`) needs the same landmark rights; without
+`knk.admin.world.landmark` it answers 403 "This domain is a landmark: changing it requires the
+knk.admin.world.landmark permission." Landmark staff need `knk.admin.world` as well, for the Domain table, the landmark
+form's Parent picker and its world check. See the [landmarks admin guide](landmarks-admin-guide.md).
 
 **Storages and the stock ledger** (stock core, [#97](https://github.com/PandiO/knk-workspace/issues/97), on `next`):
 viewed with `knk.admin.world` **or** `knk.economy.admin`; storages are created and edited with `knk.admin.world` and
@@ -225,9 +231,10 @@ delete on test records first: it can't be undone, and each refused row stays sel
 
 ## Changes
 
-1. 2026-11-18: World area: Landmark and its node `knk.admin.world.landmark` (on `next`); #708 step A
-2. 2026-11-15: release v0.3: § 6 and § 8 markers of #50 and #409 now "since v0.3"; PandiO/knk-workspace#577
-3. 2026-11-15: § 8: a town's Streets have no Add…/Unlink because they come from the districts; #409, docs #559
-4. 2026-11-13: the API refuses creates, edits and link changes without `knk.admin.content`; Staff no longer edits kits or siege setup on the web; #374, docs #385
-5. 2026-11-13: area ranks view, delete and export but don't create or edit; #371, docs #378
-6. 2026-11-13: first version, PandiO/knk-workspace#366
+1. 2026-11-22: § 2 Landmarks: landmarks in the Domain table, guarded domain writes, landmark staff need `knk.admin.world` too (on `next`); #976, docs #1008
+2. 2026-11-18: World area: Landmark and its node `knk.admin.world.landmark` (on `next`); #708 step A
+3. 2026-11-15: release v0.3: § 6 and § 8 markers of #50 and #409 now "since v0.3"; PandiO/knk-workspace#577
+4. 2026-11-15: § 8: a town's Streets have no Add…/Unlink because they come from the districts; #409, docs #559
+5. 2026-11-13: the API refuses creates, edits and link changes without `knk.admin.content`; Staff no longer edits kits or siege setup on the web; #374, docs #385
+6. 2026-11-13: area ranks view, delete and export but don't create or edit; #371, docs #378
+7. 2026-11-13: first version, PandiO/knk-workspace#366
