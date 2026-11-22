@@ -1,7 +1,7 @@
 # Landmarks as a Domain subtype — smoke test
 
 **Status:** §§ 1–5 built and merged into `next` (2026-11-22: knk-web-api `8cc4511b`, `55d187d8`, `3bc3cfd5`; knk-plugin `14645895`; knk-web-app `8c9c3553`), not run by the developer. § 1 is tier:3: run it before `next` is promoted. Steps tagged by the links. The branch names in the section notes are the links' branches, now merged.
-**Last updated:** 2026-11-22 (status: all sections merged into `next`, docs #1008); 2026-11-22 (§ 3 updated to what L3 built, steps tagged, #985); 2026-11-22 (§ 5 added, fixes #952 and #1003; § 1.0 and § 4.0 name seed v3, L1b); 2026-11-22 (§ 4 updated to what L4 built, steps tagged, #986); 2026-11-22 (§ 2 updated to what L2 built, steps tagged, #984); 2026-11-22 (§ 1 updated to what L1 built, steps tagged, #983); 2026-11-22 (draft from the design, phases 1–4)
+**Last updated:** 2026-11-22 (§ 1.0 item 1, steps 2, 3 and 14 aligned with L3, L4 and seed v3, asked by the chain coordinator, docs #1008); 2026-11-22 (status: all sections merged into `next`, docs #1008); 2026-11-22 (§ 3 updated to what L3 built, steps tagged, #985); 2026-11-22 (§ 5 added, fixes #952 and #1003; § 1.0 and § 4.0 name seed v3, L1b); 2026-11-22 (§ 4 updated to what L4 built, steps tagged, #986); 2026-11-22 (§ 2 updated to what L2 built, steps tagged, #984); 2026-11-22 (§ 1 updated to what L1 built, steps tagged, #983); 2026-11-22 (draft from the design, phases 1–4)
 **Design:** [specs/landmark-domain/DESIGN.md](../specs/landmark-domain/DESIGN.md) · **Issue:**
 [PandiO/knk-workspace#976](https://github.com/PandiO/knk-workspace/issues/976)
 
@@ -15,9 +15,8 @@ the Migrations workflow on a fresh MySQL 8 database): skip them or run them by h
 ### 1.0 Preconditions
 
 1. Deployed: knk-web-api from `next` with migration `LandmarkAsDomain` applied to the dev DB; knk-web-app and
-   knk-plugin from `next` (the region task and the rename run through the plugin). The plugin and web app still use
-   the off-road landmark fields until L3 (#985) and L4 (#986); see the deploy notes in the changelog entry for what
-   that means in between.
+   knk-plugin from `next` (the region task and the rename run through the plugin). Every phase (L1–L4 and L1b) is in
+   `next`, so the plugin and web app read the landmark-domain fields.
 2. Settings: none new.
 3. Accounts and data:
     1. A staff account with `knk.admin.world`, `knk.admin.world.landmark`, `knk.admin.content` and
@@ -39,11 +38,14 @@ the Migrations workflow on a fresh MySQL 8 database): skip them or run them by h
    shows them). Apply the migration and reload the landmark list. **Expected:** the list is empty; the migration
    reported no error; towns, districts and structures are all still there with their regions. (A02)
 2. [partly automated: `LandmarkServiceTests.Create_APoint_IsADomainOfTypeLandmark_WithoutARegion_AndTheDomainDefaults`;
-   by hand: the v2 form] As landmark staff, open a new landmark form. **Expected:** it is "Landmark - Default (seed
-   v2)": Area offers `None`, `OwnRegion` and `LinkedDomain`; there is no Extent, Region id or Radius field; the steps
-   are Landmark, Location, Area, Access and messages, Warp destination, Sub-regions. (A01, LD25)
+   by hand: the seed v3 form] As landmark staff, open a new landmark form. **Expected:** it is "Landmark - Default
+   (seed v3)": Area offers `Point`, `Own region` and `Linked domain's area` (`None`, `OwnRegion`, `LinkedDomain`; the
+   last only once a parent with a region is picked); there is no Extent, Region id or Radius field. The steps depend
+   on the area: with `Point` or `Linked domain's area` they are Landmark, Location, Area (the last step, no Region
+   field); with `Own region` the Region field shows and Area is followed by Access and messages, Warp destination and
+   Sub-regions. (A01, A17, LD25, #1003)
 3. [partly automated: `LandmarkServiceTests.Create_APoint_IsADomainOfTypeLandmark_WithoutARegion_AndTheDomainDefaults`;
-   by hand: the form] Create a landmark with the v2 form: a name, a description, a pin captured in game, Area `None`,
+   by hand: the form] Create a landmark with the seed v3 form: a name, a description, a pin captured in game, Area `None`,
    no parent. **Expected:** it saves; `GET api/landmarks/{id}` shows `areaKind` `None`, `wgRegionId` null,
    `allowEntry` and `allowExit` true, `showEnterLeaveMessages` and `teleportEnabled` false; `GET api/Domains/{id}`
    returns the same id as a domain (the Landmark fields with it) and `WgRegionId` null. (A01)
@@ -92,11 +94,15 @@ the Migrations workflow on a fresh MySQL 8 database): skip them or run them by h
     landmark in the same world already has. **Expected:** the first rename saves (area, parent and preference
     unchanged); the other two are refused with 400 "Name can be at most 100 characters." and "A landmark named "…"
     already exists in world …". (A06)
-14. [partly automated: `LandmarkServiceTests.Write_ReadsThe708Names_WhenTheNewOnesAreNotSent`,
-    `LandmarkServiceTests.Write_ARadius_IsRefused`; by hand: in game] With the plugin from `next` (before L3), run
-    `/knk landmark create Well` where you stand, then `/knk landmark create Pond radius 5`, then `/navigate Well`.
-    **Expected:** `Well` is created as a point (`areaKind` `None`); the radius form is refused with "The radius area
-    is gone: draw a round region with //sel cyl instead."; `/navigate Well` leads to it. (compatibility until L3)
+14. [partly automated: `LandmarkCommandArgsTest.theRadiusFormIsRefused_WithTheWayToARoundRegion`,
+    `LandmarkAdminCommandTest.createWithARadius_IsRefusedWithTheUsageLine`, `LandmarkServiceTests.Write_ARadius_IsRefused`
+    (the API's own refusal, for a client that still sends a radius); by hand: in game] With the plugin from `next`
+    (L3) and `navigation.landmarks: true`, run `/knk landmark create Well` where you stand, then
+    `/knk landmark create Pond radius 5`, then `/navigate Well`. **Expected:** `Well` is created as a point (`areaKind`
+    `None`; "Created landmark Well (#<id>) …"); the radius form is refused by the plugin with "The radius area is gone:
+    draw a round region with //sel cyl, then use region <id>." and the usage line `/knk landmark create <name> [region
+    <id>] | …` (no landmark is created); `/navigate Well` leads to it. § 3 step 6 checks the rest of `/knk landmark`.
+    (LD08, A15)
 
 ## 2. Phase 2: API lists, discovery, warps and realtime (#984, tier:2)
 
