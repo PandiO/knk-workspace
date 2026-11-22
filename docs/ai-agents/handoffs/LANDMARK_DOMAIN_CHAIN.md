@@ -1,10 +1,10 @@
 # Landmarks as a Domain subtype chain — charter
 
-**Status:** Ready to start (2026-11-22)
-**Last updated:** 2026-11-22 (draft from the design session; the coordinator completes it at its first run)
+**Status:** Running (2026-11-22; coordinator session_01R1w2UtYX9XFbTVUFy6zJUb, cloud)
+**Last updated:** 2026-11-22 (coordinator's first run: progress report, knk-workspace branches, model, #981); 2026-11-22 (draft from the design session)
 **Issues:** parent [PandiO/knk-workspace#976](https://github.com/PandiO/knk-workspace/issues/976); sub-issues per
 link below. Reference issues as `PandiO/knk-workspace#n` in component repos.
-**Progress report:** (the coordinator creates it at its first run)
+**Progress report:** [reports/2026-11-22-landmark-domain-chain.md](../../reports/2026-11-22-landmark-domain-chain.md).
 **Skills:** coordinator `.claude/skills/knk-coordinator/`, links `.claude/skills/knk-link/` (knk-workspace).
 
 ## 0. Binding documents
@@ -24,7 +24,7 @@ link below. Reference issues as `PandiO/knk-workspace#n` in component repos.
 
 | Link | Sub-issue | Tier | What | Repos | Branch | Base | Flag | Gate |
 |---|---|---|---|---|---|---|---|---|
-| L1 | #983 | tier:3 | API model: `Landmark : Domain` (TPT), nullable `WgRegionId`, the migration (rows dropped), `AreaKind`, the parent and one parent walk, `api/landmarks` on the hierarchy, `domain_<id>` region names, guarded `api/Domains` writes, access tests, Landmark seeds v2 | knk-web-api | `claude/landmark-domain` | `next` | none (LD24) | now (#981 may land first) |
+| L1 | #983 | tier:3 | API model: `Landmark : Domain` (TPT), nullable `WgRegionId`, the migration (rows dropped), `AreaKind`, the parent and one parent walk, `api/landmarks` on the hierarchy, `domain_<id>` region names, guarded `api/Domains` writes, access tests, Landmark seeds v2; takes over #981 | knk-web-api | `claude/landmark-domain` | `next` | none (LD24) | now |
 | L2 | #984 | tier:2 | API integration: domain lists and search with the type and filter, the disabled Landmark discovery rule with the override, warps with the type word, landmark realtime changes | knk-web-api | `claude/landmark-domain-integration` | `next` | none | L1 merged into `next` |
 | L3 | #985 | tier:2 | Plugin: LANDMARK managed kind, effect damage without landmarks, opt-in messages, discovery and warp wording, area union, `/knk landmark` without radius, realtime, `landmark_<id>` path removed | knk-plugin | `claude/landmark-domain` | `next` | none | L1 and L2 merged into `next` |
 | L4 | #986 | tier:2 | Web app: DTOs on the domain base, `DOMAIN_ENTITY_TYPES`, type column and filter, pickers, parent picker, `DomainLandmarksPanel`, landmark list columns, e2e | knk-web-app | `claude/landmark-domain` | `next` | none | L1 and L2 merged into `next` |
@@ -53,4 +53,7 @@ Order and parallelism: L1, then L2 (same repo); L3 and L4 may run together after
    #708 is not promoted) and needs a working Down for the migrations workflow. L2 at most seed data.
 4. **Dev DB.** After L1 the developer's edited Landmark form (form 51, with the Region id projection of 2026-11-22) is
    superseded by the seed v2 form (LD25); the developer recreates the test landmarks.
-5. **Model for link sessions:** (the coordinator chooses and passes it explicitly).
+5. **Model for link sessions:** the coordinator's own model, passed explicitly to `create_session` (no effort level).
+6. **knk-workspace branches** (coordinator decision 3): each link's docs (changelog entry, smoke-guide section, spec
+   status) go on `claude/landmark-domain-l<n>` in knk-workspace, from `next`, with their own PR into `next`.
+7. **#981** (coordinator decision 4): L1 takes it over; L1's parent walk ends the CrownLand loop, with #981's tests.
