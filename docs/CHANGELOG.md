@@ -108,6 +108,36 @@ This is a human-readable record of capabilities merged into the V3 default branc
     4. The bounds fill needs the plugin of L3 (#985); with an older plugin nothing is filled and the bounds are typed
        as before.
 
+- **A lootbox area, production area, siege weapon spot or domain sub-region left on a temp name after a failed re-run
+  heals itself, and the Landmark form shows its region, access, warp and sub-region parts only for an own region**
+  ([PandiO/knk-workspace#952](https://github.com/PandiO/knk-workspace/issues/952) and
+  [#1003](https://github.com/PandiO/knk-workspace/issues/1003), fix link L1b of
+  [#976](https://github.com/PandiO/knk-workspace/issues/976); branch `claude/landmark-domain-952` in knk-web-api,
+  tier:2 and tier:1, no flag). knk-web-api: when a row whose region step was run again is saved while the plugin
+  can't be reached (or refuses), it stays on `tempregion_worldtask_<n>` and its old final region stays in the world;
+  until now neither `POST api/Regions/finalize-temp-names` nor the next save could rename it, because the API named no
+  region to replace and the plugin refuses an existing target ("target region name already exists"). Now, on such a
+  retry (an update that keeps the temp region, or the finalize pass), the region finalizer names the row's own final
+  name (`domain_<id>_sub_<n>`, `lootbox_area_<id>`, `production_area_<id>`, `siege_spot_<id>`) as the region to
+  replace, so the plugin redefines it in place with the new shape (keeping its flags and owners) or renames plainly
+  when it no longer exists, unless a domain, sub-region, lootbox area, production area or siege spot names that
+  region. A first save still names nothing to replace. A domain's own `domain_<id>` (landmarks included) is **not**
+  healed this way: a v2 region can carry that name (managed-worldguard-regions.md § 8 item 9) and an in-place redefine
+  would keep its owners and flags; the manual way out of § 7 stays. New Landmark form seed v3 ("Landmark - Default
+  (seed v3)"): seed v2 plus the display condition "Area equals OwnRegion" on the Area step's Region field and on the
+  steps "Access and messages", "Warp destination" and "Sub-regions" (A17). The warp step follows A17 as written; the
+  developer's question on #1003 (should a point landmark keep its warp?) is open, and one seed edit makes that step
+  unconditional. Docs:
+  [smoke test § 5](guides/landmark-domain-smoke-test.md#5-fixes-picked-up-by-the-chain-952-1003).
+  **Admin steps (deploy notes):**
+    1. Seeds: import `Landmark` (form, "Landmark - Default (seed v3)") from the seed panel and make it the default
+       for Landmark. It supersedes seed v2 (L1): v2 need not be imported; an imported v2 stays in the database (import
+       never overwrites) and can be deleted or kept by hand. The by-hand conditions of the L4 deploy notes (item 2)
+       are not needed with v3.
+    2. No migration, no `config.yml` key, no API setting, no endpoint or access-rule change.
+    3. The heal needs a plugin that knows `replaceRegionId` (KNG-103, on `next`); an older plugin ignores it and
+       refuses as before.
+
 - **Siege weapons: a weapon spot is now a WorldGuard region you draw in the spot form, and the form shows its size class before you save**
   ([PandiO/knk-workspace#988](https://github.com/PandiO/knk-workspace/issues/988), part of
   [#354](https://github.com/PandiO/knk-workspace/issues/354); developer decision 2026-11-22, spec W76; replaces the spot
