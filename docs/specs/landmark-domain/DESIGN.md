@@ -168,7 +168,7 @@ Related: [navigation-offroad/DESIGN.md](../navigation-offroad/DESIGN.md) § 6 an
    (kept, as a domain feature). No v1 or v2 landmark entity existed.
 3. **Related open work:** #708 and #709 (landmark entity and weights, in review on `next`), #714 (plaza landmark kind,
    later), #945/#946 (drawn regions, in review), #974 (their docs), #975 (auto-projection), the CrownLand loop in
-   `GetParentDomainDecisions` (fixed here by LD23; filed separately so it can land first).
+   `GetParentDomainDecisions` (#981; LD23 replaces the walk, #981 can land first).
 4. **Vision.** § 2.5 prefers "inheritance for type identity, interfaces/composition for behavior". A landmark is a
    named place of the world like the other domains, so it takes the type identity; the behaviours it gets are the
    domain's own, switched per landmark (LD24).
@@ -327,7 +327,7 @@ Related: [navigation-offroad/DESIGN.md](../navigation-offroad/DESIGN.md) § 6 an
 
 | Phase | Scope | Acceptance | Repos | Tier | Flag | Sub-issue | Depends on |
 |---|---|---|---|---|---|---|---|
-| 1 | API: Landmark as a Domain subtype, migration, area kinds, parent walk, region names, guarded domain writes, discovery rule, warps, seeds | A01–A09 (API side) | knk-web-api | tier:3 | none (LD24) | — | the CrownLand loop fix can land first |
+| 1 | API: Landmark as a Domain subtype, migration, area kinds, parent walk, region names, guarded domain writes, discovery rule, warps, seeds | A01–A09 (API side) | knk-web-api | tier:3 | none (LD24) | — | #981 can land first |
 | 2 | Plugin: managed kind, effect damage, messages, discovery and warp wording, landmark extent union, command, realtime | A08–A16 | knk-plugin | tier:2 | none | — | 1 |
 | 3 | Web app: DTOs, lists and pickers, form and display seeds in use, panel, e2e | A07, A17, A18 | knk-web-app | tier:2 | none | — | 1 |
 
