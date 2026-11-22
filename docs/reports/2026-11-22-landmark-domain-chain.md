@@ -31,7 +31,7 @@ design session of 2026-11-22).
 | L1 API model, migration, area kinds and parent (tier:3) | #983 | Merged into `next` 2026-11-22 18:37 UTC (knk-web-api `8cc4511b`, knk-workspace `724ebc10`) | `claude/landmark-domain`: knk-web-api `00ee3115` (after merging `next` `c647daf7`); `claude/landmark-domain-l1`: knk-workspace `ba0596e0` (coordinator, 2026-11-22: the heads in block 4.1 item 2 predate that merge) | [knk-web-api#82](https://github.com/PandiO/knk-web-api/pull/82), [knk-workspace#994](https://github.com/PandiO/knk-workspace/pull/994) | green on `00ee3115` (build-and-test, mysql-tests, fresh-database); knk-workspace no checks; Codex at its usage limit (skipped) | create_session session_01R1w2Uv1A4MYoi62zFJTnwz, started 2026-11-22 16:32 UTC |
 | L2 API lists, discovery, warps and realtime (tier:2) | #984 | Merged into `next` 2026-11-22 19:45 UTC (knk-web-api `55d187d8`, knk-workspace `035f641f`) | `claude/landmark-domain-integration`: knk-web-api `2525be13`; `claude/landmark-domain-l2`: knk-workspace `fc64d3f2` | [knk-web-api#84](https://github.com/PandiO/knk-web-api/pull/84), [knk-workspace#1002](https://github.com/PandiO/knk-workspace/pull/1002) | green on `2525be13` (build-and-test, mysql-tests, fresh-database; push and PR runs); knk-workspace no checks; Codex at its usage limit (skipped) | create_session session_01R1w2Ux3HrcYVs53AugdtZW, started 2026-11-22 18:39 UTC |
 | L3 Plugin (tier:2) | #985 | Running (rerun started 2026-11-22 19:51 UTC; first run blocked at setup, block 4.3) | `claude/landmark-domain`: knk-plugin (none yet); `claude/landmark-domain-l3`: knk-workspace (none yet) | none | none | create_session session_01R1w2UtBFy9s4dBXQoeBMQF (19:46 UTC, environment "Default": blocked, `repo.papermc.io` refused); rerun create_session session_01R1w2UuLNw6Cr3qwUKQNvao in environment "Default Correct" (19:51 UTC, decision 14) |
-| L4 Web app (tier:2) | #986 | Running (started 2026-11-22 19:46 UTC) | `claude/landmark-domain`: knk-web-app (none yet); `claude/landmark-domain-l4`: knk-workspace (none yet) | none | none | create_session session_01R1w2UtGykzTGpUL4Ksj6S6, started 2026-11-22 19:46 UTC |
+| L4 Web app (tier:2) | #986 | Done, in review (2026-11-22) | `claude/landmark-domain`: knk-web-app `4bc6b88`; `claude/landmark-domain-l4`: knk-workspace `73e785d4` | PandiO/knk-web-app#78, PandiO/knk-workspace#1004 | knk-web-app `4bc6b88`: build-and-test, e2e green; knk-workspace no checks; Codex at its usage limit | create_session session_01R1w2UtGykzTGpUL4Ksj6S6, started 2026-11-22 19:46 UTC |
 | L1b #952 region re-run left on a temp name (charter § 3 item 8, fix link) | #952 | Queued: starts once L4's knk-web-api seed branch `claude/landmark-domain-l4-seed` is merged (one knk-web-api link at a time) | `claude/landmark-domain-952`: knk-web-api; `claude/landmark-domain-l1b`: knk-workspace | none | none | (not started; `create_session`) |
 
 ## 3. Coordinator decisions
@@ -360,3 +360,83 @@ _(Each link appends its block here when it finishes.)_
     1. The rerun of L3: JDK 25 comes from `sudo apt-get update` and then `sudo apt-get install -y openjdk-25-jdk-headless`
        (the package is missing before the update); build with
        `-Porg.gradle.java.installations.paths=/usr/lib/jvm/java-25-openjdk-amd64`.
+
+### 4.4 L4 — Web app (#986)
+
+1. **Scope done.**
+    1. DTOs: `DomainBaseDto` (optional region); `LandmarkDto` on it; `LandmarkListDto` on the new names (`areaKind`,
+       `wgRegionId`, `parentDomain*`).
+    2. `landmark` in `DOMAIN_ENTITY_TYPES` (world check on save, sub-region parent link).
+    3. Domain lists and pickers: Type column, Type filter (`domainType`); picker options "Type: …" (A07, A18).
+    4. Domain dashboard: a landmark row opens the landmark page, its Edit the landmark form (DESIGN § 4.3).
+    5. Landmark form: area words, "Linked domain's area" only while the parent has a region (A17, second half), the
+       parent picker with `excludeSubtreeOf` on a saved landmark (A18); Enum fields gain `settingsJson.enumLabels`.
+    6. `DomainLandmarksPanel` by `parentDomainId`, on a landmark's page too (children only); landmark list columns
+       Parent, Area, Region.
+    7. Discovery types gain `Landmark` (last); the overrides card offers landmarks.
+    8. #951 web part: a region task result with `bounds` fills the step's empty MinX…MaxZ.
+    9. knk-workspace: changelog entry with deploy notes, smoke guide § 4 as built (9 steps, tagged), DESIGN status.
+2. **Commits and heads.** knk-web-app `claude/landmark-domain` at `4bc6b88` (2 commits, base `next` at `1d7c23b`);
+   knk-workspace `claude/landmark-domain-l4` at `73e785d4` (1 commit, base `next` at `035f641f`). Neither `next` moved
+   while L4 ran (checked before the final push), so no merge was needed.
+3. **PRs.** PandiO/knk-web-app#78 (`Closes PandiO/knk-workspace#986`, `Part of PandiO/knk-workspace#951`),
+   PandiO/knk-workspace#1004 (`Part of`), base `next`. Not merged.
+4. **Tests, baseline → result.**
+    1. knk-web-app: `npm run test:ci` 347 suites, 2935 tests → 350 suites, 2951 tests, all passed; `npx tsc --noEmit`
+       0 → 0 errors; `CI=true npm run build` passed → passed; Playwright 374 tests in 38 files → 382 passed (8 new in
+       `e2e/landmark-domain.spec.ts`; `e2e/landmarks.spec.ts` updated). CI on the PR: build-and-test and e2e green.
+    2. Known reds: none.
+    3. Acceptance: A07 `landmark-domain.spec.ts` "shows each domain with its type …", `landmarks.test.ts`; A17
+       "shows the region, access, warp and sub-region steps only with Own region" (mocked form with the conditions,
+       see decision 1) and "offers Linked domain's area only with a parent that has a region", `landmarkForm.test.ts`;
+       A18 "the parent picker shows the type and leaves out the landmark and its descendants"; DESIGN § 4.3 "edits a
+       landmark with the landmark form …"; #951 "a drawn region's bounding box fills the empty bounds …",
+       `regionTaskBounds.test.ts`.
+    4. Codex: no review on either PR, the connector's code-review usage limit was reached; finished without it
+       (developer decision 2026-11-14), said so on both PRs.
+5. **Decisions (DESIGN § 4.3).**
+    1. *A17 step visibility.* Chosen: not in L4; the steps hide through display conditions the API's Landmark form seed
+       v2 doesn't carry, so follow-up #1003 (seed v3, with the conditions spelled out) and a deploy note to add them in
+       the form builder meanwhile; the e2e test drives a mocked form with them. Asked the coordinator first (no answer
+       before the rest was done, so option (b) of that message). Alternatives: (a) a seed v3 on a knk-web-api branch in
+       L4: outside the prompt's repos; (c) a Landmark-only visibility rule in FormWizard: duplicates the form
+       configuration in code.
+    2. *Warp step without Own region.* Chosen: A17 as written in the test (warp hidden without Own region), and the
+       question raised on #1003, since DESIGN § 4.1 item 5 and § 3 item 2 (v1 warp points) read as warps for points
+       too. Alternative: (a) leave warp always visible: contradicts A17.
+    3. *Linked domain's area.* Chosen: web-app rule (`landmarkForm.ts`) on the picked parent's `wgRegionId`, looked up
+       with `GET api/Domains/{id}` when only the id is known; the option stays while unknown and when it is the stored
+       value (then the API's message shows). Alternatives: (a) only the API's refusal on save: A17 asks the form to
+       offer it only with a region; (b) a display condition: can't read the parent's data.
+    4. *Parent picker exclusion.* Chosen: the wizard adds `excludeSubtreeOf` for Landmark/ParentDomainId on a saved
+       landmark; the pinned rows ("Created in this form") drop only the landmark itself. Alternative: (a) a seed
+       `pickerFilters` token `{id?}`: needs the seed again and the form values have no `id`.
+    5. *Landmarks panel on a landmark's page.* Chosen: shown, listing the child landmarks (LD23 allows landmark
+       parents), the landmark itself filtered out. Alternative: (a) hidden on landmark pages as before: child
+       landmarks then have no list.
+    6. *Opening a landmark from the domain list.* Chosen: only rows with `domainType` `Landmark` open as Landmark
+       (LD24: other types unchanged). Alternative: (a) every row as its own type: changes the other types' pages.
+    7. *Type filter values.* Chosen: a fixed list of the API's concrete types (Town … Landmark, CrownLand,
+       Warehouse, ProductionStructure). Alternative: (a) types from the loaded rows: the filter would change with the
+       page.
+    8. *#951 result shape.* Chosen: `bounds: {minX, minY, minZ, maxX, maxY, maxZ}` (top-level keys accepted too),
+       sent to the coordinator for L3; only empty, visible bound fields of the same step are filled. Alternative: (a)
+       wait for L3's shape: L3 runs at the same time.
+    9. *#951 closing keyword.* Chosen: `Part of #951` here, since L3 holds the plugin part; whichever of L3/L4 merges
+       last closes it. Alternative: (a) `Closes` here: would close it before the plugin part.
+    10. *World check for landmarks.* Chosen: `landmark` in `DOMAIN_ENTITY_TYPES` as the charter says; the check reads
+        `api/Domains` (World area), as the parent picker does. Alternative: (a) skip the check for landmarks (the pin
+        gives the world): a second rule for one type.
+6. **Out of scope, noted.** #1003 (Landmark seed v3 display conditions, with the warp question). The domain
+   dashboard's row links need a Domain display configuration (unchanged behaviour); not filed.
+7. **Blockers.** None.
+8. **At merge / what the developer must do.**
+    1. Deploy knk-web-app with phases 1 and 2 of the API; no settings, no migration.
+    2. Decide on #1003 (warp step for point landmarks) and import seed v3 once built; until then add the "Area equals
+       OwnRegion" conditions in the form builder by hand if wanted.
+    3. Run smoke guide § 4 when convenient (tier:2; 6 of 9 steps automated, step 8 needs L3's plugin).
+9. **Notes for later links.**
+    1. L3 (#985): the region task's outputJson `bounds` object (block coordinates, whole numbers) is what the web app
+       reads for #951; the PR that merges last closes #951.
+    2. A later change can drop the #708 fields (`domainId`, `extentKind`, …) from `LandmarkListDto` in the API: the web
+       app no longer reads them (the read DTO keeps them typed as deprecated).
