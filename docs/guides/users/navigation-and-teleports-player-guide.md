@@ -1,6 +1,6 @@
 # Navigation and teleports — player guide
 
-**Status:** Current · **Last updated:** 2026-11-13 (new guide: road navigation, teleports and requests, spawn, hub, warps, `/back`, staff moves and exemptions, PandiO/knk-workspace#298)
+**Status:** Current · **Last updated:** 2026-11-22 (§ 2.3: the walked stretch of the trail as the server shows it by default, PandiO/knk-workspace#996, #990); 2026-11-13 (new guide: road navigation, teleports and requests, spawn, hub, warps, `/back`, staff moves and exemptions, PandiO/knk-workspace#298)
 **Checked against:** knk-plugin `main` `57884e9`, knk-web-api `master` `75b5a00`, knk-web-app `main` `3ba747d` (desk check of the code; the behaviour itself was live-tested when each part merged, see [Sources](#sources))
 **Related:** [player handbook](player-handbook.md), [commands](commands.md) (every command with its rank), [menus](menus-player-guide.md) (the teleport menu), [gate structures](gate-structures-player-guide.md) (passing gates), [admin guide](../admin/navigation-and-teleports-admin-guide.md)
 
@@ -64,6 +64,20 @@ You don't have to start on a road. Within 96 blocks of one, the trail first lead
 (round buildings, up stairs and ladders, without big drops). The same happens at the end: a place up to 96 blocks from
 the road gets a walked last stretch. A place you can reach within 48 blocks is walked to straight away, without the
 roads.
+
+**The walked stretch.** On the walked parts (to the road, from the road, or straight to a nearby place) the trail looks
+like this, unless staff switched it off ([admin guide § 2.6](../admin/navigation-and-teleports-admin-guide.md#26-settings)):
+
+- The path keeps its distance from walls, posts and drops where there is room, and its corners are rounded, not sharp.
+- The particles sit on fixed spots, about 2 blocks apart, and stay there while you walk. They no longer slide along
+  with you.
+- The trail follows you if you step back along it: the particles, the distance in the boss bar and the next turn
+  instruction are those of the spot on the route where you are now.
+- A walked stretch stays your route as long as you are within 6 blocks of it. You are no longer told you are heading
+  away just because you walk around a pillar or take a wide turn; only when you leave the stretch the route is
+  recalculated.
+
+This applies to the walked parts only. The gold trail on the road itself, and everything in § 2.2, is unchanged.
 
 - A place up to 256 blocks from any road: the trail ends at the road, then "No conventional path to X found." and the
   arrow in the action bar points the way until you are close enough for a walked path.
