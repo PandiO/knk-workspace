@@ -2,7 +2,7 @@
 
 **Status:** In progress — Steps 1–2 done (baseline, vetting); Steps 3–4 (install, measure) wait for the developer's
 approval of the two tools · **Last updated:** 2026-11-22
-**Branch:** knk-workspace `claude/relaxed-shannon-3t43yr` (not merged; time-boxed trial). Code repos read at
+**Issue:** [PandiO/knk-workspace#977](https://github.com/PandiO/knk-workspace/issues/977) · **Branch:** knk-workspace `claude/relaxed-shannon-3t43yr` (not merged; time-boxed trial). Code repos read at
 knk-web-app `31a6896`, knk-web-api `75b8434`, knk-plugin `2411d78` (`main`).
 
 Goal: see whether an auto-generated code graph exposed over MCP lets agents answer "who calls this?", "what depends on
