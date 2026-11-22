@@ -36,7 +36,7 @@ design session of 2026-11-22).
 | L2 API lists, discovery, warps and realtime (tier:2) | #984 | Merged into `next` 2026-11-22 19:45 UTC (knk-web-api `55d187d8`, knk-workspace `035f641f`) | `claude/landmark-domain-integration`: knk-web-api `2525be13`; `claude/landmark-domain-l2`: knk-workspace `fc64d3f2` | [knk-web-api#84](https://github.com/PandiO/knk-web-api/pull/84), [knk-workspace#1002](https://github.com/PandiO/knk-workspace/pull/1002) | green on `2525be13` (build-and-test, mysql-tests, fresh-database; push and PR runs); knk-workspace no checks; Codex at its usage limit (skipped) | create_session session_01R1w2Ux3HrcYVs53AugdtZW, started 2026-11-22 18:39 UTC |
 | L3 Plugin (tier:2) | #985 | Running (rerun started 2026-11-22 19:51 UTC; first run blocked at setup, block 4.3) | `claude/landmark-domain`: knk-plugin (none yet); `claude/landmark-domain-l3`: knk-workspace (none yet) | none | none | create_session session_01R1w2UtBFy9s4dBXQoeBMQF (19:46 UTC, environment "Default": blocked, `repo.papermc.io` refused); rerun create_session session_01R1w2UuLNw6Cr3qwUKQNvao in environment "Default Correct" (19:51 UTC, decision 14) |
 | L4 Web app (tier:2) | #986 | Merged into `next` 2026-11-22 20:19 UTC (knk-web-app `8c9c3553`, knk-workspace `99da72cc`) | `claude/landmark-domain`: knk-web-app `4bc6b88d`; `claude/landmark-domain-l4`: knk-workspace `73e785d4` | [knk-web-app#78](https://github.com/PandiO/knk-web-app/pull/78), [knk-workspace#1004](https://github.com/PandiO/knk-workspace/pull/1004) | green on `4bc6b88d` (build-and-test, e2e; both runs); knk-workspace no checks; Codex at its usage limit (skipped) | create_session session_01R1w2UtGykzTGpUL4Ksj6S6, started 2026-11-22 19:46 UTC |
-| L1b #952 region re-run left on a temp name, and #1003 Landmark form seed v3 (charter § 3 item 8; fix link) | #952, #1003 | Running (started 2026-11-22 20:20 UTC) | `claude/landmark-domain-952`: knk-web-api (none yet); `claude/landmark-domain-l1b`: knk-workspace (none yet) | none | none | create_session session_01R1w2Ut1aonbYwio9RXX7mA, started 2026-11-22 20:20 UTC |
+| L1b #952 region re-run left on a temp name, and #1003 Landmark form seed v3 (charter § 3 item 8; fix link) | #952, #1003 | In review (finished 2026-11-22; block 4.5) | `claude/landmark-domain-952`: knk-web-api `60fe2723`; `claude/landmark-domain-l1b`: knk-workspace `d06f362d` | [knk-web-api#85](https://github.com/PandiO/knk-web-api/pull/85), [knk-workspace#1007](https://github.com/PandiO/knk-workspace/pull/1007) | green on `60fe2723` (build-and-test, mysql-tests, fresh-database); knk-workspace no checks; Codex at its usage limit (skipped) | create_session session_01R1w2Ut1aonbYwio9RXX7mA, started 2026-11-22 20:20 UTC |
 
 ## 3. Coordinator decisions
 
@@ -458,3 +458,77 @@ _(Each link appends its block here when it finishes.)_
        reads for #951; #78 closes #951.
     2. A later change can drop the #708 fields (`domainId`, `extentKind`, …) from `LandmarkListDto` in the API: the web
        app no longer reads them (the read DTO keeps them typed as deprecated).
+
+### 4.5 L1b — Region re-run left on a temp name (#952) and Landmark form seed v3 (#1003)
+
+1. **Scope done.**
+    1. #952 (`Services/DomainRegionNameFinalizer.cs`): on a retry for a row already stored on its temp region (an
+       update whose previous region equals the current one, or `FinalizeAllAsync`, which now passes each sub-region's,
+       lootbox area's, production area's and siege spot's current region), the finalizer names the row's own final
+       name as `replaceRegionId` (`HealableSubRegionFinalNameAsync`, `HealableOwnedFinalNameAsync`), unless a domain,
+       sub-region, lootbox area, production area or siege spot names it. Covered: `domain_<id>_sub_<n>`,
+       `lootbox_area_<id>`, `production_area_<id>`, `siege_spot_<id>`. Not covered: `domain_<id>` (decision 1,
+       follow-up #1006). A first save and a real re-run behave as before.
+    2. #1003 (`Data/FormConfigurationSeeds/Landmark.json`): "Landmark - Default (seed v3)", configuration
+       `8cefaf90-b32d-543b-b16f-73b5254c07f9`, seed v2 plus "AreaKind Equals `OwnRegion`" on the Area step's
+       `WgRegionId` (FormField) and the steps "Access and messages", "Warp destination", "Sub-regions" (FormStep), as
+       `GateDoor.json`; seeds README entry. v2 kept (not deleted, not default).
+    3. knk-workspace: changelog block (its own, under Unreleased) with deploy notes; smoke guide § 1.0 and § 4.0 name
+       seed v3, § 4 step 4 the v3 name, new § 5 "Fixes picked up by the chain" (5 steps, tagged);
+       `architecture/managed-worldguard-regions.md` § 7 #952 paragraph.
+2. **Commits and heads.** knk-web-api `claude/landmark-domain-952` at `60fe2723` (2 commits: `6ac72c43` #952,
+   `60fe2723` seed v3; base `next` `55d187d8`); knk-workspace `claude/landmark-domain-l1b` at `d06f362d` (1 commit,
+   base `next` `99da72cc`). Neither `next` moved while L1b ran (checked before opening the PRs), so no merge was needed.
+3. **PRs.** PandiO/knk-web-api#85 (`Closes PandiO/knk-workspace#952`, `Part of #1003`), PandiO/knk-workspace#1007
+   (`Part of #952`, `Part of #1003`), base `next`. Not merged. `Part of #1003`: the developer has not answered the
+   warp question on #1003.
+4. **Tests, baseline → result.**
+    1. knk-web-api: `dotnet build` 0 errors → 0 errors; `dotnet test` 5327 passed, 131 skipped, 0 failed → 5344
+       passed, 131 skipped, 0 failed (new: 16 in `Services/TempNameHealTests`, 1
+       `FormConfigurationSeedFilesTests.LandmarkSeed_V3_ShowsTheOwnRegionParts_OnlyForAnOwnRegion`). The 131 skipped
+       are the MySQL tests (no `KNK_TEST_MYSQL` locally); CI ran them. CI on #85: green on `60fe2723` (build-and-test, mysql-tests, fresh-database; push and PR runs).
+    2. Changed pinned tests (decision 5): `LootboxAreaRegionRenameTests.Update_WithTheSameTempRegion_RetriesTheRename_ReplacingItsOwnFinalName`
+       (renamed from `…_WithoutReplacing`), `LootboxAreaRegionRenameTests.FinalizeAll_AlsoRenamesAreasStillOnATempName`,
+       `DomainSubRegionTests.FinalizeAll_RenamesSubRegionsLeftOnATempName_AfterTheDomains`; the v2 seed test now
+       checks v3 (`LandmarkSeed_IsV3_…`).
+    3. Known reds: none.
+    4. Codex: the review failed on both PRs, usage limit reached, no inline findings; finished without it (developer
+       decision 2026-11-14), said so on both PRs.
+5. **Decisions (DESIGN § 4.3).**
+    1. *Owners #952 heals.* Chosen: sub-regions, lootbox areas, production areas, siege spots (names only the v3 API
+       creates); `domain_<id>` left out, since a v2 region can carry it (managed-worldguard-regions.md § 8 item 9) and
+       the plugin's in-place redefine keeps the existing region's owners, members and flags. Alternatives: (a) heal
+       `domain_<id>` too: a v2 orphan's legacy owners and flags would land on the new domain; (b) a creation-timestamp
+       or `knk-domain-id` check on the existing region: a plugin change (L3 holds knk-plugin), filed as #1006 and
+       reported to the coordinator (the prompt's "stop that part"); (c) an API record of a domain's earlier region:
+       none exists, and adding one needs a migration (out of scope).
+    2. *When to heal.* Chosen: only on a retry for a row already stored on its temp region. Alternatives: (a) on every
+       finalize (the issue's wording): a first save would redefine any existing region carrying the row's name;
+       (b) prefer the final name over a temp previous region on a real re-run: the plugin takes one replace target and
+       the next retry heals anyway.
+    3. *Guard.* Chosen: every other row kind names the final name → no replace (`OtherUserOfRegionAsync`, and
+       `DomainRegionOwnership` plus the owned kinds for sub-regions). Alternative: (a) the re-run path's
+       `RegionHolderAsync` (production areas never hold): too loose for a region that is not yet the row's.
+    4. *Seed v3 GUIDs.* Chosen: the seeds README rule (configuration uuid5(v2, "seed-v3"), every step/field uuid5(v2,
+       its v2 GUID), as GateDoor v2 → v3), so the condition reads v3's own AreaKind field `44a1e7e9-…` (derived from
+       v2's `11b2f868-…` named in the prompt; the importer requires the condition's field to be in the same file).
+       Alternative: (a) keep the v2 GUIDs: against the convention, duplicates GUIDs across configurations.
+    5. *Pinned tests.* Chosen: change the three tests that pinned "no replace on a retry", the behaviour #952 changes.
+       Alternative: (a) keep them by healing only in a new code path: two retry behaviours for one state.
+    6. *Warp step (#1003).* Chosen: A17 as written (coordinator decision 16), stated in #85, #1007 and on #1003 with the
+       one-edit reversal. Alternative: (a) unconditional warp step: waits for the developer.
+6. **Out of scope, noted.**
+    1. #1006 (filed): heal `domain_<id>` too, with a plugin check of the existing region first.
+    2. A redefined sub-region that the mirror had already marked orphaned (`knk-orphaned-since`) keeps its flags; the
+       plugin's orphan handling is expected to clear the mark once the sub-region is listed again. Not verified (no
+       plugin run); smoke guide § 5 covers a lootbox area only by hand.
+7. **Blockers.** None. The `domain_<id>` part stopped by design (decision 1), as the prompt asked.
+8. **At merge / what the developer must do.**
+    1. Import the `Landmark` form seed v3 and make it the default (v2 need not be imported).
+    2. Answer #1003's warp question; if a point landmark keeps its warp, one seed edit (and the same in the form
+       designer) makes "Warp destination" unconditional, then #1003 can close.
+    3. Decide on #1006 (the `domain_<id>` heal with a plugin check).
+    4. Run smoke guide § 5 when convenient (tier:2; steps 1–3 need a stopped game server between drawing and saving).
+9. **Notes for later links.**
+    1. L3 (#985) and #1006: the API already sends `replaceRegionId` equal to the target for these owners on a retry;
+       a plugin check of the existing region (decision 1 (b)) would make the domain heal safe.
