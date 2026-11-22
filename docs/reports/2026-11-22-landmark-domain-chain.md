@@ -32,6 +32,7 @@ design session of 2026-11-22).
 | L2 API lists, discovery, warps and realtime (tier:2) | #984 | Merged into `next` 2026-11-22 19:45 UTC (knk-web-api `55d187d8`, knk-workspace `035f641f`) | `claude/landmark-domain-integration`: knk-web-api `2525be13`; `claude/landmark-domain-l2`: knk-workspace `fc64d3f2` | [knk-web-api#84](https://github.com/PandiO/knk-web-api/pull/84), [knk-workspace#1002](https://github.com/PandiO/knk-workspace/pull/1002) | green on `2525be13` (build-and-test, mysql-tests, fresh-database; push and PR runs); knk-workspace no checks; Codex at its usage limit (skipped) | create_session session_01R1w2Ux3HrcYVs53AugdtZW, started 2026-11-22 18:39 UTC |
 | L3 Plugin (tier:2) | #985 | Running (rerun started 2026-11-22 19:51 UTC; first run blocked at setup, block 4.3) | `claude/landmark-domain`: knk-plugin (none yet); `claude/landmark-domain-l3`: knk-workspace (none yet) | none | none | create_session session_01R1w2UtBFy9s4dBXQoeBMQF (19:46 UTC, environment "Default": blocked, `repo.papermc.io` refused); rerun create_session session_01R1w2UuLNw6Cr3qwUKQNvao in environment "Default Correct" (19:51 UTC, decision 14) |
 | L4 Web app (tier:2) | #986 | Running (started 2026-11-22 19:46 UTC) | `claude/landmark-domain`: knk-web-app (none yet); `claude/landmark-domain-l4`: knk-workspace (none yet) | none | none | create_session session_01R1w2UtGykzTGpUL4Ksj6S6, started 2026-11-22 19:46 UTC |
+| L1b #952 region re-run left on a temp name (charter § 3 item 8, fix link) | #952 | Queued: starts once L4's knk-web-api seed branch `claude/landmark-domain-l4-seed` is merged (one knk-web-api link at a time) | `claude/landmark-domain-952`: knk-web-api; `claude/landmark-domain-l1b`: knk-workspace | none | none | (not started; `create_session`) |
 
 ## 3. Coordinator decisions
 
@@ -133,6 +134,21 @@ design session of 2026-11-22).
     "Default", rejected for now (it changes every session on the developer's default environment for one
     repository's needs); (c) wait for the developer, rejected (the saved environment answers it). Later plugin links
     should start in "Default Correct" from the first run.
+15. **Charter § 3 item 8 (bugs picked up by the chain) was missed at the link starts.** The design session added it to
+    the charter on `main` at 17:16 UTC (`637b32ae`, developer decision 2026-11-22: "tell the coordinator to pick up the
+    remaining relevant bugs too"), after L1 had started (16:32 UTC); the coordinator did not re-read the charter before
+    starting L2, L3 and L4, against skill § 3.1. Found at 20:00 UTC through L4's message. Effects and choices:
+    1. #952 (L1's part, the region finalizer): L1 is merged without it. Chosen: a small fix link **L1b** on knk-web-api
+       (`claude/landmark-domain-952` from `next`, `Closes #952`), started with `create_session` as soon as L4's seed
+       branch is merged, so knk-web-api keeps one link at a time. Alternatives: (a) send it to the idle L1 session,
+       rejected (links start in a fresh context; L1 is closed out); (b) start it now beside L4's seed branch, rejected
+       (one link per component repo, although the files differ); (c) leave it to the docs session or the manager,
+       rejected (the charter gives it to this chain).
+    2. #958 and the plugin part of #951 (L3): relayed to the L3 rerun at 20:02 UTC with L4's bounds contract
+       (`{"regionId", "bounds": {minX..maxZ}}` in the region task result); the knk-plugin PR closes #958 and is `Part of`
+       #951.
+    3. The web-app part of #951 (L4): already in L4's work (it read the charter); its knk-web-app PR closes #951.
+    4. From now on the coordinator re-reads the charter from `origin/main` before every link start and check.
 
 ## 4. Link blocks
 
