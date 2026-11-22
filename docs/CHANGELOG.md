@@ -4,6 +4,55 @@ This is a human-readable record of capabilities merged into the V3 default branc
 
 ## Unreleased — on feature branches, not merged
 
+- **Siege weapons: a weapon spot is now a WorldGuard region you draw in the spot form, and the form shows its size class before you save**
+  ([PandiO/knk-workspace#988](https://github.com/PandiO/knk-workspace/issues/988), part of
+  [#354](https://github.com/PandiO/knk-workspace/issues/354); developer decision 2026-11-22, spec W76; replaces the spot
+  task of #799 and the six bounds of #783). In the scenario's "Siege weapons" step an admin creates a spot and, on
+  "Place and size", draws a box with the normal region world task on **Region** ("Send to Minecraft", `/knk task
+  <code>`, a WorldEdit selection and `save`, or `select <region>`) and picks the **Facing** in the form; **Size class**
+  is read-only. Two rules on Region ask the game server over the game hub: the size check (blocking) shows the class for
+  the facing (width across × length along × height; a polygon counts as its bounding box) or "too small"; the site
+  check (a warning, answered only with `siege.weapons.enabled`) says when the floor isn't solid or the space isn't
+  clear. A game server that can't be asked never blocks: the rules say they couldn't check and the save keeps the
+  stored class (L3 works it out again before placing a weapon). On save the API works the class out from the region's
+  bounds and refuses a region smaller than the small class or one the game server doesn't know; a drawn region is
+  renamed to `siege_spot_<id>`. knk-web-api: `SiegeWeaponSpot` keeps only `WgRegionId` (migration
+  `DropSiegeWeaponSpotBounds` drops `MinX`..`MaxZ`); hub request and answer `RegionGeometryQuery`/`RegionGeometryResult`
+  (generic) and `SpotSiteCheckQuery`/`SpotSiteCheckResult` (`RegionQueryWaiter`, `GameRegionQueryClient`, settings
+  `RegionQueries:Enabled` and `RegionQueries:TimeoutSeconds`); validation types `SiegeWeaponSpotSize` and
+  `SiegeWeaponSpotSite`; the spot joins `DomainRegionNameFinalizer` (`finalize-temp-names` too) and the temp-region
+  release check; `WorldTaskTypes.SiegeWeaponSpot` and its import entry are gone; a field's rules that all pass keep a
+  `failureReason`. knk-plugin: `WeaponSpotTaskHandler`, `WorldEditSpotSelections`, `SpotSelections`, `SpotTaskOutput`
+  and `SpotDraft` removed; the region geometry query is always answered, the spot site check only with
+  `siege.weapons.enabled` (knk-core `SpotSiteCheck`); the `ChatTaskInput` chat routing stays for the production
+  `CaptureRadius` task. knk-web-app: the spot task's fan-out, task panel listing, task type entry and form-designer hint
+  removed; a rule that passes but couldn't check shows "Validation could not be completed". Known: deleting a spot
+  leaves its region behind, and the plugin's 14-day temp-region cleanup doesn't ask spots yet, so a spot whose rename
+  failed should be renamed with `POST api/Regions/finalize-temp-names` (both move to the generic region lifecycle,
+  [#989](https://github.com/PandiO/knk-workspace/issues/989)). Smoke test:
+  [siege weapons § 2](guides/siege-weapons-smoke-test.md). Branches `claude/siege-spot-region-988` in knk-web-api,
+  knk-plugin and knk-web-app, `claude/gracious-allen-cxpdrl` in knk-workspace (PRs into `next`). Admin steps:
+  1. Apply the API migration `DropSiegeWeaponSpotBounds` (`dotnet ef database update`). Only `next` test databases have
+     the columns; their spot bounds are dropped (spots keep their region, facing and class).
+  2. API settings (optional; the defaults are in `appsettings.json`):
+
+     ```json
+     "RegionQueries": {
+       "Enabled": true,
+       "TimeoutSeconds": 5
+     }
+     ```
+
+  3. Plugin `config.yml`: no new key. `siege.weapons.enabled` now switches the spot site check answer (and later phases),
+     no longer a spot world task.
+  4. Form seed `SiegeWeaponSpot` (changed in place, still seed v1): a database that imported it before either deletes
+     "SiegeWeaponSpot - Default (seed v1)" and imports it again ("make default"), or in the form designer: delete the
+     fields Min X to Max Z; on WorldGuard region (label it "Region") turn on "Requires in-game action" with type
+     `ReagionCreate` and make it required; make Size class read-only; add two validation rules on the region field:
+     `SiegeWeaponSpotSize` (dependency Facing, blocking, message `{sizeReason}`) and `SiegeWeaponSpotSite` (not
+     blocking, message `{siteReason}`). Spots saved before with only bounds and no region need a region (open them,
+     draw it, save).
+
 - **A production area's field drawn in game keeps its region, and its survey keeps counting**
   ([PandiO/knk-workspace#946](https://github.com/PandiO/knk-workspace/issues/946); with #944/#945 on branch
   `claude/landmark-regions`). knk-web-api: a Region-shaped production area's region drawn through the area form's

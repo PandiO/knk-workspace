@@ -6,8 +6,12 @@ review gaps closed 2026-11-19 (W58–W74). Phases and sub-issues in § 14.2. Pha
 unlocks) merged into `next`. Phase 2 (#783: weapon spots, size class from bounds and facing in the plugin and on API
 saves) merged into `next`; link L2b (#799, developer decision 2026-11-19) makes the spot task the web form's
 `SiegeWeaponSpot` world task with a fan-out onto the spot's fields and removes L2's `/knk weaponspot`, built on branches
-`claude/siege-weapons-l2b` (PRs into `next`), behind `siege.weapons.enabled` (default off).
-**Last updated:** 2026-11-19 (spot task through the web form's world task, link L2b, #799); 2026-11-19 (phase 2 built on branches, link L2 of the chain); 2026-11-19 (phase 1 built on branches, link L1 of the chain); 2026-11-19 (Decided: W75 aiming preview arc, open questions answered, phases split to 9 with
+`claude/siege-weapons-l2b` (PRs into `next`), behind `siege.weapons.enabled` (default off). **Since 2026-11-22
+(developer decision, W76, PandiO/knk-workspace#988) a spot is its WorldGuard region:** it keeps only `WgRegionId`, drawn
+with the normal region world task in the spot form; the six bounds and L2b's custom spot task are gone, the API works
+the size class out from the region's bounds (asked from the game server over the game hub) and the facing is picked in
+the form. Built on branches `claude/siege-spot-region-988` (PRs into `next`).
+**Last updated:** 2026-11-22 (spot as a WorldGuard region, W76, #988: W4, W5, W70, § 4, § 9.3, A02); 2026-11-19 (spot task through the web form's world task, link L2b, #799); 2026-11-19 (phase 2 built on branches, link L2 of the chain); 2026-11-19 (phase 1 built on branches, link L1 of the chain); 2026-11-19 (Decided: W75 aiming preview arc, open questions answered, phases split to 9 with
 sub-issues, smoke-test guide); 2026-11-19 (design run, `knk-design` skill: spread by ranging in, impact height and cover, weapon
 kill points, no buyer privileges, in-game aiming fallback, plugin-owned state with the API as relay
 ([DECISION-weapon-state.md](DECISION-weapon-state.md)), page credential, structure damage, flight time, check before
@@ -60,8 +64,8 @@ Scope: the Siege minigame (PvP). Siege Survival may get siege weapons later; not
 | W1 | **Roster:** ballista, catapult, trebuchet. **Battering rams are out for now** (they look odd in vanilla blocks and are too large for the current town dimensions). The cannon is out too (W25). |
 | W2 | **Weapons are schematics.** A library of Minecraft schematics, one per weapon template, pasted in by the system on request. |
 | W3 | **Three spot size classes** (small, medium, large). A larger spot can hold a smaller weapon. Sizes in §3 are placeholders until real designs are chosen. |
-| W4 | **Spots are authored with the existing world tasks feature**, one world task per spot, from a WorldEdit selection or a WorldGuard region. |
-| W5 | **Facing** is filled in by the world task from the admin's look direction; the admin can override it. |
+| W4 | **Spots are authored with the existing world tasks feature**, one world task per spot, from a WorldEdit selection or a WorldGuard region. *Since 2026-11-22 (W76):* the spot is that WorldGuard region; the spot form's region field uses the normal region world task (`ReagionCreate`, a WorldEdit selection or an existing region). |
+| W5 | **Facing** is filled in by the world task from the admin's look direction; the admin can override it. *Changed 2026-11-22 (W76):* the facing is a plain Enum field picked in the spot form (like the gate door's `FaceDirection`), no longer read from the look direction. |
 | W6 | **Weapons have health points, like gates,** and can be damaged. |
 | W7 | **Build time** is configurable per weapon template. During it, HP rises evenly from 0 to full, a deliberate window for the opponents to attack. |
 | W8 | **Wreck schematic in V1:** a destroyed weapon is replaced by a destroyed variant, defined per template. |
@@ -155,12 +159,13 @@ design on 2026-11-19.
 | W67 | 2026-11-19 | agent | **Check before charging.** Placement checks every condition (unlock, free active spot that fits, paste area clear, W43, enough siege points) before taking siege points. A refused placement charges nothing and says why. The same order holds for shots: checks, then charge, then fire. (Alternatives in § 2.7.) |
 | W68 | 2026-11-19 | agent | **Players damage weapons the way they damage gates.** The weapon's blocks take hits through the same causes the gate door hit model knows (`GateDoorHitService`: melee left-click, projectiles, fire), with per-cause damage taken from the existing gate settings, plus siege shots (W65) and explosions. Only enemies of the owning team (and allies when friendly fire is on, W23) do damage. (Alternatives in § 2.7.) |
 | W69 | 2026-11-19 | agent | **Kill credit goes to the shooter.** A kill or assist by a siege shot, its fire or its poison is credited to the player who fired it (siege points W60, statistics W57), for as long as the effect they caused lasts. Ground fire and burning remember the shooter's team, so friendly fire off (W23) also covers fire and poison. The buyer gets no share unless they fired (W61). (Alternatives in § 2.7.) |
-| W70 | 2026-11-19 | agent | **Size class measured relative to facing.** A spot's footprint is read as **width across the facing × length along it**, and its class is worked out again whenever the admin changes the facing (W5). Schematics are authored facing north (§ 3 proposal), so a north-facing 7 × 9 weapon needs a spot 7 wide and 9 deep in its facing direction. (Alternatives in § 2.7.) |
+| W70 | 2026-11-19 | agent | **Size class measured relative to facing.** A spot's footprint is read as **width across the facing × length along it**, and its class is worked out again whenever the admin changes the facing (W5). Schematics are authored facing north (§ 3 proposal), so a north-facing 7 × 9 weapon needs a spot 7 wide and 9 deep in its facing direction. *Since 2026-11-22 (W76):* the footprint is the spot region's bounds (width across × length along the facing × height; a polygon region counts as its bounding box), which the API asks the game server for on every save. (Alternatives in § 2.7.) |
 | W71 | 2026-11-19 | agent | **Idle lease timeout.** A lease also ends when its operator has not fired for a configurable time (*proposal:* 60 s after the weapon is ready), even while the heartbeat is alive. Any teammate can then take it. The page and the in-game display say "lease ended: idle". (Alternatives in § 2.7.) |
 | W72 | 2026-11-19 | agent | **Bolts do only ammo damage.** The ballista bolt is a real arrow entity (W54), but its vanilla damage is cancelled; on hit the plugin applies the ammo type's damage, effect, knockback and structure damage instead. The arrow can't be picked up and is removed on impact. (Alternatives in § 2.7.) |
 | W73 | 2026-11-19 | agent | **Map snapshot and tile access.** Each scenario's snapshot tiles are rendered offline by the BlueMap container (in-game-maps § 7) when an admin asks for it (*proposal:* a "render map snapshot" action on the scenario), not at match start. Tiles are served through a small reverse proxy that only serves the scenario's area and needs a valid page credential (W64); BlueMap's public live-player layer stays off (§ 8). Details are #613's. (Alternatives in § 2.7.) |
 | W74 | 2026-11-19 | developer | **Coin unlocks now, Engineer profession later.** V1 keeps W32's coin unlocks. When professions are designed (vision § 4.2, open), the Engineer profession may become an extra or alternative unlock path (for example cheaper unlocks or a faster build). Nothing changes now; listed under "After v1" in § 15. |
 | W75 | 2026-11-19 | developer | **Aiming preview arc for the in-game fallback** (approval change, extends W62). While a trebuchet or catapult operator aims in game, the plugin draws a **particle trail arc** from the weapon to the looked-at point and the **targeting circle** at its current spread (W58) on the highest solid block there (W59), refreshed a few times a second (*proposal:* every 5 ticks) and visible **only to the operator**. The arc follows the projectile's path for that distance (W66). Out of range, under the minimum range or with no solid block, the arc and circle switch to a warning colour and firing is refused. The page (W26) stays the main way; this is its preferred in-game backup, together with look-to-target aiming. |
+| W76 | 2026-11-22 | developer | **A spot is its WorldGuard region** (PandiO/knk-workspace#988; replaces #799's custom spot task and #783's six bounds). `SiegeWeaponSpot` keeps only `WgRegionId` for where it is, drawn with the existing region world task and FormWizard support, which is easier to maintain than six coordinates. (1) **Size class and "too small":** the API asks the game server for the region's bounds over the game hub (request and answer like gate commands, switchable with `RegionQueries:Enabled`) and works the class and the refusal out from them; a blocking form rule shows the class or "too small" before Submit. (2) **Facing** is a plain Enum field in the form (changes W5). (3) **Box shapes only:** the form tells the admin to draw a box; a polygon counts as its bounding box, with no technical refusal. (4) **Floor and clear-space warnings stay** (§ 4.6) as a warning-only form rule against the region, answered by the plugin only with `siege.weapons.enabled`. (5) **The region's lifecycle** (keeping temp regions, rename on save, delete) moves into a generic system, PandiO/knk-workspace#989; until then a drawn region is renamed to `siege_spot_<id>` on save (`DomainRegionNameFinalizer`, as lootbox areas) and stays behind when the spot is deleted. A game server that can't be asked never blocks a save: the stored class stays and L3 (#784) works it out again from the region before it places a weapon (#988 open points 1 and 2). |
 
 ### 2.7 Agent decisions: alternatives
 
@@ -286,16 +291,19 @@ fixed direction (for example north) so they can be rotated in 90° steps to the 
 ## 4. Weapon spots (scenario authoring)
 
 1. Each scenario has reserved **weapon spots**, and each spot belongs to one team, attacker or defender (W44).
-2. An admin creates a spot through a **world task** (W4): they make a WorldEdit selection or pick a WorldGuard region,
-   and the task stores its bounds.
-3. The **size class is derived from the selection's dimensions,** measured as width across the facing × length along
-   it, and derived again when the facing changes (W70). A selection smaller than the small class is rejected.
-   *Proposal:* the class is the largest one whose footprint fits.
-4. **Facing** is pre-filled from the admin's look direction when they confirm the task, and the admin can change it
-   (W5). *Proposal:* rounded to the nearest of north, east, south, west, matching the 90° schematic rotation.
+2. A spot **is a WorldGuard region** (W4, W76): in the spot form the admin draws a box with the normal region world
+   task (a WorldEdit selection) or picks an existing region. A drawn region is renamed to `siege_spot_<id>` on save.
+3. The **size class is derived from the region's bounds,** measured as width across the facing × length along it ×
+   height, and derived again on every save, so changing the facing changes it (W70). The API asks the game server for
+   the bounds over the game hub; a polygon region counts as its bounding box. A region smaller than the small class is
+   refused. The class is the largest one whose footprint fits. A blocking form rule shows the class or "too small"
+   before Submit; when the game server can't be asked the save keeps the stored class (L3 checks it again).
+4. **Facing** is picked in the form (W5 as changed by W76): one of north, east, south, west, matching the 90°
+   schematic rotation.
 5. **Team** is a field on the spot. **Active spots per team** is a field on the team or scenario (W30).
-6. A spot on a wall or tower must hold the paste exactly: the world task should warn when the selection's floor isn't
-   solid or the volume isn't clear (*proposal*, W44).
+6. A spot on a wall or tower must hold the paste exactly: a warning-only form rule warns when the region's floor isn't
+   solid or its volume isn't clear (W44, W76; knk-core `SpotSiteCheck`, answered by the plugin over the game hub only
+   with `siege.weapons.enabled`).
 7. *Proposal:* spots join the scenario readiness check (DESIGN §3.9) as a warning, not a blocker, so a scenario
    without spots stays playable.
 
@@ -417,8 +425,10 @@ the work is defining the entities and seeding default forms (W38).
 
 1. `SiegeWeaponTemplate`: the fields in §3, with schematic references into the schematic pipeline (#614).
 2. `SiegeAmmoType`: the fields in §3; many-to-many with `SiegeWeaponTemplate`.
-3. `SiegeWeaponSpot`, owned by `SiegeScenario`: `SiegeTeamId`, bounds (min/max corner or WorldGuard region id),
-   derived `SizeClass`, `Facing`, `Name`, `SortOrder`; created through a world task.
+3. `SiegeWeaponSpot`, owned by `SiegeScenario`: `SiegeTeamId`, `WgRegionId` (where the spot is: its WorldGuard region,
+   drawn with the region world task; W76, #988 dropped the six bounds `MinX`..`MaxZ`), derived `SizeClass` (read-only
+   in the form), `Facing` (an Enum field), `Name`, `SortOrder`. Two form rules on the region field: `SiegeWeaponSpotSize`
+   (blocking, depends on `Facing`) and `SiegeWeaponSpotSite` (warning).
 4. `SiegeTeam.ActiveWeaponSpots` (W30).
 5. `SiegeScenario.WeaponSpotCooldownOverrideSeconds` (nullable, W11) and `SiegeScenario.FriendlyFire` (W23).
 6. `UserSiegeWeaponUnlock`: user, weapon template, unlocked at (W32).
@@ -526,7 +536,7 @@ facing (W70).
 | ID | Check | Phase |
 |---|---|---|
 | A01 | Templates, ammo types (with structure damage), spots and unlocks can be created and edited in the web app's form wizard from seeded forms | 1 |
-| A02 | A spot world task stores bounds, team and facing pre-filled from the admin's look direction; the size class follows width across × length along the facing and changes when the facing is overridden | 2 |
+| A02 | A spot is a WorldGuard region drawn with the region world task in the spot form, with its team and a facing picked in the form; the size class follows the region's width across × length along the facing × height (worked out by the API from the region's bounds), changes when the facing changes, and a region smaller than the small class is refused (W76, #988) | 2 |
 | A03 | A selection smaller than the small class is refused | 2 |
 | A04 | With `siege.weapons.enabled` off, no siege weapon appears in the shop and no spot is used | 3 |
 | A05 | A player without the unlock can't buy; a player with it can, and only into a free active spot of their team that fits | 3 |
