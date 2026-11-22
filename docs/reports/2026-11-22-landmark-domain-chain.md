@@ -30,7 +30,7 @@ design session of 2026-11-22).
 |---|---|---|---|---|---|---|
 | L1 API model, migration, area kinds and parent (tier:3) | #983 | Merged into `next` 2026-11-22 18:37 UTC (knk-web-api `8cc4511b`, knk-workspace `724ebc10`) | `claude/landmark-domain`: knk-web-api `00ee3115` (after merging `next` `c647daf7`); `claude/landmark-domain-l1`: knk-workspace `ba0596e0` (coordinator, 2026-11-22: the heads in block 4.1 item 2 predate that merge) | [knk-web-api#82](https://github.com/PandiO/knk-web-api/pull/82), [knk-workspace#994](https://github.com/PandiO/knk-workspace/pull/994) | green on `00ee3115` (build-and-test, mysql-tests, fresh-database); knk-workspace no checks; Codex at its usage limit (skipped) | create_session session_01R1w2Uv1A4MYoi62zFJTnwz, started 2026-11-22 16:32 UTC |
 | L2 API lists, discovery, warps and realtime (tier:2) | #984 | Merged into `next` 2026-11-22 19:45 UTC (knk-web-api `55d187d8`, knk-workspace `035f641f`) | `claude/landmark-domain-integration`: knk-web-api `2525be13`; `claude/landmark-domain-l2`: knk-workspace `fc64d3f2` | [knk-web-api#84](https://github.com/PandiO/knk-web-api/pull/84), [knk-workspace#1002](https://github.com/PandiO/knk-workspace/pull/1002) | green on `2525be13` (build-and-test, mysql-tests, fresh-database; push and PR runs); knk-workspace no checks; Codex at its usage limit (skipped) | create_session session_01R1w2Ux3HrcYVs53AugdtZW, started 2026-11-22 18:39 UTC |
-| L3 Plugin (tier:2) | #985 | Running (started 2026-11-22 19:46 UTC) | `claude/landmark-domain`: knk-plugin (none yet); `claude/landmark-domain-l3`: knk-workspace (none yet) | none | none | create_session session_01R1w2UtBFy9s4dBXQoeBMQF, started 2026-11-22 19:46 UTC |
+| L3 Plugin (tier:2) | #985 | Blocked at setup (2026-11-22): the session's network refuses the plugin's Maven repositories, block 4.3 item 7 | none pushed | none | none | create_session session_01R1w2UtBFy9s4dBXQoeBMQF, started 2026-11-22 |
 | L4 Web app (tier:2) | #986 | Running (started 2026-11-22 19:46 UTC) | `claude/landmark-domain`: knk-web-app (none yet); `claude/landmark-domain-l4`: knk-workspace (none yet) | none | none | create_session session_01R1w2UtGykzTGpUL4Ksj6S6, started 2026-11-22 19:46 UTC |
 
 ## 3. Coordinator decisions
@@ -295,3 +295,41 @@ _(Each link appends its block here when it finishes.)_
     2. L4 (#986): `filters.domainType` (`"Landmark"`, or several comma separated) and `filters.excludeSubtreeOf` (the
        edited landmark's id) on `POST api/Domains/search`; the type column reads `domainType`; discovery settings list
        the `Landmark` rule last.
+
+### 4.3 L3 — Plugin (#985)
+
+1. **Scope done.** None: the link stopped at setup on a blocker (item 7). No code or docs changed.
+2. **Commits and heads.** No commits. Branches not created on the remote: knk-plugin `claude/landmark-domain` and
+   knk-workspace `claude/landmark-domain-l3` (both dry-run pushes from `origin/next` succeeded).
+3. **PRs.** None.
+4. **Tests, baseline → result.**
+    1. knk-plugin: no baseline. `./gradlew build -x deployToDevServer` on `next` `822eb39b` fails at
+       `:knk-core:compileJava`, because the dependencies can't be downloaded (item 7).
+    2. Known reds: not measured.
+5. **Decisions (DESIGN § 4.3).**
+    1. *Stop instead of writing the code without a build.* Chosen: stop at setup, because the link could not compile or
+       test anything, and the link skill lists a module that doesn't build as a blocker. Alternatives: (a) write the
+       changes without compiling them and push them: the code would be unchecked, CI would be the first compiler, and
+       a rerun would have to review all of it again; (b) do only the knk-workspace docs: the smoke-guide section and
+       deploy notes have to describe what was built, so they would be guesses.
+6. **Out of scope, noted.** None.
+7. **Blockers.**
+    1. *The session's network can't reach the plugin's Maven repositories.* Evidence: the session runs in the
+       environment "Default" (limited network, package managers only). Gradle gets HTTP 403 from the agent proxy
+       ("no rule or network setting allows this host") for `repo.papermc.io` (`paper-api:26.3.build.205-stable`);
+       `maven.enginehub.org`, `jitpack.io` and `maven.citizensnpcs.co` are refused too. Maven Central and the Gradle
+       plugin portal are reachable. The environment saved for knk-workspace and knk-plugin, "Default Correct"
+       (`env_018Anjpntcn3H2W8a9ZJTQ1R`, unrestricted network), can't be switched to from here: a session that another
+       session created can't change its environment.
+    2. Setup otherwise worked: `add_repo` for knk-plugin, clone, `register_repo_root`, both dry-run pushes, and JDK 25
+       (`openjdk-25-jdk-headless` from the Ubuntu noble archive after an `apt-get update`; `api.adoptium.net` is refused
+       too).
+    3. *Proposal.* Rerun L3 with `create_session` and `environment_id` `env_018Anjpntcn3H2W8a9ZJTQ1R` ("Default
+       Correct"), with the same prompt. Or add the four hosts to the allowed hosts of "Default" (environment settings,
+       Network access) and rerun there.
+8. **At merge / what the developer must do.** Nothing to merge. For a rerun in "Default": allow `repo.papermc.io`,
+   `maven.enginehub.org`, `jitpack.io` and `maven.citizensnpcs.co` (or use "Default Correct").
+9. **Notes for later links.**
+    1. The rerun of L3: JDK 25 comes from `sudo apt-get update` and then `sudo apt-get install -y openjdk-25-jdk-headless`
+       (the package is missing before the update); build with
+       `-Porg.gradle.java.installations.paths=/usr/lib/jvm/java-25-openjdk-amd64`.
