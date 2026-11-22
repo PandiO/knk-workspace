@@ -21,7 +21,11 @@ design session of 2026-11-22).
    `AddLandmarkDiscoveryRule` (data only, a disabled `Landmark` discovery rule).
 3. **Agent decisions to review:** L1 block § 4.1 item 5 (11 decisions), L2 block § 4.2 item 5 (7 decisions), each with
    alternatives, and § 3 below.
-4. **Off-road smoke § 6 and § 7 (landmarks, #698):** the off-road coordinator asked you on #698 whether they close as
+4. **L4 #986 in `next` (tier:2):** smoke guide § 4 (9 steps: 6 automated, 2 partly, 1 by hand; step 8 needs L3).
+5. **Decide on #1003:** should a point landmark (Area None) keep the "Warp destination" step on the form? A17 hides it
+   without an own region; DESIGN § 4.1 item 5 has no condition and § 3 item 2 likens landmark warps to the v1 warp
+   points. L1b builds seed v3 per A17 as written (decision 16); one seed edit reverses it.
+6. **Off-road smoke § 6 and § 7 (landmarks, #698):** the off-road coordinator asked you on #698 whether they close as
    superseded by this chain; this chain's guide § 3 covers landmark navigation on the new model (L3).
 
 ## 2. Summary
@@ -31,8 +35,8 @@ design session of 2026-11-22).
 | L1 API model, migration, area kinds and parent (tier:3) | #983 | Merged into `next` 2026-11-22 18:37 UTC (knk-web-api `8cc4511b`, knk-workspace `724ebc10`) | `claude/landmark-domain`: knk-web-api `00ee3115` (after merging `next` `c647daf7`); `claude/landmark-domain-l1`: knk-workspace `ba0596e0` (coordinator, 2026-11-22: the heads in block 4.1 item 2 predate that merge) | [knk-web-api#82](https://github.com/PandiO/knk-web-api/pull/82), [knk-workspace#994](https://github.com/PandiO/knk-workspace/pull/994) | green on `00ee3115` (build-and-test, mysql-tests, fresh-database); knk-workspace no checks; Codex at its usage limit (skipped) | create_session session_01R1w2Uv1A4MYoi62zFJTnwz, started 2026-11-22 16:32 UTC |
 | L2 API lists, discovery, warps and realtime (tier:2) | #984 | Merged into `next` 2026-11-22 19:45 UTC (knk-web-api `55d187d8`, knk-workspace `035f641f`) | `claude/landmark-domain-integration`: knk-web-api `2525be13`; `claude/landmark-domain-l2`: knk-workspace `fc64d3f2` | [knk-web-api#84](https://github.com/PandiO/knk-web-api/pull/84), [knk-workspace#1002](https://github.com/PandiO/knk-workspace/pull/1002) | green on `2525be13` (build-and-test, mysql-tests, fresh-database; push and PR runs); knk-workspace no checks; Codex at its usage limit (skipped) | create_session session_01R1w2Ux3HrcYVs53AugdtZW, started 2026-11-22 18:39 UTC |
 | L3 Plugin (tier:2) | #985 | Running (rerun started 2026-11-22 19:51 UTC; first run blocked at setup, block 4.3) | `claude/landmark-domain`: knk-plugin (none yet); `claude/landmark-domain-l3`: knk-workspace (none yet) | none | none | create_session session_01R1w2UtBFy9s4dBXQoeBMQF (19:46 UTC, environment "Default": blocked, `repo.papermc.io` refused); rerun create_session session_01R1w2UuLNw6Cr3qwUKQNvao in environment "Default Correct" (19:51 UTC, decision 14) |
-| L4 Web app (tier:2) | #986 | Done, in review (2026-11-22) | `claude/landmark-domain`: knk-web-app `4bc6b88`; `claude/landmark-domain-l4`: knk-workspace `73e785d4` | PandiO/knk-web-app#78, PandiO/knk-workspace#1004 | knk-web-app `4bc6b88`: build-and-test, e2e green; knk-workspace no checks; Codex at its usage limit | create_session session_01R1w2UtGykzTGpUL4Ksj6S6, started 2026-11-22 19:46 UTC |
-| L1b #952 region re-run left on a temp name (charter § 3 item 8, fix link) | #952 | Queued: starts once L4's knk-web-api seed branch `claude/landmark-domain-l4-seed` is merged (one knk-web-api link at a time) | `claude/landmark-domain-952`: knk-web-api; `claude/landmark-domain-l1b`: knk-workspace | none | none | (not started; `create_session`) |
+| L4 Web app (tier:2) | #986 | Merged into `next` 2026-11-22 20:19 UTC (knk-web-app `8c9c3553`, knk-workspace `99da72cc`) | `claude/landmark-domain`: knk-web-app `4bc6b88d`; `claude/landmark-domain-l4`: knk-workspace `73e785d4` | [knk-web-app#78](https://github.com/PandiO/knk-web-app/pull/78), [knk-workspace#1004](https://github.com/PandiO/knk-workspace/pull/1004) | green on `4bc6b88d` (build-and-test, e2e; both runs); knk-workspace no checks; Codex at its usage limit (skipped) | create_session session_01R1w2UtGykzTGpUL4Ksj6S6, started 2026-11-22 19:46 UTC |
+| L1b #952 region re-run left on a temp name, and #1003 Landmark form seed v3 (charter § 3 item 8; fix link) | #952, #1003 | Running (started 2026-11-22 20:20 UTC) | `claude/landmark-domain-952`: knk-web-api (none yet); `claude/landmark-domain-l1b`: knk-workspace (none yet) | none | none | create_session session_01R1w2Ut1aonbYwio9RXX7mA, started 2026-11-22 20:20 UTC |
 
 ## 3. Coordinator decisions
 
@@ -149,6 +153,17 @@ design session of 2026-11-22).
        #951.
     3. The web-app part of #951 (L4): already in L4's work (it read the charter); its knk-web-app PR closes #951.
     4. From now on the coordinator re-reads the charter from `origin/main` before every link start and check.
+16. **L4 checked and merged; seed v3 goes to L1b** (2026-11-22 20:20 UTC). L4 took its option (b): it filed #1003
+    (seed v3) and asked on it whether the warp step should stay for point landmarks; it did not build the seed
+    (coordinator decision 13's option, sent twice, was not acted on). Every check of skill § 6 held for L4 (CI green
+    on `4bc6b88d`, Jest 2935 → 2951, Playwright 374 → 382, scope knk-web-app and three docs, 10 agent decisions,
+    smoke § 4 tagged, #986 `status:in-review`, Codex at its usage limit), so it was merged; the missing display
+    conditions are seed data and do not block the web app. Chosen for #1003: L1b builds seed v3 together with #952
+    (both small knk-web-api changes, one knk-web-api link at a time), with the warp step following A17 as written
+    (hidden without an own region) as the reversible default until the developer answers on #1003. Alternatives:
+    (a) send L4 back to build the seed, rejected (L4 is done and the API part fits L1b); (b) a separate L4b link,
+    rejected (a second knk-web-api link for one JSON file); (c) leave the warp step unconditional, rejected as the
+    default (A17 is the approved acceptance text; DESIGN § 4.1 item 5 is only silent).
 
 ## 4. Link blocks
 
