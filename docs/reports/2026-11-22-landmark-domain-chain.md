@@ -1,6 +1,6 @@
 # Landmarks as a Domain subtype chain — progress report
 
-**Status:** Running (2026-11-22) · **Last updated:** 2026-11-22 (L1 block)
+**Status:** Running (2026-11-22: L1 in `next`, L2 running) · **Last updated:** 2026-11-22 (L1 block)
 
 **Issue:** [PandiO/knk-workspace#976](https://github.com/PandiO/knk-workspace/issues/976), links
 [#983](https://github.com/PandiO/knk-workspace/issues/983) (L1), [#984](https://github.com/PandiO/knk-workspace/issues/984) (L2),
@@ -11,14 +11,20 @@ design session of 2026-11-22).
 
 ## 1. Waiting for the developer
 
-Nothing.
+1. **L1 #983 in `next` (tier:3), for your test before the promotion of `next`:** smoke guide
+   `docs/guides/landmark-domain-smoke-test.md` § 1 in full (14 steps; the automated ones are tagged). Deploy first:
+   back up the dev DB, apply migration `LandmarkAsDomain` (it deletes every landmark row; recreate your test
+   landmarks), import the `Landmark` form seed v2 and `Landmark.display` and make both the default (form 51 and its
+   Region id projection are superseded). Don't put `next` on a server players use before L3 (#985) is in it too
+   (until then the plugin treats a landmark's own region as a domain region for effect damage).
+2. **Agent decisions to review:** L1 block § 4.1 item 5 (11 decisions, each with alternatives), and § 3 below.
 
 ## 2. Summary
 
 | Link | Issue | Status | Branch heads | PR | CI | How started |
 |---|---|---|---|---|---|---|
-| L1 API model, migration, area kinds and parent (tier:3) | #983 | Done, in review (2026-11-22) | `claude/landmark-domain`: knk-web-api `ca417528`; `claude/landmark-domain-l1`: knk-workspace `e5d781e8` | PandiO/knk-web-api#82, PandiO/knk-workspace#994 | knk-web-api `ca417528`: Build and test, mysql-tests, fresh-database green (a second mysql-tests run of the same head was still running at 17:50 UTC) | create_session session_01R1w2Uv1A4MYoi62zFJTnwz, started 2026-11-22 16:32 UTC |
-| L2 API lists, discovery, warps and realtime (tier:2) | #984 | Not started (gate: L1 merged into `next`) | `claude/landmark-domain-integration`: knk-web-api; `claude/landmark-domain-l2`: knk-workspace | none | none | (not started) |
+| L1 API model, migration, area kinds and parent (tier:3) | #983 | Merged into `next` 2026-11-22 18:37 UTC (knk-web-api `8cc4511b`, knk-workspace `724ebc10`) | `claude/landmark-domain`: knk-web-api `00ee3115` (after merging `next` `c647daf7`); `claude/landmark-domain-l1`: knk-workspace `ba0596e0` (coordinator, 2026-11-22: the heads in block 4.1 item 2 predate that merge) | [knk-web-api#82](https://github.com/PandiO/knk-web-api/pull/82), [knk-workspace#994](https://github.com/PandiO/knk-workspace/pull/994) | green on `00ee3115` (build-and-test, mysql-tests, fresh-database); knk-workspace no checks; Codex at its usage limit (skipped) | create_session session_01R1w2Uv1A4MYoi62zFJTnwz, started 2026-11-22 16:32 UTC |
+| L2 API lists, discovery, warps and realtime (tier:2) | #984 | Running (started 2026-11-22 18:39 UTC) | `claude/landmark-domain-integration`: knk-web-api (none yet); `claude/landmark-domain-l2`: knk-workspace (none yet) | none | none | create_session session_01R1w2Ux3HrcYVs53AugdtZW, started 2026-11-22 18:39 UTC |
 | L3 Plugin (tier:2) | #985 | Not started (gate: L1 and L2 merged into `next`) | `claude/landmark-domain`: knk-plugin; `claude/landmark-domain-l3`: knk-workspace | none | none | (not started) |
 | L4 Web app (tier:2) | #986 | Not started (gate: L1 and L2 merged into `next`) | `claude/landmark-domain`: knk-web-app; `claude/landmark-domain-l4`: knk-workspace | none | none | (not started) |
 
@@ -66,6 +72,19 @@ Nothing.
    behind a flag; the charter overrides both for L1: its one migration is not additive (drops the landmark rows,
    LD10, dev DB only; charter § 3.3) and needs a working Down, and there is no flag (LD24, every landmark behaviour is
    off or neutral by default). The L1 prompt says so. Alternatives: none (charter and approved design).
+8. **L1 checked and merged into `next`** (2026-11-22 18:37 UTC). Chosen: merge, because every check of skill § 6
+   held: block and summary row in place; heads matched `git ls-remote` after L1 merged `next` (#988, #991) into its
+   branch; both PRs clean against `next`; CI green on knk-web-api `00ee3115` (build-and-test, mysql-tests,
+   fresh-database); tests 5223 → 5258 passed (129 MySQL skipped; 5441 passed with MySQL locally); scope only
+   knk-web-api and three knk-workspace docs; 12 agent decisions logged; no flag per the charter (LD24); #983
+   `status:in-review`; every smoke step of § 1 kept in full and tagged. Codex reached its usage limit on every attempt,
+   so the PRs were merged without its review (developer decision 2026-11-14); in its place the coordinator read the
+   migration (Up empties `landmarks` before the rebuild, TPT keys and SET NULL parent, Down removes the landmark domains
+   before `WgRegionId` is NOT NULL again) and `Services/DomainParents.cs` (one walk, cycle guard, depth cap; CrownLand
+   and bare domains end without parents) and found nothing to fix. Noted, not fixed: Up leaves the old landmark pins'
+   Location rows without a user and Down the new ones (dev DB only, harmless). Alternatives: (a) send L1 back for a
+   Codex review once the limit resets, rejected (the developer's rule says merge without it); (b) a separate
+   review subagent, not needed after the read above.
 
 ## 4. Link blocks
 
