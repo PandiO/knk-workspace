@@ -1,6 +1,6 @@
 # Landmarks as a Domain subtype chain — progress report
 
-**Status:** Running (2026-11-22: L1 in `next`, L2 running) · **Last updated:** 2026-11-22 (L1 block)
+**Status:** Running (2026-11-22: L1 in `next`, L2 in review) · **Last updated:** 2026-11-22 (L2 block)
 
 **Issue:** [PandiO/knk-workspace#976](https://github.com/PandiO/knk-workspace/issues/976), links
 [#983](https://github.com/PandiO/knk-workspace/issues/983) (L1), [#984](https://github.com/PandiO/knk-workspace/issues/984) (L2),
@@ -24,7 +24,7 @@ design session of 2026-11-22).
 | Link | Issue | Status | Branch heads | PR | CI | How started |
 |---|---|---|---|---|---|---|
 | L1 API model, migration, area kinds and parent (tier:3) | #983 | Merged into `next` 2026-11-22 18:37 UTC (knk-web-api `8cc4511b`, knk-workspace `724ebc10`) | `claude/landmark-domain`: knk-web-api `00ee3115` (after merging `next` `c647daf7`); `claude/landmark-domain-l1`: knk-workspace `ba0596e0` (coordinator, 2026-11-22: the heads in block 4.1 item 2 predate that merge) | [knk-web-api#82](https://github.com/PandiO/knk-web-api/pull/82), [knk-workspace#994](https://github.com/PandiO/knk-workspace/pull/994) | green on `00ee3115` (build-and-test, mysql-tests, fresh-database); knk-workspace no checks; Codex at its usage limit (skipped) | create_session session_01R1w2Uv1A4MYoi62zFJTnwz, started 2026-11-22 16:32 UTC |
-| L2 API lists, discovery, warps and realtime (tier:2) | #984 | Running (started 2026-11-22 18:39 UTC) | `claude/landmark-domain-integration`: knk-web-api (none yet); `claude/landmark-domain-l2`: knk-workspace (none yet) | none | none | create_session session_01R1w2Ux3HrcYVs53AugdtZW, started 2026-11-22 18:39 UTC |
+| L2 API lists, discovery, warps and realtime (tier:2) | #984 | Done, in review (2026-11-22) | `claude/landmark-domain-integration`: knk-web-api `2525be13`; `claude/landmark-domain-l2`: knk-workspace `fc64d3f2` | PandiO/knk-web-api#84, PandiO/knk-workspace#1002 | knk-web-api `2525be13`: Build and test, mysql-tests, fresh-database green | create_session session_01R1w2Ux3HrcYVs53AugdtZW, started 2026-11-22 18:39 UTC |
 | L3 Plugin (tier:2) | #985 | Not started (gate: L1 and L2 merged into `next`) | `claude/landmark-domain`: knk-plugin; `claude/landmark-domain-l3`: knk-workspace | none | none | (not started) |
 | L4 Web app (tier:2) | #986 | Not started (gate: L1 and L2 merged into `next`) | `claude/landmark-domain`: knk-web-app; `claude/landmark-domain-l4`: knk-workspace | none | none | (not started) |
 
@@ -186,3 +186,75 @@ _(Each link appends its block here when it finishes.)_
        with the region task, `SubRegions`, access, messages, warp); `LandmarkListDto` has `parentDomain*`,
        `areaKind`, `wgRegionId` plus the old `domain*`/`extentKind` names; the domain panel's `domainId` filter still
        works.
+
+### 4.2 L2 — API lists, discovery, warps and realtime (#984)
+
+1. **Scope done.**
+    1. Domain search (A07, LD20): `POST api/Domains/search` filters `domainType` (exact types, comma separated, any
+       case; an unknown type matches nothing) and `excludeSubtreeOf` (a domain and every landmark below it, for the
+       parent picker); landmarks already carried `domainType` `Landmark` (verified, L1's note was about `GET
+       api/Domains/{id}`, which still returns the entity).
+    2. Discovery (A08, LD15): migration `AddLandmarkDiscoveryRule` (made with `dotnet ef migrations add`, data only)
+       seeds the `Landmark` rule disabled; `DiscoveryRewardRule.DomainTypes` gains `Landmark`; landmarks with
+       `AreaKind` `OwnRegion` are discovery nodes (parent = `ParentDomainId`), so the per-domain override makes one
+       discoverable; the ancestor walk follows landmark parents (bound 8).
+    3. Warps (A09, LD21): `TeleportDestinationService.DomainType` answers `Landmark`, ranked last; "requires
+       discovery" locked until the landmark was discovered (which needs its discovery on).
+    4. Realtime (LD22): `Landmark` in `RealtimeEntityChangeMap.EntityTypes`, keyed by `WgRegionId`.
+    5. knk-workspace: changelog entry with deploy notes, smoke guide § 2 as built (8 steps, tagged), DESIGN status.
+2. **Commits and heads.** knk-web-api `claude/landmark-domain-integration` at `2525be13` (2 commits, base `next` at
+   `8cc4511b`); knk-workspace `claude/landmark-domain-l2` at `fc64d3f2` (1 commit, base `next` at `724ebc10`).
+   `origin/next` did not move in either repo while L2 ran (checked before the push), so no merge was needed.
+3. **PRs.** PandiO/knk-web-api#84 (`Closes PandiO/knk-workspace#984`), PandiO/knk-workspace#1002 (`Part of`), base
+   `next`. Not merged.
+4. **Tests, baseline → result.**
+    1. knk-web-api: baseline on `next` `8cc4511b` build 0 errors, 5313 passed, 129 skipped (MySQL, no
+       `KNK_TEST_MYSQL`), 5442 total; result at `2525be13` 5327 passed, 131 skipped, 5458 total (16 new tests; 3
+       discovery tests updated for the fifth type). With `KNK_TEST_MYSQL` on a local MySQL 8.0.46: 5457 passed, 1
+       failed (item 4.2). Migrations workflow steps run locally (update on an empty DB, no pending model changes,
+       down past the new migration removes the row, down to 0, up again). CI on the PR: Build and test, mysql-tests and fresh-database green on `2525be13` (both runs, push and PR).
+    2. Known reds: `MinecraftCatalogMySqlTests.UpgradePath_PhaseTwoKeepsRows_ConstraintsWaitForTheBackfill_ThenApply`
+       fails locally with "Unknown column 'ArmorTrimMaterial'" on `next` `8cc4511b` as well (checked in a worktree of
+       the base); not caused by L2. In CI (mysql-tests on `2525be13`) the same test passed, so it depends on the local MySQL 8.0.46 setup.
+    3. Acceptance: A07 `LandmarkDomainIntegrationTests.Search_*`, `LandmarkDomainSearchMySqlTests`; A08
+       `LandmarkDomainIntegrationTests.TheLandmarkRule_*`/`ALandmarkWithItsOverrideOn_*`/`OnlyALandmarkWithItsOwnRegion_*`,
+       `AddLandmarkDiscoveryRuleTests`; A09 `LandmarkDomainIntegrationTests.ALandmarkWithItsWarpOn_*`/`RequiresDiscovery_*`;
+       realtime `ConfigEntityEventTests.Map_ALandmarkChange_*`, `Interceptor_ALandmarkSave_*`.
+    4. Codex: no review on either PR, the connector's code-review usage limit was reached; finished without it
+       (developer decision 2026-11-14), said so on both PRs.
+5. **Decisions (DESIGN § 4.3).**
+    1. *Type filter semantics.* Chosen: the exact runtime type, matching the `domainType` column (`Structure` leaves
+       out gates). Alternatives: (a) include subtypes: filter and column disagree; (b) 400 on an unknown type: the
+       other search filters ignore bad values, and nothing wider is returned.
+    2. *Parent-picker exclusion.* Chosen: an API filter `excludeSubtreeOf`. Alternatives: (a) the web app with
+       `excludeIds`: it would first need the whole landmark tree; (b) nothing in L2: LD20 is in this link's binding.
+    3. *Discovery nodes.* Chosen: landmarks with `OwnRegion` only. Alternatives: (a) every landmark: a point has nothing
+       to enter and a `LinkedDomain` landmark would count in totals against rule 6; (b) `LinkedDomain` as an alias of
+       its parent: duplicates the parent's discovery.
+    4. *Rule values.* Chosen: disabled, the structure placeholders, no gems, `IncludeAncestors` false (LD09: the region
+       may reach outside its parent). Alternatives: (a) all zeros: an override that only switches discovery on gives
+       nothing; (b) ancestors on: entering a landmark outside its town would discover the town.
+    5. *Migration, not seeder.* Chosen: a data migration, as `AddDomainDiscovery` seeds the other rules and a missing
+       row means "not discoverable even with an override". Alternative: (a) a missing rule read as disabled defaults in
+       code: differs from the other types.
+    6. *`GET api/Domains` and `GET api/Domains/{id}`.* Left returning the entity (no type field). Alternative: (a) a
+       computed `DomainType` on `Domain`: changes every domain's JSON and the form metadata reflection.
+    7. *Summary `byType.enabled` for Landmark.* Left as the type rule's flag (false), as its DTO documents, also when
+       overrides make landmarks discoverable. Alternative: (a) enabled when any domain of the type is: changes the
+       staff "Disabled" tag for every type.
+6. **Out of scope, noted.** The local MySQL known red of item 4.2 (Minecraft catalog upgrade path); no issue filed
+   (green in CI, local only).
+7. **Blockers.** None.
+8. **At merge / what the developer must do.**
+    1. Apply migration `AddLandmarkDiscoveryRule` (data only, inserts the disabled `Landmark` rule).
+    2. Run smoke guide § 2 when convenient (tier:2; 6 of 8 steps automated).
+9. **Notes for later links.**
+    1. L3 (#985): skip `POST api/Domains/search` items with `domainType == "Landmark"` in the navigation catalogue;
+       realtime `EntityChanged` with `type` `"Landmark"`, `id` the domain id, `key` the landmark's own `WgRegionId`
+       (null for `None` and `LinkedDomain`), plus the usual `DomainAccessChanged`/`TeleportDestinationsChanged`;
+       teleport destinations `domainType` `"Landmark"` (type word `landmark`); discovery grants carry `domainType`
+       `"Landmark"`; the summary's `byType` has a `Landmark` row with `enabled` false while `total` can be > 0, so a
+       player view that hides disabled types would hide landmark discoveries.
+    2. L4 (#986): `filters.domainType` (`"Landmark"`, or several comma separated) and `filters.excludeSubtreeOf` (the
+       edited landmark's id) on `POST api/Domains/search`; the type column reads `domainType`; discovery settings list
+       the `Landmark` rule last.
