@@ -1,7 +1,7 @@
 # Off-road navigation and landmarks — smoke test
 
-**Status:** Draft from the design (2026-11-17); no steps run. Drawn landmark regions (§ 6.5): 8 of 8 steps automated (2 in part); L7b (§ 15): step A 12 of 12 steps automated (2 in part), step B (§ 15.4) 5 of 8 automated (1 in part); F3 (§ 14): 8 of 8 steps automated (5 in part); F2 (§ 13): 7 of 9 steps automated (4 in part); F1 (§ 12): 5 of 7 steps automated (3 in part); Phase 5.2 (§ 7): 7 of 8 steps automated (3 in part); Phase 4 (§ 5): 8 of 9 steps automated (2 in part); Phase 2 (§ 3): 13 of 14 steps automated (5 in part); Phase 5.1 (§ 6): 21 of 22 steps automated (6 in part); Phase 0 (§ 1): 1 of 9 steps automated; phase 1 (§ 2): 4 of 4 steps automated; phase 6.1 (§ 8): 6 of 8 steps automated (3 of them in part); phase 6.2 (§ 9): 11 of 11 steps automated (3 of them in part); phase 7 step 1 (§ 10.1): 4 of 7 steps automated (3 of them in part), viewed by the developer 2026-11-18; phase 7 step 2 (§ 10.2): 9 of 9 steps automated (3 of them in part); the other phases not yet automated (the links tag them).
-**Last updated:** 2026-11-21 (§ 6.5 drawn landmark regions, #944/#945: eight steps, all automated, two in part); 2026-11-21 (§ 15 enum follow-up of #852: `DefaultRouteMode` holds the enum names Shortest, Efficient and Preferred, the form field is an Enum field, § 15.3 step 2 for the rename migration, § 15.0 item 5 for player D and the road pair, § 15.4 count corrected to 5 of 8 with a clean-up step); 2026-11-20 (§ 15.4 L7b step B, the plugin uses a group's default route mode, #852: seven steps, four automated, one in part); 2026-11-20 (§ 15 L7b step A, a default route mode per permission group, #852: API, web and migration steps, eleven, all automated, two in part; in-game steps marked step B); 2026-11-20 (§ 14 F3, the smoke-test failures of 2026-11-19, #780, #771, #710: the road goal weighs the walk above the road, no repeated turn message, which end a 0-expansion search could not use, open doors passed without the door check, `trail-leg-spacing` shipped as 2.0: eight steps, all automated, five in part; shipped settings); 2026-11-19 (§ 13 F2, road goal by walk reachability, the road kept to its end and the flag-off walk-trail spacing, #780 and #771 items 3 to 5: nine steps, seven automated, four in part; shipped settings); 2026-11-19 (§ 12 F1, the walk-search fixes of #771 items 1 and 2: seven steps, five automated, three in part; shipped settings first, scene 1 by road recorded as known); 2026-11-18 (§ 7 phase 5.2 built by link L9, #709: eight steps, seven automated, three in part); 2026-11-18 (§ 5 phase 4 built by link L7, #707: nine steps, eight automated, two in part); 2026-11-18 (§ 3 phase 2 built by link L5, #705: fourteen steps, thirteen automated, five in part); 2026-11-18 (§ 10 phase 7: step 1 viewed by the developer, O33; § 10.2 step 2 built by link L10, #712: nine steps, all automated, three in part); 2026-11-18 (§ 6.3 phase 5.1 step B, link L8: the in-game steps); 2026-11-18 (§ 6 phase 5.1 updated to what link L8 step A built, #708: API and web steps, plugin steps marked step B); 2026-11-18 (§ 10 phase 7 split into step 1, built by link L10, #712: the staff preview and the developer's viewing steps on Cinix and Brink, and step 2, the trail, not built yet); 2026-11-18 (§ 9 phase 6.2 updated to what link L4 built, #711: eleven steps, all automated, three in part); 2026-11-17 (§ 8 phase 6.1 updated to what link L3 built, #710: eight steps, six automated); 2026-11-17 (§ 2 phase 1 updated to what link L2 built, #704: every step automated); 2026-11-17 (§ 1 phase 0 updated to what link L1 built, #703: the measurement steps and the `/knk road status` lines); 2026-11-17 (draft from the design, phases 0, 1, 2, 3, 4, 5.1, 5.2, 6.1, 6.2, 7)
+**Status:** Draft from the design (2026-11-17); no steps run. guidance-v2 on by default (§ 16): 3 of 4 steps automated; Drawn landmark regions (§ 6.5): 8 of 8 steps automated (2 in part); L7b (§ 15): step A 12 of 12 steps automated (2 in part), step B (§ 15.4) 5 of 8 automated (1 in part); F3 (§ 14): 8 of 8 steps automated (5 in part); F2 (§ 13): 7 of 9 steps automated (4 in part); F1 (§ 12): 5 of 7 steps automated (3 in part); Phase 5.2 (§ 7): 7 of 8 steps automated (3 in part); Phase 4 (§ 5): 8 of 9 steps automated (2 in part); Phase 2 (§ 3): 13 of 14 steps automated (5 in part); Phase 5.1 (§ 6): 21 of 22 steps automated (6 in part); Phase 0 (§ 1): 1 of 9 steps automated; phase 1 (§ 2): 4 of 4 steps automated; phase 6.1 (§ 8): 6 of 8 steps automated (3 of them in part); phase 6.2 (§ 9): 11 of 11 steps automated (3 of them in part); phase 7 step 1 (§ 10.1): 4 of 7 steps automated (3 of them in part), viewed by the developer 2026-11-18; phase 7 step 2 (§ 10.2): 9 of 9 steps automated (3 of them in part); the other phases not yet automated (the links tag them).
+**Last updated:** 2026-11-22 (§ 16 `navigation.guidance-v2` on by default, #990: four steps, three automated; § 8.0 and § 9.0 settings note the new default); 2026-11-21 (§ 6.5 drawn landmark regions, #944/#945: eight steps, all automated, two in part); 2026-11-21 (§ 15 enum follow-up of #852: `DefaultRouteMode` holds the enum names Shortest, Efficient and Preferred, the form field is an Enum field, § 15.3 step 2 for the rename migration, § 15.0 item 5 for player D and the road pair, § 15.4 count corrected to 5 of 8 with a clean-up step); 2026-11-20 (§ 15.4 L7b step B, the plugin uses a group's default route mode, #852: seven steps, four automated, one in part); 2026-11-20 (§ 15 L7b step A, a default route mode per permission group, #852: API, web and migration steps, eleven, all automated, two in part; in-game steps marked step B); 2026-11-20 (§ 14 F3, the smoke-test failures of 2026-11-19, #780, #771, #710: the road goal weighs the walk above the road, no repeated turn message, which end a 0-expansion search could not use, open doors passed without the door check, `trail-leg-spacing` shipped as 2.0: eight steps, all automated, five in part; shipped settings); 2026-11-19 (§ 13 F2, road goal by walk reachability, the road kept to its end and the flag-off walk-trail spacing, #780 and #771 items 3 to 5: nine steps, seven automated, four in part; shipped settings); 2026-11-19 (§ 12 F1, the walk-search fixes of #771 items 1 and 2: seven steps, five automated, three in part; shipped settings first, scene 1 by road recorded as known); 2026-11-18 (§ 7 phase 5.2 built by link L9, #709: eight steps, seven automated, three in part); 2026-11-18 (§ 5 phase 4 built by link L7, #707: nine steps, eight automated, two in part); 2026-11-18 (§ 3 phase 2 built by link L5, #705: fourteen steps, thirteen automated, five in part); 2026-11-18 (§ 10 phase 7: step 1 viewed by the developer, O33; § 10.2 step 2 built by link L10, #712: nine steps, all automated, three in part); 2026-11-18 (§ 6.3 phase 5.1 step B, link L8: the in-game steps); 2026-11-18 (§ 6 phase 5.1 updated to what link L8 step A built, #708: API and web steps, plugin steps marked step B); 2026-11-18 (§ 10 phase 7 split into step 1, built by link L10, #712: the staff preview and the developer's viewing steps on Cinix and Brink, and step 2, the trail, not built yet); 2026-11-18 (§ 9 phase 6.2 updated to what link L4 built, #711: eleven steps, all automated, three in part); 2026-11-17 (§ 8 phase 6.1 updated to what link L3 built, #710: eight steps, six automated); 2026-11-17 (§ 2 phase 1 updated to what link L2 built, #704: every step automated); 2026-11-17 (§ 1 phase 0 updated to what link L1 built, #703: the measurement steps and the `/knk road status` lines); 2026-11-17 (draft from the design, phases 0, 1, 2, 3, 4, 5.1, 5.2, 6.1, 6.2, 7)
 **Design:** [specs/navigation-offroad/DESIGN.md](../specs/navigation-offroad/DESIGN.md) · **Issue:**
 [PandiO/knk-workspace#698](https://github.com/PandiO/knk-workspace/issues/698)
 
@@ -628,7 +628,8 @@ and the 3.0 spacing (O20). The road trail is unchanged. 6 of 8 steps are automat
 ### 8.0 Preconditions
 
 1. Deployed: plugin build from `next` with phase 6.1 (knk-plugin PR for #710 merged).
-2. Settings: under `navigation:` set `guidance-v2: true`; under `navigation.walk:` keep (or add) `clearance-cost: 5`,
+2. Settings: under `navigation:` set `guidance-v2: true` (the default since #990; a `config.yml` merged since #710 has
+   `false` written in); under `navigation.walk:` keep (or add) `clearance-cost: 5`,
    `wall-clearance: 0.8`, `curve: true`; then restart the server (the walk services read these at startup).
 3. Accounts and data: a player account without staff rights and a staff account (for `/knk road status`); the stair
    house and the keep on the dev world; walk paths on (`navigation.walk.enabled: true`).
@@ -690,7 +691,7 @@ automated, 3 of them in part; the developer's live test is the feel of steps 1 t
 ### 9.0 Preconditions
 
 1. Deployed: plugin build from `next` with phases 6.1 and 6.2 (knk-plugin PRs for #710 and #711 merged).
-2. Settings: under `navigation:` set `guidance-v2: true` and keep (or add) `trail-leg-spacing: 3.0` and
+2. Settings: under `navigation:` set `guidance-v2: true` (the default since #990) and keep (or add) `trail-leg-spacing: 3.0` and
    `cursor-jump: 12`; keep the phase 6.1 keys of § 8.0 under `navigation.walk:`; walk paths on
    (`navigation.walk.enabled: true`). Restart the server (the navigation service reads these at startup).
 3. Accounts and data: a player account without staff rights; the keep and the stair house on the dev world; a road
@@ -1264,3 +1265,30 @@ about 10 min.*
 7. Watch an NPC route (any NPC walk from the NPC movement smoke test) while Staff has a default. **Expected:** NPC
    routes are unchanged; NPCs never take a group default. (Manual: NPC walks in the world.)
 8. Clean-up: `/knk road edge set <id> cost 1` on the test edge, Staff's default back to None, Builders deleted or kept.
+
+## 16. `navigation.guidance-v2` on by default ([PandiO/knk-workspace#990](https://github.com/PandiO/knk-workspace/issues/990), tier:2)
+
+*Built 2026-11-22 (knk-plugin `claude/guidance-v2-default-990`, developer decision after § 8 passed and § 9 was
+accepted): the shipped `config.yml` and the code default have `guidance-v2: true`. The plugin never adds keys to an
+existing `config.yml`, so a server without the line gets the default (on) and a server with `guidance-v2: false`
+written in keeps it off. No other key, no migration. 3 of 4 steps automated. Time: about 5 minutes.*
+
+### 16.0 Preconditions
+
+1. Deployed: plugin build from `next` with #990.
+2. Accounts and data: a player account without staff rights; a destination with a walk leg (the keep's entrance hall
+   to a room upstairs, as in § 9 step 1).
+
+### 16.1 Steps
+
+1. [automated: knk-paper `ConfigLoaderNavigationTest.guidanceV2IsOnInConfigYmlAndItsWalkKeysHaveTheDesignDefaults`,
+   `theBundledConfigLoadsWithTheDesignDefaults`] Open the jar's `config.yml`. **Expected:** `guidance-v2: true` under
+   `navigation:`, with the phase 6.1 walk keys and the phase 6.2 keys at their § 8.0 and § 9.0 values.
+2. [automated: knk-paper `ConfigLoaderNavigationTest.aServerConfigWithoutTheFlagGetsItOnAndAWrittenFalseKeepsItOff`]
+   Remove the `guidance-v2` line from the server's `config.yml` (or start a server without a `navigation:` block) and
+   restart. **Expected:** the trail-quality pass is on, as if `true` were written.
+3. [automated: the same test, and the flag-off tests of § 8 step 7 and § 9 step 10] Write `guidance-v2: false` and
+   restart. **Expected:** today's trail exactly: no shaped curves, particles redrawn along the trail, no cursor.
+4. (Manual: the feel in game.) With the line removed (step 2), as the player `/navigate` to the room upstairs and walk
+   the walk leg, then step back along it. **Expected:** as § 9 steps 1 and 2: the particles stay on fixed spots, the
+   corners are curved and off the walls, and the trail follows you back. Restore the server's own value afterwards.
