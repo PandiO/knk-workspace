@@ -1,6 +1,6 @@
 # Code knowledge graph over MCP: trial
 
-**Status:** In progress — Steps 1–2 done (baseline, vetting); Steps 3–4 (install, measure) wait for the developer's
+**Status:** In progress — Steps 1–2 done (baseline, real-session overhead, vetting); Steps 3–4 (install, measure) wait for the developer's
 approval of the two tools · **Last updated:** 2026-11-22
 **Issue:** [PandiO/knk-workspace#977](https://github.com/PandiO/knk-workspace/issues/977) · **Branch:** knk-workspace `claude/relaxed-shannon-3t43yr` (not merged; time-boxed trial). Code repos read at
 knk-web-app `31a6896`, knk-web-api `75b8434`, knk-plugin `2411d78` (`main`).
@@ -38,6 +38,52 @@ What this says before any tool is installed:
 4. **Web app → API links are not literal.** The web app builds URLs at run time from
    `invokeServiceCall(data, operation, Controllers.Towns, HttpMethod.Post)`, so no tool can link them by matching URL
    string literals. Any cross-language edge there will need the tool to resolve an enum value plus a string argument.
+
+## 1b. Overhead in real sessions (layer 3)
+
+Added at the developer's request on 2026-11-22. Twelve finished cloud sessions from 19–21 November: 9 implementation
+links (Production chain L20–L29 and NPC follow-ups G1), 1 one-off fix (#845) and 2 docs sessions (P9, P12). Read from
+each session's transcript through the remote-session tools, with one recipe for all of them. Accounting fields (cost,
+cache reads, start/end context, turns) are exact, from each session's result events. Tool-result sizes are characters / 4.
+Edits are bucketed by heuristic, since most edits ran through Bash heredocs; the bucket totals are good to about ±10 %.
+Reading the 12 transcripts cost about 735k tokens across 4 subagents.
+
+| Session | Cost | Turns | Start → end context | Instructions/plans read | Code read | Read before first edit (turn) |
+|---|---|---|---|---|---|---|
+| L29 #250 | $19.01 | 195 | 87k → 548k | 49k | 73k | 75k (47) |
+| L26 #687 | $18.77 | 193 | 87k → 514k | 45k | 66k | 74k (60) |
+| L27 #688 | $11.85 | 151 | 86k → 385k | 25k | 56k | 59k (49) |
+| L24 #686 | $13.76 | 142 | 86k → 437k | 30k | 55k | 60k (42) |
+| L25 #248 | $22.23 | 199 | 87k → 599k | 37k | 105k | 97k (55) |
+| L22 #134 | $19.00 | 189 | 87k → 483k | 36k | 60k | 71k (56) |
+| L21 #685 | $21.77 | 235 | 87k → 539k | 27k | 106k | 89k (60) |
+| L20 #684 | $17.20 | 178 | 87k → 494k | 49k | 76k | 84k (49) |
+| G1 #814 | $17.05 | 204 | 86k → 463k | 19k | 80k | 64k (50) |
+| #845 fix | $4.28 | 91 | 86k → 216k | 25k | 7k | 21k (21) |
+| Docs P12 | $5.82 | 91 | 85k → 275k | 49k | 23k | 64k (38) |
+| Docs P9 | $6.43 | 99 | 85k → 281k | 30k | 42k | 65k (43) |
+
+Medians for the 9 implementation sessions: **$17.85** per session; **193 turns**; context **87k at start, 494k at
+the end**; **36k** read from instructions and plans; **73k** read from code; first edit at **turn 50**, after **74k**.
+Each session re-read 34–73M cached tokens in total (495M for the nine).
+
+What drives the cost:
+
+1. **Turns × context.** Every turn re-sends the whole context, so a token that enters early is paid again on every
+   later turn. The 87k start context alone makes up **~30 %** of all cache reads (start context × turns ÷ cache reads,
+   median).
+2. **Code reading: ~19 % of cache reads** (estimate: code-read tokens, resent for ¾ of the turns on average). This is
+   the most a code graph can attack. A graph that halved code reading would save about **9–10 %** of an implementation
+   session's cost, roughly $1.60 of $17.85.
+3. **Instructions and plans: ~10 %** of cache reads, about 36k tokens per session, read early so they are resent
+   almost every turn. The one-off fix read 3.5× more instructions than code (25k vs 7k): for small tasks, the
+   start-up reading costs more than the work. A graph doesn't touch this.
+4. **The agent's own output (130–220k tokens per session)** is the largest part of the end context: messages,
+   reasoning and written code. A graph doesn't touch this either.
+
+Reuse signals (#978): L25 and L21 mention FormConfiguration/DisplayConfiguration 22 and 16 times (API links that add
+form seeds). L24 added two admin screens (`LogisticsSettingsCard`, `LogisticsPage`) while mentioning the form system
+6 times, which suggests the system was set aside rather than missed. Whether that was right goes to the #978 audit.
 
 ## 2. Candidate vetting
 
