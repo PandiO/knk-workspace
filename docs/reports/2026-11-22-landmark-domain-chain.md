@@ -38,7 +38,7 @@ design session of 2026-11-22).
 |---|---|---|---|---|---|---|
 | L1 API model, migration, area kinds and parent (tier:3) | #983 | Merged into `next` 2026-11-22 18:37 UTC (knk-web-api `8cc4511b`, knk-workspace `724ebc10`) | `claude/landmark-domain`: knk-web-api `00ee3115` (after merging `next` `c647daf7`); `claude/landmark-domain-l1`: knk-workspace `ba0596e0` (coordinator, 2026-11-22: the heads in block 4.1 item 2 predate that merge) | [knk-web-api#82](https://github.com/PandiO/knk-web-api/pull/82), [knk-workspace#994](https://github.com/PandiO/knk-workspace/pull/994) | green on `00ee3115` (build-and-test, mysql-tests, fresh-database); knk-workspace no checks; Codex at its usage limit (skipped) | create_session session_01R1w2Uv1A4MYoi62zFJTnwz, started 2026-11-22 16:32 UTC |
 | L2 API lists, discovery, warps and realtime (tier:2) | #984 | Merged into `next` 2026-11-22 19:45 UTC (knk-web-api `55d187d8`, knk-workspace `035f641f`) | `claude/landmark-domain-integration`: knk-web-api `2525be13`; `claude/landmark-domain-l2`: knk-workspace `fc64d3f2` | [knk-web-api#84](https://github.com/PandiO/knk-web-api/pull/84), [knk-workspace#1002](https://github.com/PandiO/knk-workspace/pull/1002) | green on `2525be13` (build-and-test, mysql-tests, fresh-database; push and PR runs); knk-workspace no checks; Codex at its usage limit (skipped) | create_session session_01R1w2Ux3HrcYVs53AugdtZW, started 2026-11-22 18:39 UTC |
-| L3 Plugin (tier:2) | #985 | Running (rerun started 2026-11-22 19:51 UTC; first run blocked at setup, block 4.3) | `claude/landmark-domain`: knk-plugin (none yet); `claude/landmark-domain-l3`: knk-workspace (none yet) | none | none | create_session session_01R1w2UtBFy9s4dBXQoeBMQF (19:46 UTC, environment "Default": blocked, `repo.papermc.io` refused); rerun create_session session_01R1w2UuLNw6Cr3qwUKQNvao in environment "Default Correct" (19:51 UTC, decision 14) |
+| L3 Plugin (tier:2) | #985 | Done, in review (rerun finished 2026-11-22 21:45 UTC, block 4.3b; first run blocked at setup, block 4.3) | `claude/landmark-domain`: knk-plugin `31658c58` (after merging `next` `3f39f15a`); `claude/landmark-domain-l3`: knk-workspace `43bcdbf3` (after merging `next` `f7e4f671`) | [knk-plugin#125](https://github.com/PandiO/knk-plugin/pull/125), [knk-workspace#1005](https://github.com/PandiO/knk-workspace/pull/1005) | green on `31658c58` (build, paper-boot; one push-run build re-run after an unrelated `HarvestModuleTest` setup error); knk-workspace no checks; Codex at its usage limit (skipped) | create_session session_01R1w2UtBFy9s4dBXQoeBMQF (19:46 UTC, environment "Default": blocked, `repo.papermc.io` refused); rerun create_session session_01R1w2UuLNw6Cr3qwUKQNvao in environment "Default Correct" (19:51 UTC, decision 14) |
 | L4 Web app (tier:2) | #986 | Merged into `next` 2026-11-22 20:19 UTC (knk-web-app `8c9c3553`, knk-workspace `99da72cc`) | `claude/landmark-domain`: knk-web-app `4bc6b88d`; `claude/landmark-domain-l4`: knk-workspace `73e785d4` | [knk-web-app#78](https://github.com/PandiO/knk-web-app/pull/78), [knk-workspace#1004](https://github.com/PandiO/knk-workspace/pull/1004) | green on `4bc6b88d` (build-and-test, e2e; both runs); knk-workspace no checks; Codex at its usage limit (skipped) | create_session session_01R1w2UtGykzTGpUL4Ksj6S6, started 2026-11-22 19:46 UTC |
 | L1b #952 region re-run left on a temp name, and #1003 Landmark form seed v3 (charter § 3 item 8; fix link) | #952, #1003 | Merged into `next` 2026-11-22 20:50 UTC (knk-web-api `3bc3cfd5`, knk-workspace `f7e4f671`); `domain_<id>` part of #952 split off to #1006 | `claude/landmark-domain-952`: knk-web-api `60fe2723`; `claude/landmark-domain-l1b`: knk-workspace `d06f362d` | [knk-web-api#85](https://github.com/PandiO/knk-web-api/pull/85), [knk-workspace#1007](https://github.com/PandiO/knk-workspace/pull/1007) | green on `60fe2723` (build-and-test, mysql-tests, fresh-database; both runs); Codex at its usage limit (skipped) | create_session session_01R1w2Ut1aonbYwio9RXX7mA, started 2026-11-22 20:20 UTC |
 
@@ -388,6 +388,124 @@ _(Each link appends its block here when it finishes.)_
     1. The rerun of L3: JDK 25 comes from `sudo apt-get update` and then `sudo apt-get install -y openjdk-25-jdk-headless`
        (the package is missing before the update); build with
        `-Porg.gradle.java.installations.paths=/usr/lib/jvm/java-25-openjdk-amd64`.
+
+### 4.3b L3 rerun — Plugin (#985)
+
+1. **Scope done.**
+    1. knk-api-client: `LandmarkDto`/`LandmarkMapper` read `areaKind`, `wgRegionId`, `subRegionIds`, `parentDomainId`,
+       `parentDomain.wgRegionId`, `showEnterLeaveMessages` and write `parentDomainId`, `areaKind`, `wgRegionId`; the
+       #708 projection is no longer read or written.
+    2. knk-core landmarks and navigation: `LandmarkAreaKind`; `KnkLandmark`/`LandmarkWrite` on the new model; the
+       navigation `Landmark` holds the area's region ids (main first); `LandmarkExtent` is a point or an area (cylinder
+       gone, LD08); `LandmarkProvider` routes to the main region with the other regions as arrival (LD22);
+       `LandmarkWeights.UnionArea` weights the union once; the snapshot file writes `regionIds` and still reads an old
+       `REGION` extent.
+    3. knk-paper navigation: `Destination.areaRegionIds`, `HandleDestinations`, `RegionShapes.domainRegionIds`
+       (WorldGuard: the other regions with the main region's `knk-domain-id`, for a `LinkedDomain` parent's
+       sub-regions); `ModelLandmarks` adds them for the weights; `NavigationService` (two small changes, item 5.3).
+    4. Managed regions (LD13, A13): `ManagedRegionKind.LANDMARK` (floor 30, parent + 10, no flags) as a new constant and
+       `fromDomainType` arm; `DomainRegionSpecs.landmarks`; `ManagedRegionSpecSource` and `ManagedRegionsBootstrap`
+       read `api/landmarks` (a failed read is a warning). `finalizeNewRegion`'s kind line and `forNewRegion` (#123)
+       untouched; a test pins `forNewRegion("Landmark")` = LANDMARK. Paper-boot scenario
+       `landmark-region-is-managed-under-its-parent` (registered last), `MIN_SCENARIOS` 76.
+    5. `DomainEffectDamage` leaves landmarks out (LD12, A11).
+    6. Messages (LD15, A12): `LandmarkMessageSettings` (landmarks with `showEnterLeaveMessages`, from `api/landmarks`
+       at start-up and on realtime); `SimpleRegionTransitionService.setLandmarkMessages` and a landmark message after
+       town, district and structure; the gate check null-safe (§ 7.2 item 4).
+    7. Wording (A08, A09): "the landmark" / "Landmark" / "Landmarks", lodestone icon; the discoveries summary counts
+       landmarks although the type rule is off; `/warp landmark:<name>` (already worked through the type word, now
+       tested).
+    8. `/knk landmark` (A15): `create … radius <n>` refused with the way to a round region and the usage line; `link`
+       never offers or takes the landmark itself; `show` tells area, parent and messages.
+    9. Realtime (A16): `LandmarkRealtime` (catalogue entry, region cache, coalesced navigation-model and message
+       refresh); `NavigationDomainChanges.DOMAIN_TYPES` gains `Landmark`.
+    10. `landmark_<id>` path removed (LD14): the temp-region cleanup's landmark owner lookup; the two landmark region
+        scenarios use `domain_<id>`.
+    11. #951 plugin part (charter § 3 item 8.2): the WgRegionId task's result (`RegionCreate`, `ReagionCreate`,
+        `RegionClaim`) carries `bounds` {`minX` … `maxZ`}; the shape was sent to L4 and matches L4's reader.
+    12. knk-workspace: changelog block (after L4's) with deploy notes, smoke guide § 3 as built (9 steps, tagged),
+        DESIGN status line.
+2. **Commits and heads.** knk-plugin `claude/landmark-domain` at `31658c58` (6 commits plus a merge of `origin/next`
+   `3f39f15a`, base `next` at `822eb39b`); knk-workspace `claude/landmark-domain-l3` at `43bcdbf3` (1 commit plus a
+   fast-forward to `99da72cc` and a merge of `f7e4f671` with L1b's docs, base `next` at `035f641f`). Both are level
+   with `origin/next` (checked before this block).
+3. **PRs.** PandiO/knk-plugin#125 (`Closes PandiO/knk-workspace#985`, `Part of PandiO/knk-workspace#951`),
+   PandiO/knk-workspace#1005 (`Part of`), base `next`. Not merged.
+4. **Tests, baseline → result.**
+    1. knk-plugin: baseline on `next` `822eb39b` `./gradlew build -x deployToDevServer` green: knk-core 3779,
+       knk-api-client 429 (2 skipped), knk-paper 3490 (18 skipped). Result at `31658c58` (with `next` `3f39f15a`,
+       which adds #123's `NewRegionKindTest`): knk-core 3809, knk-api-client 430 (2 skipped), knk-paper 3496 (18
+       skipped), green. Obsolete radius and `landmark_<id>` tests were rewritten or removed. CI on the PR: `build` and
+       `paper-boot` green on `31658c58`; the push run's `build` failed once in `HarvestModuleTest` with a JUnit
+       `IOException` in the test's own setup (untouched area; 3 of 3 local passes) and passed on its one re-run.
+       Local paper-boot (pinned Paper 26.3-205, WorldEdit, WorldGuard, Citizens): 79 of 79 passed.
+    2. Known reds: none.
+    3. Acceptance: A08/A09 `DiscoveryLandmarkTest`, `WarpTargetsTest.aLandmarkIsAWarpTarget_*`; A10
+       `AccessFlagSyncTest.aLandmarksOwnRegion*`, `LandmarkTransitionMessagesTest.aLandmarkWithEntryOff_*`; A11
+       `DomainEffectDamageTest.aLandmarkNeverMakesASafeZone_*`; A12 `LandmarkTransitionMessagesTest`; A13
+       `LandmarkRegionKindTest` and the scenario; A14 `LandmarkProviderTest`, `NavigationServiceLandmarkTest`,
+       `ModelLandmarksTest`, `LandmarkWeightsTest`, `HandleDestinationsLandmarkTest`; A15 `LandmarkCommandArgsTest`,
+       `LandmarkAdminCommandTest`; A16 `LandmarkRealtimeTest`; API data `LandmarksApiImplTest`; #951
+       `WgRegionIdTaskOutputTest`.
+    4. Codex: no review on either PR, the connector's code-review usage limit was reached; finished without it, said
+       so on both PRs.
+5. **Decisions (DESIGN § 4.3).**
+    1. *A `LinkedDomain` area's sub-regions.* Chosen: the model holds the parent's main region; the server adds the
+       other regions with the same `knk-domain-id` (the access sync puts it on every region of a domain), once per
+       navigation and per weights pass. `api/landmarks` lists no parent sub-regions. Alternatives: (a) an extra
+       `by-region`/`api/Domains` call per landmark at model refresh: more API calls and a second source; (b) read the
+       access rules in the model refresh: couples the navigation model to the access sync.
+    2. *Arrival over a union.* Chosen: route to the main region (goals and walk target unchanged), arrival in any of the
+       area's regions. Alternatives: (a) a union `RegionShape` for routing: `RegionShape` is one polygon, and every
+       goal path in `NavigationService` would change; (b) one destination per region: the landmark would be listed
+       several times (LD22).
+    3. *`NavigationService` touch (for #25).* Two small changes on the engine path: `navigate(player, handle)` calls
+       `withDomainRegions` once, `insideRegion` also checks the area's other regions; `NavigateCommand.withMode` and
+       the flag check untouched. The arrival-radius mechanics of `Destination`/`Place.Point` stay (no provider sets one
+       now; the cylinder test is inlined in `Destination`), so #747 can remove them with the old path. Alternative:
+       (a) remove the arrival radius now: more `NavigationService` edits while #747 deletes that code anyway.
+    4. *Where the messages switch comes from.* Chosen: `LandmarkMessageSettings` read from `api/landmarks` (start-up,
+       realtime), off for an unknown landmark. The region decisions don't carry `showEnterLeaveMessages`.
+       Alternatives: (a) add the field to `DomainRegionDecisionDto`: an API change outside this link (worth a
+       follow-up when the projection is dropped); (b) a per-transition API call: on the movement hot path.
+    5. *Landmark message priority and wording.* Chosen: after town, district and structure (innermost), "You are now
+       entering <name>." / "You are now leaving <name>." like a town. Alternative: (a) the district form with the
+       parent name: a landmark's parent may be any domain or none.
+    6. *Gate check.* Chosen: null-safe only (`"gate".equals(type)`), behaviour unchanged; the API's type is
+       `GateStructure`, so this check never matches today. Alternative: (a) also match `GateStructure`: would start
+       opening gates on entry, a behaviour change outside the link (noted, item 6).
+    7. *Repair source.* Chosen: `api/landmarks` beside towns, districts and structures, a failed read only a warning.
+       Alternative: (a) fail the repair: one unreadable leaf list would stop the whole hierarchy's repair.
+    8. *Nested landmark parents.* Chosen: WorldGuard parent = `parentDomain.wgRegionId`; a landmark under a point or
+       `LinkedDomain` landmark is top level. Alternative: (a) walk up to the nearest region: needs the parent chain,
+       which `api/landmarks` doesn't give.
+    9. *Discoveries summary for staff.* Chosen: the `Landmark` row counts like an enabled type when `total` > 0, else
+       "Disabled". Alternative: (a) keep "Disabled": hides that some landmarks are discoverable (L2's note).
+    10. *`/knk landmark create` radius detection.* Chosen: refused only where the old keyword stood (`… radius <n>` or a
+        trailing `radius`), so "Radius tower" stays a name. Alternative: (a) any word `radius`: refuses real names.
+    11. *Snapshot file.* Chosen: write `regionIds`, keep reading `extent`/`regionId` (schema 1, additive).
+        Alternative: (a) schema 2: an older plugin would discard the whole offline model.
+6. **Out of scope, noted.**
+    1. The gate check in `SimpleRegionTransitionService` compares the type with `gate` while the API sends
+       `GateStructure`, so `GateControlPort` is never triggered from transitions; not filed (it may be intended: gates
+       are opened elsewhere); for the developer to decide.
+    2. `DomainRegionDecisionDto` could carry `showEnterLeaveMessages` when the #708 projection is dropped (L1's note
+       9.2), which would make `LandmarkMessageSettings` unnecessary.
+7. **Blockers.** None for #985. #958 (charter § 3 item 8.2) is **not fixed**, as the coordinator's message allows:
+   a local 4-minute reproduction and a sharp threshold by scene origin (pass up to origin x 32740, fail from 32752;
+   only the group of 20 differs, the leader alone is identical) are on #958; the remaining suspects are the group and
+   crowd code in `core/npc/nav/` and Citizens' path search for followers, which the open NPC PRs #116–#119 touch.
+   Proposal: an NPC-navigation session takes #958 with that reproduction; the workaround (new scenarios last) holds.
+8. **At merge / what the developer must do.**
+    1. No `config.yml` key. Deploy with knk-web-api phases 1 and 2.
+    2. Run `/knk regions repair` once after the deploy (existing landmark regions get their LANDMARK parent and
+       priority).
+    3. Run smoke guide § 3 when convenient (tier:2; 9 steps, most partly automated).
+    4. Decide on item 6.1 (gate check) and who takes #958.
+9. **Notes for later links.**
+    1. A later API change can drop the #708 projection from the landmark DTOs: knk-plugin no longer reads it.
+    2. #958's reproduction: a copy of `tools/paper-boot/boot-test.sh` that sets `testing.scenarios.origin.x` and sends
+       `knk scenario run npc-replay-quarry-to-keep` (details on the issue).
 
 ### 4.4 L4 — Web app (#986)
 
