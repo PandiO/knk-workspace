@@ -535,6 +535,9 @@ of what is already in `next`.
 83. **P12 docs done; L28 still gated (23:18).** Docs #970 closed (#971 merged into `next` as `d9511360`; remaining
     guide checks and screenshots in #972). knk-plugin `next` (`b31fceb6`) has no NPC lifecycle registry or orphan
     sweep; no developer reply on #22 or #249. Check-ins every 6 hours until the developer answers § 1 item 18.
+84. **Check-ins stopped (developer, 2026-11-23).** The developer asked the coordinator to stop its scheduled check-ins.
+    No coordinator check-in is scheduled any more. L28 (#249, shopkeepers) stays waiting for § 1 item 18; it starts
+    only when the developer asks the coordinator session again.
 
 ## 4. Link blocks
 
