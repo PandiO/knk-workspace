@@ -87,7 +87,6 @@ Live tracker of in-progress work across all four Knights and Kings repos
 
 | Feature | Repos touched | Finished | Notes / link |
 |---|---|---|---|
-| Weekly docs drift check 2026-11-22 ([PandiO/knk-workspace#292](https://github.com/PandiO/knk-workspace/issues/292)) | knk-workspace | 2026-11-22 | [Report](reports/2026-11-22-weekly-docs-check.md). Gaps: release v0.4 / plugin v0.3 (overview map) undocumented → filed #998; plugin config § 2.1 v0.2 rows → comment on #630. 33 open docs issues, debt cap exceeded. No docs sessions started (no `create_session` in this run) |
 
 ## Paused / blocked
 
