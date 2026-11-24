@@ -1,6 +1,6 @@
 # Off-road navigation and landmarks chain — progress report
 
-**Status:** Running, waiting for the developer (2026-11-18) · **Last updated:** 2026-11-22 (§ 15 accepted, #976); 2026-11-21 (smoke sessions of 2026-11-21); 2026-11-21 (live test of 2026-11-20); 2026-11-20 (L7b step B merged); 2026-11-20 (L7b step A merged); 2026-11-19 (F2 block); 2026-11-18 (L9 block); 2026-11-18 (L5 block); 2026-11-18 (L8 step A block)
+**Status:** Running, waiting for the developer (2026-11-18) · **Last updated:** 2026-11-24 (§ 6/§ 7 superseded); 2026-11-22 (§ 15 accepted, #976); 2026-11-21 (smoke sessions of 2026-11-21); 2026-11-21 (live test of 2026-11-20); 2026-11-20 (L7b step B merged); 2026-11-20 (L7b step A merged); 2026-11-19 (F2 block); 2026-11-18 (L9 block); 2026-11-18 (L5 block); 2026-11-18 (L8 step A block)
 
 **Issue:** [PandiO/knk-workspace#698](https://github.com/PandiO/knk-workspace/issues/698), links
 [#703](https://github.com/PandiO/knk-workspace/issues/703) (L1), [#704](https://github.com/PandiO/knk-workspace/issues/704) (L2),
@@ -337,6 +337,11 @@ on `next` (Decided 2026-11-17).
     `/knk landmark` without radius, `link` as parent). Checked here: the merge changes no golden transcript,
     `NavigateCommand`, route-mode code or `config.yml`. The plugin navigation slot is free again. The landmark chain's
     smoke guide (`landmark-domain-smoke-test.md` § 3) covers landmark navigation and weights on the new model.
+49. **Developer decision, 2026-11-24 (relayed by the #976 coordinator, recorded on #698 and #1009):** off-road smoke
+    § 6 (L8) and § 7 (L9) close as superseded by `landmark-domain-smoke-test.md` § 3, after every step § 3 doesn't
+    cover moves there. #976's fix link L4b (#1009) moves those steps and marks § 6, § 6.5 and § 7 "Superseded" with a
+    step mapping; this chain leaves that file to L4b. The only live-test item left for this chain is L1's
+    concurrency item (#703); the docs session follows it (or the developer's acceptance of it) and L4b's merge.
 
 ## 4. Link blocks
 
