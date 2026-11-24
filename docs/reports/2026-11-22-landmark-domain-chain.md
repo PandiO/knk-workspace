@@ -1,6 +1,6 @@
 # Landmarks as a Domain subtype chain — progress report
 
-**Status:** Running (2026-11-22: L1 in `next`, L2 in review) · **Last updated:** 2026-11-22 (L2 block)
+**Status:** Running (2026-11-22: L1 in `next`, L2 in review) · **Last updated:** 2026-11-24 (L2 block)
 
 **Issue:** [PandiO/knk-workspace#976](https://github.com/PandiO/knk-workspace/issues/976), links
 [#983](https://github.com/PandiO/knk-workspace/issues/983) (L1), [#984](https://github.com/PandiO/knk-workspace/issues/984) (L2),
@@ -26,19 +26,20 @@ design session of 2026-11-22).
 5. **L3 #985 in `next` (tier:2):** smoke guide § 3 (9 steps; `navigation.landmarks: true` for steps 5, 6, 8); deploy:
    no `config.yml` key; run `/knk regions repair` once after the plugin deploy. Decide: the gate check in
    `SimpleRegionTransitionService` compares against "gate" while the API sends "GateStructure" (block 4.3b item
-   6.1). Decide who takes #958 (left open with a reproduction; L3 proposes an NPC navigation session).
-6. **Decide on #1003:** should a point landmark (Area None) keep the "Warp destination" step on the form? A17 hides it
-   without an own region; DESIGN § 4.1 item 5 has no condition and § 3 item 2 likens landmark warps to the v1 warp
-   points. L1b builds seed v3 per A17 as written (decision 16); one seed edit reverses it.
+   6.1): **answered 2026-11-24**, filed as #1015 (to check). #958: **answered 2026-11-24**, a separate session now
+   (fix link L3b).
+6. **#1003 answered 2026-11-24:** the "Warp destination" step shows for every area kind; fix link L4b builds Landmark
+   form seed v4 (deploy: import seed v4 as the default instead of v3) and updates DESIGN A17 (LD26), the e2e test and
+   the smoke guide.
 7. **L1b (#952, #1003) in `next`:** smoke guide § 5; deploy: import the Landmark form seed v3 and make it the
-   default (v2 need not be imported). **Decide on #1006**: healing a `domain_<id>` region (landmarks included) left
-   behind by a failed re-run needs a plugin check of the existing region; until then the manual way out of
-   managed-worldguard-regions § 7 applies.
+   default (v2 need not be imported; after L4b: seed v4). #1006 **answered 2026-11-24**: it goes with #989 (the
+   generic region lifecycle), now its sub-issue; until then the manual way out of managed-worldguard-regions § 7
+   applies.
 8. **Docs:** #1008 done and closed by its docs session (session_01R1w2UsgKAzYiVf45xr41DR; main docs PR #1011 merged
    into `next` `188ade30`); leftovers #1009 and #1010. The smoke § 1 wording fix (seed v3, step 14 after L3) is
    PandiO/knk-workspace#1012 into `next`, merged by the docs session.
-9. **Off-road smoke § 6 and § 7 (landmarks, #698):** the off-road coordinator asked you on #698 whether they close as
-   superseded by this chain; this chain's guide § 3 covers landmark navigation on the new model (L3).
+9. **Off-road smoke § 6 and § 7 (#698): answered 2026-11-24**, close as superseded by landmark-domain § 3 after the
+   uncovered steps move there; fix link L4b does it (#1009).
 
 ## 2. Summary
 
@@ -49,6 +50,8 @@ design session of 2026-11-22).
 | L3 Plugin (tier:2), also #958 (findings only) and the plugin part of #951 | #985 | Merged into `next` 2026-11-22 21:38 UTC (knk-plugin `14645895`, knk-workspace `e6bb8dfe`) | `claude/landmark-domain`: knk-plugin `31658c58`; `claude/landmark-domain-l3`: knk-workspace `43bcdbf3` | [knk-plugin#125](https://github.com/PandiO/knk-plugin/pull/125), [knk-workspace#1005](https://github.com/PandiO/knk-workspace/pull/1005) | green on `31658c58` (build, paper-boot; both runs, one build re-run for a `HarvestModuleTest` setup error outside the PR); Codex at its usage limit (skipped) | create_session session_01R1w2UtBFy9s4dBXQoeBMQF (blocked, network); rerun session_01R1w2UuLNw6Cr3qwUKQNvao in "Default Correct" (decision 14) |
 | L4 Web app (tier:2) | #986 | Merged into `next` 2026-11-22 20:19 UTC (knk-web-app `8c9c3553`, knk-workspace `99da72cc`) | `claude/landmark-domain`: knk-web-app `4bc6b88d`; `claude/landmark-domain-l4`: knk-workspace `73e785d4` | [knk-web-app#78](https://github.com/PandiO/knk-web-app/pull/78), [knk-workspace#1004](https://github.com/PandiO/knk-workspace/pull/1004) | green on `4bc6b88d` (build-and-test, e2e; both runs); knk-workspace no checks; Codex at its usage limit (skipped) | create_session session_01R1w2UtGykzTGpUL4Ksj6S6, started 2026-11-22 19:46 UTC |
 | L1b #952 region re-run left on a temp name, and #1003 Landmark form seed v3 (charter § 3 item 8; fix link) | #952, #1003 | Merged into `next` 2026-11-22 20:50 UTC (knk-web-api `3bc3cfd5`, knk-workspace `f7e4f671`); `domain_<id>` part of #952 split off to #1006 | `claude/landmark-domain-952`: knk-web-api `60fe2723`; `claude/landmark-domain-l1b`: knk-workspace `d06f362d` | [knk-web-api#85](https://github.com/PandiO/knk-web-api/pull/85), [knk-workspace#1007](https://github.com/PandiO/knk-workspace/pull/1007) | green on `60fe2723` (build-and-test, mysql-tests, fresh-database; both runs); Codex at its usage limit (skipped) | create_session session_01R1w2Ut1aonbYwio9RXX7mA, started 2026-11-22 20:20 UTC |
+| L3b #958 NPC replay fails at scene origin x ≥ 32752 (developer decision 2026-11-24; fix link) | #958 | Running (started 2026-11-24 08:13 UTC) | `claude/npc-replay-958`: knk-plugin, knk-workspace (none yet) | none | none | create_session session_01R1w2UuF3ht2BpNQtH69s5f in "Default Correct" |
+| L4b #1003 warp step for every area kind (seed v4) and #1009 off-road smoke §§ 6–7 superseded (developer decisions 2026-11-24; fix link) | #1003, #1009 | Running (started 2026-11-24 08:20 UTC) | `claude/landmark-warp-step-1003`: knk-web-api, knk-web-app; `claude/landmark-domain-l4b`: knk-workspace (none yet) | none | none | subagent of the coordinator (two component repos, skill § 4.1.4.2); its block is written by the coordinator from its final report |
 
 ## 3. Coordinator decisions
 
@@ -206,6 +209,26 @@ design session of 2026-11-22).
     Smoke guide § 1 on `next` still has wording from before L3, L4 and L1b (steps 2–3 name seed v2, § 1.0 item 1 the
     in-between state, step 14 "before L3"); handed to the docs session #1008 to correct in its docs PR rather than a
     coordinator push to `next` (skill § 7.6). Final report on #976.
+21. **The developer's answers of 2026-11-24** (asked through the ask-user prompt, five questions) and what followed:
+    1. #1003, warp step: "Show for every area". Chosen: fix link **L4b** builds a Landmark form seed v4 (the seeds
+       README: a changed seed ships with a new `configurationGuid` and name, so v3 cannot change in place), updates
+       L4's e2e test, DESIGN (LD26, A17, § 4.1 item 5) and the smoke guide. Alternatives: (a) change v3 in place,
+       rejected (an import never overwrites, so databases with v3 would keep the old form); (b) leave it to the docs
+       session, rejected (code and seed change).
+    2. #1006: "Recently an issue was added to consolidate domain wg region retention, removal, cleanup operations",
+       read as: it goes with #989 (the generic region lifecycle, scope item 3, one generic replace decision). Made a
+       sub-issue of #989, comments on both. Alternatives: (a) a fix link now, rejected (the developer pointed to #989);
+       (b) close it, rejected (the problem stays until #989 lands).
+    3. #958: "Separate session now". Chosen: fix link **L3b** with `create_session` in "Default Correct" (plugin, one
+       component repo), out of the lines of the open NPC PRs #116–#119, out of `core/navigation/`. Alternatives: (a)
+       hand it to the NPC navigation chain, rejected (the developer asked for a separate session now).
+    4. Gate check: "File an issue to check". Filed #1015 (`bug`, `tier:1`, `knk-plugin`).
+    5. Off-road smoke § 6/§ 7: "Close as superseded". The docs session's leftover #1009 (rewrite them) changes to:
+       move the uncovered steps into landmark-domain § 3, then mark the off-road sections superseded; given to **L4b**
+       (it edits the same smoke guide). The off-road coordinator is told and may take the off-road file edit itself.
+    6. Route of L4b: a subagent of the coordinator, because it changes two component repos (knk-web-api, knk-web-app)
+       and L4's `create_session` attach of knk-web-api was refused once (skill § 4.1.4.2). L3b and L4b share no
+       component repo.
 
 ## 4. Link blocks
 
