@@ -19,7 +19,8 @@ This is a human-readable record of capabilities merged into the V3 default branc
   gate ended its own leg back to the group on the spot of the follower before it (`NavGroupFinishTripTest`; before,
   rounding hid it): its leg now ends at its place in the queue (`NavGroup`). A scenario can be registered anywhere in
   `PaperScenarios` again (the "new scenarios go after the NPC replays" rule is gone; a full local run with three
-  scenarios registered first passed). CI's `MIN_SCENARIOS` goes to 80.
+  scenarios registered first passed). CI's `MIN_SCENARIOS` goes to 80, the paper-boot wait to 2400 s and the job's
+  timeout to 50 minutes (the run takes about 32 minutes).
   **Admin steps (deploy notes):** none (no config key, no migration).
 
 - **Landmarks are domains now: a landmark can be a plain point, have its own region with sub-regions, or use the area
