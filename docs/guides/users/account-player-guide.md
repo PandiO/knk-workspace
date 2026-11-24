@@ -1,6 +1,6 @@
 # Your account: invitation, linking, login and password
 
-**Status:** Current · **Last updated:** 2026-11-13 (§ Delete my data: the request and what the game server does, PandiO/knk-workspace#184, game-server part in `next`; brought over from the old guide on `next`)
+**Status:** Current · **Last updated:** 2026-11-21 (§ Your Account page: the **Siege unlocks** panel, knk-web-app `next` `acff2134`, PandiO/knk-workspace#869, docs #908); 2026-11-13 (§ Delete my data: the request and what the game server does, PandiO/knk-workspace#184, game-server part in `next`; brought over from the old guide on `next`)
 **Checked against:** knk-web-app `main` `3ba747d`, knk-web-api `master` `75b5a00`, knk-plugin `main` `57884e9`
 **Related:** [player handbook](player-handbook.md), [commands reference](commands.md), [invitations admin guide](../admin/invitations-admin-guide.md), [statistics and public profile](statistics-player-guide.md)
 
@@ -201,6 +201,9 @@ Open it from the account menu (top right) → **Account settings** (the page `/a
    the account was created, your Minecraft UUID, coins and gems, and **View transaction history**.
 2. Your **discoveries** and **statistics**, once your Minecraft account is linked
    ([statistics guide](statistics-player-guide.md)).
+   In knk-web-app `next`, not released yet: a **Siege unlocks** panel, also once linked: your coins and title, every
+   siege weapon type with its unlock price and minimum title, and **Unlock for N coins** (asks you to confirm first;
+   the coins are taken once). See the [siege guide § Siege weapon unlocks](siege-player-guide.md#siege-weapon-unlocks).
 3. **Email Address** with **Edit**: type the new email and your **Current Password**, press **Save**. Your other
    devices are logged out, and your **old** address gets a mail "Your Knights & Kings email was changed". When the
    site uses Cloudflare, use the new address at Cloudflare's next sign-in. The **Email verified** badge (from a
@@ -281,13 +284,14 @@ join shows a one-line reminder with the same button. Full syntax: [commands refe
 
 ## Changes
 
-1. 2026-11-13: § Delete my data: the **Delete my data** request and what the game server does when it runs
+1. 2026-11-21: § Your Account page: the Siege unlocks panel (in `next`, #869, docs #908).
+2. 2026-11-13: § Delete my data: the **Delete my data** request and what the game server does when it runs
    (PandiO/knk-workspace#184, docs #400; game-server part in knk-plugin `next`), brought over from
    `PLAYER_GUIDE_ACCOUNT_MANAGEMENT.md` on `next`.
-2. 2026-11-13: rewritten for the invite-only flow and renamed from `PLAYER_GUIDE_ACCOUNT_MANAGEMENT.md` (PandiO/knk-workspace#299).
+3. 2026-11-13: rewritten for the invite-only flow and renamed from `PLAYER_GUIDE_ACCOUNT_MANAGEMENT.md` (PandiO/knk-workspace#299).
    The old guide's sections on `/account create`, merging in game and the account-settings layout of 2026-01 were
    removed; they described removed behaviour.
-3. 2026-11-03: the register page's code field shows the dash (#229).
-4. 2026-10-26: the claim code field shows `____-____` from the start (#196) and adds the dash (#192).
-4. 2026-10-21: "Getting an account" rewritten for invite-only sign-up (KNG-218).
-5. 2026-01-30: versions 1.0 and 1.1 (account commands, linking, merging).
+4. 2026-11-03: the register page's code field shows the dash (#229).
+5. 2026-10-26: the claim code field shows `____-____` from the start (#196) and adds the dash (#192).
+6. 2026-10-21: "Getting an account" rewritten for invite-only sign-up (KNG-218).
+7. 2026-01-30: versions 1.0 and 1.1 (account commands, linking, merging).

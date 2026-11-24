@@ -75,6 +75,11 @@ Notes:
   - Response: 200 OK → content: StreetListDtoPagedResultDto
 
 ### Structures
+
+> Since production P2 (#91, knk-web-api `next`) a structure is in a district or rural (`townId`), with read-only
+> `effectiveTownId` and `isRural`, and the search has new filters: see
+> [API_CONTRACT_PRODUCTION_WORLD.md § 2](API_CONTRACT_PRODUCTION_WORLD.md#2-placement-fields-every-structure-apistructures-apiwarehouses-apiproductionstructures).
+
 - GET /api/Structures
   - Response: 200 OK (schema unspecified → NOT IN CONTRACT)
 - POST /api/Structures
