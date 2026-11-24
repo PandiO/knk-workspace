@@ -1,7 +1,7 @@
 # Landmarks as a Domain subtype — sub-regions, entry and exit, warps and domain lists for landmarks
 
-**Status:** **Decided 2026-11-22** (developer). **Built: all four phases merged into `next`** (not released, not run by the developer): phase 1 (#983) knk-web-api `8cc4511b`, phase 2 (#984) `55d187d8`, phase 3 (#985) knk-plugin `14645895`, phase 4 (#986) knk-web-app `8c9c3553`; fix link #952/#1003 (Landmark form seed v3) knk-web-api `3bc3cfd5`. Guides: [landmarks admin guide](../../guides/admin/landmarks-admin-guide.md), [player guide § 2.7](../../guides/users/navigation-and-teleports-player-guide.md#27-landmarks), [API contract](../api/API_CONTRACT_LANDMARKS.md). Open: #1003 (should a point landmark keep its warp step), #1006 (`domain_<id>` heal).
-**Last updated:** 2026-11-22 (status: every phase merged into `next`, guides written, docs #1008); 2026-11-22 (phase 3 built by link L3, #985, in review); 2026-11-22 (phase 4 built by link L4, #986, in review); 2026-11-22 (phase 2 built by link L2, #984, in review); 2026-11-22 (phase 1 built by link L1, #983, in review); 2026-11-22 (approved by the developer; LD25 and the final phases added on approval); 2026-11-22 (design session: decisions LD01–LD10 from the developer, LD07 and LD11–LD24 agent).
+**Status:** **Decided 2026-11-22** (developer). **Built: all four phases merged into `next`** (not released, not run by the developer): phase 1 (#983) knk-web-api `8cc4511b`, phase 2 (#984) `55d187d8`, phase 3 (#985) knk-plugin `14645895`, phase 4 (#986) knk-web-app `8c9c3553`; fix link #952/#1003 (Landmark form seed v3) knk-web-api `3bc3cfd5`; fix link L4b (#1003, Landmark form seed v4, LD26) in review. Guides: [landmarks admin guide](../../guides/admin/landmarks-admin-guide.md), [player guide § 2.7](../../guides/users/navigation-and-teleports-player-guide.md#27-landmarks), [API contract](../api/API_CONTRACT_LANDMARKS.md). Open: #1006 (`domain_<id>` heal). #1003's question was decided by the developer on 2026-11-24 (LD26).
+**Last updated:** 2026-11-24 (LD26: the warp step shows for every area kind, developer decision on #1003; A17 and § 4.1 item 5 changed; fix link L4b); 2026-11-22 (status: every phase merged into `next`, guides written, docs #1008); 2026-11-22 (phase 3 built by link L3, #985, in review); 2026-11-22 (phase 4 built by link L4, #986, in review); 2026-11-22 (phase 2 built by link L2, #984, in review); 2026-11-22 (phase 1 built by link L1, #983, in review); 2026-11-22 (approved by the developer; LD25 and the final phases added on approval); 2026-11-22 (design session: decisions LD01–LD10 from the developer, LD07 and LD11–LD24 agent).
 **Issue:** [PandiO/knk-workspace#976](https://github.com/PandiO/knk-workspace/issues/976); phases as sub-issues in § 11.
 **Dependencies:** the landmark entity (#708, on `next`, not promoted), landmark weights (#709), landmark and production
 area drawn regions (#944, #945, #946, on `next`), domain sub-regions
@@ -76,6 +76,7 @@ Related: [navigation-offroad/DESIGN.md](../navigation-offroad/DESIGN.md) § 6 an
 | LD23 | 2026-11-22 | agent | One parent walk for every domain type (a `ParentDomain` resolution per subtype, landmark included, with a cycle guard), used by the region decisions, the region finalizer's hierarchy and the repository's parent loading. It also ends the CrownLand loop in `GetParentDomainDecisions`. A landmark's parent may be any domain, also another landmark. |
 | LD24 | 2026-11-22 | agent | No new feature flag: every domain behaviour of a landmark is off or neutral by default (entry and exit allowed, messages off, discovery off, warp off), and navigation keeps `navigation.landmarks`. The schema change makes the API phase `tier:3`. |
 | LD25 | 2026-11-22 | agent | The new Landmark form ships as seed v2 (a new `configurationGuid`, default for Landmark) in phase 1, so the form on `next` matches the model as soon as the model changes. Existing Landmark configurations are not deleted; the developer's edited dev form (with the Region id projection of 2026-11-22) is superseded and its projection is not carried over (#975). |
+| LD26 | 2026-11-24 | developer | The "Warp destination" step of the landmark form shows for every area kind ("Show for every area", on #1003): a point landmark can be a warp destination, like the v1 warp points (§ 3 item 2). Only the Region field and the "Access and messages" and "Sub-regions" steps stay conditional on `AreaKind = OwnRegion`. Changes A17 and § 4.1 item 5; built as the Landmark form seed v4 (fix link L4b). |
 
 ### 2.1 Agent decisions: alternatives
 
@@ -187,7 +188,8 @@ Related: [navigation-offroad/DESIGN.md](../navigation-offroad/DESIGN.md) § 6 an
     3. **Access:** Allow entry, Allow exit (both on by default), with an own region.
     4. **Messages and discovery:** "Show enter and leave messages" (off) and the discovery override (off), with an
        own region.
-    5. **Warp:** the domain teleport fields (off by default).
+    5. **Warp:** the domain teleport fields (off by default), for every area kind: a point landmark and a
+       `Linked domain's area` landmark can be warp destinations too (LD26; the warp goes to the pin).
 2. **In game.** `/knk landmark create <name> [region <id>]` at the admin's position (the `radius` form is gone,
    LD08); `link <landmark> <domain>` sets the parent, `unlink` removes it; `list`, `show`, `move`, `delete` as today.
 3. **Domain dashboard.** Landmarks appear in the domain list with the type "Landmark" and can be filtered; opening one
@@ -322,7 +324,7 @@ Related: [navigation-offroad/DESIGN.md](../navigation-offroad/DESIGN.md) § 6 an
 | A14 | `/navigate` lists each landmark once; arrival counts inside a landmark sub-region, and inside the parent's area for `LinkedDomain`. | 2 |
 | A15 | `/knk landmark create <name> radius <n>` is refused with the usage line; `link` sets the parent and doesn't offer the landmark itself. | 2 |
 | A16 | A `Landmark` change in the API reaches the plugin's catalogue, region cache and navigation model within the realtime path. | 2 |
-| A17 | The landmark form offers None, Own region and Linked domain's area; sub-regions, access, messages, discovery and warp show with Own region only. | 3 |
+| A17 | The landmark form offers None, Own region and Linked domain's area; sub-regions, access and messages show with Own region only; the warp step for every area kind (LD26, changed 2026-11-24). | 3 |
 | A18 | Domain pickers show landmarks with their type; a landmark's parent picker leaves out the landmark and its descendants. | 3 |
 
 ## 11. Phases

@@ -178,6 +178,26 @@ This is a human-readable record of capabilities merged into the V3 default branc
     3. The heal needs a plugin that knows `replaceRegionId` (KNG-103, on `next`); an older plugin ignores it and
        refuses as before.
 
+- **Any landmark can be a warp destination now, also a plain point: the landmark form shows the "Warp destination"
+  step for every area kind** ([PandiO/knk-workspace#1003](https://github.com/PandiO/knk-workspace/issues/1003), fix link
+  L4b of [#976](https://github.com/PandiO/knk-workspace/issues/976); developer decision LD26 of 2026-11-24, "Show for
+  every area"; branches `claude/landmark-warp-step-1003` in knk-web-api and knk-web-app, tier:1, no flag). knk-web-api:
+  new Landmark form seed v4 ("Landmark - Default (seed v4)"), seed v3 without the display condition on the "Warp
+  destination" step; the Area step's Region field and the steps "Access and messages" and "Sub-regions" still show only
+  for `Own region` (A17). A point landmark (Area `Point`) and a `Linked domain's area` landmark get the warp at their
+  pin, like the v1 warp points; the API already accepted the teleport fields for every area kind, so only the form
+  changes, and a new test pins that a point and a linked landmark with their warp on are destinations at their pins.
+  knk-web-app: the landmark form's e2e test follows seed v4 (no code change). knk-workspace: DESIGN LD26 and
+  A17. Docs:
+  [smoke test § 5](guides/landmark-domain-smoke-test.md#5-fixes-picked-up-by-the-chain-952-1003) steps 5–6 and § 1
+  step 2.
+  **Admin steps (deploy notes):**
+    1. Seeds: import `Landmark` (form, "Landmark - Default (seed v4)") from the seed panel and make it the default for
+       Landmark. v3 need not be imported; if it was imported, switch it off as default (import never overwrites, so
+       it stays in the database and can be deleted or kept by hand). Instead of importing v4, a database that holds
+       v3 as its default can delete the "Warp destination" step's display condition in the form designer.
+    2. No migration, no `config.yml` key, no API setting, no endpoint or access-rule change.
+
 - **Siege weapons: a weapon spot is now a WorldGuard region you draw in the spot form, and the form shows its size class before you save**
   ([PandiO/knk-workspace#988](https://github.com/PandiO/knk-workspace/issues/988), part of
   [#354](https://github.com/PandiO/knk-workspace/issues/354); developer decision 2026-11-22, spec W76; replaces the spot

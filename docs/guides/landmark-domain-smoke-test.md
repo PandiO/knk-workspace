@@ -1,7 +1,7 @@
 # Landmarks as a Domain subtype — smoke test
 
-**Status:** §§ 1–5 built and merged into `next` (2026-11-22: knk-web-api `8cc4511b`, `55d187d8`, `3bc3cfd5`; knk-plugin `14645895`; knk-web-app `8c9c3553`), not run by the developer. § 1 is tier:3: run it before `next` is promoted. Steps tagged by the links. The branch names in the section notes are the links' branches, now merged.
-**Last updated:** 2026-11-22 (§ 1.0 item 1, steps 2, 3 and 14 aligned with L3, L4 and seed v3, asked by the chain coordinator, docs #1008); 2026-11-22 (status: all sections merged into `next`, docs #1008); 2026-11-22 (§ 3 updated to what L3 built, steps tagged, #985); 2026-11-22 (§ 5 added, fixes #952 and #1003; § 1.0 and § 4.0 name seed v3, L1b); 2026-11-22 (§ 4 updated to what L4 built, steps tagged, #986); 2026-11-22 (§ 2 updated to what L2 built, steps tagged, #984); 2026-11-22 (§ 1 updated to what L1 built, steps tagged, #983); 2026-11-22 (draft from the design, phases 1–4)
+**Status:** §§ 1–5 built and merged into `next` (2026-11-22: knk-web-api `8cc4511b`, `55d187d8`, `3bc3cfd5`; knk-plugin `14645895`; knk-web-app `8c9c3553`), not run by the developer. Fix link L4b (2026-11-24, in review): Landmark form seed v4 (the warp step for every area kind, LD26) in §§ 1, 4 and 5. § 1 is tier:3: run it before `next` is promoted. Steps tagged by the links. The branch names in the section notes are the links' branches, now merged.
+**Last updated:** 2026-11-24 (fix link L4b: seed v4 with the warp step for every area kind, LD26, #1003, in § 1.0 item 3.4, § 1 steps 2–3, § 4.0, § 4 steps 1 and 4, § 5, and § 5 step 6, a point and a linked landmark as warp destinations); 2026-11-22 (§ 1.0 item 1, steps 2, 3 and 14 aligned with L3, L4 and seed v3, asked by the chain coordinator, docs #1008); 2026-11-22 (status: all sections merged into `next`, docs #1008); 2026-11-22 (§ 3 updated to what L3 built, steps tagged, #985); 2026-11-22 (§ 5 added, fixes #952 and #1003; § 1.0 and § 4.0 name seed v3, L1b); 2026-11-22 (§ 4 updated to what L4 built, steps tagged, #986); 2026-11-22 (§ 2 updated to what L2 built, steps tagged, #984); 2026-11-22 (§ 1 updated to what L1 built, steps tagged, #983); 2026-11-22 (draft from the design, phases 1–4)
 **Design:** [specs/landmark-domain/DESIGN.md](../specs/landmark-domain/DESIGN.md) · **Issue:**
 [PandiO/knk-workspace#976](https://github.com/PandiO/knk-workspace/issues/976)
 
@@ -26,10 +26,10 @@ the Migrations workflow on a fresh MySQL 8 database): skip them or run them by h
        `knk.admin.world.landmark` ("domain staff").
     3. A test town with a region and a spawn point in the dev world, and a crown land with a region (Territory V1 on
        `next`).
-    4. The Landmark form seed v3 imported and made the default for Landmark: the form configuration list, Import /
-       seeds, `Landmark` ("Landmark - Default (seed v3)", #1003; it supersedes seed v2, which need not be imported),
-       Make default. The seed v1 configuration, an imported v2 and the developer's edited form stay as they were;
-       switch them off as default.
+    4. The Landmark form seed v4 imported and made the default for Landmark: the form configuration list, Import /
+       seeds, `Landmark` ("Landmark - Default (seed v4)", #1003, LD26; it supersedes seeds v3 and v2, which need not be
+       imported), Make default. The seed v1 configuration, an imported v2 or v3 and the developer's edited form stay as
+       they were; switch them off as default.
 
 ### 1.1 Steps
 
@@ -37,15 +37,16 @@ the Migrations workflow on a fresh MySQL 8 database): skip them or run them by h
    database); by hand: the dev DB] Before the migration, note that the dev DB has landmark rows (the landmark list
    shows them). Apply the migration and reload the landmark list. **Expected:** the list is empty; the migration
    reported no error; towns, districts and structures are all still there with their regions. (A02)
-2. [partly automated: `LandmarkServiceTests.Create_APoint_IsADomainOfTypeLandmark_WithoutARegion_AndTheDomainDefaults`;
-   by hand: the seed v3 form] As landmark staff, open a new landmark form. **Expected:** it is "Landmark - Default
-   (seed v3)": Area offers `Point`, `Own region` and `Linked domain's area` (`None`, `OwnRegion`, `LinkedDomain`; the
-   last only once a parent with a region is picked); there is no Extent, Region id or Radius field. The steps depend
-   on the area: with `Point` or `Linked domain's area` they are Landmark, Location, Area (the last step, no Region
-   field); with `Own region` the Region field shows and Area is followed by Access and messages, Warp destination and
-   Sub-regions. (A01, A17, LD25, #1003)
+2. [partly automated: `LandmarkServiceTests.Create_APoint_IsADomainOfTypeLandmark_WithoutARegion_AndTheDomainDefaults`,
+   `FormConfigurationSeedFilesTests.LandmarkSeed_V4_ShowsTheOwnRegionParts_OnlyForAnOwnRegion_AndTheWarpStepForEveryArea`
+   (the seed's conditions); by hand: the seed v4 form] As landmark staff, open a new landmark form. **Expected:** it is
+   "Landmark - Default (seed v4)": Area offers `Point`, `Own region` and `Linked domain's area` (`None`, `OwnRegion`,
+   `LinkedDomain`; the last only once a parent with a region is picked); there is no Extent, Region id or Radius field.
+   The steps depend on the area: with `Point` or `Linked domain's area` they are Landmark, Location, Area (no Region
+   field) and Warp destination (the last step); with `Own region` the Region field shows and Area is followed by Access
+   and messages, Warp destination and Sub-regions. (A01, A17, LD25, LD26, #1003)
 3. [partly automated: `LandmarkServiceTests.Create_APoint_IsADomainOfTypeLandmark_WithoutARegion_AndTheDomainDefaults`;
-   by hand: the form] Create a landmark with the seed v3 form: a name, a description, a pin captured in game, Area `None`,
+   by hand: the form] Create a landmark with the seed v4 form: a name, a description, a pin captured in game, Area `None`,
    no parent. **Expected:** it saves; `GET api/landmarks/{id}` shows `areaKind` `None`, `wgRegionId` null,
    `allowEntry` and `allowExit` true, `showEnterLeaveMessages` and `teleportEnabled` false; `GET api/Domains/{id}`
    returns the same id as a domain (the Landmark fields with it) and `WgRegionId` null. (A01)
@@ -308,19 +309,20 @@ scenario `landmark-region-is-managed-under-its-parent`.*
        `api/Domains`).
     2. The landmarks of § 1 and § 2: the point landmark of § 1 step 3, "the tower" (own region, parent the test town),
        "Dais" (parent the tower), the `LinkedDomain` landmark of § 1 step 8.
-    3. The Landmark form seed v3 as the default form (§ 1.0 item 3.4): its Region field and its "Access and
-       messages", "Warp destination" and "Sub-regions" steps show only with `Own region`
-       ([#1003](https://github.com/PandiO/knk-workspace/issues/1003), § 5 step 5).
+    3. The Landmark form seed v4 as the default form (§ 1.0 item 3.4): its Region field and its "Access and
+       messages" and "Sub-regions" steps show only with `Own region`; its "Warp destination" step shows for every area
+       kind ([#1003](https://github.com/PandiO/knk-workspace/issues/1003), LD26, § 5 step 5).
 
 ### 4.1 Steps
 
-1. [partly automated: `landmark-domain.spec.ts` "shows the region, access, warp and sub-region steps only with Own
-   region (A17)", on a mocked form with those conditions, and `FormConfigurationSeedFilesTests.LandmarkSeed_V3_ShowsTheOwnRegionParts_OnlyForAnOwnRegion`
-   for the seed's conditions; by hand: the real seed v3 form, see 4.0 item 3.3] As landmark
-   staff, open a new landmark form, fill the name and go to the Area step. Pick `Point`, then `Own region`, and step
-   through with Next. **Expected:** with `Point` there is no Region field and Area is the last step (Submit, no Next);
-   with `Own region` the Region field shows and Next leads to "Access and messages", "Warp destination" and
-   "Sub-regions". (A17)
+1. [partly automated: `landmark-domain.spec.ts` "shows the region, access and sub-region steps only with Own region,
+   and the warp step for every area (A17, LD26)", on a mocked form with those conditions, and
+   `FormConfigurationSeedFilesTests.LandmarkSeed_V4_ShowsTheOwnRegionParts_OnlyForAnOwnRegion_AndTheWarpStepForEveryArea`
+   for the seed's conditions; by hand: the real seed v4 form, see 4.0 item 3.3] As landmark staff, open a new landmark
+   form, fill the name and go to the Area step. Pick `Point` and click Next; go back with Previous, pick `Own region`
+   and step through with Next. **Expected:** with `Point` there is no Region field and Next leads to "Warp destination"
+   (its "Warp destination" switch is there), which is the last step (Submit, no Next); with `Own region` the Region
+   field shows and Next leads to "Access and messages", "Warp destination" and "Sub-regions". (A17, LD26)
 2. [automated: `landmark-domain.spec.ts` "offers Linked domain's area only with a parent that has a region (A17)",
    `landmarkForm.test.ts`] In the same form, leave the parent empty and open the Area options; go back, pick the test
    town as parent, open the Area options again and pick `Linked domain's area`; go back and pick the point landmark of
@@ -335,7 +337,7 @@ scenario `landmark-region-is-managed-under-its-parent`.*
 4. [automated: `landmark-domain.spec.ts` "edits a landmark with the landmark form, and a town with the domain form
    (DESIGN § 4.3)", `landmarks.test.ts` "opens a landmark row …"] In the domain list, click Edit on the tower's row;
    go back and click Edit on the test town's row. **Expected:** the tower opens in the landmark form
-   (`/forms/Landmark/edit/<id>`, "Landmark - Default (seed v3)"), the town in the domain form as before. With a Domain display configuration the rows are links, and the tower's row
+   (`/forms/Landmark/edit/<id>`, "Landmark - Default (seed v4)"), the town in the domain form as before. With a Domain display configuration the rows are links, and the tower's row
    opens the landmark's page (`/display/Landmark/<id>`). (DESIGN § 4.3)
 5. [automated: `landmark-domain.spec.ts` "the parent picker shows the type and leaves out the landmark and its
    descendants (A18)", "a new landmark offers every domain as parent"] Edit the tower in the landmark form and click
@@ -361,11 +363,13 @@ scenario `landmark-region-is-managed-under-its-parent`.*
 
 ## 5. Fixes picked up by the chain (#952, #1003)
 
-*Built by fix link L1b (2026-11-22), knk-web-api `claude/landmark-domain-952` (charter § 3 item 8.1 and #1003).
-#952 is tier:2, #1003 tier:1. Steps tagged `[automated: …]` run in CI (knk-web-api xUnit, CI job Build and test):
-skip them or run them by hand. `[partly automated: …; by hand: …]` names the part only a person can check. Tests:
-`Services/TempNameHealTests`, `Services/Lootbox/LootboxAreaRegionRenameTests`, `Services/DomainSubRegionTests`,
-`Services/FormConfigurationSeedFilesTests`.*
+*Built by fix link L1b (2026-11-22), knk-web-api `claude/landmark-domain-952` (charter § 3 item 8.1 and #1003);
+step 5 changed and step 6 added by fix link L4b (2026-11-24), knk-web-api and knk-web-app
+`claude/landmark-warp-step-1003`: seed v4, the warp step for every area kind (developer decision LD26 on #1003). #952 is
+tier:2, #1003 tier:1. Steps tagged `[automated: …]` run in CI (knk-web-api xUnit, CI job Build and test; knk-web-app
+Playwright in the `e2e` job): skip them or run them by hand. `[partly automated: …; by hand: …]` names the part only a
+person can check. Tests: `Services/TempNameHealTests`, `Services/Lootbox/LootboxAreaRegionRenameTests`,
+`Services/DomainSubRegionTests`, `Services/FormConfigurationSeedFilesTests`, `Services/LandmarkDomainIntegrationTests`.*
 
 ### 5.0 Preconditions
 
@@ -377,7 +381,7 @@ skip them or run them by hand. `[partly automated: …; by hand: …]` names the
        and `/rg info`), and an operator in game.
     2. A lootbox spawn area made through its form with a drawn region, so it is on `lootbox_area_<id>` (lootbox area
        region smoke test, `guides/lootbox-area-region-smoke-test.md`); note its id.
-    3. The Landmark form seed v3 as the default form (§ 1.0 item 3.4).
+    3. The Landmark form seed v4 as the default form (§ 1.0 item 3.4).
 
 ### 5.1 Steps
 
@@ -404,11 +408,22 @@ skip them or run them by hand. `[partly automated: …; by hand: …]` names the
    is not replaced (the row keeps its temp name, as before); a first save names nothing to replace; a domain's own
    `domain_<id>` (a landmark's too) is not healed, so a domain in this state still needs the manual way out of
    `architecture/managed-worldguard-regions.md` § 7. (#952)
-5. [partly automated: `FormConfigurationSeedFilesTests.LandmarkSeed_V3_ShowsTheOwnRegionParts_OnlyForAnOwnRegion`,
-   `FormConfigurationSeedFilesTests` (every seed's dry run), `e2e/landmark-domain.spec.ts` "shows the region, access,
-   warp and sub-region steps only with Own region (A17)"; by hand: the imported form] Open the form configuration list
-   and check that "Landmark - Default (seed v3)" is the default for Landmark. Open a new landmark form, go to the Area
-   step and pick `Point`, then `Linked domain's area` (with the test town as parent), then `Own region`. **Expected:**
-   with `Point` and `Linked domain's area` there is no Region field and Area is the last step; with `Own region` the
-   Region field shows and Next leads to "Access and messages", "Warp destination" and "Sub-regions". (A17, #1003; if
-   the developer decides on #1003 that a point landmark keeps its warp, "Warp destination" shows for every area)
+5. [partly automated: `FormConfigurationSeedFilesTests.LandmarkSeed_V4_ShowsTheOwnRegionParts_OnlyForAnOwnRegion_AndTheWarpStepForEveryArea`,
+   `FormConfigurationSeedFilesTests.LandmarkSeed_IsV4_WithTheAreaKinds_AndDrawsItsRegionOnWgRegionId`,
+   `FormConfigurationSeedFilesTests` (every seed's dry run), `e2e/landmark-domain.spec.ts` "shows the region, access
+   and sub-region steps only with Own region, and the warp step for every area (A17, LD26)"; by hand: the imported
+   form] Open the form configuration list and check that "Landmark - Default (seed v4)" is the default for Landmark (an
+   imported v3 is not the default). Open a new landmark form (with the test town as parent), go to the Area step and
+   pick `Point` and click Next, then go back and pick `Linked domain's area` and click Next, then go back and pick
+   `Own region` and step through with Next. **Expected:** with `Point` and `Linked domain's area` there is no Region
+   field and Next leads to "Warp destination", the last step; with `Own region` the Region field shows and Next leads to
+   "Access and messages", "Warp destination" and "Sub-regions". (A17, LD26, #1003)
+6. [partly automated: knk-web-api
+   `LandmarkDomainIntegrationTests.APointLandmark_AndALinkedOne_WithTheirWarpOn_AreDestinations_AtTheirPins`; knk-plugin
+   `WarpTargetsTest.aLandmarkIsAWarpTarget_ByNameOrWithTheTypeWordLandmark`; by hand: the dev server] As landmark staff,
+   edit the point landmark of § 1 step 3 and the `LinkedDomain` landmark of § 1 step 8: in the "Warp destination" step
+   switch "Warp destination" on (price 0) and save each. Call `GET api/teleport-destinations?userId=<a player's id>`;
+   then, as that player in game, run `/warp landmark:<name of the point landmark>`, walk away and run
+   `/warp landmark:<name of the LinkedDomain landmark>`. **Expected:** both are listed with `"domainType": "Landmark"`
+   and `available` true; each warp takes the player to that landmark's pin (a point landmark has no region, and the
+   linked one warps to its own pin, not to its parent's spawn). Switch both warps off again. (LD26, #1003)
