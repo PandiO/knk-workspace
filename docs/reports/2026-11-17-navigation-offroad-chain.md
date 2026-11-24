@@ -1,6 +1,6 @@
 # Off-road navigation and landmarks chain — progress report
 
-**Status:** Running, waiting for the developer (2026-11-18) · **Last updated:** 2026-11-21 (smoke sessions of 2026-11-21); 2026-11-21 (live test of 2026-11-20); 2026-11-20 (L7b step B merged); 2026-11-20 (L7b step A merged); 2026-11-19 (F2 block); 2026-11-18 (L9 block); 2026-11-18 (L5 block); 2026-11-18 (L8 step A block)
+**Status:** Running, waiting for the developer (2026-11-18) · **Last updated:** 2026-11-22 (§ 15 accepted, #976); 2026-11-21 (smoke sessions of 2026-11-21); 2026-11-21 (live test of 2026-11-20); 2026-11-20 (L7b step B merged); 2026-11-20 (L7b step A merged); 2026-11-19 (F2 block); 2026-11-18 (L9 block); 2026-11-18 (L5 block); 2026-11-18 (L8 step A block)
 
 **Issue:** [PandiO/knk-workspace#698](https://github.com/PandiO/knk-workspace/issues/698), links
 [#703](https://github.com/PandiO/knk-workspace/issues/703) (L1), [#704](https://github.com/PandiO/knk-workspace/issues/704) (L2),
@@ -323,6 +323,20 @@ on `next` (Decided 2026-11-17).
     `NormalizePermissionGroupDefaultRouteMode`, Enum form field; knk-web-api#78 `86463af7`, knk-web-app#76 `3b672c97`,
     #955 `63126263`), because the hand-added form field could not be published; the plugin reads either case, no
     plugin change. Still to run: the rest of § 6, § 7 (#709), § 15 (#852), L1's concurrency item. `next` CI green.
+47. **2026-11-22.** (1) § 15 L7b (#852) accepted without live testing by the developer (all steps; § 15.4 steps 5 and
+    7 have no automated test). (2) The developer started the Landmarks as a Domain subtype chain (#976, coordinator
+    `session_01R1w2UtYX9XFbTVUFy6zJUb`): it reverses DESIGN § 6.1 ("It is not a domain"); L1 (#983, knk-web-api
+    `8cc4511b`, non-additive migration, landmark rows dropped) is in `next`, and its plugin link L3 (#985) will rework
+    L8's landmark classes and needs the shared plugin navigation slot (told the slot is free from our side, engine L5
+    queued first; agree the order with the engine coordinator). #945's landmark path is removed by #976 L1. (3) Open
+    for the developer: whether off-road smoke § 6 (L8) and § 7 (L9) close as superseded by #976 or are kept for after
+    it; the docs session for this chain waits for that answer (landmark guides would be rewritten). Still open
+    otherwise: L1's concurrency item. `next` CI green.
+48. **#976 L3 merged into `next` (2026-11-22 21:38, knk-plugin#125 `14645895`).** L8's landmark classes now sit on the
+    domain model (`LandmarkExtent` is a point or a union of region shapes, no cylinder; `LandmarkWeights` over the union;
+    `/knk landmark` without radius, `link` as parent). Checked here: the merge changes no golden transcript,
+    `NavigateCommand`, route-mode code or `config.yml`. The plugin navigation slot is free again. The landmark chain's
+    smoke guide (`landmark-domain-smoke-test.md` § 3) covers landmark navigation and weights on the new model.
 
 ## 4. Link blocks
 
