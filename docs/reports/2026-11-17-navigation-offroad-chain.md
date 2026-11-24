@@ -342,6 +342,11 @@ on `next` (Decided 2026-11-17).
     cover moves there. #976's fix link L4b (#1009) moves those steps and marks § 6, § 6.5 and § 7 "Superseded" with a
     step mapping; this chain leaves that file to L4b. The only live-test item left for this chain is L1's
     concurrency item (#703); the docs session follows it (or the developer's acceptance of it) and L4b's merge.
+50. **#976 L4b merged into `next` (2026-11-24, #1016 `d8eac5f2`).** Off-road smoke § 6 (6.0–6.5) and § 7 (7.0, 7.1)
+    are "Superseded" sections with headings and numbers kept; 27 steps carried over to landmark-domain § 3.2, the
+    mapping on #1009. For this chain's docs session: the `navigation.landmarks` row of
+    `guides/admin/plugin-configuration.md` still points to off-road § 6.3; it should point to landmark-domain § 3
+    (also noted on #1010). The docs session now waits only on L1's concurrency item (#703).
 
 ## 4. Link blocks
 
