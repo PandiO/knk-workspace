@@ -1,6 +1,6 @@
 # Agent token efficiency and reuse: plan
 
-**Status:** Proposed — waiting for the developer's approval · **Last updated:** 2026-11-24 (Phases 8 and 9: coordinator hand-over and wake-ups, smoke-run session) · 2026-11-22
+**Status:** Proposed — developer answered § 5 on 2026-11-24; waiting for approval · **Last updated:** 2026-11-24 (§ 5 decisions: docs per chain, Phase 7 dropped, run by a chain, run log in the guide; Phase 8 hand-over recommendation) · 2026-11-24 (Phases 8 and 9: coordinator hand-over and wake-ups, smoke-run session) · 2026-11-22
 **Issue:** PandiO/knk-workspace#987 (parent) · **Evidence:** [code-graph trial report](../../reports/2026-11-22-code-graph-mcp-trial.md)
 § 1 (baseline) and § 1b (12 real sessions) · **Related:** PandiO/knk-workspace#977 (code-graph trial, shelved),
 PandiO/knk-workspace#978 (reuse catalogue)
@@ -34,7 +34,6 @@ Medians over the next implementation links after each phase, measured with the s
 | Session board size | 20.7k tokens | ≤ 4k |
 | Re-read (cached) tokens per implementation link | 57M | −20 % |
 | New specs with a "Reuse" section (#978) | 0 % | 100 % |
-| Merges into `next` with a code review | at least 4 recent sessions without one (Codex usage limit) | every merge |
 | Coordinator context at its largest | 883k (Production), 776k (NPC #358) | ≤ 300k (Phase 8) |
 | Coordinator cost per chain | $119 (Production), $203 (NPC #358) | −50 % (Phase 8) |
 | Smoke results, design and new ideas handled in a coordinator | 17 of the NPC coordinator's 29 developer turns | 0: redirected (Phase 9) |
@@ -44,7 +43,7 @@ measurement.
 
 ## 3. Phases
 
-Each phase is one `tier:1` sub-issue of #987. Phases 1–5 and 7–9 change agent workflow files, so each goes to
+Each phase is one `tier:1` sub-issue of #987. Phases 1–5, 8 and 9 change agent workflow files (Phase 7 is dropped), so each goes to
 knk-workspace `main` through its own pull request, then `main` → `next` (global instructions, "Branches" rule 11).
 Order is by measured gain per effort. Phases 1, 2, 4, 6 and 8 don't depend on each other and can run in parallel.
 
@@ -125,9 +124,14 @@ catch drift between code and plan (P9 filed #930), so they stay.
 
 1. The link's report block gets a "Docs facts" list: behaviour, settings, endpoints and limits as built, with file
    references. The docs session starts from that list, not from the code.
-2. One docs session per chain, or per week, takes every open `documentation` issue of that chain. That changes
-   "Shipping a change", item 3 at merge ("start a new session right away"), so it needs the developer's decision.
-   The deploy gate (player and admin guides before a tester run) stays as it is.
+2. **One docs session per chain** (developer decision 2026-11-24) takes every open `documentation` issue of that
+   chain. It starts when the chain's last phase is merged into `next`, or earlier when a deploy gate needs a player or
+   admin guide. This changes "Shipping a change", item 3 at merge ("start a new session right away"), in the global
+   instructions, `AGENTS.md`/`CLAUDE.md`, `docs-session-prompt.md` and the `knk-docs-session` skill. The deploy gate
+   (player and admin guides before a tester run) stays as it is. Why it saves: one start context (~85k) and one read of
+   the chain's charter, report and guides per chain instead of per phase, with a warm cache across the phases' docs
+   inside that one session. A cache does not carry over from the implementing link: it lives inside one session for
+   at most an hour.
 
 Target: fewer docs sessions per merged phase, ≤ 15k code read per docs session.
 
@@ -144,7 +148,7 @@ components.
 The catalogue also cuts reading: a ~2k page replaces searching 65k words of specs. Target: every new spec has a Reuse
 section, and opt-outs appear in its decision log.
 
-### Phase 7: A review for every merge into `next`
+### Phase 7: A review for every merge into `next` — dropped
 
 Facts: at least 4 recent session summaries say Codex was skipped for its usage limit or did not review.
 
@@ -152,8 +156,8 @@ Facts: at least 4 recent session summaries say Codex was skipped for its usage l
    request's diff in a subagent, and handles its findings like Codex findings.
 2. The report block and digest list which review ran.
 
-This adds tokens: about one subagent per skipped review. It is the one phase that trades tokens for accuracy; drop it
-if the developer prefers the current rule.
+This adds tokens: about one subagent per skipped review. **Dropped by the developer on 2026-11-24:** the current
+rule stays (continue without Codex at its usage limit and say so on the pull request). Kept here as the record.
 
 ### Phase 8: Coordinators hand over to a fresh session and wake up less
 
@@ -170,7 +174,10 @@ Added 2026-11-24 after measuring two coordinators (same method as § 1, from the
 Each wake-up re-reads the whole context. After an idle hour the cache expires, and the next wake-up paid $4.50–6 only
 to rebuild it. The NPC coordinator alone cost more than the 12 sessions in § 1 together ($177).
 
-1. **Hand-over:** at about 300k context, or at a phase boundary, the coordinator brings the charter's links table and
+1. **Hand-over** (recommended 2026-11-24, see § 5): at every phase boundary, with 300k context as a hard ceiling.
+   Above 300k the coordinator hands over at its next quiet moment (no link mid-merge). A wake-up after more than an
+   hour idle with more than ~200k context is the cheapest moment, since the cache has expired and is rebuilt anyway.
+   The coordinator brings the charter's links table and
    the progress report up to date, starts a fresh coordinator with the knk-coordinator start note, and ends itself.
    The new session reads the charter, the report's last link block and the open sub-issues. The board row and the
    parent issue name the new session.
@@ -194,8 +201,10 @@ smoke results, 7 design and 2 new ideas, and smoke failures also arrived through
 1. **New skill `knk-smoke-run`**, one short session per test sitting, started from the daily digest's "ready to
    test" list or by the developer. It:
    1. presents the steps from `docs/guides/<feature>-smoke-test.md` (skipping the `[automated: …]` steps unless asked);
-   2. records each step's result (works, fails or skipped) with the tested commits, in the guide's run log or the next
-      tester run's checklist under "Developer pre-checks";
+   2. records each step's result (works, fails or skipped) with the date and the tested commits in a "Run log"
+      section of the feature's smoke-test guide (developer decision 2026-11-24). A run on the alpha before a tester
+      run is still also listed in that run's checklist under "Developer pre-checks", as `closed-alpha-test-runs.md`
+      asks;
    3. fixes a really small failure on the branch under test (global "GitHub Issues" rule 2) and adds its test;
    4. files every larger failure as a `bug` with steps to reproduce, as a sub-issue of the feature, for the
       coordinator to schedule;
@@ -228,13 +237,16 @@ Reopen #977 if a Phase 0 rerun shows any of these:
 The trial is ready to resume: candidates vetted, tools chosen (codebase-memory-mcp and codegraph), and the baseline,
 ground truth and recipe are in the report.
 
-## 5. Open questions for the developer
+## 5. Decisions and open question
 
-1. Approve the plan and the order? Phase 0 first; then 1, 2, 4, 6 and 8 in parallel (8 is the largest single saving);
-   then 3, 5, 7 and 9.
-2. Phase 5 changes the "start a docs session right away" rule. Batch per chain, per week, or keep it as it is?
-3. Phase 7 spends tokens on a fallback review. Yes or no?
-4. Who runs it: one session per phase, or one small chain under a coordinator?
-5. Phase 8: is about 300k the right hand-over point, or would you rather hand over at every phase boundary only?
-6. Phase 9: where should a smoke run record its results: in the feature's smoke-test guide (a run log section) or in
-   the next tester run's checklist under "Developer pre-checks", as now?
+Developer answers of 2026-11-24:
+
+1. Phase 5: one docs session per chain (reason recorded in Phase 5: shared start context and reading, not a shared cache).
+2. Phase 7: no fallback review; dropped.
+3. Who runs it: a small chain under a coordinator. Charter to draft on approval.
+4. Phase 9: smoke-run results go in a "Run log" section of the feature's smoke-test guide.
+5. Phase 8, asked by the developer for a recommendation: hand over at every phase boundary, with 300k as a hard
+   ceiling and a cold-cache wake-up above ~200k as the preferred moment. Waiting for the developer's yes.
+
+Open: the developer's approval of the plan, with the order Phase 0 first; then 1, 2, 4, 6 and 8 in parallel; then 3,
+5 and 9.
