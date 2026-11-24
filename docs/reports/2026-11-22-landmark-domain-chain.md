@@ -28,9 +28,9 @@ design session of 2026-11-22).
    `SimpleRegionTransitionService` compares against "gate" while the API sends "GateStructure" (block 4.3b item
    6.1): **answered 2026-11-24**, filed as #1015 (to check). #958: **answered 2026-11-24**, a separate session now
    (fix link L3b).
-6. **#1003 answered 2026-11-24:** the "Warp destination" step shows for every area kind; fix link L4b builds Landmark
-   form seed v4 (deploy: import seed v4 as the default instead of v3) and updates DESIGN A17 (LD26), the e2e test and
-   the smoke guide.
+6. **#1003 answered 2026-11-24 and in `next` (L4b):** the "Warp destination" step shows for every area kind. Deploy:
+   import "Landmark - Default (seed v4)" as the default (instead of v3 or v2). Smoke § 1 step 2, § 4 step 1, § 5
+   steps 5–6, and the by-hand parts of the new § 3.2 (steps carried over from the off-road guide).
 7. **L1b (#952, #1003) in `next`:** smoke guide § 5; deploy: import the Landmark form seed v3 and make it the
    default (v2 need not be imported; after L4b: seed v4). #1006 **answered 2026-11-24**: it goes with #989 (the
    generic region lifecycle), now its sub-issue; until then the manual way out of managed-worldguard-regions § 7
@@ -38,8 +38,8 @@ design session of 2026-11-22).
 8. **Docs:** #1008 done and closed by its docs session (session_01R1w2UsgKAzYiVf45xr41DR; main docs PR #1011 merged
    into `next` `188ade30`); leftovers #1009 and #1010. The smoke § 1 wording fix (seed v3, step 14 after L3) is
    PandiO/knk-workspace#1012 into `next`, merged by the docs session.
-9. **Off-road smoke § 6 and § 7 (#698): answered 2026-11-24**, close as superseded by landmark-domain § 3 after the
-   uncovered steps move there; fix link L4b does it (#1009).
+9. **Off-road smoke § 6 and § 7 (#698): answered 2026-11-24, done (L4b, #1009 closed):** superseded by landmark-domain
+   § 3; the uncovered steps are in § 3.2.
 
 ## 2. Summary
 
@@ -51,7 +51,7 @@ design session of 2026-11-22).
 | L4 Web app (tier:2) | #986 | Merged into `next` 2026-11-22 20:19 UTC (knk-web-app `8c9c3553`, knk-workspace `99da72cc`) | `claude/landmark-domain`: knk-web-app `4bc6b88d`; `claude/landmark-domain-l4`: knk-workspace `73e785d4` | [knk-web-app#78](https://github.com/PandiO/knk-web-app/pull/78), [knk-workspace#1004](https://github.com/PandiO/knk-workspace/pull/1004) | green on `4bc6b88d` (build-and-test, e2e; both runs); knk-workspace no checks; Codex at its usage limit (skipped) | create_session session_01R1w2UtGykzTGpUL4Ksj6S6, started 2026-11-22 19:46 UTC |
 | L1b #952 region re-run left on a temp name, and #1003 Landmark form seed v3 (charter § 3 item 8; fix link) | #952, #1003 | Merged into `next` 2026-11-22 20:50 UTC (knk-web-api `3bc3cfd5`, knk-workspace `f7e4f671`); `domain_<id>` part of #952 split off to #1006 | `claude/landmark-domain-952`: knk-web-api `60fe2723`; `claude/landmark-domain-l1b`: knk-workspace `d06f362d` | [knk-web-api#85](https://github.com/PandiO/knk-web-api/pull/85), [knk-workspace#1007](https://github.com/PandiO/knk-workspace/pull/1007) | green on `60fe2723` (build-and-test, mysql-tests, fresh-database; both runs); Codex at its usage limit (skipped) | create_session session_01R1w2Ut1aonbYwio9RXX7mA, started 2026-11-22 20:20 UTC |
 | L3b #958 NPC replay fails at scene origin x ≥ 32752 (developer decision 2026-11-24; fix link) | #958 | Running (started 2026-11-24 08:13 UTC) | `claude/npc-replay-958`: knk-plugin, knk-workspace (none yet) | none | none | create_session session_01R1w2UuF3ht2BpNQtH69s5f in "Default Correct" |
-| L4b #1003 warp step for every area kind (seed v4) and #1009 off-road smoke §§ 6–7 superseded (developer decisions 2026-11-24; fix link) | #1003, #1009 | Running (started 2026-11-24 08:20 UTC) | `claude/landmark-warp-step-1003`: knk-web-api, knk-web-app; `claude/landmark-domain-l4b`: knk-workspace (none yet) | none | none | subagent of the coordinator (two component repos, skill § 4.1.4.2); its block is written by the coordinator from its final report |
+| L4b #1003 warp step for every area kind (seed v4) and #1009 off-road smoke §§ 6–7 superseded (developer decisions 2026-11-24; fix link) | #1003, #1009 | Merged into `next` 2026-11-24 09:55 UTC (knk-web-api `e06fd5c0`, knk-web-app `8be9e24c`, knk-workspace `d8eac5f2`); #1009 closed (docs) | `claude/landmark-warp-step-1003`: knk-web-api `a65baee9`, knk-web-app `f1d5491e`; `claude/landmark-domain-l4b`: knk-workspace `0a0d74bd` | [knk-web-api#86](https://github.com/PandiO/knk-web-api/pull/86), [knk-web-app#79](https://github.com/PandiO/knk-web-app/pull/79), [knk-workspace#1016](https://github.com/PandiO/knk-workspace/pull/1016) | green (API build-and-test, mysql-tests after one re-run of flaky #1017, fresh-database; web app build-and-test, e2e); Codex at its usage limit (skipped) | subagent of the coordinator, 2026-11-24 08:20–09:50 UTC |
 
 ## 3. Coordinator decisions
 
@@ -229,6 +229,11 @@ design session of 2026-11-22).
     6. Route of L4b: a subagent of the coordinator, because it changes two component repos (knk-web-api, knk-web-app)
        and L4's `create_session` attach of knk-web-api was refused once (skill § 4.1.4.2). L3b and L4b share no
        component repo.
+22. **L4b checked and merged into `next`** (2026-11-24 09:55 UTC). Every check of skill § 6 held: heads matched, all
+    three branches contained `next`, scope as asked, CI green (API after one re-run of a flaky MySQL test outside the
+    change, filed #1017), tests at or above baseline, decisions logged, smoke steps tagged, Codex at its usage limit.
+    The coordinator read the seed diff: v4 differs from v3 only in GUIDs, name, description and the dropped warp-step
+    condition. #1009 closed (docs in `next`); the off-road coordinator was told. Alternatives: none needed.
 
 ## 4. Link blocks
 
@@ -715,3 +720,59 @@ _(Each link appends its block here when it finishes.)_
 9. **Notes for later links.**
     1. L3 (#985) and #1006: the API already sends `replaceRegionId` equal to the target for these owners on a retry;
        a plugin check of the existing region (decision 1 (b)) would make the domain heal safe.
+
+### 4.7 L4b — warp step for every area kind (seed v4) and off-road smoke §§ 6–7 superseded (#1003, #1009)
+
+_Written by the coordinator from the subagent's final report (2026-11-24); the subagent did not edit this file._
+
+1. **Scope done.**
+    1. knk-web-api: Landmark form seed v4 ("Landmark - Default (seed v4)", `configurationGuid`
+       `0e58df82-02fb-59c1-9969-5a0a6ce15194` = uuid5(v3, "seed-v4"), steps and fields uuid5(v3, their v3 GUID)): v3
+       without the "Warp destination" step's display condition (LD26); seeds README v4 paragraph and table row; seed
+       tests pin v4; new `LandmarkDomainIntegrationTests.APointLandmark_AndALinkedOne_WithTheirWarpOn_AreDestinations_AtTheirPins`.
+       No migration, no API code change.
+    2. knk-web-app: the A17 e2e test and its mocked form follow seed v4 (renamed "shows the region, access and
+       sub-region steps only with Own region, and the warp step for every area (A17, LD26)").
+    3. knk-workspace: DESIGN LD26, A17 and § 4.1 item 5; smoke guide seed v4 (§ 1.0, § 1 steps 2–3, § 4.0, § 4 steps
+       1 and 4, § 5 step 5) and new § 5 step 6 (a point and a linked landmark as warp destinations); new § 3.2 "Carried
+       over from the off-road guide" (27 steps); `navigation-offroad-smoke-test.md` § 6 (6.0–6.5) and § 7 (7.0, 7.1)
+       superseded with the step mapping, headings and numbers kept; changelog block with the deploy note.
+2. **Commits and heads.** knk-web-api `claude/landmark-warp-step-1003` `a65baee9` (base `next` `3bc3cfd5`); knk-web-app
+   `claude/landmark-warp-step-1003` `f1d5491e` (base `8c9c355`); knk-workspace `claude/landmark-domain-l4b` `0a0d74bd`
+   (base `baf9ef74`). `next` did not move during the link.
+3. **PRs.** PandiO/knk-web-api#86 (`Closes #1003`), PandiO/knk-web-app#79 (`Part of #1003`),
+   PandiO/knk-workspace#1016 (`Closes #1009`, `Part of #1003`); merged into `next` by the coordinator.
+4. **Tests, baseline → result.**
+    1. knk-web-api: build 0 → 0 errors; 5344 → 5345 passed, 131 skipped (MySQL, run in CI), 0 failed. The renamed
+       seed tests fail against v3 and pass against v4.
+    2. knk-web-app: Jest 2951 → 2951; tsc 0 → 0; build passed; typecheck:e2e passed; Playwright 382 → 382 (one test
+       renamed; it fails against the old mock).
+    3. knk-workspace: link check over the changed docs, 0 broken (CHANGELOG and `plugin-configuration.md` anchors
+       into the off-road headings included); every test named in § 3.2 exists on `next`.
+    4. Known reds: the pull-request run's mysql-tests failed once in
+       `DiscoveryLedgerMySqlTests.TitleCrossing_PostsTheXpOnceAndAppliesTheBonusOnce` (outside this change), green on
+       the push run and the re-run; filed as flaky #1017.
+    5. Codex: usage limit on all three PRs; finished without it, said so on each.
+5. **Decisions (DESIGN § 4.3).**
+    1. *Extra API test for LD26.* Chosen: a warp-destination test for a point and a linked landmark, since the seed
+       only shows the step. Alternatives: (a) seed test only; (b) a plugin test, out of the link's repos (covered by
+       `WarpTargetsTest`).
+    2. *README table.* Chosen: a one-row table under the v4 paragraph, as other v3 entries have. Alternative: (a)
+       paragraph only.
+    3. *Where carried-over steps go.* Chosen: one § 3.2 inside § 3. Alternatives: (a) spread into §§ 1, 2, 4 (splits
+       the mapping, renumbers cited steps); (b) a new top-level section (against "§ 3").
+    4. *What counts as covered.* Chosen: drop an old step only when §§ 1–5 check the same behaviour on the new model or
+       the behaviour is gone (radius, `landmark_<id>`, `AddLandmarks`); partly covered steps keep their uncovered half.
+       Alternative: (a) carry every step (duplicates).
+    5. *Off-road headings.* Chosen: keep every heading (6.0–6.5, 7.0, 7.1) with a mapping list, because other docs link
+       them. Alternative: (a) one note per top-level section (breaks the § 6.3 links).
+    6. *New smoke § 5 step 6.* Chosen, because LD26 is player-visible and the other steps test warps only on own
+       regions. Alternative: (a) change only the expected form steps.
+6. **Out of scope, noted.** #1017 (flaky MySQL test, filed). Docs follow-ups added to #1010: the landmarks admin guide
+   and `guides/README.md` still name seed v3 and "Warp destination (Own region)"; the `navigation.landmarks` row of
+   `plugin-configuration.md` points to off-road § 6.3 instead of landmark-domain § 3.
+7. **Blockers.** None.
+8. **At merge / what the developer must do.** Import "Landmark - Default (seed v4)" and make it the default (v3 need
+   not be imported; if it was, switch it off as default); smoke § 1 step 2, § 4 step 1, § 5 steps 5–6 and the by-hand
+   parts of § 3.2.
+9. **Notes for later links.** None.
