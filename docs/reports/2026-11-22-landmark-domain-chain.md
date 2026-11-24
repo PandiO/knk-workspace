@@ -26,8 +26,10 @@ design session of 2026-11-22).
 5. **L3 #985 in `next` (tier:2):** smoke guide § 3 (9 steps; `navigation.landmarks: true` for steps 5, 6, 8); deploy:
    no `config.yml` key; run `/knk regions repair` once after the plugin deploy. Decide: the gate check in
    `SimpleRegionTransitionService` compares against "gate" while the API sends "GateStructure" (block 4.3b item
-   6.1): **answered 2026-11-24**, filed as #1015 (to check). #958: **answered 2026-11-24**, a separate session now
-   (fix link L3b).
+   6.1): **answered 2026-11-24**, filed as #1015 (to check). #958: **fixed and in `next`** (fix link L3b, 2026-11-24:
+   the NPC route line on a 1/4096 grid; scene order no longer matters). **Review:** paper-boot CI now takes about 32
+   minutes (job limit 50, wait 2400 s) because L3b's check scenario replays the walk at x ≥ 32768 (about 3.5 minutes);
+   a shorter check is possible later if CI time matters more.
 6. **#1003 answered 2026-11-24 and in `next` (L4b):** the "Warp destination" step shows for every area kind. Deploy:
    import "Landmark - Default (seed v4)" as the default (instead of v3 or v2). Smoke § 1 step 2, § 4 step 1, § 5
    steps 5–6, and the by-hand parts of the new § 3.2 (steps carried over from the off-road guide).
@@ -50,7 +52,7 @@ design session of 2026-11-22).
 | L3 Plugin (tier:2), also #958 (findings only) and the plugin part of #951 | #985 | Merged into `next` 2026-11-22 21:38 UTC (knk-plugin `14645895`, knk-workspace `e6bb8dfe`) | `claude/landmark-domain`: knk-plugin `31658c58`; `claude/landmark-domain-l3`: knk-workspace `43bcdbf3` | [knk-plugin#125](https://github.com/PandiO/knk-plugin/pull/125), [knk-workspace#1005](https://github.com/PandiO/knk-workspace/pull/1005) | green on `31658c58` (build, paper-boot; both runs, one build re-run for a `HarvestModuleTest` setup error outside the PR); Codex at its usage limit (skipped) | create_session session_01R1w2UtBFy9s4dBXQoeBMQF (blocked, network); rerun session_01R1w2UuLNw6Cr3qwUKQNvao in "Default Correct" (decision 14) |
 | L4 Web app (tier:2) | #986 | Merged into `next` 2026-11-22 20:19 UTC (knk-web-app `8c9c3553`, knk-workspace `99da72cc`) | `claude/landmark-domain`: knk-web-app `4bc6b88d`; `claude/landmark-domain-l4`: knk-workspace `73e785d4` | [knk-web-app#78](https://github.com/PandiO/knk-web-app/pull/78), [knk-workspace#1004](https://github.com/PandiO/knk-workspace/pull/1004) | green on `4bc6b88d` (build-and-test, e2e; both runs); knk-workspace no checks; Codex at its usage limit (skipped) | create_session session_01R1w2UtGykzTGpUL4Ksj6S6, started 2026-11-22 19:46 UTC |
 | L1b #952 region re-run left on a temp name, and #1003 Landmark form seed v3 (charter § 3 item 8; fix link) | #952, #1003 | Merged into `next` 2026-11-22 20:50 UTC (knk-web-api `3bc3cfd5`, knk-workspace `f7e4f671`); `domain_<id>` part of #952 split off to #1006 | `claude/landmark-domain-952`: knk-web-api `60fe2723`; `claude/landmark-domain-l1b`: knk-workspace `d06f362d` | [knk-web-api#85](https://github.com/PandiO/knk-web-api/pull/85), [knk-workspace#1007](https://github.com/PandiO/knk-workspace/pull/1007) | green on `60fe2723` (build-and-test, mysql-tests, fresh-database; both runs); Codex at its usage limit (skipped) | create_session session_01R1w2Ut1aonbYwio9RXX7mA, started 2026-11-22 20:20 UTC |
-| L3b #958 NPC replay fails at scene origin x ≥ 32752 (developer decision 2026-11-24; fix link) | #958 | In review: root cause fixed (route line on a 1/4096 grid), PRs open, not merged (block 4.6) | `claude/npc-replay-958`: knk-plugin `a888d8c6`, knk-workspace `a340f689` | [knk-plugin#126](https://github.com/PandiO/knk-plugin/pull/126), [knk-workspace#1018](https://github.com/PandiO/knk-workspace/pull/1018) | green on `a888d8c6` (build, paper-boot with 80 scenarios; both runs); Codex at its usage limit (skipped) | create_session session_01R1w2UuF3ht2BpNQtH69s5f in "Default Correct" |
+| L3b #958 NPC replay fails at scene origin x ≥ 32752 (developer decision 2026-11-24; fix link) | #958 | Merged into `next` 2026-11-24 12:20 UTC (knk-plugin `2c5d5846`, knk-workspace `f193120d`) | `claude/npc-replay-958`: knk-plugin `a888d8c6`, knk-workspace `a340f689` | [knk-plugin#126](https://github.com/PandiO/knk-plugin/pull/126), [knk-workspace#1018](https://github.com/PandiO/knk-workspace/pull/1018) | green on `a888d8c6` (build, paper-boot with 80 scenarios, both runs); Codex at its usage limit (skipped) | create_session session_01R1w2UuF3ht2BpNQtH69s5f in "Default Correct", 2026-11-24 08:13 UTC |
 | L4b #1003 warp step for every area kind (seed v4) and #1009 off-road smoke §§ 6–7 superseded (developer decisions 2026-11-24; fix link) | #1003, #1009 | Merged into `next` 2026-11-24 09:55 UTC (knk-web-api `e06fd5c0`, knk-web-app `8be9e24c`, knk-workspace `d8eac5f2`); #1009 closed (docs) | `claude/landmark-warp-step-1003`: knk-web-api `a65baee9`, knk-web-app `f1d5491e`; `claude/landmark-domain-l4b`: knk-workspace `0a0d74bd` | [knk-web-api#86](https://github.com/PandiO/knk-web-api/pull/86), [knk-web-app#79](https://github.com/PandiO/knk-web-app/pull/79), [knk-workspace#1016](https://github.com/PandiO/knk-workspace/pull/1016) | green (API build-and-test, mysql-tests after one re-run of flaky #1017, fresh-database; web app build-and-test, e2e); Codex at its usage limit (skipped) | subagent of the coordinator, 2026-11-24 08:20–09:50 UTC |
 
 ## 3. Coordinator decisions
@@ -234,6 +236,17 @@ design session of 2026-11-22).
     change, filed #1017), tests at or above baseline, decisions logged, smoke steps tagged, Codex at its usage limit.
     The coordinator read the seed diff: v4 differs from v3 only in GUIDs, name, description and the dropped warp-step
     condition. #1009 closed (docs in `next`); the off-road coordinator was told. Alternatives: none needed.
+23. **L3b checked and merged into `next`** (2026-11-24 12:20 UTC). Every check of skill § 6 held: heads matched, both
+    branches contained `next`, scope (`RouteFollower`, `NavGroup`, the replay scenario, `PaperScenarios`,
+    `paper-boot.yml`, three docs) out of the open NPC PRs' lines and out of `core/navigation/`, CI green on
+    `a888d8c6` (build, paper-boot 80 scenarios, both runs), tests knk-core 3809 → 3813 (others unchanged), block 4.6
+    with four decisions, #958 `status:in-review`, Codex at its usage limit. The coordinator read the fix: the route
+    line's x and z on a 1/4096 grid (exact as a double anywhere in the world border; the root cause was the lost
+    fraction bit from x 32768 with a road along a block face) and a `NavGroup` queue fix the exact coordinates
+    exposed. Accepted with a flag for the developer: paper-boot's wait 1800 → 2400 s and job limit 40 → 50 minutes
+    for the 3.5-minute check scenario. Alternatives: (a) send L3b back for a shorter check scenario, rejected (the full
+    replay is the proof the developer's issue asked for; shortening it is reversible later); (b) hold the merge for
+    the developer, rejected (CI time is not a merge gate).
 
 ## 4. Link blocks
 

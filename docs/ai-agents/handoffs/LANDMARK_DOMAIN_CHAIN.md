@@ -1,6 +1,6 @@
 # Landmarks as a Domain subtype chain — charter
 
-**Status:** In review (2026-11-22: L1–L4 and the fix link L1b merged into `next`; waiting for the developer's tests and the promotion of `next`; coordinator session_01R1w2UtYX9XFbTVUFy6zJUb, cloud)
+**Status:** In review (2026-11-24: L1–L4 and the fix links L1b, L3b, L4b merged into `next`; waiting for the developer's tests and the promotion of `next`; coordinator session_01R1w2UtYX9XFbTVUFy6zJUb, cloud)
 **Last updated:** 2026-11-22 (§ 3 item 8: bugs picked up by the chain, developer decision, added from the design session); 2026-11-22 (coordinator's first run: progress report, knk-workspace branches, model, #981); 2026-11-22 (draft from the design session)
 **Issues:** parent [PandiO/knk-workspace#976](https://github.com/PandiO/knk-workspace/issues/976); sub-issues per
 link below. Reference issues as `PandiO/knk-workspace#n` in component repos.
