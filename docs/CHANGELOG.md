@@ -188,7 +188,10 @@ This is a human-readable record of capabilities merged into the V3 default branc
   pin, like the v1 warp points; the API already accepted the teleport fields for every area kind, so only the form
   changes, and a new test pins that a point and a linked landmark with their warp on are destinations at their pins.
   knk-web-app: the landmark form's e2e test follows seed v4 (no code change). knk-workspace: DESIGN LD26 and
-  A17. Docs:
+  A17; the off-road smoke test's landmark sections (§ 6, § 6.5, § 7) are superseded by
+  [landmark-domain smoke test § 3](guides/landmark-domain-smoke-test.md#3-phase-3-plugin-985-tier2): the steps it did
+  not cover moved to its new § 3.2 on the landmark-domain model, and each old section lists where its steps went
+  ([#1009](https://github.com/PandiO/knk-workspace/issues/1009), developer decision 2026-11-24). Docs:
   [smoke test § 5](guides/landmark-domain-smoke-test.md#5-fixes-picked-up-by-the-chain-952-1003) steps 5–6 and § 1
   step 2.
   **Admin steps (deploy notes):**

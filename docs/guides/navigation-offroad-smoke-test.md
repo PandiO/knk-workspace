@@ -1,7 +1,7 @@
 # Off-road navigation and landmarks — smoke test
 
-**Status:** Draft from the design (2026-11-17); no steps run. guidance-v2 on by default (§ 16): 3 of 4 steps automated; Drawn landmark regions (§ 6.5): 8 of 8 steps automated (2 in part); L7b (§ 15): step A 12 of 12 steps automated (2 in part), step B (§ 15.4) 5 of 8 automated (1 in part); F3 (§ 14): 8 of 8 steps automated (5 in part); F2 (§ 13): 7 of 9 steps automated (4 in part); F1 (§ 12): 5 of 7 steps automated (3 in part); Phase 5.2 (§ 7): 7 of 8 steps automated (3 in part); Phase 4 (§ 5): 8 of 9 steps automated (2 in part); Phase 2 (§ 3): 13 of 14 steps automated (5 in part); Phase 5.1 (§ 6): 21 of 22 steps automated (6 in part); Phase 0 (§ 1): 1 of 9 steps automated; phase 1 (§ 2): 4 of 4 steps automated; phase 6.1 (§ 8): 6 of 8 steps automated (3 of them in part); phase 6.2 (§ 9): 11 of 11 steps automated (3 of them in part); phase 7 step 1 (§ 10.1): 4 of 7 steps automated (3 of them in part), viewed by the developer 2026-11-18; phase 7 step 2 (§ 10.2): 9 of 9 steps automated (3 of them in part); the other phases not yet automated (the links tag them).
-**Last updated:** 2026-11-22 (§ 6, § 6.5, § 7: superseded notes for landmarks as domains, #976, docs #1008); 2026-11-22 (§ 16 `navigation.guidance-v2` on by default, #990: four steps, three automated; § 8.0 and § 9.0 settings note the new default); 2026-11-21 (§ 6.5 drawn landmark regions, #944/#945: eight steps, all automated, two in part); 2026-11-21 (§ 15 enum follow-up of #852: `DefaultRouteMode` holds the enum names Shortest, Efficient and Preferred, the form field is an Enum field, § 15.3 step 2 for the rename migration, § 15.0 item 5 for player D and the road pair, § 15.4 count corrected to 5 of 8 with a clean-up step); 2026-11-20 (§ 15.4 L7b step B, the plugin uses a group's default route mode, #852: seven steps, four automated, one in part); 2026-11-20 (§ 15 L7b step A, a default route mode per permission group, #852: API, web and migration steps, eleven, all automated, two in part; in-game steps marked step B); 2026-11-20 (§ 14 F3, the smoke-test failures of 2026-11-19, #780, #771, #710: the road goal weighs the walk above the road, no repeated turn message, which end a 0-expansion search could not use, open doors passed without the door check, `trail-leg-spacing` shipped as 2.0: eight steps, all automated, five in part; shipped settings); 2026-11-19 (§ 13 F2, road goal by walk reachability, the road kept to its end and the flag-off walk-trail spacing, #780 and #771 items 3 to 5: nine steps, seven automated, four in part; shipped settings); 2026-11-19 (§ 12 F1, the walk-search fixes of #771 items 1 and 2: seven steps, five automated, three in part; shipped settings first, scene 1 by road recorded as known); 2026-11-18 (§ 7 phase 5.2 built by link L9, #709: eight steps, seven automated, three in part); 2026-11-18 (§ 5 phase 4 built by link L7, #707: nine steps, eight automated, two in part); 2026-11-18 (§ 3 phase 2 built by link L5, #705: fourteen steps, thirteen automated, five in part); 2026-11-18 (§ 10 phase 7: step 1 viewed by the developer, O33; § 10.2 step 2 built by link L10, #712: nine steps, all automated, three in part); 2026-11-18 (§ 6.3 phase 5.1 step B, link L8: the in-game steps); 2026-11-18 (§ 6 phase 5.1 updated to what link L8 step A built, #708: API and web steps, plugin steps marked step B); 2026-11-18 (§ 10 phase 7 split into step 1, built by link L10, #712: the staff preview and the developer's viewing steps on Cinix and Brink, and step 2, the trail, not built yet); 2026-11-18 (§ 9 phase 6.2 updated to what link L4 built, #711: eleven steps, all automated, three in part); 2026-11-17 (§ 8 phase 6.1 updated to what link L3 built, #710: eight steps, six automated); 2026-11-17 (§ 2 phase 1 updated to what link L2 built, #704: every step automated); 2026-11-17 (§ 1 phase 0 updated to what link L1 built, #703: the measurement steps and the `/knk road status` lines); 2026-11-17 (draft from the design, phases 0, 1, 2, 3, 4, 5.1, 5.2, 6.1, 6.2, 7)
+**Status:** Draft from the design (2026-11-17); no steps run. guidance-v2 on by default (§ 16): 3 of 4 steps automated; Drawn landmark regions (§ 6.5): superseded by landmark-domain-smoke-test.md § 3.2 (#1009); L7b (§ 15): step A 12 of 12 steps automated (2 in part), step B (§ 15.4) 5 of 8 automated (1 in part); F3 (§ 14): 8 of 8 steps automated (5 in part); F2 (§ 13): 7 of 9 steps automated (4 in part); F1 (§ 12): 5 of 7 steps automated (3 in part); Phase 5.2 (§ 7): superseded by landmark-domain-smoke-test.md § 3.2 (#1009); Phase 4 (§ 5): 8 of 9 steps automated (2 in part); Phase 2 (§ 3): 13 of 14 steps automated (5 in part); Phase 5.1 (§ 6): superseded by landmark-domain-smoke-test.md § 3 (#1009); Phase 0 (§ 1): 1 of 9 steps automated; phase 1 (§ 2): 4 of 4 steps automated; phase 6.1 (§ 8): 6 of 8 steps automated (3 of them in part); phase 6.2 (§ 9): 11 of 11 steps automated (3 of them in part); phase 7 step 1 (§ 10.1): 4 of 7 steps automated (3 of them in part), viewed by the developer 2026-11-18; phase 7 step 2 (§ 10.2): 9 of 9 steps automated (3 of them in part); the other phases not yet automated (the links tag them).
+**Last updated:** 2026-11-24 (§ 6, § 6.5, § 7 superseded by landmark-domain-smoke-test.md § 3, developer decision on #1009, #976: the steps it did not cover moved to its § 3.2 on the new model, each section here lists where its steps went or why they were dropped, numbers and headings kept; fix link L4b); 2026-11-22 (§ 6, § 6.5, § 7: superseded notes for landmarks as domains, #976, docs #1008); 2026-11-22 (§ 16 `navigation.guidance-v2` on by default, #990: four steps, three automated; § 8.0 and § 9.0 settings note the new default); 2026-11-21 (§ 6.5 drawn landmark regions, #944/#945: eight steps, all automated, two in part); 2026-11-21 (§ 15 enum follow-up of #852: `DefaultRouteMode` holds the enum names Shortest, Efficient and Preferred, the form field is an Enum field, § 15.3 step 2 for the rename migration, § 15.0 item 5 for player D and the road pair, § 15.4 count corrected to 5 of 8 with a clean-up step); 2026-11-20 (§ 15.4 L7b step B, the plugin uses a group's default route mode, #852: seven steps, four automated, one in part); 2026-11-20 (§ 15 L7b step A, a default route mode per permission group, #852: API, web and migration steps, eleven, all automated, two in part; in-game steps marked step B); 2026-11-20 (§ 14 F3, the smoke-test failures of 2026-11-19, #780, #771, #710: the road goal weighs the walk above the road, no repeated turn message, which end a 0-expansion search could not use, open doors passed without the door check, `trail-leg-spacing` shipped as 2.0: eight steps, all automated, five in part; shipped settings); 2026-11-19 (§ 13 F2, road goal by walk reachability, the road kept to its end and the flag-off walk-trail spacing, #780 and #771 items 3 to 5: nine steps, seven automated, four in part; shipped settings); 2026-11-19 (§ 12 F1, the walk-search fixes of #771 items 1 and 2: seven steps, five automated, three in part; shipped settings first, scene 1 by road recorded as known); 2026-11-18 (§ 7 phase 5.2 built by link L9, #709: eight steps, seven automated, three in part); 2026-11-18 (§ 5 phase 4 built by link L7, #707: nine steps, eight automated, two in part); 2026-11-18 (§ 3 phase 2 built by link L5, #705: fourteen steps, thirteen automated, five in part); 2026-11-18 (§ 10 phase 7: step 1 viewed by the developer, O33; § 10.2 step 2 built by link L10, #712: nine steps, all automated, three in part); 2026-11-18 (§ 6.3 phase 5.1 step B, link L8: the in-game steps); 2026-11-18 (§ 6 phase 5.1 updated to what link L8 step A built, #708: API and web steps, plugin steps marked step B); 2026-11-18 (§ 10 phase 7 split into step 1, built by link L10, #712: the staff preview and the developer's viewing steps on Cinix and Brink, and step 2, the trail, not built yet); 2026-11-18 (§ 9 phase 6.2 updated to what link L4 built, #711: eleven steps, all automated, three in part); 2026-11-17 (§ 8 phase 6.1 updated to what link L3 built, #710: eight steps, six automated); 2026-11-17 (§ 2 phase 1 updated to what link L2 built, #704: every step automated); 2026-11-17 (§ 1 phase 0 updated to what link L1 built, #703: the measurement steps and the `/knk road status` lines); 2026-11-17 (draft from the design, phases 0, 1, 2, 3, 4, 5.1, 5.2, 6.1, 6.2, 7)
 **Design:** [specs/navigation-offroad/DESIGN.md](../specs/navigation-offroad/DESIGN.md) · **Issue:**
 [PandiO/knk-workspace#698](https://github.com/PandiO/knk-workspace/issues/698)
 
@@ -342,284 +342,112 @@ part; the developer's live test is steps 2, 3 and 9 (about 15 minutes).*
 
 ## 6. Phase 5.1: landmark entity (#708, tier:3)
 
-**Superseded in part since 2026-11-22 (#976, merged into `next`):** landmarks are domains now. The landmark rows of this section's database are deleted by the migration `LandmarkAsDomain`; the Extent and Radius fields, `create … radius`, the `DomainId` link and the off-road form seed are gone (Area `Point`, `Own region`, `Linked domain's area`; a parent; seed v3). Steps 6.1–6.4 below describe the #708 model and no longer match the code where they use those fields; run the [landmark-domain smoke test](landmark-domain-smoke-test.md) §§ 1–4 instead. Rewriting these steps for the new model: PandiO/knk-workspace#1009.
+**Superseded by [landmark-domain-smoke-test.md § 3](landmark-domain-smoke-test.md) (developer decision 2026-11-24,
+#976; [#1009](https://github.com/PandiO/knk-workspace/issues/1009)).** Since #976 (merged into `next`) a landmark is a
+domain: Area `Point`, `Own region` or `Linked domain's area`, a parent, `domain_<id>` regions managed as `LANDMARK`, no
+radius, no `DomainId` link and no off-road form seed (Landmark form seed v4 since #1003). Every step of § 6, § 6.5 and
+§ 7 that the landmark-domain smoke test did not cover moved there, rewritten on that model, as its § 3.2 "Carried over
+from the off-road guide"; the other steps were already covered there or went with the old model. The lists below say
+where each step went. The steps themselves were removed on 2026-11-24 (fix link L4b; they are in this file's history).
+The sub-section numbers stay so links into them still resolve. Run the landmark-domain smoke test instead.
 
-*Step A built 2026-11-18 (link L8, knk-web-api and knk-web-app `claude/offroad-landmarks`, PRs into `next`): the
-`landmarks` table (migration `AddLandmarks`), `api/landmarks` (anonymous `GET ?world=` and `GET {id}` under the `map`
-rate limit, `POST search` for the dashboard, writes behind the new node `knk.admin.world.landmark` or the plugin key),
-the default form seed `Landmark`, the dashboard type with its columns and a Landmarks list on every domain's detail
-page. Step B built the same day (knk-plugin `claude/offroad-landmarks`): `/knk landmark …` and the `LandmarkProvider`
-behind `navigation.landmarks`, § 6.3. API and web steps: 11 of 12 automated (tagged), 2 of them in part; not run by
-hand yet. Time: about 25 min for the API and web steps (6.1 to 6.4), 20 min for step B's.*
-
-Who may do what (DESIGN § 6.4, O26):
-
-1. **Read** a landmark by world or by id: anyone, also without logging in (`GET api/landmarks?world=`,
-   `GET api/landmarks/{id}`), 120 requests a minute per IP (`RateLimiting:Map:PermitPerMinute`).
-2. **List** them on the dashboard (`POST api/landmarks/search`): the World area node `knk.admin.world` or
-   `knk.admin.world.landmark`, or the plugin key.
-3. **Create and edit**: `knk.admin.world.landmark` and `knk.admin.content` (the dashboard's change rule, #374), or the
-   plugin key. **Delete**: `knk.admin.world.landmark` and `knk.admin.delete`, or the plugin key.
-4. `knk.admin.world.landmark` is matched by `knk.admin.world.*`, `knk.admin.*` and `*`; a bare `knk.admin.world`
-   grant does **not** include it (a grant without `*` matches only its own node).
+"Who may do what" (DESIGN § 6.4, O26) is now the [landmarks admin guide](admin/landmarks-admin-guide.md) § 1; its checks
+are landmark-domain § 1 steps 12–13 and § 3.2 steps 1, 4, 5 and 10.
 
 ### 6.0 Preconditions
 
-1. Deployed: knk-web-api with the migration `AddLandmarks` applied (`dotnet ef database update`, or the API's
-   migration on start); knk-web-app from the same `next`. For step B also: the plugin build from `next` with phase
-   5.1 step B and the destination engine P1, P2 and P3 (#96, #103, #69), `navigation.destination-engine: true`.
-2. Settings: none for the API and web app. Step B: `navigation.landmarks: true` and `navigation.destination-engine: true`
-   in the plugin's `config.yml`, then restart.
-3. Data: the form seed `Landmark` imported on the form configuration list (Import / seeds, "Landmark - Default
-   (seed v1)"; it becomes the default when Landmark has none); the keep as a structure domain; a WorldGuard region
-   `keep_throne` around the throne room.
-4. Accounts: staff **A** with `knk.admin.world`, `knk.admin.world.landmark`, `knk.admin.content` and
-   `knk.admin.delete` (or `knk.admin.*`); staff **B** with `knk.admin.world` and `knk.admin.content` but not
-   `knk.admin.world.landmark`; a player account (step B).
+1. Superseded by landmark-domain § 3.0 and the preconditions of § 3.2: seed v4 instead of the off-road seed v1, the
+   migration `LandmarkAsDomain` instead of `AddLandmarks`, `keep_throne` in § 3.2 item 4.4, staff A as "staff" and staff
+   B as "domain staff".
 
 ### 6.1 API (A12)
 
-1. Without logging in, open `<api>/api/landmarks?world=world` in a browser (or `curl -s`). **Expected:** `200` and a
-   JSON list (empty before step 6.2.2); each landmark has `id`, `name`, `world`, `location` (x, y, z), `domainId`,
-   `domainName`, `extentKind`, `regionId`, `radius`, `preference`, `navigationEnabled` and `kind`.
-   [automated: knk-web-api `EndpointAccessRulesTests.AllowAnonymous_IsLimitedToTheAllowList`,
-   `ReadAccessRulesTests` (`LandmarksController.GetAll` = P), `LandmarkServiceTests.Create_WithDefaults_ReturnsWhatThePluginNeeds`,
-   `GetAll_ByWorld_IgnoresCase_AndSortsByName`]
-2. Without logging in, `POST <api>/api/landmarks` with `{"name":"x","locationId":1}`. **Expected:** `401`; nothing is
-   created. [automated: knk-web-api `EndpointAccessRulesTests`, `DashboardChangeAccessRulesTests`
-   (`LandmarksController.Create`/`Update`), `DeleteAccessRulesTests` (`LandmarksController.Delete`)]
-3. The rules, by hand or by request: a second landmark with the same name in the same world (any case), a `Region`
-   area without a region id, a `Radius` of 0 or above 512, a preference outside 0.25 to 4.0. **Expected:** each is
-   refused with `400` and the reason; the same name in another world is accepted.
-   [automated: knk-web-api `LandmarkServiceTests` (17 tests)]
+1. Step 1 (anonymous reads by world and id) → landmark-domain § 3.2 step 1.
+2. Step 2 (an anonymous write answers 401) → § 3.2 step 1.
+3. Step 3 (the rules) → § 3.2 step 2: the name per world in any case, a region for `Own region`, a region another domain
+   holds, the preference range. The radius rule went with the radius (LD08); the API's refusal of a radius is § 1
+   step 14.
 
 ### 6.2 Web app (A12)
 
-1. As staff A, open the dashboard and pick **Landmark** under World. **Expected:** the table has the columns ID, Name,
-   World, Point, Domain, Area and In /navigate; the search box narrows the list by name, world or domain.
-   [automated: knk-web-app `e2e/landmarks.spec.ts` "lists the landmarks with world, point, domain, area and /navigate",
-   "the search box asks the API with the search term"]
-2. Click **Create** (the Landmark form): Name "Throne room", Domain: the keep, Offer in /navigate on; on the Location
-   step stand in the throne room in game and use Send to Minecraft; on the Area step choose Region and type
-   `keep_throne`; Submit. **Expected:** "Landmark created."; the row shows the keep under Domain and Region under Area.
-   [automated in part: `e2e/landmarks.spec.ts` "the landmark form saves through POST api/landmarks" (a one-step test
-   form; the Location world task and the domain picker are the form wizard's own specs)]
-3. Open the keep's detail page (Dashboard → Structure → the keep → View). **Expected:** below the details a
-   **Landmarks** box lists "Throne room" with "Region · x y z · world"; the name opens the landmark's page.
-   [automated: `e2e/landmarks.spec.ts` "lists the landmarks linked to the town, each linking to its page" (a town;
-   every domain type shows the box, `DomainLandmarksPanel.test.tsx`)]
-4. On the landmark's page click **Edit**, rename it to "Throne hall", Submit; reopen the keep's page. **Expected:** the
-   new name in the table and in the keep's Landmarks box. (A12)
-5. Log in as staff B. **Expected:** the dashboard lists Landmark (B holds `knk.admin.world`) but **Create** and **Edit**
-   are greyed out with "Requires knk.admin.world.landmark"; on the keep's page **Add landmark** is greyed out with the
-   same hint. A save sent anyway answers `403`. [automated: `e2e/landmarks.spec.ts` "Add landmark needs the landmark
-   node, and says which"; knk-web-api `DashboardAccessTests.Metadata_CreateAndEdit_AreTheChangeNodes` (Landmark)]
-6. As staff with only `knk.admin.content`. **Expected:** no Landmark in the dashboard's explorer.
-   [automated: `e2e/landmarks.spec.ts` "content-only staff do not get the landmark type"]
-7. As staff A delete "Throne hall" (its page → Delete → confirm). **Expected:** "Landmark "Throne hall" deleted."; it is
-   gone from the table and from the keep's Landmarks box, which says "No landmarks are linked to <keep>.". Its Location
-   stays and shows up later in the orphaned-Location list (KNG-80), like a deleted domain's.
-   [automated in part: `LandmarkServiceTests.Delete_RemovesTheLandmark_AndLeavesThePinToTheRetentionCheck`,
-   `e2e/landmarks.spec.ts` "says when no landmark is linked"]
-8. Delete the keep's domain while a landmark is linked to it (on a copy, or a test structure). **Expected:** the
-   landmark stays, without a domain. [automated: `AddLandmarksTests.Up_LocationRestricts_DomainIsClearedOnDelete`,
-   `LandmarkServiceTests.DeletingTheDomain_ClearsTheLink`]
+1. Step 1 (the list's columns and search box) → columns: § 4 step 7; search box: § 3.2 step 3.
+2. Step 2 (create with the form, a domain and a typed region) → § 1 steps 3, 6 and 8 (the form, the area kinds, the
+   parent) and § 3.2 step 8 (a typed region id).
+3. Step 3 (the domain page's Landmarks box) → § 4 step 6.
+4. Step 4 (a rename shows in the list and the box) → § 1 step 13 (a rename), § 3.1 step 8 (a web-app rename reaches the
+   game) and § 4 step 6 (the panel); § 3.2 step 13 renames during a navigation.
+5. Step 5 (staff without `knk.admin.world.landmark`) → § 3.2 step 4 (web app) and § 1 step 12 (`api/Domains`).
+6. Step 6 (content-only staff) → § 3.2 step 5.
+7. Step 7 (delete, the Location stays) → § 3.2 step 6.
+8. Step 8 (deleting the linked domain) → § 3.2 step 7: the parent's delete makes the children top level and a
+   `Linked domain's area` child a point.
 
 ### 6.3 In game (step B, A12 to A14)
 
-*Built 2026-11-18 (link L8 step B, knk-plugin `claude/offroad-landmarks`): `/knk landmark`, the destination engine's
-`LandmarkProvider` and the landmarks section of the navigation model, all behind `navigation.landmarks`. For these
-steps set both `navigation.landmarks: true` and `navigation.destination-engine: true` and restart. 10 of 10 steps
-automated (4 of them in part); the live run (a real client walking, tab completion as typed) is the developer's.
-About 20 min.*
-
-1. As staff A, stand in the throne room and run `/knk landmark create Throne room region keep_throne`.
-   **Expected:** "Created landmark Throne room (#<id>) region keep_throne."; `/knk landmark list` shows it; the web
-   app's Landmark table shows it after a reload. (A12) [automated in part: knk-plugin
-   `LandmarkAdminCommandTest.createTakesTheNameTheExtentAndThePlayersPosition`, `listShowsThePlayersWorld`;
-   `LandmarksApiImplTest.createSendsTheNameThePinAndTheExtentInTheApisWords` (the API's answer is faked)]
-2. `/knk landmark link Throne room <keep's name>`, then `/knk landmark show Throne room`. **Expected:** "Linked Throne
-   room to <keep> (Structure)."; `show` lists the domain, the point, "region keep_throne" and "In /navigate: yes". A
-   domain name several domains share answers with their `#id`s; `link Throne room #<id>` then works. (A12)
-   [automated: `LandmarkAdminCommandTest.linkTakesADomainByNameOrId_andAnAmbiguousNameAsksForTheId`,
-   `showFindsANameWithSpacesOrAnId`]
-3. Stand a few blocks away and run `/knk landmark move Throne room`, then `/knk landmark show Throne room`.
-   **Expected:** the new position; the domain link is kept. [automated:
-   `LandmarkAdminCommandTest.moveMovesTheSameLocationAndKeepsTheDomain`]
-4. As staff B (no `knk.admin.world.landmark`), `/knk landmark create Test`. **Expected:** "You don't have permission"
-   and nothing is created; `/knk help` does not list `landmark`. (A12) [automated in part:
-   `LandmarkAdminCommandTest.theMetadataGatesOnTheLandmarkNode`, the registry's check in `CommandRegistryPermissionsTest`]
-5. As the player, `/navigate Throne room` from outside the keep and walk there. **Expected:** the trail leads to the
-   keep; navigation ends with "You have arrived" as you step into the `keep_throne` region. (A13) [automated in part:
-   `HandleDestinationsLandmarkTest.noExtentIsAPlainPoint_aRegionExtentIsTheRegion` (the region destination; region
-   arrival is the existing WorldGuard check)]
-6. As staff, `/knk landmark create Market well radius 5` at the well and `/knk landmark create Old gate` at a gate;
-   as the player navigate to each. **Expected:** "Market well" ends as you come within 5 blocks of the well (also 1 to 4
-   blocks off the point); "Old gate" only within the arrive distance (4 blocks). (A13) [automated:
-   `NavigationServiceLandmarkTest.aRadiusExtentIsReachedInsideItsCylinder`,
-   `withoutAnExtentEightBlocksAwayIsNotThereYet`, `standingInsideTheRadiusIsAlreadyThere`]
-7. As the player type `/navigate ` and press tab; then `/navigate landmark:` and tab. **Expected:** this world's
-   landmarks you may navigate to are offered ("Throne", "Market", "Old"). A landmark with "Offer in /navigate" off (set
-   it in the web app, wait a minute or `/knk cache refresh`), one in another world, and every landmark during a running
-   siege match are not offered; `/navigate <other-world landmark>` says it is in another world. Staff mode lists them
-   even in a match. (A14) [automated: knk-core `LandmarkProviderTest.tabCompletionOffersOnlyLandmarksThePlayerMayNavigateTo`,
-   `enabledLandmarksOfThePlayersWorldAreListedByName`, `resolvesByNameAndIdAndTheBypassListsThemInAMatch`]
-8. Start `/navigate Old gate`, then in the web app untick "Offer in /navigate" on it (or delete it) and wait up to a
-   minute (the model refresh). **Expected:** the navigation ends with the "no longer" message; renaming it instead
-   keeps the navigation going. [automated: `NavigationServiceLandmarkTest.disablingTheLandmarkEndsTheSessionWithDestinationNotAllowed`,
-   `deletingTheLandmarkEndsTheSessionWithDestinationNotAllowed`, `aLandmarkSessionSurvivesReValidationAndARename`]
-9. As staff, `/knk landmark delete Throne room`. **Expected:** "Deleted landmark Throne room (#<id>)."; it is gone from
-   `/knk landmark list`, the keep's Landmarks box in the web app and tab completion (within a few seconds: the command
-   refreshes the model). (A12) [automated in part: `LandmarkAdminCommandTest.unlinkSendsNoDomain_deleteDeletes`,
-   `NavigationModelLandmarksTest.aDeletedLandmarkLeavesTheModelOnTheNextRefresh`]
-10. Set `navigation.landmarks: false`, restart. **Expected:** `/knk landmark list` says "Landmarks are off on this
-    server"; no landmark is offered by `/navigate`; the server log's model line names no landmarks.
-    [automated: `LandmarkAdminCommandTest.withTheFlagOffNothingHappens`, `LandmarksConfigTest`,
-    `NavigationModelLandmarksTest.withTheFlagOffTheSectionStaysEmpty`]
+1. Step 1 (`/knk landmark create … region <id>`, `list`) → § 3.2 step 8.
+2. Step 2 (`link`, `show`, a name several domains share) → § 3.1 step 6 (`link`, `show`) and § 3.2 step 9 (the shared
+   name).
+3. Step 3 (`move` keeps the link) → § 3.2 step 9.
+4. Step 4 (no landmark node, `/knk help`) → § 3.2 step 10.
+5. Step 5 (arrival on entering the region) → § 3.1 step 5 (arrival in the area's regions, its sub-regions and a linked
+   area).
+6. Step 6 (arrival with a radius and at a point) → the point: § 3.2 step 11. The radius was dropped (LD08: no radius;
+   `create … radius` is refused, § 1 step 14 and § 3.1 step 6).
+7. Step 7 (tab completion: switched off, another world, a siege match, staff mode) → § 3.2 step 12; each landmark
+   offered once is § 3.1 step 5.
+8. Step 8 (switched off or deleted during a navigation, a rename) → § 3.2 step 13.
+9. Step 9 (`delete`) → § 3.2 step 14.
+10. Step 10 (`navigation.landmarks: false`) → § 3.2 step 27.
 
 ### 6.4 Migration (A12, deploy)
 
-1. On a copy of the production database, apply the migrations. **Expected:** one new table `landmarks`, no change to
-   any other table; `Down` drops only `landmarks`. [automated: knk-web-api `AddLandmarksTests`; CI "Migrations (fresh
-   DB)" on the API PR]
+1. Step 1 (`AddLandmarks` on a copy of production) → dropped: migration `LandmarkAsDomain` replaced the `landmarks`
+   table of #708 before any promotion (it deletes the rows, LD10); its check is landmark-domain § 1 step 1
+   (`LandmarkAsDomainTests`, the Migrations workflow).
 
 ### 6.5 Drawn landmark regions (#944, #945, tier:2)
 
-**Superseded since 2026-11-22 (#976, merged into `next`):** a drawn landmark region is named `domain_<id>` (sub-regions `domain_<id>_sub_<n>`) like any domain's and is a managed `LANDMARK` region; the `landmark_<id>` path below is removed. The region task on any field (#944, step 1) still holds. Run the [landmark-domain smoke test](landmark-domain-smoke-test.md) § 1 steps 6–7 and § 3 step 4 instead.
+**Superseded** like § 6: the `landmark_<id>` path is removed (LD14); a drawn landmark region is `domain_<id>` (sub-regions
+`domain_<id>_sub_<n>`), managed as `LANDMARK`.
 
-*Built 2026-11-21 (knk-plugin, knk-web-api and knk-web-app `claude/landmark-regions`, PRs into `next`): the region
-world task runs on any field (the plugin finds its handler by task type, #944), and a region drawn on the Landmark
-form's Region field becomes `landmark_<id>` on save, is replaced by a re-run and is kept by the temp-region cleanup, as
-a domain's is (#945; [managed WorldGuard regions § 7 "Landmarks"](../architecture/managed-worldguard-regions.md)). 8 of 8
-steps automated (2 of them in part); every step can still be run by hand; not run by hand yet. About 15 min for every
-step, 8 min for the parts no suite covers (steps 2 and 4: drawing and walking with a real client).*
-
-Preconditions, besides § 6.0: the API, web app and plugin from `next` with #944/#945; `navigation.landmarks: true` and
-`navigation.destination-engine: true` for step 4. The Landmark form's Region field needs the region world task: a fresh
-import of the seed has it; on a database that imported the seed before (the dev DB), add it in the form designer (Region
-field → Requires in-game action → task type `ReagionCreate`) if it is not there yet.
-
-1. As staff A open the Landmark form (Dashboard → Landmark → Create) and go to the **Area** step. **Expected:** the
-   **Region** field has **Send to Minecraft** and its help text says a drawn region becomes `landmark_<id>` when you
-   save; you can still type a region id into it. [automated: knk-web-api
-   `FormConfigurationSeedFilesTests.LandmarkSeed_DrawsItsRegionThroughTheRegionTaskOnRegionId` (the seed); the form
-   wizard renders a world task on any field in its own specs]
-2. Fill in Name "Courtyard", a Location (Send to Minecraft on the Location step), Area = Region, then **Send to
-   Minecraft** on Region. In game, claim the task with its code (`/knk task <code>`, shown in the form), select an L-shaped
-   area with `//sel poly` from the ground to a few blocks up, type `save`. **Expected:** the task starts (no "This game
-   server has no handler for task type 'ReagionCreate' (field RegionId)"); after `save` the form's Region field shows
-   `tempregion_worldtask_<n>`. [partly automated: knk-plugin
-   `WorldTaskHandlerRegistryTest.theRegionTaskOnAFieldNotNamedWgRegionId_findsTheRegionHandler`, knk-web-app
-   `WorldBoundFieldRenderer.regionAnyField.test.ts` (the result fills RegionId); by hand: drawing with a real client]
-3. Submit. **Expected:** "Landmark created."; the landmark's page shows the region `landmark_<id>` (its own id);
-   in game `/rg info landmark_<id>` shows exactly the drawn outline and Y range and `/rg info tempregion_worldtask_<n>`
-   finds nothing. [automated: knk-web-api
-   `LandmarkRegionRenameTests.Create_WithADrawnRegion_RenamesItToTheLandmarkName_InThePinsWorld_AndStoresIt`;
-   knk-plugin scenario `landmark-region-rename-keeps-drawn-bounds` (`LandmarkRegionRenameScenario`)]
-4. As the player, wait a minute (or `/knk cache refresh` as staff), then `/navigate Courtyard` from outside and walk
-   there. **Expected:** navigation ends with "You have arrived" as you step into the drawn region (anywhere in the L,
-   not in its notch). [partly automated: scenario `landmark-region-rename-keeps-drawn-bounds` (the navigation's region
-   shapes resolve `landmark_<id>` to the drawn L), `HandleDestinationsLandmarkTest.noExtentIsAPlainPoint_aRegionExtentIsTheRegion`;
-   by hand: walking with a real client]
-5. Edit "Courtyard", go to the Area step, **Send to Minecraft** on Region again, draw a different shape and submit.
-   **Expected:** the region is still `landmark_<id>`; `/rg info landmark_<id>` shows the new shape; `/knk regions temp`
-   lists no `tempregion_worldtask_*` left from it; navigation to "Courtyard" ends in the new shape (at once: region
-   shapes are read live). [automated: knk-web-api
-   `LandmarkRegionRenameTests.Update_AfterARerun_ReplacesTheLandmarksOwnRegionInPlace`,
-   `Update_AfterARerun_OfALandmarkStillOnATempName_RemovesThatTempRegion`; knk-plugin scenario
-   `landmark-region-rerun-replaces-in-place` (`LandmarkRegionReplaceScenario`)]
-6. Create a landmark in the form with Area = Region and the region id `keep_throne` typed in, and one in game with
-   `/knk landmark create Throne room region keep_throne`. **Expected:** both keep `keep_throne` as their region; no
-   `landmark_<id>` region appears. [automated: knk-web-api `LandmarkRegionRenameTests.Create_OnAnExistingRegion_KeepsItsId`,
-   `Rerun_KeepsARegionTheFormDidNotDraw`; knk-plugin
-   `LandmarkAdminCommandTest.createTakesTheNameTheExtentAndThePlayersPosition`]
-7. A landmark left on a temp name: stop the game server after drawing (step 2) and submit while it is down, then start
-   it. **Expected:** the landmark is saved with `tempregion_worldtask_<n>`; `/knk regions temp` lists it under "Used by a
-   domain, lootbox area or landmark" and the daily cleanup keeps it; `POST /api/Regions/finalize-temp-names` (staff with
-   `knk.admin.regions`) answers `renamed: 1` and the landmark shows `landmark_<id>`. [automated: knk-web-api
-   `LandmarkRegionRenameTests.Create_WhenThePluginIsUnreachable_StillSaves`, `FinalizeAll_AlsoRenamesLandmarksStillOnATempName`,
-   `TempRegionReleaseTests.ListDue_ARegionSomethingNames_IsKept(landmark)`; knk-plugin
-   `TempRegionRetentionLookupTest.theCleanupKeepsARegionALandmarkStandsOn_evenWithNoDomainOrArea`]
-8. Start a new landmark's form, draw a region on its Region field (step 2), then cancel the task in the web app (or
-   delete the draft in Saved Progress) instead of submitting. **Expected:** within about 10 minutes the server log says
-   `Removed temp region <world>/tempregion_worldtask_<n> (…)` and the region is gone. [automated: knk-web-api
-   `TempRegionReleaseTests.IsRegionTask_ByTaskType_OnAnyField`,
-   `CancellingAHeldRegionTaskOnALandmarkRegionIdField_ReleasesItsRegion`; the plugin's release pass is
-   `TempRegionReleasePassTest`]
+1. Step 1 (the region task on the form's Region field, #944) → § 3.2 step 15.
+2. Step 2 (drawing gives a temp name) → § 1 step 6 (drawn with `//sel cyl`, renamed to `domain_<id>`) and § 3.2 step 15
+   (the task starts on the game server).
+3. Step 3 (the rename keeps the drawn outline and Y range) → § 1 step 6 (`domain_<id>`, the shape kept); the scenario
+   `landmark-region-rename-keeps-drawn-bounds` checks outline and Y range on `domain_<id>`.
+4. Step 4 (navigation ends in the drawn shape) → § 3.1 step 5 (arrival in the area) and the same scenario (a cell in the
+   L's notch is not in the region).
+5. Step 5 (a re-run replaces the region in place) → § 3.2 step 16.
+6. Step 6 (an existing region id is kept) → § 3.2 step 8.
+7. Step 7 (left on a temp name, finalize) → § 3.2 step 17; a re-run left on a temp name is § 5 step 4.
+8. Step 8 (a cancelled task releases its region) → § 3.2 step 18.
 
 ## 7. Phase 5.2: landmark preference weights (#709, tier:2)
 
-*Built 2026-11-18 (link L9, knk-plugin `claude/offroad-landmark-weights`), behind `navigation.landmarks` (off by
-default). In the `preferred` route mode (the default) a landmark with an extent (a region or a radius) and a
-`Preference` other than 1.0 multiplies the walk cost of every cell inside it: above 1.0 the walk search avoids the
-area, below 1.0 it prefers it. `shortest` and `efficient` ignore the weights. Overlapping landmarks multiply, capped at
-`navigation.preference-max` (default 4.0, and at its inverse 0.25 the other way). The weights apply to walk legs (the
-walk from the player to the road, from the road to the destination, and direct mode); a cached walk link keeps the path
-its search found without them (L7's rule). Landmarks standing on a road node (within 4 blocks across and 3 up or down)
-also make that node a walk-link end (`navigation.walk-links`). NPC movement never uses the weights. 7 of 8 steps
-automated (3 of them in part); the developer's live test is steps 1 to 3 in the keep (about 15 minutes).*
-
-**Note since 2026-11-22 (#976):** the weights now cover a landmark's whole area (its own main region and sub-regions, or its parent's area for `Linked domain's area`); the radius extent is gone, so a round area is a `//sel cyl` region. Make the test landmarks of this section with the [landmarks admin guide](admin/landmarks-admin-guide.md) § 3.
+**Superseded by [landmark-domain-smoke-test.md § 3.2](landmark-domain-smoke-test.md) steps 19–27 (developer decision
+2026-11-24, #976; [#1009](https://github.com/PandiO/knk-workspace/issues/1009)).** The weights now cover a landmark's
+whole area (its own main region and sub-regions, or its parent's area for `Linked domain's area`), weighted once as a
+union; the radius is gone, so a round area is a `//sel cyl` region. The steps were removed on 2026-11-24 (fix link L4b;
+they are in this file's history); the sub-section numbers stay.
 
 ### 7.0 Preconditions
 
-1. Deployed: plugin build from `next` with phases 4, 5.1 and 5.2 (knk-plugin PR for #709 merged); the API and web app
-   with phase 5.1 (#708). Add to the plugin's `config.yml` under `navigation:` the key `preference-max: 4.0` (see the
-   PR's Admin steps) and restart.
-2. Settings: `navigation.landmarks: true` and `navigation.destination-engine: true`; `navigation.walk.enabled: true`
-   (the shipped default).
-3. Accounts and data:
-    1. Player A: a player account (no mode node needed for steps 1 and 3; `knk.navigate.mode.shortest` for step 2).
-    2. Staff A: an account with `knk.admin.world.landmark` and `knk.admin.content` (to edit a landmark in the web app).
-    3. Two corridors of the keep that lead to the same place within about 40 blocks (a walk leg, not a road), the
-       shorter one covered by a WorldGuard region (for example `keep_east_corridor`), and a destination at their far
-       end (a landmark without an extent, "Keep library", or any point destination).
-    4. As staff A: `/knk landmark create East corridor region keep_east_corridor`, then in the web app set its
-       `Preference` to 2.0 and save; wait a minute or run `/knk cache refresh` (the navigation model refresh).
+1. Superseded by the preconditions of landmark-domain § 3.2 (items 2 and 4.5): the East corridor is a landmark with its
+   own region drawn in the form instead of `keep_east_corridor` with `create … region`; `navigation.preference-max`
+   ships as 4.0.
 
 ### 7.1 Steps
 
-1. As player A, stand at the near end of the two corridors and run `/navigate Keep library`. **Expected:** the walk
-   trail takes the longer corridor: the weighted one is avoided in `preferred`, the default mode. (A10)
-   [automated in part: knk-core `WalkPreferenceWeightsTest.anAreaWithAPreferenceOfTwoIsWalkedAround`; knk-paper
-   `NavigationServiceLandmarkWeightsTest.inPreferredTheGardenWeightsTheWalkCells`; the keep is manual]
-2. `/navigate Keep library shortest` (player A needs `knk.navigate.mode.shortest`). **Expected:** the trail takes the
-   shorter, weighted corridor: `shortest` ignores the weight. `/navigate Keep library efficient` does the same. (A10)
-   [automated in part: knk-paper `NavigationServiceLandmarkWeightsTest.shortestAndEfficientIgnoreTheWeights`,
-   `forModeAddsTheWeightsInPreferredOnly`; the keep is manual]
-3. As staff A, set the landmark's `Preference` back to 1.0 in the web app, wait a minute (or `/knk cache refresh`), and
-   as player A navigate again with no mode word. **Expected:** the shorter corridor again: a weight of 1.0 is no
-   weight. (A10) [automated in part: knk-core `LandmarkWeightsTest.onlyLandmarksWithAnExtentAndAWeightInTheWorldBecomeAreas`,
-   `WalkPreferenceWeightsTest.noWeightsIsTheSearchAsBefore`; the refresh and the keep are manual]
-4. Two overlapping landmarks of `Preference` 3.0 each cover one hall. **Expected:** a cell in both costs 4 times its
-   move (3 × 3 = 9, capped at `preference-max` 4.0); with `preference-max: 10` and a restart it costs 9 times. Two of
-   0.25 cost 0.25 times, not 0.0625. [automated: knk-core
-   `LandmarkWeightsTest.overlappingAreasMultiplyCappedByPreferenceMaxBothWays`,
-   `WalkPreferenceWeightsTest.aCellInsideCostsItsMoveTimesThePreference`; knk-paper
-   `LandmarksConfigTest.preferenceMaxIsReadAndABadValueIsTheDefault`]
-5. A landmark with `Preference` 0.5 on a side lane. **Expected:** the walk trail is drawn through the lane where it is
-   not much longer, and the path found is still the cheapest one (the heuristic stays admissible). (DESIGN § 5.4.4)
-   [automated: knk-core `WalkPreferenceWeightsTest.anAreaWithAPreferenceBelowOneDrawsThePathIn`,
-   `WalkPreferenceWeightsTest.theHeuristicStaysAdmissibleTheFoundCostIsTheOptimum`,
-   `LandmarkWeightsTest.theHeuristicScaleIsTheSmallestMultiplierInForce`]
-6. Set `navigation.landmarks: false` and restart; navigate as in step 1. **Expected:** the shorter corridor, exactly
-   today's walk; no landmark is read for the walk. With the flag on, a world or leg without weighted landmarks is
-   also today's. (A11, chain rule) [automated: knk-paper
-   `NavigationServiceLandmarkWeightsTest.withLandmarksOffTheWalkIsTodays`,
-   `aLandmarkFarFromTheLegOrNoneGivesNoWeights`, `aFailingLookupMeansNoWeightsNotNoWalk`; knk-core
-   `WalkLegDefaultTranscriptTest.theDefaultModeIsTodaysWalkLegs`, `WalkPreferenceWeightsTest.noWeightsIsTheSearchAsBefore`]
-7. Restart the server after step 1's setup (the model comes from its snapshot `offline/navigation-model.json`).
-   **Expected:** the weight still applies before the API answers; a snapshot written before phase 5.2 loads every
-   landmark with no weight. [automated: knk-core `NavigationModelSnapshotTest.aLandmarksPreferenceSurvivesTheRoundTrip`,
-   `aSchemaOneFileWrittenBeforePhaseFiveTwoReadsTheMissingPreferenceAsOne`]
-8. With `navigation.walk-links: true`, a landmark pinned on a road node at one side of the courtyard (§ 3) where that
-   node is a tile boundary. **Expected:** the node becomes a walk-link end like a junction (`/knk road status` counts a
-   link search across the courtyard). No stored landmark-to-landmark links exist in v1 (O05); landmark nodes in the
-   hierarchical search's clusters come with phase 3 (#706). [automated: knk-core
-   `WalkLinkLandmarkNodesTest.aLandmarkOnTheBoundaryMakesItALinkEndWithInferredConnections`,
-   `aBlockedStoredLinkRemovesThePair`, `LandmarkLinkNodesTest`; knk-paper
-   `NavigationServiceLandmarkWeightsTest.landmarkNodesReachTheWalkLinkCandidates`, `ModelLandmarksTest`; manual: none
-   needed beyond § 3]
+1. Step 1 (`preferred` walks around the weighted corridor) → § 3.2 step 19.
+2. Step 2 (`shortest` and `efficient` ignore the weights) → § 3.2 step 20.
+3. Step 3 (a weight of 1.0 is no weight) → § 3.2 step 21, which adds that a point landmark has no area to weight.
+4. Step 4 (overlapping areas multiply, capped) → § 3.2 step 22, with round regions drawn with `//sel cyl`.
+5. Step 5 (a preference below 1 draws the path in) → § 3.2 step 23.
+6. Step 6 (`navigation.landmarks: false`) → § 3.2 step 27.
+7. Step 7 (the weights survive a restart in the snapshot) → § 3.2 step 25.
+8. Step 8 (landmark nodes as walk-link ends) → § 3.2 step 26.
+9. New with landmarks as domains: a sub-region and a `Linked domain's area` are weighted once as the area's union, so
+   neither needs a weights step of its own → § 3.2 step 24.
 
 ## 8. Phase 6.1: walk-trail corners (#710, tier:3)
 
