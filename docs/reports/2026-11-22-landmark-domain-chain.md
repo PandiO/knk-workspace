@@ -50,7 +50,7 @@ design session of 2026-11-22).
 | L3 Plugin (tier:2), also #958 (findings only) and the plugin part of #951 | #985 | Merged into `next` 2026-11-22 21:38 UTC (knk-plugin `14645895`, knk-workspace `e6bb8dfe`) | `claude/landmark-domain`: knk-plugin `31658c58`; `claude/landmark-domain-l3`: knk-workspace `43bcdbf3` | [knk-plugin#125](https://github.com/PandiO/knk-plugin/pull/125), [knk-workspace#1005](https://github.com/PandiO/knk-workspace/pull/1005) | green on `31658c58` (build, paper-boot; both runs, one build re-run for a `HarvestModuleTest` setup error outside the PR); Codex at its usage limit (skipped) | create_session session_01R1w2UtBFy9s4dBXQoeBMQF (blocked, network); rerun session_01R1w2UuLNw6Cr3qwUKQNvao in "Default Correct" (decision 14) |
 | L4 Web app (tier:2) | #986 | Merged into `next` 2026-11-22 20:19 UTC (knk-web-app `8c9c3553`, knk-workspace `99da72cc`) | `claude/landmark-domain`: knk-web-app `4bc6b88d`; `claude/landmark-domain-l4`: knk-workspace `73e785d4` | [knk-web-app#78](https://github.com/PandiO/knk-web-app/pull/78), [knk-workspace#1004](https://github.com/PandiO/knk-workspace/pull/1004) | green on `4bc6b88d` (build-and-test, e2e; both runs); knk-workspace no checks; Codex at its usage limit (skipped) | create_session session_01R1w2UtGykzTGpUL4Ksj6S6, started 2026-11-22 19:46 UTC |
 | L1b #952 region re-run left on a temp name, and #1003 Landmark form seed v3 (charter § 3 item 8; fix link) | #952, #1003 | Merged into `next` 2026-11-22 20:50 UTC (knk-web-api `3bc3cfd5`, knk-workspace `f7e4f671`); `domain_<id>` part of #952 split off to #1006 | `claude/landmark-domain-952`: knk-web-api `60fe2723`; `claude/landmark-domain-l1b`: knk-workspace `d06f362d` | [knk-web-api#85](https://github.com/PandiO/knk-web-api/pull/85), [knk-workspace#1007](https://github.com/PandiO/knk-workspace/pull/1007) | green on `60fe2723` (build-and-test, mysql-tests, fresh-database; both runs); Codex at its usage limit (skipped) | create_session session_01R1w2Ut1aonbYwio9RXX7mA, started 2026-11-22 20:20 UTC |
-| L3b #958 NPC replay fails at scene origin x ≥ 32752 (developer decision 2026-11-24; fix link) | #958 | Running (started 2026-11-24 08:13 UTC) | `claude/npc-replay-958`: knk-plugin, knk-workspace (none yet) | none | none | create_session session_01R1w2UuF3ht2BpNQtH69s5f in "Default Correct" |
+| L3b #958 NPC replay fails at scene origin x ≥ 32752 (developer decision 2026-11-24; fix link) | #958 | In review: root cause fixed (route line on a 1/4096 grid), PRs open, not merged (block 4.6) | `claude/npc-replay-958`: knk-plugin `a888d8c6`, knk-workspace `a340f689` | [knk-plugin#126](https://github.com/PandiO/knk-plugin/pull/126), [knk-workspace#1018](https://github.com/PandiO/knk-workspace/pull/1018) | green on `a888d8c6` (build, paper-boot with 80 scenarios; both runs); Codex at its usage limit (skipped) | create_session session_01R1w2UuF3ht2BpNQtH69s5f in "Default Correct" |
 | L4b #1003 warp step for every area kind (seed v4) and #1009 off-road smoke §§ 6–7 superseded (developer decisions 2026-11-24; fix link) | #1003, #1009 | Merged into `next` 2026-11-24 09:55 UTC (knk-web-api `e06fd5c0`, knk-web-app `8be9e24c`, knk-workspace `d8eac5f2`); #1009 closed (docs) | `claude/landmark-warp-step-1003`: knk-web-api `a65baee9`, knk-web-app `f1d5491e`; `claude/landmark-domain-l4b`: knk-workspace `0a0d74bd` | [knk-web-api#86](https://github.com/PandiO/knk-web-api/pull/86), [knk-web-app#79](https://github.com/PandiO/knk-web-app/pull/79), [knk-workspace#1016](https://github.com/PandiO/knk-workspace/pull/1016) | green (API build-and-test, mysql-tests after one re-run of flaky #1017, fresh-database; web app build-and-test, e2e); Codex at its usage limit (skipped) | subagent of the coordinator, 2026-11-24 08:20–09:50 UTC |
 
 ## 3. Coordinator decisions
@@ -720,6 +720,97 @@ _(Each link appends its block here when it finishes.)_
 9. **Notes for later links.**
     1. L3 (#985) and #1006: the API already sends `replaceRegionId` equal to the target for these owners on a retry;
        a plugin check of the existing region (decision 1 (b)) would make the domain heal safe.
+
+### 4.6 L3b — NPC replay fails at scene origin x ≥ 32752 (#958)
+
+1. **Scope done.**
+    1. Root cause: a double has one bit less for the fraction from x 32768 (2^15) on. The replay's road runs along the
+       block face x 1412 (real). Real x 1407…1418 lies below 32768 in a scene from 32740 and at or above it in one
+       from 32752. So after the real-to-scene move, those line points rounded to the other side of the face, and the
+       corridor shaper made a different stretch there (1411.53 115 −531.84 against 1412.0 115 −532.0). Everywhere
+       else both scenes are in the same range and the line is bit-identical after the move, hence the sharp
+       threshold. Found by logging every waypoint list handed to Citizens and every stage of `RouteFollower.next` at
+       both origins:
+        1. The road lines differ only in the last bits.
+        2. The block centres are identical, and the shaper's output is the first real difference.
+        3. Each stage gives the same result on an exactly translated input.
+        4. So it is not the plugin's coordinate keys, Citizens, chunk loading or the group code.
+        5. L3's "leader alone identical" held for the outcome; its waypoints already differed.
+    2. knk-plugin `core/npc/nav/RouteFollower`: the road line and the resampled line on a grid of 1/4096 block
+       (`LINE_GRID`), exact as a double anywhere within the world border. The replay's 1449 waypoint lists are
+       identical at origin 32740 and 32752.
+    3. knk-plugin `core/npc/nav/group/NavGroup`: with exact arcs, `NavGroupFinishTripTest` showed an existing gap. A
+       follower held behind another at a closed gate ended its own leg back (rejoin) on the spot of the follower ahead.
+       Before, rounding made it overshoot into the door's margin, where `backOutOf` queued it; it still ended 0.1 from
+       that follower, and the test passed by timing. The follower now keeps the index its last hand-out stopped
+       before (`cutIdx`, set in `send` and `backOutOf`), and a queued follower's rejoin target stops a queue's length
+       before it.
+    4. knk-plugin scenario `npc-replay-quarry-to-keep-past-32768` (`NpcSnapshotReplayScenario.pastTheBinade()`): the
+       replay with the snapshot's settings in a scene at world x 32768 or beyond. Its first check fails further west,
+       so it has to be registered from the 45th scenario on. It runs in about 3.5 minutes. `PaperScenariosTest`,
+       `MIN_SCENARIOS` 80. The comment "new scenarios go after the NPC replays" in `PaperScenarios` is removed
+       (prompt § 2.3, proof in item 4.3).
+    5. knk-workspace: changelog entry (no admin steps); `guides/developer/plugin-scenarios.md` § 1 item 6 (scene order
+       no longer matters) and item 14 (the new scenario); `guides/developer/ci.md` § 7 and § 7.1 (paper-boot waits
+       2400 s, job timeout 50 minutes, about 32 minutes for 80 scenarios).
+    6. knk-plugin `.github/workflows/paper-boot.yml`: `MIN_SCENARIOS` 80, `--expect-timeout` 2400, `timeout-minutes` 50.
+2. **Commits and heads.**
+    1. knk-plugin `claude/npc-replay-958` at `a888d8c6` (4 commits: `a5e5cf24` grid, `92c4bd6c` group queue,
+       `97350ce7` scenario, `a888d8c6` paper-boot timeout; base `next` `14645895`, which did not move).
+    2. knk-workspace `claude/npc-replay-958` at `a340f689` (`3baaaea5` docs, a merge of `origin/next` `d8eac5f2`,
+       `a340f689` CI guide; base `next`).
+3. **PRs.** [knk-plugin#126](https://github.com/PandiO/knk-plugin/pull/126) (`Closes PandiO/knk-workspace#958`),
+   [knk-workspace#1018](https://github.com/PandiO/knk-workspace/pull/1018) (`Part of #958`), base `next`. Not merged.
+4. **Tests, baseline → result.**
+    1. knk-plugin `./gradlew build -x deployToDevServer`: baseline on `next` `14645895`: knk-core 3809, knk-api-client
+       430 (2 skipped), knk-paper 3496 (18 skipped), 0 failures. Branch: knk-core 3813 (+4 `RouteFollowerGridTest`),
+       knk-api-client 430, knk-paper 3496, 0 failures. CI on #126: the first run on `97350ce7` passed 79 scenarios and ran out of the 1800 s wait during the 80th
+       (the new check); with `--expect-timeout 2400` and a 50-minute job (`a888d8c6`) build and paper-boot are green
+       on `a888d8c6` (both runs, 80 scenarios).
+    2. Fails before the fix:
+        1. `RouteFollowerGridTest`: 3 of 4 fail without the grid.
+        2. `npc-replay-quarry-to-keep-past-32768` alone at origin 35056 (its CI position) without the grid: FAIL,
+           "falls from the climb 17: knk-sc-0 from 1424 49 -515 to 1429 46 -516 …", as on #115. With the grid:
+           PASS (4151 ticks).
+    3. Local paper-boot (the pinned Paper 26.3-205, WorldEdit 7.4.6, WorldGuard 7.0.20, Citizens b4269):
+        1. `npc-replay-quarry-to-keep` alone at origin 32740 and 32752 before the fix: PASS and FAIL. After the fix
+           both PASS with identical reports.
+        2. The final code with three empty scenarios registered before all others (the replay at scene 44, where it
+           failed): 83 of 83 passed (replay 7261 ticks).
+    4. Known reds: none.
+    5. Codex: at its usage limit on both PRs (review failed, no findings); finished without it, said so on both PRs.
+5. **Decisions (DESIGN § 4.3).**
+    1. *Where to fix.* Chosen: the route line in `RouteFollower` (`core/npc/nav`), the input every NPC stretch is built
+       from; outside `core/navigation/` and outside the lines of knk-plugin #116 to #119 (none of them touches
+       `RouteFollower`, `NavGroup` or `NpcSnapshotReplayScenario`). Alternatives: (a) make the corridor shaper's face
+       and tie decisions tolerant: in `core/navigation/` (prompt § 3.3), and a tolerance moves the problem rather
+       than removing it; (b) snap only the input road line: resampled points (a + d·t) round at their own magnitude
+       again; (c) place the scenario's scene elsewhere: hides the bug for real routes.
+    2. *Grid size.* Chosen: 1/4096 block (12 fraction bits plus 25 for 30,000,000 fit a double's 53). Alternatives:
+       (a) 1/1024: coarser than needed; (b) 1/65536: exact as well, no benefit.
+    3. *Group queue gap.* Chosen: cap a queued follower's rejoin target at its place in the queue (a fix inside this
+       link, since the grid turned `NavGroupFinishTripTest` red and the test detects a real pile-up). Alternatives:
+       (a) step a still follower back out of its queue gap every tick: broke two `NavGroupTest` cases (stuck spells,
+       an outside follower at the edge); (b) change or loosen the test: it caught a real pile-up; (c) leave it red
+       as a blocker: the fix is small and covered by the existing tests.
+    4. *Check scenario.* Chosen: a second registration of the replay with the snapshot's settings only, checking its
+       own scene position. Alternatives: (a) both configurations: about 3.5 more minutes of CI for walks that never
+       failed; (b) move the existing replay to a later index: depends on registration order, the rule being removed.
+6. **Out of scope, noted.**
+    1. Local paper-boot in this environment: Citizens b4269 downloads its Adventure libraries at startup with libby,
+       and that download fails inside the server here (the same URLs work from a plain JVM). Worked around by
+       pre-filling `plugins/Citizens/lib` with libby run outside the server. CI is not affected. Not filed (an
+       environment matter, not a plugin bug).
+7. **Blockers.** None.
+8. **At merge / what the developer must do.**
+    1. Nothing beyond merging (no config key, no migration). CI's paper-boot runs one more scenario (about 3.5
+       minutes) and now takes about 32 minutes in a 50-minute job.
+9. **Notes for later links.**
+    1. A scenario can be registered anywhere in `PaperScenarios` again.
+    2. Plugin code that decides by comparing a coordinate with a block face or a tie should get its inputs from
+       `RouteFollower.line()` (on the grid), not from raw road points.
+    3. The knk-workspace merge commit `96e1e803` has git's default message without the commit trailers (pushed
+       before I noticed; no force-push).
 
 ### 4.7 L4b — warp step for every area kind (seed v4) and off-road smoke §§ 6–7 superseded (#1003, #1009)
 
