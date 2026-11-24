@@ -1,6 +1,6 @@
 # Agent token efficiency and reuse: plan
 
-**Status:** Proposed — developer answered § 5 on 2026-11-24; waiting for approval · **Last updated:** 2026-11-24 (§ 5 decisions: docs per chain, Phase 7 dropped, run by a chain, run log in the guide; Phase 8 hand-over recommendation) · 2026-11-24 (Phases 8 and 9: coordinator hand-over and wake-ups, smoke-run session) · 2026-11-22
+**Status:** **Decided 2026-11-24** (developer) · **Last updated:** 2026-11-24 (approved, including the Phase 8 hand-over recommendation; phase sub-issues filed) · 2026-11-24 (§ 5 decisions: docs per chain, Phase 7 dropped, run by a chain, run log in the guide; Phase 8 hand-over recommendation) · 2026-11-24 (Phases 8 and 9: coordinator hand-over and wake-ups, smoke-run session) · 2026-11-22
 **Issue:** PandiO/knk-workspace#987 (parent) · **Evidence:** [code-graph trial report](../../reports/2026-11-22-code-graph-mcp-trial.md)
 § 1 (baseline) and § 1b (12 real sessions) · **Related:** PandiO/knk-workspace#977 (code-graph trial, shelved),
 PandiO/knk-workspace#978 (reuse catalogue)
@@ -42,6 +42,22 @@ The −20 % is an estimate: Phases 1–4 add up to roughly that. If Phase 0's re
 measurement.
 
 ## 3. Phases
+
+| Phase | Sub-issue | Tier | What | Order |
+|---|---|---|---|---|
+| 0 | PandiO/knk-workspace#1019 | tier:1 | Session token audit procedure | first |
+| 1 | PandiO/knk-workspace#1020 | tier:1 | Slim the session board | after 0, parallel |
+| 2 | PandiO/knk-workspace#1021 | tier:1 | Lighter start-up reading | after 0, parallel |
+| 4 | PandiO/knk-workspace#1026 | tier:1 | Stop waking finished sessions | after 0, parallel |
+| 6 | PandiO/knk-workspace#978 | tier:1 | Reuse catalogue and Reuse design step | after 0, parallel |
+| 8 | PandiO/knk-workspace#1024 | tier:1 | Coordinator hand-over and fewer wake-ups | after 0, parallel (PR watching after 4) |
+| 3 | PandiO/knk-workspace#1022 | tier:1 | Fewer set-up turns | after the parallel group |
+| 5 | PandiO/knk-workspace#1023 | tier:1 | One docs session per chain | after the parallel group |
+| 9 | PandiO/knk-workspace#1025 | tier:1 | Smoke-run session and redirects | after the parallel group |
+| 7 | — | — | Fallback review | dropped 2026-11-24 |
+
+No smoke-test guide: every phase is `tier:1` and changes agent workflow, not game behaviour. Each phase is checked by
+a Phase 0 rerun against the targets in § 2.
 
 Each phase is one `tier:1` sub-issue of #987. Phases 1–5, 8 and 9 change agent workflow files (Phase 7 is dropped), so each goes to
 knk-workspace `main` through its own pull request, then `main` → `next` (global instructions, "Branches" rule 11).
@@ -237,7 +253,7 @@ Reopen #977 if a Phase 0 rerun shows any of these:
 The trial is ready to resume: candidates vetted, tools chosen (codebase-memory-mcp and codegraph), and the baseline,
 ground truth and recipe are in the report.
 
-## 5. Decisions and open question
+## 5. Decisions
 
 Developer answers of 2026-11-24:
 
@@ -246,7 +262,7 @@ Developer answers of 2026-11-24:
 3. Who runs it: a small chain under a coordinator. Charter to draft on approval.
 4. Phase 9: smoke-run results go in a "Run log" section of the feature's smoke-test guide.
 5. Phase 8, asked by the developer for a recommendation: hand over at every phase boundary, with 300k as a hard
-   ceiling and a cold-cache wake-up above ~200k as the preferred moment. Waiting for the developer's yes.
+   ceiling and a cold-cache wake-up above ~200k as the preferred moment. Approved by the developer 2026-11-24.
 
-Open: the developer's approval of the plan, with the order Phase 0 first; then 1, 2, 4, 6 and 8 in parallel; then 3,
-5 and 9.
+6. Approval: the developer approved the plan and the Phase 8 recommendation on 2026-11-24. Order: Phase 0 first;
+   then 1, 2, 4, 6 and 8 in parallel; then 3, 5 and 9 (§ 3 table). No open questions remain.
