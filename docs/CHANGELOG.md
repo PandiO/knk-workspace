@@ -4,6 +4,24 @@ This is a human-readable record of capabilities merged into the V3 default branc
 
 ## Unreleased — on feature branches, not merged
 
+- **An NPC's route has the same shape wherever it lies: the quarry-to-keep replay no longer fails east of world x
+  32768** ([PandiO/knk-workspace#958](https://github.com/PandiO/knk-workspace/issues/958), tier:2, fix link L3b of
+  [#976](https://github.com/PandiO/knk-workspace/issues/976); branch `claude/npc-replay-958` in knk-plugin, no flag).
+  Cause: a double has one bit less for the fraction from x 32768 (2^15) on. The replay's road runs along the block
+  face x 1412 (real); moved into a scene starting at x 32752 or further east, those line points came out a hair on
+  the other side of the face than at 32740, the corridor shaper made a different stretch there, and the group of 20
+  fell from the climb. knk-plugin: `RouteFollower` puts the route line's x and z on a grid of 1/4096 block
+  (`LINE_GRID`), exact as a double anywhere within the world border, so moving a route by whole blocks moves its
+  stretches exactly. The waypoints handed to Citizens in the replay are now identical at origin 32740 and 32752 (1449
+  waypoint lists compared). New paper-boot scenario `npc-replay-quarry-to-keep-past-32768` (the replay with the
+  snapshot's settings in a scene at x 32768 or beyond, from the 45th scenario on; about 3.5 minutes) and knk-core
+  `RouteFollowerGridTest`; both fail without the grid. With the grid a follower held behind others before a closed
+  gate ended its own leg back to the group on the spot of the follower before it (`NavGroupFinishTripTest`; before,
+  rounding hid it): its leg now ends at its place in the queue (`NavGroup`). A scenario can be registered anywhere in
+  `PaperScenarios` again (the "new scenarios go after the NPC replays" rule is gone; a full local run with three
+  scenarios registered first passed). CI's `MIN_SCENARIOS` goes to 80.
+  **Admin steps (deploy notes):** none (no config key, no migration).
+
 - **Landmarks are domains now: a landmark can be a plain point, have its own region with sub-regions, or use the area
   of the domain it belongs to** ([PandiO/knk-workspace#983](https://github.com/PandiO/knk-workspace/issues/983), phase 1
   of [#976](https://github.com/PandiO/knk-workspace/issues/976), [design](specs/landmark-domain/DESIGN.md); also fixes
