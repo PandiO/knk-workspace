@@ -1,6 +1,6 @@
 # Landmarks as a Domain subtype chain — progress report
 
-**Status:** Running (2026-11-22: L1 in `next`, L2 in review) · **Last updated:** 2026-11-22 (L2 block)
+**Status:** Running (2026-11-22: L1 in `next`, L2 in review) · **Last updated:** 2026-11-24 (L2 block)
 
 **Issue:** [PandiO/knk-workspace#976](https://github.com/PandiO/knk-workspace/issues/976), links
 [#983](https://github.com/PandiO/knk-workspace/issues/983) (L1), [#984](https://github.com/PandiO/knk-workspace/issues/984) (L2),
@@ -26,19 +26,22 @@ design session of 2026-11-22).
 5. **L3 #985 in `next` (tier:2):** smoke guide § 3 (9 steps; `navigation.landmarks: true` for steps 5, 6, 8); deploy:
    no `config.yml` key; run `/knk regions repair` once after the plugin deploy. Decide: the gate check in
    `SimpleRegionTransitionService` compares against "gate" while the API sends "GateStructure" (block 4.3b item
-   6.1). Decide who takes #958 (left open with a reproduction; L3 proposes an NPC navigation session).
-6. **Decide on #1003:** should a point landmark (Area None) keep the "Warp destination" step on the form? A17 hides it
-   without an own region; DESIGN § 4.1 item 5 has no condition and § 3 item 2 likens landmark warps to the v1 warp
-   points. L1b builds seed v3 per A17 as written (decision 16); one seed edit reverses it.
+   6.1): **answered 2026-11-24**, filed as #1015 (to check). #958: **fixed and in `next`** (fix link L3b, 2026-11-24:
+   the NPC route line on a 1/4096 grid; scene order no longer matters). **Review:** paper-boot CI now takes about 32
+   minutes (job limit 50, wait 2400 s) because L3b's check scenario replays the walk at x ≥ 32768 (about 3.5 minutes);
+   a shorter check is possible later if CI time matters more.
+6. **#1003 answered 2026-11-24 and in `next` (L4b):** the "Warp destination" step shows for every area kind. Deploy:
+   import "Landmark - Default (seed v4)" as the default (instead of v3 or v2). Smoke § 1 step 2, § 4 step 1, § 5
+   steps 5–6, and the by-hand parts of the new § 3.2 (steps carried over from the off-road guide).
 7. **L1b (#952, #1003) in `next`:** smoke guide § 5; deploy: import the Landmark form seed v3 and make it the
-   default (v2 need not be imported). **Decide on #1006**: healing a `domain_<id>` region (landmarks included) left
-   behind by a failed re-run needs a plugin check of the existing region; until then the manual way out of
-   managed-worldguard-regions § 7 applies.
+   default (v2 need not be imported; after L4b: seed v4). #1006 **answered 2026-11-24**: it goes with #989 (the
+   generic region lifecycle), now its sub-issue; until then the manual way out of managed-worldguard-regions § 7
+   applies.
 8. **Docs:** #1008 done and closed by its docs session (session_01R1w2UsgKAzYiVf45xr41DR; main docs PR #1011 merged
    into `next` `188ade30`); leftovers #1009 and #1010. The smoke § 1 wording fix (seed v3, step 14 after L3) is
    PandiO/knk-workspace#1012 into `next`, merged by the docs session.
-9. **Off-road smoke § 6 and § 7 (landmarks, #698):** the off-road coordinator asked you on #698 whether they close as
-   superseded by this chain; this chain's guide § 3 covers landmark navigation on the new model (L3).
+9. **Off-road smoke § 6 and § 7 (#698): answered 2026-11-24, done (L4b, #1009 closed):** superseded by landmark-domain
+   § 3; the uncovered steps are in § 3.2.
 
 ## 2. Summary
 
@@ -49,6 +52,8 @@ design session of 2026-11-22).
 | L3 Plugin (tier:2), also #958 (findings only) and the plugin part of #951 | #985 | Merged into `next` 2026-11-22 21:38 UTC (knk-plugin `14645895`, knk-workspace `e6bb8dfe`) | `claude/landmark-domain`: knk-plugin `31658c58`; `claude/landmark-domain-l3`: knk-workspace `43bcdbf3` | [knk-plugin#125](https://github.com/PandiO/knk-plugin/pull/125), [knk-workspace#1005](https://github.com/PandiO/knk-workspace/pull/1005) | green on `31658c58` (build, paper-boot; both runs, one build re-run for a `HarvestModuleTest` setup error outside the PR); Codex at its usage limit (skipped) | create_session session_01R1w2UtBFy9s4dBXQoeBMQF (blocked, network); rerun session_01R1w2UuLNw6Cr3qwUKQNvao in "Default Correct" (decision 14) |
 | L4 Web app (tier:2) | #986 | Merged into `next` 2026-11-22 20:19 UTC (knk-web-app `8c9c3553`, knk-workspace `99da72cc`) | `claude/landmark-domain`: knk-web-app `4bc6b88d`; `claude/landmark-domain-l4`: knk-workspace `73e785d4` | [knk-web-app#78](https://github.com/PandiO/knk-web-app/pull/78), [knk-workspace#1004](https://github.com/PandiO/knk-workspace/pull/1004) | green on `4bc6b88d` (build-and-test, e2e; both runs); knk-workspace no checks; Codex at its usage limit (skipped) | create_session session_01R1w2UtGykzTGpUL4Ksj6S6, started 2026-11-22 19:46 UTC |
 | L1b #952 region re-run left on a temp name, and #1003 Landmark form seed v3 (charter § 3 item 8; fix link) | #952, #1003 | Merged into `next` 2026-11-22 20:50 UTC (knk-web-api `3bc3cfd5`, knk-workspace `f7e4f671`); `domain_<id>` part of #952 split off to #1006 | `claude/landmark-domain-952`: knk-web-api `60fe2723`; `claude/landmark-domain-l1b`: knk-workspace `d06f362d` | [knk-web-api#85](https://github.com/PandiO/knk-web-api/pull/85), [knk-workspace#1007](https://github.com/PandiO/knk-workspace/pull/1007) | green on `60fe2723` (build-and-test, mysql-tests, fresh-database; both runs); Codex at its usage limit (skipped) | create_session session_01R1w2Ut1aonbYwio9RXX7mA, started 2026-11-22 20:20 UTC |
+| L3b #958 NPC replay fails at scene origin x ≥ 32752 (developer decision 2026-11-24; fix link) | #958 | Merged into `next` 2026-11-24 12:20 UTC (knk-plugin `2c5d5846`, knk-workspace `f193120d`) | `claude/npc-replay-958`: knk-plugin `a888d8c6`, knk-workspace `a340f689` | [knk-plugin#126](https://github.com/PandiO/knk-plugin/pull/126), [knk-workspace#1018](https://github.com/PandiO/knk-workspace/pull/1018) | green on `a888d8c6` (build, paper-boot with 80 scenarios, both runs); Codex at its usage limit (skipped) | create_session session_01R1w2UuF3ht2BpNQtH69s5f in "Default Correct", 2026-11-24 08:13 UTC |
+| L4b #1003 warp step for every area kind (seed v4) and #1009 off-road smoke §§ 6–7 superseded (developer decisions 2026-11-24; fix link) | #1003, #1009 | Merged into `next` 2026-11-24 09:55 UTC (knk-web-api `e06fd5c0`, knk-web-app `8be9e24c`, knk-workspace `d8eac5f2`); #1009 closed (docs) | `claude/landmark-warp-step-1003`: knk-web-api `a65baee9`, knk-web-app `f1d5491e`; `claude/landmark-domain-l4b`: knk-workspace `0a0d74bd` | [knk-web-api#86](https://github.com/PandiO/knk-web-api/pull/86), [knk-web-app#79](https://github.com/PandiO/knk-web-app/pull/79), [knk-workspace#1016](https://github.com/PandiO/knk-workspace/pull/1016) | green (API build-and-test, mysql-tests after one re-run of flaky #1017, fresh-database; web app build-and-test, e2e); Codex at its usage limit (skipped) | subagent of the coordinator, 2026-11-24 08:20–09:50 UTC |
 
 ## 3. Coordinator decisions
 
@@ -206,6 +211,42 @@ design session of 2026-11-22).
     Smoke guide § 1 on `next` still has wording from before L3, L4 and L1b (steps 2–3 name seed v2, § 1.0 item 1 the
     in-between state, step 14 "before L3"); handed to the docs session #1008 to correct in its docs PR rather than a
     coordinator push to `next` (skill § 7.6). Final report on #976.
+21. **The developer's answers of 2026-11-24** (asked through the ask-user prompt, five questions) and what followed:
+    1. #1003, warp step: "Show for every area". Chosen: fix link **L4b** builds a Landmark form seed v4 (the seeds
+       README: a changed seed ships with a new `configurationGuid` and name, so v3 cannot change in place), updates
+       L4's e2e test, DESIGN (LD26, A17, § 4.1 item 5) and the smoke guide. Alternatives: (a) change v3 in place,
+       rejected (an import never overwrites, so databases with v3 would keep the old form); (b) leave it to the docs
+       session, rejected (code and seed change).
+    2. #1006: "Recently an issue was added to consolidate domain wg region retention, removal, cleanup operations",
+       read as: it goes with #989 (the generic region lifecycle, scope item 3, one generic replace decision). Made a
+       sub-issue of #989, comments on both. Alternatives: (a) a fix link now, rejected (the developer pointed to #989);
+       (b) close it, rejected (the problem stays until #989 lands).
+    3. #958: "Separate session now". Chosen: fix link **L3b** with `create_session` in "Default Correct" (plugin, one
+       component repo), out of the lines of the open NPC PRs #116–#119, out of `core/navigation/`. Alternatives: (a)
+       hand it to the NPC navigation chain, rejected (the developer asked for a separate session now).
+    4. Gate check: "File an issue to check". Filed #1015 (`bug`, `tier:1`, `knk-plugin`).
+    5. Off-road smoke § 6/§ 7: "Close as superseded". The docs session's leftover #1009 (rewrite them) changes to:
+       move the uncovered steps into landmark-domain § 3, then mark the off-road sections superseded; given to **L4b**
+       (it edits the same smoke guide). The off-road coordinator is told and may take the off-road file edit itself.
+    6. Route of L4b: a subagent of the coordinator, because it changes two component repos (knk-web-api, knk-web-app)
+       and L4's `create_session` attach of knk-web-api was refused once (skill § 4.1.4.2). L3b and L4b share no
+       component repo.
+22. **L4b checked and merged into `next`** (2026-11-24 09:55 UTC). Every check of skill § 6 held: heads matched, all
+    three branches contained `next`, scope as asked, CI green (API after one re-run of a flaky MySQL test outside the
+    change, filed #1017), tests at or above baseline, decisions logged, smoke steps tagged, Codex at its usage limit.
+    The coordinator read the seed diff: v4 differs from v3 only in GUIDs, name, description and the dropped warp-step
+    condition. #1009 closed (docs in `next`); the off-road coordinator was told. Alternatives: none needed.
+23. **L3b checked and merged into `next`** (2026-11-24 12:20 UTC). Every check of skill § 6 held: heads matched, both
+    branches contained `next`, scope (`RouteFollower`, `NavGroup`, the replay scenario, `PaperScenarios`,
+    `paper-boot.yml`, three docs) out of the open NPC PRs' lines and out of `core/navigation/`, CI green on
+    `a888d8c6` (build, paper-boot 80 scenarios, both runs), tests knk-core 3809 → 3813 (others unchanged), block 4.6
+    with four decisions, #958 `status:in-review`, Codex at its usage limit. The coordinator read the fix: the route
+    line's x and z on a 1/4096 grid (exact as a double anywhere in the world border; the root cause was the lost
+    fraction bit from x 32768 with a road along a block face) and a `NavGroup` queue fix the exact coordinates
+    exposed. Accepted with a flag for the developer: paper-boot's wait 1800 → 2400 s and job limit 40 → 50 minutes
+    for the 3.5-minute check scenario. Alternatives: (a) send L3b back for a shorter check scenario, rejected (the full
+    replay is the proof the developer's issue asked for; shortening it is reversible later); (b) hold the merge for
+    the developer, rejected (CI time is not a merge gate).
 
 ## 4. Link blocks
 
@@ -692,3 +733,150 @@ _(Each link appends its block here when it finishes.)_
 9. **Notes for later links.**
     1. L3 (#985) and #1006: the API already sends `replaceRegionId` equal to the target for these owners on a retry;
        a plugin check of the existing region (decision 1 (b)) would make the domain heal safe.
+
+### 4.6 L3b — NPC replay fails at scene origin x ≥ 32752 (#958)
+
+1. **Scope done.**
+    1. Root cause: a double has one bit less for the fraction from x 32768 (2^15) on. The replay's road runs along the
+       block face x 1412 (real). Real x 1407…1418 lies below 32768 in a scene from 32740 and at or above it in one
+       from 32752. So after the real-to-scene move, those line points rounded to the other side of the face, and the
+       corridor shaper made a different stretch there (1411.53 115 −531.84 against 1412.0 115 −532.0). Everywhere
+       else both scenes are in the same range and the line is bit-identical after the move, hence the sharp
+       threshold. Found by logging every waypoint list handed to Citizens and every stage of `RouteFollower.next` at
+       both origins:
+        1. The road lines differ only in the last bits.
+        2. The block centres are identical, and the shaper's output is the first real difference.
+        3. Each stage gives the same result on an exactly translated input.
+        4. So it is not the plugin's coordinate keys, Citizens, chunk loading or the group code.
+        5. L3's "leader alone identical" held for the outcome; its waypoints already differed.
+    2. knk-plugin `core/npc/nav/RouteFollower`: the road line and the resampled line on a grid of 1/4096 block
+       (`LINE_GRID`), exact as a double anywhere within the world border. The replay's 1449 waypoint lists are
+       identical at origin 32740 and 32752.
+    3. knk-plugin `core/npc/nav/group/NavGroup`: with exact arcs, `NavGroupFinishTripTest` showed an existing gap. A
+       follower held behind another at a closed gate ended its own leg back (rejoin) on the spot of the follower ahead.
+       Before, rounding made it overshoot into the door's margin, where `backOutOf` queued it; it still ended 0.1 from
+       that follower, and the test passed by timing. The follower now keeps the index its last hand-out stopped
+       before (`cutIdx`, set in `send` and `backOutOf`), and a queued follower's rejoin target stops a queue's length
+       before it.
+    4. knk-plugin scenario `npc-replay-quarry-to-keep-past-32768` (`NpcSnapshotReplayScenario.pastTheBinade()`): the
+       replay with the snapshot's settings in a scene at world x 32768 or beyond. Its first check fails further west,
+       so it has to be registered from the 45th scenario on. It runs in about 3.5 minutes. `PaperScenariosTest`,
+       `MIN_SCENARIOS` 80. The comment "new scenarios go after the NPC replays" in `PaperScenarios` is removed
+       (prompt § 2.3, proof in item 4.3).
+    5. knk-workspace: changelog entry (no admin steps); `guides/developer/plugin-scenarios.md` § 1 item 6 (scene order
+       no longer matters) and item 14 (the new scenario); `guides/developer/ci.md` § 7 and § 7.1 (paper-boot waits
+       2400 s, job timeout 50 minutes, about 32 minutes for 80 scenarios).
+    6. knk-plugin `.github/workflows/paper-boot.yml`: `MIN_SCENARIOS` 80, `--expect-timeout` 2400, `timeout-minutes` 50.
+2. **Commits and heads.**
+    1. knk-plugin `claude/npc-replay-958` at `a888d8c6` (4 commits: `a5e5cf24` grid, `92c4bd6c` group queue,
+       `97350ce7` scenario, `a888d8c6` paper-boot timeout; base `next` `14645895`, which did not move).
+    2. knk-workspace `claude/npc-replay-958` at `a340f689` (`3baaaea5` docs, a merge of `origin/next` `d8eac5f2`,
+       `a340f689` CI guide; base `next`).
+3. **PRs.** [knk-plugin#126](https://github.com/PandiO/knk-plugin/pull/126) (`Closes PandiO/knk-workspace#958`),
+   [knk-workspace#1018](https://github.com/PandiO/knk-workspace/pull/1018) (`Part of #958`), base `next`. Not merged.
+4. **Tests, baseline → result.**
+    1. knk-plugin `./gradlew build -x deployToDevServer`: baseline on `next` `14645895`: knk-core 3809, knk-api-client
+       430 (2 skipped), knk-paper 3496 (18 skipped), 0 failures. Branch: knk-core 3813 (+4 `RouteFollowerGridTest`),
+       knk-api-client 430, knk-paper 3496, 0 failures. CI on #126: the first run on `97350ce7` passed 79 scenarios and ran out of the 1800 s wait during the 80th
+       (the new check); with `--expect-timeout 2400` and a 50-minute job (`a888d8c6`) build and paper-boot are green
+       on `a888d8c6` (both runs, 80 scenarios).
+    2. Fails before the fix:
+        1. `RouteFollowerGridTest`: 3 of 4 fail without the grid.
+        2. `npc-replay-quarry-to-keep-past-32768` alone at origin 35056 (its CI position) without the grid: FAIL,
+           "falls from the climb 17: knk-sc-0 from 1424 49 -515 to 1429 46 -516 …", as on #115. With the grid:
+           PASS (4151 ticks).
+    3. Local paper-boot (the pinned Paper 26.3-205, WorldEdit 7.4.6, WorldGuard 7.0.20, Citizens b4269):
+        1. `npc-replay-quarry-to-keep` alone at origin 32740 and 32752 before the fix: PASS and FAIL. After the fix
+           both PASS with identical reports.
+        2. The final code with three empty scenarios registered before all others (the replay at scene 44, where it
+           failed): 83 of 83 passed (replay 7261 ticks).
+    4. Known reds: none.
+    5. Codex: at its usage limit on both PRs (review failed, no findings); finished without it, said so on both PRs.
+5. **Decisions (DESIGN § 4.3).**
+    1. *Where to fix.* Chosen: the route line in `RouteFollower` (`core/npc/nav`), the input every NPC stretch is built
+       from; outside `core/navigation/` and outside the lines of knk-plugin #116 to #119 (none of them touches
+       `RouteFollower`, `NavGroup` or `NpcSnapshotReplayScenario`). Alternatives: (a) make the corridor shaper's face
+       and tie decisions tolerant: in `core/navigation/` (prompt § 3.3), and a tolerance moves the problem rather
+       than removing it; (b) snap only the input road line: resampled points (a + d·t) round at their own magnitude
+       again; (c) place the scenario's scene elsewhere: hides the bug for real routes.
+    2. *Grid size.* Chosen: 1/4096 block (12 fraction bits plus 25 for 30,000,000 fit a double's 53). Alternatives:
+       (a) 1/1024: coarser than needed; (b) 1/65536: exact as well, no benefit.
+    3. *Group queue gap.* Chosen: cap a queued follower's rejoin target at its place in the queue (a fix inside this
+       link, since the grid turned `NavGroupFinishTripTest` red and the test detects a real pile-up). Alternatives:
+       (a) step a still follower back out of its queue gap every tick: broke two `NavGroupTest` cases (stuck spells,
+       an outside follower at the edge); (b) change or loosen the test: it caught a real pile-up; (c) leave it red
+       as a blocker: the fix is small and covered by the existing tests.
+    4. *Check scenario.* Chosen: a second registration of the replay with the snapshot's settings only, checking its
+       own scene position. Alternatives: (a) both configurations: about 3.5 more minutes of CI for walks that never
+       failed; (b) move the existing replay to a later index: depends on registration order, the rule being removed.
+6. **Out of scope, noted.**
+    1. Local paper-boot in this environment: Citizens b4269 downloads its Adventure libraries at startup with libby,
+       and that download fails inside the server here (the same URLs work from a plain JVM). Worked around by
+       pre-filling `plugins/Citizens/lib` with libby run outside the server. CI is not affected. Not filed (an
+       environment matter, not a plugin bug).
+7. **Blockers.** None.
+8. **At merge / what the developer must do.**
+    1. Nothing beyond merging (no config key, no migration). CI's paper-boot runs one more scenario (about 3.5
+       minutes) and now takes about 32 minutes in a 50-minute job.
+9. **Notes for later links.**
+    1. A scenario can be registered anywhere in `PaperScenarios` again.
+    2. Plugin code that decides by comparing a coordinate with a block face or a tie should get its inputs from
+       `RouteFollower.line()` (on the grid), not from raw road points.
+    3. The knk-workspace merge commit `96e1e803` has git's default message without the commit trailers (pushed
+       before I noticed; no force-push).
+
+### 4.7 L4b — warp step for every area kind (seed v4) and off-road smoke §§ 6–7 superseded (#1003, #1009)
+
+_Written by the coordinator from the subagent's final report (2026-11-24); the subagent did not edit this file._
+
+1. **Scope done.**
+    1. knk-web-api: Landmark form seed v4 ("Landmark - Default (seed v4)", `configurationGuid`
+       `0e58df82-02fb-59c1-9969-5a0a6ce15194` = uuid5(v3, "seed-v4"), steps and fields uuid5(v3, their v3 GUID)): v3
+       without the "Warp destination" step's display condition (LD26); seeds README v4 paragraph and table row; seed
+       tests pin v4; new `LandmarkDomainIntegrationTests.APointLandmark_AndALinkedOne_WithTheirWarpOn_AreDestinations_AtTheirPins`.
+       No migration, no API code change.
+    2. knk-web-app: the A17 e2e test and its mocked form follow seed v4 (renamed "shows the region, access and
+       sub-region steps only with Own region, and the warp step for every area (A17, LD26)").
+    3. knk-workspace: DESIGN LD26, A17 and § 4.1 item 5; smoke guide seed v4 (§ 1.0, § 1 steps 2–3, § 4.0, § 4 steps
+       1 and 4, § 5 step 5) and new § 5 step 6 (a point and a linked landmark as warp destinations); new § 3.2 "Carried
+       over from the off-road guide" (27 steps); `navigation-offroad-smoke-test.md` § 6 (6.0–6.5) and § 7 (7.0, 7.1)
+       superseded with the step mapping, headings and numbers kept; changelog block with the deploy note.
+2. **Commits and heads.** knk-web-api `claude/landmark-warp-step-1003` `a65baee9` (base `next` `3bc3cfd5`); knk-web-app
+   `claude/landmark-warp-step-1003` `f1d5491e` (base `8c9c355`); knk-workspace `claude/landmark-domain-l4b` `0a0d74bd`
+   (base `baf9ef74`). `next` did not move during the link.
+3. **PRs.** PandiO/knk-web-api#86 (`Closes #1003`), PandiO/knk-web-app#79 (`Part of #1003`),
+   PandiO/knk-workspace#1016 (`Closes #1009`, `Part of #1003`); merged into `next` by the coordinator.
+4. **Tests, baseline → result.**
+    1. knk-web-api: build 0 → 0 errors; 5344 → 5345 passed, 131 skipped (MySQL, run in CI), 0 failed. The renamed
+       seed tests fail against v3 and pass against v4.
+    2. knk-web-app: Jest 2951 → 2951; tsc 0 → 0; build passed; typecheck:e2e passed; Playwright 382 → 382 (one test
+       renamed; it fails against the old mock).
+    3. knk-workspace: link check over the changed docs, 0 broken (CHANGELOG and `plugin-configuration.md` anchors
+       into the off-road headings included); every test named in § 3.2 exists on `next`.
+    4. Known reds: the pull-request run's mysql-tests failed once in
+       `DiscoveryLedgerMySqlTests.TitleCrossing_PostsTheXpOnceAndAppliesTheBonusOnce` (outside this change), green on
+       the push run and the re-run; filed as flaky #1017.
+    5. Codex: usage limit on all three PRs; finished without it, said so on each.
+5. **Decisions (DESIGN § 4.3).**
+    1. *Extra API test for LD26.* Chosen: a warp-destination test for a point and a linked landmark, since the seed
+       only shows the step. Alternatives: (a) seed test only; (b) a plugin test, out of the link's repos (covered by
+       `WarpTargetsTest`).
+    2. *README table.* Chosen: a one-row table under the v4 paragraph, as other v3 entries have. Alternative: (a)
+       paragraph only.
+    3. *Where carried-over steps go.* Chosen: one § 3.2 inside § 3. Alternatives: (a) spread into §§ 1, 2, 4 (splits
+       the mapping, renumbers cited steps); (b) a new top-level section (against "§ 3").
+    4. *What counts as covered.* Chosen: drop an old step only when §§ 1–5 check the same behaviour on the new model or
+       the behaviour is gone (radius, `landmark_<id>`, `AddLandmarks`); partly covered steps keep their uncovered half.
+       Alternative: (a) carry every step (duplicates).
+    5. *Off-road headings.* Chosen: keep every heading (6.0–6.5, 7.0, 7.1) with a mapping list, because other docs link
+       them. Alternative: (a) one note per top-level section (breaks the § 6.3 links).
+    6. *New smoke § 5 step 6.* Chosen, because LD26 is player-visible and the other steps test warps only on own
+       regions. Alternative: (a) change only the expected form steps.
+6. **Out of scope, noted.** #1017 (flaky MySQL test, filed). Docs follow-ups added to #1010: the landmarks admin guide
+   and `guides/README.md` still name seed v3 and "Warp destination (Own region)"; the `navigation.landmarks` row of
+   `plugin-configuration.md` points to off-road § 6.3 instead of landmark-domain § 3.
+7. **Blockers.** None.
+8. **At merge / what the developer must do.** Import "Landmark - Default (seed v4)" and make it the default (v3 need
+   not be imported; if it was, switch it off as default); smoke § 1 step 2, § 4 step 1, § 5 steps 5–6 and the by-hand
+   parts of § 3.2.
+9. **Notes for later links.** None.
