@@ -1,6 +1,6 @@
 # Agent token efficiency and reuse: plan
 
-**Status:** Proposed — waiting for the developer's approval · **Last updated:** 2026-11-22
+**Status:** Proposed — waiting for the developer's approval · **Last updated:** 2026-11-24 (Phases 8 and 9: coordinator hand-over and wake-ups, smoke-run session) · 2026-11-22
 **Issue:** PandiO/knk-workspace#987 (parent) · **Evidence:** [code-graph trial report](../../reports/2026-11-22-code-graph-mcp-trial.md)
 § 1 (baseline) and § 1b (12 real sessions) · **Related:** PandiO/knk-workspace#977 (code-graph trial, shelved),
 PandiO/knk-workspace#978 (reuse catalogue)
@@ -35,15 +35,18 @@ Medians over the next implementation links after each phase, measured with the s
 | Re-read (cached) tokens per implementation link | 57M | −20 % |
 | New specs with a "Reuse" section (#978) | 0 % | 100 % |
 | Merges into `next` with a code review | at least 4 recent sessions without one (Codex usage limit) | every merge |
+| Coordinator context at its largest | 883k (Production), 776k (NPC #358) | ≤ 300k (Phase 8) |
+| Coordinator cost per chain | $119 (Production), $203 (NPC #358) | −50 % (Phase 8) |
+| Smoke results, design and new ideas handled in a coordinator | 17 of the NPC coordinator's 29 developer turns | 0: redirected (Phase 9) |
 
 The −20 % is an estimate: Phases 1–4 add up to roughly that. If Phase 0's reruns show less, revise the target, not the
 measurement.
 
 ## 3. Phases
 
-Each phase is one `tier:1` sub-issue of #987. Phases 1–5 and 7 change agent workflow files, so each goes to
+Each phase is one `tier:1` sub-issue of #987. Phases 1–5 and 7–9 change agent workflow files, so each goes to
 knk-workspace `main` through its own pull request, then `main` → `next` (global instructions, "Branches" rule 11).
-Order is by measured gain per effort. Phases 1, 2, 4 and 6 don't depend on each other and can run in parallel.
+Order is by measured gain per effort. Phases 1, 2, 4, 6 and 8 don't depend on each other and can run in parallel.
 
 ### Phase 0: Measurement procedure (do first, small)
 
@@ -152,6 +155,67 @@ Facts: at least 4 recent session summaries say Codex was skipped for its usage l
 This adds tokens: about one subagent per skipped review. It is the one phase that trades tokens for accuracy; drop it
 if the developer prefers the current rule.
 
+### Phase 8: Coordinators hand over to a fresh session and wake up less
+
+Added 2026-11-24 after measuring two coordinators (same method as § 1, from their result events):
+
+| | Production chain coordinator | NPC follow-ups coordinator (#358) |
+|---|---|---|
+| Cost | $119 | $203 |
+| Turns | 822 | 929 |
+| Context at its largest | 883k | 776k |
+| Turns the developer started / automatic wake-ups | 4 / 69 | 29 / 118 |
+| Cost of automatic wake-ups (notifications, check-ins) | $109 (91 %) | $147 (72 %) |
+
+Each wake-up re-reads the whole context. After an idle hour the cache expires, and the next wake-up paid $4.50–6 only
+to rebuild it. The NPC coordinator alone cost more than the 12 sessions in § 1 together ($177).
+
+1. **Hand-over:** at about 300k context, or at a phase boundary, the coordinator brings the charter's links table and
+   the progress report up to date, starts a fresh coordinator with the knk-coordinator start note, and ends itself.
+   The new session reads the charter, the report's last link block and the open sub-issues. The board row and the
+   parent issue name the new session.
+2. **Wake-ups:**
+   1. One `send_later` check-in per active link, timed under an hour apart while links run, so the cache doesn't
+      expire. No check-ins while nothing runs.
+   2. Batch notifications: a check-in handles every queued notification in one turn.
+   3. PR watching follows Phase 4: the coordinator watches, links don't.
+3. **Coordinator skill:** add both rules to `knk-coordinator` § 3 (the loop) and § 7, and say how the progress report
+   carries over in the hand-over.
+
+Target: context ≤ 300k, cost per chain −50 % (estimate: wake-ups at ~250k instead of 600–880k context).
+
+### Phase 9: A smoke-run session, and redirects out of the coordinator
+
+Facts: no skill covers the developer's own smoke runs. `knk-coordinator` only lists smoke steps in its reports, and
+`docs/guides/closed-alpha-test-runs.md` only says to record developer pre-checks in the next run's checklist. So
+results, fixes, ideas and design end up in the coordinator: in the NPC coordinator, 8 of the developer's 29 turns were
+smoke results, 7 design and 2 new ideas, and smoke failures also arrived through its notifications.
+
+1. **New skill `knk-smoke-run`**, one short session per test sitting, started from the daily digest's "ready to
+   test" list or by the developer. It:
+   1. presents the steps from `docs/guides/<feature>-smoke-test.md` (skipping the `[automated: …]` steps unless asked);
+   2. records each step's result (works, fails or skipped) with the tested commits, in the guide's run log or the next
+      tester run's checklist under "Developer pre-checks";
+   3. fixes a really small failure on the branch under test (global "GitHub Issues" rule 2) and adds its test;
+   4. files every larger failure as a `bug` with steps to reproduce, as a sub-issue of the feature, for the
+      coordinator to schedule;
+   5. sends ideas to `knk-intake` capture mode (the developer's words, no questions), and labels follow-ups that need
+      design "design first" without designing them;
+   6. ends with one summary comment on the feature issue: results per step, issues filed, what the coordinator picks up.
+2. **Redirects in `knk-coordinator`:**
+   1. An idea the developer drops is captured by a small subagent with the intake skill, so it stays out of the
+      coordinator's context; the coordinator confirms in one sentence.
+   2. Test results and design requests get a one-line answer with a ready starter prompt for a smoke-run or design
+      session (the developer chooses; the coordinator doesn't refuse).
+   3. Failures filed by a smoke run are scheduled like other sub-issues.
+3. **Design always in a design session**, even for small follow-ups. It starts at ~87k context instead of a
+   coordinator's 600k+, and brings the spec, decision log and sub-issues with it.
+4. **Global instructions:** one line naming the session types: intake, design, coordinator, link, smoke-run, docs and
+   manager, and what goes where.
+
+Target: no smoke results, design or new ideas handled inside a coordinator. One skill added (about 180 tokens of
+description in every session).
+
 ## 4. Reopening the code knowledge graph (#977)
 
 Reopen #977 if a Phase 0 rerun shows any of these:
@@ -166,7 +230,11 @@ ground truth and recipe are in the report.
 
 ## 5. Open questions for the developer
 
-1. Approve the plan and the order (Phase 0 first; then 1, 2, 4 and 6 in parallel; then 3, 5 and 7)?
+1. Approve the plan and the order? Phase 0 first; then 1, 2, 4, 6 and 8 in parallel (8 is the largest single saving);
+   then 3, 5, 7 and 9.
 2. Phase 5 changes the "start a docs session right away" rule. Batch per chain, per week, or keep it as it is?
 3. Phase 7 spends tokens on a fallback review. Yes or no?
 4. Who runs it: one session per phase, or one small chain under a coordinator?
+5. Phase 8: is about 300k the right hand-over point, or would you rather hand over at every phase boundary only?
+6. Phase 9: where should a smoke run record its results: in the feature's smoke-test guide (a run log section) or in
+   the next tester run's checklist under "Developer pre-checks", as now?
