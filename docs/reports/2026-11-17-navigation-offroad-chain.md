@@ -1,6 +1,6 @@
 # Off-road navigation and landmarks chain — progress report
 
-**Status:** Running, waiting for the developer (2026-11-18) · **Last updated:** 2026-11-24 (§ 6/§ 7 superseded); 2026-11-22 (§ 15 accepted, #976); 2026-11-21 (smoke sessions of 2026-11-21); 2026-11-21 (live test of 2026-11-20); 2026-11-20 (L7b step B merged); 2026-11-20 (L7b step A merged); 2026-11-19 (F2 block); 2026-11-18 (L9 block); 2026-11-18 (L5 block); 2026-11-18 (L8 step A block)
+**Status:** In review (2026-11-25): all merged into `next`, live tests settled, docs done; waits for promotion · **Last updated:** 2026-11-25 (docs merged, chain in review); 2026-11-25 (tests settled, docs session); 2026-11-24 (§ 6/§ 7 superseded); 2026-11-22 (§ 15 accepted, #976); 2026-11-21 (smoke sessions of 2026-11-21); 2026-11-21 (live test of 2026-11-20); 2026-11-20 (L7b step B merged); 2026-11-20 (L7b step A merged); 2026-11-19 (F2 block); 2026-11-18 (L9 block); 2026-11-18 (L5 block); 2026-11-18 (L8 step A block)
 
 **Issue:** [PandiO/knk-workspace#698](https://github.com/PandiO/knk-workspace/issues/698), links
 [#703](https://github.com/PandiO/knk-workspace/issues/703) (L1), [#704](https://github.com/PandiO/knk-workspace/issues/704) (L2),
@@ -347,6 +347,19 @@ on `next` (Decided 2026-11-17).
     mapping on #1009. For this chain's docs session: the `navigation.landmarks` row of
     `guides/admin/plugin-configuration.md` still points to off-road § 6.3; it should point to landmark-domain § 3
     (also noted on #1010). The docs session now waits only on L1's concurrency item (#703).
+51. **Developer decisions, 2026-11-25 (asked in the session):** (1) L1's concurrency step and the tick time of a large
+    capture move to a later measurement issue, #1029 (tier:1), so phase 0 closes; (2) the three observations of
+    2026-11-20 become issues: #1030 (walk length cap from the upper keep stair house), #1031 (skip an identical walk
+    recompute while standing still), #1032 (road edge ids change between goal choices seconds apart). Every live test of
+    the chain is settled. Documentation sub-issue #1033 filed; docs session `session_01R1w2Ut6jcbMzdUqq1oUcUq` started
+    12:06 (branch `claude/docs-offroad-navigation` from `next`).
+52. **Docs merged, chain in review (2026-11-25 12:15).** Docs session #1033: PR #1035 merged into `next` as
+    `698be5e2` (checked: in `next`, 13 files including the new `docs/architecture/offroad-navigation.md`, config keys
+    checked against knk-plugin `next` `2c5d5846`, the `navigation.landmarks` row fixed); Codex at its usage limit. #1033
+    closed; its row archived. Left open by the docs session: #1034 (form field settings reference, permission group API
+    contract). Follow-ups outside the chain: #1029–#1032; L6 (#706) on hold; phase 8 (#713) later. The feature issues
+    stay `status:in-review` until the developer promotes `next`; #698 closes then. No link, session or check-in of this
+    chain is running.
 
 ## 4. Link blocks
 
