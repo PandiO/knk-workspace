@@ -1,6 +1,6 @@
 # Off-road navigation and landmarks chain — progress report
 
-**Status:** Running, waiting for the developer (2026-11-18) · **Last updated:** 2026-11-25 (tests settled, docs session); 2026-11-24 (§ 6/§ 7 superseded); 2026-11-22 (§ 15 accepted, #976); 2026-11-21 (smoke sessions of 2026-11-21); 2026-11-21 (live test of 2026-11-20); 2026-11-20 (L7b step B merged); 2026-11-20 (L7b step A merged); 2026-11-19 (F2 block); 2026-11-18 (L9 block); 2026-11-18 (L5 block); 2026-11-18 (L8 step A block)
+**Status:** In review (2026-11-25): all merged into `next`, live tests settled, docs done; waits for promotion · **Last updated:** 2026-11-25 (docs merged, chain in review); 2026-11-25 (tests settled, docs session); 2026-11-24 (§ 6/§ 7 superseded); 2026-11-22 (§ 15 accepted, #976); 2026-11-21 (smoke sessions of 2026-11-21); 2026-11-21 (live test of 2026-11-20); 2026-11-20 (L7b step B merged); 2026-11-20 (L7b step A merged); 2026-11-19 (F2 block); 2026-11-18 (L9 block); 2026-11-18 (L5 block); 2026-11-18 (L8 step A block)
 
 **Issue:** [PandiO/knk-workspace#698](https://github.com/PandiO/knk-workspace/issues/698), links
 [#703](https://github.com/PandiO/knk-workspace/issues/703) (L1), [#704](https://github.com/PandiO/knk-workspace/issues/704) (L2),
@@ -353,6 +353,13 @@ on `next` (Decided 2026-11-17).
     recompute while standing still), #1032 (road edge ids change between goal choices seconds apart). Every live test of
     the chain is settled. Documentation sub-issue #1033 filed; docs session `session_01R1w2Ut6jcbMzdUqq1oUcUq` started
     12:06 (branch `claude/docs-offroad-navigation` from `next`).
+52. **Docs merged, chain in review (2026-11-25 12:15).** Docs session #1033: PR #1035 merged into `next` as
+    `698be5e2` (checked: in `next`, 13 files including the new `docs/architecture/offroad-navigation.md`, config keys
+    checked against knk-plugin `next` `2c5d5846`, the `navigation.landmarks` row fixed); Codex at its usage limit. #1033
+    closed; its row archived. Left open by the docs session: #1034 (form field settings reference, permission group API
+    contract). Follow-ups outside the chain: #1029–#1032; L6 (#706) on hold; phase 8 (#713) later. The feature issues
+    stay `status:in-review` until the developer promotes `next`; #698 closes then. No link, session or check-in of this
+    chain is running.
 
 ## 4. Link blocks
 

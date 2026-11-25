@@ -1,6 +1,6 @@
 # Off-road navigation and landmarks chain — charter
 
-**Status:** Running (2026-11-17)
+**Status:** In review (2026-11-25): every link and the docs (#1033) merged into `next`; waits for the developer's promotion of `next`
 **Last updated:** 2026-11-19 (O32: L6 on hold as the fallback; fix link F1 #771 added); 2026-11-17 (completed by the coordinator at its first run: progress report, model, gates checked against the branches, status Running); 2026-11-17 (drafted by the design session)
 **Issues:** parent [PandiO/knk-workspace#698](https://github.com/PandiO/knk-workspace/issues/698); sub-issues per
 link below. Reference issues as `PandiO/knk-workspace#n` in component repos.
