@@ -88,14 +88,14 @@ This applies to the walked parts only. The gold trail on the road itself, and ev
 
 **Where staff switched them on** (on `next`, not on the live server yet; [admin guide § 2.6](../admin/navigation-and-teleports-admin-guide.md#26-settings)):
 
-- **Shortcuts on foot:** a route may leave the road to walk across, for example through a courtyard, where the road
-  round it is much longer. The walked part is drawn like the walked stretches above, and the turn instruction says
-  "Leave the road and walk across". A nearby place may also be reached over the road instead of a direct walk, when the
-  road carries most of the way and is not much longer.
-- **The right end of the road:** for a place inside a building the road part ends where the place can really be walked
-  to from, not at the road point that is merely nearest in a straight line (a dead end in a stair house).
-- **Across plazas:** where a route crosses a plaza from one road to another, the gold trail follows a rounded line
-  across the plaza instead of a sharp bend through its middle. The distance and the turn instructions don't change.
+1. **Shortcuts on foot:** a route may leave the road to walk across, for example through a courtyard, where the road
+   round it is much longer. The walked part is drawn like the walked stretches above, and the turn instruction says
+   "Leave the road and walk across". A nearby place may also be reached over the road instead of a direct walk, when the
+   road carries most of the way and is not much longer.
+2. **The right end of the road:** for a place inside a building the road part ends where the place can really be walked
+   to from, not at the road point that is merely nearest in a straight line (a dead end in a stair house).
+3. **Across plazas:** where a route crosses a plaza from one road to another, the gold trail follows a rounded line
+   across the plaza instead of a sharp bend through its middle. The distance and the turn instructions don't change.
 
 ### 2.4 Gates, closed areas and changes on the way
 
@@ -162,15 +162,16 @@ On `next`, not on the live server yet. A word after the place picks how the rout
 | `/navigate <place> efficient` | The least effort: main roads before paths, and stairs, ladders, doors, water and drops count extra on walked parts. |
 | `/navigate <place> preferred` | `efficient`, and also the roads staff marked as better or worse (and, where staff set them, the landmarks to keep to or avoid on walked parts). The same route as `/navigate <place>` without a word. |
 
-- **Who can use the words:** each word needs its own permission; Tab offers only the words you may use. Without it:
-  "You don't have permission to use this command." `/navigate <place>` without a word always works.
-- **Your rank's default:** staff can give a rank (or another group, such as Staff) a default mode, which you then get
-  without typing a word. If you are in several with a default, the highest-ranked one counts. A word you type beats the default. Right after you join, or
-  after your rank changed, the first route may still be `preferred`; the next one uses your rank's default.
-- **Word order:** the mode goes after the place and before `spawn` or `region`: `/navigate Kardenna efficient spawn`.
-  After `spawn` or `region` a word is read as part of the place's name.
-- **In a siege match** on a server that still uses the older destination lists, the mode words and your rank's default
-  are not used; the match's route is the usual one.
+1. **Who can use the words:** each word needs its own permission; Tab offers only the words you may use. Without it:
+   "You don't have permission to use this command." `/navigate <place>` without a word always works.
+2. **Your rank's default:** staff can give a rank (or another group, such as Staff) a default mode, which you then get
+   without typing a word. If you are in several with a default, the highest-ranked one counts. A word you type beats
+   the default. Right after you join, or after your rank changed, the first route may still be `preferred`; the next
+   one uses your rank's default.
+3. **Word order:** the mode goes after the place and before `spawn` or `region`: `/navigate Kardenna efficient spawn`.
+   After `spawn` or `region` a word is read as part of the place's name.
+4. **In a siege match** on a server that still uses the older destination lists, the mode words and your rank's default
+   are not used; the match's route is the usual one.
 
 ## 3. Teleporting yourself
 
