@@ -1,6 +1,6 @@
 # Navigation and teleports — admin guide
 
-**Status:** Current · **Last updated:** 2026-11-22 (§ 3.2 and § 7: landmarks as warps and `/navigate` places, on `next`, PandiO/knk-workspace#976, docs #1008); 2026-11-22 (§ 2.6: `navigation.guidance-v2` is on by default and is the kill switch of the walk-trail quality pass, PandiO/knk-workspace#996, #990); 2026-11-20 (§ 1: `knk.navigate` is `default: false` and seeded to Default, `knk.navigate.any` row, PandiO/knk-workspace#845); 2026-11-18 (§ 1: the route mode nodes `knk.navigate.mode.<word>`, PandiO/knk-workspace#707); 2026-11-13 (new guide: road network setup, upkeep and reset, Road network page, warps, spawn and hub, group fees, rank perks, staff teleports and exemptions, PandiO/knk-workspace#298)
+**Status:** Current · **Last updated:** 2026-11-25 (§ 1 route mode node row; § 2.6 the other off-road keys; § 2.7 new: route modes and a permission group's default route mode with its deploy steps, in `next`, PandiO/knk-workspace#707, #852, docs #1033); 2026-11-22 (§ 3.2 and § 7: landmarks as warps and `/navigate` places, on `next`, PandiO/knk-workspace#976, docs #1008); 2026-11-22 (§ 2.6: `navigation.guidance-v2` is on by default and is the kill switch of the walk-trail quality pass, PandiO/knk-workspace#996, #990); 2026-11-20 (§ 1: `knk.navigate` is `default: false` and seeded to Default, `knk.navigate.any` row, PandiO/knk-workspace#845); 2026-11-18 (§ 1: the route mode nodes `knk.navigate.mode.<word>`, PandiO/knk-workspace#707); 2026-11-13 (new guide: road network setup, upkeep and reset, Road network page, warps, spawn and hub, group fees, rank perks, staff teleports and exemptions, PandiO/knk-workspace#298)
 **Checked against:** knk-plugin `main` `57884e9`, knk-web-api `master` `75b5a00`, knk-web-app `main` `3ba747d` (desk check); `next` only for what § 7 names
 **Related:** [player guide](../users/navigation-and-teleports-player-guide.md) (what players see; not repeated here), [commands](../users/commands.md) (§ Teleporting players, `/knk road`), [plugin configuration](plugin-configuration.md) § 4.10 `teleport` and § 4.15 `navigation`, [Game Settings](../game-settings.md), [staff web app guide § 9](staff-web-app-guide.md#9-settings-pages), [road navigation design](../../specs/navigation/DESIGN.md) § 5 and § 7, [teleport design](../../specs/teleport/DESIGN.md)
 
@@ -14,7 +14,7 @@ teleport prices, and move players.
 | `knk.admin.road` | `/knk road …` in game and the web app's **Road network** page | Staff |
 | `knk.navigate` | `/navigate` and the navigation compass. Given to everyone through the Default group by the knk-web-api seed `SeedNavigateDefaultNode`; `plugin.yml` declares it `default: false` (PandiO/knk-workspace#845, PandiO/knk-plugin#106), so a deny on a rank or player in the in-house system takes `/navigate` away. Before #845 it was `default: true` and could not be taken away (#311) | Everyone (Default) |
 | `knk.navigate.any` | With `navigation.destination-engine` on: `/navigate` to any place in the world, past the siege and permission scopes (frozen still refuses). `plugin.yml` declares it `default: false` | none yet (the staff rank(s) are the developer's call, open on PandiO/knk-workspace#845) |
-| `knk.navigate.mode.shortest`, `.mode.efficient`, `.mode.preferred` | The route mode words of `/navigate <place> <word>` (knk-plugin branch `claude/offroad-route-modes`, PandiO/knk-workspace#707): `shortest` length only, `efficient` road class and walking costs without the road weights, `preferred` typed explicitly (the same route as no word). `/navigate` without a word needs none of them. `plugin.yml` declares them `default: op` | none yet (who gets them is the developer's call, see the PR's Admin steps) |
+| `knk.navigate.mode.shortest`, `.mode.efficient`, `.mode.preferred` | The route mode words of `/navigate <place> <word>` (in `next`, PandiO/knk-workspace#707; § 2.7): `shortest` length only, `efficient` road class and walking costs without the road weights, `preferred` typed explicitly (the same route as no word). `/navigate` without a word needs none of them, and neither does a group's default route mode (§ 2.7). `plugin.yml` declares them `default: op` | none (no seed; grant them per group or player while the developer decides who gets them) |
 | `knk.teleport.spawn`, `.warp`, `.request` | `/spawn`, `/warp`/`/warps`, `/tpa` | Everyone |
 | `knk.teleport.request.here`, `knk.teleport.back` (+ `.back.warps\|teleport\|spawn\|all`) | `/tpahere`, `/back` and the kinds of place `/back` remembers | Dragon Blood (`/back` kinds: as staff grant them) |
 | `knk.teleport.warmup.short`, `.bypass.warmup\|cooldown\|combat\|cost\|requirements` | Rank perks: 3 s warmup, no warmup, no cooldown, teleport in combat, free, ignore warp requirements | Noble and up for the short warmup; the rest staff |
@@ -155,6 +155,83 @@ affected.
    back along it: the particles stay on their spots, the trail follows you back. Steps: [off-road smoke test § 16](../navigation-offroad-smoke-test.md).
 4. `walk.enabled: false` is a different switch (no walked stretches at all); it is unaffected.
 
+**The other off-road keys** (off-road chain, PandiO/knk-workspace#698, in `next`): each is off or at today's behaviour
+by default, needs a restart and is described in [plugin configuration § 4.15](plugin-configuration.md#415-navigation).
+How they work inside: [off-road navigation architecture](../../architecture/offroad-navigation.md).
+
+1. `walk-links` (off): a route may leave the road for a walked shortcut between two road junctions, such as across a
+   courtyard; with it the road-first rule (`road-first-share`, `road-first-max-ratio`) sends a near target over the
+   road when the road carries most of the way. Accepted by the developer without a live test (off-road smoke § 3).
+2. `road-goal-reachable` (off): a destination off the road gets the road point from which it can really be walked to
+   (up to `road-goal-candidates` points searched, scored road plus `road-goal-walk-weight` × walk), instead of the
+   nearest road point in a straight line. Each choice writes one INFO line with every candidate's lengths.
+   `road-to-its-end` (off) keeps a followed road route when the road network is swapped near the destination.
+   Live-tested 2026-11-20 (off-road smoke § 13, § 14).
+3. `plaza-lines` (off): the road trail crosses a plaza along a rounded line from road to road instead of the sharp
+   bend at the plaza node. Only the drawn trail changes. `/knk road plazaline` shows the lines to staff whatever the key
+   says. Live-tested 2026-11-21 (off-road smoke § 10.2).
+4. `landmarks` (off) and `preference-max` (4.0): landmarks in `/navigate` (also needs `destination-engine: true`) and
+   their preference weights on walk legs in the `preferred` route mode; see the [landmarks admin guide](landmarks-admin-guide.md).
+5. `walk.max-chunks-per-request` (64): keep it; raise it on a test server only, for measurements.
+
+### 2.7 Route modes and a group's default route mode
+
+`/navigate <place> [shortest|efficient|preferred]` picks how the route is chosen (off-road phase 4, PandiO/knk-workspace#707;
+what players read: [player guide § 2.8](../users/navigation-and-teleports-player-guide.md#28-route-modes)):
+
+| Mode | Road edges cost | Walked legs cost |
+|---|---|---|
+| `shortest` | their length | the blocks walked; doors, water, drops and ladders stay passable at no extra cost |
+| `efficient` | length × the road class's `class-cost` | the walk costs of `navigation.walk` (stairs, ladders, doors, water, drops, walls) |
+| `preferred` (default) | `efficient` × the road profile's and the edge's cost multiplier (the Road network page) | as `efficient`, × the landmark preference weights with `navigation.landmarks: true` |
+
+`preferred` is the route `/navigate` always took: without a word and without a group default the route is exactly
+today's. NPC routes always use `preferred`. No `config.yml` key is added.
+
+**Who may type a word.** Each word needs its node `knk.navigate.mode.<word>` (§ 1); there is no seed, so only
+operators have them until you grant them. Grant a node to a group in its **Permissions** panel or to one player with
+`/knk user <player> perm grant knk.navigate.mode.shortest` ([ranks admin guide § 3](ranks-permissions-moderation-admin-guide.md#3-giving-someone-a-group-a-rank-or-a-node)).
+A player without the node who types the word gets "You don't have permission to use this command."; Tab offers only
+the words they hold.
+
+**A group's default route mode** (L7b, PandiO/knk-workspace#852, in `next`): the mode `/navigate` takes for the group's
+members when they type no word.
+
+1. **Set it:** **Dashboard → Permission group** → the group → **Edit**, step **Group**, field **Default route mode**:
+   **Shortest**, **Efficient**, **Preferred** or **None (default: Preferred)**. Save. Needs `knk.admin.user.perm` and a
+   group ranked below your own, as every group edit. The dashboard's **Default route** column shows the value ("-" for
+   none).
+2. **Which default wins:** of the player's active groups that set one, the group with the highest weight (on a tie, the
+   lower group id). No group sets one: `preferred`, as before.
+3. **No node needed:** a group default needs no `knk.navigate.mode.*` node; a typed word still needs its node and always
+   beats the default.
+4. **When it applies in game:** the plugin caches each player's default and fills the cache in the background (when the
+   player types `/navigate` or presses Tab), so the very first `/navigate` after a join or a change can still run in
+   `preferred`; the next one uses the default. A group edit or a membership change (in the web app or in game, over
+   realtime) clears the cache; without an event the cache is refilled after 10 minutes. Without the API nothing is
+   cached and every route is `preferred`.
+5. **Not applied:** in a siege match on the old path (with `navigation.destination-engine` off), where mode words are not
+   read either.
+
+**Deploy** (knk-web-api first, then the web app, then the plugin; the plugin reads either spelling, so the order only
+matters for the form):
+
+1. Apply the migrations `20261120101407_AddPermissionGroupDefaultRouteMode` (adds the nullable column
+   `permission_groups.DefaultRouteMode`) and `20261121144143_NormalizePermissionGroupDefaultRouteMode` (renames stored
+   lowercase words to the enum names `Shortest`, `Efficient`, `Preferred`), in that order ([production installation
+   § 5.3](../production-installation.md) items 10 and 19).
+2. A fresh import of the `PermissionGroup` form seed has the field. A database that imported the seed earlier: add the
+   field in the form designer to step **Group**, field name `DefaultRouteMode`, type **Enum**, settings JSON
+   `{"enumValues": ["Shortest", "Efficient", "Preferred"], "emptyOptionLabel": "None (default: Preferred)"}`. A field
+   added by hand as a String field before 2026-11-21: change its type to **Enum** and its settings to these, or the
+   form can't be published. The values must be the enum names: an edit pre-selects the stored name.
+3. No `config.yml` change; restart the plugin after its deploy.
+
+**Safe test:** on the dev server, set **Efficient** on a test group with one member, have that member `/navigate` to a
+place twice (the first may still be `preferred`), then type `/navigate <place> shortest` without the node: refused.
+Full steps: [off-road smoke test § 5](../navigation-offroad-smoke-test.md#5-phase-4-route-modes-707-tier2) and
+[§ 15](../navigation-offroad-smoke-test.md#15-l7b-default-route-mode-per-permission-group-852-tier3).
+
 ## 3. Teleports
 
 ### 3.1 Spawn and hub
@@ -270,6 +347,12 @@ The full checklists: [road navigation smoke test](../road-navigation-smoke-test.
    `Services/TeleportGroupPolicy.cs`; knk-web-app `pages/admin/RoadsAdminPage.tsx`, `components/admin/roads/`.
 2. [Road navigation design](../../specs/navigation/DESIGN.md) (§ 5, § 6.7, § 7) and
    [plan](../../specs/navigation/IMPLEMENTATION_PLAN.md); [teleport design](../../specs/teleport/DESIGN.md) and
-   [plan](../../specs/teleport/IMPLEMENTATION_PLAN.md).
+   [plan](../../specs/teleport/IMPLEMENTATION_PLAN.md); [off-road navigation design](../../specs/navigation-offroad/DESIGN.md)
+   § 5.4 (route modes).
 3. [Road navigation smoke test](../road-navigation-smoke-test.md); the Road network page notes of the #337–#345 docs
    session (comment on PandiO/knk-workspace#298).
+4. § 2.6 off-road keys and § 2.7 (docs #1033): knk-plugin `next` `2c5d5846` (`roads/route/RouteMode`,
+   `GroupRouteModeResolver`, `navigation/NavigateCommand`, `GroupRouteModeDefaults`, `config.yml`, `plugin.yml`),
+   knk-web-api `next` `e06fd5c0` (`Models/PermissionGroup.cs`, `Enums/NavigationEnums.cs`, the two migrations, the
+   `PermissionGroup` form seed), knk-web-app `next` `8be9e24c` (`config/objectConfigs.tsx`); the
+   [off-road chain report](../../reports/2026-11-17-navigation-offroad-chain.md) for the live-test results.

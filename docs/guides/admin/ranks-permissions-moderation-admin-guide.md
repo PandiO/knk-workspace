@@ -1,6 +1,6 @@
 # Ranks, permissions and moderation — admin guide
 
-**Status:** Current · **Last updated:** 2026-11-20 (§ 5: moderation from the map on trunk since v0.4, live-tested, docs #767); 2026-11-18 (§ 5: moderation from the overview map, #743 in `next`, docs #766)
+**Status:** Current · **Last updated:** 2026-11-25 (§ 3.3 item 5: a group's default route mode; § 8: the `knk.navigate.mode.*` nodes, in `next`, PandiO/knk-workspace#707, #852, docs #1033); 2026-11-20 (§ 5: moderation from the map on trunk since v0.4, live-tested, docs #767); 2026-11-18 (§ 5: moderation from the overview map, #743 in `next`, docs #766)
 **Checked against:** knk-web-api `master` `75b5a00`, knk-web-app `main` `3ba747d`, knk-plugin `main` `57884e97`; not
 live-tested as a whole (the parts' own smoke tests are linked in § 9). The group Permissions panel, the PermissionGrant
 table and the profile's permission search (#50, #408, #407), and kick and ban from the web app, the unfreeze reason,
@@ -149,7 +149,12 @@ message (PandiO/knk-workspace#466). After a premium change you see which tier th
    saving the group may blank them (PandiO/knk-workspace#465): check the colours after a save.
 4. Changes to a group's **nodes** are audited and listed in the group's History (#50, since v0.3); changes to its
    **settings** (name, weight, parent, colours) and deleting a group are not (PandiO/knk-workspace#464).
-5. **All grants at once:** **Dashboard → Permission Grant** (#408, since v0.3) lists every grant and deny of every
+5. **Default route mode** (in `next`, not released; PandiO/knk-workspace#852): the group's **Default route mode** field
+   (step **Group**: Shortest, Efficient, Preferred or "None (default: Preferred)"; dashboard column **Default route**)
+   is the `/navigate` route mode its members get when they type no mode word. Of a player's groups that set one, the
+   highest weight wins. It needs no node; typing a mode word still needs `knk.navigate.mode.<word>` (§ 8). Deploy
+   steps and how it reaches the game: [navigation admin guide § 2.7](navigation-and-teleports-admin-guide.md#27-route-modes-and-a-groups-default-route-mode).
+6. **All grants at once:** **Dashboard → Permission Grant** (#408, since v0.3) lists every grant and deny of every
    player and group: ID, Node, Effect, Holder ("Group #<id>" or "User #<id>") and Expires (UTC) ("Never" without one).
    Search by node, sort by any column. It needs `knk.admin.user.manage` and is read-only: change grants on the player
    profile or the group's Permissions panel. **New** and **Edit** show but don't save a grant (#530).
@@ -365,6 +370,7 @@ and **Recently demoted** (§ 7).
 | `knk.socialspy.exempt` | Your private messages stay hidden from spies without it | the owner |
 | `knk.pmlog.read` | Read the private-message log | the owner only |
 | `knk.notify.joinattempt` | A chat line when a join is refused | Staff |
+| `knk.navigate.mode.shortest`, `.efficient`, `.preferred` | Typing that route mode word after `/navigate <place>` (in `next`, #707; `plugin.yml` `default: op`). A group's default route mode (§ 3.3) needs none of them | no rank (no seed yet) |
 
 "Seeded on" follows the [commands reference](../users/commands.md) and the seed migrations; check your database
 before relying on it.

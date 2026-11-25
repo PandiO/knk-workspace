@@ -1,6 +1,6 @@
 # Navigation and teleports — player guide
 
-**Status:** Current · **Last updated:** 2026-11-22 (§ 2.7 Landmarks and `/warp landmark:<name>` in § 3.3, on `next`, PandiO/knk-workspace#976, docs #1008); 2026-11-22 (§ 2.3: the walked stretch of the trail as the server shows it by default, PandiO/knk-workspace#996, #990); 2026-11-13 (new guide: road navigation, teleports and requests, spawn, hub, warps, `/back`, staff moves and exemptions, PandiO/knk-workspace#298)
+**Status:** Current · **Last updated:** 2026-11-25 (§ 2.3 shortcuts on foot, the road's end and plaza lines where staff switch them on; § 2.8 new: route modes and a rank's default mode, on `next`, PandiO/knk-workspace#698, #707, #852, docs #1033); 2026-11-22 (§ 2.7 Landmarks and `/warp landmark:<name>` in § 3.3, on `next`, PandiO/knk-workspace#976, docs #1008); 2026-11-22 (§ 2.3: the walked stretch of the trail as the server shows it by default, PandiO/knk-workspace#996, #990); 2026-11-13 (new guide: road navigation, teleports and requests, spawn, hub, warps, `/back`, staff moves and exemptions, PandiO/knk-workspace#298)
 **Checked against:** knk-plugin `main` `57884e9`, knk-web-api `master` `75b5a00`, knk-web-app `main` `3ba747d` (desk check of the code; the behaviour itself was live-tested when each part merged, see [Sources](#sources))
 **Related:** [player handbook](player-handbook.md), [commands](commands.md) (every command with its rank), [menus](menus-player-guide.md) (the teleport menu), [gate structures](gate-structures-player-guide.md) (passing gates), [admin guide](../admin/navigation-and-teleports-admin-guide.md)
 
@@ -86,6 +86,17 @@ This applies to the walked parts only. The gold trail on the road itself, and ev
 - "No walkable way straight to X - following the roads instead.": a short walk was blocked, so the trail uses the
   roads.
 
+**Where staff switched them on** (on `next`, not on the live server yet; [admin guide § 2.6](../admin/navigation-and-teleports-admin-guide.md#26-settings)):
+
+- **Shortcuts on foot:** a route may leave the road to walk across, for example through a courtyard, where the road
+  round it is much longer. The walked part is drawn like the walked stretches above, and the turn instruction says
+  "Leave the road and walk across". A nearby place may also be reached over the road instead of a direct walk, when the
+  road carries most of the way and is not much longer.
+- **The right end of the road:** for a place inside a building the road part ends where the place can really be walked
+  to from, not at the road point that is merely nearest in a straight line (a dead end in a stair house).
+- **Across plazas:** where a route crosses a plaza from one road to another, the gold trail follows a rounded line
+  across the plaza instead of a sharp bend through its middle. The distance and the turn instructions don't change.
+
 ### 2.4 Gates, closed areas and changes on the way
 
 Routes only use roads you may use **now**:
@@ -140,6 +151,26 @@ server yet, and only where staff switched them on.
 - **Discovering one:** only landmarks staff made discoverable count: "You discovered the landmark <name>!" with a
   small reward ([economy guide § 6](economy-player-guide.md#6-discoveries)).
 - **Warping to one:** see § 3.3.
+
+### 2.8 Route modes
+
+On `next`, not on the live server yet. A word after the place picks how the route is chosen:
+
+| Command | Route |
+|---|---|
+| `/navigate <place> shortest` | The fewest blocks, whatever the road or the climb. |
+| `/navigate <place> efficient` | The least effort: main roads before paths, and stairs, ladders, doors, water and drops count extra on walked parts. |
+| `/navigate <place> preferred` | `efficient`, and also the roads staff marked as better or worse (and, where staff set them, the landmarks to keep to or avoid on walked parts). The same route as `/navigate <place>` without a word. |
+
+- **Who can use the words:** each word needs its own permission; Tab offers only the words you may use. Without it:
+  "You don't have permission to use this command." `/navigate <place>` without a word always works.
+- **Your rank's default:** staff can give a rank (or another group, such as Staff) a default mode, which you then get
+  without typing a word. If you are in several with a default, the highest-ranked one counts. A word you type beats the default. Right after you join, or
+  after your rank changed, the first route may still be `preferred`; the next one uses your rank's default.
+- **Word order:** the mode goes after the place and before `spawn` or `region`: `/navigate Kardenna efficient spawn`.
+  After `spawn` or `region` a word is read as part of the place's name.
+- **In a siege match** on a server that still uses the older destination lists, the mode words and your rank's default
+  are not used; the match's route is the usual one.
 
 ## 3. Teleporting yourself
 
@@ -231,7 +262,11 @@ staff if you need an exemption, for example while recording.
    `commands/{Spawn,Warp,Back}Command`, `hub/HubCommand`, `plugin.yml`, `config.yml` (`teleport:`, `navigation:`);
    knk-web-api `Models/Domain.cs`, `Models/PermissionGroup.cs`, `Services/TeleportGroupPolicy.cs`.
 2. Specs: [road navigation design](../../specs/navigation/DESIGN.md) § 6, [walkable last-mile paths](../../specs/navigation/LAST_MILE_PATHFINDING.md),
-   [teleport design](../../specs/teleport/DESIGN.md).
+   [teleport design](../../specs/teleport/DESIGN.md), [off-road navigation design](../../specs/navigation-offroad/DESIGN.md)
+   § 5 (§ 2.3 shortcuts, road end and plazas; § 2.8 route modes).
 3. Live tests: [road navigation smoke test](../road-navigation-smoke-test.md) (merged 2026-10-08, follow-ups to
    2026-10-17), the teleport plan's smoke tests ([plan](../../specs/teleport/IMPLEMENTATION_PLAN.md), merged
    2026-09-28 and 2026-10-06), alpha run 1 package I (`all` forms and exemptions, #171, merged 2026-11-01).
+4. § 2.3 (staff switches) and § 2.8 (docs #1033): knk-plugin `next` `2c5d5846` (`NavigateCommand`, `RouteMode`,
+   `GroupRouteModeDefaults`, `ManeuverBuilder`); [off-road smoke test](../navigation-offroad-smoke-test.md) § 3, § 5,
+   § 10.2, § 13–§ 15 (passed or accepted by the developer, 2026-11-20 to 2026-11-22).
