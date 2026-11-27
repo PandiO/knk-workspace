@@ -22,12 +22,18 @@ something different from this skill, the prompt and charter win.
        commit there; work in worktrees (`git worktree add -b <branch> <scratchpad>/<link>/<repo> origin/<base>`) and
        remove the worktrees, not the branches, at the end.
 2. **Read first.** The global instructions; `AGENTS.md` and `CLAUDE.md` of every repo you change; the charter and the
-   binding sections for your link; your sub-issue **with its comments**; earlier link blocks in the progress report
-   ("Notes for later links"); the "In progress" table of `docs/ACTIVE_SESSIONS.md`, read fresh (`git fetch origin`,
+   binding sections for your link; your sub-issue **with its comments**; the "Notes for later links" digest in your
+   prompt (read an earlier link block in the progress report only where a note points to it); the "In progress" table of `docs/ACTIVE_SESSIONS.md`, read fresh (`git fetch origin`,
    then `git show origin/main:docs/ACTIVE_SESSIONS.md`). Another row that
    claims your files: follow the coordinator's note. Without one, it blocks you only when its branch changes the same
    lines or the claim is active on the same area (stop and flag it, § 4); additive edits elsewhere in the file go ahead
    and are logged as an agent decision with alternatives (§ 5).
+    1. **Orientation subagent (trial, only when your prompt says `Orientation subagent: on`):** before reading the
+       list above yourself, start one subagent (Agent tool, general-purpose, your own model) with your prompt's scope,
+       repos and base. It reads the list and returns a digest of at most 3k tokens, numbered: the rules that apply to
+       this link (with file and section), open decisions and sub-issue comments, files other rows claim, and the
+       commands your setup needs. Work from that digest; open a source yourself only to check a point you act on. In
+       your block, say that you ran it, the digest's size, and what you had to look up anyway.
 3. **Base branch.** Your prompt names it. Without one: `next` once the branch model applies (CI workflow
    `.github/workflows/ci.yml` on knk-web-api `main` and knk-web-app `main`), otherwise the repo's default branch
    (`main` in every repo). Never start from another feature's unmerged branch unless the
