@@ -24,7 +24,7 @@
 | Link | Issue | Status | Branch heads | PR | CI | How started |
 |---|---|---|---|---|---|---|
 | L0 session token audit procedure | #1019 | Merged into `main` (#1037, `39525374`) and `next` (#1038 `db35f876`; sync #1040 `b2e454f8`) | `claude/token-audit-1019`: `f6dba762`; `claude/token-audit-1019-next`: `c91e7539` | [#1037](https://github.com/PandiO/knk-workspace/pull/1037) (`main`), [#1038](https://github.com/PandiO/knk-workspace/pull/1038) (`next`) | none (docs; Codex at usage limit, skipped) | create_session `session_01R1w2UuT7VcXg1qRF2cqKDV` (§ 3.3) |
-| L1 slim the session board | #1020 | Running | — | — | — | create_session `session_01R1w2Uv7GQxAnY971aP5hiH` (§ 3.6) |
+| L1 slim the session board | #1020 | In review (PR open, not merged) | `claude/token-board-1020`: `e18c07cf` (base `main`) | [#1047](https://github.com/PandiO/knk-workspace/pull/1047) (`main`) | none (docs and script) | create_session `session_01R1w2Uv7GQxAnY971aP5hiH` (§ 3.6) |
 | L2 lighter start-up reading | #1021 | Running | — | — | — | create_session `session_01R1w2UtvxHHSbCHYZ2ZsheW` (§ 3.6) |
 | L3 stop waking finished sessions | #1026 | Merged into `main` (#1041 `8ffae44e`) and `next` (sync #1042 `0c030da3`) | `claude/token-wakeups-1026`: `43d0efd1` (2 commits on `main`) | [#1041](https://github.com/PandiO/knk-workspace/pull/1041) (`main`) | none (docs) | create_session `session_01R1w2UuD4tw3yQ2N6mwMpQ9` (§ 3.6) |
 | L4 coordinator hand-over, fewer wake-ups | #1024 | Running | — | — | — | create_session `session_01R1w2UwgB6mB8qcMtKmYSwt` (§ 3.6) |
@@ -89,6 +89,37 @@ _(Each link appends its block here when it finishes.)_
     2. Compare against both references in the procedure's § 4. Without a phase merged, three links already spread from $8 to $23, so use at least 3 links that started after your phase merged into `main`.
     3. L3 (Phase 4) target: count only **idle** wake-ups after the hand-over. L1's 8 post-hand-over results were mostly rework (base merges, conflicts).
     4. L4 (Phase 8): restarts (`process_turn_index` 0) rebuild the cache; L4 #986 paid $2.66 for one.
+
+### 4.1 L1 — Slim the session board (#1020)
+
+1. **Scope done.**
+    1. `docs/ACTIVE_SESSIONS.md`: 86,163 → 11,139 bytes, about 20.7k → 2.7k tokens (bytes scaled by the plan's 86 KB = 20.7k ratio). The "In progress" table as the skills now read it: 9,474 bytes, about 2.3k tokens. 10 finished rows moved verbatim to `reports/sessions-archive/2026-11.md` with `--move`; the 29 others cut to one line of at most 400 characters (dates unchanged); "How to use" shortened.
+    2. `scripts/sessions-archive/archive_sessions.py`: `--flag` (rows whose linked knk-workspace issues are all closed, via `--closed` or `--gh`; status saying merged/done/closed/deployed/installed with no in review/waiting/running/paused/blocked; rows over 400 characters or multi-line; `--board -` reads stdin) and `--move <lines>` (verbatim into the current month's file, same line check). Archive README rule 6.
+    3. Skills: `knk-link` § 1.2, `knk-coordinator` § 2.1, `knk-design` step 2 read only the "In progress" table: `git show origin/main:docs/ACTIVE_SESSIONS.md | awk '/^## /{p=/^## In progress/} p'`. `knk-manager` § 7.1: `--flag --gh`, then `--move`, every run.
+    4. `docs/CHANGELOG.md` Unreleased entry.
+2. **Commits and heads.** knk-workspace `claude/token-board-1020` at `e18c07cf` (5 commits + 2 merges of `origin/main`, base `main`).
+3. **PRs.** [#1047](https://github.com/PandiO/knk-workspace/pull/1047) into `main` (`Closes #1020`). Not merged.
+4. **Tests, baseline → result.**
+    1. `python3 -m unittest discover -s scripts/sessions-archive`: 15 → 25 passed (10 new).
+    2. `--flag --gh` on the new board: no rows flagged; `--check`: 0 waiting; report links on the board resolve.
+    3. Acceptance 1 (board ≤ 4k tokens) met on the branch; holds on `main` after the merge. The plan's ~6 % re-read saving needs a Phase 0 rerun on links started after the merge: the coordinator's, at the chain's end.
+    4. Known reds: none.
+5. **Decisions (DESIGN § 4.3).**
+    1. *Finished-row rule.* Chosen: archive a row when every issue it names as its own is closed, or its status says merged/deployed/installed/done with nothing left for the developer, or a later row or merged branch supersedes it; keep every row that is running, paused, blocked or in review (merged but waiting for the developer's test), per the coordinator's note. Archived: web app chain 1 (#177 closed, superseded by chains 2–3), chain 2 (its open #184 now closed), #231 (closed), seed update (fast-forwarded to `main`), NAS Stage B (installed), startup seeders (merged and deployed), closed-alpha NAS continuation (merged and superseded by Phase 4), closed-alpha readiness (branch merged in `d51dd659`), the example row, legacy menu mining (spec on `main`). Alternatives: (a) archive every row whose issues are closed only: almost none, since issues close at promotion; (b) also archive old "In review" rows from October: against the coordinator's note.
+    2. *Archive month.* Chosen: rows moved from "In progress" go to the month they were found finished (`--today`), here 2026-11.md as the prompt says, because the finish day is unknown. Alternatives: (a) month of "Last updated" (2026-09/10 files): the plan's reading, but contradicts the prompt.
+    3. *Long text of kept rows.* Chosen: cut to one line without copying the old text anywhere; the detail is in the linked issues and reports and in git history. Alternatives: (a) archive a snapshot of each long row: doubles the archive and mixes live rows into it.
+    4. *Issue state source.* Chosen: `--closed N,N` and `--gh` (open issues through the search API; an issue not open counts as closed); stdlib only, no token handling. Alternatives: (a) GitHub MCP from the script: not callable from Python; (b) REST per issue: one call per row.
+    5. *Text flag scope.* Chosen: the Status cell and bold spans of the Feature cell only, with "in review/waiting/..." as a veto, so coordinator rows that list merged links are not flagged. Alternatives: (a) whole row: flags nearly every chain row.
+    6. *Read command.* Chosen: an `awk` one-liner on `git show origin/main:...`, needing no checkout of the script (prompt § 2a.3). Alternatives: (a) a script mode: needs a checkout at the right commit; (b) `sed -n '/^## In progress/,/^## /p'`: also prints the next heading.
+    7. *Row cap.* Chosen: 400 characters (`--max-row`), enough for issue, branch, repos, owner and status. Alternatives: (a) 300: forced dropping report links on chain rows.
+6. **Out of scope, noted.**
+    1. `knk-docs-session` § 1 and `knk-digest` § 3 still read the whole board; with the board at 11 KB this costs little. L3's/L7's files; not changed here.
+    2. Three `merge -X ours` style board conflicts are expected when other sessions edit their long rows before the merge: keep `main`'s new rows, shortened.
+7. **Blockers.** None.
+8. **What the developer must do.** Nothing beyond the coordinator's merge of #1047 into `main` and `main` → `next`.
+9. **Notes for later links.**
+    1. The manager run now flags and moves board rows daily (`--flag --gh`, then `--move`); rows over 400 characters show up in its output.
+    2. L2: `knk-link` § 1.2's board line changed (the `awk` command); merge both sides.
 
 ### 4.3 L3 — Stop waking finished sessions (#1026)
 
