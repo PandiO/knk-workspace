@@ -1,6 +1,6 @@
 ---
 name: knk-link
-description: Run one link of a Knights and Kings (K&K) session chain. Use when your prompt says you run a K&K chain link (a link of a chain, "L<n>", a chain charter or a coordinator that started you), or when asked to run a K&K chain link. Covers setup (repos, branch from `next` or the default branch, merge-not-rebase of the base, push dry run, toolchains including JDK 25 for the plugin, baseline tests), hard rules, blockers, the pull request, the report block with agent decisions and their alternatives, and numbered lists.
+description: Run one link of a Knights and Kings (K&K) session chain. Use when your prompt says you run a K&K chain link (a link of a chain, "L<n>", a chain charter or a coordinator that started you), or when asked to run a K&K chain link.
 ---
 
 # K&K chain link

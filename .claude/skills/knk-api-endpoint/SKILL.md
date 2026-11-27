@@ -1,6 +1,6 @@
 ---
 name: knk-api-endpoint
-description: Add or change an endpoint in knk-web-api, the Knights and Kings (K&K) ASP.NET Core API. Use when asked to add a K&K API endpoint, controller action, route, service method, repository query, DTO or AutoMapper mapping, or to expose something new to the web app or the plugin. Covers the layers (controller, service, repository with interfaces, DTOs, AutoMapper profile, DI registration), the default-deny access rule every write needs and the pinned access tests (EndpointAccessRulesTests, ReadAccessRulesTests, DashboardChangeAccessRulesTests, DeleteAccessRulesTests), rate limits, a migration when the schema changes, the xUnit tests and the docs triggers. For a whole new entity across API, web app and plugin use knk-entity-scaffold instead.
+description: Add or change an endpoint in knk-web-api, the Knights and Kings (K&K) ASP.NET Core API. Use when asked to add a K&K API endpoint, controller action, route, service method, repository query, DTO or AutoMapper mapping, an access rule or rate limit, or to expose something new to the web app or the plugin. For a whole new entity use knk-entity-scaffold.
 ---
 
 # K&K API endpoint

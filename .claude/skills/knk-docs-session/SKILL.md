@@ -1,6 +1,6 @@
 ---
 name: knk-docs-session
-description: Run a Knights and Kings (K&K) docs session, the documentation follow-up of a merged feature. Use when your prompt says you run a docs session or names a `documentation` issue (`Docs: <feature>`), when the weekly docs check starts one, or when asked to write the remaining guides, register rows, site/wiki pages or screenshots of a merged K&K change. Covers setup (clone the merged code, tracker row), working through the docs impact list against the merged code and test results, code that disagrees with the plan, the branch from knk-workspace `next` (or `main`), merging its own docs PR into `next` after the checks and Codex findings (or the Codex usage-limit rule), agent workflow files via their own PR into `main`, the smoke-guide format, closing the issue and archiving the tracker row.
+description: Run a Knights and Kings (K&K) docs session, the documentation follow-up of a merged feature. Use when your prompt says you run a docs session or names a `documentation` issue (`Docs: <feature>`), when the weekly docs check starts one, or when asked to write the remaining guides, register rows, site/wiki pages or screenshots of a merged K&K change.
 ---
 
 # K&K docs session

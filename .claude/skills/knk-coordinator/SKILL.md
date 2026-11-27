@@ -1,6 +1,6 @@
 ---
 name: knk-coordinator
-description: Coordinate a Knights and Kings (K&K) session chain. Use when asked to coordinate a K&K chain, run or resume a chain's coordinator, start the next link, check a finished link, or merge a link into `next`. Covers the coordinator loop, gate checks against the actual branches, starting links with create_session or as a subagent with the generated permissions block, send_later check-ins, the checks of a finished link, merging into `next`, blockers and reporting to the manager. Templates for the permissions block, the chain charter and the progress report are in this folder.
+description: Coordinate a Knights and Kings (K&K) session chain. Use when asked to coordinate a K&K chain, run or resume a chain's coordinator, start the next link, check a finished link, or merge a link into `next`.
 ---
 
 # K&K chain coordinator

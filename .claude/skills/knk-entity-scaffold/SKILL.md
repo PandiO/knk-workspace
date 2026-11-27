@@ -1,6 +1,6 @@
 ---
 name: knk-entity-scaffold
-description: Scaffold a new Knights and Kings (K&K) entity across knk-web-api, knk-web-app and knk-plugin, or finish one whose model exists ("I created the model, scaffold the rest"). Use when asked to add a new K&K entity, record type, reference-data table or dashboard type end to end. Covers the API (model with form metadata attributes, DbContext and migration, DTOs with navigation DTOs, repository, service with cascade rules, AutoMapper profile, controller, the dashboard access registry, lookups, the pinned access tests, form and display seeds), the web app (DTO types, API client, enums, entityApiMapping, objectConfigs columns, Playwright mock fixtures and specs) and the plugin (DTO and mapper in knk-api-client, query API port in knk-core, BaseApiImpl implementation, DataAccess gateway with cache settings, realtime cache invalidation), with tests in every repo and the docs.
+description: Scaffold a new Knights and Kings (K&K) entity across knk-web-api, knk-web-app and knk-plugin, or finish one whose model exists ("I created the model, scaffold the rest"). Use when asked to add a new K&K entity, record type, reference-data table or dashboard type end to end.
 ---
 
 # K&K entity scaffold

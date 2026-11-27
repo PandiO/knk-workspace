@@ -1,6 +1,6 @@
 ---
 name: knk-digest
-description: Write the Knights and Kings (K&K) daily digest and post it as one comment on the pinned "Daily digest" issue PandiO/knk-workspace#333. Use when asked to write, post or run the K&K daily digest, and as the last step of the K&K manager run (knk-manager skill). Covers the digest sections (ready for test in next, decisions needed, blocked, progress, new ideas, health, manager run), where each fact comes from (branches, PRs, issues, chain reports, the sessions board, CI), the quiet-day comment and the rule that the digest reads and reports but changes nothing.
+description: Write the Knights and Kings (K&K) daily digest on the pinned "Daily digest" issue PandiO/knk-workspace#333. Use when asked to write, post or run the K&K daily digest, and as the last step of the K&K manager run.
 ---
 
 # K&K daily digest
