@@ -1,7 +1,7 @@
 # Token efficiency chain — charter
 
-**Status:** Ready to start (2026-11-27)
-**Last updated:** 2026-11-27 (pushed to `main`; drafted 2026-11-24 by the design session on approval)
+**Status:** Running (2026-11-27): L0–L5 merged into `main` and `next`; L6–L8 next, coordinator 2 `session_01R1w2UuEXhepWcgm7ApQ7rs`
+**Last updated:** 2026-11-27 (coordinator 1 hand-over at the L1–L5 phase boundary)
 **Issues:** parent [PandiO/knk-workspace#987](https://github.com/PandiO/knk-workspace/issues/987); sub-issues per
 link below. Reference issues as `PandiO/knk-workspace#n` in component repos.
 **Progress report:** `reports/<date>-token-efficiency-chain.md`, created by the coordinator at its first run.
@@ -59,6 +59,8 @@ Order and parallelism:
    instructions and skill descriptions; L3 the PR-watching steps; L5 the design template and skill. Where two links
    change the same skill file, the second merges `main` in first (merge, never rebase).
 3. Then L6, L7 and L8, one at a time, since each changes several skills.
+
+Hand-over points (coordinator skill § 3.8): after L0; after L1–L5; after L6–L8 (the end of the chain).
 
 ## 3. Chain notes
 
