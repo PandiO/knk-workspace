@@ -26,7 +26,7 @@
 | L0 session token audit procedure | #1019 | Merged into `main` (#1037, `39525374`) and `next` (#1038 `db35f876`; sync #1040 `b2e454f8`) | `claude/token-audit-1019`: `f6dba762`; `claude/token-audit-1019-next`: `c91e7539` | [#1037](https://github.com/PandiO/knk-workspace/pull/1037) (`main`), [#1038](https://github.com/PandiO/knk-workspace/pull/1038) (`next`) | none (docs; Codex at usage limit, skipped) | create_session `session_01R1w2UuT7VcXg1qRF2cqKDV` (§ 3.3) |
 | L1 slim the session board | #1020 | Running | — | — | — | create_session `session_01R1w2Uv7GQxAnY971aP5hiH` (§ 3.6) |
 | L2 lighter start-up reading | #1021 | Running | — | — | — | create_session `session_01R1w2UtvxHHSbCHYZ2ZsheW` (§ 3.6) |
-| L3 stop waking finished sessions | #1026 | Running | — | — | — | create_session `session_01R1w2UuD4tw3yQ2N6mwMpQ9` (§ 3.6) |
+| L3 stop waking finished sessions | #1026 | In review (PR open, not merged) | `claude/token-wakeups-1026`: `43d0efd1` (2 commits on `main`) | [#1041](https://github.com/PandiO/knk-workspace/pull/1041) (`main`) | none (docs) | create_session `session_01R1w2UuD4tw3yQ2N6mwMpQ9` (§ 3.6) |
 | L4 coordinator hand-over, fewer wake-ups | #1024 | Not started (gate: L0 and L3 merged) | — | — | — | — |
 | L5 reuse catalogue | #978 | Running | — | — | — | create_session `session_01R1w2UvxEiZju9gUZgBsVjt` (§ 3.6) |
 | L6 fewer set-up turns | #1022 | Not started (gate: L1–L5 merged; developer approval) | — | — | — | — |
@@ -88,3 +88,30 @@ _(Each link appends its block here when it finishes.)_
     2. Compare against both references in the procedure's § 4. Without a phase merged, three links already spread from $8 to $23, so use at least 3 links that started after your phase merged into `main`.
     3. L3 (Phase 4) target: count only **idle** wake-ups after the hand-over. L1's 8 post-hand-over results were mostly rework (base merges, conflicts).
     4. L4 (Phase 8): restarts (`process_turn_index` 0) rebuild the cache; L4 #986 paid $2.66 for one.
+
+### 4.3 L3 — Stop waking finished sessions (#1026)
+
+1. **Scope done.**
+    1. `knk-link` § 3.4 (don't wait for a late Codex review) and new § 3.8: at the hand-over, unsubscribe from every PR (also when never subscribed), cancel `send_later` check-ins, stop; rework comes from the coordinator by `send_message`; a stray notification gets no work and no reply.
+    2. `knk-coordinator` new § 3.5 (subscribe to a handed-over link's PRs; old step 5 is now 6), new § 5.4 (hand Codex findings, base merges and conflicts back with `send_message`, or `SendMessage` to a subagent), § 6.10 (points to § 5.4), new § 7.11 (unsubscribe in the merge turn). Check-in cadence untouched, left to L4.
+    3. `knk-docs-session` § 3.2 item 5 (unsubscribe and cancel check-ins in the merge turn) and § 4.4 (none left before the final message; same rule for one-off sessions that merge their own PR).
+    4. `docs/CHANGELOG.md` Unreleased entry.
+2. **Commits and heads.** knk-workspace `claude/token-wakeups-1026` at `43d0efd1` (2 commits, base `main`).
+3. **PRs.** [#1041](https://github.com/PandiO/knk-workspace/pull/1041) into `main` (`Closes #1026`). Not merged.
+4. **Tests, baseline → result.**
+    1. Docs only, no CI. Section references added resolve inside the files.
+    2. Measured now: the three skills grow by about 300 (link), 340 (coordinator) and 200 (docs session) tokens (characters / 4).
+    3. Acceptance (≤ 1 idle turn after the work is done per link and docs session) needs a Phase 0 rerun on sessions started after this merge: the coordinator's, at the chain's end.
+    4. Known reds: none.
+5. **Decisions (DESIGN § 4.3).**
+    1. *Unsubscribe unconditionally.* Chosen: the link and docs session call `unsubscribe_pr_activity` even when they never subscribed, because the platform can subscribe a session that opens a PR and the call is idempotent. Alternatives: (a) only when subscribed — the session can't always tell.
+    2. *Order of the hand-over.* Chosen: the link unsubscribes before its final message, the coordinator subscribes when it reads that message, because a PR's events reach one session at a time. Alternatives: (a) coordinator subscribes when the PR opens — its call would succeed but deliver nothing while the link holds the PR.
+    3. *Late Codex reviews.* Chosen: the link handles reviews already in at its hand-over and doesn't stay on for one that hasn't come; the coordinator sends later findings back. Alternatives: (a) link waits with check-ins — exactly the idle wake-ups Phase 4 removes.
+    4. *One-off sessions.* Chosen: one sentence in `knk-docs-session` § 4.4, since one-off sessions have no skill and the global instructions are L2's file in this round. Alternatives: (a) a global line — collides with L2's split; left as a note below.
+    5. *Measurement.* Chosen: token growth of the changed skills now, the rerun left to the coordinator (prompt § 1.5). Alternatives: (a) none possible inside the link.
+6. **Blockers.** None.
+7. **What the developer must do.** Nothing beyond the coordinator's merge of #1041 into `main` and `main` → `next`.
+8. **Notes for later links.**
+    1. L4: the coordinator now holds the PR subscriptions of handed-over links (§ 3.5, § 5.4, § 7.11); batch those PR events with your check-ins.
+    2. L2 / L7: if one-off sessions get a rule in the global instructions, add "unsubscribe and cancel `send_later` in the merge turn" there too.
+
