@@ -1,6 +1,6 @@
 # Token efficiency chain — progress report
 
-**Status:** Running (2026-11-27) · **Last updated:** 2026-11-27 (L0 merged; L1, L2, L3, L5 running)
+**Status:** Running (2026-11-27) · **Last updated:** 2026-11-27 (L0, L3 merged; L1, L2, L4, L5 running)
 
 **Issue:** [PandiO/knk-workspace#987](https://github.com/PandiO/knk-workspace/issues/987), links
 [#1019](https://github.com/PandiO/knk-workspace/issues/1019) (L0),
@@ -26,8 +26,8 @@
 | L0 session token audit procedure | #1019 | Merged into `main` (#1037, `39525374`) and `next` (#1038 `db35f876`; sync #1040 `b2e454f8`) | `claude/token-audit-1019`: `f6dba762`; `claude/token-audit-1019-next`: `c91e7539` | [#1037](https://github.com/PandiO/knk-workspace/pull/1037) (`main`), [#1038](https://github.com/PandiO/knk-workspace/pull/1038) (`next`) | none (docs; Codex at usage limit, skipped) | create_session `session_01R1w2UuT7VcXg1qRF2cqKDV` (§ 3.3) |
 | L1 slim the session board | #1020 | Running | — | — | — | create_session `session_01R1w2Uv7GQxAnY971aP5hiH` (§ 3.6) |
 | L2 lighter start-up reading | #1021 | Running | — | — | — | create_session `session_01R1w2UtvxHHSbCHYZ2ZsheW` (§ 3.6) |
-| L3 stop waking finished sessions | #1026 | In review (PR open, not merged) | `claude/token-wakeups-1026`: `43d0efd1` (2 commits on `main`) | [#1041](https://github.com/PandiO/knk-workspace/pull/1041) (`main`) | none (docs) | create_session `session_01R1w2UuD4tw3yQ2N6mwMpQ9` (§ 3.6) |
-| L4 coordinator hand-over, fewer wake-ups | #1024 | Not started (gate: L0 and L3 merged) | — | — | — | — |
+| L3 stop waking finished sessions | #1026 | Merged into `main` (#1041 `8ffae44e`) and `next` (sync #1042 `0c030da3`) | `claude/token-wakeups-1026`: `43d0efd1` (2 commits on `main`) | [#1041](https://github.com/PandiO/knk-workspace/pull/1041) (`main`) | none (docs) | create_session `session_01R1w2UuD4tw3yQ2N6mwMpQ9` (§ 3.6) |
+| L4 coordinator hand-over, fewer wake-ups | #1024 | Running | — | — | — | create_session `session_01R1w2UwgB6mB8qcMtKmYSwt` (§ 3.6) |
 | L5 reuse catalogue | #978 | Running | — | — | — | create_session `session_01R1w2UvxEiZju9gUZgBsVjt` (§ 3.6) |
 | L6 fewer set-up turns | #1022 | Not started (gate: L1–L5 merged; developer approval) | — | — | — | — |
 | L7 one docs session per chain | #1023 | Not started (gate: L1–L5 merged) | — | — | — | — |
@@ -57,6 +57,7 @@
 6. **Route for L1, L2, L3, L5.** Chosen: `create_session` for all four, knk-workspace only. L5 reads the component repos, which are public, so it clones them read-only without `add_repo` (no attach for the classifier to refuse, skill § 4.1.4). Alternatives: (a) L5 as a subagent with the repos attached here — costs this coordinator context and needs no attach anyway.
 7. **Shared files between the parallel links.** Chosen: each prompt lists every link's lines (L1 board and board-reading lines, L2 global split, descriptions and digest step, L3 watching steps, L5 design skill, one § 6 item, one global line). I merge in order of finish, and a later link merges `origin/main` in when its PR conflicts. L2 keeps the name `GLOBAL_AGENT_INSTRUCTIONS.md`, so the component pointers stay valid. Alternatives: (a) run them one at a time — the charter asks for parallel; (b) give L5's global line to L2 — couples two links.
 8. **Acceptance items that need a later rerun** (L2's ≤ 15k, L3's ≤ 1 turn, L2's orientation-subagent trial). Chosen: the links measure what they can now, and I run the Phase 0 reruns on links that start after the merges (L6–L8 and the next chains), at the chain's end. Alternatives: (a) hold each link open until a rerun — it would block the chain on unrelated chains.
+9. **L3 check and merge (2026-11-27).** Chosen: merged #1041 into `main` without a Codex review (usage limit again, noted on the PR), all other § 6 checks held; synced through branch `claude/token-sync-main-next-1026` (#1042, no conflict). L4's gate (L0 and L3 merged) checked with `rev-list` counts 0, and L4 started. Alternatives: (a) wait for Codex — no date for the limit.
 
 ## 4. Link blocks
 
