@@ -4,6 +4,17 @@ This is a human-readable record of capabilities merged into the V3 default branc
 
 ## Unreleased — on feature branches, not merged
 
+- **Chain coordinators hand over to a fresh session and wake up less** ([PandiO/knk-workspace#1024](https://github.com/PandiO/knk-workspace/issues/1024),
+  link L4 of the token efficiency chain, [#987](https://github.com/PandiO/knk-workspace/issues/987)) — no game change;
+  developer-facing. knk-workspace branch `claude/token-handover-1024` (PR into `main`). A coordinator reads its own
+  context size at every wake-up and hands over to a fresh coordinator at each phase boundary, above 300k context, or
+  at a cold-cache wake-up above about 200k: it updates the charter and progress report, cancels its check-ins, lets go
+  of its PR subscriptions, starts the new coordinator with a start note and tells the running links the new session
+  id. It keeps one check-in for the whole chain, under an hour apart while links run and none while nothing runs, and
+  handles every queued notification in one turn. Skill changed: `knk-coordinator` (§ 3, § 5, § 7; new
+  `start-note.md`; a "Hand-over points" field in the charter template, a "Coordinators" line in the report template).
+  1. Admin steps: none.
+
 - **Finished sessions stop watching their pull requests** ([PandiO/knk-workspace#1026](https://github.com/PandiO/knk-workspace/issues/1026),
   link L3 of the token efficiency chain, [#987](https://github.com/PandiO/knk-workspace/issues/987)) — no game change;
   developer-facing. knk-workspace branch `claude/token-wakeups-1026` (PR into `main`). A chain link unsubscribes from
