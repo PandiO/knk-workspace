@@ -1,6 +1,6 @@
 # System overview
 
-**Status:** Current · **Last updated:** 2026-11-22 (first version; describes the `main` branches of knk-web-app
+**Status:** Current · **Last updated:** 2026-11-27 (§ 5: link to the reuse catalogue, PandiO/knk-workspace#978); 2026-11-22 (first version; describes the `main` branches of knk-web-app
 `31a6896`, knk-web-api `75b8434` and knk-plugin `2411d78`)
 
 A one-page map for people and agents to read first. The deeper documents are linked at the end.
@@ -66,6 +66,9 @@ Plugin Java packages are `net.knightsandkings.knk.{core,api,paper}`; `...` above
 - Branches: `main` = released, `next` = integrated; feature branches start from `next` (global instructions).
 
 ## 5. Deeper documents
+
+Before building a form, detail view, picker, validation or world capture, read
+[reusable systems](reusable-systems.md): what exists, when it is required, when an exception is fine.
 
 [Web API architecture](web-api-architecture.md) · [web-app architecture](web-app-architecture.md) ·
 [plugin architecture](plugin-architecture.md) · [plugin API client pattern](plugin-api-client-pattern.md) ·
