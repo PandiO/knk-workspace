@@ -114,7 +114,9 @@ something different from this skill, the prompt and charter win.
    `@codex review` comment), not on every push: after any push that changes the PR's content (code or docs), comment
    `@codex review` and handle the new findings before you finish. When Codex is at its usage limit (its comment says
    the code-review usage limit is reached), don't wait for it: finish without its review, and say so on the PR and in
-   your report block (developer decision 2026-11-14).
+   your report block (developer decision 2026-11-14). Handle the reviews that are in before your hand-over (§ 3.7);
+   don't stay on or schedule check-ins only to wait for one that hasn't come. After your hand-over (§ 3.7) the coordinator watches the PR and sends you
+   any new findings with `send_message` (§ 3.8).
 5. **Sub-issue:** a comment with branches, heads, PRs, tests vs baseline and decisions to review; swap
    `status:in-progress` for `status:in-review`.
 6. **Report block** in the chain's progress report on knk-workspace `main`: append it under "## 4. Link blocks" in the
@@ -125,6 +127,16 @@ something different from this skill, the prompt and charter win.
    newest first), not to "Recently completed".
 7. **Final message** to the coordinator, numbered: PR links, heads per repo, tests baseline → result, decisions,
    blockers, what the developer must do. Then stop; do not start another link.
+8. **Stop watching at the hand-over** (plan Phase 4, PandiO/knk-workspace#1026). In the same turn as the final
+   message, and before you send it:
+    1. Call `unsubscribe_pr_activity` for each of your PRs, also when you never subscribed (the platform may have
+       subscribed you when the PR was opened). A PR's events reach one session at a time, so the coordinator only
+       gets them once you have let go.
+    2. Cancel every `send_later` check-in you scheduled (`delete_trigger` with its id; `list_triggers` if you lost it).
+    3. Don't subscribe to or watch your PRs again. The coordinator watches them, does the merge check and wakes you
+       with `send_message` when your PR needs you: Codex findings, a base merge, a conflict. Do that rework, answer
+       with a short numbered `send_message`, unsubscribe again if the platform subscribed you, and stop. A wake-up
+       you have nothing to do for (a stray notification) gets no work: end the turn without a reply.
 
 ## 4. Blockers
 

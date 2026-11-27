@@ -61,7 +61,11 @@ branch model applies, merges into `next`. Links follow the `knk-link` skill.
 3. **Start it** (§ 4) and record "How started" in its summary row (bookkeeping commit).
 4. **Wait without sleeping.** End your turn and schedule a check-in with `send_later` (about every 45–60 minutes)
    until the link finishes (§ 5). Never poll with `sleep`.
-5. **Check it** (§ 6). Pass: merge into `next` (§ 7), report up (§ 9), back to step 1. Fail: § 8.
+5. **Watch the link's PRs yourself** once it has handed over (plan Phase 4, PandiO/knk-workspace#1026): the link
+   unsubscribes from its PRs and stops (link skill § 3.8), so call `subscribe_pr_activity` for each of its PRs when
+   its final message comes in. A PR's events reach one session at a time; if the result says another session still
+   watches it, ask the link with `send_message` to unsubscribe, then subscribe again.
+6. **Check it** (§ 6). Pass: merge into `next` (§ 7), report up (§ 9), back to step 1. Fail: § 8.
 
 ## 4. Starting a link
 
@@ -116,6 +120,12 @@ branch model applies, merges into `next`. Links follow the `knk-link` skill.
    anything outside it to the developer (§ 9.3) and tell the link to stop or to go on with the reversible default.
 3. Still working: schedule the next check-in. Stuck for two check-ins without progress: interrupt, ask for status,
    and treat it as a blocker if it cannot continue.
+4. **PR events and rework after the hand-over.** You hold the PR subscriptions of handed-over links (§ 3.5), so their
+   Codex reviews, CI results and comments come to you. When a PR needs the link again (Codex findings to fix or
+   answer, a base merge, a conflict), hand it back, don't wait for the link to notice: a `create_session` link gets a
+   numbered `send_message` (it wakes the session) with the PR, the head, what to do and "reply when done, then
+   stop"; a subagent link gets the same through `SendMessage` to its agent id, or a rerun (§ 8.2) if it can't be
+   continued. Small fixes you may make yourself (§ 6.10). Never ask a link to watch its PR again.
 
 ## 6. Checking a finished link
 
@@ -137,8 +147,8 @@ All of these must hold:
 10. **Codex findings handled** (global "Branches" rule 4, developer decision 2026-11-13): every inline finding of the
     ChatGPT Codex connector on each PR's current head is fixed by the link or answered on its thread with the reason
     (not a bug, or out of scope with the issue filed), and resolved; the link block lists them. A P1 finding blocks the
-    merge until it is fixed or the developer decides. If the link left findings open, send it back (or fix the small
-    ones yourself before merging) rather than merging over them. When Codex is at its usage limit (its comment says
+    merge until it is fixed or the developer decides. If the link left findings open, send it back with `send_message` (§ 5.4; or fix the
+    small ones yourself before merging) rather than merging over them. When Codex is at its usage limit (its comment says
     so), merge without its review once the other checks hold and note on the PR that Codex was skipped for the limit
     (developer decision 2026-11-14).
 11. **Automated proof** (global instructions, "Testing: automated first", developer decision 2026-11-14): each
@@ -180,6 +190,8 @@ All of these must hold:
     Codex findings included), merge them into the default branch with a merge commit, then open a pull request from
     the default branch into `next` and merge it the same way, so `next` carries the same rules. This is the one merge
     into a default branch you make; promotion of `next` stays the developer's.
+11. **Unsubscribe after the merge.** In the same turn as a merge (or when you close a PR unmerged), call
+    `unsubscribe_pr_activity` for that PR, including the `main` → `next` PR of § 7.10 if you subscribed to it.
 
 ## 8. Blockers
 
