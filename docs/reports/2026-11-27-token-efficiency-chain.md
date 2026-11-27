@@ -1,6 +1,6 @@
 # Token efficiency chain — progress report
 
-**Status:** Running (2026-11-27) · **Last updated:** 2026-11-27 (L0, L3, L5 merged; L1, L2, L4 running)
+**Status:** Running (2026-11-27) · **Last updated:** 2026-11-27 (L0, L1, L3, L4, L5 merged; L2 running; hand-over after L2)
 
 **Issue:** [PandiO/knk-workspace#987](https://github.com/PandiO/knk-workspace/issues/987), links
 [#1019](https://github.com/PandiO/knk-workspace/issues/1019) (L0),
@@ -24,10 +24,10 @@
 | Link | Issue | Status | Branch heads | PR | CI | How started |
 |---|---|---|---|---|---|---|
 | L0 session token audit procedure | #1019 | Merged into `main` (#1037, `39525374`) and `next` (#1038 `db35f876`; sync #1040 `b2e454f8`) | `claude/token-audit-1019`: `f6dba762`; `claude/token-audit-1019-next`: `c91e7539` | [#1037](https://github.com/PandiO/knk-workspace/pull/1037) (`main`), [#1038](https://github.com/PandiO/knk-workspace/pull/1038) (`next`) | none (docs; Codex at usage limit, skipped) | create_session `session_01R1w2UuT7VcXg1qRF2cqKDV` (§ 3.3) |
-| L1 slim the session board | #1020 | In review (PR open, not merged) | `claude/token-board-1020`: `e18c07cf` (base `main`) | [#1047](https://github.com/PandiO/knk-workspace/pull/1047) (`main`) | none (docs and script) | create_session `session_01R1w2Uv7GQxAnY971aP5hiH` (§ 3.6) |
-| L2 lighter start-up reading | #1021 | In review (PR open, not merged) | `claude/token-startup-1021`: `584d315b` (6 commits + 2 merges of `main`, last `5cd56b0d`) | [#1046](https://github.com/PandiO/knk-workspace/pull/1046) (`main`) | none (docs) | create_session `session_01R1w2UtvxHHSbCHYZ2ZsheW` (§ 3.6) |
+| L1 slim the session board | #1020 | Merged into `main` (#1047 `a4270fc4`) and `next` (sync #1050 `7989f1ac`) | `claude/token-board-1020`: `e18c07cf` (base `main`) | [#1047](https://github.com/PandiO/knk-workspace/pull/1047) (`main`) | none (docs and script) | create_session `session_01R1w2Uv7GQxAnY971aP5hiH` (§ 3.6) |
+| L2 lighter start-up reading | #1021 | In review (PR open, not merged) | `claude/token-startup-1021`: `dd96d440` (6 commits + 3 merges of `main`, last `a170fa6a`) | [#1046](https://github.com/PandiO/knk-workspace/pull/1046) (`main`) | none (docs) | create_session `session_01R1w2UtvxHHSbCHYZ2ZsheW` (§ 3.6) |
 | L3 stop waking finished sessions | #1026 | Merged into `main` (#1041 `8ffae44e`) and `next` (sync #1042 `0c030da3`) | `claude/token-wakeups-1026`: `43d0efd1` (2 commits on `main`) | [#1041](https://github.com/PandiO/knk-workspace/pull/1041) (`main`) | none (docs) | create_session `session_01R1w2UuD4tw3yQ2N6mwMpQ9` (§ 3.6) |
-| L4 coordinator hand-over, fewer wake-ups | #1024 | In review | `claude/token-handover-1024`: `badec5dc` (1 commit on `main`) | [#1048](https://github.com/PandiO/knk-workspace/pull/1048) (`main`) | none (docs) | create_session `session_01R1w2UwgB6mB8qcMtKmYSwt` (§ 3.6) |
+| L4 coordinator hand-over, fewer wake-ups | #1024 | Merged into `main` (#1048 `a170fa6a`) and `next` (sync #1050 `7989f1ac`) | `claude/token-handover-1024`: `badec5dc` (1 commit on `main`) | [#1048](https://github.com/PandiO/knk-workspace/pull/1048) (`main`) | none (docs) | create_session `session_01R1w2UwgB6mB8qcMtKmYSwt` (§ 3.6) |
 | L5 reuse catalogue | #978 | Merged into `main` (#1044 `cf429b7d`) and `next` (#1045 `248ca828`; sync #1049 `5cb2e69a`) | `claude/reuse-catalogue-978`: `be067817` (3 commits + merge of `main` `405c82e4`, base `main`); `claude/reuse-catalogue-978-next`: `a3096162` (1 commit on `next` `b2e454f8`) | [#1044](https://github.com/PandiO/knk-workspace/pull/1044) (`main`), [#1045](https://github.com/PandiO/knk-workspace/pull/1045) (`next`) | none (docs) | create_session `session_01R1w2UvxEiZju9gUZgBsVjt` (§ 3.6) |
 | L6 fewer set-up turns | #1022 | Not started (gate: L1–L5 merged; developer approval) | — | — | — | — |
 | L7 one docs session per chain | #1023 | Not started (gate: L1–L5 merged) | — | — | — | — |
@@ -59,6 +59,8 @@
 8. **Acceptance items that need a later rerun** (L2's ≤ 15k, L3's ≤ 1 turn, L2's orientation-subagent trial). Chosen: the links measure what they can now, and I run the Phase 0 reruns on links that start after the merges (L6–L8 and the next chains), at the chain's end. Alternatives: (a) hold each link open until a rerun — it would block the chain on unrelated chains.
 9. **L3 check and merge (2026-11-27).** Chosen: merged #1041 into `main` without a Codex review (usage limit again, noted on the PR), all other § 6 checks held; synced through branch `claude/token-sync-main-next-1026` (#1042, no conflict). L4's gate (L0 and L3 merged) checked with `rev-list` counts 0, and L4 started. Alternatives: (a) wait for Codex — no date for the limit.
 10. **L5 check and merge (2026-11-27).** Chosen: merged #1044 into `main` and #1045 into `next` without a Codex review (usage limit, noted on both PRs by the link), all other § 6 checks held; I added the missing house footer to #1044's body. Synced through `claude/token-sync-main-next-978` (#1049, no conflict). Told L2 to keep L5's global line (item 6 of "Authority and freshness") and to merge `origin/main` in. The optional audit is follow-up #1043, for the developer's review in the digest (charter § 2.4). Alternatives: (a) send #1044 back for the footer — a body edit, not a change.
+11. **L1 and L4 checks and merges (2026-11-27).** Chosen: merged #1047, then #1048, into `main` without a Codex review (usage limit, noted on both PRs); all other § 6 checks held, archive script tests 25/25. Both branches were behind `main`; I merged `origin/main` into each myself (§ 7.3, mechanical): the changelog kept both entries, the board kept L1's slimmed version plus this chain's row status (the only change `main` made there). One sync for both, #1050. Told L2 to merge `origin/main` in. Alternatives: (a) send both back to their links for the base merge — two wake-ups for a mechanical change.
+12. **Coordinator hand-over (charter § 3.1, L4's new § 3.8).** Chosen: hand over to a fresh coordinator at the phase boundary once L2 is merged (end of the L1–L5 group), under L4's start-note steps. Alternatives: (a) hand over now with L2 running — § 3.8 allows it, but the boundary is one link away and the start note would carry a running link; (b) carry on to the end of the chain — against the charter.
 
 ## 4. Link blocks
 
@@ -216,7 +218,7 @@ _(Each link appends its block here when it finishes.)_
     5. `knk-link` § 1.2: reads the digest and opens an earlier block only where a note points to it. New sub-item 1 is the trial step, run only on `Orientation subagent: on`.
     6. "Branches" rule 3: a session that merges its own PR unsubscribes and cancels its check-ins in the merge turn. This is L3's rule (knk-docs-session § 4.4), added as L3's note asked.
     7. `docs/CHANGELOG.md` Unreleased entry.
-2. **Commits and heads.** knk-workspace `claude/token-startup-1021` at `584d315b` (6 commits plus merges of `origin/main` `405c82e4` and `5cd56b0d`, base `main`). The second merge keeps L5's reuse line in the core file as Authority item 6 (history D16).
+2. **Commits and heads.** knk-workspace `claude/token-startup-1021` at `dd96d440` (6 commits plus merges of `origin/main` `405c82e4`, `5cd56b0d` and `a170fa6a`, base `main`). The last merge keeps L1's In-progress-only board read beside the digest in `knk-link` § 1.2. The second merge keeps L5's reuse line in the core file as Authority item 6 (history D16).
 3. **PRs.** [#1046](https://github.com/PandiO/knk-workspace/pull/1046) into `main` (`Closes #1021`). Not merged.
 4. **Tests, baseline → result.**
     1. Docs only, no CI. Every relative link in both instruction files resolves. The three anchors linked from other files (`#github-issues-is-the-work-list`, `#branches-releases-and-risk-tiers`, `#shipping-a-change-documentation`) still exist.

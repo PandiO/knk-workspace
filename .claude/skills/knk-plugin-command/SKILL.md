@@ -1,6 +1,6 @@
 ---
 name: knk-plugin-command
-description: Add or change an in-game command in knk-plugin, the Knights and Kings (K&K) Paper plugin. Use when asked to add a K&K command, a `/knk` subcommand, a command flag or argument, a permission node for a command, or a player-facing command message or config key. Covers plugin.yml, registration in KnKPlugin (registerTabCommand, the /knk subcommand registry), the command-label takeover when another plugin holds the label, in-house permission checks through KnkPermissible (CommandNodes, PermissionGatedCommand, PlayerCommandSupport, CommandPermissions), messages, config.yml keys with deploy notes, and the tests (knk-core unit, MockBukkit/Mockito command tests, a player scenario on a real Paper server) and docs.
+description: Add or change an in-game command in knk-plugin, the Knights and Kings (K&K) Paper plugin. Use when asked to add a K&K command, a `/knk` subcommand, a command flag or argument, a permission node for a command, or a player-facing command message or config key.
 ---
 
 # K&K plugin command

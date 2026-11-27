@@ -1,6 +1,6 @@
 ---
 name: knk-coordinator
-description: Coordinate a Knights and Kings (K&K) session chain. Use when asked to coordinate a K&K chain, run or resume a chain's coordinator, start the next link, check a finished link, or merge a link into `next`. Covers the coordinator loop, gate checks against the actual branches, starting links with create_session or as a subagent with the generated permissions block, send_later check-ins, the checks of a finished link, merging into `next`, blockers and reporting to the manager. Templates for the permissions block, the chain charter and the progress report are in this folder.
+description: Coordinate a Knights and Kings (K&K) session chain. Use when asked to coordinate a K&K chain, run or resume a chain's coordinator, start the next link, check a finished link, or merge a link into `next`.
 ---
 
 # K&K chain coordinator
@@ -149,8 +149,20 @@ branch model applies, merges into `next`. Links follow the `knk-link` skill.
        charter adds, the commit-trailer rule of § 1.5 in full, the base branch (`next` or the default branch, § 1.3),
        and the bookkeeping exception for the progress report.
     3. The link's scope verbatim from the charter, its sub-issue, tier and flag.
-    4. "Read first": the charter, DESIGN, the global instructions, the binding sections, earlier link blocks.
+    4. "Read first": the charter, DESIGN, the global instructions, the binding sections, and the digest below
+       instead of the earlier link blocks.
     5. Your notes: overlaps and which lines to keep to, lessons from earlier links, anything the developer said.
+    6. **"Notes for later links" digest** (at most 2k tokens, about 1,500 words; token plan Phase 2): when you check a
+       finished link (§ 6), merge its block's "Notes for later links" and any lesson of yours into one running digest,
+       kept in your context or a scratch file, never in the progress report alone. Paste the part that applies to the
+       new link under this heading in its prompt: numbered, one line per note, each with the block it came from
+       (`§ 4.<n>`), so the link reads a block only when a note points to it. Drop notes that no longer apply. No
+       earlier links: write "None yet".
+    7. **Orientation subagent (trial, opt-in):** to try it on a link, add the line `Orientation subagent: on` to the
+       prompt (knk-link § 1.2). Run it on two links of the same kind, then measure them and two comparable links without
+       it with `docs/ai-agents/session-token-audit.md` (instructions bucket, read before the first edit, cost) and
+       compare their report blocks. Keep it, as the default in this list, only if the measured links read less and
+       their blocks are no worse; otherwise drop this item. Record the result as a coordinator decision.
 5. Set the sub-issue to `status:in-progress` if the link does not (the link normally does it).
 
 ## 5. Check-ins

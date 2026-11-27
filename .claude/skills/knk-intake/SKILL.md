@@ -1,6 +1,6 @@
 ---
 name: knk-intake
-description: Take in new Knights and Kings (K&K) ideas and shape them. Use when the developer drops an idea, wish, request or "what if" for K&K (even one line, often with "idea:", "note:", "capture this" or "for later"), when asked to file or capture an idea, and when the developer says "let's go through ideas" (or "shape the ideas", "go through the idea issues"). Capture mode searches open and closed issues for duplicates, files an issue labelled `idea` with the developer's words kept as they are, asks nothing and confirms in one sentence. Shaping mode takes the open `idea` issues one at a time with a read-back, the repos touched, a proposed `tier:` label and design-or-ready, asks at most three questions through the ask-user prompt, then "now, later or design first", and hands "design first" to the design skill.
+description: Take in new Knights and Kings (K&K) ideas and shape them. Use when the developer drops an idea, wish, request or "what if" for K&K (even one line, often with "idea:", "note:", "capture this" or "for later"), when asked to file or capture an idea, and when the developer says "let's go through ideas" (or "shape the ideas", "go through the idea issues").
 ---
 
 # K&K intake

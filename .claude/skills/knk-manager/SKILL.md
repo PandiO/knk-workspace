@@ -1,6 +1,6 @@
 ---
 name: knk-manager
-description: Run the Knights and Kings (K&K) manager, the scheduled daily run above the chain coordinators. Use when the "K&K manager" scheduled task starts you, or when asked to run the K&K manager, act on instructions the developer replied on the daily digest issue PandiO/knk-workspace#333 (pause, bump, promote, start a chain, issue or docs session, the state of something), close issues after a promotion of `next`, sync `main` into `next`, tidy or archive the sessions board, or watch the docs debt cap. Covers the stateless run order, red CI first, promotion only on the developer's explicit go with releases through the Release workflow, closing promoted issues, `main` → `next` sync pull requests, board archiving and stale claims, scheduling designs, intake "now" issues and docs sessions, and the daily digest (through the knk-digest skill).
+description: Run the Knights and Kings (K&K) manager, the scheduled daily run above the chain coordinators. Use when the "K&K manager" scheduled task starts you, or when asked to run the K&K manager, act on the developer's replies on the daily digest issue PandiO/knk-workspace#333 (pause, bump, promote, start a chain, issue or docs session, the state of something), close issues after a promotion of `next`, sync `main` into `next`, tidy or archive the sessions board, or watch the docs debt cap.
 ---
 
 # K&K manager
