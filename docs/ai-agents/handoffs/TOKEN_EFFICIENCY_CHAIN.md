@@ -60,6 +60,8 @@ Order and parallelism:
    change the same skill file, the second merges `main` in first (merge, never rebase).
 3. Then L6, L7 and L8, one at a time, since each changes several skills.
 
+Hand-over points (coordinator skill § 3.8): after L0; after L1–L5; after L6–L8 (the end of the chain).
+
 ## 3. Chain notes
 
 1. This chain changes the coordinator and link skills that run it. A link's change applies to the next session
