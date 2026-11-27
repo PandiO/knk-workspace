@@ -4,6 +4,17 @@ This is a human-readable record of capabilities merged into the V3 default branc
 
 ## Unreleased — on feature branches, not merged
 
+- **Lighter start-up reading for agent sessions** ([PandiO/knk-workspace#1021](https://github.com/PandiO/knk-workspace/issues/1021),
+  link L2 of the token efficiency chain, [#987](https://github.com/PandiO/knk-workspace/issues/987)) — no game change;
+  developer-facing. knk-workspace branch `claude/token-startup-1021` (PR into `main`). The global agent instructions
+  keep only the rules (about 3.9k tokens, was 7.6k), each with a pointer to the new
+  `docs/ai-agents/decision-history.md`, which holds the dates, reasons and history. Skill descriptions are cut to their
+  trigger phrases (8,038 → 3,433 characters, loaded in every session). Coordinators paste a "Notes for later links"
+  digest of at most 2k tokens into each link prompt instead of links reading the earlier report blocks, and can switch
+  on an orientation subagent trial per link. Skills changed: all eleven descriptions, `knk-coordinator` § 4.4,
+  `knk-link` § 1.2.
+  1. Admin steps: none.
+
 - **Finished sessions stop watching their pull requests** ([PandiO/knk-workspace#1026](https://github.com/PandiO/knk-workspace/issues/1026),
   link L3 of the token efficiency chain, [#987](https://github.com/PandiO/knk-workspace/issues/987)) — no game change;
   developer-facing. knk-workspace branch `claude/token-wakeups-1026` (PR into `main`). A chain link unsubscribes from
