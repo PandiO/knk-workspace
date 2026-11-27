@@ -46,10 +46,14 @@ Ask the developer only what the sources cannot answer. Read, in this order, and 
 3. **What is built:** `docs/FEATURE_REGISTER.md`, `docs/architecture/`, and the code on `next` of the component repos
    you touch (attach them read-only with `add_repo` when they are not in the session). Name entities, endpoints,
    services and plugin classes to reuse.
-4. **Legacy V1/V2 behaviour:** `docs/specs/legacy/` first, then the archive repos `knk-v1-archive` and
+4. **Reusable systems (required):** [reusable systems](../../../docs/architecture/reusable-systems.md). For each
+   system whose "required when" matches the feature (entity create/edit, detail views, world-bound fields, relation
+   pickers, validation, regions), the design uses it. Not using one is allowed only where the catalogue's "exception
+   when" fits, and is then a decision log row with the reason (§ 4.9).
+5. **Legacy V1/V2 behaviour:** `docs/specs/legacy/` first, then the archive repos `knk-v1-archive` and
    `knk-v2-archive` (read-only) for the feature's commands, events, menus and data. Write what players knew there and
    what to keep, change or drop; a design that drops a legacy behaviour says so.
-5. **Open work:** issues and `docs/backlog/` items on the same area, so the design links instead of duplicating.
+6. **Open work:** issues and `docs/backlog/` items on the same area, so the design links instead of duplicating.
 
 ## 3. Ask one question at a time
 
@@ -70,7 +74,7 @@ Ask the developer only what the sources cannot answer. Read, in this order, and 
 ## 4. Write the spec
 
 1. **File:** `docs/specs/<feature>/DESIGN.md` from [design-template.md](design-template.md). Keep the template's
-   section order; drop a section only when it does not apply and say so in one line. Add the folder to
+   section order; drop a section only when it does not apply and say so in one line (never "Reuse", § 4.8). Add the folder to
    `docs/specs/README.md`.
 2. **Decision log.** Every decision gets an id with the feature's letter prefix (`S01` style), the date, who decided
    (developer, or agent) and the text. A changed decision keeps its row, struck through, with "superseded by <id>".
@@ -89,7 +93,12 @@ Ask the developer only what the sources cannot answer. Read, in this order, and 
 7. **Risk tier proposal** for the feature and per phase, with the reason (global "Branches" rule 7): `tier:1` a tweak,
    `tier:2` a feature change, `tier:3` new foundations, schema changes or game feel. Big or risky work names its
    config flag, off by default.
-8. **End** with numbered open questions, each with options and your recommendation, and status **Proposed**
+8. **Reuse section (required).** The spec's "Reuse" section names, per system in the
+   [reuse catalogue](../../../docs/architecture/reusable-systems.md) that could apply, whether the feature uses it and
+   how. Every opt-out is a decision log row (agent or developer) with the reason, tested against the catalogue's
+   "exception when"; an agent opt-out is listed in your PR body and issue comment so the developer sees it. A spec
+   without the section is not ready for review.
+9. **End** with numbered open questions, each with options and your recommendation, and status **Proposed**
    (DESIGN § 4.1). A design with no open questions still ends with the section saying "none".
 
 ## 5. Proposed: hand it to the developer
