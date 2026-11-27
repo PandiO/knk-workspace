@@ -1,6 +1,6 @@
 # Token efficiency chain — progress report
 
-**Status:** Running (2026-11-27) · **Last updated:** 2026-11-27 (L0, L1, L3, L4, L5 merged; L2 running; hand-over after L2)
+**Status:** Running (2026-11-27) · **Last updated:** 2026-11-27 (L0–L5 merged; hand-over to coordinator 2)
 
 **Issue:** [PandiO/knk-workspace#987](https://github.com/PandiO/knk-workspace/issues/987), links
 [#1019](https://github.com/PandiO/knk-workspace/issues/1019) (L0),
@@ -13,11 +13,13 @@
 [#1023](https://github.com/PandiO/knk-workspace/issues/1023) (L7),
 [#1025](https://github.com/PandiO/knk-workspace/issues/1025) (L8).
 **Charter:** [handoffs/TOKEN_EFFICIENCY_CHAIN.md](../ai-agents/handoffs/TOKEN_EFFICIENCY_CHAIN.md).
+**Coordinators:** 1 `session_01R1w2UwgSEFGuuwruXHUJmM` (2026-11-27, L0–L5; handed over at the L1–L5 phase boundary, about 247k context) → 2 `session_01R1w2UuEXhepWcgm7ApQ7rs` (from 2026-11-27, L6–L8).
 
 ## 1. Waiting for the developer
 
-1. Nothing yet. Known gate ahead: L6 (#1022) changes the cloud environment's setup script, which needs your approval
-   in the environment approval prompt.
+1. L6 (#1022) changes the cloud environment's setup script: it needs your approval in the environment approval
+   prompt when the link reaches that step.
+2. For review in the digest (charter § 2.4): L5's optional audit was filed as #1043 (19 flagged web-app components).
 
 ## 2. Summary
 
@@ -25,7 +27,7 @@
 |---|---|---|---|---|---|---|
 | L0 session token audit procedure | #1019 | Merged into `main` (#1037, `39525374`) and `next` (#1038 `db35f876`; sync #1040 `b2e454f8`) | `claude/token-audit-1019`: `f6dba762`; `claude/token-audit-1019-next`: `c91e7539` | [#1037](https://github.com/PandiO/knk-workspace/pull/1037) (`main`), [#1038](https://github.com/PandiO/knk-workspace/pull/1038) (`next`) | none (docs; Codex at usage limit, skipped) | create_session `session_01R1w2UuT7VcXg1qRF2cqKDV` (§ 3.3) |
 | L1 slim the session board | #1020 | Merged into `main` (#1047 `a4270fc4`) and `next` (sync #1050 `7989f1ac`) | `claude/token-board-1020`: `e18c07cf` (base `main`) | [#1047](https://github.com/PandiO/knk-workspace/pull/1047) (`main`) | none (docs and script) | create_session `session_01R1w2Uv7GQxAnY971aP5hiH` (§ 3.6) |
-| L2 lighter start-up reading | #1021 | In review (PR open, not merged) | `claude/token-startup-1021`: `dd96d440` (6 commits + 3 merges of `main`, last `a170fa6a`) | [#1046](https://github.com/PandiO/knk-workspace/pull/1046) (`main`) | none (docs) | create_session `session_01R1w2UtvxHHSbCHYZ2ZsheW` (§ 3.6) |
+| L2 lighter start-up reading | #1021 | Merged into `main` (#1046 `f334a3b0`) and `next` (sync #1051 `ecdcd157`) | `claude/token-startup-1021`: `dd96d440` (6 commits + 3 merges of `main`, last `a170fa6a`) | [#1046](https://github.com/PandiO/knk-workspace/pull/1046) (`main`) | none (docs) | create_session `session_01R1w2UtvxHHSbCHYZ2ZsheW` (§ 3.6) |
 | L3 stop waking finished sessions | #1026 | Merged into `main` (#1041 `8ffae44e`) and `next` (sync #1042 `0c030da3`) | `claude/token-wakeups-1026`: `43d0efd1` (2 commits on `main`) | [#1041](https://github.com/PandiO/knk-workspace/pull/1041) (`main`) | none (docs) | create_session `session_01R1w2UuD4tw3yQ2N6mwMpQ9` (§ 3.6) |
 | L4 coordinator hand-over, fewer wake-ups | #1024 | Merged into `main` (#1048 `a170fa6a`) and `next` (sync #1050 `7989f1ac`) | `claude/token-handover-1024`: `badec5dc` (1 commit on `main`) | [#1048](https://github.com/PandiO/knk-workspace/pull/1048) (`main`) | none (docs) | create_session `session_01R1w2UwgB6mB8qcMtKmYSwt` (§ 3.6) |
 | L5 reuse catalogue | #978 | Merged into `main` (#1044 `cf429b7d`) and `next` (#1045 `248ca828`; sync #1049 `5cb2e69a`) | `claude/reuse-catalogue-978`: `be067817` (3 commits + merge of `main` `405c82e4`, base `main`); `claude/reuse-catalogue-978-next`: `a3096162` (1 commit on `next` `b2e454f8`) | [#1044](https://github.com/PandiO/knk-workspace/pull/1044) (`main`), [#1045](https://github.com/PandiO/knk-workspace/pull/1045) (`next`) | none (docs) | create_session `session_01R1w2UvxEiZju9gUZgBsVjt` (§ 3.6) |
@@ -61,6 +63,8 @@
 10. **L5 check and merge (2026-11-27).** Chosen: merged #1044 into `main` and #1045 into `next` without a Codex review (usage limit, noted on both PRs by the link), all other § 6 checks held; I added the missing house footer to #1044's body. Synced through `claude/token-sync-main-next-978` (#1049, no conflict). Told L2 to keep L5's global line (item 6 of "Authority and freshness") and to merge `origin/main` in. The optional audit is follow-up #1043, for the developer's review in the digest (charter § 2.4). Alternatives: (a) send #1044 back for the footer — a body edit, not a change.
 11. **L1 and L4 checks and merges (2026-11-27).** Chosen: merged #1047, then #1048, into `main` without a Codex review (usage limit, noted on both PRs); all other § 6 checks held, archive script tests 25/25. Both branches were behind `main`; I merged `origin/main` into each myself (§ 7.3, mechanical): the changelog kept both entries, the board kept L1's slimmed version plus this chain's row status (the only change `main` made there). One sync for both, #1050. Told L2 to merge `origin/main` in. Alternatives: (a) send both back to their links for the base merge — two wake-ups for a mechanical change.
 12. **Coordinator hand-over (charter § 3.1, L4's new § 3.8).** Chosen: hand over to a fresh coordinator at the phase boundary once L2 is merged (end of the L1–L5 group), under L4's start-note steps. Alternatives: (a) hand over now with L2 running — § 3.8 allows it, but the boundary is one link away and the start note would carry a running link; (b) carry on to the end of the chain — against the charter.
+13. **L2 check and merge (2026-11-27).** Chosen: merged #1046 into `main` without a Codex review (usage limit, noted on the PR) after checking the three linked anchors, L5's kept line and the rule mapping in the PR body; L2 had merged `origin/main` (with L1 and L4) in itself. Synced as #1051. Alternatives: none needed.
+14. **Hand-over to coordinator 2 (2026-11-27).** Chosen: hand over now, at the phase boundary after the L1–L5 group (L4's § 3.8.1, charter § 3.1), with about 247k context and nothing running. Steps of § 3.9: record updated (this commit), start note written, my check-in cancelled (no PR subscriptions held), `create_session` `session_01R1w2UuEXhepWcgm7ApQ7rs`, no running links to tell, named here, on the board and on #987. Alternatives: (a) start L6 first and hand over later — § 3.8.1 says the next group is started by the fresh coordinator.
 
 ## 4. Link blocks
 
