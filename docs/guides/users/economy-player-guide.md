@@ -1,6 +1,6 @@
 # Coins, gems, kits, lootboxes and discoveries — Player Guide
 
-**Status:** Current · **Last updated:** 2026-11-13 (first version, PandiO/knk-workspace#300)
+**Status:** Current · **Last updated:** 2026-11-22 (§ 6: landmarks, on `next`, PandiO/knk-workspace#976, docs #1008); 2026-11-21 (§ Kits: leftovers go to the reward inbox where staff switched production on, knk-plugin `next` `bdd8b463`, #684, docs PandiO/knk-workspace#915); 2026-11-13 (first version, PandiO/knk-workspace#300)
 **Checked against:** knk-plugin `main` `57884e9`, knk-web-api `master` `75b5a00`, knk-web-app `main` `3ba747d` (desk
 check of the code, not a live test). Amounts are the seed defaults; staff can change them.
 **Related:** [player handbook](player-handbook.md), [commands reference](commands.md), [menus guide](menus-player-guide.md),
@@ -164,7 +164,11 @@ the menu offers the buy line even when you can't claim the kit
 **Where the items go:** armour into the armour slots, the hand item into the slot you hold, the rest into your
 inventory, topping up stacks first. What doesn't fit is **dropped at your feet**, so make room before you claim. When
 that happens you may see a technical line `placed=… dropped=…`
-([#321](https://github.com/PandiO/knk-workspace/issues/321)).
+([#321](https://github.com/PandiO/knk-workspace/issues/321)). On servers where staff switched production on (in
+knk-plugin `next`, not released yet), what doesn't fit goes to your **reward inbox** instead
+(`25 items didn't fit and went to your reward inbox (/inbox).`); claim it with `/inbox`, see the
+[menus player guide § Reward inbox](menus-player-guide.md#reward-inbox). Unique items (a sword with its own name, for
+example) still drop at your feet.
 
 **What others see:** nothing; claims aren't announced. A kit a staff member gives you says
 `You received the "<name>" kit.` Kit prices and purchases show in your `/transactions`.
@@ -252,6 +256,10 @@ of your salary. Default ranges:
 
 Your premium tier and rank multipliers apply on top. Staff can give single places other rewards.
 
+**Landmarks** (on `next`, not live yet): a landmark counts only when staff made it discoverable, and then like a
+structure: `You discovered the landmark Old Well in Oakvale!` with a small reward, and a `Landmarks: 1/<n>` line in
+`/discoveries` (lodestone icon). A landmark that shares its town's or building's area is discovered as that place.
+
 **When it doesn't count:** in creative or spectator mode, in staff mode, while frozen, while you are in a siege lobby
 or match, and while your account is still loading. Walk into the place again later. Each place pays only once per
 account.
@@ -284,7 +292,7 @@ on your public profile and the discoveries leaderboard only as far as your stati
 | `Your account isn't loaded yet - try again in a moment.` | Wait a few seconds after joining. |
 | `You don't have permission to do that.` on a kit command | Your rank can't use that command; ask staff. |
 | `The economy service can't be reached right now — try again in a moment. Nothing was paid.` | The web server is down; nothing happened. |
-| A kit dropped items on the ground | Your inventory was full; pick them up. |
+| A kit dropped items on the ground | Your inventory was full; pick them up. (With the reward inbox they go to `/inbox` instead.) |
 | A payment's result is unclear | Check `/transactions` before paying again. |
 | Your balance looks wrong | Check `/transactions`, then ask staff with the date and amount. |
 

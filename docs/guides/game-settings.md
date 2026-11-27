@@ -1,7 +1,7 @@
 # Game Settings — admin guide
 
 **Status:** Current. Describes trunk since the KNG-52 merge of 2026-10-10 (see the [plan](../specs/game-settings/IMPLEMENTATION_PLAN.md)); the page header, units and help (§ Before you start, § Hub) describe knk-web-app `main` `1371951` (merged 2026-11-12, not live-tested).
-**Last updated:** 2026-11-12 (settings header with unsaved changes, Discard and Save (n); units and one line of help per field; Hub section; reached through Admin → Settings — #339, #342, #340); 2026-10-26 (route gated on `knk.admin.config`, #185, branch `claude/route-gates-185`, not merged); 2026-10-15 (`game-settings.server-id`, KNG-118, branch `wt/kng-118`, not merged)
+**Last updated:** 2026-11-21 (§ Production and territory: the `production.shops` section without a card, knk-web-api `next` `289f4d4b`, #248, docs PandiO/knk-workspace#939); 2026-11-21 (§ Production and territory: the Town logistics card, knk-web-app `next` `c12e0e7e`, #686, docs PandiO/knk-workspace#929); 2026-11-21 (§ Menu item: the Menu item card, knk-web-app `next` `acff2134`, knk-web-api `next` `fc1a5143`, knk-plugin `next` `ec02a64a`, #870, #871, docs PandiO/knk-workspace#908); 2026-11-19 (Production and territory card, knk-web-app `next` `89751315`, docs PandiO/knk-workspace#806); 2026-11-12 (settings header with unsaved changes, Discard and Save (n); units and one line of help per field; Hub section; reached through Admin → Settings — #339, #342, #340); 2026-10-26 (route gated on `knk.admin.config`, #185, branch `claude/route-gates-185`, not merged); 2026-10-15 (`game-settings.server-id`, KNG-118, branch `wt/kng-118`, not merged)
 
 The Game Settings page sets server-wide rules for joining, respawning, each world's game mode, time,
 weather and spawn point, and the server-list MOTD. It also sets exceptions per permission group. The plugin picks up a saved change within about 30 seconds. To apply it at once, run
@@ -56,6 +56,85 @@ the API is down, and the hub's rules apply inside its region. Without a hub, pla
   keep their own inventory. **Healing**, **Feeding** and **Saturation** are an amount every *n* **ticks**, with the
   interval in seconds next to it (20 ticks = 1 s). The defaults match vanilla Peaceful (1 health and 1 saturation every
   20 ticks, 1 food every 10 ticks); 0 turns one off, and they are skipped in a world that is already Peaceful.
+
+## Production and territory
+
+The **Production and territory** card (knk-web-app `next`, not released; [#690](https://github.com/PandiO/knk-workspace/issues/690))
+holds the API's production switch (**Production enabled**, off by default) and the territory ranges: **Base range
+(blocks)** (100), **Blocks per power point** (2) and **Capital multiplier** (1.5), with a worked example. A value
+outside the allowed range turns red and Save stays off. What they do and how to switch territory on in game:
+[territory admin guide § 3–4](admin/territory-admin-guide.md#3-range-settings).
+
+The **Town logistics** card (knk-web-app `next`, not released; [#686](https://github.com/PandiO/knk-workspace/issues/686))
+holds the planner's timing and defaults (`production.logistics`): **Planner interval (minutes)** (10), **Reservation
+expiry (minutes)** (30), **Consumption window (days)** (7), **Default min (hours of input)** (4), **Default max (hours of
+input)** (12) and **Keep planner runs (days)** (14). Problems are listed under the card and block Save. What they do:
+[town logistics admin guide § 6](admin/town-logistics-admin-guide.md#6-settings).
+
+The shops section `production.shops` (knk-web-api `next`, not released; [#248](https://github.com/PandiO/knk-workspace/issues/248))
+has no card yet: `enchantmentPercentPerLevel` (10) and `statsLookbackHours` (2) are changed through `PUT api/GameSettings`; saving the cards above keeps them. What they do and
+how: [shops admin guide § 6](admin/shops-admin-guide.md#6-settings).
+
+## Menu item
+
+The **Menu item** card (in `next`, not released; [#870](https://github.com/PandiO/knk-workspace/issues/870) on the
+page, [#871](https://github.com/PandiO/knk-workspace/issues/871) in game) sets the item players click to open the menus
+(a nether star by default) and what each click does. It replaces the plugin's `menus.menu-item.*` keys as soon as the
+game server reads the game settings; those keys are only used while the API is unreachable at the server's start
+([plugin configuration § 4.14](admin/plugin-configuration.md#414-lore-menus-crossplay)). What players see:
+[menus player guide § The menu item](users/menus-player-guide.md#the-menu-item).
+
+**Look and handling:**
+
+| Field | Default | Meaning |
+|---|---|---|
+| Menu item enabled | on | Off: nobody gets the item; a save takes it away from online players. |
+| Give on join | on | Put it back at every join when it is missing. |
+| Keep on death | on | Give it back at respawn. |
+| Droppable | off | On: dropping takes it away until the next join or respawn. |
+| Movable | off | On: it may be moved in the player's own inventory; inventory clicks then do nothing. |
+| Who gets it | All players | Or **Bedrock players only**. |
+| Material | `NETHER_STAR` | A material name such as `NETHER_STAR` or `COMPASS`. |
+| Slot | 8 | 0–8 hotbar (8 = right-most), 9–35 main inventory. |
+| Name, Lore | `&6&lMenu &7(click to open)`, `&7Opens the Knights & Kings menu (&e/menu&7).` | `&` colour codes; one lore line per row; the **Preview** shows them coloured. |
+
+The item never drops on the ground, never goes into containers and can't be placed.
+
+**Clicks.** One row each for **Left click**, **Right click**, **Shift + left click**, **Shift + right click** and
+**Click in the inventory**, with an action:
+
+1. **Open menu** with a menu key: `main` (the main menu, as `/menu`), `siege.information` (the player's siege menu,
+   as `/siege menu`), `siege.shop` (the siege shop, as `/siege shop`, with its own answers outside a match or with the
+   shop off) or any other menu key, such as `siege.overview`. The key field suggests these four.
+2. **Run command**: a player command without the slash, run as the player (for example `siege points`).
+3. **Nothing.**
+
+Seeded: every click opens `main`. Right-clicking a block that does something itself (a door, a chest) still uses the
+block unless the player sneaks.
+
+**Situation overrides.** A partial click table per situation, where **Use default** keeps the click above:
+
+| Situation | When | Seeded |
+|---|---|---|
+| **Siege Survival match** (`siege.survival.match`) | A member of a running Survival match (works once Siege Survival is merged) | Left and right click `siege.information`, shift + right click `siege.shop` |
+| **Siege match** (`siege.match`) | A member of a running PvP match | The same |
+| **Siege hub** (`siege.hub`) | At a siege's scenario hub: the team split before the match and the result after it (not while matchmaking) | Left and right click `siege.information` |
+
+The most specific situation wins: Siege Survival match, then Siege match, then Siege hub. Pick a situation and
+**Add override** to add one; **Remove <situation>** removes it. An override with every click on Use default is not
+stored.
+
+**Saving.** The card saves with the page's **Save (n)**. Before that, problems are listed under the card (**Menu
+item problems**, for example "Slot must be 0 to 35." or a menu key with spaces) and Save stays off; the API refuses
+the same (an unknown click, situation or action type, Run command without a command, a bad material name). A save
+tells the game server at once over the realtime channel (or at its next game settings read, every
+`game-settings.refresh-interval-seconds`): a new look reaches online players within seconds, in the slot they have
+it in; a new slot or a first give applies at their next join or respawn, so nothing is moved mid-fight. The log
+says `[MenuItem] Settings from the game settings page applied: NETHER_STAR in slot 8, for ALL players, 3 situation
+override(s)`.
+
+**Deploy:** migration `AddMenuItemSettings` (a null column reads the defaults above). Test steps:
+[siege shop smoke test § 5](siege-shop-smoke-test.md#5-phases-5a-and-5b-menu-item-settings-870-871-tier2).
 
 ## Picking a spawn point
 

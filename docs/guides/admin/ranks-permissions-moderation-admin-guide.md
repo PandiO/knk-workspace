@@ -1,6 +1,6 @@
 # Ranks, permissions and moderation — admin guide
 
-**Status:** Current · **Last updated:** 2026-11-18 (§ 5: moderation from the overview map, #743 in `next`, docs #766)
+**Status:** Current · **Last updated:** 2026-11-25 (§ 3.3 item 5: a group's default route mode; § 8: the `knk.navigate.mode.*` nodes, in `next`, PandiO/knk-workspace#707, #852, docs #1033); 2026-11-20 (§ 5: moderation from the map on trunk since v0.4, live-tested, docs #767); 2026-11-18 (§ 5: moderation from the overview map, #743 in `next`, docs #766)
 **Checked against:** knk-web-api `master` `75b5a00`, knk-web-app `main` `3ba747d`, knk-plugin `main` `57884e97`; not
 live-tested as a whole (the parts' own smoke tests are linked in § 9). The group Permissions panel, the PermissionGrant
 table and the profile's permission search (#50, #408, #407), and kick and ban from the web app, the unfreeze reason,
@@ -149,7 +149,12 @@ message (PandiO/knk-workspace#466). After a premium change you see which tier th
    saving the group may blank them (PandiO/knk-workspace#465): check the colours after a save.
 4. Changes to a group's **nodes** are audited and listed in the group's History (#50, since v0.3); changes to its
    **settings** (name, weight, parent, colours) and deleting a group are not (PandiO/knk-workspace#464).
-5. **All grants at once:** **Dashboard → Permission Grant** (#408, since v0.3) lists every grant and deny of every
+5. **Default route mode** (in `next`, not released; PandiO/knk-workspace#852): the group's **Default route mode** field
+   (step **Group**: Shortest, Efficient, Preferred or "None (default: Preferred)"; dashboard column **Default route**)
+   is the `/navigate` route mode its members get when they type no mode word. Of a player's groups that set one, the
+   highest weight wins. It needs no node; typing a mode word still needs `knk.navigate.mode.<word>` (§ 8). Deploy
+   steps and how it reaches the game: [navigation admin guide § 2.7](navigation-and-teleports-admin-guide.md#27-route-modes-and-a-groups-default-route-mode).
+6. **All grants at once:** **Dashboard → Permission Grant** (#408, since v0.3) lists every grant and deny of every
    player and group: ID, Node, Effect, Holder ("Group #<id>" or "User #<id>") and Expires (UTC) ("Never" without one).
    Search by node, sort by any column. It needs `knk.admin.user.manage` and is read-only: change grants on the player
    profile or the group's Permissions panel. **New** and **Edit** show but don't save a grant (#530).
@@ -184,7 +189,7 @@ they don't hold (PandiO/knk-workspace#469, not yet checked live). Until that is 
 
 ## 5. Moderation tools
 
-Freeze, unfreeze, kick and ban also work from a player's name card on the overview map (`/map`), each under its own node, with the same dialogs, endpoints and audit entries as the profile (in `next`, not released; [overview map admin guide § 6](overview-map-admin-guide.md#6-moderation-from-the-map)).
+Freeze, unfreeze, kick and ban also work from a player's name card on the overview map (`/map`), each under its own node, with the same dialogs, endpoints and audit entries as the profile (since knk-web-app v0.4, live-tested 2026-11-19; [overview map admin guide § 6](overview-map-admin-guide.md#6-moderation-from-the-map)).
 
 ### 5.1 Freeze
 
@@ -365,6 +370,7 @@ and **Recently demoted** (§ 7).
 | `knk.socialspy.exempt` | Your private messages stay hidden from spies without it | the owner |
 | `knk.pmlog.read` | Read the private-message log | the owner only |
 | `knk.notify.joinattempt` | A chat line when a join is refused | Staff |
+| `knk.navigate.mode.shortest`, `.efficient`, `.preferred` | Typing that route mode word after `/navigate <place>` (in `next`, #707; `plugin.yml` `default: op`). A group's default route mode (§ 3.3) needs none of them | no rank (no seed yet) |
 
 "Seeded on" follows the [commands reference](../users/commands.md) and the seed migrations; check your database
 before relying on it.
@@ -423,11 +429,12 @@ Never test kick and ban on a real player. For dashboard rights use the [dashboar
 
 ## Changes
 
-1. 2026-11-18: § 5: moderation from the overview map, #743 in `next`, docs #766
-2. 2026-11-15: release v0.3: "in `next`" markers of #50, #408, #407, #565 now "since v0.3"; the plugin side
+1. 2026-11-20: § 5: moderation from the overview map on trunk since knk-web-app v0.4, live-tested 2026-11-19 (docs #767)
+2. 2026-11-18: § 5: moderation from the overview map, #743 in `next`, docs #766
+3. 2026-11-15: release v0.3: "in `next`" markers of #50, #408, #407, #565 now "since v0.3"; the plugin side
    of kick and ban (#574) is in knk-plugin `v0.2`; PandiO/knk-workspace#577
-3. 2026-11-15: § 5.4 kick and ban from the web app, § 5.1 unfreeze reason and frozen since/by, § 5.6 the moderation
+4. 2026-11-15: § 5.4 kick and ban from the web app, § 5.1 unfreeze reason and frozen since/by, § 5.6 the moderation
    search's filters and sort, § 7 game sessions in the timeline, § 8–10; #565, #574 in `next`, docs #597
-4. 2026-11-15: § 3.1, § 3.3, § 7: a group's nodes with History, the PermissionGrant table, the profile's permission
+5. 2026-11-15: § 3.1, § 3.3, § 7: a group's nodes with History, the PermissionGrant table, the profile's permission
    search; #50, #408, #407 in `next`, docs #576
-5. 2026-11-13: first version, PandiO/knk-workspace#301
+6. 2026-11-13: first version, PandiO/knk-workspace#301
