@@ -1,6 +1,6 @@
 ---
 name: knk-test-writer
-description: Write the automated tests for a Knights and Kings (K&K) change and keep the developer's manual check short. Use when you implement or fix a K&K feature, write or update a smoke-test guide, fill in a PR's Testing section, or backfill tests for an existing smoke test. Covers sorting each behaviour or smoke step into a suite (Playwright e2e with a mocked API in knk-web-app, Jest, API xUnit tests, plugin knk-core JUnit, plugin MockBukkit/Mockito, plugin scenarios on a real Paper server, or manual only), where each suite lives and how to run it, the smoke-guide format (every step in full, automated steps tagged), and the PR Testing section.
+description: Write the automated tests for a Knights and Kings (K&K) change and keep the developer's manual check short. Use when you implement or fix a K&K feature, write or update a smoke-test guide, fill in a PR's Testing section, or backfill tests for an existing smoke test.
 ---
 
 # K&K test writer: automated first

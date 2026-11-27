@@ -1,6 +1,6 @@
 ---
 name: knk-design
-description: Run a Knights and Kings (K&K) design session. Use when asked to design a K&K feature, work out an idea that needs design, write or update a feature spec (`docs/specs/<feature>/DESIGN.md`), weigh a framework, library or service choice in a decision matrix, or act on the developer's approval of a design. Covers reading the vision, related specs and legacy V1/V2 behaviour, asking questions one at a time with the ask-user prompt, the spec with status header, decision log and numbered open questions (status Proposed), platform independence, and on approval: status Decided, phases with tiered sub-issues, each phase's first smoke-test guide section, the draft chain charter and the handoff to the manager. Templates for DESIGN.md, the decision matrix, the smoke-test section and the sub-issue are in this folder.
+description: Run a Knights and Kings (K&K) design session. Use when asked to design a K&K feature, work out an idea that needs design, write or update a feature spec (`docs/specs/<feature>/DESIGN.md`), weigh a framework, library or service choice in a decision matrix, or act on the developer's approval of a design.
 ---
 
 # K&K design session
