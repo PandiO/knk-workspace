@@ -79,7 +79,8 @@ default branch and only the developer merged [D4](decision-history.md#d4).
    **Outside a chain** the PR's own session merges once: CI green on its head; its automated tests ship with it; every
    Codex finding is handled (rule 4); the issue has a `tier:` label (a `documentation` issue is `tier:1`, labelled at
    creation); `tier:3` work is behind an off-by-default flag; the essential docs ship with it
-   [D5](decision-history.md#d5). The issue stays `status:in-review` until promotion.
+   [D5](decision-history.md#d5). In the merge turn it unsubscribes from the PR and cancels its `send_later` check-ins
+   (knk-docs-session § 4.4). The issue stays `status:in-review` until promotion.
 4. **Codex findings first** [D6](decision-history.md#d6). The merging session reads every inline Codex finding. Codex
    reviews on open or ready only: after a push that changes content, comment `@codex review` and wait. Fix what is real
    and in scope, else answer on the thread why not (not a bug, or out of scope with the issue filed); resolve the
