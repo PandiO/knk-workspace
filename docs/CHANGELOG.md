@@ -4,6 +4,14 @@ This is a human-readable record of capabilities merged into the V3 default branc
 
 ## Unreleased — on feature branches, not merged
 
+- **Session token audit procedure** ([PandiO/knk-workspace#1019](https://github.com/PandiO/knk-workspace/issues/1019),
+  link L0 of the token efficiency chain, [#987](https://github.com/PandiO/knk-workspace/issues/987)) — no game change;
+  developer-facing. knk-workspace branch `claude/token-audit-1019` (PR into `main`). New
+  `docs/ai-agents/session-token-audit.md`: a step-by-step recipe to measure a finished cloud session from its
+  transcript (cost, turns, start and end context, re-read tokens, instructions and code read, read before the first
+  edit, Edit-tool vs Bash edits with output tokens per edit, wake-ups after the work was done), with the 2026-11-22
+  baseline as the reference. The first rerun, on 3 links, is in a dated report on `next`.
+  1. Admin steps: none.
 - **An NPC's route has the same shape wherever it lies: the quarry-to-keep replay no longer fails east of world x
   32768** ([PandiO/knk-workspace#958](https://github.com/PandiO/knk-workspace/issues/958), tier:2, fix link L3b of
   [#976](https://github.com/PandiO/knk-workspace/issues/976); branch `claude/npc-replay-958` in knk-plugin, no flag).
