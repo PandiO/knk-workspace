@@ -1,7 +1,7 @@
 # Domain access (AllowEntry / AllowExit) — enforcement on the game server
 
 **Status:** Implemented, **live-tested by the developer and merged to trunk 2026-10-08** (knk-plugin `main` `790c662`, knk-web-api `master` `be7b70e`; feature commits `dfffcb7` / `32fca08`). Refusal-in-chat follow-up [KNG-74](https://linear.app/kngpandi/issue/KNG-74) live-tested and merged 2026-10-09 (knk-plugin `main` `fd869aa`, feature commit `a608aa7`). Linear [KNG-56](https://linear.app/kngpandi/issue/KNG-56) (follows [KNG-55](https://linear.app/kngpandi/issue/KNG-55))
-**Last updated:** 2026-10-26 (§ 7 storage bypass and effect damage, alpha run 1 package C, #157/#162, in review on `claude/alpha-run-1-permissions`, not merged); 2026-10-23 (`knk-domain-id` and domain sub-regions, KNG-255, merged and live-tested: knk-plugin `9dfd7aae`); 2026-10-09 (KNG-74 merged; live checklist §6 item 9 passed)
+**Last updated:** 2026-11-22 (§ 7 effect damage: landmarks never count, on `next`, PandiO/knk-workspace#976, docs #1008); 2026-10-26 (§ 7 storage bypass and effect damage, alpha run 1 package C, #157/#162, in review on `claude/alpha-run-1-permissions`, not merged); 2026-10-23 (`knk-domain-id` and domain sub-regions, KNG-255, merged and live-tested: knk-plugin `9dfd7aae`); 2026-10-09 (KNG-74 merged; live checklist §6 item 9 passed)
 **Decision record:** [`reports/2026-10-06-domain-access-enforcement-options.md`](../reports/2026-10-06-domain-access-enforcement-options.md) (option C chosen by the developer on 2026-10-06)
 **Related:** [`managed-worldguard-regions.md`](managed-worldguard-regions.md) (parent/priority/category flags on the same regions); KNG-57 (SignalR push), KNG-58 (offline cache for other data)
 
@@ -128,3 +128,8 @@ Not part of AllowEntry/AllowExit, but enforced on the same domain regions. Pushe
   registered in `onLoad`, resolved the WorldGuard way) decides when set; unset, a spot where `pvp` resolves to `allow`
   keeps effect damage. Siege members whose lobby is at the hub or in a match keep the siege's rules. Domains come from
   the cached region-to-domain map (fail open, as the KNG-11 safezone). Rule: `knk-core/.../regions/DomainEffectDamage`.
+  **Landmarks never count** ([#976](https://github.com/PandiO/knk-workspace/issues/976), landmark-domain DESIGN LD03,
+  LD12; knk-plugin `next` `14645895`): when every domain at the spot is a landmark (type `Landmark`), effect damage is
+  not stopped, so a landmark in the wilderness hurts as outside it. Inside a town (or any other domain) the other
+  domain decides as before, so a landmark there keeps that domain's rule. Entry and exit (§ 1–§ 6) apply to a
+  landmark's own region like to any domain's.

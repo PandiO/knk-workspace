@@ -1,6 +1,6 @@
 # Currency, kits, lootboxes and discoveries — Admin Guide
 
-**Status:** Current · **Last updated:** 2026-11-13 (first version, PandiO/knk-workspace#300)
+**Status:** Current · **Last updated:** 2026-11-21 (§ 2 and § 2.3: reason codes `SHOP_PURCHASE` and `SHOP_BUYBACK` with the town account, not reversible, knk-web-api `next` `289f4d4b`, #248, docs PandiO/knk-workspace#939); 2026-11-21 (§ 3.4 and § 4.8: kit and lootbox leftovers to the reward inbox with `production.enabled`, knk-plugin `next` `bdd8b463`, #684, docs PandiO/knk-workspace#915); 2026-11-21 (§ 2: reason code `SIEGE_UNLOCK`, knk-web-api `next` `fc1a5143`, #869, docs PandiO/knk-workspace#908); 2026-11-13 (first version, PandiO/knk-workspace#300)
 **Checked against:** knk-plugin `main` `57884e9`, knk-web-api `master` `75b5a00`, knk-web-app `main` `3ba747d` (desk
 check of the code, not a live test; the settings pages of #26 are not live-tested either)
 **Related:** [economy player guide](../users/economy-player-guide.md) (what players see; not repeated here),
@@ -60,7 +60,10 @@ grant is what counts):
 ## 2. Currency
 
 Every change of coins, gems or XP is a **ledger** transaction with a reason code (`SALARY`, `PLAYER_TRANSFER`,
-`DISCOVERY_REWARD`, `SIEGE_REWARD`, `KIT_CLAIM_COST`, `KIT_PURCHASE`, `TELEPORT_FEE`, `ADMIN_GRANT`, …). Balances are
+`DISCOVERY_REWARD`, `SIEGE_REWARD`, `SIEGE_UNLOCK` (a siege weapon unlock, in `next`, see the
+[siege shop admin guide § 4](siege-shop-admin-guide.md#4-siege-weapon-unlocks)), `SHOP_PURCHASE` and `SHOP_BUYBACK`
+(a town shop purchase or buy-back, paid to or from the town's account, in `next`, see the [shops admin
+guide § 5.3](shops-admin-guide.md#53-the-town-account)), `KIT_CLAIM_COST`, `KIT_PURCHASE`, `TELEPORT_FEE`, `ADMIN_GRANT`, …). Balances are
 never edited directly.
 
 ### 2.1 Currency policy
@@ -118,7 +121,9 @@ In game: `/knk user <player> coins|gems set|add|remove <amount> <reason…>`. Yo
    entries. **Reverse this transaction:** a reason of at least 10 characters, optionally **Allow a partial reversal
    (reverse what is left)** when the player spent part of it, then **Reverse**. There is no confirm yet: check
    before you click ([#459](https://github.com/PandiO/knk-workspace/issues/459)). The player isn't notified. In game:
-   `/knk currency reverse <txId> [--partial] <reason…>`.
+   `/knk currency reverse <txId> [--partial] <reason…>`. A shop purchase or buy-back (`SHOP_PURCHASE`,
+   `SHOP_BUYBACK`, in `next`) can't be reversed: it has a town account leg, and the API refuses with `NotReversible`
+   ([#934](https://github.com/PandiO/knk-workspace/issues/934)).
 3. **Payments lock:** the profile's **Payments** card, **Lock payments** with a reason (up to 200 characters), or
    `/knk currency lock <player> <reason…>`. A locked player can't send or receive `/pay`; staff grants still work.
 
@@ -187,8 +192,9 @@ tooltip) uses the plugin's cache: up to 60 seconds (`cache.ttl-seconds`), or at 
 ### 3.4 Giving a kit
 
 1. In game: `/kit give <player> <kit name>` (`knk.kit.give`), for an online player. It skips gating, cooldown and price
-   and places the items like a claim (leftovers dropped at their feet). It starts their cooldown. The console can't
-   use it.
+   and places the items like a claim (leftovers dropped at their feet; with the reward inbox on, in `next`, they go to
+   the player's inbox, see the [reward inbox admin guide](reward-inbox-admin-guide.md)). It starts their cooldown. The
+   console can't use it.
 2. Web app: the profile's **Kits** card lists each kit's status, cooldown and cost for that player. **Grant** (needs
    `knk.kit.give`) records the claim, the audit entry and the kit's lootbox tokens and starts the cooldown, but on the
    released plugin **the items never reach the player** ([#261](https://github.com/PandiO/knk-workspace/issues/261)).
@@ -292,6 +298,9 @@ The game server re-reads the lootbox settings and active boxes every `lootboxes.
 `realtime.enabled: true` (off by default) a save is pushed at once; a despawn or revoke always arrives within seconds.
 `/knk lootbox reload` re-reads `config.yml` and refreshes from the API. The `lootboxes:` keys (display, reel, claim
 distance, full inventory, staff mode) are in [plugin configuration § 4.21](plugin-configuration.md#421-lootboxes).
+With `production.enabled: true` (knk-plugin `next`, not released) stackable leftovers of an opening go to the player's
+reward inbox instead of dropping owner-locked; the claim then shows Inventory (or Redelivered) with the note
+`N to the reward inbox (delivery #<id>)` ([reward inbox admin guide](reward-inbox-admin-guide.md)).
 
 ## 5. Discoveries
 

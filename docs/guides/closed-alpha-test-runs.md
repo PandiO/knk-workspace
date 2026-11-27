@@ -1,7 +1,7 @@
 # Closed alpha test runs — how they are numbered, prepared, run and reported
 
 **Status:** Current (developer agreed 2026-11-03)
-**Last updated:** 2026-11-10 (run 1's folder renamed to `test-run-1/`); 2026-11-03
+**Last updated:** 2026-11-16 (link to the balance test plan template); 2026-11-10 (run 1's folder renamed to `test-run-1/`); 2026-11-03
 **Issues:** [PandiO/knk-workspace#149](https://github.com/PandiO/knk-workspace/issues/149) (run 1 findings)
 
 How closed-alpha test runs with testers are numbered, where their documents live, what a preparation plan contains
@@ -59,6 +59,10 @@ once the previous run's fixes are in review. It has these sections:
    and rewards) so runs can be compared, a few open questions, and platform (Java / console, first session or not).
 6. **Reporting and triage:** the report template, priorities and the known issues (§ 5).
 7. **After the run:** the steps in § 6.
+
+For runs that test **balance or usability**, also copy the [alpha balance test plan template](alpha-balance-test-plan-template.md)
+into the run's folder as `test-run-<n>-balance-plan.md`: target numbers, gear tiers, a round plan that changes one
+thing at a time, the data to collect and scripted usability tasks (added 2026-11-16).
 
 ## 4. Running the session
 
