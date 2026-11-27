@@ -59,14 +59,39 @@ Duplicate guard ("already archived")
     merging an archive branch and keeping the other side's board; see the
     archive README, "Merging a branch that ran the script".
 
+Finished "In progress" rows (--flag, --move)
+    --flag lists the rows of "## In progress" that look finished, by line
+    number, and writes nothing:
+    1. "issue closed": every knk-workspace issue the row links is closed. The
+       closed issues come from --closed N,N,... or, with --gh, from the GitHub
+       search API through the gh CLI (an issue that is not open is closed).
+       Rows without a knk-workspace issue link are never flagged this way.
+    2. "text says finished": the Status cell or a bold span of the Feature
+       cell says merged, done, closed, deployed, installed or fast-forwarded,
+       and none of them says in review, waiting, in progress, running,
+       paused, blocked or not merged.
+    It also lists rows longer than --max-row characters (default 400) or
+    spanning several lines, which break the one-line rule. A flag is a hint:
+    a row that is merged but waits for the developer's test is in review,
+    not finished, so a person or the manager run decides. --board - reads the
+    board from stdin, for example from git show origin/main:docs/...
+    --move L,L,... moves the "In progress" rows on those board lines (as
+    --flag prints them) into the archive, verbatim. They go to the archive
+    file of the month of --today (the day they were found finished; the
+    finish day itself is unknown), under the six-column header, and the
+    board loses exactly those lines. The safety checks below apply, with
+    check 4 read as "unchanged apart from the moved lines".
+
 Modes
     (default)   move the entries and write the files.
     --dry-run   plan and verify, print what would change, write nothing.
     --check     exit 1 if the board has entries waiting to be archived,
                 0 if not; writes nothing.
+    --flag      list finished-looking and too-long "In progress" rows;
+                exit 1 if any, 0 if not; writes nothing.
 
-Exit codes: 0 done / nothing to do, 1 --check found entries, 2 error or
-verification failure (nothing written). Running it twice in a row changes
+Exit codes: 0 done / nothing to do, 1 --check or --flag found entries, 2
+error or verification failure (nothing written). Running it twice in a row changes
 nothing the second time. Python 3 standard library only.
 """
 
@@ -75,7 +100,9 @@ from __future__ import annotations
 import argparse
 import datetime as _dt
 import os
+import json
 import re
+import subprocess
 import sys
 import tempfile
 from collections import Counter
@@ -98,6 +125,18 @@ SCAFFOLD_PATTERNS = (
     re.compile(r"^## (Entries|Table rows)\s*$"),
 )
 UNDATED = "undated"
+IN_PROGRESS_RE = re.compile(r"^## In progress\s*$", re.IGNORECASE)
+ISSUE_RE = re.compile(r"knk-workspace(?:#|/issues/)(\d+)")
+BOLD_RE = re.compile(r"\*\*(.+?)\*\*")
+FINISHED_RE = re.compile(
+    r"\b(merged|done|closed|deployed|installed|fast-forwarded)\b", re.IGNORECASE
+)
+OPEN_RE = re.compile(
+    r"\b(in review|waiting|in progress|running|paused|blocked|not merged|not deployed)\b",
+    re.IGNORECASE,
+)
+DEFAULT_MAX_ROW = 400
+GH_REPO = "PandiO/knk-workspace"
 INDEX_START = "<!-- archive-index:start -->"
 INDEX_END = "<!-- archive-index:end -->"
 
@@ -112,9 +151,12 @@ class Entry:
     lines: list[str]
     header: tuple[str, str] | None = None
     date: str | None = field(default=None)
+    month_override: str | None = None
 
     @property
     def month(self) -> str:
+        if self.month_override:
+            return self.month_override
         return self.date[:7] if self.date else UNDATED
 
 
@@ -356,6 +398,8 @@ class Plan:
     archives_new: dict[Path, str]
     moved: Counter
     duplicates: list[tuple[str, str]] = field(default_factory=list)
+    board_cut: str | None = None  # board_old without the rows moved from "In progress"
+    moved_from_board: list[str] = field(default_factory=list)
 
     @property
     def changed(self) -> bool:
@@ -384,15 +428,28 @@ def already_archived(entries: list[Entry], archive_dir: Path) -> list[tuple[str,
     return found
 
 
-def plan(board_path: Path, archive_dir: Path, today: str) -> Plan:
+def plan(
+    board_path: Path, archive_dir: Path, today: str, move_lines: list[int] | None = None
+) -> Plan:
     board_old = board_path.read_text(encoding="utf-8")
-    before, section, after = split_board(board_old)
+    moved_rows: list[Entry] = []
+    if move_lines:
+        board_old_lines = board_old.split("\n")
+        moved_rows = rows_to_move(board_old, move_lines, today)
+        drop = {n - 1 for n in move_lines}
+        board_cut = "\n".join(l for i, l in enumerate(board_old_lines) if i not in drop)
+    else:
+        board_cut = board_old
+    before, section, after = split_board(board_cut)
     kept, entries = parse_block(section[1:])
+    entries = moved_rows + entries
     moved = Counter(e.month for e in entries)
     archives_old: dict[Path, str | None] = {}
     archives_new: dict[Path, str] = {}
     if not entries:
         return Plan(board_old, board_old, archives_old, archives_new, moved)
+    # rows moved from "In progress" are checked against the board without them
+    moved_from_board = [l for e in moved_rows for l in e.lines]
     duplicates = already_archived(entries, archive_dir)
 
     for month in sorted(moved):
@@ -411,7 +468,10 @@ def plan(board_path: Path, archive_dir: Path, today: str) -> Plan:
 
     new_section = render_board_section([section[0], ""] + kept)
     board_new = "\n".join(before + new_section + after)
-    return Plan(board_old, board_new, archives_old, archives_new, moved, duplicates)
+    p = Plan(board_old, board_new, archives_old, archives_new, moved, duplicates)
+    p.board_cut = board_cut
+    p.moved_from_board = moved_from_board
+    return p
 
 
 def check_duplicates(p: Plan) -> None:
@@ -460,8 +520,12 @@ def verify(p: Plan) -> None:
     check_duplicates(p)
     problems: list[str] = []
 
-    # 4. Board outside the section unchanged.
-    b0, s0, a0 = split_board(p.board_old)
+    # 4. Board outside the section unchanged (apart from rows moved by --move).
+    b0, s0, a0 = split_board(p.board_cut or p.board_old)
+    if p.board_cut is not None:
+        cut, old = _nonblank(p.board_cut), _nonblank(p.board_old)
+        if old - cut != Counter(l for l in p.moved_from_board if l.strip()) or cut - old:
+            problems.append("--move removed other lines than the moved rows")
     b1, s1, a1 = split_board(p.board_new)
     if b0 != b1 or a0 != a1:
         problems.append('board changed outside "## Recently completed"')
@@ -514,6 +578,115 @@ def verify(p: Plan) -> None:
 
 
 # --------------------------------------------------------------------------
+# "In progress" rows: flagging finished ones and moving them
+
+
+@dataclass
+class Row:
+    lineno: int  # 1-based line on the board
+    line: str
+    one_line: bool  # False when the next line continues the row
+
+
+def in_progress_rows(text: str) -> tuple[list[Row], tuple[str, str] | None]:
+    """Return the rows of the "## In progress" table and its header."""
+    lines = text.split("\n")
+    start = next((i for i, l in enumerate(lines) if IN_PROGRESS_RE.match(l)), None)
+    if start is None:
+        raise ArchiveError('board has no "## In progress" section')
+    rows: list[Row] = []
+    header = None
+    i = start + 1
+    while i < len(lines) and not lines[i].startswith("## "):
+        if header is None and is_header_at(lines, i):
+            header = (lines[i], lines[i + 1])
+            i += 2
+            continue
+        if header is not None and lines[i].lstrip().startswith("|"):
+            nxt = lines[i + 1] if i + 1 < len(lines) else ""
+            cont = bool(nxt.strip()) and not nxt.lstrip().startswith(("|", "#"))
+            rows.append(Row(i + 1, lines[i], not cont))
+        i += 1
+    return rows, header
+
+
+def linked_issues(row: Row) -> set[int]:
+    return {int(n) for n in ISSUE_RE.findall(row.line)}
+
+
+def flag_row(row: Row, closed: set[int] | None, max_row: int) -> list[str]:
+    """Reasons why a row looks finished or breaks the one-line rule."""
+    cells = split_cells(row.line)
+    reasons: list[str] = []
+    issues = linked_issues(row)
+    if closed is not None and issues and issues <= closed:
+        reasons.append("issue closed: " + ", ".join(f"#{n}" for n in sorted(issues)))
+    status = [cells[3]] if len(cells) > 3 else []
+    status += BOLD_RE.findall(cells[0]) if cells else []
+    said = " ".join(status)
+    if FINISHED_RE.search(said) and not OPEN_RE.search(said):
+        reasons.append("text says finished")
+    if len(row.line) > max_row:
+        reasons.append(f"too long ({len(row.line)} > {max_row} characters)")
+    if not row.one_line:
+        reasons.append("spans several lines")
+    return reasons
+
+
+def flag(text: str, closed: set[int] | None, max_row: int) -> list[tuple[Row, list[str]]]:
+    rows, _ = in_progress_rows(text)
+    out = []
+    for row in rows:
+        reasons = flag_row(row, closed, max_row)
+        if reasons:
+            out.append((row, reasons))
+    return out
+
+
+def gh_open_issues(repo: str = GH_REPO) -> set[int]:
+    """Open issue numbers of the repo, from the GitHub search API through gh."""
+    cmd = [
+        "gh", "api", "-X", "GET", "search/issues",
+        "-f", f"q=repo:{repo} is:issue is:open", "-f", "per_page=100",
+        "--paginate", "--jq", ".items[].number",
+    ]
+    try:
+        res = subprocess.run(cmd, capture_output=True, text=True, check=True, timeout=120)
+    except (OSError, subprocess.SubprocessError) as exc:
+        raise ArchiveError(f"gh could not list the open issues: {exc}") from exc
+    return {int(n) for n in res.stdout.split() if n.isdigit()}
+
+
+def rows_to_move(text: str, move_lines: list[int], today: str) -> list[Entry]:
+    """Entries for the "In progress" rows on the given board lines."""
+    rows, header = in_progress_rows(text)
+    by_line = {r.lineno: r for r in rows}
+    out = []
+    for n in move_lines:
+        row = by_line.get(n)
+        if row is None:
+            raise ArchiveError(f'line {n} is not a row of the "## In progress" table')
+        if not row.one_line:
+            raise ArchiveError(f"line {n} is a row spanning several lines; move it by hand")
+        e = Entry("row", [row.line], header=header, month_override=today[:7])
+        e.date = entry_date(e)
+        out.append(e)
+    return out
+
+
+def print_flags(flags: list[tuple[Row, list[str]]]) -> None:
+    finished = [r for r, why in flags if any(w.startswith(("issue", "text")) for w in why)]
+    for row, why in flags:
+        label = split_cells(row.line)[0].strip() if row.line else ""
+        print(f"line {row.lineno}: {'; '.join(why)}")
+        print(f"    {label[:100]}")
+    if finished:
+        lines = ",".join(str(r.lineno) for r in finished)
+        print(f"{len(finished)} row(s) look finished. Check each (a row in review is not finished), then:")
+        print(f"    python3 scripts/sessions-archive/archive_sessions.py --dry-run --move {lines}")
+
+
+# --------------------------------------------------------------------------
 # Index and writing
 
 
@@ -561,11 +734,34 @@ def main(argv: list[str] | None = None) -> int:
     mode = ap.add_mutually_exclusive_group()
     mode.add_argument("--dry-run", action="store_true", help="show the plan, write nothing")
     mode.add_argument("--check", action="store_true", help="exit 1 if entries wait to be archived")
+    mode.add_argument("--flag", action="store_true", help='list finished-looking "In progress" rows')
+    ap.add_argument("--closed", help="--flag: closed issue numbers, comma separated")
+    ap.add_argument("--gh", action="store_true", help="--flag: read open issues with the gh CLI")
+    ap.add_argument("--max-row", type=int, default=DEFAULT_MAX_ROW, help="--flag: row length cap")
+    ap.add_argument("--move", help='move these "In progress" board lines (comma separated)')
     args = ap.parse_args(argv)
     today = args.today or _dt.date.today().isoformat()
 
     try:
-        p = plan(args.board, args.archive_dir, today)
+        if args.flag:
+            text = sys.stdin.read() if str(args.board) == "-" else args.board.read_text(encoding="utf-8")
+            closed: set[int] | None = None
+            if args.closed:
+                closed = {int(n) for n in args.closed.replace(" ", "").split(",") if n}
+            if args.gh:
+                rows, _ = in_progress_rows(text)
+                refs = set().union(*(linked_issues(r) for r in rows)) if rows else set()
+                closed = (closed or set()) | (refs - gh_open_issues())
+            flags = flag(text, closed, args.max_row)
+            if closed is None:
+                print("issue state not checked (pass --closed or --gh)")
+            if not flags:
+                print("no rows flagged")
+                return 0
+            print_flags(flags)
+            return 1
+        move = [int(n) for n in args.move.split(",") if n.strip()] if args.move else None
+        p = plan(args.board, args.archive_dir, today, move)
         if args.check:
             n = sum(p.moved.values())
             print(f"{n} entr{'y' if n == 1 else 'ies'} waiting to be archived")
