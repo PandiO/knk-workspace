@@ -156,6 +156,11 @@ All of these must hold:
     lists them, and the smoke-test guide keeps every step in full with the automated ones tagged (knk-test-writer § 4). A
     page change with only unit tests, a shortened or dropped guide step, or an untagged step
     a suite could run, sends the link back.
+12. **Reuse** (PandiO/knk-workspace#978): where the link builds something a system in the
+    [reuse catalogue](../../../docs/architecture/reusable-systems.md) covers (entity create/edit, detail views,
+    world-bound fields, relation pickers, validation, regions), it uses that system, or the spec's "Reuse" section or
+    the link block has a decision row saying why not that fits the catalogue's "exception when". A hand-built
+    replacement with no such row sends the link back.
 
 ## 7. Merging into `next` (only once § 1.3 says the branch model applies)
 
