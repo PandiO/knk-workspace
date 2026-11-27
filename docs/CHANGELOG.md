@@ -4,6 +4,15 @@ This is a human-readable record of capabilities merged into the V3 default branc
 
 ## Unreleased — on feature branches, not merged
 
+- **Session token audit procedure** ([PandiO/knk-workspace#1019](https://github.com/PandiO/knk-workspace/issues/1019),
+  link L0 of the token efficiency chain, [#987](https://github.com/PandiO/knk-workspace/issues/987)) — no game change;
+  developer-facing. knk-workspace branch `claude/token-audit-1019` (PR into `main`). New
+  `docs/ai-agents/session-token-audit.md`: a step-by-step recipe to measure a finished cloud session from its
+  transcript (cost, turns, start and end context, re-read tokens, instructions and code read, read before the first
+  edit, Edit-tool vs Bash edits with output tokens per edit, wake-ups after the work was done), with the 2026-11-22
+  baseline as the reference. The first rerun, on 3 links, is in a dated report on `next`.
+  1. Admin steps: none.
+
 - **Overview map: moderation from the map** ([PandiO/knk-workspace#743](https://github.com/PandiO/knk-workspace/issues/743),
   link L9 of the overview map chain, [#732](https://github.com/PandiO/knk-workspace/issues/732)). knk-web-app and
   knk-workspace branches `claude/overview-map-moderation` (PRs into `next`). No flag of its own: it needs the live
