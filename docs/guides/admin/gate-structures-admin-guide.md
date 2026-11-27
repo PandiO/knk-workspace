@@ -1,6 +1,6 @@
 # Gate Structures — Admin Guide
 
-**Status:** Current · **Last updated:** 2026-11-18 (§ Commands: gate commands from the overview map, #741/#742 in `next`, docs #766)
+**Status:** Current · **Last updated:** 2026-11-20 (§ Commands: gate commands from the map on trunk since v0.4, docs #767); 2026-11-18 (§ Commands: gate commands from the overview map, #741/#742 in `next`, docs #766)
 **Companion docs:** `docs/architecture/gate-structures-design.md` (mechanics), `docs/guides/developer/gate-structures-developer-guide.md` (implementation)
 
 Everything a server admin needs to configure, author, and operate gate structures — in-game commands, permissions, `config.yml` tuning, and how to author a new gate through the web app.
@@ -19,7 +19,7 @@ There's no dedicated "Gate" page — gates are managed through the generic admin
 
 ## Commands
 
-Staff holding `knk.gate.admin` can also open, close, toggle and repair a gate or one door from its panel on the overview map (`/map`): the same operations, refused during a siege match, audited as `GateCommandSent` (in `next`, behind `Map:GateCommands:Enabled`, off by default; [overview map admin guide § 5](overview-map-admin-guide.md#5-gate-commands-from-the-map-knkgateadmin)).
+Staff holding `knk.gate.admin` can also open, close, toggle and repair a gate or one door from its panel on the overview map (`/map`): the same operations, refused during a siege match, audited as `GateCommandSent` (since knk-web-api and knk-web-app v0.4, behind `Map:GateCommands:Enabled`, off by default; [overview map admin guide § 5](overview-map-admin-guide.md#5-gate-commands-from-the-map-knkgateadmin)).
 
 All under `/knk gate ...`. A door is selected either by a bare id/name (when globally unique, or the structure has only one door) or `<gateStructure> <gateDoor>`.
 
@@ -94,7 +94,8 @@ Changing `rotationGapFill.rasterization-enabled` and the `world-sync`/`state-syn
 
 ## Changes
 
-1. 2026-11-18: § Commands: gate commands from the overview map, #741/#742 in `next`, docs #766
-2. 2026-10-25: troubleshooting: an invincible gate refuses ignition
-3. 2026-10-23: open-door scan in step 5: empty open-door anchor, seed v3, scan refusal, KNG-268/270/271; decorated doors and jam troubleshooting, KNG-272/KNG-273
-4. 2026-10-22: `gates.damage-cracks`; rest based on a full read-only code scan of `knk-plugin` `main`@`e6e428b` and `knk-web-app` `main`@`4ff5dc6`
+1. 2026-11-20: § Commands: gate commands from the overview map on trunk since v0.4 (docs #767)
+2. 2026-11-18: § Commands: gate commands from the overview map, #741/#742 in `next`, docs #766
+3. 2026-10-25: troubleshooting: an invincible gate refuses ignition
+4. 2026-10-23: open-door scan in step 5: empty open-door anchor, seed v3, scan refusal, KNG-268/270/271; decorated doors and jam troubleshooting, KNG-272/KNG-273
+5. 2026-10-22: `gates.damage-cracks`; rest based on a full read-only code scan of `knk-plugin` `main`@`e6e428b` and `knk-web-app` `main`@`4ff5dc6`
