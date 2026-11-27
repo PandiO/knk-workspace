@@ -4,6 +4,16 @@ This is a human-readable record of capabilities merged into the V3 default branc
 
 ## Unreleased — on feature branches, not merged
 
+- **Reuse catalogue and reuse check** ([PandiO/knk-workspace#978](https://github.com/PandiO/knk-workspace/issues/978),
+  link L5 of the token efficiency chain, [#987](https://github.com/PandiO/knk-workspace/issues/987)) — no game change;
+  developer-facing. New `docs/architecture/reusable-systems.md` (branch `claude/reuse-catalogue-978-next`, PR into
+  `next`): FormWizard and form/display configurations, relation pickers, validation, world tasks with WorldGuard
+  regions and the plugin/web app building blocks, each with "required when", "exception when", entry points and
+  current specs. Workflow files (branch `claude/reuse-catalogue-978`, PR into `main`): a required "Reuse" step and
+  DESIGN template section in `knk-design`, a reuse check in `knk-coordinator` § 6.12, pointers in `knk-link`, the
+  code-recipe skills and the global instructions.
+  1. Admin steps: none.
+
 - **Finished sessions stop watching their pull requests** ([PandiO/knk-workspace#1026](https://github.com/PandiO/knk-workspace/issues/1026),
   link L3 of the token efficiency chain, [#987](https://github.com/PandiO/knk-workspace/issues/987)) — no game change;
   developer-facing. knk-workspace branch `claude/token-wakeups-1026` (PR into `main`). A chain link unsubscribes from

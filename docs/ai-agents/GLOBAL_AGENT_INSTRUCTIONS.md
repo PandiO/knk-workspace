@@ -37,6 +37,8 @@ spec and default branches before interpreting older priority notes.
    historical evidence. They are snapshots, not standing instructions. Before
    resuming one, recheck its branch, commits, issue, tracker row, plan, and
    current default branch. Reconcile any drift and record what changed.
+6. Before designing or building forms, detail views, pickers, validation or world capture, read the
+   [reuse catalogue](../architecture/reusable-systems.md); an opt-out is a logged decision (PandiO/knk-workspace#978).
 
 If sources conflict and no developer decision resolves it, surface the
 specific conflict and choose a reversible course where possible. Do not
