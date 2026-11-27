@@ -149,10 +149,15 @@ The board is `docs/ACTIVE_SESSIONS.md` on knk-workspace `main` (DESIGN § 8). Ru
 in a detached worktree on `origin/main`; commit only the board and archive files; push `HEAD:main`; on a rejected push fetch, rebase that one
 commit and keep both sides of any conflict.
 
-1. **Finished rows.** A row is finished when its status says done, merged and closed, or archived, or when every issue
-   it names is closed and it names no open pull request. Move it verbatim under "Recently completed", then run
-   `python3 scripts/sessions-archive/archive_sessions.py --dry-run` and, if the plan is right, without `--dry-run`;
-   the script picks each row's month and checks that no line is lost (see the archive README). Never edit a row's text.
+1. **Finished rows**, every run. A row is finished when its status says done, merged and closed, or archived, or when
+   every issue it names is closed and it names no open pull request; a row whose work is merged but waits for the
+   developer's test is in review, not finished. In the worktree run
+   `python3 scripts/sessions-archive/archive_sessions.py --flag --gh`: it lists the rows that look finished, with
+   their board line numbers, and rows over 400 characters. Check each flagged row against the rule, then
+   `... --dry-run --move <lines>` and, if the plan is right, the same without `--dry-run`: the rows go verbatim into
+   the current month's archive file and the script checks that no line is lost (see the archive README). Rows left
+   under "Recently completed" are moved by a plain run (no `--move`). Never edit a row's text; a too-long row of a
+   running session is listed in the digest for its owner to shorten.
 2. **Stale claims:** an "In progress" row whose last-updated date is more than three days old and that is not finished.
    Check its branch (`git ls-remote`) and issue: activity in the last three days (commits, comments, pull requests)
    means it is alive; list it as stale only otherwise. Do not archive or edit a stale row on your own; list it in the

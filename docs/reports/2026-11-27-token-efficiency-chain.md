@@ -1,6 +1,6 @@
 # Token efficiency chain — progress report
 
-**Status:** Running (2026-11-27) · **Last updated:** 2026-11-27 (L0, L3 merged; L1, L2, L4, L5 running)
+**Status:** Running (2026-11-27) · **Last updated:** 2026-11-27 (L0, L3, L5 merged; L1, L2, L4 running)
 
 **Issue:** [PandiO/knk-workspace#987](https://github.com/PandiO/knk-workspace/issues/987), links
 [#1019](https://github.com/PandiO/knk-workspace/issues/1019) (L0),
@@ -25,10 +25,10 @@
 |---|---|---|---|---|---|---|
 | L0 session token audit procedure | #1019 | Merged into `main` (#1037, `39525374`) and `next` (#1038 `db35f876`; sync #1040 `b2e454f8`) | `claude/token-audit-1019`: `f6dba762`; `claude/token-audit-1019-next`: `c91e7539` | [#1037](https://github.com/PandiO/knk-workspace/pull/1037) (`main`), [#1038](https://github.com/PandiO/knk-workspace/pull/1038) (`next`) | none (docs; Codex at usage limit, skipped) | create_session `session_01R1w2UuT7VcXg1qRF2cqKDV` (§ 3.3) |
 | L1 slim the session board | #1020 | In review (PR open, not merged) | `claude/token-board-1020`: `e18c07cf` (base `main`) | [#1047](https://github.com/PandiO/knk-workspace/pull/1047) (`main`) | none (docs and script) | create_session `session_01R1w2Uv7GQxAnY971aP5hiH` (§ 3.6) |
-| L2 lighter start-up reading | #1021 | Running | — | — | — | create_session `session_01R1w2UtvxHHSbCHYZ2ZsheW` (§ 3.6) |
+| L2 lighter start-up reading | #1021 | In review (PR open, not merged) | `claude/token-startup-1021`: `584d315b` (6 commits + 2 merges of `main`, last `5cd56b0d`) | [#1046](https://github.com/PandiO/knk-workspace/pull/1046) (`main`) | none (docs) | create_session `session_01R1w2UtvxHHSbCHYZ2ZsheW` (§ 3.6) |
 | L3 stop waking finished sessions | #1026 | Merged into `main` (#1041 `8ffae44e`) and `next` (sync #1042 `0c030da3`) | `claude/token-wakeups-1026`: `43d0efd1` (2 commits on `main`) | [#1041](https://github.com/PandiO/knk-workspace/pull/1041) (`main`) | none (docs) | create_session `session_01R1w2UuD4tw3yQ2N6mwMpQ9` (§ 3.6) |
 | L4 coordinator hand-over, fewer wake-ups | #1024 | In review | `claude/token-handover-1024`: `badec5dc` (1 commit on `main`) | [#1048](https://github.com/PandiO/knk-workspace/pull/1048) (`main`) | none (docs) | create_session `session_01R1w2UwgB6mB8qcMtKmYSwt` (§ 3.6) |
-| L5 reuse catalogue | #978 | In review (PRs open, not merged) | `claude/reuse-catalogue-978`: `be067817` (3 commits + merge of `main` `405c82e4`, base `main`); `claude/reuse-catalogue-978-next`: `a3096162` (1 commit on `next` `b2e454f8`) | [#1044](https://github.com/PandiO/knk-workspace/pull/1044) (`main`), [#1045](https://github.com/PandiO/knk-workspace/pull/1045) (`next`) | none (docs) | create_session `session_01R1w2UvxEiZju9gUZgBsVjt` (§ 3.6) |
+| L5 reuse catalogue | #978 | Merged into `main` (#1044 `cf429b7d`) and `next` (#1045 `248ca828`; sync #1049 `5cb2e69a`) | `claude/reuse-catalogue-978`: `be067817` (3 commits + merge of `main` `405c82e4`, base `main`); `claude/reuse-catalogue-978-next`: `a3096162` (1 commit on `next` `b2e454f8`) | [#1044](https://github.com/PandiO/knk-workspace/pull/1044) (`main`), [#1045](https://github.com/PandiO/knk-workspace/pull/1045) (`next`) | none (docs) | create_session `session_01R1w2UvxEiZju9gUZgBsVjt` (§ 3.6) |
 | L6 fewer set-up turns | #1022 | Not started (gate: L1–L5 merged; developer approval) | — | — | — | — |
 | L7 one docs session per chain | #1023 | Not started (gate: L1–L5 merged) | — | — | — | — |
 | L8 smoke-run session | #1025 | Not started (gate: L1–L5 merged) | — | — | — | — |
@@ -58,6 +58,7 @@
 7. **Shared files between the parallel links.** Chosen: each prompt lists every link's lines (L1 board and board-reading lines, L2 global split, descriptions and digest step, L3 watching steps, L5 design skill, one § 6 item, one global line). I merge in order of finish, and a later link merges `origin/main` in when its PR conflicts. L2 keeps the name `GLOBAL_AGENT_INSTRUCTIONS.md`, so the component pointers stay valid. Alternatives: (a) run them one at a time — the charter asks for parallel; (b) give L5's global line to L2 — couples two links.
 8. **Acceptance items that need a later rerun** (L2's ≤ 15k, L3's ≤ 1 turn, L2's orientation-subagent trial). Chosen: the links measure what they can now, and I run the Phase 0 reruns on links that start after the merges (L6–L8 and the next chains), at the chain's end. Alternatives: (a) hold each link open until a rerun — it would block the chain on unrelated chains.
 9. **L3 check and merge (2026-11-27).** Chosen: merged #1041 into `main` without a Codex review (usage limit again, noted on the PR), all other § 6 checks held; synced through branch `claude/token-sync-main-next-1026` (#1042, no conflict). L4's gate (L0 and L3 merged) checked with `rev-list` counts 0, and L4 started. Alternatives: (a) wait for Codex — no date for the limit.
+10. **L5 check and merge (2026-11-27).** Chosen: merged #1044 into `main` and #1045 into `next` without a Codex review (usage limit, noted on both PRs by the link), all other § 6 checks held; I added the missing house footer to #1044's body. Synced through `claude/token-sync-main-next-978` (#1049, no conflict). Told L2 to keep L5's global line (item 6 of "Authority and freshness") and to merge `origin/main` in. The optional audit is follow-up #1043, for the developer's review in the digest (charter § 2.4). Alternatives: (a) send #1044 back for the footer — a body edit, not a change.
 
 ## 4. Link blocks
 
@@ -204,3 +205,37 @@ _(Each link appends its block here when it finishes.)_
 9. **Notes for later links.**
     1. Coordinator (charter § 3.1): after the merge, apply § 3.7–§ 3.9 at your next wake-up; this chain's hand-over points are the groups in charter § 2 (L0; L1–L5; L6–L8), so the first one is after L1–L5 merge, or earlier if your context is above 300k (it almost certainly is: hand over at the next quiet moment). Consider adding a "Hand-over points" line to the charter in that bookkeeping commit.
     2. L6–L8: none of you need to change your behaviour; reply to the coordinator id you were last told.
+
+### 4.2 L2 — Lighter start-up reading (#1021)
+
+1. **Scope done.**
+    1. `docs/ai-agents/GLOBAL_AGENT_INSTRUCTIONS.md`: the same file name holds the core rules only. It is 15,688 characters, about 3.9k tokens (was 30,336, about 7.6k). The linked headings stay, and so do the numbers other files cite ("Branches" 1–11, "Testing" 1–5, "Shipping", "GitHub Issues" rule 3, "Parallel sessions" rule 1). Each decided rule points to `D<n>`.
+    2. New `docs/ai-agents/decision-history.md`: D1–D13 hold the dated decisions with their reasons and the `add_repo` history, D14 records the split, and D15 holds the detail shortened out of the rules. The full old → new rule mapping is in the PR body.
+    3. All 11 skill `description:` lines cut to their trigger phrases: 8,038 → 3,433 characters (about 2.0k → 0.9k tokens).
+    4. `knk-coordinator` § 4.4: new item 6, the "Notes for later links" digest (≤ 2k tokens, in the link prompt, one line per note with its source block), and item 4 now reads the digest, not the earlier blocks. New item 7: the opt-in orientation subagent trial (how to switch it on, what to measure, the keep/drop rule).
+    5. `knk-link` § 1.2: reads the digest and opens an earlier block only where a note points to it. New sub-item 1 is the trial step, run only on `Orientation subagent: on`.
+    6. "Branches" rule 3: a session that merges its own PR unsubscribes and cancels its check-ins in the merge turn. This is L3's rule (knk-docs-session § 4.4), added as L3's note asked.
+    7. `docs/CHANGELOG.md` Unreleased entry.
+2. **Commits and heads.** knk-workspace `claude/token-startup-1021` at `584d315b` (6 commits plus merges of `origin/main` `405c82e4` and `5cd56b0d`, base `main`). The second merge keeps L5's reuse line in the core file as Authority item 6 (history D16).
+3. **PRs.** [#1046](https://github.com/PandiO/knk-workspace/pull/1046) into `main` (`Closes #1021`). Not merged.
+4. **Tests, baseline → result.**
+    1. Docs only, no CI. Every relative link in both instruction files resolves. The three anchors linked from other files (`#github-issues-is-the-work-list`, `#branches-releases-and-risk-tiers`, `#shipping-a-change-documentation`) still exist.
+    2. Measured now (characters / 4, calibrated on the old file's 7.6k): the core file about 3.9k against the "about 3k" aim, and the skill descriptions −1.1k in every session. A link's projected instruction reading is about 36k − 3.7k (global file) − about 8k (digest ≤ 2k instead of about 10k of earlier blocks) − 1.1k (descriptions) ≈ 23k, before L1's board cut.
+    3. Acceptance 1 (≤ 15k per link) needs a Phase 0 rerun on links started after this merge. That rerun is the coordinator's, at the chain's end. Acceptance 2 (no rule lost): the mapping is in the PR body.
+    4. Known reds: none.
+5. **Decisions (DESIGN § 4.3).**
+    1. *Core size.* Chosen: about 3.9k, not 3k, because cutting further would drop rules that agents act on every session (the merge checks, Codex handling, docs before merge), and the binding says rules keep their meaning. Alternatives: (a) move role-only rules (manager, release, alpha) into the history file — rejected, the history file should not hold rules agents have to find; (b) move them into the skills — outside L2's lines this round.
+    2. *Pointer format.* Chosen: `[D<n>](decision-history.md#d<n>)` with explicit `<a id>` anchors, so pointers survive heading edits. Alternatives: (a) heading anchors — they break on rename; (b) inline dates — the bulk the split removes.
+    3. *Shortened detail.* Chosen: history entry D15 keeps every detail cut from the rules (release inputs, ruleset check names, manager run order, alpha file names, docs-session fill-in), so nothing is lost. Alternatives: (a) rely on the skills and guides that repeat most of it — not all of it is repeated there.
+    4. *Where the digest lives.* Chosen: the link prompt, made from the coordinator's running digest, because a charter digest needs a `main` commit per link and every later link would read all of it. Alternatives: (a) charter § "Notes for later links" — more commits, grows with the chain; (b) a scratch file only — links can't read the coordinator's scratchpad.
+    5. *Orientation subagent.* Chosen: an opt-in step (prompt line `Orientation subagent: on`), with the measurement and the keep/drop rule in coordinator § 4.4.7, because it can't be tried inside this link (coordinator note 2a.4). Alternatives: (a) on by default — not measured; (b) left out — the plan asks for the trial.
+    6. *Branches rule 3 line.* Chosen: add L3's unsubscribe step for self-merging sessions, as L3's note asked. It points to a rule that already exists. Alternatives: (a) leave it to L7 — the global file is L2's this round.
+    7. *Descriptions.* Chosen: keep each "Use when…" sentence whole and drop the "Covers…" lists. Two small rewordings: knk-api-endpoint names "an access rule or rate limit" as triggers, and knk-entity-scaffold keeps "use knk-entity-scaffold" as the redirect. Alternatives: (a) also shorten trigger lists — risks missed loads (coordinator note 2a.3).
+6. **Out of scope, noted.** None. No component `AGENTS.md`/`CLAUDE.md` pointer has to change (file name and anchors kept).
+7. **Blockers.** None.
+8. **What the developer must do.** Nothing beyond the coordinator's merge of #1046 into `main` and `main` → `next`.
+9. **Notes for later links.**
+    1. L5: if L5 merges first, its one global line goes into the core file; if L2 merges first, add it to the core file in the right section, with a `D<n>` entry in `decision-history.md` if it carries a decision.
+    2. L7: "Shipping a change", at-merge item 3 (start a docs session right away) is in the core file, with its history in D13 and D15.8. Change both when the per-chain docs session lands.
+    3. Any link adding a global rule: one line in the core file plus a dated `D<n>` entry in `decision-history.md`. Don't put dates or history in the core file.
+    4. Orientation subagent trial: try it on two implementation links of L6–L8 (suggested: L6 and L8, which read the most skills). Switch it on with the prompt line in coordinator § 4.4.7 and measure against L7.

@@ -49,6 +49,10 @@ risky work off in `next`, or "none".)
 Order and parallelism: <for example "at most one link per component repo at a time; L3 and L4 may run together, they
 share no component repo">.
 
+Hand-over points (coordinator skill § 3.8): <the groups of links after whose last merge the coordinator hands over to a
+fresh session, for example "after L1–L3; after L4–L6">. (A chain of up to about four links may write "none: the 300k
+ceiling only".)
+
 ## 3. Chain notes
 
 (Only what the skills don't cover; delete the section if empty.)

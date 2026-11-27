@@ -18,6 +18,9 @@ Copy from the line below, replace every `<...>` and delete the hints in parenthe
 **Issue:** [PandiO/knk-workspace#<parent>](https://github.com/PandiO/knk-workspace/issues/<parent>), links
 [#<n>](https://github.com/PandiO/knk-workspace/issues/<n>) (L1), ...
 **Charter:** [handoffs/<FEATURE>_CHAIN.md](../ai-agents/handoffs/<FEATURE>_CHAIN.md).
+**Coordinators:** 1. `<session id>` from <date>; 2. `<session id>` from <date> (hand-over: <phase boundary after
+<group> | 300k ceiling | cold-cache wake-up>, at <context>k). (The current one last; kept by the coordinator,
+skill § 3.9.)
 
 ## 1. Waiting for the developer
 

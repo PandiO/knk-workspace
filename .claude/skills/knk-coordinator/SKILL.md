@@ -16,7 +16,8 @@ branch model applies, merges into `next`. Links follow the `knk-link` skill.
    [AI agent workflow design](../../../docs/specs/ai-agent-workflow/DESIGN.md) § 2 and § 5; the
    [global agent instructions](../../../docs/ai-agents/GLOBAL_AGENT_INSTRUCTIONS.md).
 2. **Templates here:** [permissions-block.md](permissions-block.md) (the § 0 block every link prompt carries),
-   [charter-template.md](charter-template.md), [report-template.md](report-template.md).
+   [charter-template.md](charter-template.md), [report-template.md](report-template.md),
+   [start-note.md](start-note.md) (the prompt of a fresh coordinator at a hand-over, § 3.9).
 3. **Branch model check.** The `next` rules (links branch from `next`, PRs target `next`, you merge into `next`) apply
    as soon as CI runs on the API and web-app default branches (developer decision 2026-11-12). Check, after `git fetch`:
    `git -C <knk-web-api> ls-tree --name-only origin/main .github/workflows/ci.yml` and
@@ -33,8 +34,8 @@ branch model applies, merges into `next`. Links follow the `knk-link` skill.
 ## 2. First run of a chain
 
 1. Read the charter (or draft it from the template if the design session did not), the binding documents' status
-   headers, and the "In progress" table of `docs/ACTIVE_SESSIONS.md`, read fresh: `git fetch origin`, then
-   `git show origin/main:docs/ACTIVE_SESSIONS.md` (never a local or worktree copy).
+   headers, and only the "In progress" table of `docs/ACTIVE_SESSIONS.md`, read fresh: `git fetch origin`, then
+   `git show origin/main:docs/ACTIVE_SESSIONS.md | awk '/^## /{p=/^## In progress/} p'` (never a local or worktree copy).
 2. Issues: a parent issue for the chain and one sub-issue per link in `PandiO/knk-workspace`, each with its `tier:<n>`
    label (from design or intake; the developer may override). Scope every link by its sub-issue.
 3. Create the progress report from the template and add a tracker row ("In progress": feature, parent issue, branches,
@@ -59,13 +60,54 @@ branch model applies, merges into `next`. Links follow the `knk-link` skill.
    running link per component repo (knk-web-api, knk-web-app, knk-plugin); knk-workspace bookkeeping on `main` does
    not count. If no gate is open, stop and list in report § 1 what would open one.
 3. **Start it** (§ 4) and record "How started" in its summary row (bookkeeping commit).
-4. **Wait without sleeping.** End your turn and schedule a check-in with `send_later` (about every 45–60 minutes)
-   until the link finishes (§ 5). Never poll with `sleep`.
+4. **Wait without sleeping.** End your turn with one pending check-in for all running links (§ 5.5), or none
+   when nothing runs. Never poll with `sleep`.
 5. **Watch the link's PRs yourself** once it has handed over (plan Phase 4, PandiO/knk-workspace#1026): the link
    unsubscribes from its PRs and stops (link skill § 3.8), so call `subscribe_pr_activity` for each of its PRs when
    its final message comes in. A PR's events reach one session at a time; if the result says another session still
    watches it, ask the link with `send_message` to unsubscribe, then subscribe again.
 6. **Check it** (§ 6). Pass: merge into `next` (§ 7), report up (§ 9), back to step 1. Fail: § 8.
+7. **Watch your own context** (plan Phase 8, PandiO/knk-workspace#1024). At every wake-up, before other work, read
+   your context size: `get_session` without `session_id` gives your own id; `list_events` on that id with `kinds`
+   `["result"]` and `limit` 20; in the newest result event, the last entry of `usage.iterations`:
+   `input_tokens + cache_read_input_tokens + cache_creation_input_tokens` (session token audit, step 1). Note it with
+   the time of your previous turn, which tells you how long you were idle.
+8. **Hand over** (step 9) when one of these holds, and only at a quiet moment: no merge half done (§ 7), no answer
+   you owe a link or the developer, and no subagent link running (a subagent lives in your session and cannot move;
+   wait for it to finish).
+    1. **A phase boundary:** the charter's "Hand-over points" (charter § 2, "Order and parallelism"), normally the
+       end of one group of links in its order. Hand over after the group's last merge (§ 7.12) and before you start
+       the next group, so the next group's links are started by the fresh coordinator.
+    2. **The ceiling:** context above 300k. Hand over at the next quiet moment, even mid-group.
+    3. **The cheap moment:** a wake-up after more than an hour idle with more than about 200k context. The cache has
+       expired and is rebuilt anyway, so hand over then instead of paying for the rebuild.
+    4. **Already running when this rule merged:** apply it from your next wake-up, with the same checks.
+9. **The hand-over steps,** in this order, in one or two turns:
+    1. **Bring the record up to date.** Charter: status line and links table (gates, branches). Progress report:
+       § 1, the § 2 summary rows, § 3 decisions, and the "Coordinators" header line with the new session (filled
+       in after step 4). One bookkeeping commit for both, on top of `origin/main` (§ 2 step 3).
+    2. **Write the start note** from [start-note.md](start-note.md): the § 0 permissions block verbatim, the chain,
+       charter and report paths, the rule set, the running links with their session ids, the check-in to schedule,
+       the PR subscriptions to take over, the next gate, what waits for the developer, and your own session id.
+    3. **Let go.** Cancel every `send_later` check-in you scheduled (`list_triggers`, `delete_trigger`); a check-in
+       fires into the session that scheduled it, so the new coordinator schedules its own. Call
+       `unsubscribe_pr_activity` for every PR you watch (§ 3.5): a PR's events reach one session at a time, and the new
+       coordinator subscribes to them at its start.
+    4. **Start the fresh coordinator** with `create_session`: `source_url` knk-workspace, `source_revision` `main`,
+       `model` your own (`get_session` → `session_context.model`), title "<Chain> — coordinator <n>", the start note
+       as `prompt`. Record its session id.
+    5. **Tell the running links.** A `send_message` to each running `create_session` link: "The coordinator is now
+       `<new session id>`; send your final message and replies there." Links reply to a session id, not a role.
+    6. **Name the new session** in the board row (owner column, bookkeeping commit), in the "Coordinators" line
+       (same commit as step 1 if you have the id by then) and in a numbered comment on the parent issue: the new
+       session, why you handed over (boundary, ceiling, cheap moment) and your context at the hand-over.
+    7. **End.** No check-ins, no subscriptions, no further work. A message that still reaches you later (a link that
+       missed step 5, a stray notification): forward it with `send_message` to the new coordinator, then end the
+       turn.
+10. **Starting as a fresh coordinator** (your prompt is a start note): load this skill; read the charter, report § 1–3,
+    the newest link block and the open sub-issues (not the whole report); verify the heads (step 1); subscribe to
+    the PRs the note lists (§ 3.5); schedule the one check-in the note names (§ 5.5), or none when nothing runs;
+    check that the board row and the parent issue name you, and fix them if not; then continue the loop at step 1.
 
 ## 4. Starting a link
 
@@ -118,14 +160,27 @@ branch model applies, merges into `next`. Links follow the `knk-link` skill.
 2. A finished `create_session` link may not notify you; it can also end idle, waiting for a "go" or asking a
    question. Answer it yourself with `send_message` when the answer is within the link's scope and the charter; take
    anything outside it to the developer (§ 9.3) and tell the link to stop or to go on with the reversible default.
-3. Still working: schedule the next check-in. Stuck for two check-ins without progress: interrupt, ask for status,
-   and treat it as a blocker if it cannot continue.
+3. Still working: leave or schedule the next check-in (step 5). Stuck for two check-ins without progress: interrupt,
+   ask for status, and treat it as a blocker if it cannot continue.
 4. **PR events and rework after the hand-over.** You hold the PR subscriptions of handed-over links (§ 3.5), so their
    Codex reviews, CI results and comments come to you. When a PR needs the link again (Codex findings to fix or
    answer, a base merge, a conflict), hand it back, don't wait for the link to notice: a `create_session` link gets a
    numbered `send_message` (it wakes the session) with the PR, the head, what to do and "reply when done, then
    stop"; a subagent link gets the same through `SendMessage` to its agent id, or a rerun (§ 8.2) if it can't be
    continued. Small fixes you may make yourself (§ 6.10). Never ask a link to watch its PR again.
+5. **Timing** (plan Phase 8, PandiO/knk-workspace#1024). Every wake-up re-reads your whole context, so wake up as
+   rarely as the work allows:
+    1. **One pending check-in for the chain,** not one per link: a single `send_later` that checks every running link
+       (steps 1–3). Before you schedule one, `list_triggers`: if one is already pending, leave it.
+    2. **Under an hour apart while any link runs** (about 50 minutes), so the cache does not expire between
+       wake-ups. A wake-up for another reason (a link's message, a PR event) does the check-in work for every link
+       in the same turn and leaves the pending check-in as it is.
+    3. **None while nothing runs:** no link running and only the developer or a gate to wait for. Cancel the
+       pending check-in and end the turn; a link's message, a PR event or the developer wakes you. A PR you watch
+       (§ 3.5) is not a reason for a check-in: its events wake you.
+    4. **Batch the notifications.** At every wake-up call `ReadNotifications` until it reports 0 remaining and
+       handle everything queued (link messages, PR events, check-ins) in that one turn, before you end it.
+    5. **Check your context** (§ 3.7) at the same wake-up; a hand-over (§ 3.8) replaces the next check-in.
 
 ## 6. Checking a finished link
 
@@ -192,6 +247,9 @@ All of these must hold:
     into a default branch you make; promotion of `next` stays the developer's.
 11. **Unsubscribe after the merge.** In the same turn as a merge (or when you close a PR unmerged), call
     `unsubscribe_pr_activity` for that PR, including the `main` → `next` PR of § 7.10 if you subscribed to it.
+12. **Hand over at a phase boundary** (§ 3.8). When this merge is the last of a hand-over point (charter § 2), finish
+    it first (CI on `next` checked, § 7.4; `main` → `next` done, § 7.10; unsubscribed, § 7.11; report up, § 9.1), then
+    hand over (§ 3.9) instead of starting the next group. Never hand over between a merge and its checks.
 
 ## 8. Blockers
 
