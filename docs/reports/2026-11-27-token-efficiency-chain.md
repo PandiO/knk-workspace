@@ -114,7 +114,7 @@ _(Each link appends its block here when it finishes.)_
     7. *Row cap.* Chosen: 400 characters (`--max-row`), enough for issue, branch, repos, owner and status. Alternatives: (a) 300: forced dropping report links on chain rows.
 6. **Out of scope, noted.**
     1. `knk-docs-session` § 1 and `knk-digest` § 3 still read the whole board; with the board at 11 KB this costs little. L3's/L7's files; not changed here.
-    2. Three `merge -X ours` style board conflicts are expected when other sessions edit their long rows before the merge: keep `main`'s new rows, shortened.
+    2. Board conflicts are likely at merge, since other sessions keep editing their rows: keep `main`'s new or changed rows, shortened to one line.
 7. **Blockers.** None.
 8. **What the developer must do.** Nothing beyond the coordinator's merge of #1047 into `main` and `main` → `next`.
 9. **Notes for later links.**
