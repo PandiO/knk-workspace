@@ -4,6 +4,15 @@ This is a human-readable record of capabilities merged into the V3 default branc
 
 ## Unreleased — on feature branches, not merged
 
+- **Slim sessions board** ([PandiO/knk-workspace#1020](https://github.com/PandiO/knk-workspace/issues/1020),
+  link L1 of the token efficiency chain, [#987](https://github.com/PandiO/knk-workspace/issues/987)) — no game change;
+  developer-facing. knk-workspace branch `claude/token-board-1020` (PR into `main`). `docs/ACTIVE_SESSIONS.md` goes
+  from 86 KB (about 20.7k tokens) to 11 KB (about 2.7k): 10 finished rows moved verbatim to the 2026-11 sessions
+  archive, the rest cut to one line of at most 400 characters. `archive_sessions.py` gains `--flag` (rows whose
+  issues are closed or whose status says merged/done, and rows that are too long) and `--move <lines>`; the manager
+  run applies it daily. `knk-link`, `knk-coordinator` and `knk-design` read only the "In progress" table.
+  1. Admin steps: none.
+
 - **Finished sessions stop watching their pull requests** ([PandiO/knk-workspace#1026](https://github.com/PandiO/knk-workspace/issues/1026),
   link L3 of the token efficiency chain, [#987](https://github.com/PandiO/knk-workspace/issues/987)) — no game change;
   developer-facing. knk-workspace branch `claude/token-wakeups-1026` (PR into `main`). A chain link unsubscribes from
