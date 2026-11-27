@@ -9,7 +9,8 @@ A new entity across the three component repos, built from the code on each repo'
 **Tag** (a content-area dashboard type with the full pipeline in all three repos); a world-area type with relations is
 **District**. Pick the one closest to yours and open its files as you go. The API part is the
 [`knk-api-endpoint`](../knk-api-endpoint/SKILL.md) recipe applied to a whole CRUD controller; read that skill first.
-Per-repo file lists are in [checklist.md](checklist.md).
+Per-repo file lists are in [checklist.md](checklist.md). The forms, display views, pickers and world tasks this
+scaffold wires up are summarised in the [reuse catalogue](../../../docs/architecture/reusable-systems.md).
 
 Read first: `AGENTS.md` and `CLAUDE.md` of each repo you change, the
 [dashboard access model](../../../docs/specs/dashboard-access-model/DESIGN.md) § 4 (areas, nodes, read categories)

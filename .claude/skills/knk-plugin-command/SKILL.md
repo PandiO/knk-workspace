@@ -10,7 +10,8 @@ first (modules, Java 25 toolchain, `./gradlew build -x deployToDevServer`), the
 [permission checks architecture](../../../docs/architecture/plugin-permission-checks.md) and the
 [global instructions](../../../docs/ai-agents/GLOBAL_AGENT_INSTRUCTIONS.md) "Testing: automated first". Skeletons are
 in [templates.md](templates.md). Paths below are under `knk-paper/src/main/java/net/knightsandkings/knk/paper/`
-unless they name a module.
+unless they name a module. A command that captures a location or region for a web form is a world task, not a new
+command: see the [reuse catalogue](../../../docs/architecture/reusable-systems.md).
 
 ## 1. Decide before you write
 

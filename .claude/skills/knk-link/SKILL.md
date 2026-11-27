@@ -82,6 +82,8 @@ something different from this skill, the prompt and charter win.
 6. **API:** every new endpoint gets an explicit access rule (see knk-web-api `CLAUDE.md`, default-deny). The code
    recipes [`knk-api-endpoint`](../knk-api-endpoint/SKILL.md), [`knk-plugin-command`](../knk-plugin-command/SKILL.md)
    and [`knk-entity-scaffold`](../knk-entity-scaffold/SKILL.md) list the files to copy and the tests each change needs.
+   Before you hand-build a form, detail view, picker, validation or world capture, check the
+   [reuse catalogue](../../../docs/architecture/reusable-systems.md); not using a system there is an agent decision (§ 5).
 7. **Secrets:** none in code, settings, fixtures, logs or docs.
 8. **Tests, automated first** (global instructions, "Testing: automated first", developer decision 2026-11-14): use
    the [knk-test-writer skill](../knk-test-writer/SKILL.md) to put each behaviour in the right suite: Playwright e2e

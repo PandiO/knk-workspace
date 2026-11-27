@@ -177,3 +177,11 @@ until 2026-11-27 and still holds; most of it also lives in the skill or guide na
    `https://github.com/PandiO/knk-workspace`, its prompt is filled in with issue numbers, merged commits and base, and
    the documentation issue links the merged commits and PRs. Before the branch model applied, "at merge" meant the
    merge into the default branch and all three at-merge items happened then.
+
+<a id="d16"></a>
+## D16. Reuse catalogue before building forms and world capture (2026-11-24, 2026-11-27)
+
+Token efficiency plan Phase 6 (decided by the developer 2026-11-24; PandiO/knk-workspace#978, added 2026-11-27):
+designs and links read `docs/architecture/reusable-systems.md` before hand-building a form, detail view, picker,
+validation or world capture, and log an opt-out as a decision. Why: no rule pointed at the form and world-task
+systems, and a heuristic flagged 19 of 63 admin pages and components added since October as possible rebuilds.

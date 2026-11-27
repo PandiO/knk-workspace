@@ -11,7 +11,8 @@ file to copy; open it before you write. For a brand-new entity with its dashboar
 
 Read first: knk-web-api `AGENTS.md` and `CLAUDE.md` (default-deny, staff nodes, rate limits, secrets), then the
 [global instructions](../../../docs/ai-agents/GLOBAL_AGENT_INSTRUCTIONS.md) "Testing: automated first". Code skeletons
-are in [templates.md](templates.md).
+are in [templates.md](templates.md). Before adding a dedicated create/update endpoint for an entity the web app edits,
+check the [reuse catalogue](../../../docs/architecture/reusable-systems.md): FormWizard and world tasks may already cover it.
 
 ## 1. Decide before you write
 

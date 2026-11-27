@@ -23,6 +23,9 @@ features it needs; check the current issue, spec and branches before older prior
    issue, tracker row, plan and default branch, and record the drift.
 5. A conflict no decision settles: name it and take a reversible course. Never present unmerged work or an unverified
    live test as shipped.
+6. Before designing or building forms, detail views, pickers, validation or world capture, read the
+   [reuse catalogue](../architecture/reusable-systems.md); an opt-out is a logged decision (PandiO/knk-workspace#978)
+   [D16](decision-history.md#d16).
 
 ## GitHub Issues is the work list
 
