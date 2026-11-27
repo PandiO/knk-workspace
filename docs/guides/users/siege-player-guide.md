@@ -1,7 +1,7 @@
 # Siege — Player Guide
 
-**Status:** Current · **Last updated:** 2026-11-13 (first version, written from the default branches, PandiO/knk-workspace#297)
-**Checked against:** knk-plugin `main` `57884e97`, knk-web-api `master` `75b5a00`, knk-web-app `main` `3ba747d`
+**Status:** Current · **Last updated:** 2026-11-21 (siege points, the siege shop and siege weapon unlocks, in `next`, not released; siege shop chain #611, #356, docs #908)
+**Checked against:** knk-plugin `main` `57884e97`, knk-web-api `master` `75b5a00`, knk-web-app `main` `3ba747d`; § Siege points, the siege shop and weapon unlocks against knk-plugin `next` `ec02a64a`, knk-web-api `next` `fc1a5143`, knk-web-app `next` `acff2134`
 **Related:** [player handbook](player-handbook.md), [commands reference § Sieges](commands.md#sieges),
 [menus](menus-player-guide.md), [statistics and match pages](statistics-player-guide.md),
 [gate structures](gate-structures-player-guide.md), [custom enchantments](custom-enchantments-player-guide.md),
@@ -27,9 +27,11 @@ numbers per scenario or in the siege settings, so the numbers below are the star
 9. [Leaving and coming back](#leaving-and-coming-back)
 10. [The end of the match](#the-end-of-the-match)
 11. [Rewards](#rewards)
-12. [Match history](#match-history)
-13. [Messages and what they mean](#messages-and-what-they-mean)
-14. [Coming / not yet released](#coming--not-yet-released)
+12. [Siege points, the siege shop and weapon unlocks](#siege-points-the-siege-shop-and-weapon-unlocks) (in `next`, not released)
+13. [Match history](#match-history)
+14. [Messages and what they mean](#messages-and-what-they-mean)
+15. [Coming / not yet released](#coming--not-yet-released)
+16. [Changes](#changes)
 
 ## Joining a siege
 
@@ -252,6 +254,128 @@ If the server takes a few seconds, the line comes first and `Your rewards: …` 
 unreachable, the hover says the result is kept and paid automatically later. A match that couldn't be recorded at the
 draw grants no rewards ("no rewards are granted this round").
 
+## Siege points, the siege shop and weapon unlocks
+
+> **In `next`, not released yet.** This section describes knk-plugin `next` `ec02a64a`, knk-web-api `next`
+> `fc1a5143` and knk-web-app `next` `acff2134` ([PandiO/knk-workspace#611](https://github.com/PandiO/knk-workspace/issues/611),
+> [#356](https://github.com/PandiO/knk-workspace/issues/356), [#859](https://github.com/PandiO/knk-workspace/issues/859)).
+> Siege points and the shop are switched off on a server until the staff turn them on, so you may not see them yet.
+> Weapon unlocks need no switch. Nothing here has been checked on a live server yet.
+
+### Siege points
+
+Siege points are a match currency in PvP Siege. Everyone in the match starts at **0**, earns points by playing and can
+spend them in the [siege shop](#the-siege-shop). They are not coins: they belong to one match only and are gone when it
+ends, spent or not.
+
+**Earning (starting values; staff can change them in the siege settings):**
+
+| You … | Points |
+|---|---|
+| kill an enemy | 100; the 2nd kill in a row pays 110, the 3rd 120, up to 150 from the 6th kill on. Dying starts the streak over. |
+| helped with a kill: did at least 2 hearts of damage to the victim in the last 10 seconds, but someone else got the kill | 40 (an assist) |
+| die (killed by an enemy, or by a fall, lava and so on) | 15, so a player who is behind still earns something |
+| damage an enemy gate | 1 per 5 HP of damage |
+| stand alive in an objective's ring while it moves towards your side | 3 per percent it moves |
+| are inside the ring when your side captures the objective | 100 |
+| are active (walk 10 blocks, fight, hit a gate or stand on an objective within the minute) | 10 every minute; AFK players get nothing |
+
+Friendly fire and killing yourself pay nobody.
+
+**Where you see them.** Your siege sidebar has a line **Siege points: N** right under the time; only you see your own
+number. Each change also shows on the action bar, for example `+130 kill ×1.3 · 830` (what you earned, the streak
+multiplier if any, and your new balance).
+
+**Commands:**
+
+1. `/siege points`: `Siege points: B (earned E, spent S this match)`.
+2. `/siege pay <player> <amount>`: sends points to a teammate in the same match. This is **off** unless the staff
+   allow it for the game mode; then you get `Sending siege points to teammates is turned off in this game mode.`
+   With it on, both of you get a line with the new balance. You can't send more than you have, to an enemy or to
+   yourself.
+
+**At the end of the match** you get `Siege points this match: earned E, spent S.` and the totals are stored with the
+match. Your balance is gone: the next match starts at 0 again. Leaving with `/siege leave` also ends your balance,
+and a match ended by a server restart gives nothing back.
+
+### The siege shop
+
+During a running match, open the shop with `/siege shop`, with the **Shop** button (emerald, top left) in your siege
+menu (`/siege menu`), or with a shift + right click on the menu item (the nether star, see
+[menus](menus-player-guide.md)). It works anywhere on the map. Outside a running match: `The siege shop is open only
+during a running siege match.`
+
+- The gold item at the top shows **Siege points: N** and reminds you: "Purchases are final; bought items end with the
+  match."
+- The shop has **categories**: **Consumables**, and **Siege weapons** on servers where siege weapons are switched on.
+  Click a category to see its offers.
+- Each offer shows its current **price**, how many you **bought** of the most you may buy in one match (for example
+  `Bought: 1/8`), a **cooldown** while it counts down, and, in red, why you can't buy it right now.
+- **Click an offer to buy it.** You get `Bought Ender Pearl for 300 siege points. Balance: 100.` and the item goes into
+  your inventory.
+
+**Prices go up as you buy.** Each purchase of the same offer in a match costs more than the one before, and some offers
+get a longer cooldown after each purchase. Every offer has a cap per match. At the start of the next match prices,
+cooldowns and caps start over.
+
+Starting offers in PvP Siege (a scenario can hide, change or add offers):
+
+| Offer | First price | Then | Cooldown | Most per match |
+|---|---|---|---|---|
+| Ender Pearl | 300 | 350, 450, 600, 800, … | 20 s, then 30, 45, 67.5 s, … | 8 |
+| Splash Potion of Healing II | 150 | 175, 225, 300, … | 10 s | 10 |
+| Golden Apple | 200 | 250, 350, 500, … | none | 6 |
+| Potion of Regeneration | 250 | 250 | none | 4 |
+
+**Bought items end with the match.** Everything you bought is gone when your own inventory is restored after the
+match, used or not, and no points come back. A thrown ender pearl works as in vanilla, also over a wall.
+
+**Siege weapons** in the shop: you can only buy a weapon type you have [unlocked](#siege-weapon-unlocks). A locked one
+says `Locked: unlock it in /menu → Siege Minigame → Siege unlocks.` Unlocks are read when the match starts, so a type
+you unlock during a match counts from the next one. Placing a bought weapon isn't built yet: an unlocked weapon entry
+says `Siege weapons can't be bought yet.` and charges nothing.
+
+**Why a purchase is refused** (nothing is charged in any of these):
+
+| Message | Meaning |
+|---|---|
+| `Not enough siege points: 100/350.` | Your balance and the price. Earn more first. |
+| `Cooldown: N s.` | Wait until the cooldown is over. |
+| `Limit reached: 8 per match.` | You bought the most this match allows. |
+| `Inventory full: make room for the whole stack first.` | Free a slot (the hotbar counts); nothing is dropped. |
+| `You can buy only while you are alive in the match.` | You are dead; buy after you respawn. |
+| `That is not sold in this match.` | The offer isn't in this match's shop (the shop is fixed when the match starts). |
+| `The siege shop is still opening; try again in a moment.` | The match has just started and the shop is still loading. |
+| `The siege shop isn't available in this match.` | The game's services didn't answer at the start; this match has no shop. |
+| `The siege shop is not enabled on this server.` | The staff haven't switched the shop on. |
+| `Something went wrong; your siege points were given back.` | The item couldn't be given; you paid nothing. |
+
+### Siege weapon unlocks
+
+Before you can buy a siege weapon type (ballista, trebuchet, catapult, …) in a match, you unlock it once, for good,
+with your **coins**. Some types also need a **minimum title**.
+
+**In game:** outside a match, open `/menu` → **Siege Minigame** → **Siege unlocks** (anvil, top left). The top shows
+your coins and title; each weapon type shows its unlock price, its minimum title and what you can do:
+
+| The line says | Meaning |
+|---|---|
+| `Unlock for 500 coins` | Click it. Chat asks `Unlock the Ballista for 500 coins? Click Confirm in the menu.`; click **Confirm** (lime) or **Cancel** (red) at the top. |
+| `Unlocked` | You own it; you can buy it in siege matches. |
+| `Needs title <title>` | Reach that title first: `You need the title <title> to unlock the Trebuchet.` |
+| `Not enough coins: 700/800` | Your coins and the price. |
+
+After **Confirm**: `Unlocked the Ballista for 500 coins. You can buy it in siege matches now.` The coins are taken
+once, even if you click twice. A type you already own: `You have already unlocked the Ballista.` During a match you
+can look at the menu but not buy: `Siege weapons can't be unlocked during a match. Unlock them after it.`
+
+**On the website:** your account page (**Account**, `/account`) has a **Siege unlocks** panel with the same list and an
+**Unlock for N coins** button, which asks you to confirm first. The panel shows once your Minecraft account is linked.
+An unlock made on the website shows in game the next time you open the menu (within a few seconds).
+
+Unlocks cost coins (your personal currency, not siege points); the payment is in your transaction history
+(`/transactions`, see the [economy guide](economy-player-guide.md#3-your-balance-and-history)).
+
 ## Match history
 
 - **In game:** `/siege history` lists your last 5 finished matches, newest first: date, Win/Loss/Draw/Left/Aborted, the
@@ -286,6 +410,11 @@ Siege messages start with a red `[Siege]`.
 | `In a siege you can only fight enemies in your own match.` | The player is in another match. |
 | `There is no fighting outside the running match.` | PvP only counts during the match itself, not at the hub or after it. |
 | `Your siege history couldn't be loaded right now; try again later.` | The game's services didn't answer. |
+| `Siege points are not enabled on this server.` | (In `next`.) The staff haven't switched siege points on. |
+| `You have siege points only during a running siege match.` | (In `next`.) `/siege points` and `/siege pay` work only in a running match. |
+| `You can only send siege points to a teammate.` | (In `next`.) `/siege pay` to an enemy is refused. |
+
+Shop and unlock messages: [Siege points, the siege shop and weapon unlocks](#siege-points-the-siege-shop-and-weapon-unlocks).
 
 ## Coming / not yet released
 
@@ -302,3 +431,11 @@ These are not on the default branches yet; don't expect them in game:
 4. In `next`, not yet released: a kit that staff grant you from the website while you are in a siege is held back and
    given to you after the siege ([#261](https://github.com/PandiO/knk-workspace/issues/261)).
 5. Scheduled lobbies (sieges at set times) are designed but not built; only continuous lobbies run.
+6. In `next`, not yet released: [siege points, the siege shop and weapon unlocks](#siege-points-the-siege-shop-and-weapon-unlocks)
+   ([#611](https://github.com/PandiO/knk-workspace/issues/611)). Placing a bought siege weapon comes with siege weapons
+   phase 3 ([#784](https://github.com/PandiO/knk-workspace/issues/784)); the Siege Survival shop with Siege Survival.
+
+## Changes
+
+1. 2026-11-21: new § Siege points, the siege shop and weapon unlocks (in `next`), message rows, Coming item 6; docs #908
+2. 2026-11-13: first version, PandiO/knk-workspace#297

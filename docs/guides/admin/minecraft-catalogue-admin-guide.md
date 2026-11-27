@@ -1,7 +1,7 @@
 # Minecraft Catalogue — Admin Guide
 
 **Status:** Living document — update in place as the code changes
-**Last updated:** 2026-10-23 (KNG-250 merged: knk-web-api `master` `a1f8838`, knk-web-app `main` `f9ee73c`, knk-plugin `main` `c7806b87`; KNG-200 merged 2026-10-22)
+**Last updated:** 2026-11-19 (scan creates vanilla shadow blueprints, #141 in `next`, docs #796); 2026-10-23 (KNG-250 merged: knk-web-api `master` `a1f8838`, knk-web-app `main` `f9ee73c`, knk-plugin `main` `c7806b87`; KNG-200 merged 2026-10-22)
 **Companion docs:** `docs/specs/minecraft-catalog/IMPLEMENTATION_PLAN.md` (design, decisions D1-D12, contract)
 
 The Minecraft catalogue is the list of materials (items and blocks) and enchantments the web app offers in its pickers, for
@@ -27,6 +27,9 @@ Scan again after every Minecraft upgrade. A scan:
 - deletes rows the server doesn't know and nothing references;
 - marks rows the server doesn't know but something still references as **Missing**. Pickers hide them; the
   page lists them under "Needs attention".
+- since #141 (knk-web-api `next`, not released), then creates a plain "vanilla shadow" item blueprint in the
+  **Uncurated** category for every obtainable item that has no blueprint yet. See the
+  [item identity admin guide](item-identity-admin-guide.md).
 
 Only one scan runs at a time. A scan without an answer from the server times out after 15 minutes, and
 **Cancel** stops one earlier. A scan the plugin couldn't send shows the server's error.

@@ -1,6 +1,6 @@
 # Navigation and teleports — player guide
 
-**Status:** Current · **Last updated:** 2026-11-13 (new guide: road navigation, teleports and requests, spawn, hub, warps, `/back`, staff moves and exemptions, PandiO/knk-workspace#298)
+**Status:** Current · **Last updated:** 2026-11-25 (§ 2.3 shortcuts on foot, the road's end and plaza lines where staff switch them on; § 2.8 new: route modes and a rank's default mode, on `next`, PandiO/knk-workspace#698, #707, #852, docs #1033); 2026-11-22 (§ 2.7 Landmarks and `/warp landmark:<name>` in § 3.3, on `next`, PandiO/knk-workspace#976, docs #1008); 2026-11-22 (§ 2.3: the walked stretch of the trail as the server shows it by default, PandiO/knk-workspace#996, #990); 2026-11-13 (new guide: road navigation, teleports and requests, spawn, hub, warps, `/back`, staff moves and exemptions, PandiO/knk-workspace#298)
 **Checked against:** knk-plugin `main` `57884e9`, knk-web-api `master` `75b5a00`, knk-web-app `main` `3ba747d` (desk check of the code; the behaviour itself was live-tested when each part merged, see [Sources](#sources))
 **Related:** [player handbook](player-handbook.md), [commands](commands.md) (every command with its rank), [menus](menus-player-guide.md) (the teleport menu), [gate structures](gate-structures-player-guide.md) (passing gates), [admin guide](../admin/navigation-and-teleports-admin-guide.md)
 
@@ -65,12 +65,37 @@ You don't have to start on a road. Within 96 blocks of one, the trail first lead
 the road gets a walked last stretch. A place you can reach within 48 blocks is walked to straight away, without the
 roads.
 
+**The walked stretch.** On the walked parts (to the road, from the road, or straight to a nearby place) the trail looks
+like this, unless staff switched it off ([admin guide § 2.6](../admin/navigation-and-teleports-admin-guide.md#26-settings)):
+
+- The path keeps its distance from walls, posts and drops where there is room, and its corners are rounded, not sharp.
+- The particles sit on fixed spots, about 2 blocks apart, and stay there while you walk. They no longer slide along
+  with you.
+- The trail follows you if you step back along it: the particles, the distance in the boss bar and the next turn
+  instruction are those of the spot on the route where you are now.
+- A walked stretch stays your route as long as you are within 6 blocks of it. You are no longer told you are heading
+  away just because you walk around a pillar or take a wide turn; only when you leave the stretch the route is
+  recalculated.
+
+This applies to the walked parts only. The gold trail on the road itself, and everything in § 2.2, is unchanged.
+
 - A place up to 256 blocks from any road: the trail ends at the road, then "No conventional path to X found." and the
   arrow in the action bar points the way until you are close enough for a walked path.
 - "No conventional path to the road found.": you seem to be shut in (a walled yard, a room). Find a way out; the
   route continues.
 - "No walkable way straight to X - following the roads instead.": a short walk was blocked, so the trail uses the
   roads.
+
+**Where staff switched them on** (on `next`, not on the live server yet; [admin guide § 2.6](../admin/navigation-and-teleports-admin-guide.md#26-settings)):
+
+1. **Shortcuts on foot:** a route may leave the road to walk across, for example through a courtyard, where the road
+   round it is much longer. The walked part is drawn like the walked stretches above, and the turn instruction says
+   "Leave the road and walk across". A nearby place may also be reached over the road instead of a direct walk, when the
+   road carries most of the way and is not much longer.
+2. **The right end of the road:** for a place inside a building the road part ends where the place can really be walked
+   to from, not at the road point that is merely nearest in a straight line (a dead end in a stair house).
+3. **Across plazas:** where a route crosses a plaza from one road to another, the gold trail follows a rounded line
+   across the plaza instead of a sharp bend through its middle. The distance and the turn instructions don't change.
 
 ### 2.4 Gates, closed areas and changes on the way
 
@@ -109,6 +134,45 @@ A route ends when you log out, die, change world, teleport more than 16 blocks, 
 **In a siege match** `/navigate` only knows the match's places (objectives, gates), and the navigation compass you get
 there points to them. See the Siege player guide (`siege-player-guide.md`, PandiO/knk-workspace#297).
 
+### 2.7 Landmarks
+
+Landmarks are named places staff mark on the map: a well, a ruin, a throne room. Some are just a spot, some have an
+area of their own, some share the area of the town or building they belong to. They are on `next`, not on the live
+server yet, and only where staff switched them on.
+
+- **Navigating:** `/navigate <landmark>` (or `/navigate landmark:<name>` when a town or building has the same name).
+  Tab completion offers each landmark once. You arrive when you step into the landmark's area, any part of it, or,
+  for a landmark that is only a spot, when you are close to it. Standing in its area already: "You are already in
+  <name>."
+- **Entering one:** most landmarks say nothing. Where staff switched messages on you get "You are now entering
+  <name>." and "You are now leaving <name>." once each. A landmark can keep you out, like a town with its entry
+  closed. A landmark never protects you from fire, lava or poison: in the wild they hurt as anywhere in the wild,
+  inside a town the town's rule applies.
+- **Discovering one:** only landmarks staff made discoverable count: "You discovered the landmark <name>!" with a
+  small reward ([economy guide § 6](economy-player-guide.md#6-discoveries)).
+- **Warping to one:** see § 3.3.
+
+### 2.8 Route modes
+
+On `next`, not on the live server yet. A word after the place picks how the route is chosen:
+
+| Command | Route |
+|---|---|
+| `/navigate <place> shortest` | The fewest blocks, whatever the road or the climb. |
+| `/navigate <place> efficient` | The least effort: main roads before paths, and stairs, ladders, doors, water and drops count extra on walked parts. |
+| `/navigate <place> preferred` | `efficient`, and also the roads staff marked as better or worse (and, where staff set them, the landmarks to keep to or avoid on walked parts). The same route as `/navigate <place>` without a word. |
+
+1. **Who can use the words:** each word needs its own permission; Tab offers only the words you may use. Without it:
+   "You don't have permission to use this command." `/navigate <place>` without a word always works.
+2. **Your rank's default:** staff can give a rank (or another group, such as Staff) a default mode, which you then get
+   without typing a word. If you are in several with a default, the highest-ranked one counts. A word you type beats
+   the default. Right after you join, or after your rank changed, the first route may still be `preferred`; the next
+   one uses your rank's default.
+3. **Word order:** the mode goes after the place and before `spawn` or `region`: `/navigate Kardenna efficient spawn`.
+   After `spawn` or `region` a word is read as part of the place's name.
+4. **In a siege match** on a server that still uses the older destination lists, the mode words and your rank's default
+   are not used; the match's route is the usual one.
+
 ## 3. Teleporting yourself
 
 ### 3.1 How every player teleport works
@@ -138,13 +202,13 @@ has its own cooldown; your rank's spawn price and cooldown apply to both.
 
 ### 3.3 Warps: `/warp`, `/warps` and the teleport menu
 
-Staff can open towns, districts and structures as teleport destinations ("warps").
+Staff can open towns, districts, structures and landmarks as teleport destinations ("warps").
 
 | Command | What it does |
 |---|---|
 | `/warp` (`/point`) | Opens the teleport menu ([menus guide § Teleports](menus-player-guide.md#teleports)). |
 | `/warps`, `/warp list` | Lists every destination with its type, price and `Available!` or `Locked! <reason>`; click one to go. |
-| `/warp <place>` | Teleports you there. Two places with one name: `/warp town:Name`, `/warp district:Name`. |
+| `/warp <place>` | Teleports you there. Two places with one name: `/warp town:Name`, `/warp district:Name`, `/warp landmark:Name`. |
 
 A destination can need a **title** ("Reach title X to unlock"), a **premium tier** ("Premium tier X or higher
 required") or that you **discovered** it first ("Discover X first"), and it can cost **gems**. When you arrive: "You paid
@@ -199,7 +263,11 @@ staff if you need an exemption, for example while recording.
    `commands/{Spawn,Warp,Back}Command`, `hub/HubCommand`, `plugin.yml`, `config.yml` (`teleport:`, `navigation:`);
    knk-web-api `Models/Domain.cs`, `Models/PermissionGroup.cs`, `Services/TeleportGroupPolicy.cs`.
 2. Specs: [road navigation design](../../specs/navigation/DESIGN.md) § 6, [walkable last-mile paths](../../specs/navigation/LAST_MILE_PATHFINDING.md),
-   [teleport design](../../specs/teleport/DESIGN.md).
+   [teleport design](../../specs/teleport/DESIGN.md), [off-road navigation design](../../specs/navigation-offroad/DESIGN.md)
+   § 5 (§ 2.3 shortcuts, road end and plazas; § 2.8 route modes).
 3. Live tests: [road navigation smoke test](../road-navigation-smoke-test.md) (merged 2026-10-08, follow-ups to
    2026-10-17), the teleport plan's smoke tests ([plan](../../specs/teleport/IMPLEMENTATION_PLAN.md), merged
    2026-09-28 and 2026-10-06), alpha run 1 package I (`all` forms and exemptions, #171, merged 2026-11-01).
+4. § 2.3 (staff switches) and § 2.8 (docs #1033): knk-plugin `next` `2c5d5846` (`NavigateCommand`, `RouteMode`,
+   `GroupRouteModeDefaults`, `ManeuverBuilder`); [off-road smoke test](../navigation-offroad-smoke-test.md) § 3, § 5,
+   § 10.2, § 13–§ 15 (passed or accepted by the developer, 2026-11-20 to 2026-11-22).
