@@ -28,7 +28,7 @@
 | L2 lighter start-up reading | #1021 | Running | — | — | — | create_session `session_01R1w2UtvxHHSbCHYZ2ZsheW` (§ 3.6) |
 | L3 stop waking finished sessions | #1026 | Merged into `main` (#1041 `8ffae44e`) and `next` (sync #1042 `0c030da3`) | `claude/token-wakeups-1026`: `43d0efd1` (2 commits on `main`) | [#1041](https://github.com/PandiO/knk-workspace/pull/1041) (`main`) | none (docs) | create_session `session_01R1w2UuD4tw3yQ2N6mwMpQ9` (§ 3.6) |
 | L4 coordinator hand-over, fewer wake-ups | #1024 | Running | — | — | — | create_session `session_01R1w2UwgB6mB8qcMtKmYSwt` (§ 3.6) |
-| L5 reuse catalogue | #978 | Running | — | — | — | create_session `session_01R1w2UvxEiZju9gUZgBsVjt` (§ 3.6) |
+| L5 reuse catalogue | #978 | In review (PRs open, not merged) | `claude/reuse-catalogue-978`: `be067817` (3 commits + merge of `main` `405c82e4`, base `main`); `claude/reuse-catalogue-978-next`: `a3096162` (1 commit on `next` `b2e454f8`) | [#1044](https://github.com/PandiO/knk-workspace/pull/1044) (`main`), [#1045](https://github.com/PandiO/knk-workspace/pull/1045) (`next`) | none (docs) | create_session `session_01R1w2UvxEiZju9gUZgBsVjt` (§ 3.6) |
 | L6 fewer set-up turns | #1022 | Not started (gate: L1–L5 merged; developer approval) | — | — | — | — |
 | L7 one docs session per chain | #1023 | Not started (gate: L1–L5 merged) | — | — | — | — |
 | L8 smoke-run session | #1025 | Not started (gate: L1–L5 merged) | — | — | — | — |
@@ -116,3 +116,31 @@ _(Each link appends its block here when it finishes.)_
     1. L4: the coordinator now holds the PR subscriptions of handed-over links (§ 3.5, § 5.4, § 7.11); batch those PR events with your check-ins.
     2. L2 / L7: if one-off sessions get a rule in the global instructions, add "unsubscribe and cancel `send_later` in the merge turn" there too.
 
+### 4.5 L5 — Reuse catalogue and reuse check (#978)
+
+1. **Scope done.**
+    1. knk-workspace `next` branch: new `docs/architecture/reusable-systems.md` (about 1,040 words), one short section per system: FormWizard and FormConfiguration; DisplayConfiguration, DisplayWizard and ObjectDashboard; RelationPicker, lookups, M2M editor and child forms; validation, step conditions and reusable steps; world tasks with WorldGuard regions; plugin and web app building blocks. Each: what it is for, required when, exception when, entry points per repo, current specs. Linked from `system-overview.md` § 5.
+    2. knk-workspace `main` branch: `knk-design` § 2.4 (required read step) and § 4.8 (required Reuse section, opt-out is a decision log row); DESIGN template new § 4 "Reuse" (later sections renumbered 5–13); `knk-coordinator` § 6.12 (reuse check); one pointer each in `knk-link` § 2.6, `knk-api-endpoint`, `knk-entity-scaffold`, `knk-plugin-command`; global instructions "Authority and freshness" item 6; changelog entry.
+    3. Audit (optional item 5): not done in the link; follow-up [#1043](https://github.com/PandiO/knk-workspace/issues/1043) (`improvement`, `tier:1`, sub-issue of #978) with the heuristic, the sorting rules and `RoadProfilesCard.tsx` as the confirmed first case. For the digest (charter § 2.4).
+2. **Commits and heads.** `claude/reuse-catalogue-978` at `be067817` (base `main`, `origin/main` `405c82e4` merged in, one CHANGELOG conflict kept both sides); `claude/reuse-catalogue-978-next` at `a3096162` (base `next` `b2e454f8`).
+3. **PRs.** [#1044](https://github.com/PandiO/knk-workspace/pull/1044) into `main` (`Closes #978`), [#1045](https://github.com/PandiO/knk-workspace/pull/1045) into `next` (`Part of #978`). Not merged. The `main` files link to a page that exists only on `next` until #1045 merges and `next` is promoted.
+4. **Tests, baseline → result.**
+    1. knk-workspace: docs only. Every relative link on the new page resolves on `next`; the pointers on `main` resolve once the page is there.
+    2. Entry points checked against `next`: knk-web-app `8be9e24`, knk-web-api `e06fd5c`, knk-plugin `2c5d584` (read-only clones, nothing changed).
+    3. Measurement now: the catalogue is about 1,040 words (roughly 1.5k tokens) against about 65k words in the form, validation and world-task specs it points into. The plan § 2 target (new specs with a Reuse section: 0 % → 100 %) can only be counted on specs written after #1044 merges; that count, and any Phase 0 rerun, is the coordinator's at the chain's end.
+    4. Codex: at its usage limit on both PRs; finished without its review (developer decision 2026-11-14), noted on each PR.
+    5. Known reds: none.
+5. **Decisions (DESIGN § 4.3).**
+    1. *Reuse section place in the template.* Chosen: its own § 4 after "Current state", visible and countable for the plan § 2 target. Alternatives: (a) a sub-item of § 3: easy to skip; (b) at the end: read after the design is shaped.
+    2. *Which PR closes #978.* Chosen: #1044 into `main`, because only a merge into the default branch auto-closes. Alternatives: (a) #1045 into `next`: would not close on merge.
+    3. *Audit.* Chosen: follow-up #1043, to keep the link's cost moderate (prompt § 2a.3); the 19-file list needs history the read-only depth-1 clones don't have. Alternatives: (a) audit in the link with full clones and a subagent: roughly 80–120k more tokens.
+    4. *Measurement.* Chosen: report the catalogue's size now and leave the Reuse-section count and rerun to the coordinator (prompt § 1.5). Alternatives: (a) count the specs now: none is written after the change yet.
+    5. *Relations rule.* Chosen: the catalogue says to store relations as a foreign key or join, not a JSON id list, from #978's roads finding. Alternatives: (a) leave it out: the roads case would still pass the check.
+6. **Out of scope, noted.**
+    1. There is no general auto-fill in the form system: only the ItemScan cross-field fill inside `FormWizard.tsx` (`applyItemScanResult`). The catalogue says so; no issue filed, as nobody has asked for one.
+    2. Several specs under `form-validation/` and `world-tasks/` read as phase reports or "Historical"; the catalogue names the current ones only. Tidying them is #1023/docs work, not this link.
+7. **Blockers.** None.
+8. **At merge / what the developer must do.** Nothing beyond the merges: #1044 into `main` (then `main` → `next`) and #1045 into `next`. Review #1043 in the digest. L2: keep `GLOBAL_AGENT_INSTRUCTIONS.md` "Authority and freshness" item 6 in the core file if #1044 merges first.
+9. **Notes for later links.**
+    1. Design sessions after the merge must fill the template's § 4 "Reuse"; the coordinator's § 6.12 checks links against `docs/architecture/reusable-systems.md`.
+    2. Template sections moved by one: "Open questions" is now § 13, "Phases" § 12.
