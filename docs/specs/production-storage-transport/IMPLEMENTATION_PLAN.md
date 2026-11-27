@@ -1,17 +1,36 @@
 # Production, storage and transport — Implementation plan
 
-**Status:** Draft, **rev. 2** (after the developer's notes of 2026-10-09). No phase has started. The open decisions
-are in [DESIGN §14](DESIGN.md#14-decisions), [PRODUCTION_KINDS §9](PRODUCTION_KINDS.md#9-decisions) and
-[TOWN_LOGISTICS §8](TOWN_LOGISTICS.md#8-decisions). Each has a recommendation; phases can start on those.
-**Last updated:** 2026-10-09
-**Design:** [DESIGN.md](DESIGN.md), [PRODUCTION_KINDS.md](PRODUCTION_KINDS.md), [TOWN_LOGISTICS.md](TOWN_LOGISTICS.md).
+**Status:** **Decided 2026-11-16** (developer, with [DESIGN.md](DESIGN.md) §18 for tiers and flags). Draft **rev. 3** (after the developer's voice design review of 2026-11-05,
+[decision record](DECISIONS_2026-11-05.md) §10). Prerequisite item identity (#141, chain link L0) is merged into `next` (knk-web-api `7d213fd6`, knk-plugin
+`2ef256e7`, 2026-11-19; [architecture](../../architecture/item-identity.md)). The territory API (#326, chain link L1), plugin
+(#689, link L2) and web app (#690, link L3) are merged into `next` (knk-web-api `0d6e369a`, knk-plugin `55804b11`,
+knk-web-app `89751315`, 2026-11-19). P1 stock core (#97 API, link L4; #675 web app, link L5) is merged into `next`
+(knk-web-api `2e7d4e81`, knk-web-app `9f46cb49`, migration `AddStockCore`, 2026-11-19). P2 world API (#91, link L6) is
+merged into `next` (knk-web-api `fcfced27`, migration `AddProductionWorld`, 2026-11-19). P3 production engine API (#86, link L9) is merged into `next` (knk-web-api `6c648f60`, migration `AddProductionEngine`, 2026-11-19). P4 yield areas API (#138, link L11) is in review (knk-web-api branch `claude/production-p4`, migration
+`AddProductionYieldAreas`, 2026-11-19). Decisions are in
+[DESIGN §14](DESIGN.md#14-decisions), [PRODUCTION_KINDS §9](PRODUCTION_KINDS.md#9-decisions) and
+[TOWN_LOGISTICS §8](TOWN_LOGISTICS.md#8-decisions); the few still open are listed there. Every item is marked
+**V1** or **Later**. The production structures work and the garrison/guard NPC work ship in the **same test phase**.
+**Last updated:** 2026-11-21 (P12 display stalls and P10b shop menus merged into `next`, docs #970); 2026-11-21 (P12 display stalls in review, link L29, #250); 2026-11-21 (P10b shop menus in review, link L26, #687); 2026-11-21 (P10 merged into `next`: knk-web-api `289f4d4b`, knk-web-app `11832d6b`; docs #939); 2026-11-21 (P10 shops API in review, link L25, #248); 2026-11-21 (P8 merged into `next`: knk-web-api `9ad32c23`, knk-plugin `6f6c915f`; docs #922); 2026-11-21 (P8 harvest plugin #134 in review, link L22); 2026-11-21 (P7 and P7b merged into `next`: knk-web-api `2952d0c7`, knk-plugin `bdd8b463`; docs #915); 2026-11-21 (P7b inbox plugin #684 in review, link L20); 2026-11-20 (P7 delivery and inbox API #60 in review, link L19, with #883 and #890); 2026-11-20 (P5c transport web app #682 in review, link L16); 2026-11-20 (P5 transport API #79 in review, link L14); 2026-11-20 (P4c yield areas web app #680 in review); 2026-11-19 (P4 yield areas API #138 in review); 2026-11-19 (P3b production engine web app #678 in review); 2026-11-19 (P3 production engine API #86 merged into `next`); 2026-11-19 (P2c world plugin #677 in review); 2026-11-19 (P2 world API #91 merged into `next`); 2026-11-19 (P1b stock web app #675 in review; P1 API #97 merged into `next`); 2026-11-19 (P1 stock core API #97 in review); 2026-11-19 (territory plugin #689 and web app #690 merged into `next`); 2026-11-19 (territory API #326 in review); 2026-11-19 (item identity #141 merged into `next`, docs #796); 2026-11-19 (item identity #141 in review); 2026-11-11 (open questions answered, [decision record §11](DECISIONS_2026-11-05.md#11-follow-up-decisions-2026-11-11); issues #324, #325)
+**Design:** [DESIGN.md](DESIGN.md), [PRODUCTION_KINDS.md](PRODUCTION_KINDS.md), [TOWN_LOGISTICS.md](TOWN_LOGISTICS.md),
+[shops DESIGN](../shops/DESIGN.md), [NPC platform](../npc-platform/DESIGN.md) (lifecycle).
 **Evidence:** [V2 scan](../../reports/2026-10-09-v2-production-storage-transport-scan.md).
-**Linear:** parent [KNG-83](https://linear.app/kngpandi/issue/KNG-83). Prerequisite
-[KNG-95](https://linear.app/kngpandi/issue/KNG-95) (every item is a blueprint item).
+**Issues:** parent [#22](https://github.com/PandiO/knk-workspace/issues/22) (`[KNG-83]`). Phase issues are sub-issues of #22 and keep
+their Linear id in the title (`[KNG-84]` = [#97](https://github.com/PandiO/knk-workspace/issues/97) and so on). Prerequisite
+[#141](https://github.com/PandiO/knk-workspace/issues/141) (`[KNG-95]`, every item is a blueprint item).
 **Branches (when work starts):** one standing branch per repo, `claude/production-storage-transport`, cut from
 each repo's current default branch (`master` for knk-web-api, `main` for the others). The earlier docs-only
 knk-workspace branch of that name was merged into `main` and deleted on 2026-10-18. Follow the board rules in
 [ACTIVE_SESSIONS.md](../../ACTIVE_SESSIONS.md).
+
+**Revision history**
+
+- **Rev. 2 (2026-10-09):** phases P1-P9 and the web-app insight track.
+- **Rev. 3 (2026-11-05, [decision record](DECISIONS_2026-11-05.md) §10):** decision record items folded into P1, P3,
+  P5, P6, P7, P8 and P9; new phases P10 Shops, P11 Shopkeepers and P12 Display stalls; NPC lifecycle requirements on
+  the NPC platform; every item marked V1 or Later; new Later issues; smoke test updated.
+- **2026-11-11 ([decision record §11](DECISIONS_2026-11-05.md#11-follow-up-decisions-2026-11-11)):** P10 gains a minimal town account kind and the settled pricing
+  details; P9 releases expired reservations; Later issues #324 and #325.
 
 ## Rules for every phase
 
@@ -19,6 +38,10 @@ knk-workspace branch of that name was merged into `main` and deleted on 2026-10-
   - their FormConfig CRUD;
   - a detail view with the insight data it produces: ledger, cycle trace, event log, plan explanation.
   - In-game menus and commands follow in P6, or within the phase when they are needed to test.
+- **Form and display seeds for every new entity** (developer, 2026-11-16, decision record §15 G17): each entity a
+  phase adds ships its FormConfiguration seed (`Data/FormConfigurationSeeds/<Entity>.json` + README row) and its
+  DisplayConfiguration seed (`Data/DisplayConfigurationSeeds/`) in the same phase, so the FormWizard and detail pages
+  work without hand-made configs. The `knk-entity-scaffold` skill covers the steps.
 - **Checks per phase:**
   - `dotnet test` (API, including `requires-mysql` concurrency tests for stock);
   - `npm run test:ci` + `npm run build` (web app);
@@ -35,18 +58,31 @@ KNG-95 Item identity ───────────────────�
 P1 Stock core (84) ──► P2 World (85) ──► P3 Production engine (86) ──► P4 Areas & surveys (96) ──► P8 Harvest & regen (97)
         │                    │                 │
         │                    └────────► P5 Transport core (87) ──► P9 Town logistics (98) ──► later: trade (100)
-        │                                      │                                               later: physical transport (99)
-        └──► P7 Delivery, inbox, deposit (90) ◄┘  P6 Plugin terminals/menus (88)        web-app insight (89) grows with each phase
+        │                                      │                                               next: NPC caravans (#251)
+        └──► P7 Delivery, inbox, deposit (90) ◄┘  P6 Plugin terminals/menus (88)
+
+P10 Shops (#248): static catalogue ──► restocking (needs P9), processing, player selling
+        ├──► P11 Shopkeepers (#249) ◄── NPC platform lifecycle (KNG-36; same test phase as the guard work, #234)
+        └──► P12 Display stalls (#250)
+web-app insight (89) grows with each phase
 ```
+
+P10's static catalogue needs P1, P2 and the P3 level pattern only, so it can start before P9. Restocking needs P9.
 
 ---
 
-## P1 — Stock core · [KNG-84](https://linear.app/kngpandi/issue/KNG-84)
+## P1 — Stock core · [#97](https://github.com/PandiO/knk-workspace/issues/97) (`[KNG-84]`)
 
 **API**
 
+All **V1**.
+
 - `Storage` (kind, holder FKs or `SystemKey`, purpose, capacity value object, stored totals, `RowVersion`, lock
   fields).
+- **Capacity in raw units (rev. 3):** `MaxUnits`, `MaxDistinct`, `UnitsPerSlot`; capacity use = Σ amount ×
+  `ItemBlueprint.StorageWeight`. No `StackSlots` mode.
+- **`ItemBlueprint.StorageWeight`** (decimal, default 1) with its migration. Per-item values are Later tuning, data
+  only.
 - `StockLine`, `StockUnit`, `StockTransaction`, `StockMove`. Enums in `Enums/`.
 - Migration `AddStockCore`, which seeds the virtual storages `SYS_PRODUCTION`, `SYS_CONSUMPTION`, `SYS_LOSS`,
   `SYS_ADJUSTMENT` and `SYS_WORLD`.
@@ -56,11 +92,12 @@ P1 Stock core (84) ──► P2 World (85) ──► P3 Production engine (86) �
 - `StoragesController`, `StockTransactionsController` (ledger, paged).
 - Permission `knk.economy.admin`.
 
-**Web app:** storage CRUD, a storage detail view (lines and units), a manual move/adjust dialog, the ledger explorer.
+**Web app:** storage CRUD, a storage detail view (lines and units), a manual move/adjust dialog, the ledger explorer,
+`StorageWeight` on the blueprint form.
 
 **Tests:**
 
-- capacity (both weightings);
+- capacity in raw units with `StorageWeight` (default 1 and a non-1 value);
 - partial vs all-or-nothing;
 - idempotency replay;
 - concurrent moves (MySQL);
@@ -68,42 +105,106 @@ P1 Stock core (84) ──► P2 World (85) ──► P3 Production engine (86) �
 - Restrict FKs;
 - locks.
 
-## P2 — World: Territory, Warehouse, ProductionStructure · [KNG-85](https://linear.app/kngpandi/issue/KNG-85)
+## P2 — World: rural structures, Warehouse, ProductionStructure · [#91](https://github.com/PandiO/knk-workspace/issues/91) (`[KNG-85]`)
 
-**Needs:** DESIGN D1 and D5.
+**Needs:** the territory V1 work ([#326](https://github.com/PandiO/knk-workspace/issues/326), [territory DESIGN](../territory/DESIGN.md)) for the territory
+lookup used by P-2 and P-3; DESIGN D1 (2026-11-11, DESIGN §3.4) and D5 (confirmed 2026-11-05). All **V1**. The
+district part of this phase doesn't wait for #326.
+
+**Status (2026-11-19):** API in review (link L6, knk-web-api `claude/production-p2`, migration `AddProductionWorld`).
+Built: `Structure.TownId` with District-xor-Town, `Warehouse` and `ProductionStructure` with default storages, the
+`InsideTerritory` validation type, the placement rules on save, the road-connection endpoint, seeds. The territory
+lookup `InsideTerritory` asks is answered by the plugin (P2c, #677): `GET /api/territory/contains-region/{regionId}`
+and `GET /api/territory/contains-location` on the plugin's HTTP server (contract in knk-web-api
+`Services/Production/TerritoryLookupClient.cs`). The structure search lists every structure's town (`townId`), so the
+territory report can flag rural structures. P-3 (production areas) uses the same validation types once P4 adds areas. Plugin
+(P2c, #677) in review (link L8, knk-plugin `claude/production-p2c`, behind `production.enabled`): region kinds
+`RESOURCE_PRODUCTION` (production structures) and `STRUCTURE` (warehouses), rural structure regions with no parent at
+the kind's floor, the two territory lookup endpoints, rural structures in the territory report. Structure NPCs do not
+exist yet (they come with P5's workers and P11's shopkeepers), so "structure NPCs invulnerable" is left to those phases. Web app
+(P2b, #676) in review (link L7, knk-web-app `claude/production-p2b`): the seeded forms with region capture and the town
+picker, placement warnings shown after a save and the API's reason for a refused one, `InsideTerritory` in the rule
+builder, the dashboard columns and a Territory flag filter for flagged structures, and the warehouse and production
+structure pages (placement, warnings, territory flag, storages with their stock).
 
 **API**
 
-- `Territory : Domain`.
-- `Structure.TerritoryId` with the District-xor-Territory rule; an effective-town resolver.
+- `Structure.TownId` for rural structures, with the District-xor-Town rule; `DistrictId` and `StreetId` nullable; an
+  effective-town resolver (DESIGN §3.3-3.4).
 - `Warehouse : Structure`.
-- `ProductionStructure : Structure` (fields per DESIGN §3.3; `ProductionKindId` nullable until P3 seeds kinds).
+- `ProductionStructure : Structure` (fields per DESIGN §3.3, including `WorkersTotal`; `ProductionKindId` nullable
+  until P3 seeds kinds).
+- **Placement rules** (DESIGN §3.4): P-1 `RegionContainment` against the district in the Warehouse,
+  ProductionStructure (and later Shop) seed forms; P-2 and P-3 through a new `InsideTerritory` validation type. All
+  seeded as warnings (`IsBlocking: false`); admins can switch each to blocking. The same rules checked on save in the
+  API.
+- A flag on structures whose land is contested or outside their town's territory, listed on the
+  `TerritoryConflict` (#326).
 - Default storages on create.
-- Audit and fix every `Structure.District` dereference; list the call sites in the PR.
+- Audit and fix every `Structure.District` and `Structure.Street` dereference; list the call sites in the PR.
 
-**Web app:** FormConfigs with WorldTask capture.
+**Web app:** FormConfigs with WorldTask capture (district or rural, with the town picker for rural); the rule builder
+offers `InsideTerritory`; the dashboard shows flagged structures.
 
-**Plugin:** managed-region kinds for Territory, ProductionStructure and Warehouse; tests in
-`ManagedRegionPolicyTest`.
+**Plugin:** managed-region kinds ProductionStructure (`RESOURCE_PRODUCTION`) and Warehouse (`STRUCTURE`); rural
+structure regions without a parent at their floor priority (PvP stays allowed); structure NPCs invulnerable; `/knk regions repair` handles structures without a
+district; tests in `ManagedRegionPolicyTest`.
 
-## P3 — Production engine · [KNG-86](https://linear.app/kngpandi/issue/KNG-86)
+**Tests:** District-xor-Town; effective town for both; P-1 to P-3 warn by default and block when an admin sets
+`IsBlocking`; a structure on land that becomes
+contested keeps its town and is flagged; rural structures through navigation, discovery and domain access.
+
+## P3 — Production engine · [#86](https://github.com/PandiO/knk-workspace/issues/86) (`[KNG-86]`)
+
+**Status (2026-11-19):** API built in link L9 (in review): everything in the API list below except the "Later" items.
+Agent decisions on knk-web-api PR `claude/production-p3` (e.g. cycle speed shortens the cycle without raising the
+rate per hour; weather days of 20 real minutes; inputs consumed per hour of running time; child lists edited through
+the API until the web app editors of #678). Web app #678 built in link L10 (in review, knk-web-app branch `claude/production-p3b`):
+everything in the "Web app" line below, plus the engine timing card and Run production now on the game settings page.
 
 **API**
 
-- `ProductionKind` + seeds (PRODUCTION_KINDS §2.1).
-- `ProductionKindLevel` (10 levels) and an upgrade action.
+All **V1** unless marked.
+
+- `ProductionKind` + seeds (PRODUCTION_KINDS §2.1; Hunter stays out of V1, P-D10).
+- `ProductionKindLevel` (10 levels: yield multiplier, cycle speed, storage caps and `UnitsPerSlot`, transport
+  capacity, an `UpkeepReduction` field **without effect**) and an upgrade action.
 - `ProductionLine` (Configured rates in this phase, decimal accrual, inputs, status, `NextSettleAt` index).
-- `ProductionCycleRecord`.
+- **Modifier pipeline (rev. 3):** `ProductionModifier` (scope, target, effect, active window, source), a resolver
+  per cycle, and modifier **sources** as an extension point. V1 sources: **structure level** and **weather**.
+- **Weather (rev. 3):** `ClimateZone` (one default; assignable per town), weather types with odds per
+  zone and modifiers per resource category, a **daily stored roll per zone** (`WeatherRoll`), and a sweep that rolls
+  once per in-game day.
+- **Producer workers (rev. 3):** `WorkersTotal` (default 2), workers present, and the worker-availability factor in
+  settle (one of two away → 50%, both away → 0).
+- `ProductionCycleRecord` with **each** applied modifier and the workers present.
 - `ProductionService.Settle*`.
 - `ProductionSweepService` (pattern: `RankExpirySweepService`, with an injectable clock).
 - Notifications to the outbox (blocked and resumed).
+- **Later:** the other modifier sources ([#254](https://github.com/PandiO/knk-workspace/issues/254), [#255](https://github.com/PandiO/knk-workspace/issues/255), [#257](https://github.com/PandiO/knk-workspace/issues/257)).
 
-**Web app:** kind, level and line editors; structure detail with the cycle trace and a "why not producing" view.
+**Web app:** kind, level and line editors; modifier list; climate zone and weather editors with the roll history;
+structure detail with the cycle trace (per modifier) and a "why not producing" view.
 
-**Tests:** drift-free accrual over simulated clocks; catch-up cap; stall-when-full (D4); inputs; level multipliers
-and unlocks; upgrade costs (stock + currency in one transaction).
+**Tests:** drift-free accrual over simulated clocks; catch-up cap; stall-when-full (D4); inputs; level modifiers,
+cycle speed and unlocks; modifier scope, target and window matching and their order; one stored weather roll per
+zone per day, identical on replay; worker factor 100/50/0%; upgrade costs (stock + currency in one transaction).
 
-## P4 — Yield areas and surveys · [KNG-96](https://linear.app/kngpandi/issue/KNG-96)
+## P4 — Yield areas and surveys · [#138](https://github.com/PandiO/knk-workspace/issues/138) (`[KNG-96]`)
+
+All **V1** (unchanged in rev. 3; Hybrid default confirmed, P-D1).
+
+**Status (2026-11-19):** API built in link L11 (in review, knk-web-api branch `claude/production-p4`, migration
+`AddProductionYieldAreas`): everything in the API list below. The survey runs in the plugin and reports unit counts per
+area, with `sharedBy` for units in overlapping shared areas (the API lists those areas in its survey queue), so the
+equal split is computed from what the plugin counted; exclusive overlaps are checked from bounding boxes. Agent
+decisions on knk-web-api PR `claude/production-p4` (e.g. a pin replaces the survey's rate; lines whose output
+disappears stay with base 0; no yield table rows seeded). Plugin: #679, built in link L12 (2026-11-20, in review,
+knk-plugin branch `claude/production-p4b`): everything in the plugin list below; the placeholder overlay waits for P8's
+regeneration jobs. Web app #680 built in link L13 (in review,
+knk-web-app branch `claude/production-p4c`): the survey viewer, Survey now, the Hybrid override editor and the yield
+table editor; area capture uses the seeded form, with the region world task to be added to the seed (#680) and
+`CaptureRadius` waiting for #679.
 
 **API:**
 
@@ -125,14 +226,38 @@ and unlocks; upgrade costs (stock + currency in one transaction).
 **Tests:** tree detection fixtures; overlap split; Derived vs Hybrid materialization; survey idempotence (same world
 → same hash).
 
-## P5 — Transport core (simulated) · [KNG-87](https://linear.app/kngpandi/issue/KNG-87)
+## P5 — Transport core (simulated) · [#79](https://github.com/PandiO/knk-workspace/issues/79) (`[KNG-87]`)
+
+**Status (2026-11-20):** API built in link L14 (in review, knk-web-api branch `claude/production-p5`, migration
+`AddTransportCore`): everything in the API list below except the "Later" items, plus #838 (kind name on the structure
+list, blueprint names on consumed inputs, cycle records on the dashboard). Lanes have a `due` list and a `report`
+endpoint for the plugin (#681) and can be typed in by staff; a structure's transport view (`GET
+api/ProductionStructures/{id}/transport`) is the automatic trigger's dry run. Agent decisions on knk-web-api PR
+`claude/production-p5` (e.g. the walking speed 4.317 blocks/s as a game setting; the worker is away from loading until
+the order ends; at a full stop the carrier waits 30 minutes, re-routes within the town, else carries on and brings the
+rest back; manual orders through the API, the TransportOrder form seed read only). Plugin built in link L15 (merged
+into `next`, knk-plugin `7116f1a5`, #681): the lane measurer over the road snapshot, road connections,
+`/knk logistics lanes measure|status` and the headless job (`production.logistics.lanes.*`); agent decisions on the
+knk-plugin PR (e.g. the road distance includes the walk to and from the road; a structure more than 48 blocks from a
+road is Unconnected; the road connection is judged on every lane measured since the server started).
+Web app built in link L16 (#682): the order list and detail
+(timeline, cargo, route, cancel), the manual order page with the dry run, a structure's transport panel with its lanes,
+lanes on the dashboard, the transport settings card with Run transport now, and the #838 reads.
 
 **API**
 
 - `TransportOrder`, `TransportStop`, `TransportOrderLine`, a Transit storage per order, `TransportAssignment`
   (Simulated), `TransportEvent`, `TransportLane`.
-- Triggers, sizing and destination choice (DESIGN §7.4, §7.6).
-- `TransportSweepService`; manual orders, dry run, cancel.
+- Triggers, sizing and destination choice (DESIGN §7.4, §7.6). **V1**
+- **Simulated only, robbery off** (D6). **V1**
+- **Carried by the producer's own workers (rev. 3):** an order takes a free worker, the worker's capacity bounds the
+  order, and the order waits when no worker is free; the worker is away until the order is done (DESIGN §7.7).
+  **V1**
+- **Unconnected producers (rev. 3, D5):** automatic transport held; warnings for the missing road and the full
+  storage. **V1**
+- `TransportSweepService`; manual orders, dry run, cancel. **V1**
+- **Later:** NPC caravans with virtual movement ([#251](https://github.com/PandiO/knk-workspace/issues/251), next follow-up), town carrier pool for hire
+  ([#252](https://github.com/PandiO/knk-workspace/issues/252)), couriers, robbery and escort ([#53](https://github.com/PandiO/knk-workspace/issues/53)).
 
 **Plugin:** lane measurer (`AStarRouter`), `RoadConnection` updates, `/knk logistics lanes measure`, a headless
 periodic job.
@@ -140,39 +265,104 @@ periodic job.
 **Web app:** order list and detail (timeline, cargo, route), manual order form, dry run.
 
 **Tests:** every lifecycle path, including AwaitingSpace → re-route → Returning and ReturnBlocked; cancel in each
-state; restarts mid-transit; one open automatic order per source; ledger reconciliation.
+state; restarts mid-transit; one open automatic order per source; ledger reconciliation; an order waits without a
+free worker; output drops while a worker is away and recovers on return; an unconnected producer holds transport and
+stops when full.
 
-## P6 — Plugin: terminals, displays, menus, commands · [KNG-88](https://linear.app/kngpandi/issue/KNG-88)
+## P6 — Plugin: terminals, displays, menus, commands · [#74](https://github.com/PandiO/knk-workspace/issues/74) (`[KNG-88]`)
 
-**API:** `StorageContainer` CRUD (Terminal and Display modes).
+**Status (2026-11-20):** API part built in link L17 (#683, in review, knk-web-api branch `claude/production-p6a`,
+migration `AddStorageContainers`): `StorageContainer` CRUD (Terminal, Display) with the container-derived cap written to
+the storage's `MaxUnits`; terminal view, take and put (`SYS_WORLD` moves with idempotency keys, reasons Deposit and
+Withdraw) and the display sample for the game server; the caller-filtered structure reads `api/StructureMenus`
+(overview, structure menu, orders list; M3); staff retry `POST api/TransportOrders/{id}/retry`; the three menus and the
+hub's "Structures" tile seeded as menu content (A27). Town membership is the permission node
+`knk.town.member.<townId>` until town roles (#246). Plugin part built in link L18 (#74, in review, knk-plugin branch
+`claude/production-p6`, behind `production.enabled`): `/knk storage bind|unbind|info|reload`; terminals (a paged view of
+the storage, take and put as ledger moves as the player, puts resolved with item identity and held back until the API
+answers); displays (a tagged sample written on chunk load and after terminal moves, throttled; read-only); bound blocks
+protected from breaking, explosions and hoppers; the structures overview with the Town filter preset from the territory
+lookup, the structure menu and the orders list with the staff buttons (survey now, dry run, area outline, cancel and
+retry). Not built: opening the structure menu from a worker NPC (production structures have no worker NPC entity yet),
+unique items in terminals in game, notifications and Bukkit events (`ProductionCycleEvent`,
+`TransportOrderStatusEvent`), `/knk transport` and watch on/off ([#897](https://github.com/PandiO/knk-workspace/issues/897)).
+
+All **V1**; Backed mode is Later ([#113](https://github.com/PandiO/knk-workspace/issues/113)).
+
+**API:** `StorageContainer` CRUD (Terminal and Display modes); container-derived capacity = bound slots ×
+`UnitsPerSlot` (rev. 3).
 
 **Plugin:**
 
 - terminal inventory view (paged; take and put as `SYS_WORLD` moves with idempotency keys);
 - display renderer;
-- logistics menus;
+- in-game menus (decided 2026-11-16, DESIGN §11.2, decision record §15.1 M1-M5): a "Structures" icon in the main
+  menu with the structures overview (search, filters, town filter pre-set from the player's position via the
+  territory lookup, #326), the structure menu (also from the worker NPC) and the transport orders list; read-only
+  for players, staff buttons for survey, dry run, order cancel/retry and area outline; layouts from V2's
+  `ProductionStructureMenu`, `StorageOverview` and overview pattern; seeded as menu content;
+- API: caller-filtered structure summary and detail reads (public summary; rates, stock, workers and orders for town
+  members and staff only);
 - `/knk storage|production|transport|logistics`;
 - notifications and Bukkit events.
 
 **Needs:** KNG-95 for put/take resolution.
 
 **Tests:** canonical container keys (double chests); terminal take/put under lag and retry; display refresh
-throttling.
+throttling; binding or unbinding a container changes the cap by its slots × `UnitsPerSlot`.
 
-## P7 — Item delivery, reward inbox, deposit/withdraw · [KNG-90](https://linear.app/kngpandi/issue/KNG-90)
+## P7 — Item delivery, reward inbox, deposit/withdraw · [#60](https://github.com/PandiO/knk-workspace/issues/60) (`[KNG-90]`)
+
+All **V1**.
 
 **API:** `IItemDeliveryService`, player Inbox and Stash storages, claim and expiry, deposit/withdraw endpoints.
+Rev. 3 inbox rules (DESIGN §4.6):
+
+- a **hard cap**, with a **premium cap source** (premium tiers raise it);
+- **overflow to `SYS_LOSS`** (`InboxOverflow`) when a reward arrives at a full inbox;
+- **near-cap warnings** and a notification when something is lost;
+- **30-day expiry** with reminders (`InboxExpired` to `SYS_LOSS`).
 
 **Plugin:** `/inbox` and an inbox menu; migrate `KitGrantPlacer` and `LootboxDelivery` from dropping at the
 player's feet to the delivery service.
 
 **Tests:** offline, full-inventory and in-minigame deliveries land in the inbox; claim with partial space;
-`StockUnit` rewards keep their enchantments; retries don't duplicate.
+`StockUnit` rewards keep their enchantments; retries don't duplicate; a full inbox sends the reward to `SYS_LOSS`
+with a ledger record and a notification; premium raises the cap; warnings at the thresholds; expiry after 30 days.
 
-## P8 — Player harvesting and block regeneration · [KNG-97](https://linear.app/kngpandi/issue/KNG-97)
+**Status (2026-11-20):** API part built in link L19 (#60, in review, knk-web-api branch `claude/production-p7`,
+migration `AddItemDelivery`): `IItemDeliveryService` (deliveries from the game server or staff into the player's Inbox
+storage, overflow at the hard cap to `SYS_LOSS` with a loss notification, near-cap warnings, premium caps from the game
+settings section `production.delivery`), claims (oldest lots first), the 30-day expiry with reminders (hourly sweep), the
+premium stash with idempotent deposit and withdraw, and the `ItemDelivery` seeds. Every move needs `Production:Enabled`.
+Also in L19: placement rule P-3 for production areas (#883) and the P5 read additions (#890).
 
-**API:** `HarvestRule` per kind; `ResourcePool` per area; a harvest report endpoint (idempotent, batched); the pool
-multiplier in settle.
+**Status (2026-11-21):** plugin part built in link L20 (#684, in review, knk-plugin branch `claude/production-p7b`, behind
+`production.enabled`): `/inbox` and the inbox view (claim with partial space), the inbox notices (near-cap warning, loss,
+expiry reminders, expiry) and a join summary; kit (`KitGrantPlacer` through `KitGrantFlow`, `KitGrantDelivery` #261 and
+first-join kits) and lootbox (`LootboxDelivery`) leftovers go to `POST api/ItemDeliveries` instead of the ground, and a
+kit for a player who went offline goes to the inbox whole. Unique items still drop until the instance-to-item builder
+(#897). With the flag off, kits and lootboxes deliver as before (A21).
+
+**Status (2026-11-21):** both parts merged into `next` (knk-web-api `2952d0c7`, PR PandiO/knk-web-api#70; knk-plugin
+`bdd8b463`, PR PandiO/knk-plugin#113); smoke test § 8 not run live. Docs: [architecture](../../architecture/production-item-delivery.md),
+[API contract](../api/API_CONTRACT_ITEM_DELIVERY.md), [admin guide](../../guides/admin/reward-inbox-admin-guide.md) (#915).
+Open: the web app pages (#901), unique items in game (#897), the lootbox `Inbox` method and claim all (#912).
+
+## P8 — Player harvesting and block regeneration · [#134](https://github.com/PandiO/knk-workspace/issues/134) (`[KNG-97]`)
+
+All **V1** unless marked.
+
+**API:**
+
+- `HarvestRule` per kind, with `WorkerShare` (default 25%);
+- `ResourcePool` per area;
+- a harvest report endpoint (idempotent, batched) that **splits each harvest**: the worker's share as
+  `SYS_PRODUCTION → SYS_WORLD`, the rest `SYS_PRODUCTION → Output` (both `PlayerHarvest`);
+- the pool factor in settle;
+- the **net-positive check** per rule (PRODUCTION_KINDS §6.3), shown in the web app.
+- An optional coin wage or title XP per harvest is allowed, not required.
+- **Later:** professions, paid work, quests, the roleplay theft mode.
 
 **Plugin:**
 
@@ -181,52 +371,223 @@ multiplier in settle.
 - blueprint drops through KNG-95;
 - a disk-persisted regeneration queue with placeholders and tree snapshots.
 
-**Tests:** allowed vs denied breaks; pool math; regeneration across restart and chunk unload; surveys counting
-pending regenerations.
+**Tests:** allowed vs denied breaks; the worker's share split and its ledger moves; the town gains net output for a
+net-positive rule; pool math; regeneration across restart and chunk unload; surveys counting pending regenerations.
 
-## P9 — Town logistics · [KNG-98](https://linear.app/kngpandi/issue/KNG-98)
+**Status (2026-11-21):** API part built in link L21 (#685, in review, knk-web-api branch `claude/production-p8a`,
+migration `AddPlayerHarvesting`): `HarvestRule` per kind (targets, requirement, tool, yield with fortune, worker's share
+default 25 %, pool cost, cooldown, placeholder and regeneration time), `ResourcePool` per area (capacity from the latest
+survey, lazy regeneration, staff edits), `ProductionKind.PoolFloor` (0.5) and the pool step in settle, batched and
+idempotent harvest reports (`POST api/Harvest/reports`) that split each harvest as above with carried fractions per
+player and rule and the F10 rule for a full Output, the game server's catalogue (`GET api/Harvest/catalog`), the
+net-output check per rule (`GET api/HarvestRules/{id}/balance`, F9), the harvest history and the seeds. Reports need
+`Production:Enabled`. Also in L21: P-3 for Polygon areas (#900). Web app (rule editor with the balance, pools, history):
+[#913](https://github.com/PandiO/knk-workspace/issues/913).
 
-**Needs:** the developer's review of TOWN_LOGISTICS §4.
+**Status (2026-11-21, plugin):** built in link L22 (#134, in review, knk-plugin branch `claude/production-p8`), behind
+`production.enabled`: the harvest listener for blocks and entities against `GET api/Harvest/catalog` (`HarvestGate`:
+target, crop age, `IRequirementEvaluator` with permission node and title bracket, tool class and tier, cooldown, the
+structure's switch, optionally the empty pool), the WorldGuard pass for qualified harvests in `RESOURCE_PRODUCTION`
+regions (replaces the KNG-48 config switch for harvesting; #105) and the global-region protection's pass outside regions,
+blueprint drops (the answer's `workerUnits` of the rule's blueprint into the inventory, owed to offline players), batched
+reports with one idempotency key per entry (persisted outbox, resent with the same key), the disk-persisted regeneration
+queue with placeholders (depleted block P-D7, replant, air, whole-tree snapshot with a sapling P-D8), restored only with
+loaded chunks, over unchanged placeholders and never into an entity, and the survey placeholder overlay (L12).
+`/knk production harvest status|refresh`; `config.yml` `production.harvest.*`; scenarios `player-harvest-regenerate` and
+`player-harvest-tree`; smoke guide § 9.2.
 
-**API:**
+**Status (2026-11-21):** both parts merged into `next` (knk-web-api `9ad32c23`, PR PandiO/knk-web-api#72; knk-plugin
+`6f6c915f`, PR PandiO/knk-plugin#114); smoke test § 9 not run live. Docs: [architecture](../../architecture/production-harvesting.md),
+[API contract](../api/API_CONTRACT_HARVESTING.md), [admin guide](../../guides/admin/production-harvesting-admin-guide.md),
+[player guide](../../guides/users/harvesting-player-guide.md) (#922). Open: the web app pages (#913), harvest breaks in the
+survey NotableChange counter (#923).
 
-- service areas;
-- consumer replenishment settings;
-- `LogisticsPolicy`/`LogisticsRule` (versioned);
-- `LogisticsPlanner` (interval plus dry run) creating Distribution and Rebalance orders with explanations;
-- default policy templates.
+## P9 — Town logistics · [#127](https://github.com/PandiO/knk-workspace/issues/127) (`[KNG-98]`)
 
-**Web app:** policy and rule editor, planner dry-run view, town supply view.
+The developer reviewed TOWN_LOGISTICS §4 on 2026-11-05; the V1 subset is below.
 
-**Tests:** reserves never breached; priority under scarcity; quotas; rebalance; emergency modes; explanation
+**API (V1):**
+
+- service areas (default: nearest warehouse by road);
+- consumer replenishment settings (reorder point, target level, priority class);
+- **consumer workers** (the same model as producer workers);
+- `LogisticsPolicy`/`LogisticsRule` (versioned) with the V1 rule types: reserves, priority classes, service areas;
+- **reserve and collect:** `LogisticsPlanner` (10-minute interval plus dry run) creating **reservations** and
+  **collection orders** carried by the consumer's worker, with explanations;
+- default policy templates, edited by admins;
+- no warehouse workers.
+
+**Later:** ceilings, allocation quotas, export/import and embargoes, emergency modes, rebalance, tax/tariff
+([#324](https://github.com/PandiO/knk-workspace/issues/324)); clan council governance (later stage); in-game runtime management ([#256](https://github.com/PandiO/knk-workspace/issues/256)); warehouse throughput ([#253](https://github.com/PandiO/knk-workspace/issues/253)).
+
+**Web app:** policy and rule editor, planner dry-run view, town supply view with reservations.
+
+**Tests:** reserves never breached; a reservation can't be taken twice; priority under scarcity; collection by the
+consumer's worker lowers its output while away; expired reservations are released at the next run; explanation
 content.
 
-## Web-app insight · [KNG-89](https://linear.app/kngpandi/issue/KNG-89)
+**Status (2026-11-21):** API part built in link L23 (#127, in review, knk-web-api branch `claude/production-p9`,
+migration `AddTownLogistics`): versioned `LogisticsPolicy` (town, warehouse, default templates per size and
+specialization, applied to a town) with `LogisticsRule`s of the V1 types (reserves in units or days of cover, town-wide
+or per warehouse; priority classes per consumer or production kind; service areas per district, the rural territory or
+a structure, also the producers' inbound preference; replenishment defaults per consumer group), `ConsumerReplenishment`
+(min/max and priority per consumer storage and blueprint; without one, the line inputs × 4 h / 12 h), the planner every
+10 minutes per town with dry runs (reservations with a 30-minute expiry, released at the next run; collection orders with
+origin Distribution carried by the consumer's own worker through `TransportService`; a plan explanation per consumer
+line), the town supply, service area and consumer views, the seeds. The planner needs `Production:Enabled`. Consumer
+workers: V1 consumers are production structures (their `WorkersTotal`/`WorkersPresent`); other consumers (shops,
+P10) need workers and the transport carrier widened (note for L25). Web app: link L24 (#686, in review, knk-web-app
+branch `claude/production-p9b`): the policy and rule editor with versions and templates, the planner dry-run and run
+view with the explanation per consumer line, the town supply view with reservations and service areas, the consumer
+and warehouse panels, the settings card.
 
-The logistics dashboard, simulator, health view and order map. These grow alongside P3-P9.
+## P10 — Shops · [#248](https://github.com/PandiO/knk-workspace/issues/248)
+
+**Status (2026-11-21):** API part built in link L25 (#248, merged into knk-web-api `next` `289f4d4b`,
+migration `AddShops`): shops (a TPT subtype of `ProductionStructure`, for the worker and the processing lines), shop
+types with accepted categories and levels, the static catalogue (Stocked or Unlimited), interim pricing, confirmed
+purchases with the coins to the town account (`AccountKind.Town`), selling to shops, processing on the P3 engine
+(Input → Merchandise), restocking by the P9 planner at the level's default min/max, hourly trade stats and the seeds
+(G17). Shop menus built in link L26 (#687, merged into knk-plugin `next` `c349a53c`, menu seeds in knk-web-api `next` `7c6dd7f5`): the shop menu, the item information menu, the purchase confirmation (to the inventory or the reward inbox, `PriceChanged` asked again), the plugin-built sell menu and `/knk shop <id>`, from the legacy V1 shop menus (developer decision 2026-11-21); the menu seeds `shops.shop`, `shops.item`, `shops.confirm` are in knk-web-api `MenuTemplateSeed.Shops.cs`. Web app built in link L27 (#688, merged into knk-web-app `next`
+`11832d6b`): shop type categories and levels, the shop page (offer, catalogue editor, sales, town
+account, hourly trade stats chart), the town account ledger. Smoke test: [§ 11](../../guides/production-storage-transport-smoke-test.md#11-phase-p10-shops-248-api-687-plugin-menus-688-web-app-tier3).
+Docs: [architecture](../../architecture/shops.md), [API contract](../api/API_CONTRACT_SHOPS.md), [admin
+guide](../../guides/admin/shops-admin-guide.md) (#939).
+
+**V1.** Design: [shops DESIGN](../shops/DESIGN.md). One update, built in this order:
+
+1. **Static admin catalogue first** (needs P1, P2 and the P3 level pattern):
+   - `Shop : Structure` with Input and Merchandise storages, a kind (`Processing` or `Trading`), a level, accepted
+     categories, its own worker and a shopkeeper spawn location (used by P11);
+   - `ShopCatalogueEntry` (blueprint or item instance, static price, admin pin);
+   - shop levels on the production level pattern (processing speed, yield, input cost, price multiplier, storage
+     caps), with the same admin UI;
+   - **minimal town account kind** (`AccountKind.Town`) so shop income goes to the town (decision 2026-11-11; trade,
+     tax and spending stay in [#124](https://github.com/PandiO/knk-workspace/issues/124));
+   - buying: a currency transaction (player → town account) and a stock transaction in one database transaction;
+     **every purchase confirmed**;
+   - interim pricing: a static price wins; otherwise base price (midpoint of `BasePriceMin`/`BasePriceMax`) × shop
+     tax modifier × shop level modifier; enchantments on unique items add a percentage of the base price.
+2. **Then, in the same update:**
+   - **restocking** from the warehouse by the shop's own worker (reserve and collect, needs P9);
+   - **processing** lines (flour → bread) on the P3 engine;
+   - **players selling** to shops: accepted categories; buy-back = sell formula × buy-back % (default 50%); unique
+     items become a `StockUnit` in Merchandise and are resold as that exact item.
+
+**Plugin:** shop menus on the inventory menu engine, from the legacy V1 shop menus (developer decision 2026-11-21, #687); the sell menu is built in the plugin, since the engine has no deposit slots.
+
+- **hourly trade stats** (`ShopTradeStat` per shop, blueprint and hour, rolled up from the ledger; shops DESIGN
+  §9.1): recorded from V1 for the later pricing model, not used by V1 pricing.
+
+**Web app:** shop CRUD, catalogue editor, levels, sales ledger, trade stats chart.
+
+**Tests:** the hourly rollup matches the ledger and is idempotent per shop and hour; a purchase is atomic (coins and stock together, coins to the town account); confirmation required; a static price wins; formula
+price; 50% buy-back; refused categories; a sold enchanted item comes back on sale with its enchantments; restock and
+processing keep the ledger reconciled.
+
+**Later:** real pricing ([#120](https://github.com/PandiO/knk-workspace/issues/120)); a town turnover tax on shops with shop margins ([#325](https://github.com/PandiO/knk-workspace/issues/325)); sales
+slowed while a shop's only NPC is out, once hired workers exist. **Decided later:** whether selling to a shop should
+be more or less attractive than selling to a marketplace vendor.
+
+## P11 — Shopkeepers · [#249](https://github.com/PandiO/knk-workspace/issues/249)
+
+**V1.** Needs P10 and the NPC platform lifecycle (KNG-36, [#234](https://github.com/PandiO/knk-workspace/issues/234)). Ships in the same test phase as the
+garrison/guard NPC work.
+
+- A shopkeeper NPC (human or villager) at the shop's stored spawn location.
+- Stays in place and looks at nearby players by default; option to roam within the shop region.
+- A greeting on entering the shop region, with a cooldown (cosmetic).
+- Right-click opens the shop menu: info header (name, level, owner) and the paged catalogue.
+- NPC lifecycle: non-persistent entity, spawn on demand, one live entity per NPC id, orphan sweep on chunk load.
+
+**Tests:** one shopkeeper after a restart, a crash, a chunk reload and repeated spawn requests; orphans removed;
+greeting cooldown; the menu opens for the right shop.
+
+## P12 — Display stalls · [#250](https://github.com/PandiO/knk-workspace/issues/250)
+
+**Status (2026-11-21):** built in link L29 (#250), merged into knk-web-api `next` `d86d6e1a` and knk-plugin `next`
+`b31fceb6` (not released; as built: [shops architecture § 14](../../architecture/shops.md#14-the-game-server-display-stalls-l29-250), docs #970): knk-web-api `ShopDisplaySpot` (one per block,
+an optional pin to an entry of the same shop, facing, order; `api/ShopDisplaySpots`, form and display seeds, migration
+`AddShopDisplaySpots`); knk-plugin display stalls behind `production.enabled` (the selection in knk-core, non-persistent
+item display, Interaction and label entities respawned by the plugin, right-click `shops.item`, shift-right-click the
+`shops.confirm` quick buy, `/knk shop display add|remove|pin|list|reload`, config `production.shops.displays`, scenario
+`shop-display-stall`). The web app has no page for display spots yet ([#968](https://github.com/PandiO/knk-workspace/issues/968)). Smoke test
+[§ 11.4](../../guides/production-storage-transport-smoke-test.md#114-steps-display-stalls-plugin-and-api-250).
+
+**V1.** Needs P10.
+
+- `ShopDisplaySpot`, registered explicitly (like containers; never scanned).
+- Paper item display entities with a floating price label, non-persistent.
+- Selection: admin pins first, then the system fills the rest (in stock and best sellers first); sold-out items are
+  greyed out by default, hidden as an option per shop.
+- Right-click → shop item information menu; shift-right-click → quick buy with a confirmation.
+
+**Tests:** spot selection order; sold-out handling; no duplicate display entities after reloads; quick buy always
+asks for confirmation.
+
+## NPC platform: lifecycle and reliability
+
+**V1**, owned by the NPC platform ([NPC platform DESIGN](../npc-platform/DESIGN.md), lifecycle section). Needed by
+P11 and by rendered producer and consumer workers, later by carriers, alongside guards. The garrison/guard NPC work
+([#234](https://github.com/PandiO/knk-workspace/issues/234), [#238](https://github.com/PandiO/knk-workspace/issues/238)) ships in the same test phase as this feature.
+
+## Web-app insight · [#65](https://github.com/PandiO/knk-workspace/issues/65) (`[KNG-89]`)
+
+The logistics dashboard, simulator, health view and order map. These grow alongside P3-P12.
 
 ---
 
-## Later (own designs)
+## Later
 
-- [KNG-99](https://linear.app/kngpandi/issue/KNG-99): physical transport (NPC caravans, couriers, robbery, escort,
-  risk, quests). After KNG-36.
-- [KNG-100](https://linear.app/kngpandi/issue/KNG-100): inter-town trade and town treasury accounts.
-- [KNG-101](https://linear.app/kngpandi/issue/KNG-101): pricing. **Needs the developer's pricing documents first.**
-- [KNG-102](https://linear.app/kngpandi/issue/KNG-102): Backed container sync for housing.
-- [KNG-91](https://linear.app/kngpandi/issue/KNG-91): processing chains, shops with levels, ownership and payouts.
+Designed for in V1 (fields, extension points), not built.
 
-## Smoke test outline (after P5 + P6)
+| Item | Issue |
+|---|---|
+| NPC caravans with virtual movement (**next follow-up after V1**) | [#251](https://github.com/PandiO/knk-workspace/issues/251) |
+| Physical transport: player couriers, robbery, escort, route risk, quests | [#53](https://github.com/PandiO/knk-workspace/issues/53) (`[KNG-99]`) |
+| Town carrier pool for hire | [#252](https://github.com/PandiO/knk-workspace/issues/252) |
+| Warehouse workers and throughput | [#253](https://github.com/PandiO/knk-workspace/issues/253) |
+| Painted fertility map | [#254](https://github.com/PandiO/knk-workspace/issues/254) |
+| Technologies / knowledge modifier | [#255](https://github.com/PandiO/knk-workspace/issues/255) |
+| Seasons, staffing, exhaustion, events, neighbour bonuses, upkeep, war disruption, per-player weather | [#257](https://github.com/PandiO/knk-workspace/issues/257) |
+| In-game runtime management | [#256](https://github.com/PandiO/knk-workspace/issues/256) (town runtime management design: [#246](https://github.com/PandiO/knk-workspace/issues/246)) |
+| Inter-town trade and town treasury accounts | [#124](https://github.com/PandiO/knk-workspace/issues/124) (`[KNG-100]`) |
+| Pricing (needs the developer's pricing documents first) | [#120](https://github.com/PandiO/knk-workspace/issues/120) (`[KNG-101]`) |
+| Backed container sync for housing | [#113](https://github.com/PandiO/knk-workspace/issues/113) (`[KNG-102]`) |
+| Ceilings, quotas, export/import, emergency modes, rebalance, tax/tariff | [#324](https://github.com/PandiO/knk-workspace/issues/324) |
+| Town turnover tax on shops and shop margin pricing | [#325](https://github.com/PandiO/knk-workspace/issues/325) |
+| Clan council governance | later stage than #324/#325; no issue yet (developer 2026-11-11) |
+| Professions, paid work and quests for harvesting; roleplay theft mode | later stage than #324/#325; no issue yet (developer 2026-11-11) |
+| Processing chains beyond V1 shops, ownership and payouts | [#56](https://github.com/PandiO/knk-workspace/issues/56) (`[KNG-91]`; its shop part moved to P10-P12) |
+
+## Smoke test outline (after P5, P6, P7 and P10-P12)
 
 1. In the web app:
-   - create Territory "Cinix North" claimed by Cinix;
-   - create the Docks Warehouse (district) with a terminal chest and a display chest;
-   - create a Coal Mine (district) and a Logger in the territory, with a radius over a forest.
+   - give Cinix a power value so its territory reaches the forest north of town (territory feature, #326);
+   - create the Docks Warehouse (district) with a terminal chest and a display chest, `UnitsPerSlot` 200; its cap
+     shows 27 slots × 200 = 5,400 units per single chest;
+   - create a Coal Mine (district) and a rural Logger for Cinix in that forest, with a radius over the trees; each
+     has 2 workers. Placing the logger outside Cinix's territory shows a warning;
+   - give Cinix a climate zone with a high storm chance.
 2. Survey the logger (`/knk production survey`). Check the composition and the derived rates in the web app.
-3. `/knk logistics lanes measure`. The logger shows `Connected`, or `Unconnected` with a held transport warning.
-4. Set the mine's rate high and watch the cycle trace. At 25% occupancy, an automatic order is planned. It departs;
-   stock leaves the mine at departure, sits in transit, and arrives at the ETA. The display chest fills.
+3. `/knk logistics lanes measure`. The logger shows `Connected`, or `Unconnected` with a held-transport warning. An
+   unconnected logger keeps producing until its storage is full, then stops, with both warnings on the dashboard.
+4. Set the mine's rate high and watch the cycle trace: it lists the level modifier and the day's weather modifier.
+   At the threshold an automatic order is planned and one worker leaves with it: the next cycle shows 50% output.
+   Stock leaves the mine at departure, sits in transit, and arrives at the ETA. The display chest fills. The worker
+   returns and output is back to 100%.
 5. Lower the warehouse cap: AwaitingSpace → Returning → Returned. The ledger reconciles.
 6. Restart the API mid-transit: the order resumes.
 7. Take coal from the terminal chest. Your inventory gets blueprint-tagged coal, and the ledger shows a `SYS_WORLD`
    move.
+8. Harvest in the mine's area as a player who meets the rule: you get about 25%, the rest appears in the mine's
+   Output storage; the dashboard shows the mine's net output going up.
+9. Fill your inbox to its cap, then claim a reward: you get the near-cap warning, the overflow lands in `SYS_LOSS`
+   with a notification.
+10. Create a trading shop with a static catalogue and a shopkeeper. Walk in: the shopkeeper greets you once and looks
+    at you. Right-click: the shop menu shows the info header and the catalogue. Buy an item: a confirmation first,
+    then coins and stock move together.
+11. Shift-right-click an item on a display stall: quick buy asks for confirmation. Right-click shows the item info.
+12. Sell an enchanted sword to a weaponsmith at 50% of its price; it comes back on sale with its enchantments. A
+    weaponsmith refuses bread.
+13. Restart the server and reload the shop's chunks: exactly one shopkeeper and one set of display entities.
