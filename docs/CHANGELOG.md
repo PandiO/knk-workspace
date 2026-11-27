@@ -4,6 +4,14 @@ This is a human-readable record of capabilities merged into the V3 default branc
 
 ## Unreleased — on feature branches, not merged
 
+- **Finished sessions stop watching their pull requests** ([PandiO/knk-workspace#1026](https://github.com/PandiO/knk-workspace/issues/1026),
+  link L3 of the token efficiency chain, [#987](https://github.com/PandiO/knk-workspace/issues/987)) — no game change;
+  developer-facing. knk-workspace branch `claude/token-wakeups-1026` (PR into `main`). A chain link unsubscribes from
+  its pull requests and cancels its check-ins when it hands over; the coordinator watches the PRs and wakes the link
+  with a message when Codex findings or a base merge need it. Docs sessions unsubscribe and cancel their check-ins in
+  the turn they merge. Skills changed: `knk-link`, `knk-coordinator`, `knk-docs-session`.
+  1. Admin steps: none.
+
 - **Session token audit procedure** ([PandiO/knk-workspace#1019](https://github.com/PandiO/knk-workspace/issues/1019),
   link L0 of the token efficiency chain, [#987](https://github.com/PandiO/knk-workspace/issues/987)) — no game change;
   developer-facing. knk-workspace branch `claude/token-audit-1019` (PR into `main`). New
