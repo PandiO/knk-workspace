@@ -11,9 +11,9 @@ Copy from the line below, replace every `<...>` and delete the hints in parenthe
 ```markdown
 # <Feature name> — <one-line subtitle>
 
-**Status:** **Proposed** (<date>) — <n> open questions in § 12. (On approval: **Decided <date>** (developer).)
+**Status:** **Proposed** (<date>) — <n> open questions in § 13. (On approval: **Decided <date>** (developer).)
 **Last updated:** <date> (<what changed>); <older dates, newest first>
-**Issue:** [PandiO/knk-workspace#<n>](https://github.com/PandiO/knk-workspace/issues/<n>); phases as sub-issues in § 11.
+**Issue:** [PandiO/knk-workspace#<n>](https://github.com/PandiO/knk-workspace/issues/<n>); phases as sub-issues in § 12.
 **Dependencies:** <features, specs or issues this needs, or "none">.
 **Authority:** <whose decisions define this: the developer's answers of <dates>; which older docs it supersedes>. This
 document is the canonical specification, not a claim that the proposed entities, endpoints or behaviour exist.
@@ -49,27 +49,36 @@ by <id>". Agent decisions list their alternatives below the table.)
    drop each, and why>.
 3. **Related open work:** <issues and backlog items>.
 
-## 4. Player and admin experience
+## 4. Reuse
+
+(Required, never dropped. Check the [reuse catalogue](../../architecture/reusable-systems.md) and list every system
+that could apply. "No" needs a decision log id with the reason, tested against the catalogue's "exception when".)
+
+| System | Used | How, or why not | Decision |
+|---|---|---|---|
+| <e.g. FormWizard + FormConfiguration> | <yes / no / n/a> | <which entity, form seed, step; or the reason> | <X0n for a "no"> |
+
+## 5. Player and admin experience
 
 (Step by step, as the player or admin sees it: commands, menus, pages, messages, permissions. Numbered.)
 
-## 5. Rules
+## 6. Rules
 
 (The behaviour, one numbered rule per decision or group of decisions, citing the ids. Edge cases and refusals too.)
 
-## 6. Data and API
+## 7. Data and API
 
 1. **Entities and fields:** <new or changed, with migration note: additive or not>.
 2. **Endpoints:** <method, route, access rule (default-deny), DTOs>.
 3. **Web app:** <pages, forms, dashboard tables>.
 
-## 7. Plugin
+## 8. Plugin
 
 1. **`knk-core` (Bukkit-free):** <rules, state machines, calculations, the ports they use>.
 2. **`knk-paper` adapters:** <listeners, commands, menus, schedulers behind those ports>.
 3. **Configuration:** <`config.yml` keys with defaults; the feature flag, off by default, for risky work>.
 
-## 8. Platform-specific parts
+## 9. Platform-specific parts
 
 (Vision principle "Platform Independence". Every part that depends on Minecraft/Paper or a Bukkit plugin.)
 
@@ -77,11 +86,11 @@ by <id>". Agent decisions list their alternatives below the table.)
 |---|---|---|---|
 | <e.g. block animation of a gate> | <Paper block API> | `knk-paper` <class/package> | <port name, or "none: no game logic"> |
 
-## 9. Risks and integration checks
+## 10. Risks and integration checks
 
 (What could break existing modes, performance or data; what must be checked in the code or live before building.)
 
-## 10. Acceptance checklist
+## 11. Acceptance checklist
 
 (One item per rule a test or a smoke step can check. Phases and smoke-test sections are built from these.)
 
@@ -89,7 +98,7 @@ by <id>". Agent decisions list their alternatives below the table.)
 |---|---|---|
 | A01 | <observable result> | <phase> |
 
-## 11. Phases
+## 12. Phases
 
 (Filled on approval. Each phase merges into `next` on its own, behind its flag where needed.)
 
@@ -99,7 +108,7 @@ by <id>". Agent decisions list their alternatives below the table.)
 
 Smoke test: [guides/<feature>-smoke-test.md](../../guides/<feature>-smoke-test.md).
 
-## 12. Open questions
+## 13. Open questions
 
 (Numbered, each with options and the recommendation. "None" when all are answered. On approval, unanswered items
 move to "After v1" below with their issue.)

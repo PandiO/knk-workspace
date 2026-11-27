@@ -316,5 +316,138 @@ class ArchiveTestCase(unittest.TestCase):
         self.assertIn("Recently completed", err)
 
 
+IP_HEADER = "| Feature | Repos / files claimed | Owner | Status | Started | Last updated |"
+FLAG_BOARD = f"""# Active Sessions
+
+## In progress
+
+{IP_HEADER}
+|---|---|---|---|---|---|
+| Chain A ([PandiO/knk-workspace#10](https://github.com/PandiO/knk-workspace/issues/10)) | ws | s | **In review:** L1 merged into `next`, waiting for the developer's test | 2026-11-01 | 2026-11-20 |
+| Fix B (PandiO/knk-workspace#11, #12) | plugin | s | Merged 2026-11-02 and deployed | 2026-10-30 | 2026-11-02 |
+| Old C (PandiO/knk-workspace#13) — **done** | api | s | | 2026-10-01 | 2026-10-05 |
+| Live D (PandiO/knk-workspace#14) | api | s | working | 2026-11-26 | 2026-11-27 |
+| Long E | api | s | {"x" * 450} | 2026-11-26 | 2026-11-27 |
+
+## Recently completed
+
+| Feature | Repos touched | Finished | Notes / link |
+|---|---|---|---|
+
+## Paused / blocked
+
+| Feature | Repos / files claimed | Blocked on | Last updated |
+|---|---|---|---|
+"""
+
+
+class FlagAndMoveTestCase(unittest.TestCase):
+    def setUp(self) -> None:
+        self.tmp = tempfile.TemporaryDirectory()
+        root = Path(self.tmp.name)
+        self.board = root / "ACTIVE_SESSIONS.md"
+        self.board.write_text(FLAG_BOARD, encoding="utf-8")
+        self.arch = root / "reports" / "sessions-archive"
+        self.arch.mkdir(parents=True)
+        self.args = ["--board", str(self.board), "--archive-dir", str(self.arch), "--today", "2026-11-27"]
+
+    def tearDown(self) -> None:
+        self.tmp.cleanup()
+
+    def line_of(self, text: str) -> int:
+        return next(i + 1 for i, l in enumerate(FLAG_BOARD.split("\n")) if text in l)
+
+    def reasons(self, closed: set[int] | None) -> dict[str, list[str]]:
+        return {
+            A.split_cells(r.line)[0].strip().split(" ")[1]: why
+            for r, why in A.flag(FLAG_BOARD, closed, A.DEFAULT_MAX_ROW)
+        }
+
+    def test_text_flags_finished_rows_but_not_in_review(self) -> None:
+        got = self.reasons(None)
+        self.assertEqual(got["B"], ["text says finished"])
+        self.assertEqual(got["C"], ["text says finished"])  # bold span in the Feature cell
+        self.assertNotIn("A", got)  # merged, but in review: not finished
+        self.assertNotIn("D", got)
+
+    def test_closed_issues_flag_only_when_every_linked_issue_is_closed(self) -> None:
+        got = self.reasons({10, 11})
+        self.assertIn("issue closed: #10", got["A"])
+        # Fix B links #11 and #12 (only #11 as a knk-workspace link), so it counts as closed
+        self.assertIn("issue closed: #11", got["B"])
+        self.assertFalse(any(w.startswith("issue") for w in self.reasons({99}).get("B", [])))
+        self.assertNotIn("D", self.reasons({10, 11, 13}))
+
+    def test_long_rows_are_flagged(self) -> None:
+        got = self.reasons(None)
+        self.assertEqual(len(got["E"]), 1)
+        self.assertTrue(got["E"][0].startswith("too long"))
+
+    def test_flag_mode_reads_stdin_and_writes_nothing(self) -> None:
+        with mock.patch("sys.stdin", io.StringIO(FLAG_BOARD)):
+            rc, out, _ = run(["--flag", "--board", "-", "--closed", "14"])
+        self.assertEqual(rc, 1)
+        self.assertIn(f"line {self.line_of('Live D')}: issue closed: #14", out)
+        self.assertIn("--move", out)
+        self.assertEqual(self.board.read_text(encoding="utf-8"), FLAG_BOARD)
+        self.assertEqual(list(self.arch.iterdir()), [])
+
+    def test_flag_mode_with_gh(self) -> None:
+        with mock.patch.object(A, "gh_open_issues", return_value={10, 11, 14}):
+            rc, out, _ = run(self.args + ["--flag", "--gh"])
+        self.assertEqual(rc, 1)
+        self.assertIn(f"line {self.line_of('Old C')}: issue closed: #13; text says finished", out)
+
+    def test_flag_mode_clean_board(self) -> None:
+        board = "\n".join(l for l in FLAG_BOARD.split("\n") if not l.startswith(("| Fix", "| Old", "| Long")))
+        self.board.write_text(board, encoding="utf-8")
+        rc, out, _ = run(self.args + ["--flag"])
+        self.assertEqual(rc, 0)
+        self.assertIn("no rows flagged", out)
+
+    def test_move_rows_into_the_month_of_today(self) -> None:
+        b, c = self.line_of("Fix B"), self.line_of("Old C")
+        rc, _, err = run(self.args + ["--move", f"{b},{c}"])
+        self.assertEqual(rc, 0, err)
+        board = self.board.read_text(encoding="utf-8")
+        lines = FLAG_BOARD.split("\n")
+        self.assertEqual(board.split("\n"), [l for i, l in enumerate(lines) if i + 1 not in (b, c)])
+        arch = (self.arch / "2026-11.md").read_text(encoding="utf-8")
+        self.assertIn(lines[b - 1], arch)
+        self.assertIn(lines[c - 1], arch)  # last updated 2026-10-05, archived in 2026-11
+        self.assertIn(IP_HEADER, arch)
+        self.assertFalse((self.arch / "2026-10.md").exists())
+        self.assertLess(arch.index(lines[b - 1]), arch.index(lines[c - 1]))  # newest first
+        self.assertEqual(run(self.args)[1].strip(), "nothing to archive")
+
+    def test_move_refuses_a_line_that_is_not_an_in_progress_row(self) -> None:
+        rc, _, err = run(self.args + ["--move", "1"])
+        self.assertEqual(rc, 2)
+        self.assertIn("not a row", err)
+        self.assertEqual(self.board.read_text(encoding="utf-8"), FLAG_BOARD)
+
+    def test_move_twice_is_caught_by_the_duplicate_guard(self) -> None:
+        b = self.line_of("Fix B")
+        self.assertEqual(run(self.args + ["--move", str(b)])[0], 0)
+        self.board.write_text(FLAG_BOARD, encoding="utf-8")  # an old board comes back
+        rc, _, err = run(self.args + ["--move", str(b)])
+        self.assertEqual(rc, 2)
+        self.assertIn("already in the archive", err)
+
+    def test_in_progress_command_prints_only_that_table(self) -> None:
+        """The awk command the skills use to read only the "In progress" table."""
+        import shutil, subprocess
+
+        if not shutil.which("awk"):
+            self.skipTest("no awk")
+        out = subprocess.run(
+            ["awk", "/^## /{p=/^## In progress/} p"], input=FLAG_BOARD, capture_output=True, text=True, check=True
+        ).stdout
+        self.assertTrue(out.startswith("## In progress"))
+        self.assertIn("Live D", out)
+        self.assertNotIn("Recently completed", out)
+        self.assertNotIn("# Active Sessions", out)
+
+
 if __name__ == "__main__":
     unittest.main()

@@ -1,6 +1,6 @@
 # Sessions archive
 
-**Status:** Living index · **Last updated:** 2026-11-13
+**Status:** Living index · **Last updated:** 2026-11-27
 
 Finished entries from the [sessions board](../../ACTIVE_SESSIONS.md), one file per month
 ([DESIGN § 8](../../specs/ai-agent-workflow/DESIGN.md)). The board keeps only in-progress claims; when a session
@@ -21,7 +21,15 @@ finishes, its row moves here verbatim. Nothing is deleted.
 4. Relative links inside entries were written for the board in `docs/`, so read them as relative to `docs/`.
 5. Each file has its own table header; the header is repeated after a row that spans several lines so the next rows
    still render as a table.
-6. **Duplicate guard.** The script refuses to run (exit 2, nothing written) when an entry it would move is already in
+6. **Finished "In progress" rows.** `--flag` lists the "In progress" rows that look finished (every linked issue
+   closed, with `--closed N,N` or `--gh`; or the status says merged, done, closed, deployed or installed and nothing
+   says in review, waiting, running, paused or blocked) and rows longer than 400 characters; it writes nothing and
+   works on `git show origin/main:docs/ACTIVE_SESSIONS.md | python3 ... --flag --board -`. A flag is a hint: a row
+   whose work is merged but waits for the developer's test is in review, not finished. `--move L,L` then moves the
+   chosen rows (board line numbers as `--flag` prints them) verbatim into the file of the current month, under the
+   six-column header, with the same line check. The manager run does this daily
+   ([`knk-manager`](../../../.claude/skills/knk-manager/SKILL.md)).
+7. **Duplicate guard.** The script refuses to run (exit 2, nothing written) when an entry it would move is already in
    any archive file verbatim, and lists those entries. `--check` reports them too. This stops the wrong merge below.
 
 ## Merging a branch that ran the script

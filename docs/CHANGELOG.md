@@ -14,6 +14,23 @@ This is a human-readable record of capabilities merged into the V3 default branc
   handles every queued notification in one turn. Skill changed: `knk-coordinator` (§ 3, § 5, § 7; new
   `start-note.md`; a "Hand-over points" field in the charter template, a "Coordinators" line in the report template).
   1. Admin steps: none.
+- **Slim sessions board** ([PandiO/knk-workspace#1020](https://github.com/PandiO/knk-workspace/issues/1020),
+  link L1 of the token efficiency chain, [#987](https://github.com/PandiO/knk-workspace/issues/987)) — no game change;
+  developer-facing. knk-workspace branch `claude/token-board-1020` (PR into `main`). `docs/ACTIVE_SESSIONS.md` goes
+  from 86 KB (about 20.7k tokens) to 11 KB (about 2.7k): 10 finished rows moved verbatim to the 2026-11 sessions
+  archive, the rest cut to one line of at most 400 characters. `archive_sessions.py` gains `--flag` (rows whose
+  issues are closed or whose status says merged/done, and rows that are too long) and `--move <lines>`; the manager
+  run applies it daily. `knk-link`, `knk-coordinator` and `knk-design` read only the "In progress" table.
+  1. Admin steps: none.
+- **Reuse catalogue and reuse check** ([PandiO/knk-workspace#978](https://github.com/PandiO/knk-workspace/issues/978),
+  link L5 of the token efficiency chain, [#987](https://github.com/PandiO/knk-workspace/issues/987)) — no game change;
+  developer-facing. New `docs/architecture/reusable-systems.md` (branch `claude/reuse-catalogue-978-next`, PR into
+  `next`): FormWizard and form/display configurations, relation pickers, validation, world tasks with WorldGuard
+  regions and the plugin/web app building blocks, each with "required when", "exception when", entry points and
+  current specs. Workflow files (branch `claude/reuse-catalogue-978`, PR into `main`): a required "Reuse" step and
+  DESIGN template section in `knk-design`, a reuse check in `knk-coordinator` § 6.12, pointers in `knk-link`, the
+  code-recipe skills and the global instructions.
+  1. Admin steps: none.
 
 - **Finished sessions stop watching their pull requests** ([PandiO/knk-workspace#1026](https://github.com/PandiO/knk-workspace/issues/1026),
   link L3 of the token efficiency chain, [#987](https://github.com/PandiO/knk-workspace/issues/987)) — no game change;
