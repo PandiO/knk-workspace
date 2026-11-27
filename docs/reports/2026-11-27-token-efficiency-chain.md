@@ -27,7 +27,7 @@
 | L1 slim the session board | #1020 | In review (PR open, not merged) | `claude/token-board-1020`: `e18c07cf` (base `main`) | [#1047](https://github.com/PandiO/knk-workspace/pull/1047) (`main`) | none (docs and script) | create_session `session_01R1w2Uv7GQxAnY971aP5hiH` (§ 3.6) |
 | L2 lighter start-up reading | #1021 | Running | — | — | — | create_session `session_01R1w2UtvxHHSbCHYZ2ZsheW` (§ 3.6) |
 | L3 stop waking finished sessions | #1026 | Merged into `main` (#1041 `8ffae44e`) and `next` (sync #1042 `0c030da3`) | `claude/token-wakeups-1026`: `43d0efd1` (2 commits on `main`) | [#1041](https://github.com/PandiO/knk-workspace/pull/1041) (`main`) | none (docs) | create_session `session_01R1w2UuD4tw3yQ2N6mwMpQ9` (§ 3.6) |
-| L4 coordinator hand-over, fewer wake-ups | #1024 | Running | — | — | — | create_session `session_01R1w2UwgB6mB8qcMtKmYSwt` (§ 3.6) |
+| L4 coordinator hand-over, fewer wake-ups | #1024 | In review | `claude/token-handover-1024`: `badec5dc` (1 commit on `main`) | [#1048](https://github.com/PandiO/knk-workspace/pull/1048) (`main`) | none (docs) | create_session `session_01R1w2UwgB6mB8qcMtKmYSwt` (§ 3.6) |
 | L5 reuse catalogue | #978 | In review (PRs open, not merged) | `claude/reuse-catalogue-978`: `be067817` (3 commits + merge of `main` `405c82e4`, base `main`); `claude/reuse-catalogue-978-next`: `a3096162` (1 commit on `next` `b2e454f8`) | [#1044](https://github.com/PandiO/knk-workspace/pull/1044) (`main`), [#1045](https://github.com/PandiO/knk-workspace/pull/1045) (`next`) | none (docs) | create_session `session_01R1w2UvxEiZju9gUZgBsVjt` (§ 3.6) |
 | L6 fewer set-up turns | #1022 | Not started (gate: L1–L5 merged; developer approval) | — | — | — | — |
 | L7 one docs session per chain | #1023 | Not started (gate: L1–L5 merged) | — | — | — | — |
@@ -175,3 +175,32 @@ _(Each link appends its block here when it finishes.)_
 9. **Notes for later links.**
     1. Design sessions after the merge must fill the template's § 4 "Reuse"; the coordinator's § 6.12 checks links against `docs/architecture/reusable-systems.md`.
     2. Template sections moved by one: "Open questions" is now § 13, "Phases" § 12.
+
+### 4.4 L4 — Coordinator hand-over and fewer wake-ups (#1024)
+
+1. **Scope done.**
+    1. `knk-coordinator` § 3.4 (one pending check-in, or none), new § 3.7 (read own context at every wake-up: `get_session` for the id, `list_events` `kinds ["result"]` limit 20, last `usage.iterations` entry), § 3.8 (when: phase boundary from the charter's "Hand-over points", above 300k at the next quiet moment, a wake-up after > 1 h idle above ~200k; quiet = no merge half done, no answer owed, no subagent link running), § 3.9 (the seven hand-over steps), § 3.10 (start of a fresh coordinator).
+    2. § 5.3 and new § 5.5 (timing: one pending check-in for the chain, about 50 min apart while any link runs, none while nothing runs; `ReadNotifications` until 0 and everything in one turn; context check at the same wake-up). § 7.12 (finish the boundary merge, its CI, `main` → `next`, unsubscribe and report before handing over).
+    3. New `start-note.md` (permissions block verbatim, chain, charter and report paths, rule set, running links with session ids, PR subscriptions and check-in to take over, owed answers, next gate and hand-over point, old session id). `charter-template.md`: "Hand-over points" under "Order and parallelism". `report-template.md`: "Coordinators" header line. § 1.2 lists the new template. `docs/CHANGELOG.md` Unreleased entry.
+2. **Commits and heads.** knk-workspace `claude/token-handover-1024` at `badec5dc` (1 commit, base `main` at `405c82e4`).
+3. **PRs.** [#1048](https://github.com/PandiO/knk-workspace/pull/1048) into `main` (`Closes #1024`). Not merged.
+4. **Tests, baseline → result.**
+    1. Docs only, no CI. The section references added resolve inside the file; `start-note.md` link resolves.
+    2. Measured now: `knk-coordinator` SKILL grows by about 1.6k tokens (characters / 4); `start-note.md` is about 650 tokens and is read only at a hand-over.
+    3. Acceptance (next chain's coordinators ≤ 300k, cost per chain about −50 %) needs a Phase 0 rerun (session token audit step 1) on coordinators started after this merge: the coordinator's, at the chain's end.
+    4. Known reds: none.
+5. **Decisions (DESIGN § 4.3).**
+    1. *One check-in per chain, not per link.* Chosen: a single pending `send_later` that checks every running link, because the target is fewer idle wake-ups and one wake-up re-reads the context once whatever it checks; it matches what the coordinator already runs. Alternatives: (a) one per active link, as the plan's wording — N wake-ups an hour with N links, each re-reading the whole context.
+    2. *Cadence about 50 minutes.* Chosen: under the one-hour cache lifetime, so the cache stays warm while links run. Alternatives: (a) 45–60 min as before — 60 can miss the cache; (b) longer — every wake-up pays the rebuild ($4.50–6 at Phase 8 sizes).
+    3. *Phase boundary definition.* Chosen: a new charter field "Hand-over points", defaulting to the end of each group in "Order and parallelism", because chains differ and the coordinator reading mid-chain needs a rule it can apply to an existing charter. Alternatives: (a) after every link — a fresh start each link costs more than it saves for small links; (b) the ceiling only — loses the planned boundary hand-over.
+    4. *Context measurement.* Chosen: own result events via `list_events` (audit step 1), because `get_session` reports no context size. Alternatives: (a) estimate from turns — not checkable against 300k.
+    5. *No hand-over with a subagent link running.* Chosen: wait for it, because a subagent lives in the coordinator's session and cannot move. Alternatives: (a) rerun it under the new coordinator — loses its work.
+    6. *Who tells the running links.* Chosen: the old coordinator, right after `create_session` returns the id, since it knows the links and the new one may not have started its first turn. Alternatives: (a) the new coordinator at its start — a link finishing in between would message the ended session (still covered: the old one forwards stray messages).
+    7. *Start note as its own template file.* Chosen: `start-note.md` beside the other templates, read only at a hand-over, so the skill itself stays short. Alternatives: (a) inline in § 3 — about 650 tokens every coordinator reads at every start.
+    8. *Order: unsubscribe before the new one subscribes.* Chosen as in L3's § 3.5 (one watcher per PR). Alternatives: (a) new subscribes first — its call would deliver nothing while the old one holds the PR.
+6. **Out of scope, noted.** None. Touched only `knk-coordinator` § 1.2 (one line, template list), § 3, § 5, § 7 and its templates; not § 4.4, the board-reading lines, § 6 or the `description:` line.
+7. **Blockers.** None.
+8. **What the developer must do.** Nothing beyond the coordinator's merge of #1048 into `main` and `main` → `next`.
+9. **Notes for later links.**
+    1. Coordinator (charter § 3.1): after the merge, apply § 3.7–§ 3.9 at your next wake-up; this chain's hand-over points are the groups in charter § 2 (L0; L1–L5; L6–L8), so the first one is after L1–L5 merge, or earlier if your context is above 300k (it almost certainly is: hand over at the next quiet moment). Consider adding a "Hand-over points" line to the charter in that bookkeeping commit.
+    2. L6–L8: none of you need to change your behaviour; reply to the coordinator id you were last told.
