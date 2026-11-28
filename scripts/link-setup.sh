@@ -195,13 +195,15 @@ baseline_repo() {
       counts="$(grep -E '^Tests: ' "$log" | tail -1 | sed -E 's/^Tests: +//')"
       ;;
     knk-plugin)
-      local jdk=() mark="$LOG_DIR/$repo.start"
+      local gopts=() mark="$LOG_DIR/$repo.start"
       touch "$mark"
-      [ -d /opt/jdk-25 ] && jdk=(-Porg.gradle.java.installations.paths=/opt/jdk-25)
-      steps+=("$(cd "$d" && run_step "$log" build ./gradlew --console=plain "${jdk[@]}" build -x deployToDevServer)")
+      [ -d /opt/jdk-25 ] && gopts=(-Porg.gradle.java.installations.paths=/opt/jdk-25)
+      # Gradle's own retries with a longer backoff ride out most of Maven Central's 429s.
+      gopts+=(-Dorg.gradle.internal.repository.max.retries=8 -Dorg.gradle.internal.repository.initial.backoff=1000)
+      steps+=("$(cd "$d" && run_step "$log" build ./gradlew --console=plain "${gopts[@]}" build -x deployToDevServer)")
       # Maven Central answers bursts with 429; one retry once the downloads that did arrive are cached.
       if [[ "${steps[-1]}" == *FAILED* ]] && grep -q -E 'status code 429|Could not download' "$log"; then
-        steps+=("$(cd "$d" && run_step "$log" build-retry ./gradlew --console=plain "${jdk[@]}" build -x deployToDevServer)")
+        steps+=("$(cd "$d" && run_step "$log" build-retry ./gradlew --console=plain "${gopts[@]}" build -x deployToDevServer)")
       fi
       counts="$(find "$d" -path '*/build/test-results/test/*.xml' -newer "$mark" -print0 2>/dev/null \
         | xargs -0 -r cat | grep -o '<testsuite [^>]*>' \
