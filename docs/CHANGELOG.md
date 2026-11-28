@@ -4,6 +4,17 @@ This is a human-readable record of capabilities merged into the V3 default branc
 
 ## Unreleased — on feature branches, not merged
 
+- **Fewer set-up turns for chain links** ([PandiO/knk-workspace#1022](https://github.com/PandiO/knk-workspace/issues/1022),
+  link L6 of the token efficiency chain, [#987](https://github.com/PandiO/knk-workspace/issues/987)) — no game change;
+  developer-facing. knk-workspace branch `claude/token-setup-1022` (PR into `main`). New `scripts/link-setup.sh` does a
+  link's set-up in one run: per repo the attach check, the branch from the base (`next` by default, `--base main` for
+  agent workflow links; an existing branch gets `origin/<base>` merged in, never rebased), the push dry run and the
+  baseline tests (in parallel, `--skip-tests` to skip), then one summary table. `knk-link` § 1 says "run it, read the
+  summary" instead of separate branch, push-check and baseline steps. The cloud environment's setup script also warms
+  the dependency caches: `npx npm@11 ci` in knk-web-app, `dotnet restore` in knk-web-api and a Gradle dependency
+  resolve in knk-plugin, each skipped when the repo is not in the session.
+  1. Admin steps: approve the environment's setup-script change in its approval prompt (done in the session).
+
 - **Lighter start-up reading for agent sessions** ([PandiO/knk-workspace#1021](https://github.com/PandiO/knk-workspace/issues/1021),
   link L2 of the token efficiency chain, [#987](https://github.com/PandiO/knk-workspace/issues/987)) — no game change;
   developer-facing. knk-workspace branch `claude/token-startup-1021` (PR into `main`). The global agent instructions

@@ -39,19 +39,36 @@ something different from this skill, the prompt and charter win.
    `.github/workflows/ci.yml` on knk-web-api `main` and knk-web-app `main`), otherwise the repo's default branch
    (`main` in every repo). Never start from another feature's unmerged branch unless the
    charter stacks you on it.
-4. **Branch.** The link's feature branch in every repo you change. Missing: create it from `origin/<base>`. Existing
-   (a later link of the same feature): check it out, pull, and **merge** (never rebase) `origin/<base>` into it, at the
-   start and again before the final push. A non-mechanical conflict is a blocker.
-5. **Push check.** `git push --dry-run origin <branch>` in every repo you will change. A failure is a blocker.
-6. **Status.** Set your sub-issue to `status:in-progress`.
-7. **Toolchains** (install only what your repos need):
+4. **Set-up script: run it, read the summary.** One run does the branch, the push check and the baseline for every
+   repo you will change, and prints one summary table:
+
+   ```bash
+   scripts/link-setup.sh --branch <branch> --base <base> [--worktree <scratchpad>/<link>] <repo>...
+   ```
+
+    1. Run it from a knk-workspace checkout. As a subagent (item 1, sub-item 2), pass `--worktree`: it then works in
+       worktrees and never switches a clone's branch. `--root <dir>` when the clones are not siblings of
+       knk-workspace; `--skip-tests` for a rerun.
+    2. Per repo it checks the clone and its `origin`, then creates the branch from `origin/<base>`, or, when it
+       exists (a later link of the same feature), checks it out, pulls and **merges** (never rebases) `origin/<base>`.
+       Then `git push --dry-run origin <branch>` and the baseline (item 7) on the unchanged branch, one repo after
+       the other (`--parallel` on a large machine). It never pushes.
+    3. Exit code 1 is a blocker (§ 4): a missing clone, a merge conflict with the base or a failed push dry run; the
+       row names it and the log path. Red baseline tests are reported in the table, not as a blocker.
+    4. Copy the summary table into your report block as the baseline. Before the final push, merge `origin/<base>`
+       again (rerun it with `--skip-tests`).
+    5. When the script is missing on your checkout or fails for a reason outside your link, do the same steps by
+       hand: branch, merge, push dry run, item 7.
+5. **Status.** Set your sub-issue to `status:in-progress`.
+6. **Toolchains.** The cloud environment's setup script installs them and warms the dependency caches; install one
+   only when the summary shows a step failing for want of it:
     1. .NET 8: `sudo apt-get install -y dotnet-sdk-8.0` if `dotnet --list-sdks` has no 8.0.
     2. Node 22; dependency changes in the web app with npm 11 only (`npx npm@11 ...`), the lock file is invalid for
        npm 10.
     3. Plugin: Gradle runs on JDK 21 and compiles with a **JDK 25** toolchain. Install `openjdk-25-jdk-headless`, else
-       a Temurin 25 tarball from `api.adoptium.net` into `/opt/jdk-25`, passed with
-       `-Porg.gradle.java.installations.paths=/opt/jdk-25`. No JDK 25 is a blocker.
-8. **Baseline** on the unchanged branch, recorded before your first change (keep output short):
+       a Temurin 25 tarball from `api.adoptium.net` into `/opt/jdk-25` (the script passes it to Gradle with
+       `-Porg.gradle.java.installations.paths=/opt/jdk-25`). No JDK 25 is a blocker.
+7. **Baseline** (what the script runs), recorded before your first change:
 
    | Repo | Commands |
    |---|---|
