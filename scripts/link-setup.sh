@@ -128,7 +128,7 @@ setup_repo() {
     elif [ $remote_has = 1 ]; then
       git -C "$g" worktree add -q --track -b "$BRANCH" "$d" "origin/$BRANCH" >>"$log" 2>&1
     else
-      git -C "$g" worktree add -q -b "$BRANCH" "$d" "origin/$BASE" >>"$log" 2>&1
+      git -C "$g" worktree add -q --no-track -b "$BRANCH" "$d" "origin/$BASE" >>"$log" 2>&1
     fi
     [ -e "$d" ] || { R_BRANCH[$repo]="WORKTREE FAILED"; R_BLOCK[$repo]=1; return; }
   else
@@ -141,7 +141,7 @@ setup_repo() {
     elif [ $remote_has = 1 ]; then
       git -C "$d" checkout -q --track -b "$BRANCH" "origin/$BRANCH" >>"$log" 2>&1
     else
-      git -C "$d" checkout -q -b "$BRANCH" "origin/$BASE" >>"$log" 2>&1
+      git -C "$d" checkout -q --no-track -b "$BRANCH" "origin/$BASE" >>"$log" 2>&1
     fi
     [ "$(git -C "$d" rev-parse --abbrev-ref HEAD)" = "$BRANCH" ] \
       || { R_BRANCH[$repo]="CHECKOUT FAILED"; R_BLOCK[$repo]=1; return; }
@@ -150,11 +150,12 @@ setup_repo() {
 
   if [ $remote_has = 1 ] || [ $local_has = 1 ]; then
     # An existing branch: pull (fast-forward only) from its remote, then merge the base.
-    if [ $remote_has = 1 ]; then
-      git -C "$d" merge -q --ff-only "origin/$BRANCH" >>"$log" 2>&1 || true
+    local pulled=""
+    if [ $remote_has = 1 ] && ! git -C "$d" merge -q --ff-only "origin/$BRANCH" >>"$log" 2>&1; then
+      pulled=", local differs from origin/$BRANCH (not pulled, check it)"
     fi
-    if st="$(merge_base_in "$d" "$log")"; then R_BRANCH[$repo]="existing, $st"
-    else R_BRANCH[$repo]="existing, $st"; R_BLOCK[$repo]=1; fi
+    if st="$(merge_base_in "$d" "$log")"; then R_BRANCH[$repo]="existing, $st$pulled"
+    else R_BRANCH[$repo]="existing, $st$pulled"; R_BLOCK[$repo]=1; fi
   else
     R_BRANCH[$repo]="new from origin/$BASE"
   fi
@@ -174,7 +175,7 @@ run_step() {
   echo "$label $([ $rc = 0 ] && echo ok || echo "FAILED(rc=$rc)") $(( $(now) - s ))s"
 }
 
-# Baseline tests: the knk-link skill § 1.8 table. Prints one line "<steps> | <counts>".
+# Baseline tests: the knk-link skill § 1.7 table. Prints one line "<steps> | <counts>".
 baseline_repo() {
   local repo="$1" d="${R_DIR[$1]}" log="$LOG_DIR/$1-tests.log" steps=() counts=""
   : >"$log"
